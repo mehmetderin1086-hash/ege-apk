@@ -1,0 +1,86 @@
+{% extends "temel.html" %}
+{% block baslik %}Değerlendirme · biyo-cozucu{% endblock %}
+{% block icerik %}
+<h1>Kör değerlendirme</h1>
+
+<p class="soluk">
+  Test örnekleri hafızadan <strong>dışlanarak</strong> çözülür. Dışlanmasaydı
+  sistem kendi cevabını referans olarak getirir ve doğruluk yapay şekilde
+  %100 çıkardı. Bölme sorunun imzasına bağlı olduğu için yeni örnek eklemek
+  eski koşuları karşılaştırılamaz hale getirmez.
+</p>
+
+<div class="kart">
+  {% if test_sayisi %}
+  <form method="post" action="/degerlendirme/akis" data-kosu-formu>
+    <label for="etiket">Koşu etiketi <span class="ipucu">(ör. taban, lora-v1)</span></label>
+    <input type="text" id="etiket" name="etiket" maxlength="40" placeholder="taban">
+    <p style="margin-bottom:0">
+      <button type="submit">{{ test_sayisi }} örnekle koşuyu başlat</button>
+      <span class="soluk">motor: <code>{{ motor_turu }}</code></span>
+    </p>
+  </form>
+  {% if oz_turemis_test %}
+  <p class="hata-kutu" style="margin-bottom:0">
+    Dikkat: test kümesindeki {{ test_sayisi }} örneğin
+    <strong>{{ oz_turemis_test }}</strong> tanesi onay döngüsünden geliyor.
+    Kör koşu bunların hafızadan getirilmesini engelliyor, ama puanlamanın
+    karşılaştırdığı referans yine modelin kendi eski çıktısı — bu, doğruluğu
+    olduğundan yüksek gösterir. Karşılaştırmalarda bunu hesaba kat.
+  </p>
+  {% endif %}
+  {% else %}
+  <p>
+    {{ bos_test_mesaji }}
+    Şu an <strong>{{ durum.ornek }}</strong> örnek var.
+    <a href="/ornek/yeni">Örnek ekle</a>,
+    <a href="/alim">kaynaktan al</a> ya da
+    <a href="/pano">panodaki kapsam boşluklarına</a> bak.
+  </p>
+  {% endif %}
+</div>
+
+<div class="kart" id="kosu-alani" hidden>
+  <div class="akis-durum">
+    <span class="donuyor" aria-hidden="true"></span>
+    <span id="kosu-durum-yazi">hazırlanıyor</span>
+  </div>
+  <div class="akis-panel" id="kosu-ilerleme" aria-live="polite"></div>
+  <p class="soluk" style="margin-bottom:0">
+    Her örnek bir model çağrısı; yerel modelde bu dakikalar sürebilir.
+  </p>
+</div>
+
+<div id="kosu-sonucu"></div>
+
+<h2>Koşu geçmişi</h2>
+<div class="kart">
+  {% if kosular %}
+  <table>
+    <tr>
+      <th>#</th><th>Etiket</th><th>Doğruluk</th><th>Örnek</th>
+      <th>Örtüşme</th><th>İncelemeye düşen</th><th>Model</th><th>Tarih</th>
+    </tr>
+    {% for kosu in kosular %}
+    <tr>
+      <td>{{ kosu.id }}</td>
+      <td>{{ kosu.etiket or "—" }}</td>
+      <td>{{ "%.0f%%"|format(kosu.dogruluk * 100) }}</td>
+      <td>{{ kosu.ornek_sayisi }}</td>
+      <td>{{ "%.2f"|format(kosu.ortusme) }}</td>
+      <td>{{ "%.0f%%"|format(kosu.inceleme_orani * 100) }}</td>
+      <td><code>{{ kosu.model or "—" }}</code></td>
+      <td class="soluk">{{ kosu.olusturma[:16] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p class="soluk">
+    Ölçümün değeri tek bir sayıda değil, <strong>koşular arası farkta</strong>:
+    taban modeli ve ince ayarlı modeli aynı test kümesinde koşturup buradan
+    karşılaştır.
+  </p>
+  {% else %}
+  <p class="soluk">Henüz koşu yok.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.mehmetderin.biyo.campbell</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/caffeinate</string>
+    <string>-i</string>
+    <string>/bin/zsh</string>
+    <string>/Users/mehmetderin/Developer/biyo-cozucu/scripts/campbell_entegre.sh</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>/Users/mehmetderin/Developer/biyo-cozucu</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>ThrottleInterval</key>
+  <integer>60</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/mehmetderin/.biyo-cozucu/kitaplar/campbell-automation.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/mehmetderin/.biyo-cozucu/kitaplar/campbell-automation.log</string>
+</dict>
+</plist>

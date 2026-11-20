@@ -1,0 +1,73 @@
+{% extends "temel.html" %}
+{% block baslik %}Merkez · Biyoloji Stüdyosu{% endblock %}
+{% block sayfa_stilleri %}
+<style>
+ .merkez-izgara { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: .8rem; }
+ .merkez-kart { display: flex; flex-direction: column; gap: .45rem; padding: .9rem; border: 1px solid var(--cizgi);
+   border-radius: var(--yuvarlak); background: var(--kart); box-shadow: var(--golge); }
+ .merkez-kart .ust { display: flex; align-items: center; gap: .5rem; }
+ .merkez-kart .simge { font-size: 1.3rem; line-height: 1; }
+ .merkez-kart .ad { font-weight: 700; flex: 1 1 auto; }
+ .merkez-kart .aciklama { color: var(--soluk); font-size: .78rem; margin: 0; }
+ .merkez-kart .eylem { margin-top: auto; display: flex; gap: .4rem; flex-wrap: wrap; }
+ .merkez-kart form { margin: 0; }
+</style>
+{% endblock %}
+{% block icerik %}
+<h1>Merkez</h1>
+<p class="soluk" style="margin-top:-.4rem">
+  Biyoloji Stüdyosu'nun tüm araçları burada. Kesme, çözme ve kaynak araştırması
+  ayrı yerel sunucularda çalışır; durumları aşağıda canlı olarak görünür.
+</p>
+
+{% if mesaj %}<div class="bilgi-kutu">{{ mesaj }}</div>{% endif %}
+
+<div class="kart">
+  <div class="kart-baslik"><h2>Bu uygulamada</h2></div>
+  <div class="merkez-izgara">
+    {% for sayfa in ic_sayfalar %}
+    <div class="merkez-kart">
+      <div class="ust"><span class="simge" aria-hidden="true">{{ sayfa.simge }}</span>
+        <span class="ad">{{ sayfa.ad }}</span></div>
+      <p class="aciklama">{{ sayfa.aciklama }}</p>
+      <div class="eylem"><a class="dugme" href="{{ sayfa.yol }}">Aç →</a></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="kart">
+  <div class="kart-baslik"><h2>Yerel servisler</h2>
+    <span class="rozet">Python {{ python }} · motor {{ durum.motor_turu }}</span></div>
+  <div class="merkez-izgara">
+    {% for servis in servisler %}
+    <div class="merkez-kart">
+      <div class="ust">
+        <span class="simge" aria-hidden="true">{{ servis.simge }}</span>
+        <span class="ad">{{ servis.ad }}</span>
+        {% if servis.durum == 'calisiyor' %}<span class="rozet iyi">çalışıyor</span>
+        {% elif servis.durum == 'cakisma' %}<span class="rozet kotu">port çakışması</span>
+        {% elif servis.durum == 'kurulu-degil' %}<span class="rozet dikkat">kurulu değil</span>
+        {% else %}<span class="rozet dikkat">kapalı</span>{% endif %}
+      </div>
+      <p class="aciklama">{{ servis.aciklama }}</p>
+      {% if servis.ayrinti %}<p class="aciklama">{{ servis.ayrinti }}</p>{% endif %}
+      <div class="eylem">
+        {% if servis.durum == 'calisiyor' %}
+          <a class="dugme" href="{{ servis.url }}" target="_blank" rel="noopener">Aç →</a>
+          {% if servis.surum %}<span class="rozet">{{ servis.surum }}</span>{% endif %}
+        {% elif servis.baslatilabilir %}
+          <form method="post" action="/merkez/baslat/{{ servis.anahtar }}">
+            <button class="dugme birincil" type="submit">Başlat</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <p class="soluk" style="margin-bottom:0">
+    Bir servis "port çakışması" gösteriyorsa o portta başka bir program dinliyor
+    demektir; Stüdyo onu kendi servisi sanmaz.
+  </p>
+</div>
+{% endblock %}

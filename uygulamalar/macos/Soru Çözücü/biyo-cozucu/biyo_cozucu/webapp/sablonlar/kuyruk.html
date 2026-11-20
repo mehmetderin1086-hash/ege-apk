@@ -1,0 +1,40 @@
+{% extends "temel.html" %}
+{% block baslik %}Onay kuyruğu · biyo-cozucu{% endblock %}
+{% block icerik %}
+<h1>Onay kuyruğu</h1>
+
+<div class="kart">
+  <div class="olcumler">
+    <div class="olcum"><div class="deger">{{ ozet.bekleyen }}</div><div class="ad">bekleyen</div></div>
+    <div class="olcum"><div class="deger">{{ ozet.onayli }}</div><div class="ad">onaylı</div></div>
+    <div class="olcum"><div class="deger">{{ ozet.reddedilen }}</div><div class="ad">reddedilen</div></div>
+    <div class="olcum"><div class="deger">{{ ozet.alinan }}</div><div class="ad">hafızaya alınan</div></div>
+  </div>
+</div>
+
+{% if not dosyalar %}
+<div class="kart">
+  <p style="margin-top:0">Kuyruk boş.</p>
+  <a class="dugme" href="/youtube">YouTube'dan soru çözümü al →</a>
+</div>
+{% else %}
+<div class="kart">
+  <table class="tablo">
+    <thead>
+      <tr><th>Dosya</th><th>Video</th><th>Bekleyen</th><th>Onaylı</th><th>Toplam</th></tr>
+    </thead>
+    <tbody>
+      {% for dosya in dosyalar %}
+      <tr>
+        <td><a href="/kuyruk/{{ dosya.ad }}">{{ dosya.ad }}</a></td>
+        <td>{{ dosya.baslik|kisa(44) }}</td>
+        <td>{{ dosya.bekleyen }}</td>
+        <td>{{ dosya.onayli }}</td>
+        <td>{{ dosya.toplam }}{% if dosya.bozuk %} <span class="uyari-kutu">{{ dosya.bozuk }} bozuk satır</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

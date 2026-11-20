@@ -1,0 +1,59 @@
+{% extends "temel.html" %}
+{% block baslik %}Referans örnekler · biyo-cozucu{% endblock %}
+{% block icerik %}
+<h1>Referans örnekler ({{ sayfalama.toplam }})</h1>
+
+<form method="get" action="/ornekler" class="kart">
+  <div class="satir">
+    <div>
+      <label for="ara">Ara <span class="ipucu">(<kbd>/</kbd> ile odaklan)</span></label>
+      <input type="search" id="ara" name="ara" value="{{ ara }}" placeholder="mitoz, kalıtım…">
+    </div>
+    <div>
+      <label for="tur">Çözüm türü</label>
+      <select id="tur" name="tur">
+        <option value="">Hepsi</option>
+        {% for t in turler %}
+          <option value="{{ t }}" {% if secili_tur == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="flex:0 0 auto">
+      <button type="submit" class="ikincil">Süz</button>
+      <a class="dugme" href="/ornek/yeni">Yeni örnek</a>
+    </div>
+  </div>
+</form>
+
+<div class="kart">
+  {% if ornekler %}
+  <div class="tablo-sarmal">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Soru</th><th>Konu</th><th>Çözüm türü</th><th>Cevap</th></tr>
+      </thead>
+      <tbody>
+      {% for o in ornekler %}
+        <tr>
+          <td><a href="/ornek/{{ o.id }}">{{ o.id }}</a></td>
+          <td>{{ o.soru|kisa(85) }}</td>
+          <td>{{ o.konu or "—" }}</td>
+          <td><span class="rozet">{{ o.cozum_turu }}</span></td>
+          <td>{{ o.cevap|kisa(30) or "—" }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "parcalar/sayfalama.html" %}
+  {% elif ara or secili_tur %}
+  <p class="soluk">Bu süzgeçlerle eşleşen örnek yok.
+    <a href="/ornekler">Süzgeçleri temizle</a></p>
+  {% else %}
+  <p class="soluk">
+    Hafıza boş. <a href="/ornek/toplu">Toplu yapıştırma</a> ile birkaç çözülmüş
+    soru eklemek en hızlı başlangıç.
+  </p>
+  {% endif %}
+</div>
+{% endblock %}

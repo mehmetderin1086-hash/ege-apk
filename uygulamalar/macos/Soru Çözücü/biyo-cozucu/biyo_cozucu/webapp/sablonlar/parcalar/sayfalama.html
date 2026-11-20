@@ -1,0 +1,28 @@
+{# Sayfalama şeridi. Bekler: sayfalama (yardimcilar.sayfa_araligi çıktısı),
+   temel_yol, sorgu (mevcut süzgeçler — sayfa değişince kaybolmamalı). #}
+{% if sayfalama.toplam %}
+<div class="sayfalama">
+  {% set ek = [] %}
+  {% for ad, deger in (sorgu or {}).items() if deger %}
+    {% set _ = ek.append(ad ~ "=" ~ deger|urlencode) %}
+  {% endfor %}
+  {% set sorgu_metni = ("&" ~ ek|join("&")) if ek else "" %}
+
+  {% if sayfalama.onceki_var %}
+    <a class="dugme ikincil kucuk"
+       href="{{ temel_yol }}?sayfa={{ sayfalama.sayfa - 1 }}{{ sorgu_metni }}"
+       rel="prev">← Önceki</a>
+  {% endif %}
+
+  <span class="bilgi">
+    {{ sayfalama.ilk_sira }}–{{ sayfalama.son_sira }} / {{ sayfalama.toplam }}
+    (sayfa {{ sayfalama.sayfa }}/{{ sayfalama.son_sayfa }})
+  </span>
+
+  {% if sayfalama.sonraki_var %}
+    <a class="dugme ikincil kucuk"
+       href="{{ temel_yol }}?sayfa={{ sayfalama.sayfa + 1 }}{{ sorgu_metni }}"
+       rel="next">Sonraki →</a>
+  {% endif %}
+</div>
+{% endif %}

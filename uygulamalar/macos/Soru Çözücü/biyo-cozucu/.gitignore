@@ -1,0 +1,25 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+/tmp/
+
+# uv.lock BİLİNÇLİ olarak takip edilir: bu bir uygulama, kütüphane değil.
+# Colab ile Mac arasında gidip gelen eğitim akışında aynı bağımlılık
+# sürümlerinin yeniden kurulabilmesi gerekiyor.
+
+# Yerel veri ve modeller depoya girmez. Kalıpların başındaki "/" şart:
+# köksüz "veri/" kuralı `biyo_cozucu/veri/` paketini de yok sayıyordu ve
+# paket temiz bir checkout'ta hiç bulunmuyordu.
+/veri/
+/modeller/
+/egitim/
+/indeks/
+*.db
+*.db-wal
+*.db-shm

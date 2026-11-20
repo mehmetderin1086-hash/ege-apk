@@ -1,0 +1,65 @@
+{% extends "temel.html" %}
+{% block baslik %}Çözümler · biyo-cozucu{% endblock %}
+{% block icerik %}
+<h1>Çözümler ({{ sayfalama.toplam }})</h1>
+
+<form method="get" action="/cozumler" class="kart">
+  <div class="satir">
+    <div>
+      <label for="ara">Ara <span class="ipucu">(<kbd>/</kbd> ile odaklan)</span></label>
+      <input type="search" id="ara" name="ara" value="{{ ara }}" placeholder="soru metninde ara…">
+    </div>
+    <div>
+      <label for="onay">Onay durumu</label>
+      <select id="onay" name="onay">
+        <option value="" {% if not secili_onay %}selected{% endif %}>Hepsi</option>
+        {% for d in ["bekliyor", "onaylandi", "duzeltildi", "reddedildi"] %}
+          <option value="{{ d }}" {% if secili_onay == d %}selected{% endif %}>{{ d }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="incele">Görünüm</label>
+      <select id="incele" name="incele">
+        <option value="">Tümü</option>
+        <option value="1" {% if yalniz_incele %}selected{% endif %}>Yalnız incelenmeli</option>
+      </select>
+    </div>
+    <div style="flex:0 0 auto"><button type="submit" class="ikincil">Süz</button></div>
+  </div>
+</form>
+
+<div class="kart">
+  {% if satirlar %}
+  <div class="tablo-sarmal">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Soru</th><th>Cevap</th><th>Güven</th><th>Yöntem</th><th>Durum</th></tr>
+      </thead>
+      <tbody>
+      {% for s in satirlar %}
+        <tr>
+          <td><a href="/cozum/{{ s['id'] }}">{{ s["id"] }}</a></td>
+          <td>{{ s["soru"]|kisa(80) }}</td>
+          <td>{{ s["cevap"] or "—" }}</td>
+          <td>
+            <span class="rozet {% if s['guven'] >= 0.75 %}iyi{% elif s['guven'] >= 0.5 %}dikkat{% else %}kotu{% endif %}">
+              {{ "%.2f"|format(s["guven"]) }}</span>
+            {% if s["incele"] %}<span class="rozet kotu">incele</span>{% endif %}
+          </td>
+          <td class="soluk">{{ s["uretim_yontemi"] }}</td>
+          <td>{{ s["onay_durumu"] }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "parcalar/sayfalama.html" %}
+  {% elif ara or secili_onay or yalniz_incele %}
+  <p class="soluk">Bu süzgeçlerle eşleşen çözüm yok.
+    <a href="/cozumler">Süzgeçleri temizle</a></p>
+  {% else %}
+  <p class="soluk">Henüz çözüm yok. <a href="/coz">Bir soru çöz →</a></p>
+  {% endif %}
+</div>
+{% endblock %}

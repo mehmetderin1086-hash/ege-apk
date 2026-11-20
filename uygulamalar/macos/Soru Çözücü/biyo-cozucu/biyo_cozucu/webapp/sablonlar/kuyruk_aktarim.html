@@ -1,0 +1,24 @@
+{% extends "temel.html" %}
+{% block baslik %}Aktarma sonucu · biyo-cozucu{% endblock %}
+{% block icerik %}
+<h1>Aktarma sonucu</h1>
+
+<div class="kart">
+  <div class="olcumler">
+    <div class="olcum"><div class="deger">{{ eklenen }}</div><div class="ad">eklenen</div></div>
+    <div class="olcum"><div class="deger">{{ guncellenen }}</div><div class="ad">güncellenen</div></div>
+    <div class="olcum"><div class="deger">{{ atlananlar|length }}</div><div class="ad">atlanan</div></div>
+  </div>
+  <p class="soluk">
+    Atlanan kayıtlar kuyrukta <strong>onay</strong> durumunda kaldı; dosya bu
+    yüzden arşivlenmedi. Düzeltip yeniden aktarabilir ya da reddedebilirsiniz.
+  </p>
+  {% for satir in atlananlar %}
+    <div class="uyari-kutu">{{ satir }}</div>
+  {% endfor %}
+  <p style="margin-bottom:0">
+    <a class="dugme" href="/kuyruk/{{ ad }}">Kuyruğa dön</a>
+    <a class="dugme ikincil" href="/ornekler">Örnekleri gör →</a>
+  </p>
+</div>
+{% endblock %}

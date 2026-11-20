@@ -1,0 +1,153 @@
+{% macro nav_ogesi(href, anahtar, simge, ad, aciklama) -%}
+<a href="{{ href }}" class="nav-ogesi{% if etkin == anahtar %} etkin{% endif %}"
+   {% if etkin == anahtar %}aria-current="page"{% endif %}>
+  <span class="nav-simge" aria-hidden="true">{{ simge }}</span>
+  <span class="nav-metin"><strong>{{ ad }}</strong><small>{{ aciklama }}</small></span>
+</a>
+{%- endmacro %}
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="application-name" content="biyo-cozucu">
+<meta name="theme-color" content="#0f7054">
+<title>{% block baslik %}Soru Çözücü · biyo-cozucu{% endblock %}</title>
+<link rel="stylesheet" href="/statik/stil.css">
+{% block sayfa_stilleri %}{% endblock %}
+{# Gömülü SVG: ayrı dosya isteği ve her sayfada bir 404 gürültüsü olmasın. #}
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>%F0%9F%A7%AC</text></svg>">
+<script>
+  /* Temayı ilk boyamadan önce uygula — aksi halde koyu temada beyaz bir kare çakar. */
+  try {
+    var t = localStorage.getItem("biyo-tema");
+    if (t && t !== "sistem") document.documentElement.dataset.tema = t;
+  } catch (e) {}
+</script>
+</head>
+<body>
+<a class="gizli-erisim" href="#icerik">İçeriğe atla</a>
+
+<div class="uygulama-kabugu">
+  <header class="ust-cubuk">
+    <a class="marka" href="/merkez" aria-label="Biyoloji Stüdyosu merkezi">
+      <span class="marka-simge" aria-hidden="true">
+        <svg viewBox="0 0 32 32" role="img">
+          <path d="M10 5c9 4 3 18 12 22M22 5c-9 4-3 18-12 22M10 10h12M9 16h14M10 22h12"/>
+        </svg>
+      </span>
+      <span class="marka-metin"><strong>Biyoloji Stüdyosu</strong><small>Yerel biyoloji çalışma alanı</small></span>
+    </a>
+
+    <div class="ust-eylemler">
+      <span class="motor-durumu" title="Etkin çözüm motoru">
+        <span class="durum-noktasi{% if durum.motor_hatasi %} hatali{% endif %}" aria-hidden="true"></span>
+        <span>Yerel · {{ durum.motor_turu }}</span>
+      </span>
+      <button type="button" class="ikon-dugme" data-tema-anahtari
+              title="Temayı değiştir" aria-label="Temayı değiştir">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.4-6.4L17 7M7 17l-1.4 1.4m12.8 0L17 17M7 7 5.6 5.6M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/></svg>
+        <span data-tema-yazi>Sistem</span>
+      </button>
+      <button type="button" class="ikon-dugme yalniz-simge" data-yardim-ac
+              title="Klavye kısayolları" aria-label="Klavye kısayolları">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 9a2.7 2.7 0 1 1 4.2 2.2c-1.3.8-1.7 1.3-1.7 2.3M12 17.4v.1M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+      </button>
+
+      <details class="mobil-gezinme">
+        <summary aria-label="Gezinme menüsünü aç">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          <span>Menü</span>
+        </summary>
+        <nav class="mobil-nav" aria-label="Mobil gezinme">
+          {{ nav_ogesi('/merkez', 'merkez', '🏠', 'Merkez', 'Tüm araçlar ve servis durumu') }}
+          {{ nav_ogesi('/kes-ve-coz', 'kes-ve-coz', 'K', 'Kes ve çöz', 'Kitaptan çözüme tek akış') }}
+          {{ nav_ogesi('/coz', 'coz', 'Ç', 'Soru çöz', 'Yeni çözüm başlat') }}
+          {{ nav_ogesi('/cozumler', 'cozumler', 'S', 'Sonuçlar', 'Geçmiş çözümler') }}
+          {{ nav_ogesi('/ornekler', 'ornekler', 'Ö', 'Referanslar', 'Örnek kütüphanesi') }}
+          {{ nav_ogesi('/ornek/toplu', 'toplu', '+', 'Toplu ekle', 'Çoklu örnek girişi') }}
+          {{ nav_ogesi('/alim', 'alim', 'A', 'Kaynaktan al', 'Belge ve arşiv işle') }}
+          {{ nav_ogesi('/youtube', 'youtube', 'Y', "YouTube'dan al", 'Video çözümünden soru çıkar') }}
+          {{ nav_ogesi('/kuyruk', 'kuyruk', 'O', 'Onay kuyruğu', 'Çıkarılanları gözden geçir') }}
+          {{ nav_ogesi('/egitim', 'egitim', 'E', 'Eğitim', 'Veri seti hazırla') }}
+          {{ nav_ogesi('/degerlendirme', 'degerlendirme', 'D', 'Değerlendir', 'Kaliteyi ölç') }}
+          {{ nav_ogesi('/pano', 'pano', 'P', 'Pano', 'Genel görünüm') }}
+        </nav>
+      </details>
+    </div>
+  </header>
+
+  <div class="uygulama-govde">
+    <aside class="yan-panel">
+      <nav class="ana-nav" aria-label="Ana gezinme">
+        <div class="nav-grubu">
+          <div class="nav-grup-basligi">Çalışma</div>
+          {{ nav_ogesi('/merkez', 'merkez', '🏠', 'Merkez', 'Tüm araçlar ve servis durumu') }}
+          {{ nav_ogesi('/kes-ve-coz', 'kes-ve-coz', 'K', 'Kes ve çöz', 'Kitaptan çözüme tek akış') }}
+          {{ nav_ogesi('/coz', 'coz', 'Ç', 'Soru çöz', 'Yeni çözüm başlat') }}
+          {{ nav_ogesi('/cozumler', 'cozumler', 'S', 'Sonuçlar', 'Geçmiş çözümler') }}
+        </div>
+        <div class="nav-grubu">
+          <div class="nav-grup-basligi">Bilgi tabanı</div>
+          {{ nav_ogesi('/ornekler', 'ornekler', 'Ö', 'Referanslar', 'Örnek kütüphanesi') }}
+          {{ nav_ogesi('/ornek/toplu', 'toplu', '+', 'Toplu ekle', 'Çoklu örnek girişi') }}
+          {{ nav_ogesi('/alim', 'alim', 'A', 'Kaynaktan al', 'Belge ve arşiv işle') }}
+          {{ nav_ogesi('/youtube', 'youtube', 'Y', "YouTube'dan al", 'Video çözümünden soru çıkar') }}
+          {{ nav_ogesi('/kuyruk', 'kuyruk', 'O', 'Onay kuyruğu', 'Çıkarılanları gözden geçir') }}
+        </div>
+        <div class="nav-grubu">
+          <div class="nav-grup-basligi">İyileştirme</div>
+          {{ nav_ogesi('/egitim', 'egitim', 'E', 'Eğitim', 'Veri seti hazırla') }}
+          {{ nav_ogesi('/degerlendirme', 'degerlendirme', 'D', 'Değerlendir', 'Kaliteyi ölç') }}
+          {{ nav_ogesi('/pano', 'pano', 'P', 'Pano', 'Genel görünüm') }}
+        </div>
+      </nav>
+
+      <div class="sistem-karti" aria-label="Sistem özeti">
+        <div class="sistem-karti-baslik"><span>Sistem</span><span class="durum-noktasi" aria-hidden="true"></span></div>
+        <dl>
+          <div><dt>Referans</dt><dd>{{ durum.ornek }}</dd></div>
+          <div><dt>İndeks</dt><dd>{% if durum.anlamsal %}Anlamsal{% else %}Sözcüksel{% endif %}</dd></div>
+          <div><dt>Motor</dt><dd>{{ durum.motor_turu }}</dd></div>
+        </dl>
+      </div>
+    </aside>
+
+    <main id="icerik" tabindex="-1">
+      {% if durum.indeks_bayat %}
+        <div class="uyari-kutu" role="status">
+          İndeks depodaki örnek sayısıyla uyuşmuyor
+          ({{ durum.indeks }} / {{ durum.ornek }}).
+          <form method="post" action="/indeks/yenile" class="satir-ici-form">
+            {# Kullanıcı hangi sayfadan bastıysa oraya dönmeli; sunucu bu değeri
+               `guvenli_geri` ile doğruluyor (yalnız site içi göreli yol). #}
+            <input type="hidden" name="geri" value="{{ request.url.path }}">
+            <button class="kucuk ikincil" type="submit">İndeksi yeniden kur</button>
+          </form>
+        </div>
+      {% endif %}
+      {% if durum.motor_hatasi %}
+        <div class="uyari-kutu" role="alert">Model yüklenemedi: {{ durum.motor_hatasi }}</div>
+      {% endif %}
+      {% block icerik %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<dialog id="kisayol-yardim">
+  <div class="dialog-baslik">
+    <div><span class="ust-etiket">Hızlı kullanım</span><h2>Klavye kısayolları</h2></div>
+    <button class="ikon-dugme yalniz-simge" type="button" data-kapat aria-label="Kapat">×</button>
+  </div>
+  <div class="kisayol-listesi">
+    <kbd>⌘/Ctrl + Enter</kbd><span>Soruyu çöz</span>
+    <kbd>/</kbd><span>Arama kutusuna git</span>
+    <kbd>?</kbd><span>Bu yardımı aç/kapat</span>
+    <kbd>Esc</kbd><span>Kapat / akışı durdur</span>
+  </div>
+</dialog>
+
+<script src="/statik/app.js" defer></script>
+{% block sayfa_betikleri %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,108 @@
+{% extends "temel.html" %}
+{% block baslik %}{{ ad }} · Onay kuyruğu{% endblock %}
+{% block icerik %}
+<h1>Kuyruk: {{ ad }}</h1>
+<p><a href="/kuyruk">← Kuyruk listesi</a></p>
+
+{% if bozuk %}
+  <div class="uyari-kutu">
+    {{ bozuk }} satır okunamadı; dosyada olduğu gibi korunuyor.
+  </div>
+{% endif %}
+
+{# Toplu form tablonun DIŞINDA duruyor; tablodaki onay kutuları ona `form`
+   özniteliğiyle bağlanıyor. İç içe form HTML'de geçersiz: ayrıştırıcı iç
+   formu yok sayıp dış formu erken kapatıyor ve toplu onay düğmeleri hiçbir
+   forma bağlı kalmadığı için sessizce çalışmıyordu. #}
+<form method="post" action="/kuyruk/{{ ad }}/toplu" id="toplu-form" class="kart">
+  <p class="soluk" style="margin-top:0">
+    Onaylayacağınız kayıtları işaretleyin. Güven ve dayanak puanları makinenin
+    denetimi; <strong>zaman bağlantısı</strong> ile videodaki anı açıp kendiniz
+    doğrulayabilirsiniz.
+  </p>
+  <p>
+    <button type="submit" name="eylem" value="onay" class="dugme">Seçilenleri onayla</button>
+    <button type="submit" name="eylem" value="ret" class="dugme ikincil">Seçilenleri reddet</button>
+  </p>
+</form>
+
+<div class="kart">
+  <table class="tablo">
+    <thead>
+      <tr><th></th><th>Durum</th><th>Güven</th><th>Dayanak</th><th>Soru</th><th>Kaynak</th></tr>
+    </thead>
+    <tbody>
+      {% for sira, kayit in kayitlar %}
+      <tr>
+        <td>
+          {# Değer kalıcı KİMLİK: sıra numarası, araya bir düzenleme girdiğinde
+             kayıp bir kayıt yüzünden kayar ve başka kaydı işaretlerdi. #}
+          <input type="checkbox" form="toplu-form" name="secilenler"
+                 value="{{ kayit.kimlik }}"
+                 {% if kayit.durum in ('alindi', 'ret') %}disabled{% endif %}>
+        </td>
+        <td>{{ kayit.durum }}</td>
+        <td>{{ '%.2f'|format(kayit.guven) }}</td>
+        <td>{{ '%.2f'|format(kayit.dayanak) }}</td>
+        <td>
+          <details>
+            <summary>{{ kayit.soru|kisa(90) }}</summary>
+            <form method="post" action="/kuyruk/{{ ad }}/satir/{{ kayit.kimlik }}">
+              <label for="soru-{{ sira }}">Soru</label>
+              <textarea id="soru-{{ sira }}" name="soru" rows="3" required>{{ kayit.soru }}</textarea>
+              <label for="cozum-{{ sira }}">Çözüm</label>
+              <textarea id="cozum-{{ sira }}" name="cozum" rows="5">{{ kayit.cozum }}</textarea>
+              <div class="satir">
+                <div>
+                  <label for="cevap-{{ sira }}">Cevap</label>
+                  <input type="text" id="cevap-{{ sira }}" name="cevap" value="{{ kayit.cevap }}">
+                </div>
+                <div>
+                  <label for="konu-{{ sira }}">Konu</label>
+                  <input type="text" id="konu-{{ sira }}" name="konu" value="{{ kayit.konu }}">
+                </div>
+              </div>
+              {% if kayit.secenekler %}
+                <p class="soluk">
+                  Şıklar:
+                  {% for harf, metin in kayit.secenekler.items() %}{{ harf }}) {{ metin }} {% endfor %}
+                </p>
+              {% endif %}
+              {% if kayit.uyarilar %}
+                <div class="uyari-kutu">{{ kayit.uyarilar|join(' · ') }}</div>
+              {% endif %}
+              <button type="submit" class="dugme ikincil">Bu kaydı kaydet</button>
+            </form>
+          </details>
+        </td>
+        <td class="soluk">
+          <a href="{{ kayit.guvenli_izleme_adresi() }}" rel="noopener noreferrer" target="_blank">
+            {{ kayit.konum or 'videoyu aç' }}
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<form method="post" action="/kuyruk/{{ ad }}/aktar" class="kart">
+  <p style="margin-top:0">
+    Onaylı kayıtları hafızaya yaz. Yalnız <strong>onay</strong> durumundakiler
+    aktarılır; hepsi bitince dosya arşive taşınır.
+  </p>
+  <button type="submit" class="dugme">Onaylıları hafızaya aktar</button>
+</form>
+
+<form method="post" action="/kuyruk/{{ ad }}/sil" class="kart">
+  <p style="margin-top:0" class="soluk">
+    Dosyayı silmek geri alınamaz: bu videonun tüm adayları ve elle yaptığınız
+    düzeltmeler gider.
+  </p>
+  <label class="onay">
+    <input type="checkbox" name="onaylandi" value="1" required>
+    Evet, {{ kayitlar|length }} kaydı kalıcı olarak silmek istiyorum
+  </label>
+  <button type="submit" class="dugme ikincil">Bu kuyruk dosyasını sil</button>
+</form>
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends "temel.html" %}
+{% block baslik %}Soru çöz · Soru Çözücü{% endblock %}
+{% block icerik %}
+<section class="coz-hero">
+  <div>
+    <span class="ust-etiket">Çalışma alanı</span>
+    <h1>Soru çöz</h1>
+    <p>Soruyu yaz, ekran görüntüsünü yapıştır veya birden fazla PDF yükle; çözümü adım adım incele.</p>
+  </div>
+  <div class="yerel-guvence">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2m-11 0h12v10H6V10Zm6 4v2"/></svg>
+    <span><strong>Cihazında çalışır</strong><small>Sorular yerel olarak işlenir</small></span>
+  </div>
+</section>
+
+{% if hata %}<div class="hata-kutu" role="alert">{{ hata }}</div>{% endif %}
+
+<div class="coz-calisma">
+  <section class="coz-form-sarmal" aria-labelledby="soru-girisi-baslik">
+    {# data-akis-formu: JS varsa akışa çevrilir, yoksa klasik POST /coz çalışır. #}
+    <form method="post" action="/coz" class="kart coz-formu" data-akis-formu
+          enctype="multipart/form-data" novalidate>
+      <div class="bolum-basligi">
+        <span class="adim-numarasi" aria-hidden="true">1</span>
+        <div>
+          <h2 id="soru-girisi-baslik">Soruyu ekle</h2>
+          <p>Dosya yükleyebilir veya metni doğrudan yazabilirsin.</p>
+        </div>
+      </div>
+
+      <div class="gorsel-durum {% if durum.gorsel_hazir %}hazir{% else %}sinirli{% endif %}">
+        <span class="durum-noktasi{% if not durum.gorsel_hazir %} uyari{% endif %}" aria-hidden="true"></span>
+        {% if durum.gorsel_hazir %}
+          <span><strong>Görsel okuma etkin</strong> · Resim ve taranmış PDF soruları okunabilir.</span>
+        {% else %}
+          <span><strong>Görsel okuma sınırlı</strong> · Metin PDF'leri okunur; fotoğraf ve taranmış PDF için görsel motor gerekir.</span>
+        {% endif %}
+      </div>
+
+      <div class="dosya-birakma" id="dosya-birakma">
+        <input type="file" id="soru-dosyalari" name="dosyalar" multiple
+               accept=".png,.jpg,.jpeg,.webp,.gif,.bmp,.tif,.tiff,.pdf,.txt,.text,.md,image/png,image/jpeg,image/webp,application/pdf,text/plain,text/markdown"
+               class="dosya-secici" aria-label="Soru dosyalarını seç"
+               data-azami-dosya="12" data-azami-dosya-mb="25" data-azami-toplam-mb="80">
+        <span class="dosya-simge" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5"/></svg>
+        </span>
+        <strong>Dosyaları buraya bırak veya seç</strong>
+        <span>Resim, ekran görüntüsü, PDF ya da metin dosyası</span>
+        <span class="dosya-turleri">PNG · JPG · WEBP · PDF · TXT · MD</span>
+      </div>
+      {# Eski tek-görsel POST istemcileri için geriye dönük alan. #}
+      <input type="file" id="gorsel" name="gorsel" accept="image/*"
+             class="gizli-dosya" aria-hidden="true" tabindex="-1">
+
+      <div id="dosya-hatasi" class="hata-kutu form-hata" role="alert" hidden></div>
+      <div id="dosya-ozeti" class="dosya-ozeti" hidden>
+        <strong id="dosya-sayisi">0 dosya seçildi</strong>
+        <button type="button" id="tum-dosyalari-kaldir" class="metin-dugmesi">Tümünü kaldır</button>
+      </div>
+      <div id="dosya-listesi" class="dosya-listesi" hidden
+           aria-live="polite" aria-label="Seçilen soru dosyaları"></div>
+      <p class="yukleme-siniri">En fazla 12 dosya · dosya başına 25 MB · toplam 80 MB · PDF başına 30 sayfa</p>
+
+      <div class="veya"><span>veya metin olarak ekle</span></div>
+      <label for="soru">Soru <span class="ipucu">(dosya yüklediysen ek yönerge)</span></label>
+      <textarea id="soru" name="soru" autofocus rows="5"
+        placeholder="Soruyu ve varsa şıkları buraya yaz. Dosya yüklediysen özellikle dikkat edilmesini istediğin noktayı belirt.">{{ soru }}</textarea>
+
+      <div class="ornek-sorular" aria-label="Hazır soru örnekleri">
+        <span>Hızlı dene:</span>
+        <button type="button" class="ornek-cipi"
+                data-ornek-soru="Mitokondrinin hücredeki temel görevi nedir?">Hücre</button>
+        <button type="button" class="ornek-cipi"
+                data-ornek-soru="Aa × Aa çaprazlamasında aa genotipli yavru olasılığı kaçtır?"
+                data-ornek-secenekler="A) %0&#10;B) %25&#10;C) %50&#10;D) %75">Kalıtım</button>
+        <button type="button" class="ornek-cipi"
+                data-ornek-soru="Fotosentezin ışığa bağımlı tepkimeleri nerede gerçekleşir?">Fotosentez</button>
+      </div>
+
+      <details class="gelismis-ayarlar" {% if secenek_metni or secili_tur %}open{% endif %}>
+        <summary>
+          <span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10m4 0h2M4 17h2m4 0h10M14 5v4M6 15v4"/></svg>
+            Şıklar ve çözüm ayarları
+          </span>
+          <small>Otomatik ayarlar önerilir</small>
+        </summary>
+        <div class="gelismis-icerik">
+          <label for="secenekler">Şıklar <span class="ipucu">(satır başına bir tane)</span></label>
+          <textarea id="secenekler" name="secenekler" rows="4"
+            placeholder="A) Birinci şık&#10;B) İkinci şık">{{ secenek_metni }}</textarea>
+
+          <label for="cevap_turu">Soru türü</label>
+          <select id="cevap_turu" name="cevap_turu">
+            <option value="">Otomatik — sorudan anla</option>
+            {% for t in cevap_turleri %}
+              <option value="{{ t }}" {% if secili_tur == t %}selected{% endif %}>
+                {{ tur_adlari[t] }}
+              </option>
+            {% endfor %}
+          </select>
+
+          <div class="ayar-satiri">
+            <div>
+              <label for="ornek_sayisi">Referans sayısı</label>
+              <input type="number" id="ornek_sayisi" name="ornek_sayisi" value="3" min="0" max="8">
+              <small class="alan-aciklamasi">Hafızadan en yakın örnekler</small>
+            </div>
+            <div>
+              <label for="oz_kontrol">Öz-kontrol</label>
+              <select id="oz_kontrol" name="oz_kontrol">
+                <option value="">Kapalı · daha hızlı</option>
+                <option value="1">Açık · ikinci geçiş</option>
+              </select>
+              <small class="alan-aciklamasi">Daha yavaş, ek denetimli</small>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <div id="coz-form-hatasi" class="hata-kutu form-hata" role="alert" hidden></div>
+      <div class="coz-eylem">
+        <button type="submit" class="birincil-buyuk">
+          <span data-dugme-yazi>Çözümü başlat</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+        </button>
+        <span class="kisayol-ipucu"><kbd>⌘/Ctrl</kbd><span>+</span><kbd>Enter</kbd></span>
+      </div>
+      <div class="yerel-not">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.8 8 7 10 4.2-2 7-5.4 7-10V6l-7-3Z"/></svg>
+        Yüklediğin içerikler bu cihazdaki yerel çalışma alanında kalır.
+      </div>
+    </form>
+  </section>
+
+  <div class="sonuc-kolonu">
+    <div id="coz-durum-bildirimi" class="gizli-erisim" role="status" aria-live="polite"></div>
+
+    {# Akış paneli: JS akışı başlatınca görünür olur, bitince gizlenir. #}
+    <div class="kart akis-karti" id="akis-alani" hidden aria-busy="true">
+      <div class="akis-durum" role="status" aria-live="polite">
+        <span class="donuyor" aria-hidden="true"></span>
+        <span id="akis-durum-yazi">Hazırlanıyor</span>
+        <span class="sure" id="akis-sure"></span>
+        <button type="button" id="akis-iptal" class="ikincil kucuk">Durdur</button>
+      </div>
+      <div class="akis-panel" id="akis-metni" aria-label="Modelin canlı çıktısı"></div>
+      <p class="soluk akis-aciklama">
+        Yerel model soruları sırayla çözer. Durdurmak için <kbd>Esc</kbd> tuşunu da kullanabilirsin.
+      </p>
+    </div>
+
+    <div id="kuyruk-ozeti" class="kuyruk-ozeti" role="status" hidden></div>
+    <div id="dosya-cozumleri" class="dosya-cozumleri" role="region"
+         aria-label="Dosya çözüm kuyruğu" aria-live="polite"></div>
+
+    <div id="cozum-alani" role="region" aria-live="polite"
+         aria-label="Çözüm sonucu" tabindex="-1">
+      {% if cozum %}{% include "parcalar/cozum_karti.html" %}{% endif %}
+      {% for cozum in cozumler %}
+        <div class="toplu-cozum">
+          <h2>Soru {{ loop.index }}</h2>
+          {% include "parcalar/cozum_karti.html" %}
+        </div>
+      {% endfor %}
+
+      {% if not cozum and not cozumler %}
+        <div class="bos-sonuc">
+          <div class="bos-sonuc-gorseli" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><path d="M19 8h22l10 10v38H13V8h6Zm22 1v11h10M22 30h20M22 39h14M22 48h10"/></svg>
+            <span>✓</span>
+          </div>
+          <span class="ust-etiket">Sonuç alanı</span>
+          <h2>Çözüm burada görünecek</h2>
+          <p>Soruyu ekleyip çözümü başlattığında cevap, çözüm adımları ve kullanılan referanslar burada yer alır.</p>
+          <ol class="mini-adimlar">
+            <li><span>1</span>Soruyu ekle</li>
+            <li><span>2</span>Çözümü başlat</li>
+            <li><span>3</span>Sonucu incele</li>
+          </ol>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

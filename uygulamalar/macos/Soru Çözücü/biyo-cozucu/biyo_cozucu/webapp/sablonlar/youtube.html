@@ -1,0 +1,92 @@
+{% extends "temel.html" %}
+{% block baslik %}YouTube'dan al · biyo-cozucu{% endblock %}
+{% block icerik %}
+<h1>YouTube'dan soru çözümü al</h1>
+
+<form method="post" action="/youtube/is" class="kart">
+  <p class="soluk" style="margin-top:0">
+    Bir soru çözümü videosunun ya da oynatma listesinin adresini verin. Sistem
+    sesi indirip yazıya döker, çözülen soruları çıkarır ve
+    <strong>onay kuyruğuna</strong> koyar. Hafızaya yalnız onayladıklarınız girer.
+  </p>
+  <label for="url">Video veya oynatma listesi adresi</label>
+  <input type="url" id="url" name="url" required
+         placeholder="https://www.youtube.com/watch?v=…">
+
+  <div class="satir">
+    <div>
+      <label for="limit">En fazla video (0 = hepsi)</label>
+      <input type="number" id="limit" name="limit" value="0" min="0" max="200">
+    </div>
+    <div>
+      <label for="asgari_guven">Asgari güven</label>
+      <input type="number" id="asgari_guven" name="asgari_guven"
+             value="0.0" min="0" max="1" step="0.05">
+    </div>
+  </div>
+
+  <label class="onay">
+    <input type="checkbox" name="kural" value="1">
+    Modeli kullanma (yalnız kural tabanlı çıkarım — hızlı, daha az isabetli)
+  </label>
+  <label class="onay">
+    <input type="checkbox" name="yeniden" value="1">
+    Yazıya dökümü yeniden yap (önbelleği yok say)
+  </label>
+
+  <p class="soluk">
+    Uzun videolarda döküm dakikalar sürer; iş arka planda yürür, bu sayfayı
+    kapatabilirsiniz.
+  </p>
+  <button type="submit" class="dugme">İşi başlat</button>
+</form>
+
+{% if is_id %}
+<div class="kart" id="is-durumu" data-is-id="{{ is_id }}">
+  <h2 style="margin-top:0">İş durumu</h2>
+  <p id="is-mesaj" class="soluk">Yükleniyor…</p>
+  <div class="olcumler">
+    <div class="olcum"><div class="deger" id="is-biten">0</div><div class="ad">işlenen video</div></div>
+    <div class="olcum"><div class="deger" id="is-toplam">0</div><div class="ad">toplam video</div></div>
+    <div class="olcum"><div class="deger" id="is-aday">0</div><div class="ad">kuyruğa yazılan</div></div>
+    <div class="olcum"><div class="deger" id="is-hata">0</div><div class="ad">hatalı video</div></div>
+  </div>
+  <p>
+    <button type="button" class="dugme ikincil" id="is-durdur">Durdur</button>
+    <a class="dugme ikincil" href="/kuyruk">Onay kuyruğuna git →</a>
+  </p>
+</div>
+<script src="/statik/youtube.js" defer></script>
+{% endif %}
+
+{% if kuyruk_ozeti.dosya_sayisi %}
+<div class="kart">
+  <h2 style="margin-top:0">Onay kuyruğu</h2>
+  <p>
+    {{ kuyruk_ozeti.bekleyen }} bekleyen · {{ kuyruk_ozeti.onayli }} onaylı ·
+    {{ kuyruk_ozeti.dosya_sayisi }} dosya
+  </p>
+  <a class="dugme ikincil" href="/kuyruk">Kuyruğu gözden geçir →</a>
+</div>
+{% endif %}
+
+{% if isler %}
+<div class="kart">
+  <h2 style="margin-top:0">Son işler</h2>
+  <table class="tablo">
+    <thead><tr><th>Durum</th><th>Video</th><th>Aday</th><th>Adres</th><th>Zaman</th></tr></thead>
+    <tbody>
+      {% for is_kaydi in isler %}
+      <tr>
+        <td>{{ is_kaydi.durum }}</td>
+        <td>{{ is_kaydi.biten_video }}/{{ is_kaydi.toplam_video }}</td>
+        <td>{{ is_kaydi.aday_sayisi }}</td>
+        <td><a href="{{ is_kaydi.url }}" rel="noopener noreferrer" target="_blank">{{ is_kaydi.url|kisa(48) }}</a></td>
+        <td class="soluk">{{ is_kaydi.olusturma }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

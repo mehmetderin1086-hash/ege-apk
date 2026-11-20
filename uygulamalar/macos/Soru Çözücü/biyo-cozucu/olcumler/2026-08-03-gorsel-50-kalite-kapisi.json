@@ -1,0 +1,75 @@
+{
+  "etiket": "gorsel-50-kalite-kapisi",
+  "tarih": "2026-08-03",
+  "dilim": "dilim-gorsel-50-v2",
+  "dilim_imzasi": "6f60898eee1972d6",
+  "test_jsonl_sha256": "f3b33069167aa103f47723ccb9a4fef4e0217cdaef59fe260c1a4c644d3c4006",
+  "protokol": {
+    "gercek_soru": true,
+    "gorsel_dosyasi_zorunlu": true,
+    "cevap_anahtari_modele_verildi": false,
+    "sicaklik": 0.0,
+    "deneme": 1,
+    "ortak_hafiza": ["Campbell", "Guyton", "referans soru cozumleri"]
+  },
+  "hedef": {
+    "genel_dogruluk": 0.8,
+    "secici_dogruluk": 0.9
+  },
+  "kosular": [
+    {
+      "model": "mlx-community/Qwen3.5-4B-MLX-4bit",
+      "gorsel_modu": "zorla",
+      "dusunme": "disabled",
+      "toplam": 50,
+      "dogru": 39,
+      "dogruluk": 0.78,
+      "en_iyi_secici_dogruluk": 0.848,
+      "en_iyi_secici_kapsama": 0.66,
+      "tur_bazli": {
+        "grafik_yorumlama": 0.71,
+        "mekanizma_aciklama": 0.92,
+        "kalitim_hesabi": 0.75,
+        "siniflandirma": 1.0,
+        "deney_kurgusu": 1.0
+      }
+    },
+    {
+      "model": "mlx-community/Qwen3.5-4B-MLX-4bit",
+      "gorsel_modu": "auto",
+      "dusunme": "disabled",
+      "toplam": 50,
+      "dogru": 35,
+      "dogruluk": 0.7,
+      "secici_dogruluk": 0.95,
+      "secici_kapsama": 0.12,
+      "tur_bazli": {
+        "grafik_yorumlama": 0.58,
+        "mekanizma_aciklama": 0.83,
+        "kalitim_hesabi": 0.75,
+        "siniflandirma": 1.0,
+        "deney_kurgusu": 1.0
+      }
+    }
+  ],
+  "pilotlar": [
+    {
+      "model": "Qwen3.5-9B-4bit",
+      "dusunme": "adaptive",
+      "zor_uc_soru_dogru": 1,
+      "zor_uc_soru_toplam": 3
+    },
+    {
+      "model": "Qwen3.5-4B-MLX-4bit",
+      "dusunme": "adaptive",
+      "zor_uc_soru_dogru": 0,
+      "zor_uc_soru_toplam": 3
+    }
+  ],
+  "karar": {
+    "genel_kapi_gecti": false,
+    "kurulu_uygulama_degistirildi": false,
+    "varsayilan_vlm": "mlx-community/Qwen3.5-4B-MLX-4bit",
+    "gerekce": "En iyi tam kosu 39/50 ile genel yuzde 80 kapisinin bir soru altinda kaldi."
+  }
+}

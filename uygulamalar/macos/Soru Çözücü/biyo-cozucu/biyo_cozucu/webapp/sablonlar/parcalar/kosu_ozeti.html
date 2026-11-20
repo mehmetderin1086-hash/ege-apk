@@ -1,0 +1,38 @@
+<div class="kart kosu-ozeti">
+  <h3>Koşu #{{ kosu_id }}</h3>
+  <div class="olcumler">
+    <div class="olcum">
+      <div class="deger">{{ "%.0f%%"|format(ozet.dogruluk * 100) }}</div>
+      <div class="ad">doğruluk ({{ ozet.dogru }}/{{ ozet.toplam }})</div>
+    </div>
+    <div class="olcum">
+      <div class="deger">{{ "%.2f"|format(ozet.ortalama_ortusme) }}</div>
+      <div class="ad">adım örtüşmesi</div>
+    </div>
+    <div class="olcum">
+      <div class="deger">{{ "%.2f"|format(ozet.ortalama_guven) }}</div>
+      <div class="ad">ortalama güven</div>
+    </div>
+    <div class="olcum">
+      <div class="deger">{{ "%.0f%%"|format(ozet.inceleme_orani * 100) }}</div>
+      <div class="ad">incelemeye düşen</div>
+    </div>
+  </div>
+
+  {% if ozet.tur_bazli %}
+  <table>
+    <tr><th>Çözüm türü</th><th>Doğruluk</th><th>Örnek</th></tr>
+    {% for tur, veri in ozet.tur_bazli|dictsort(by='value', reverse=true) %}
+    <tr>
+      <td><code>{{ tur }}</code></td>
+      <td>{{ "%.0f%%"|format(veri.dogruluk * 100) }}</td>
+      <td>{{ veri.adet|int }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p class="soluk">
+    Zayıf çıkan tür, o türden daha çok referans örnek gerektiğini gösterir —
+    genel doğruluktan daha eyleme dönük bir sayıdır.
+  </p>
+  {% endif %}
+</div>

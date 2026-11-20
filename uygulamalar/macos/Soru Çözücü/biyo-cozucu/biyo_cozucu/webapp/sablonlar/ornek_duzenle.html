@@ -1,0 +1,66 @@
+{% extends "temel.html" %}
+{% block baslik %}{% if ornek %}Örnek #{{ ornek.id }}{% else %}Yeni örnek{% endif %} · biyo-cozucu{% endblock %}
+{% block icerik %}
+<h1>{% if ornek %}Örnek #{{ ornek.id }}{% else %}Yeni referans örnek{% endif %}</h1>
+
+<form method="post" action="{% if ornek %}/ornek/{{ ornek.id }}{% else %}/ornek/yeni{% endif %}" class="kart">
+  <label for="soru">Soru</label>
+  <textarea id="soru" name="soru" required rows="4">{{ ornek.soru if ornek else "" }}</textarea>
+
+  <label for="secenekler">Şıklar (satır başına "A) metin"; boş bırakılabilir)</label>
+  <textarea id="secenekler" name="secenekler" rows="4">{% if ornek %}{% for harf, metin in ornek.secenekler|dictsort %}{{ harf }}) {{ metin }}
+{% endfor %}{% endif %}</textarea>
+
+  <label for="cozum">Adım adım çözüm</label>
+  <textarea id="cozum" name="cozum" required rows="8"
+    placeholder="Her satır bir adım olsun.">{{ ornek.cozum if ornek else "" }}</textarea>
+
+  <label for="cevap">Nihai cevap</label>
+  <input type="text" id="cevap" name="cevap" value="{{ ornek.cevap if ornek else '' }}">
+
+  <div class="satir">
+    <div>
+      <label for="konu">Konu</label>
+      <input type="text" id="konu" name="konu" value="{{ ornek.konu if ornek else '' }}"
+             placeholder="boş bırakılırsa otomatik">
+    </div>
+    <div>
+      <label for="cevap_turu">Soru türü <span class="ipucu">(cevabın biçimi)</span></label>
+      <select id="cevap_turu" name="cevap_turu">
+        <option value="">otomatik — sorudan anla</option>
+        {% for t in cevap_turleri %}
+          <option value="{{ t }}" {% if ornek and ornek.cevap_turu == t %}selected{% endif %}>
+            {{ tur_adlari[t] }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="cozum_turu">Çözüm türü <span class="ipucu">(muhakeme yapısı)</span></label>
+      <select id="cozum_turu" name="cozum_turu">
+        <option value="">otomatik</option>
+        {% for t in turler %}
+          <option value="{{ t }}" {% if ornek and ornek.cozum_turu == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="kaynak">Kaynak</label>
+      <input type="text" id="kaynak" name="kaynak" value="{{ ornek.kaynak if ornek else '' }}">
+    </div>
+  </div>
+
+  <p style="margin-top:1rem"><button type="submit">Kaydet</button></p>
+</form>
+
+{% if ornek %}
+<form method="post" action="/ornek/{{ ornek.id }}/sil" class="kart"
+      data-onay="Bu örnek pasife alınacak ve bundan sonra referans olarak getirilmeyecek. Devam edilsin mi?">
+  <p class="soluk">
+    Silme, örneği pasife alır: geçmiş çözümlerin atıfları kırılmaz ama bundan
+    sonra referans olarak getirilmez.
+  </p>
+  <button type="submit" class="tehlike">Örneği pasife al</button>
+</form>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "temel.html" %}
+{% block baslik %}{{ baslik or "Hata" }} · biyo-cozucu{% endblock %}
+{% block icerik %}
+<h1>{{ baslik or "Bir sorun çıktı" }}</h1>
+<div class="kart">
+  <div class="hata-kutu">{{ mesaj }}</div>
+  {% if oneri %}<p>{{ oneri }}</p>{% endif %}
+  <p style="margin-bottom:0">
+    <a class="dugme ikincil" href="{{ geri or '/coz' }}">← Geri dön</a>
+  </p>
+</div>
+{% endblock %}

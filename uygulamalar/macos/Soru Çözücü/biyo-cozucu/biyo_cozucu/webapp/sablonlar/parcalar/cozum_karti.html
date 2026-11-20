@@ -1,0 +1,118 @@
+{# Çözüm kartı — hem /coz sayfasında hem SSE akışının "bitti" olayında
+   render edilir. Tek kaynak: iki yerde biçim ayrışması olmasın. #}
+<article class="kart cozum-karti">
+  <header class="cozum-karti-ust">
+    <div>
+      <span class="ust-etiket">Çözüm hazır</span>
+      <h2>Sonuç</h2>
+    </div>
+    <div class="guven-ozeti">
+      <span>güven</span>
+      <strong>{{ "%.0f"|format(cozum.guven * 100) }}%</strong>
+      <meter min="0" max="1" value="{{ cozum.guven }}"
+             low="0.5" high="0.75" optimum="1">{{ "%.2f"|format(cozum.guven) }}</meter>
+    </div>
+  </header>
+
+  <div class="cevap-kutusu">
+    <div>
+      <span class="etiket">Doğru cevap</span>
+      <div class="deger">{{ cozum.cevap or "—" }}</div>
+    </div>
+    {% if cozum.incele %}
+      <span class="inceleme-rozeti"><span aria-hidden="true">!</span> İnceleme önerilir</span>
+    {% else %}
+      <span class="dogrulandi-rozeti"><span aria-hidden="true">✓</span> İnceleme işareti yok</span>
+    {% endif %}
+  </div>
+
+  <section class="cozum-bolumu">
+    <h3>Çözüm yolu</h3>
+    {% if cozum.adimlar %}
+      <ol class="adimlar">
+        {% for adim in cozum.adimlar %}<li>{{ adim }}</li>{% endfor %}
+      </ol>
+    {% else %}
+      <p class="soluk">Bu yanıt için ayrı çözüm adımı üretilmedi.</p>
+    {% endif %}
+  </section>
+
+  <div class="cozum-etiketleri" aria-label="Çözüm özellikleri">
+    <span class="bilgi-rozeti">{{ cozum.uretim_yontemi }}</span>
+    {% if cozum.konu %}<span class="bilgi-rozeti">{{ cozum.konu }}</span>{% endif %}
+    <span class="bilgi-rozeti">{{ cozum.cozum_turu }}</span>
+    {% if cozum.model %}<span class="bilgi-rozeti">{{ cozum.model }}</span>{% endif %}
+    {% if cozum.gorsel_turu %}<span class="bilgi-rozeti">görsel: {{ cozum.gorsel_turu }}</span>{% endif %}
+    {% if cozum.dogrulama_durumu %}<span class="bilgi-rozeti">{{ cozum.dogrulama_durumu }}</span>{% endif %}
+  </div>
+
+  {% for uyari in cozum.uyarilar %}
+    <div class="uyari-kutu" role="status">{{ uyari }}</div>
+  {% endfor %}
+
+  {% if cozum.gorsel_kanit_ozeti %}
+    <details class="kanit-detayi">
+      <summary>
+        <span>Görselden okunan kanıt</span>
+        <small>{{ "%.0f"|format(cozum.algilama_guveni * 100) }}% algılama güveni</small>
+      </summary>
+      <p>{{ cozum.gorsel_kanit_ozeti }}</p>
+    </details>
+  {% endif %}
+
+  {% if cozum.kitap_kaynaklari %}
+    <details class="kanit-detayi">
+      <summary>
+        <span>Kullanılan ders kitabı kaynakları</span>
+        <small>{{ cozum.kitap_kaynaklari|length }} kaynak</small>
+      </summary>
+      <ul>
+        {% for kaynak in cozum.kitap_kaynaklari %}<li>{{ kaynak }}</li>{% endfor %}
+      </ul>
+    </details>
+  {% endif %}
+
+  {% if cozum.kanitlar %}
+    <details class="kanit-detayi">
+      <summary>
+        <span>Kullanılan referans örnekler</span>
+        <small>{{ cozum.kanitlar|length }} kaynak</small>
+      </summary>
+      <div class="tablo-sarmal">
+        <table>
+          <thead>
+            <tr><th>Etiket</th><th>Kaynak</th><th>Soru</th><th>Benzerlik</th></tr>
+          </thead>
+          <tbody>
+          {% for kanit in cozum.kanitlar %}
+            <tr>
+              <td>{{ kanit.etiket }}</td>
+              <td>
+                {% if kanit.ornek_id %}<a href="/ornek/{{ kanit.ornek_id }}">{{ kanit.kaynak_adi() }}</a>
+                {% else %}{{ kanit.kaynak_adi() }}{% endif %}
+              </td>
+              <td>{{ kanit.soru|kisa(90) }}</td>
+              <td>
+                {{ "%.2f"|format(kanit.skor) }}
+                {% if kanit.tur_uyumlu %}<span class="soluk">· yapı uyumlu</span>{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  {% else %}
+    <div class="referans-yok">
+      <span aria-hidden="true">i</span>
+      Hafızada benzer referans örnek bulunamadı; yanıtı ayrıca gözden geçir.
+    </div>
+  {% endif %}
+
+  {% if cozum.id %}
+    <div class="cozum-karti-alt">
+      <span>Bu sonuç doğru mu?</span>
+      <a class="dugme ikincil" href="/cozum/{{ cozum.id }}">Onayla veya düzelt <span aria-hidden="true">→</span></a>
+    </div>
+  {% endif %}
+</article>

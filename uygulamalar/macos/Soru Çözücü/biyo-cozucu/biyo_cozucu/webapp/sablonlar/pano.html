@@ -1,0 +1,116 @@
+{% extends "temel.html" %}
+{% block baslik %}Pano · biyo-cozucu{% endblock %}
+{% block icerik %}
+<h1>Pano</h1>
+
+<div class="olcumler">
+  <div class="olcum"><div class="deger">{{ durum.ornek }}</div><div class="ad">referans örnek</div></div>
+  <div class="olcum"><div class="deger">{{ olcumler.cozum }}</div><div class="ad">üretilen çözüm</div></div>
+  <div class="olcum"><div class="deger">{{ olcumler.incelenecek }}</div><div class="ad">incelemeye düşen</div></div>
+  <div class="olcum">
+    <div class="deger">
+      {% if olcumler.onay_orani is none %}—{% else %}{{ "%.0f%%"|format(olcumler.onay_orani * 100) }}{% endif %}
+    </div>
+    <div class="ad">düzeltmesiz onay</div>
+  </div>
+  <div class="olcum"><div class="deger">{{ "%.2f"|format(olcumler.ortalama_guven) }}</div><div class="ad">ortalama güven</div></div>
+  <div class="olcum"><div class="deger">{{ durum.onbellek_isabeti }}</div><div class="ad">önbellek isabeti</div></div>
+</div>
+
+<p class="soluk">
+  Düzeltmesiz onay oranı yalnız değerlendirdiğin çözümler üzerinden hesaplanır
+  ({{ olcumler.onaylanan }} onay / {{ olcumler.duzeltilen }} düzeltme); henüz
+  bakmadıkların paydaya girmez.
+</p>
+
+<h2>Hafıza kapsamı</h2>
+<div class="kart">
+  <div class="olcumler">
+    <div class="olcum">
+      <div class="deger">{{ kapsam.dolu_hucre }}/{{ kapsam.hucre_sayisi }}</div>
+      <div class="ad">kapsanan konu × tür hücresi</div>
+    </div>
+    <div class="olcum">
+      <div class="deger">
+        {% if kapsam.esige_kalan(esikler.rag) %}{{ kapsam.esige_kalan(esikler.rag) }}{% else %}✓{% endif %}
+      </div>
+      <div class="ad">RAG eşiğine kalan ({{ esikler.rag }})</div>
+    </div>
+    <div class="olcum">
+      <div class="deger">
+        {% if kapsam.esige_kalan(esikler.lora) %}{{ kapsam.esige_kalan(esikler.lora) }}{% else %}✓{% endif %}
+      </div>
+      <div class="ad">LoRA eşiğine kalan ({{ esikler.lora }})</div>
+    </div>
+  </div>
+
+  {% if kapsam.bos_turler %}
+  <p><strong>Hiç örneği olmayan çözüm türleri:</strong>
+    {% for tur in kapsam.bos_turler %}<code>{{ tur }}</code>{% if not loop.last %}, {% endif %}{% endfor %}
+  </p>
+  <p class="soluk">
+    Erişim katmanı örnekleri çözüm türü uyumuna göre kademeliyor. Bir tür hiç
+    örneği yoksa o tür soru geldiğinde her zaman yanlış yapıdaki kanıt getirilir —
+    en öncelikli eksik budur.
+  </p>
+  {% else %}
+  <p class="soluk">Her çözüm türünün en az bir örneği var.</p>
+  {% endif %}
+
+  {% if kapsam.oneriler %}
+  <table>
+    <tr><th>Eksik konu</th><th>Çözüm türü</th></tr>
+    {% for bosluk in kapsam.oneriler %}
+    <tr><td>{{ bosluk.konu }}</td><td><code>{{ bosluk.cozum_turu }}</code></td></tr>
+    {% endfor %}
+  </table>
+  <p class="soluk">
+    Bu çiftlerden birer örnek eklemek, hafızayı rastgele büyütmekten belirgin
+    biçimde daha çok işe yarar.
+  </p>
+  {% endif %}
+</div>
+
+<h2>Hafızanın konu dağılımı</h2>
+<div class="kart">
+  {% if durum.konu_dagilimi %}
+  <table>
+    <tr><th>Konu</th><th>Örnek</th></tr>
+    {% for konu, adet in durum.konu_dagilimi.items() %}
+    <tr><td>{{ konu }}</td><td>{{ adet }}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="soluk">Henüz örnek yok.</p>{% endif %}
+</div>
+
+<h2>Çözüm türü dağılımı</h2>
+<div class="kart">
+  {% if durum.cozum_turu_dagilimi %}
+  <table>
+    <tr><th>Çözüm türü</th><th>Örnek</th></tr>
+    {% for tur, adet in durum.cozum_turu_dagilimi.items() %}
+    <tr><td>{{ tur }}</td><td>{{ adet }}</td></tr>
+    {% endfor %}
+  </table>
+  <p class="soluk">
+    Az örneği olan türler, o tür soru geldiğinde zayıf kalır — dengeyi buradan izle.
+  </p>
+  {% else %}<p class="soluk">Henüz örnek yok.</p>{% endif %}
+</div>
+
+<h2>Üretim yöntemi</h2>
+<div class="kart">
+  {% if yontem_dagilimi %}
+  <table>
+    <tr><th>Yöntem</th><th>Çözüm</th></tr>
+    {% for yontem, adet in yontem_dagilimi.items() %}
+    <tr><td>{{ yontem }}</td><td>{{ adet }}</td></tr>
+    {% endfor %}
+  </table>
+  <p class="soluk">
+    <code>yerel_rag</code> ve <code>ragsiz</code> çözümler model çalışmadan
+    üretilmiştir; bunların oranı yüksekse motor kurulumunu kontrol et.
+  </p>
+  {% else %}<p class="soluk">Henüz çözüm yok.</p>{% endif %}
+</div>
+{% endblock %}

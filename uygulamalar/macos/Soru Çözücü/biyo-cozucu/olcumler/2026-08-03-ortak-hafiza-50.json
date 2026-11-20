@@ -1,0 +1,684 @@
+{
+  "etiket": "ortak-hafiza-50",
+  "zaman": "2026-08-03T14:11:32+00:00",
+  "model": "karma(/Users/mehmetderin/.biyo-cozucu/modeller/biyo-mlx-v1+mlx-community/Qwen3-VL-4B-Instruct-4bit)",
+  "dilim": "dilim-v1",
+  "dilim_imzasi": "af29ce22ced0c541",
+  "kod_surumu": "338a951",
+  "ayarlar": {
+    "motor": "karma",
+    "deneme": 1,
+    "sicaklik": 0.0,
+    "inceleme_esigi": 0.7,
+    "oz_kontrol": false,
+    "ornek_sayisi": 3,
+    "limit": 50
+  },
+  "ozet": {
+    "toplam": 50,
+    "dogru": 17,
+    "dogruluk": 0.34,
+    "ortalama_ortusme": 0.6999,
+    "ortalama_guven": 0.7361,
+    "inceleme_orani": 0.28
+  },
+  "tur_bazli": {
+    "kalitim_hesabi": {
+      "adet": 9.0,
+      "dogru": 2.0,
+      "dogruluk": 0.2222222222222222
+    },
+    "mekanizma_aciklama": {
+      "adet": 32.0,
+      "dogru": 11.0,
+      "dogruluk": 0.34375
+    },
+    "grafik_yorumlama": {
+      "adet": 7.0,
+      "dogru": 3.0,
+      "dogruluk": 0.42857142857142855
+    },
+    "siniflandirma": {
+      "adet": 1.0,
+      "dogru": 1.0,
+      "dogruluk": 1.0
+    },
+    "ezber_bilgi": {
+      "adet": 1.0,
+      "dogru": 0.0,
+      "dogruluk": 0.0
+    }
+  },
+  "risk_kapsama": [
+    [
+      0.0,
+      1.0,
+      0.34
+    ],
+    [
+      0.05,
+      0.98,
+      0.3469
+    ],
+    [
+      0.1,
+      0.98,
+      0.3469
+    ],
+    [
+      0.15,
+      0.98,
+      0.3469
+    ],
+    [
+      0.2,
+      0.98,
+      0.3469
+    ],
+    [
+      0.25,
+      0.98,
+      0.3469
+    ],
+    [
+      0.3,
+      0.94,
+      0.3404
+    ],
+    [
+      0.35,
+      0.94,
+      0.3404
+    ],
+    [
+      0.4,
+      0.74,
+      0.3784
+    ],
+    [
+      0.45,
+      0.74,
+      0.3784
+    ],
+    [
+      0.5,
+      0.72,
+      0.3889
+    ],
+    [
+      0.55,
+      0.72,
+      0.3889
+    ],
+    [
+      0.6,
+      0.72,
+      0.3889
+    ],
+    [
+      0.65,
+      0.72,
+      0.3889
+    ],
+    [
+      0.7,
+      0.72,
+      0.3889
+    ],
+    [
+      0.75,
+      0.72,
+      0.3889
+    ],
+    [
+      0.8,
+      0.72,
+      0.3889
+    ],
+    [
+      0.85,
+      0.72,
+      0.3889
+    ],
+    [
+      0.9,
+      0.02,
+      1.0
+    ],
+    [
+      0.95,
+      0.0,
+      0.0
+    ],
+    [
+      1.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "hedef_esigi": [
+    0.9,
+    0.02,
+    1.0
+  ],
+  "sorular": [
+    {
+      "imza": "024fe915b941dc74c94b5d90e506df40",
+      "soru": "Aşağıdaki soyağacında kırmızı – yeşil renk körü bireyler koyu renkli olarak veri",
+      "tur": "kalitim_hesabi",
+      "beklenen": "C",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.398,
+      "yontem": "model"
+    },
+    {
+      "imza": "032ec976e5264adcca54670424d30467",
+      "soru": "Aşağıdakilerden hangisi bir insanda uç beyin tarafından kontrol edilemez?",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "A",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "100318bac6358237659e5db2359a78d8",
+      "soru": "Aşağıda bir hayvan hücresinde madde alış verişini sağlayan X ve Y olayları şemat",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "D",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "12b3c37535a897fd74c71d40a4cc700b",
+      "soru": "Aşağıdaki tabloda üç farklı sinir hücresinin gerçekleştirdiği görevler verilmişt",
+      "tur": "grafik_yorumlama",
+      "beklenen": "C",
+      "uretilen": "A",
+      "dogru": false,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "13dbce8a8d69b8a594688877e0cc1cbe",
+      "soru": "Aşağıda ölü bir farede bulunan azot atomunun yeşil bir bitkinin kullanabileceği ",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "E",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "17cc2fd6c0fed40e4a088c96ce174a3b",
+      "soru": "Aşağıda dört farklı ailedeki kız ve erkek çocukların renk körlüğü ile ilgili fen",
+      "tur": "kalitim_hesabi",
+      "beklenen": "C",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.398,
+      "yontem": "model"
+    },
+    {
+      "imza": "17ffa18f39a9f3d33b9e373f6639e6ab",
+      "soru": "Tarihte mantarlar kök ve gövde gibi yapısal formların olmamasına karşın yerden b",
+      "tur": "siniflandirma",
+      "beklenen": "D",
+      "uretilen": "D",
+      "dogru": true,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "18ad0fee6f6bce03e54d44d05a6257b0",
+      "soru": "Aşağıdaki soyağacında bir aileye ait iki çocuğun kan grubu fenotipleri verilmişt",
+      "tur": "kalitim_hesabi",
+      "beklenen": "A",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.398,
+      "yontem": "model"
+    },
+    {
+      "imza": "1989c47e7b8add522139fd41c84e1779",
+      "soru": "Renk körü kız çocukları olan bir aile ile ilgili, I. Baba renk körüdür. II. Anne",
+      "tur": "kalitim_hesabi",
+      "beklenen": "A",
+      "uretilen": "A",
+      "dogru": true,
+      "guven": 0.398,
+      "yontem": "model"
+    },
+    {
+      "imza": "19a40f29f88ac892f46d2201417ed709",
+      "soru": "100 molekül glikoz kullanılarak üretilen maltoz ve nişasta moleküllerinin, I. kü",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "D",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "1ce995d23f4eb777b6363be7cd77f732",
+      "soru": "Gametlerindeki kromozom sayısı X olan sağlıklı diploit bir canlı türü ile ilgili",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "B",
+      "uretilen": "B",
+      "dogru": true,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "1f68f1db4a0ff48222b87daf6cce26d9",
+      "soru": "Şartlı refleksler ile ilgili olarak yapılan aşağıdaki açıklamalardan hangisi yan",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "E",
+      "uretilen": "A",
+      "dogru": false,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "255d93520b9ed6165ad63a85882e2af2",
+      "soru": "Mayoz bölünme geçirmekte olan bir hücrenin metafaz I evresinde 44 kromatit bulun",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "D",
+      "uretilen": "E",
+      "dogru": false,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "25ddda840a8320ddc970d7c41326a0e5",
+      "soru": "Glikoz, bazı amino asitler ve bazı vitaminleri içeren bir petri kabında üreyebil",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "E",
+      "uretilen": "E",
+      "dogru": true,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "26c8e6f809a7f3958c6486b549d7a11f",
+      "soru": "Hipotalamusu zarar gören bir insanda, I. karbonhidrat ve yağ metabolizmasının dü",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "E",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "28854cb9f428b92e336ee222092a486f",
+      "soru": "Aşağıdaki olaylardan hangisi hücre döngüsünün mitoz evresi sırasında gerçekleşme",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "C",
+      "uretilen": "C",
+      "dogru": true,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "28da054294212b8df34a2a31cd882a89",
+      "soru": "Bitkisel parazitlere ait olan, I. organik besin ihtiyacını konak bitkinin floemi",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "C",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "2f48e1161ea88acea082ef80947aa2c5",
+      "soru": "Aşağıdaki şemada azotun karasal döngüsü verilmiştir. N2 NH3 NH4 + NO2 – NO3 – Öz",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "B",
+      "uretilen": "B",
+      "dogru": true,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "2ffba8ccc24b4f45342fecb217c96b01",
+      "soru": "Pankreastan insülin hormonu yetersiz salgılanan bir insanda, Günlük içilen su mi",
+      "tur": "grafik_yorumlama",
+      "beklenen": "C",
+      "uretilen": "D",
+      "dogru": false,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "3249fd32b6920472e89ad77237a80c34",
+      "soru": "Birçok sinir hücresinden oluşan bir sinir kordonuna eşik değerin üzerindeki uyar",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "E",
+      "uretilen": "E",
+      "dogru": true,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "324d3e28dbdbc555ba9012e0e8bd11a7",
+      "soru": "Aşağıdaki şemada bir insanın karaciğer hücrelerinde gerçekleşen organik monomerl",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "A",
+      "uretilen": "E",
+      "dogru": false,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "35d9e1071f07c06b60a60b11c2fc87ac",
+      "soru": "Aşağıda bir ara ve motor nöron arasındaki bağıntı şematize edilmiştir. X Ca++ Y ",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "D",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "3b32a9563d3c94ed7dac8af1fe91ba1c",
+      "soru": "Su içmek için bardağı eline alan Tuna’nın suyun soğuk olduğunu anlamasıyla sonuç",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "C",
+      "uretilen": "C",
+      "dogru": true,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "3e006cdcceb2cd392d8e7a99d97fd19a",
+      "soru": "Aşağıda diploit iki hücrenin mayoz bölünmesi sırasında meydana gelen ayrılmama o",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "E",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "3ec62ccb120ed3daaa3a4f5b40ce9e51",
+      "soru": "Aşağıdaki grafikte aynı besin zincirini oluşturan canlı türlerinde bir tarım ila",
+      "tur": "grafik_yorumlama",
+      "beklenen": "C",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "3ec7c813ddd14b5058e4afc61c586b22",
+      "soru": "Multipl skleroz (MS), beyin ve omurilikte, mesajları taşıyan nöronların etrafınd",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "D",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "3eec7b5042a5b52e7593c46b11ae1d2b",
+      "soru": "Mor çiçekli (M) ve sarı tohumlu (S) bir bezelyenin kontrol çaprazlanması ile gen",
+      "tur": "kalitim_hesabi",
+      "beklenen": "B",
+      "uretilen": "B",
+      "dogru": true,
+      "guven": 0.398,
+      "yontem": "model"
+    },
+    {
+      "imza": "4763cbb2171360dfc3c2322393993511",
+      "soru": "Bazı bakterilerde halkasal DNA’dan farklı olarak “plazmit” olarak adlandırılan k",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "D",
+      "uretilen": "D",
+      "dogru": true,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "4dd772cf482025f3b32d2899a43ee894",
+      "soru": "Aşağıdaki soyağacında renk körü bireyler koyu renkli olarak verilmiştir. 1 2 3 S",
+      "tur": "kalitim_hesabi",
+      "beklenen": "C",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.398,
+      "yontem": "model"
+    },
+    {
+      "imza": "50dcc5abfc94f98fb8bdea8531e35cff",
+      "soru": "Kanındaki aldosteron miktarı artan bir bireyde, İdrardaki Na+ miktarı Zaman I. K",
+      "tur": "grafik_yorumlama",
+      "beklenen": "D",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "514c3f0b7bcdaa087d73d22fac3059b2",
+      "soru": "Embriyonik hücre döngüsünün interfaz evresinde hücreler büyümeden DNA replikasyo",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "A",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "51f84c900a07ab1f41f97accae76e103",
+      "soru": "Bol miktarda besin içeren ve ısı yalıtımı olmayan 25ºC’deki bir petri kabındaki ",
+      "tur": "grafik_yorumlama",
+      "beklenen": "B",
+      "uretilen": "B",
+      "dogru": true,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "52ca315a018cf5c405a48d107e133af4",
+      "soru": "Rh– kan grubuna sahip dişi bir birey, I. rr, II. RR, III. Rr genotipine sahip bi",
+      "tur": "kalitim_hesabi",
+      "beklenen": "A",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.398,
+      "yontem": "model"
+    },
+    {
+      "imza": "53ca9fd586935ec4707931b33b54d704",
+      "soru": "İnsanlara ait aşağıdaki özelliklerden hangisi cinsiyete bağlı kalıtım göstermez?",
+      "tur": "kalitim_hesabi",
+      "beklenen": "C",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "58d888548d0c06b3809d40cbdf42cf8d",
+      "soru": "Belirli bir alandaki, I. ekosistem, II. popülasyon, III. komünite ekolojik birim",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "D",
+      "uretilen": "A",
+      "dogru": false,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "5a47e17e797eb668fa5da55462552391",
+      "soru": "Bit Fare Buğday Ayrıştırıcılar Yukarıda verilen besin piramidiyle ilgili, I. Üre",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "C",
+      "uretilen": "A",
+      "dogru": false,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "5cb2e2fcb591689520d7d2113ce1b0b7",
+      "soru": "Bileşik enzimler ile ilgili aşağıdaki ifadelerden hangisi doğru değildir?",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "C",
+      "uretilen": "C",
+      "dogru": true,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "5e5e774ca99540f0a43f2b4c223cd29f",
+      "soru": "Sağlıklı bir insanda mitoz bölünme ile, I. kırılan bir kemiğin onarılması, II. s",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "D",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "5e6ebc902a7dd2922a7449af0739dcbd",
+      "soru": "Bir besin zincirinde enerji piramidinin yukarı doğru daralmasının nedeni nedir?",
+      "tur": "ezber_bilgi",
+      "beklenen": "Her basamakta enerjinin büyük kısmı ısı olarak kaybedildiği için üst basamaklara yaklaşık %10 enerji aktarılır",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.45,
+      "yontem": "model"
+    },
+    {
+      "imza": "60efbcc31d8244db30a4b6d4fc59dafc",
+      "soru": "Aynı komünitede yaşayan iki farklı popülasyona ait bireyler çiftleştiklerinde ol",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "B",
+      "uretilen": "B",
+      "dogru": true,
+      "guven": 0.9,
+      "yontem": "model"
+    },
+    {
+      "imza": "12b77a8b019b849b3bc6723494593be4",
+      "soru": "102. Aşağıdaki grafik; kıyı yengeci ve örümcek yengecin vücut sıvılarının tuz de",
+      "tur": "grafik_yorumlama",
+      "beklenen": "A",
+      "uretilen": "A",
+      "dogru": true,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "13be8294f0370331ad1dd33ceb0f88d3",
+      "soru": "21. Mantarlarla ilgili aşağıdaki ifadelerden hangisi yanlıştır?",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "E",
+      "uretilen": "A",
+      "dogru": false,
+      "guven": 0.35,
+      "yontem": "kurtarma"
+    },
+    {
+      "imza": "2bbfa626bcb74ac0bcae542ae3c81588",
+      "soru": "4. Trigliseritler ile ilgili, I. Bir molekül trigliserit oluşurken bir molekül s",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "E",
+      "uretilen": "B",
+      "dogru": false,
+      "guven": 0.25,
+      "yontem": "model"
+    },
+    {
+      "imza": "2de62fef299a2fd78697fc34d037afad",
+      "soru": "14. Kofulların çeşitli hücrelerdeki işlevleriyle ilgili, I. Besin kofulları, içe",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "D",
+      "uretilen": "E",
+      "dogru": false,
+      "guven": 0.35,
+      "yontem": "kurtarma"
+    },
+    {
+      "imza": "34f0b762cd9f4d259405c2425258e1f7",
+      "soru": "34. Renk körlüğü X kromozomu üzerindeki çekinik bir alel tarafından kalıtılan bi",
+      "tur": "kalitim_hesabi",
+      "beklenen": "D",
+      "uretilen": "C",
+      "dogru": false,
+      "guven": 0.398,
+      "yontem": "model"
+    },
+    {
+      "imza": "3decfa9586c3ee7c3867ed35ccd534dc",
+      "soru": "26. İnsan dolaşım sisteminde yer alan damarlarla ilgili aşağıdakilerden hangisi ",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "E",
+      "uretilen": "C",
+      "dogru": false,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "48d916d558411c069321f34136e78523",
+      "soru": "21. İnsandaki lenf sistemiyle ilgili olarak aşağıdaki ifadelerden hangisi yanlış",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "C",
+      "uretilen": "C",
+      "dogru": true,
+      "guven": 0.87,
+      "yontem": "model"
+    },
+    {
+      "imza": "4d26294e421e289e2f495541e1083e66",
+      "soru": "51. Aşağıda lojistik büyüme gösteren bir popülasyona ait S tipi büyüme eğrisi ve",
+      "tur": "grafik_yorumlama",
+      "beklenen": "E",
+      "uretilen": "E",
+      "dogru": true,
+      "guven": 0.95,
+      "yontem": "model"
+    },
+    {
+      "imza": "580c541c19c88bf91ab1a68add02f7f4",
+      "soru": "41. Canlıların yedikleri besinlerle aldıkları bazı zehirli maddeler, vücutta par",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "E",
+      "uretilen": "...",
+      "dogru": false,
+      "guven": 0.0,
+      "yontem": "model"
+    },
+    {
+      "imza": "611fffb888381678e992d026f7305198",
+      "soru": "12. Avcısıyla karşılaşan bir memeli hayvanın korkup kaçma eyleminde aşağıdakiler",
+      "tur": "mekanizma_aciklama",
+      "beklenen": "D",
+      "uretilen": "D",
+      "dogru": true,
+      "guven": 0.25,
+      "yontem": "model"
+    }
+  ],
+  "yontem_bazli": {
+    "kurtarma": {
+      "adet": 2.0,
+      "dogru": 0.0,
+      "dogruluk": 0.0,
+      "ortalama_guven": 0.35,
+      "esik_ustu": 0.0,
+      "esik_ustu_dogruluk": 0.0
+    },
+    "model": {
+      "adet": 48.0,
+      "dogru": 17.0,
+      "dogruluk": 0.3542,
+      "ortalama_guven": 0.7522,
+      "esik_ustu": 36.0,
+      "esik_ustu_dogruluk": 0.3889
+    }
+  }
+}

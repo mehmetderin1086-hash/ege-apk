@@ -1,0 +1,166 @@
+{% extends "temel.html" %}
+{% block baslik %}Kaynaktan al · biyo-cozucu{% endblock %}
+{% block icerik %}
+<h1>Kaynaktan referans al</h1>
+
+{% if aktarma %}
+  <div class="kart">
+    <h2 style="margin-top:0">Aktarma tamamlandı</h2>
+    <div class="olcumler">
+      <div class="olcum"><div class="deger">{{ aktarma.eklenen }}</div><div class="ad">eklenen</div></div>
+      <div class="olcum"><div class="deger">{{ aktarma.guncellenen }}</div><div class="ad">güncellenen</div></div>
+      <div class="olcum"><div class="deger">{{ aktarma.atlanan }}</div><div class="ad">atlanan</div></div>
+    </div>
+    {% for hata in aktarma.hatalar %}
+      <div class="uyari-kutu">{{ hata }}</div>
+    {% endfor %}
+    <p style="margin-bottom:0">
+      <a class="dugme ikincil" href="/ornekler">Örnekleri gör →</a>
+      <a class="dugme ikincil" href="/alim">Başka dosya al</a>
+    </p>
+  </div>
+{% endif %}
+
+{% if not sonuc %}
+<form method="post" action="/alim" enctype="multipart/form-data" class="kart">
+  <p class="soluk" style="margin-top:0">
+    Kitap, çözüm föyü, ders videosu ya da ses kaydı yükleyin. Sistem soru ve
+    çözümleri ayırıp size <strong>önizleme</strong> gösterir; hafızaya yalnız
+    onayladıklarınız girer.
+  </p>
+  <label for="dosya">Dosya</label>
+  <input type="file" id="dosya" name="dosya" required
+         accept="{{ uzantilar|join(',') }}">
+  <p class="soluk">
+    Desteklenen: {{ uzantilar|join(' · ') }}
+  </p>
+
+  <div class="satir">
+    <div>
+      <label for="ocr">Taranmış sayfalarda OCR</label>
+      <select id="ocr" name="ocr">
+        <option value="oto">Otomatik — yalnız metin katmanı olmayan sayfalara</option>
+        <option value="kapali">Kapalı</option>
+        <option value="zorla">Zorla — tüm sayfalara (yavaş)</option>
+      </select>
+    </div>
+    <div>
+      <label for="ocr_motoru">OCR motoru</label>
+      <select id="ocr_motoru" name="ocr_motoru">
+        <option value="">Otomatik ({{ ocr_motorlari|join(', ') or "kurulu motor yok" }})</option>
+        {% for m in tum_ocr_motorlari %}
+          <option value="{{ m }}" {% if m not in ocr_motorlari %}disabled{% endif %}>
+            {{ m }}{% if m not in ocr_motorlari %} — kurulu değil{% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  {% if not ocr_motorlari %}
+    <div class="uyari-kutu">
+      Hiçbir OCR motoru kurulu değil; taranmış PDF'lerden metin çıkmaz.
+      Kurulum: <code>uv sync --extra ocr</code>
+    </div>
+  {% endif %}
+
+  <p style="margin-bottom:0">
+    <button type="submit">Oku ve önizle</button>
+    <span class="soluk">Ses/video dökümü ve OCR dosya uzunluğuna göre dakikalar sürebilir.</span>
+  </p>
+</form>
+
+<div class="kart">
+  <h2 style="margin-top:0">Nasıl çalışır</h2>
+  <ul class="soluk" style="margin-bottom:0">
+    <li><strong>PDF / Word:</strong> sayfa sayfa okunur, atıfta "s. 42" olarak görünür.</li>
+    <li><strong>Ses / video:</strong> ffmpeg ile sese çevrilip yerel Whisper ile
+        Türkçe yazıya dökülür; atıfta zaman damgası ("01:05") görünür.</li>
+    <li><strong>Soru ayırma:</strong> numaralı sorular, A) B) C) şıkları,
+        "ÇÖZÜM" ve "CEVAP: B" işaretleri yakalanır. Her adaya bir güven
+        değeri verilir; düşük güvenliler varsayılan olarak seçili gelmez.</li>
+    <li><strong>Taranmış PDF / fotoğraf:</strong> metin katmanı yoksa OCR
+        devreye girer. Türkçe için kalite sırası: <code>surya</code> (en iyi,
+        okuma sırasını da çözer) → <code>easyocr</code> → <code>paddle</code>
+        → <code>tesseract</code>. Kurulu olanlardan en iyisi otomatik seçilir.</li>
+  </ul>
+</div>
+{% endif %}
+
+{% if sonuc %}
+  {% set kaynak = sonuc.kaynak %}
+  <div class="kart">
+    <div class="kart-baslik">
+      <h2>{{ kaynak.ad }}</h2>
+      <span class="rozet">{{ kaynak.tur }}</span>
+      <span class="rozet">{{ sonuc.adaylar|length }} aday</span>
+    </div>
+    {% for uyari in kaynak.uyarilar %}
+      <div class="uyari-kutu">{{ uyari }}</div>
+    {% endfor %}
+    {% if not sonuc.adaylar %}
+      <p class="soluk">
+        Bu dosyadan soru çıkarılamadı. Metin "1." / "SORU" gibi bir soru
+        işareti ve "ÇÖZÜM" bölümü içermiyor olabilir.
+        <a href="/ornek/toplu">Toplu yapıştırma</a> ile elle ekleyebilirsiniz.
+      </p>
+    {% endif %}
+  </div>
+
+  {% if sonuc.adaylar %}
+  <form method="post" action="/alim/aktar">
+    <input type="hidden" name="yuk" value="{{ sonuc.yuk }}">
+    <div class="kart">
+      <div class="arac-cubugu">
+        <button type="submit">Seçilenleri hafızaya al</button>
+        <label style="margin:0;font-weight:400">
+          <input type="checkbox" name="uzerine_yaz" value="1" style="width:auto">
+          Aynı soru varsa üzerine yaz
+        </label>
+        <span class="bosluk"></span>
+        <span class="soluk">Düşük güvenli adaylar seçili gelmez.</span>
+      </div>
+
+      <div class="tablo-sarmal">
+        <table>
+          <thead>
+            <tr><th>Al</th><th>Güven</th><th>Yer</th><th>Soru</th><th>Çözüm</th><th>Cevap</th></tr>
+          </thead>
+          <tbody>
+          {% for aday in sonuc.adaylar %}
+            <tr>
+              <td>
+                <input type="checkbox" name="secilenler" value="{{ loop.index0 }}"
+                       style="width:auto"
+                       {% if aday.kullanilabilir_mi() and aday.guven >= 0.6 %}checked{% endif %}>
+              </td>
+              <td>
+                <span class="rozet {% if aday.guven >= 0.8 %}iyi{% elif aday.guven >= 0.6 %}dikkat{% else %}kotu{% endif %}">
+                  {{ "%.2f"|format(aday.guven) }}
+                </span>
+              </td>
+              <td class="soluk">{{ aday.konum or "—" }}</td>
+              <td>
+                {{ aday.soru|kisa(110) }}
+                {% if aday.secenekler %}
+                  <div class="soluk">
+                    {% for harf, metin in aday.secenekler|dictsort %}{{ harf }}) {{ metin|kisa(28) }} {% endfor %}
+                  </div>
+                {% endif %}
+                {% for uyari in aday.uyarilar %}
+                  <div class="uyari-kutu">{{ uyari }}</div>
+                {% endfor %}
+              </td>
+              <td class="soluk">{{ aday.cozum|kisa(110) or "—" }}</td>
+              <td>{{ aday.cevap or "—" }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </form>
+  {% endif %}
+
+  <p><a class="dugme ikincil" href="/alim">← Başka dosya yükle</a></p>
+{% endif %}
+{% endblock %}

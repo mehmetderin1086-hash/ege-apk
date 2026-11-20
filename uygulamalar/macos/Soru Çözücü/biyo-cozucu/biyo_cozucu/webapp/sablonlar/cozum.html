@@ -1,0 +1,75 @@
+{% extends "temel.html" %}
+{% block baslik %}Çözüm #{{ cozum.id }} · biyo-cozucu{% endblock %}
+{% block icerik %}
+<h1>Çözüm #{{ cozum.id }}</h1>
+
+<div class="kart">
+  <p class="soluk">{{ satir["olusturma"] }} · {{ satir["model"] or "model yok" }}</p>
+  <p><strong>Soru:</strong> {{ cozum.soru }}</p>
+  <ol class="adimlar">
+    {% for adim in cozum.adimlar %}<li>{{ adim }}</li>{% endfor %}
+  </ol>
+  <p><strong>Cevap:</strong> {{ cozum.cevap or "—" }}</p>
+  <p>
+    <span class="rozet {% if cozum.guven >= 0.75 %}iyi{% elif cozum.guven >= 0.5 %}dikkat{% else %}kotu{% endif %}">
+      güven {{ "%.2f"|format(cozum.guven) }}</span>
+    <span class="rozet">{{ cozum.uretim_yontemi }}</span>
+    {% if cozum.gorsel_turu %}<span class="rozet">görsel: {{ cozum.gorsel_turu }}</span>{% endif %}
+    {% if cozum.dogrulama_durumu %}<span class="rozet">{{ cozum.dogrulama_durumu }}</span>{% endif %}
+    <span class="rozet {% if satir['onay_durumu'] == 'onaylandi' %}iyi{% elif satir['onay_durumu'] == 'reddedildi' %}kotu{% endif %}">
+      {{ satir["onay_durumu"] }}</span>
+  </p>
+  {% for uyari in cozum.uyarilar %}<div class="uyari-kutu">{{ uyari }}</div>{% endfor %}
+  {% if cozum.gorsel_kanit_ozeti %}
+    <p><strong>Görsel kanıtı:</strong> {{ cozum.gorsel_kanit_ozeti }}
+      <span class="soluk">· algılama güveni {{ "%.0f"|format(cozum.algilama_guveni * 100) }}%</span>
+    </p>
+  {% endif %}
+  {% if cozum.kitap_kaynaklari %}
+    <p class="soluk">Ders kitabı kaynakları:
+      {% for kaynak in cozum.kitap_kaynaklari %}{{ kaynak }}{% if not loop.last %} · {% endif %}{% endfor %}
+    </p>
+  {% endif %}
+  {% if cozum.kanitlar %}
+    <p class="soluk">Referanslar:
+      {% for kanit in cozum.kanitlar %}
+        {% if kanit.ornek_id %}<a href="/ornek/{{ kanit.ornek_id }}">{{ kanit.kaynak_adi() }}</a>{% else %}{{ kanit.kaynak_adi() }}{% endif %}{% if not loop.last %} · {% endif %}
+      {% endfor %}
+    </p>
+  {% endif %}
+</div>
+
+<div class="kart">
+  <h2 style="margin-top:0">Öğretmen değerlendirmesi</h2>
+  <p class="soluk">
+    Onayladığın ya da düzelttiğin çözüm yeni bir referans örneğe dönüşür ve
+    bundan sonraki sorularda kullanılır.
+  </p>
+  <form method="post" action="/cozum/{{ cozum.id }}/onay">
+    <input type="hidden" name="islem" value="onayla">
+    <button type="submit">Doğru — örnek olarak kaydet</button>
+  </form>
+
+  <form method="post" action="/cozum/{{ cozum.id }}/onay" style="margin-top:1rem">
+    <input type="hidden" name="islem" value="duzelt">
+    <label for="duzeltilmis_cozum">Düzeltilmiş çözüm</label>
+    <textarea id="duzeltilmis_cozum" name="duzeltilmis_cozum" rows="7">{{ satir["duzeltme"] or cozum.metin() }}</textarea>
+    <label for="duzeltilmis_cevap">Düzeltilmiş cevap</label>
+    <input type="text" id="duzeltilmis_cevap" name="duzeltilmis_cevap" value="{{ cozum.cevap }}">
+    <p><button type="submit" class="ikincil">Düzelterek kaydet</button></p>
+  </form>
+
+  <form method="post" action="/cozum/{{ cozum.id }}/onay"
+        data-onay="Bu çözüm reddedilecek ve referans örneğe dönüştürülmeyecek. Devam edilsin mi?">
+    <input type="hidden" name="islem" value="reddet">
+    <button type="submit" class="tehlike ikincil">Reddet (örneğe dönüştürme)</button>
+  </form>
+</div>
+
+{% if cozum.ham_yanit %}
+<details class="kart">
+  <summary>Modelin düşünce/ham çıktısı</summary>
+  <pre>{{ cozum.ham_yanit }}</pre>
+</details>
+{% endif %}
+{% endblock %}

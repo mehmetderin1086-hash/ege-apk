@@ -1,0 +1,54 @@
+{% extends "temel.html" %}
+{% block baslik %}Toplu örnek ekle · biyo-cozucu{% endblock %}
+{% block icerik %}
+<h1>Toplu örnek ekle</h1>
+
+<div class="kart">
+  <p class="soluk">Çözülmüş soruları aşağıdaki biçimde yapıştır:</p>
+  <pre>SORU: Aşağıdakilerden hangisi mitokondride gerçekleşir?
+A) Fotosentez
+B) Krebs döngüsü
+ÇÖZÜM:
+Mitokondri oksijenli solunumun merkezidir.
+Krebs döngüsü mitokondri matriksinde gerçekleşir.
+Fotosentez kloroplastta olur, bu yüzden A elenir.
+CEVAP: B
+
+SORU: …
+ÇÖZÜM: …</pre>
+  <p class="soluk">
+    Konu ve çözüm türü etiketleri otomatik atanır; örnek sayfasından
+    düzeltebilirsin. Çözüm satırlarının her biri bir adım sayılır.
+  </p>
+</div>
+
+{% if sonuc %}
+<div class="kart">
+  <p>
+    Bulunan blok: <strong>{{ sonuc.bulunan }}</strong> ·
+    Eklenen: <strong>{{ sonuc.eklenen }}</strong> ·
+    Güncellenen: <strong>{{ sonuc.guncellenen }}</strong> ·
+    Atlanan: <strong>{{ sonuc.atlanan }}</strong>
+  </p>
+  {% for hata in sonuc.hatalar %}<div class="uyari-kutu">{{ hata }}</div>{% endfor %}
+  {% if sonuc.eklenen or sonuc.guncellenen %}
+    <p><a class="dugme ikincil" href="/ornekler">Örnekleri gör →</a></p>
+  {% endif %}
+</div>
+{% endif %}
+
+<form method="post" action="/ornek/toplu" class="kart">
+  <label for="metin">Yapıştır</label>
+  <textarea id="metin" name="metin" required rows="16"></textarea>
+  <div class="satir" style="margin-top:.8rem">
+    <div>
+      <label for="uzerine_yaz">Aynı soru zaten varsa</label>
+      <select id="uzerine_yaz" name="uzerine_yaz">
+        <option value="">Atla</option>
+        <option value="1">Üzerine yaz</option>
+      </select>
+    </div>
+    <div style="flex:0 0 auto"><button type="submit">Ekle</button></div>
+  </div>
+</form>
+{% endblock %}

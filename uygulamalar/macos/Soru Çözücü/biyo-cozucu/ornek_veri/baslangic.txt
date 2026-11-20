@@ -1,0 +1,83 @@
+SORU: Mitoz bölünme sonucu oluşan hücrelerin kromozom sayısı neden ana hücreninkiyle aynıdır?
+ÇÖZÜM:
+Bölünmeden önce interfaz evresinde DNA kendini eşler, her kromozom iki kardeş kromatitten oluşur.
+Metafazda kromozomlar hücrenin ekvator düzleminde tek sıra hâlinde dizilir.
+Anafazda kardeş kromatitler birbirinden ayrılıp zıt kutuplara çekilir.
+Böylece her yavru hücreye kromozomların birer takımı düşer ve sayı korunur.
+CEVAP: DNA önceden eşlendiği ve kardeş kromatitler eşit paylaşıldığı için kromozom sayısı değişmez
+
+SORU: Aa genotipli iki bireyin çaprazlanmasında çekinik fenotipli birey oluşma olasılığı kaçtır?
+ÇÖZÜM:
+Aa x Aa çaprazlamasında her ebeveyn A ve a gametlerini eşit oranda üretir.
+Punnett karesinde açılım 1AA : 2Aa : 1aa olur.
+Çekinik fenotip yalnız homozigot çekinik (aa) genotipinde görülür.
+Dört olası birleşimden biri aa olduğu için olasılık 1/4'tür.
+CEVAP: 1/4
+
+SORU: Fotosentez hızının ışık şiddetine bağlı grafiğinde, belirli bir noktadan sonra hızın sabitlenmesinin nedeni nedir?
+ÇÖZÜM:
+Grafiğin ilk bölümünde ışık şiddeti arttıkça fotosentez hızı da artar; bu bölgede ışık sınırlayıcı faktördür.
+Belirli bir doyma noktasından sonra ışık artsa da hız değişmez.
+Bu noktada ışık artık sınırlayıcı değildir; karbondioksit derişimi veya sıcaklık gibi başka bir faktör hızı sınırlamaktadır.
+Sınırlayıcı faktör kuramına göre bir olayın hızını, en yetersiz olan faktör belirler.
+CEVAP: Işık sınırlayıcı olmaktan çıkar, başka bir faktör (CO2 veya sıcaklık) sınırlayıcı hâle gelir
+
+SORU: Bir hücrede 2n = 8 kromozom bulunuyorsa, mayoz bölünme sonucu oluşan hücrelerde kaç kromozom bulunur?
+A) 2
+B) 4
+C) 8
+D) 16
+ÇÖZÜM:
+Mayoz bölünme, kromozom sayısını yarıya indiren bir bölünme türüdür.
+2n = 8 olan hücrede n = 4'tür.
+Mayoz sonucu oluşan hücreler haploittir, yani n kadar kromozom taşır.
+A seçeneği yarıya inme kuralına uymaz, C mitoz sonucunu verir, D ise sayının artması anlamına gelir; bu yüzden üçü de elenir.
+CEVAP: B
+
+SORU: Enzimlerin çalışmasında optimum sıcaklık aşıldığında tepkime hızı neden düşer?
+ÇÖZÜM:
+Enzimler protein yapılıdır ve üç boyutlu şekilleri hidrojen bağlarıyla korunur.
+Optimum sıcaklığın üstünde bu bağlar kopar ve protein denatüre olur.
+Denatürasyon sonucu enzimin aktif bölgesi özgül şeklini kaybeder.
+Substrat aktif bölgeye bağlanamadığı için enzim-substrat kompleksi oluşmaz ve tepkime hızı düşer.
+CEVAP: Enzim denatüre olup aktif bölgesi bozulduğu için tepkime hızı düşer
+
+SORU: Oksijenli solunumda bir glikoz molekülünden net kaç ATP elde edilir ve bu ATP'nin büyük kısmı nerede üretilir?
+ÇÖZÜM:
+Glikoliz sitoplazmada gerçekleşir ve net 2 ATP üretir.
+Krebs döngüsü mitokondri matriksinde gerçekleşir ve 2 ATP üretir.
+Elektron taşıma sistemi mitokondrinin iç zarında çalışır ve oksidatif fosforilasyonla yaklaşık 26-28 ATP üretir.
+Toplamda net ATP yaklaşık 30-32'dir ve büyük kısmı mitokondri iç zarında elektron taşıma sisteminde üretilir.
+CEVAP: Yaklaşık 30-32 ATP; büyük kısmı mitokondri iç zarındaki elektron taşıma sisteminde
+
+SORU: Bir bitkinin köklerindeki su emiliminin osmoz ile açıklanmasında hangi koşul gereklidir?
+ÇÖZÜM:
+Osmoz, suyun yarı geçirgen zardan yoğunluğunun çok olduğu yerden az olduğu yere geçişidir.
+Kök emici tüy hücrelerinin sitoplazması topraktaki su çözeltisine göre daha derişiktir.
+Bu derişim farkı nedeniyle su, toprak çözeltisinden hücre içine doğru hareket eder.
+Emilimin sürmesi için hücre öz suyunun toprak çözeltisinden daha derişik kalması, yani osmotik basıncın yüksek olması gerekir.
+CEVAP: Hücre öz suyunun toprak çözeltisinden daha derişik (osmotik basıncının yüksek) olması
+
+SORU: Bir deneyde tohumların çimlenmesi için sıcaklığın etkisi araştırılacaktır. Bu deneyde kontrol grubu nasıl oluşturulmalıdır?
+ÇÖZÜM:
+Bir deneyde yalnız araştırılan değişken (bağımsız değişken) farklı olmalıdır; burada bu sıcaklıktır.
+Su, ışık, tohum türü, tohum sayısı ve nem gibi diğer tüm faktörler bütün gruplarda aynı tutulmalıdır.
+Kontrol grubu, sıcaklığın bilinen uygun (optimum) değerinde tutulan gruptur.
+Deney gruplarının sonuçları bu kontrol grubuyla karşılaştırılarak sıcaklığın etkisi belirlenir.
+CEVAP: Sıcaklık dışındaki tüm koşullar aynı tutulup sıcaklığın optimum değerde olduğu grup kontrol grubu yapılmalıdır
+
+SORU: Virüslerin canlı ve cansız özellikleri hangi ölçütlere göre ayırt edilir?
+ÇÖZÜM:
+Virüsler nükleik asit ve protein kılıftan oluşur; bu yapısal özellik canlılara benzer.
+Konak hücre içinde çoğalabilmeleri, kalıtsal materyal taşımaları ve mutasyon geçirebilmeleri canlılık özellikleridir.
+Konak dışında kristalleşebilmeleri, metabolizmalarının olmaması ve enzim sistemlerinin bulunmaması cansız özellikleridir.
+Hücresel yapıya sahip olmadıkları için hücre kuramının dışında kalırlar.
+CEVAP: Konak içinde çoğalma ve kalıtsal materyal canlı; hücresiz yapı, metabolizmasızlık ve kristalleşme cansız özellikleridir
+
+SORU: Bir besin zincirinde enerji piramidinin yukarı doğru daralmasının nedeni nedir?
+ÇÖZÜM:
+Üreticiler güneş enerjisini kimyasal enerjiye dönüştürerek besin zincirinin tabanını oluşturur.
+Her beslenme basamağında canlılar aldıkları enerjinin büyük kısmını solunum ve ısı olarak kaybeder.
+Bir basamaktan diğerine yaklaşık %10 kadar enerji aktarılabilir.
+Bu kayıp yukarı basamaklarda kullanılabilir enerjiyi azalttığı için piramit yukarı doğru daralır.
+CEVAP: Her basamakta enerjinin büyük kısmı ısı olarak kaybedildiği için üst basamaklara yaklaşık %10 enerji aktarılır
