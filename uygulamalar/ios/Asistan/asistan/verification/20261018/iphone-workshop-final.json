@@ -1,0 +1,8 @@
+{
+  "gorselHata" : "Görsel üretilemedi (HTTP 402). Seçilen görsel modeli veya hesap kotası kullanılamıyor olabilir.",
+  "gorselModel" : "gemini-3-pro-image",
+  "tamamlandi" : true,
+  "webAramaSayisi" : 0,
+  "webHata" : "",
+  "webYanit" : "Hayır, çalışmıyor. Apple'ın resmi destek belgesine göre iPhone Yansıtma kullanılırken iPhone'un kamerasına ve mikrofonuna erişilemiyor; bu kısıtlama Face ID'yi ve telefon aramalarını da kapsıyor.\n\nKaynak: https:\/\/support.apple.com\/en-us\/120421\n\nİlk arama hata verdi, ikinci aramada sonuç geldi. Bu sonuç tek bir resmi Apple sayfasına dayanıyor; araç sayfanın yayın ya da güncelleme tarihini vermedi."
+}

@@ -1,0 +1,85 @@
+{
+  "tamamlandi" : true,
+  "turlar" : [
+    {
+      "ad" : "otomatik-selam",
+      "bitti" : true,
+      "caba" : "low",
+      "hata" : "",
+      "ilkSn" : 1.1191500425338745,
+      "model" : "claude-haiku-4-5",
+      "toplamSn" : 1.2239569425582886,
+      "yanit" : "Merhaba Mehmet! 👋 Bugün sana nasıl yardımcı olabilirim?"
+    },
+    {
+      "ad" : "otomatik-arac",
+      "bitti" : true,
+      "caba" : "low",
+      "hata" : "",
+      "ilkSn" : 0.0542449951171875,
+      "model" : "iPhone · yerel saat",
+      "toplamSn" : 0.0542449951171875,
+      "yanit" : "Saat 11:31."
+    },
+    {
+      "ad" : "sonnet-yazi",
+      "bitti" : true,
+      "caba" : "medium",
+      "hata" : "",
+      "ilkSn" : 1.5352391004562378,
+      "model" : "claude-sonnet-5-5",
+      "toplamSn" : 2.8408761024475098,
+      "yanit" : "Küçük Elif her sabah penceresini açıp gökyüzüne \"günaydın\" derdi. Bir gün gökyüzü, o masmavi gülüşüyle ilk kez ona göz kırptı ve Elif, mavinin aslında dünyanın en büyük gülümsemesi olduğunu anladı. 💙"
+    },
+    {
+      "ad" : "haiku-baglam",
+      "bitti" : true,
+      "caba" : "low",
+      "hata" : "",
+      "ilkSn" : 0.84481799602508545,
+      "model" : "claude-haiku-4-5",
+      "toplamSn" : 1.0551160573959351,
+      "yanit" : "Elif her sabah gökyüzüne \"günaydın\" derdi. Bir gün mavinin aslında dünyanın en büyük gülümsemesi olduğunu anladı. 💙"
+    },
+    {
+      "ad" : "gemini-ceviri",
+      "bitti" : true,
+      "caba" : "low",
+      "hata" : "",
+      "ilkSn" : 2.0030180215835571,
+      "model" : "gemini-3.8-flash",
+      "toplamSn" : 2.0030180215835571,
+      "yanit" : "\"Gökyüzü mavidir.\" (veya konuşma dilinde daha yaygın olarak \"Gökyüzü mavi.\")"
+    },
+    {
+      "ad" : "gpt-zor",
+      "bitti" : true,
+      "caba" : "high",
+      "hata" : "",
+      "ilkSn" : 4.9145510196685791,
+      "model" : "gpt-6.1-sol",
+      "toplamSn" : 5.6569859981536865,
+      "yanit" : "n = 3 tek sayıdır ve karesi 3² = 9’dur. 9 = 2 × 4 + 1 olduğundan karesi de tektir."
+    },
+    {
+      "ad" : "web-dogrudan",
+      "bitti" : true,
+      "caba" : "low",
+      "hata" : "",
+      "ilkSn" : 4.8303029537200928,
+      "model" : "gpt-6.1-sol",
+      "toplamSn" : 6.5261269807815552,
+      "yanit" : "iPhone 15 ve sonraki modellerde pil sağlığına **Ayarlar > Pil > Pil Sağlığı** menüsünden bakılır. ([support.apple.com](https:\/\/support.apple.com\/tr-tr\/120745?utm_source=openai))\niPhone 14 ve önceki modellerde yol **Ayarlar > Pil > Pil Sağlığı ve Şarj Etme** şeklindedir ([Apple Destek](https:\/\/support.apple.com\/tr-tr\/120745)). ([support.apple.com](https:\/\/support.apple.com\/tr-tr\/120745?utm_source=openai))\nKaynaklar:\nhttps:\/\/support.apple.com\/tr-tr\/120745?utm_source=openai"
+    },
+    {
+      "ad" : "web-sonrasi-baglam",
+      "bitti" : true,
+      "caba" : "medium",
+      "hata" : "",
+      "ilkSn" : 1.8147740364074707,
+      "model" : "claude-sonnet-5-5",
+      "toplamSn" : 1.867108941078186,
+      "yanit" : "iPhone 15 ve sonrasında yol Ayarlar > Pil > Pil Sağlığı, iPhone 14 ve öncesinde ise Ayarlar > Pil > Pil Sağlığı ve Şarj Etme."
+    }
+  ]
+}

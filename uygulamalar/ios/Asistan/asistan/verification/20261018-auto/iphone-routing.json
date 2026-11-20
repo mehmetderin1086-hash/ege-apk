@@ -1,0 +1,56 @@
+[
+  {
+    "basarili" : true,
+    "beklenen" : "kod",
+    "istek" : "Python ile CSV dosyasını okuyup toplam hesaplayan fonksiyon yaz",
+    "secilen" : "kod"
+  },
+  {
+    "basarili" : false,
+    "beklenen" : "kod",
+    "istek" : "Buna birim testlerini de ekle",
+    "secilen" : "sohbet"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "yazi",
+    "istek" : "Bana kısa bir doğum günü mesajı hazırla",
+    "secilen" : "yazi"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "yazi",
+    "istek" : "Bunu daha samimi yap",
+    "secilen" : "yazi"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "arastirma",
+    "istek" : "Apple'ın güncel iPhone mikrofon desteğini resmi kaynaklardan araştır",
+    "secilen" : "arastirma"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "gorsel",
+    "istek" : "Uzayda bir kütüphanenin suluboya resmini çiz",
+    "secilen" : "gorsel"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "yazi",
+    "istek" : "Resim üretme, bunun için bir açıklama metni yaz",
+    "secilen" : "yazi"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "sohbet",
+    "istek" : "Şimdi YouTube'u aç",
+    "secilen" : "sohbet"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "arsiv",
+    "istek" : "Sohbet arşivini aç",
+    "secilen" : "arsiv"
+  }
+]

@@ -1,0 +1,30 @@
+{
+  "dosyalar" : [
+    {
+      "ad" : "33315C07-38BA-4106-B810-D40564C98385-kabul-Donusum-Kaynagi-Dönüştürüldü.xlsx",
+      "okundu" : true,
+      "yon" : "docx->xlsx"
+    },
+    {
+      "ad" : "CF5BD00E-A971-4CE1-9A3B-77F466DDB961-kabul-Donusum-Kaynagi-Dönüştürüldü.pdf",
+      "okundu" : true,
+      "yon" : "docx->pdf"
+    },
+    {
+      "ad" : "B9415EF4-711A-478F-A971-649CAED5863D-kabul-Donusum-Kaynagi-Dönüştürüldü.pptx",
+      "okundu" : true,
+      "yon" : "docx->pptx"
+    },
+    {
+      "ad" : "D6B613B4-23DA-4C71-9E21-467DF4E3EDEB-kabul-Donusum-Kaynagi-Dönüştürüldü.csv",
+      "okundu" : true,
+      "yon" : "docx->csv"
+    },
+    {
+      "ad" : "3AB473F4-1844-4B27-9B29-DEB94F56EB54-kabul-Donusum-Kaynagi-Dönüştürüldü.docx",
+      "okundu" : true,
+      "yon" : "xlsx->docx"
+    }
+  ],
+  "tamamlandi" : true
+}

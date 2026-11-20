@@ -1,0 +1,8 @@
+{
+  "gorselHata" : "Görsel üretilemedi (HTTP 502). Seçilen görsel modeli veya hesap kotası kullanılamıyor olabilir.",
+  "gorselModel" : "gpt-image-2.5-flare",
+  "tamamlandi" : true,
+  "webAramaSayisi" : 0,
+  "webHata" : "",
+  "webYanit" : "(Boş yanıt)"
+}

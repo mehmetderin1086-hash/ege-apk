@@ -1,0 +1,17 @@
+{
+  "version": "0.7.0",
+  "build": "13",
+  "unit_test_count": 99,
+  "conditional_skips": 10,
+  "ui_tests_passed": 4,
+  "physical_install": true,
+  "physical_launch": true,
+  "physical_screen_sharing": false,
+  "visual_checks": "Simulator only; fixture conversation, no live microphone or model test",
+  "screenshots": [
+    "night-chat.png",
+    "studio.png",
+    "large-wave-chat.png",
+    "focus-home.png"
+  ]
+}

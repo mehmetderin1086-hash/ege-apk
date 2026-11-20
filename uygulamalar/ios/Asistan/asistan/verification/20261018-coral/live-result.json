@@ -1,0 +1,31 @@
+{
+  "baslangicMikrofon" : "dinliyor",
+  "bitti" : true,
+  "durdu" : true,
+  "girdi" : "sabit metin; gerçek STT testi değil",
+  "girisDb" : -63.209037780761719,
+  "model" : "claude-opus-5-5",
+  "ses" : "azure:Elif",
+  "turlar" : [
+    {
+      "canliMod" : true,
+      "cikisDb" : -8.0770235061645508,
+      "dinlemeyeDondu" : true,
+      "hata" : "",
+      "ilkSesSn" : 4.0303829908370972,
+      "istek" : "Bu konuşma için seçtiğim renk mercan. Yalnız 'Mercan, aklımda.' de.",
+      "sureSn" : 7.084758996963501,
+      "yanit" : "Mercan, aklımda."
+    },
+    {
+      "canliMod" : true,
+      "cikisDb" : -6.5213508605957031,
+      "dinlemeyeDondu" : true,
+      "hata" : "",
+      "ilkSesSn" : 3.0019240379333496,
+      "istek" : "Az önce seçtiğim renk neydi? Yalnız rengin adını söyle.",
+      "sureSn" : 4.9889259338378906,
+      "yanit" : "Mercan."
+    }
+  ]
+}

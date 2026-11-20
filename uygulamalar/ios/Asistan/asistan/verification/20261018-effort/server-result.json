@@ -1,0 +1,8 @@
+{
+  "id": "bf26c0d7-863e-41fa-abd7-4c2b2ed4027b",
+  "kind": "code",
+  "status": "done",
+  "effort": "high",
+  "result": "İki sayıyı toplayan `topla` fonksiyonu yazıldı. Kod yalnızca Python standart kütüphanesini kullanır. `assert` ile 2 + 3 = 5 testi yapılır, ardından birkaç ek kontrol (negatif sayılar, sıfır, ondalıklı sayılar) çalışır. Testler geçerse sonuç ekrana basılır, geçmezse AssertionError fırlatılır. Kod ağsız, dosyasız, 128 MB bellek ve 25 saniye sınırlı izole bir Python ortamında çalıştırılmak üzere hazırlandı. Yalnızca Python kodu çalıştırılır, başka diller bu ortamda çalıştırılmaz.\n\n```python\ndef topla(a, b):\n    \"\"\"İki sayıyı toplar ve sonucu döndürür.\"\"\"\n    return a + b\n\n\ndef testleri_calistir():\n    # İstenen ana test\n    assert topla(2, 3) == 5, \"2 + 3 = 5 olmalı\"\n\n    # Küçük ek testler\n    assert topla(-1, 1) == 0, \"-1 + 1 = 0 olmalı\"\n    assert topla(0, 0) == 0, \"0 + 0 = 0 olmalı\"\n    assert abs(topla(0.1, 0.2) - 0.3) < 1e-9, \"0.1 + 0.2 ≈ 0.3 olmalı\"\n\n\nif __name__ == \"__main__\":\n    testleri_calistir()\n    sonuc = topla(2, 3)\n    print(f\"Tüm testler geçti. topla(2, 3) = {sonuc}\")\n\n```\n\nSunucudaki izole Python çalıştırması: çıkış kodu 0\nTüm testler geçti. topla(2, 3) = 5\n",
+  "error": ""
+}

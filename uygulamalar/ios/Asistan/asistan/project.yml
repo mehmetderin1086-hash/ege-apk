@@ -1,0 +1,231 @@
+name: Asistan
+options:
+  bundleIdPrefix: com.mehmetderin
+  deploymentTarget:
+    iOS: "27.0"
+  developmentLanguage: tr
+  createIntermediateGroups: true
+  xcodeVersion: "27.0"
+
+packages:
+  ProxyKit:
+    path: ../cliproxy-ios/ProxyKit
+  ClaudeForFoundationModels:
+    url: https://github.com/anthropics/ClaudeForFoundationModels.git
+    exactVersion: 0.2.3
+  ArgmaxOSS:
+    url: https://github.com/argmaxinc/argmax-oss-swift.git
+    exactVersion: 1.1.1
+  ZIPFoundation:
+    url: https://github.com/weichsel/ZIPFoundation.git
+    exactVersion: 0.9.20
+  Unrar:
+    url: https://github.com/mtgto/Unrar.swift.git
+    branch: main
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: 838FF89FZ8
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "6.0"
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    SWIFT_STRICT_CONCURRENCY: complete
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    TARGETED_DEVICE_FAMILY: "1"
+    CURRENT_PROJECT_VERSION: "38"
+
+targets:
+  Asistan:
+    type: application
+    platform: iOS
+    sources:
+      - path: Asistan
+        excludes:
+          - Resources/mehmet-uygulama-koprusu.json
+          - Resources/mehmet-uygulama-koprusu.signed.shortcut
+          - Kepce/python
+    dependencies:
+      - framework: Bagimliliklar/Python.xcframework
+        embed: true
+      - package: ProxyKit
+      - package: ClaudeForFoundationModels
+      - package: ArgmaxOSS
+        product: WhisperKit
+      - package: ZIPFoundation
+      - package: Unrar
+      - target: AsistanKontrol
+        embed: true
+      - target: AsistanPaylas
+        embed: true
+    postBuildScripts:
+      - name: Python ve yt-dlp
+        script: "\"$PROJECT_DIR/araclar/python-kur.sh\""
+        basedOnDependencyAnalysis: false
+    info:
+      path: Asistan/Info.plist
+      properties:
+        CFBundleDisplayName: Asistan
+        CFBundleShortVersionString: "0.21.0"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        AsistanGitHash: "yok"
+        AsistanDegisikDosya: "0"
+        AsistanDerlemeTuru: "$(CONFIGURATION)"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        ITSAppUsesNonExemptEncryption: false
+        UIBackgroundModes: [audio, fetch, processing]
+        BGTaskSchedulerPermittedIdentifiers: [com.mehmetderin.asistan.nabiz, "com.mehmetderin.asistan.gorev.*", com.mehmetderin.asistan.fotoindeks]
+        NSMicrophoneUsageDescription: "Sesli komutlarınızı dinlemek ve istediğinizde toplantı kaydı almak için mikrofon gerekir."
+        NSSpeechRecognitionUsageDescription: "Konuşmanızı cihaz içinde yazıya dökmek için."
+        NSCalendarsFullAccessUsageDescription: "Takvim etkinliklerinizi okumak ve eklemek için."
+        NSRemindersFullAccessUsageDescription: "Hatırlatıcılarınızı okumak ve eklemek için."
+        NSContactsUsageDescription: "Kişilerinizi aramak için."
+        NSLocationWhenInUseUsageDescription: "Hava durumu ve yakın yer aramaları için konumunuz."
+        NSAlarmKitUsageDescription: "Zamanlayıcı ve alarm kurmak için."
+        NSAppleMusicUsageDescription: "Müziği denetlemek ve çalan parçayı söylemek için."
+        NSHomeKitUsageDescription: "Ev aksesuarlarını açıp kapatmak için."
+        NSCameraUsageDescription: "Fotoğraf çekip Asistan'a göstermek için."
+        NSPhotoLibraryUsageDescription: "Fotoğraf seçip Asistan'a göstermek ve istersen galerinde arama yapmak için."
+        NSSupportsLiveActivities: true
+        LSApplicationQueriesSchemes: [kepce, shortcuts, tel, sms, facetime, maps, music, youtube, whatsapp, instagram, twitter, x, spotify, comgooglemaps, App-prefs, camera, photos-redirect, calshow, clock-alarm, mobilenotes, message, derspodcast, dersvideo, kocum]
+        CFBundleURLTypes:
+          - CFBundleURLName: com.mehmetderin.asistan
+            CFBundleURLSchemes: [asistan]
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: false
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mehmetderin.asistan
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        CODE_SIGN_ENTITLEMENTS: Asistan/Asistan.entitlements
+        SWIFT_OBJC_BRIDGING_HEADER: Asistan/Kepce/Motor/Asistan-Bridging-Header.h
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+
+  AsistanKontrol:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: AsistanKontrol
+      - path: Asistan/Tetik/AsistaniBaslatIntent.swift
+      - path: Asistan/Tetik/AsistanHizliEylemIntentleri.swift
+      - path: Asistan/Tetik/AsistanAlarmMeta.swift
+      - path: Asistan/Tetik/AsistanIsNitelikleri.swift
+      - path: Asistan/Tetik/IsAktivitesiIntentleri.swift
+      - path: Asistan/Beyin/DersGunu.swift
+      - path: Asistan/Tetik/AsistanBasKonusIntent.swift
+      - path: Asistan/Tetik/CanliAktiviteIntentleri.swift
+      - path: Asistan/Tetik/OrtakAyarlar.swift
+    info:
+      path: AsistanKontrol/Info.plist
+      properties:
+        CFBundleDisplayName: Asistan Kontrol
+        CFBundleShortVersionString: "0.21.0"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mehmetderin.asistan.kontrol
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        CODE_SIGN_ENTITLEMENTS: AsistanKontrol/AsistanKontrol.entitlements
+
+  AsistanPaylas:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: AsistanPaylas
+      - path: Asistan/Paylasim/PaylasimKutusu.swift
+    info:
+      path: AsistanPaylas/Info.plist
+      properties:
+        CFBundleDisplayName: Asistan'a gönder
+        CFBundleShortVersionString: "0.21.0"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).PaylasDenetleyici
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsImageWithMaxCount: 8
+              NSExtensionActivationSupportsFileWithMaxCount: 5
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mehmetderin.asistan.paylas
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        CODE_SIGN_ENTITLEMENTS: AsistanPaylas/AsistanPaylas.entitlements
+
+  AsistanTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: AsistanTests
+    dependencies:
+      - target: Asistan
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mehmetderin.asistan.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Asistan.app/Asistan
+        BUNDLE_LOADER: $(TEST_HOST)
+
+  AsistanUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: AsistanUITests
+    dependencies:
+      - target: Asistan
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mehmetderin.asistan.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Asistan
+
+schemes:
+  Asistan:
+    build:
+      targets:
+        Asistan: all
+        AsistanTests: [test]
+        AsistanUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      testPlans:
+        - path: Planlar/Tam.xctestplan
+          defaultPlan: true
+        - path: Planlar/Duman.xctestplan
+        - path: Planlar/Canli.xctestplan
+      targets: [AsistanTests, AsistanUITests]
+      environmentVariables:
+        - variable: ASISTAN_TEST
+          value: "1"
+          isEnabled: true
+        - variable: ASISTAN_CANLI
+          value: "$(ASISTAN_CANLI)"
+          isEnabled: true
+        - variable: ASISTAN_SES
+          value: "$(ASISTAN_SES)"
+          isEnabled: true
+        - variable: ASISTAN_WHISPER
+          value: "$(ASISTAN_WHISPER)"
+          isEnabled: true
+        - variable: ASISTAN_YEREL_WHISPER
+          value: "$(ASISTAN_YEREL_WHISPER)"
+          isEnabled: true
+        - variable: ASISTAN_YEREL_HESAP
+          value: "$(ASISTAN_YEREL_HESAP)"
+          isEnabled: true
+        - variable: ASISTAN_YEREL_SIL
+          value: "$(ASISTAN_YEREL_SIL)"
+          isEnabled: true
+        - variable: ASISTAN_OTOMASYON_KUR
+          value: "$(ASISTAN_OTOMASYON_KUR)"
+          isEnabled: true

@@ -1,0 +1,45 @@
+{
+  "ayar" : "auto",
+  "turlar" : [
+    {
+      "bitti" : true,
+      "caba" : "low",
+      "hata" : "",
+      "istek" : "Merhaba",
+      "model" : "claude-opus-5-5",
+      "sn" : 4.3727560043334961,
+      "yanit" : "Merhaba Mehmet, günaydın! Bugün sana nasıl yardımcı olabilirim?",
+      "yol" : "iPhone CLIProxy"
+    },
+    {
+      "bitti" : true,
+      "caba" : "high",
+      "hata" : "",
+      "istek" : "n=3 seçtim. n tekse n² tektir, kanıtla. En fazla iki cümle kullan.",
+      "model" : "claude-opus-5-5",
+      "sn" : 26.161554932594299,
+      "yanit" : "n tekse bir k tam sayısı için n = 2k + 1 yazılır; o zaman n² = 4k² + 4k + 1 = 2(2k² + 2k) + 1 olur, yani n² tektir. Senin seçtiğin n = 3 bunun bir örneği: k = 1 için 3² = 9 = 2·4 + 1, yani tek.",
+      "yol" : "iPhone CLIProxy"
+    },
+    {
+      "bitti" : true,
+      "caba" : "medium",
+      "hata" : "",
+      "istek" : "Python ile iki sayıyı toplayan tek satırlık fonksiyon yaz.",
+      "model" : "claude-opus-5-5",
+      "sn" : 2.5944041013717651,
+      "yanit" : "Buyur:\n\n```python\ntopla = lambda a, b: a + b\n```\n\nÖrneğin `topla(2, 3)` sana 5 verir.",
+      "yol" : "iPhone CLIProxy"
+    },
+    {
+      "bitti" : true,
+      "caba" : "low",
+      "hata" : "",
+      "istek" : "2 + 2 kaç? Önceki mesajımda seçtiğim n değerini de söyle.",
+      "model" : "claude-opus-5-5",
+      "sn" : 3.5206540822982788,
+      "yanit" : "2 + 2 = 4. Seçtiğin n değeri de 3'tü; aslında onu bir önceki mesajda değil, ondan önceki mesajda söylemiştin.",
+      "yol" : "iPhone CLIProxy"
+    }
+  ]
+}

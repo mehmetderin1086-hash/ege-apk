@@ -1,0 +1,9 @@
+{
+  "before": [],
+  "after": [
+    {
+      "executable": "file:///private/var/containers/Bundle/Application/F435E8E8-A575-4006-BF48-910A6436E6CE/Compass.app/Compass",
+      "processIdentifier": 1892
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4895037A-59EE-45E9-BEF0-A555E9D0939D",
+        "deviceName" : "Ikra Tasarim",
+        "exportedFileName" : "12935B56-E8FF-4BB5-BE50-E75BB5EFE92A.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "sade-ses-modlari_0_86EA67BE-0980-4CFD-A290-8CCED2A358EF.png",
+        "timestamp" : 1792314353.985
+      }
+    ],
+    "testIdentifier" : "KisisellestirmeUITestleri/testSadeSesModlariVeYuvarlakDugme()",
+    "testIdentifierURL" : "test://com.apple.xcode/Asistan/AsistanUITests/KisisellestirmeUITestleri/testSadeSesModlariVeYuvarlakDugme"
+  }
+]

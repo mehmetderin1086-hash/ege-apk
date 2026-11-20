@@ -1,0 +1,13 @@
+{
+  "gonderenler" : [
+    "Mehmet",
+    "Ayşe"
+  ],
+  "kalici" : true,
+  "kaynaklar" : [
+    "WhatsApp",
+    "Mail"
+  ],
+  "okunmamis" : 1,
+  "tamamlandi" : true
+}

@@ -1,0 +1,19 @@
+Mehmet Asistan kişisel otomasyon kurulumu
+Tarih: 2026-10-18
+Cihaz: Mehmet iPhone'u, iPhone 15, iOS 27.0.1
+
+Kestirmeler erişilebilirlik ağacında doğrulanan etkin otomasyonlar:
+- Mail bildirimi aldığımda, Mail iletisini kaydet — value: 1
+- Mesajlar bildirimi aldığımda, Mesajlar iletisini kaydet — value: 1
+- WhatsApp bildirimi aldığımda, WhatsApp bildirimini kaydet 2 — value: 1
+
+Her akışta iOS Bildirim tetikleyicisinin Bildirim sihirli değişkeni App Intent'in
+metin parametresine bağlandı. Keşif sırasında oluşan eksik E-posta taslağı silindi.
+
+Kurulum testi: 1 test, 0 hata, 74.732 saniye.
+İdempotent son doğrulama: 1 test, 0 hata, 2.038 saniye.
+Temizlik testi: 1 test, 0 hata, 6.615 saniye.
+
+Son durum:
+- Device Hub düğmesi: View Screen (paylaşım kapalı)
+- iPhone Yansıtma: isRunning=false

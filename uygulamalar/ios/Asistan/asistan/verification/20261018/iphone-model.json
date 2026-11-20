@@ -1,0 +1,19 @@
+{
+  "asama" : "tamamlandi",
+  "hafizaAraciCalisti" : true,
+  "hata" : "",
+  "hesapSayisi" : 8,
+  "istekYollari" : [
+    "Claude (telefon)",
+    "Claude (telefon)"
+  ],
+  "model" : "claude-opus-5-5",
+  "modelSinamasi" : "Bağlantı başarılı · 66 model. Yanıt üretimi sohbet sırasında doğrulanır.",
+  "sureSaniye" : 5,
+  "telefonProxyHazir" : true,
+  "turkceSesVar" : true,
+  "yanit" : "Saat 08:40, pil yüzde 95 ve şarjda değil; \"Sınama rengi turkuaz\" bilgisini de hafızaya kaydettim.",
+  "yol" : "iPhone CLIProxy",
+  "zaman" : "2026-10-18T05:40:54Z",
+  "zamanAsimi" : false
+}

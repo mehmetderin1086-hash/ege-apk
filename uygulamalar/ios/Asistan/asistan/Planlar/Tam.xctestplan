@@ -1,0 +1,71 @@
+{
+  "configurations" : [
+    {
+      "id" : "5A3F2C10-7B1E-4D2A-9C61-0E1D3B4A5F10",
+      "name" : "Tam",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "environmentVariableEntries" : [
+      {
+        "key" : "ASISTAN_TEST",
+        "value" : "1"
+      },
+      {
+        "key" : "ASISTAN_CANLI",
+        "value" : "$(ASISTAN_CANLI)"
+      },
+      {
+        "key" : "ASISTAN_SES",
+        "value" : "$(ASISTAN_SES)"
+      },
+      {
+        "key" : "ASISTAN_WHISPER",
+        "value" : "$(ASISTAN_WHISPER)"
+      },
+      {
+        "key" : "ASISTAN_YEREL_WHISPER",
+        "value" : "$(ASISTAN_YEREL_WHISPER)"
+      },
+      {
+        "key" : "ASISTAN_YEREL_HESAP",
+        "value" : "$(ASISTAN_YEREL_HESAP)"
+      },
+      {
+        "key" : "ASISTAN_YEREL_SIL",
+        "value" : "$(ASISTAN_YEREL_SIL)"
+      },
+      {
+        "key" : "ASISTAN_OTOMASYON_KUR",
+        "value" : "$(ASISTAN_OTOMASYON_KUR)"
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Asistan.xcodeproj",
+      "identifier" : "B4B67DBFAA0FFFE938F286AF",
+      "name" : "Asistan"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:Asistan.xcodeproj",
+        "identifier" : "067BC05BF8B8A5DD3D9BDB15",
+        "name" : "AsistanTests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:Asistan.xcodeproj",
+        "identifier" : "9F574705827E0B0C88FB836C",
+        "name" : "AsistanUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

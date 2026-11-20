@@ -1,0 +1,44 @@
+ASISTAN OTOMATIK TEST MERKEZI
+
+Başlatma: Repo kökündeki “Asistan Testini Başlat.command” dosyasını Mac'te aç.
+Gerçek iPhone bağlı, kilidi açık ve Geliştirici Modu etkin olmalıdır.
+AsistanUITests-Runner telefona kurulur; test sırasında uygulamayı otomatik kullanır.
+Runner simgesine dokunmak tek başına XCTest turunu başlatmaz. Turu Mac yönetir.
+
+Katmanlar:
+- Birim: modelden bağımsız kurallar, veri işleme ve regresyonlar.
+- Arayüz: gerçek iPhone'da sahte servisle ekranlar ve kullanıcı akışları.
+- Sunucu: yerel sunucu bileşenlerinin testleri; üretim dağıtımı yapmaz.
+- Otomasyon: kurulum ve kabul betiklerinin denetimi.
+- Canlı: gerçek ağ/model/servis testleri; servis kullanımı ücretli olabilir.
+- Cihaz: ses, Live, ofis/PDF, dönüştürme, arşiv, indirme ve araç kabulü.
+
+Tek katman: python3 araclar/test-merkezi/merkez.py --asama arayuz
+Birden çok katman: --asama birim,sunucu,otomasyon
+Sonuç: ~/Developer/.build/asistan-test-merkezi/sonuc.json
+Her tur ayrıca tarihli klasörde günlük ve sonuc.json saklar.
+
+Geçti, Kısmen geçti, Başarısız, Doğrulanamadı, Koşulmadı ayrı raporlanır.
+Atlanan veya sıfır test çalıştırılan katman başarılı kabul edilmez.
+İlk ses/tekrar dinleme/üç ardışık tur doğrulanmadan Live kabulü başarılı olmaz.
+Sabit metinle Live testi gerçek mikrofonun insan konuşmasını tanıdığını kanıtlamaz.
+
+Sınırlar: Siri, kilit ekranı, Bluetooth, gerçek mikrofon, dış uygulamada teslim,
+kimlik doğrulama ve bildirimlerin gerçek zamanlı teslimi ayrıca cihaz kabulü ister.
+Takvim yazma ve MCP fixture testleri özel test hesabı/adresi olmadan atlanır.
+A–Z envanter, her olası girişin veya her modelin denendiği anlamına gelmez.
+
+ÖZELLİK / TEST EŞLEMESİ
+Sohbet/modeller: SahteModelUITestleri, GercekYanitUITesti, ModelMatrisiTestleri.
+Ses/Live: SesModuTestleri, SesIncelemeDuzeltmeTestleri, LiveClaudeCanliTestleri; cihaz kabulü.
+Hafıza: KisisellestirmeTestleri, HafizaKurtarmaTestleri, HafizaKalitesi testleri.
+Dosya/PDF/OCR/ofis: PdfOcrTestleri, PdfIslemTestleri, AraclarOfisPaylasimTestleri, CalismaAlaniUITestleri.
+İndirme/medya: IndirmeTestleri, MotorluIndirmeCanliTestleri, AdlaIndirmeCanliTestleri.
+Web/araçlar: AgCanliTestleri, YedekAramaCanliTestleri, DegerlendirmeCanliTestleri.
+Öğretmen: Müfredat, sınav, oylama, sınıflar, öğrenci ve öğretmen profili testleri.
+Otomasyon/entegrasyon: Siri/tetik, MCP, İkra köprüsü, bildirim ve kurulum testleri.
+Sağlık/ayarlar: SaglikMerkeziTestleri, AyarlarUITestleri, TumDugmelerUITesti, tanı/arıza testleri.
+
+Bu eşleme test bulunduğunu gösterir; başarı yalnız koşu sonucuyla doğrulanır.
+CihazSesTestleri, WhisperCanliTestleri, YerelWhisperCanliTestleri Canlı planından ayrıdır;
+özel ses bayrakları/yerel model ve donanım hazırlanarak ayrıca çalıştırılmalıdır.

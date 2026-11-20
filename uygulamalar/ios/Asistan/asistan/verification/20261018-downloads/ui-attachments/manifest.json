@@ -1,0 +1,17 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4895037A-59EE-45E9-BEF0-A555E9D0939D",
+        "deviceName" : "Ikra Tasarim",
+        "exportedFileName" : "90F4CF04-8831-48DC-95CB-8F04BF9FB531.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Screenshot of Target Application 'com.mehmetderin.asistan'_0_56CB6657-64A3-46CC-9D33-281776F3A10D.png",
+        "timestamp" : 1792315015.165
+      }
+    ],
+    "testIdentifier" : "KisisellestirmeUITestleri/testIndirmeEkrani()",
+    "testIdentifierURL" : "test://com.apple.xcode/Asistan/AsistanUITests/KisisellestirmeUITestleri/testIndirmeEkrani"
+  }
+]

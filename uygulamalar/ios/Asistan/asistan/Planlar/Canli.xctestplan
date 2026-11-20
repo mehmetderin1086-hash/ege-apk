@@ -1,0 +1,87 @@
+{
+  "configurations" : [
+    {
+      "id" : "E4B7A133-9D2C-4F1E-8B05-2C3D4E5F6A30",
+      "name" : "Canlı",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "environmentVariableEntries" : [
+      {
+        "key" : "ASISTAN_TEST",
+        "value" : "1"
+      },
+      {
+        "key" : "ASISTAN_CANLI",
+        "value" : "1"
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Asistan.xcodeproj",
+      "identifier" : "B4B67DBFAA0FFFE938F286AF",
+      "name" : "Asistan"
+    }
+  },
+  "testTargets" : [
+    {
+      "selectedTests" : [
+        "AdlaIndirmeCanliTestleri",
+        "AgCanliTestleri",
+        "AntigravityYarisOlcumTestleri",
+        "CanliIstemSuzgeciTestleri",
+        "CanliOlcumTestleri",
+        "CanliTestleri",
+        "CihazOzellikleriTestleri",
+        "DegerlendirmeCanliTestleri",
+        "EkAjanCanliTestleri",
+        "Gelistirme_P3_7_CanliBaglantiTestleri",
+        "HermesCanliTestleri",
+        "IettCanliTestleri",
+        "IndirmeBulSureTestleri",
+        "KasaDenetimTestleri",
+        "LiveClaudeCanliTestleri",
+        "MebKaynakCanliTestleri",
+        "ModelMatrisiTestleri",
+        "MotorTeshisTestleri",
+        "MotorluIndirmeCanliTestleri",
+        "MuzikAramaTestleri",
+        "OpenAIRealtimeCanliTestleri",
+        "OpenAITTSCanliTestleri",
+        "ParalelYarisOlcumTestleri",
+        "SesCikisOlcumTestleri",
+        "TakvimDogrudanTestleri",
+        "YedekAramaCanliTestleri",
+        "YeniOzelliklerCanliTestleri",
+        "YerelSunucuOnarimTestleri",
+        "ZenginBicimCanliTestleri",
+        "ZorSoruCanliTestleri"
+      ],
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:Asistan.xcodeproj",
+        "identifier" : "067BC05BF8B8A5DD3D9BDB15",
+        "name" : "AsistanTests"
+      }
+    },
+    {
+      "selectedTests" : [
+        "GercekYanitUITesti",
+        "KisisellestirmeUITestleri\/testAsistanTabloKaziyipKartGosterir()",
+        "KisisellestirmeUITestleri\/testIettDevamIstegiYeniPdfVerir()",
+        "KisisellestirmeUITestleri\/testIettSeferleriVePdf()",
+        "KisisellestirmeUITestleri\/testMesajlarArasiBaglamSurer()",
+        "KisisellestirmeUITestleri\/testTelifliSarkiIstegiYasalYolaGider()"
+      ],
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:Asistan.xcodeproj",
+        "identifier" : "9F574705827E0B0C88FB836C",
+        "name" : "AsistanUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

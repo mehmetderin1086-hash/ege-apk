@@ -1,0 +1,53 @@
+{
+  "configurations" : [
+    {
+      "id" : "8C1D4E22-3F5A-4B7C-A2D9-6E0F1A2B3C20",
+      "name" : "Duman",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "environmentVariableEntries" : [
+      {
+        "key" : "ASISTAN_TEST",
+        "value" : "1"
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Asistan.xcodeproj",
+      "identifier" : "B4B67DBFAA0FFFE938F286AF",
+      "name" : "Asistan"
+    }
+  },
+  "testTargets" : [
+    {
+      "selectedTests" : [
+        "CumleBolucuTestleri",
+        "Gelistirme_P1_5_SurumBilgisiTestleri",
+        "Gelistirme_P3_10_SahteModelTestleri",
+        "ModelZinciriTestleri"
+      ],
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:Asistan.xcodeproj",
+        "identifier" : "067BC05BF8B8A5DD3D9BDB15",
+        "name" : "AsistanTests"
+      }
+    },
+    {
+      "selectedTests" : [
+        "KisisellestirmeUITestleri\/testCekmeceYapisi()",
+        "SahteModelUITestleri"
+      ],
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:Asistan.xcodeproj",
+        "identifier" : "9F574705827E0B0C88FB836C",
+        "name" : "AsistanUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

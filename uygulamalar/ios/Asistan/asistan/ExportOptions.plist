@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- araclar/testflight-yukle.sh kullanır. Yalnız iç test (TestFlight Internal Testing Only).
+     Derleme numarasını betik verir (CURRENT_PROJECT_VERSION = YYYYMMDDHHMM); Xcode değiştirmez.
+     `--kuru` kipinde betik geçici bir kopyada destination=export yapar (yükleme olmaz). -->
+<plist version="1.0">
+<dict>
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>destination</key>
+	<string>upload</string>
+	<key>teamID</key>
+	<string>838FF89FZ8</string>
+	<key>signingStyle</key>
+	<string>automatic</string>
+	<key>testFlightInternalTestingOnly</key>
+	<true/>
+	<key>uploadSymbols</key>
+	<true/>
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
+	<key>stripSwiftSymbols</key>
+	<true/>
+</dict>
+</plist>

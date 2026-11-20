@@ -1,0 +1,64 @@
+[
+  {
+    "bolumler": [
+      {
+        "title": "Intro",
+        "start_time": 0,
+        "end_time": 5
+      },
+      {
+        "title": "The cool thing",
+        "start_time": 5,
+        "end_time": 17
+      },
+      {
+        "title": "End",
+        "start_time": 17,
+        "end_time": 19
+      }
+    ],
+    "dosya": "Videolar/Me at the zoo.mp4",
+    "kaynak": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+    "altyazilar": {},
+    "etiket": "240p · H.264",
+    "sure": 19,
+    "baslik": "Me at the zoo",
+    "tur": "video",
+    "boyut": 788333,
+    "tarih": 814007873.761919,
+    "kapak": "B503522D-E18B-4C3E-85A4-6DEF45C8BC65.jpg",
+    "id": "B503522D-E18B-4C3E-85A4-6DEF45C8BC65",
+    "yazar": "jawed"
+  },
+  {
+    "bolumler": [
+      {
+        "end_time": 5,
+        "start_time": 0,
+        "title": "Intro"
+      },
+      {
+        "end_time": 17,
+        "start_time": 5,
+        "title": "The cool thing"
+      },
+      {
+        "start_time": 17,
+        "end_time": 19,
+        "title": "End"
+      }
+    ],
+    "dosya": "Sesler/Me at the zoo.m4a",
+    "kaynak": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+    "altyazilar": {},
+    "etiket": "AAC · 130 kb/sn",
+    "sure": 19,
+    "baslik": "Me at the zoo",
+    "tur": "ses",
+    "boyut": 356391,
+    "tarih": 814007855.608877,
+    "kapak": "1A8BE665-BC3E-451B-808D-D7CB20B7229A.jpg",
+    "id": "1A8BE665-BC3E-451B-808D-D7CB20B7229A",
+    "yazar": "jawed"
+  }
+]

@@ -1,0 +1,30 @@
+{
+  "WFWorkflowName": "Mehmet Uygulama Koprusu",
+  "WFWorkflowClientVersion": "2700.1",
+  "WFWorkflowMinimumClientVersion": 900,
+  "WFWorkflowMinimumClientVersionString": "900",
+  "WFWorkflowIcon": {
+    "WFWorkflowIconStartColor": 4282601983,
+    "WFWorkflowIconGlyphNumber": 59729
+  },
+  "WFWorkflowActions": [
+    {
+      "WFWorkflowActionIdentifier": "is.workflow.actions.openapp",
+      "WFWorkflowActionParameters": {
+        "WFAppIdentifier": {
+          "Value": {
+            "Type": "ExtensionInput"
+          },
+          "WFSerializationType": "WFTextTokenAttachment"
+        }
+      }
+    }
+  ],
+  "WFWorkflowInputContentItemClasses": [
+    "WFStringContentItem"
+  ],
+  "WFWorkflowHasShortcutInputVariables": true,
+  "WFWorkflowImportQuestions": [],
+  "WFWorkflowTypes": [],
+  "WFQuickActionSurfaces": []
+}

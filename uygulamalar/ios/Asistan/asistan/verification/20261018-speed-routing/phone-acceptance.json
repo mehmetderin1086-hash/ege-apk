@@ -1,0 +1,75 @@
+{
+  "tamamlandi" : true,
+  "turlar" : [
+    {
+      "ad" : "otomatik-selam",
+      "bitti" : true,
+      "caba" : "low",
+      "hata" : "",
+      "ilkSn" : 1.2159669399261475,
+      "model" : "claude-haiku-4-5",
+      "toplamSn" : 1.2670819759368896,
+      "yanit" : "Merhaba Mehmet! 👋 Nasılsın? Bugün sana nasıl yardımcı olabilirim?"
+    },
+    {
+      "ad" : "otomatik-arac",
+      "bitti" : true,
+      "caba" : "low",
+      "hata" : "",
+      "ilkSn" : 13.943472027778625,
+      "model" : "claude-haiku-4-5",
+      "toplamSn" : 13.995990991592407,
+      "yanit" : "Saat 11:22, Pazar günü."
+    },
+    {
+      "ad" : "sonnet-yazi",
+      "bitti" : true,
+      "caba" : "medium",
+      "hata" : "",
+      "ilkSn" : 1.5854179859161377,
+      "model" : "claude-sonnet-5-5",
+      "toplamSn" : 3.3625600337982178,
+      "yanit" : "Küçük balıkçı Ali, her sabah denizin maviliğine bakıp \"Bugün de bir umut var\" derdi. O gün ağına balık yerine, dedesinin yıllar önce denize düşen mavi fenerinin takıldığını görünce, umudun hep geri döndüğünü anladı.\n\nİstersen bu hikayeyi biraz uzatabilirim ya da başka bir renkle yeni bir tane yazabilirim."
+    },
+    {
+      "ad" : "haiku-baglam",
+      "bitti" : true,
+      "caba" : "low",
+      "hata" : "",
+      "ilkSn" : 0.91182100772857666,
+      "model" : "claude-haiku-4-5",
+      "toplamSn" : 1.4753479957580566,
+      "yanit" : "Balıkçı Ali her sabah denizin maviliğine bakıp umut ederdi. Bir gün ağına dedesinin yıllar önce düşürdüğü mavi fener takıldı ve umudun geri döndüğünü anladı."
+    },
+    {
+      "ad" : "web-eski-zincir",
+      "bitti" : false,
+      "caba" : "medium",
+      "hata" : "",
+      "ilkSn" : 100.00737392902374,
+      "model" : "claude-opus-5-5",
+      "toplamSn" : 100.00737392902374,
+      "yanit" : "Apple resmi kaynaklarında iPhone pil sağlığına hangi Ayarlar menüsünden bakıldığını web aramasıyla araştır. İki kısa cümle ve kaynak bağlantısı ver."
+    },
+    {
+      "ad" : "web-dogrudan",
+      "bitti" : true,
+      "caba" : "low",
+      "hata" : "Araştırma tamamlanamadı: Sağlayıcı doğrulanabilir web sonucu döndürmedi.",
+      "ilkSn" : 6.2640210390090942,
+      "model" : "gpt-6.1-sol",
+      "toplamSn" : 6.2640210390090942,
+      "yanit" : "Apple resmi kaynaklarında iPhone pil sağlığına hangi Ayarlar menüsünden bakıldığını web aramasıyla araştır. İki kısa cümle ve kaynak bağlantısı ver."
+    },
+    {
+      "ad" : "web-sonrasi-baglam",
+      "bitti" : true,
+      "caba" : "medium",
+      "hata" : "",
+      "ilkSn" : 1.4932100772857666,
+      "model" : "claude-sonnet-5-5",
+      "toplamSn" : 2.1809380054473877,
+      "yanit" : "Bu oturumda henüz bir araştırma yapmadım, o yüzden tekrar edebileceğim bir menü yolu yok. Hangi ayarı ya da konuyu araştırmamı istersin? Hemen bakayım."
+    }
+  ]
+}

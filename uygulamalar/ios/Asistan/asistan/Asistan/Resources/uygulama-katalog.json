@@ -1,0 +1,776 @@
+[
+  {
+    "id": "com.amazon.Amazon",
+    "ad": "Amazon",
+    "digerAdlar": [
+      "Amazon"
+    ],
+    "kestirme": "Mehmet Aç Amazon",
+    "dosya": "com.amazon.Amazon"
+  },
+  {
+    "id": "com.apple.AppStore",
+    "ad": "App Store",
+    "digerAdlar": [
+      "App Store"
+    ],
+    "kestirme": "Mehmet Aç App Store",
+    "dosya": "com.apple.AppStore"
+  },
+  {
+    "id": "com.microsoft.azureauthenticator",
+    "ad": "Authenticator",
+    "digerAdlar": [
+      "Authenticator"
+    ],
+    "kestirme": "Mehmet Aç Authenticator",
+    "dosya": "com.microsoft.azureauthenticator"
+  },
+  {
+    "id": "com.apple.iBooks",
+    "ad": "Kitaplar",
+    "digerAdlar": [
+      "Books"
+    ],
+    "kestirme": "Mehmet Aç Kitaplar",
+    "dosya": "com.apple.iBooks"
+  },
+  {
+    "id": "com.mehmetderin.cliproxy",
+    "ad": "CLI Proxy",
+    "digerAdlar": [
+      "CLI Proxy"
+    ],
+    "kestirme": "Mehmet Aç CLI Proxy",
+    "dosya": "com.mehmetderin.cliproxy"
+  },
+  {
+    "id": "com.apple.calculator",
+    "ad": "Hesap Makinesi",
+    "digerAdlar": [
+      "Calculator"
+    ],
+    "kestirme": "Mehmet Aç Hesap Makinesi",
+    "dosya": "com.apple.calculator"
+  },
+  {
+    "id": "com.apple.mobilecal",
+    "ad": "Takvim",
+    "digerAdlar": [
+      "Calendar"
+    ],
+    "kestirme": "Mehmet Aç Takvim",
+    "dosya": "com.apple.mobilecal"
+  },
+  {
+    "id": "com.apple.camera",
+    "ad": "Kamera",
+    "digerAdlar": [
+      "Camera"
+    ],
+    "kestirme": "Mehmet Aç Kamera",
+    "dosya": "com.apple.camera"
+  },
+  {
+    "id": "com.openai.chat",
+    "ad": "ChatGPT",
+    "digerAdlar": [
+      "ChatGPT"
+    ],
+    "kestirme": "Mehmet Aç ChatGPT",
+    "dosya": "com.openai.chat"
+  },
+  {
+    "id": "com.anthropic.claude",
+    "ad": "Claude",
+    "digerAdlar": [
+      "Claude"
+    ],
+    "kestirme": "Mehmet Aç Claude",
+    "dosya": "com.anthropic.claude"
+  },
+  {
+    "id": "com.apple.mobiletimer",
+    "ad": "Saat",
+    "digerAdlar": [
+      "Clock"
+    ],
+    "kestirme": "Mehmet Aç Saat",
+    "dosya": "com.apple.mobiletimer"
+  },
+  {
+    "id": "com.apple.compass",
+    "ad": "Pusula",
+    "digerAdlar": [
+      "Compass"
+    ],
+    "kestirme": "Mehmet Aç Pusula",
+    "dosya": "com.apple.compass"
+  },
+  {
+    "id": "com.apple.MobileAddressBook",
+    "ad": "Kişiler",
+    "digerAdlar": [
+      "Contacts"
+    ],
+    "kestirme": "Mehmet Aç Kişiler",
+    "dosya": "com.apple.MobileAddressBook"
+  },
+  {
+    "id": "com.microsoft.officemobile",
+    "ad": "Copilot",
+    "digerAdlar": [
+      "Copilot"
+    ],
+    "kestirme": "Mehmet Aç Copilot",
+    "dosya": "com.microsoft.officemobile"
+  },
+  {
+    "id": "com.google.Docs",
+    "ad": "Docs",
+    "digerAdlar": [
+      "Docs"
+    ],
+    "kestirme": "Mehmet Aç Docs",
+    "dosya": "com.google.Docs"
+  },
+  {
+    "id": "com.readdle.ReaddleDocsIPad",
+    "ad": "Documents",
+    "digerAdlar": [
+      "Documents"
+    ],
+    "kestirme": "Mehmet Aç Documents",
+    "dosya": "com.readdle.ReaddleDocsIPad"
+  },
+  {
+    "id": "com.google.Drive",
+    "ad": "Drive",
+    "digerAdlar": [
+      "Drive"
+    ],
+    "kestirme": "Mehmet Aç Drive",
+    "dosya": "com.google.Drive"
+  },
+  {
+    "id": "com.canlidoviz",
+    "ad": "Döviz App",
+    "digerAdlar": [
+      "Döviz App"
+    ],
+    "kestirme": "Mehmet Aç Döviz App",
+    "dosya": "com.canlidoviz"
+  },
+  {
+    "id": "Yegitek.EBAMobil",
+    "ad": "EBA",
+    "digerAdlar": [
+      "EBA"
+    ],
+    "kestirme": "Mehmet Aç EBA",
+    "dosya": "Yegitek.EBAMobil"
+  },
+  {
+    "id": "com.apple.facetime",
+    "ad": "FaceTime",
+    "digerAdlar": [
+      "FaceTime"
+    ],
+    "kestirme": "Mehmet Aç FaceTime",
+    "dosya": "com.apple.facetime"
+  },
+  {
+    "id": "com.apple.appleseed.FeedbackAssistant",
+    "ad": "Geri Bildirim",
+    "digerAdlar": [
+      "Feedback"
+    ],
+    "kestirme": "Mehmet Aç Geri Bildirim",
+    "dosya": "com.apple.appleseed.FeedbackAssistant"
+  },
+  {
+    "id": "com.apple.DocumentsApp",
+    "ad": "Dosyalar",
+    "digerAdlar": [
+      "Files"
+    ],
+    "kestirme": "Mehmet Aç Dosyalar",
+    "dosya": "com.apple.DocumentsApp"
+  },
+  {
+    "id": "com.apple.findmy",
+    "ad": "Bul",
+    "digerAdlar": [
+      "Find My"
+    ],
+    "kestirme": "Mehmet Aç Bul",
+    "dosya": "com.apple.findmy"
+  },
+  {
+    "id": "com.apple.Fitness",
+    "ad": "Fitness",
+    "digerAdlar": [
+      "Fitness"
+    ],
+    "kestirme": "Mehmet Aç Fitness",
+    "dosya": "com.apple.Fitness"
+  },
+  {
+    "id": "com.apple.freeform",
+    "ad": "Freeform",
+    "digerAdlar": [
+      "Freeform"
+    ],
+    "kestirme": "Mehmet Aç Freeform",
+    "dosya": "com.apple.freeform"
+  },
+  {
+    "id": "com.apple.games",
+    "ad": "Oyunlar",
+    "digerAdlar": [
+      "Games"
+    ],
+    "kestirme": "Mehmet Aç Oyunlar",
+    "dosya": "com.apple.games"
+  },
+  {
+    "id": "com.google.gemini",
+    "ad": "Gemini",
+    "digerAdlar": [
+      "Gemini"
+    ],
+    "kestirme": "Mehmet Aç Gemini",
+    "dosya": "com.google.gemini"
+  },
+  {
+    "id": "com.google.photos",
+    "ad": "Google Photos",
+    "digerAdlar": [
+      "Google Photos"
+    ],
+    "kestirme": "Mehmet Aç Google Photos",
+    "dosya": "com.google.photos"
+  },
+  {
+    "id": "ai.x.GrokApp",
+    "ad": "Grok",
+    "digerAdlar": [
+      "Grok"
+    ],
+    "kestirme": "Mehmet Aç Grok",
+    "dosya": "ai.x.GrokApp"
+  },
+  {
+    "id": "co.anysphere.sand",
+    "ad": "Grok Bot",
+    "digerAdlar": [
+      "Grok Bot"
+    ],
+    "kestirme": "Mehmet Aç Grok Bot",
+    "dosya": "co.anysphere.sand"
+  },
+  {
+    "id": "com.halkbank.mobileapp",
+    "ad": "Halkbank",
+    "digerAdlar": [
+      "Halkbank"
+    ],
+    "kestirme": "Mehmet Aç Halkbank",
+    "dosya": "com.halkbank.mobileapp"
+  },
+  {
+    "id": "com.apple.Health",
+    "ad": "Sağlık",
+    "digerAdlar": [
+      "Health"
+    ],
+    "kestirme": "Mehmet Aç Sağlık",
+    "dosya": "com.apple.Health"
+  },
+  {
+    "id": "com.apple.Home",
+    "ad": "Ev",
+    "digerAdlar": [
+      "Home"
+    ],
+    "kestirme": "Mehmet Aç Ev",
+    "dosya": "com.apple.Home"
+  },
+  {
+    "id": "com.burbn.instagram",
+    "ad": "Instagram",
+    "digerAdlar": [
+      "Instagram"
+    ],
+    "kestirme": "Mehmet Aç Instagram",
+    "dosya": "com.burbn.instagram"
+  },
+  {
+    "id": "com.apple.journal",
+    "ad": "Günlük",
+    "digerAdlar": [
+      "Journal"
+    ],
+    "kestirme": "Mehmet Aç Günlük",
+    "dosya": "com.apple.journal"
+  },
+  {
+    "id": "com.kazanim.cepte",
+    "ad": "KazanımCepte",
+    "digerAdlar": [
+      "KazanımCepte"
+    ],
+    "kestirme": "Mehmet Aç KazanımCepte",
+    "dosya": "com.kazanim.cepte"
+  },
+  {
+    "id": "com.mehmetderin.kepce",
+    "ad": "Kepçe",
+    "digerAdlar": [
+      "Kepçe"
+    ],
+    "kestirme": "Mehmet Aç Kepçe",
+    "dosya": "com.mehmetderin.kepce"
+  },
+  {
+    "id": "com.mehmetderin.kitapkatalogu",
+    "ad": "Kitap Bul",
+    "digerAdlar": [
+      "Kitap Bul"
+    ],
+    "kestirme": "Mehmet Aç Kitap Bul",
+    "dosya": "com.mehmetderin.kitapkatalogu"
+  },
+  {
+    "id": "tr.gov.eba.mebi",
+    "ad": "MEBİ",
+    "digerAdlar": [
+      "MEBİ"
+    ],
+    "kestirme": "Mehmet Aç MEBİ",
+    "dosya": "tr.gov.eba.mebi"
+  },
+  {
+    "id": "com.apple.Magnifier",
+    "ad": "Büyüteç",
+    "digerAdlar": [
+      "Magnifier"
+    ],
+    "kestirme": "Mehmet Aç Büyüteç",
+    "dosya": "com.apple.Magnifier"
+  },
+  {
+    "id": "com.apple.mobilemail",
+    "ad": "Mail",
+    "digerAdlar": [
+      "Mail"
+    ],
+    "kestirme": "Mehmet Aç Mail",
+    "dosya": "com.apple.mobilemail"
+  },
+  {
+    "id": "com.apple.Maps",
+    "ad": "Haritalar",
+    "digerAdlar": [
+      "Maps"
+    ],
+    "kestirme": "Mehmet Aç Haritalar",
+    "dosya": "com.apple.Maps"
+  },
+  {
+    "id": "com.apple.measure",
+    "ad": "Ölçüm",
+    "digerAdlar": [
+      "Measure"
+    ],
+    "kestirme": "Mehmet Aç Ölçüm",
+    "dosya": "com.apple.measure"
+  },
+  {
+    "id": "com.mehmetderin.asistan",
+    "ad": "Mehmet Asistan",
+    "digerAdlar": [
+      "Mehmet Asistan"
+    ],
+    "kestirme": "Mehmet Aç Mehmet Asistan",
+    "dosya": "com.mehmetderin.asistan"
+  },
+  {
+    "id": "com.apple.MobileSMS",
+    "ad": "Mesajlar",
+    "digerAdlar": [
+      "Messages"
+    ],
+    "kestirme": "Mehmet Aç Mesajlar",
+    "dosya": "com.apple.MobileSMS"
+  },
+  {
+    "id": "com.apple.Music",
+    "ad": "Müzik",
+    "digerAdlar": [
+      "Music"
+    ],
+    "kestirme": "Mehmet Aç Müzik",
+    "dosya": "com.apple.Music"
+  },
+  {
+    "id": "com.apple.news",
+    "ad": "Haberler",
+    "digerAdlar": [
+      "News"
+    ],
+    "kestirme": "Mehmet Aç Haberler",
+    "dosya": "com.apple.news"
+  },
+  {
+    "id": "com.google.NotebookLM",
+    "ad": "Notebook",
+    "digerAdlar": [
+      "Notebook"
+    ],
+    "kestirme": "Mehmet Aç Notebook",
+    "dosya": "com.google.NotebookLM"
+  },
+  {
+    "id": "com.apple.mobilenotes",
+    "ad": "Notlar",
+    "digerAdlar": [
+      "Notes"
+    ],
+    "kestirme": "Mehmet Aç Notlar",
+    "dosya": "com.apple.mobilenotes"
+  },
+  {
+    "id": "com.microsoft.skydrive",
+    "ad": "OneDrive",
+    "digerAdlar": [
+      "OneDrive"
+    ],
+    "kestirme": "Mehmet Aç OneDrive",
+    "dosya": "com.microsoft.skydrive"
+  },
+  {
+    "id": "tr.gov.iett.MobiettCalisma",
+    "ad": "Otobüsüm Nerede?",
+    "digerAdlar": [
+      "Otobüsüm Nerede?"
+    ],
+    "kestirme": "Mehmet Aç Otobüsüm Nerede?",
+    "dosya": "tr.gov.iett.MobiettCalisma"
+  },
+  {
+    "id": "com.microsoft.Office.Outlook",
+    "ad": "Outlook",
+    "digerAdlar": [
+      "Outlook"
+    ],
+    "kestirme": "Mehmet Aç Outlook",
+    "dosya": "com.microsoft.Office.Outlook"
+  },
+  {
+    "id": "com.apple.Passwords",
+    "ad": "Parolalar",
+    "digerAdlar": [
+      "Passwords"
+    ],
+    "kestirme": "Mehmet Aç Parolalar",
+    "dosya": "com.apple.Passwords"
+  },
+  {
+    "id": "com.apple.mobilephone",
+    "ad": "Telefon",
+    "digerAdlar": [
+      "Phone"
+    ],
+    "kestirme": "Mehmet Aç Telefon",
+    "dosya": "com.apple.mobilephone"
+  },
+  {
+    "id": "com.apple.mobileslideshow",
+    "ad": "Fotoğraflar",
+    "digerAdlar": [
+      "Photos"
+    ],
+    "kestirme": "Mehmet Aç Fotoğraflar",
+    "dosya": "com.apple.mobileslideshow"
+  },
+  {
+    "id": "com.apple.podcasts",
+    "ad": "Podcasts",
+    "digerAdlar": [
+      "Podcasts"
+    ],
+    "kestirme": "Mehmet Aç Podcasts",
+    "dosya": "com.apple.podcasts"
+  },
+  {
+    "id": "com.apple.Preview",
+    "ad": "Önizleme",
+    "digerAdlar": [
+      "Preview"
+    ],
+    "kestirme": "Mehmet Aç Önizleme",
+    "dosya": "com.apple.Preview"
+  },
+  {
+    "id": "com.apple.reminders",
+    "ad": "Anımsatıcılar",
+    "digerAdlar": [
+      "Reminders"
+    ],
+    "kestirme": "Mehmet Aç Anımsatıcılar",
+    "dosya": "com.apple.reminders"
+  },
+  {
+    "id": "com.apple.TVRemoteApp",
+    "ad": "Kumanda",
+    "digerAdlar": [
+      "Remote"
+    ],
+    "kestirme": "Mehmet Aç Kumanda",
+    "dosya": "com.apple.TVRemoteApp"
+  },
+  {
+    "id": "com.apple.mobilesafari",
+    "ad": "Safari",
+    "digerAdlar": [
+      "Safari"
+    ],
+    "kestirme": "Mehmet Aç Safari",
+    "dosya": "com.apple.mobilesafari"
+  },
+  {
+    "id": "com.apple.Preferences",
+    "ad": "Ayarlar",
+    "digerAdlar": [
+      "Settings"
+    ],
+    "kestirme": "Mehmet Aç Ayarlar",
+    "dosya": "com.apple.Preferences"
+  },
+  {
+    "id": "com.apple.shortcuts",
+    "ad": "Kestirmeler",
+    "digerAdlar": [
+      "Shortcuts"
+    ],
+    "kestirme": "Mehmet Aç Kestirmeler",
+    "dosya": "com.apple.shortcuts"
+  },
+  {
+    "id": "com.clarif.solver",
+    "ad": "Solvi",
+    "digerAdlar": [
+      "Solvi"
+    ],
+    "kestirme": "Mehmet Aç Solvi",
+    "dosya": "com.clarif.solver"
+  },
+  {
+    "id": "com.spotify.client",
+    "ad": "Spotify",
+    "digerAdlar": [
+      "Spotify"
+    ],
+    "kestirme": "Mehmet Aç Spotify",
+    "dosya": "com.spotify.client"
+  },
+  {
+    "id": "com.apple.stocks",
+    "ad": "Borsa",
+    "digerAdlar": [
+      "Stocks"
+    ],
+    "kestirme": "Mehmet Aç Borsa",
+    "dosya": "com.apple.stocks"
+  },
+  {
+    "id": "com.digiturk.tod",
+    "ad": "TOD Türkiye",
+    "digerAdlar": [
+      "TOD Türkiye"
+    ],
+    "kestirme": "Mehmet Aç TOD Türkiye",
+    "dosya": "com.digiturk.tod"
+  },
+  {
+    "id": "com.apple.tv",
+    "ad": "TV",
+    "digerAdlar": [
+      "TV"
+    ],
+    "kestirme": "Mehmet Aç TV",
+    "dosya": "com.apple.tv"
+  },
+  {
+    "id": "ph.telegra.Telegraph",
+    "ad": "Telegram",
+    "digerAdlar": [
+      "Telegram"
+    ],
+    "kestirme": "Mehmet Aç Telegram",
+    "dosya": "ph.telegra.Telegraph"
+  },
+  {
+    "id": "com.apple.tips",
+    "ad": "İpuçları",
+    "digerAdlar": [
+      "Tips"
+    ],
+    "kestirme": "Mehmet Aç İpuçları",
+    "dosya": "com.apple.tips"
+  },
+  {
+    "id": "com.apple.Translate",
+    "ad": "Çeviri",
+    "digerAdlar": [
+      "Translate"
+    ],
+    "kestirme": "Mehmet Aç Çeviri",
+    "dosya": "com.apple.Translate"
+  },
+  {
+    "id": "com.avea.onlineislemler",
+    "ad": "Türk Telekom",
+    "digerAdlar": [
+      "Türk Telekom"
+    ],
+    "kestirme": "Mehmet Aç Türk Telekom",
+    "dosya": "com.avea.onlineislemler"
+  },
+  {
+    "id": "com.vakifbank.mobil",
+    "ad": "VakıfBank",
+    "digerAdlar": [
+      "VakıfBank"
+    ],
+    "kestirme": "Mehmet Aç VakıfBank",
+    "dosya": "com.vakifbank.mobil"
+  },
+  {
+    "id": "com.apple.VoiceMemos",
+    "ad": "Sesli Notlar",
+    "digerAdlar": [
+      "Voice Memos"
+    ],
+    "kestirme": "Mehmet Aç Sesli Notlar",
+    "dosya": "com.apple.VoiceMemos"
+  },
+  {
+    "id": "com.apple.Passbook",
+    "ad": "Cüzdan",
+    "digerAdlar": [
+      "Wallet"
+    ],
+    "kestirme": "Mehmet Aç Cüzdan",
+    "dosya": "com.apple.Passbook"
+  },
+  {
+    "id": "com.apple.Bridge",
+    "ad": "Watch",
+    "digerAdlar": [
+      "Watch"
+    ],
+    "kestirme": "Mehmet Aç Watch",
+    "dosya": "com.apple.Bridge"
+  },
+  {
+    "id": "com.apple.weather",
+    "ad": "Hava Durumu",
+    "digerAdlar": [
+      "Weather"
+    ],
+    "kestirme": "Mehmet Aç Hava Durumu",
+    "dosya": "com.apple.weather"
+  },
+  {
+    "id": "com.microsoft.Office.Word",
+    "ad": "Word",
+    "digerAdlar": [
+      "Word"
+    ],
+    "kestirme": "Mehmet Aç Word",
+    "dosya": "com.microsoft.Office.Word"
+  },
+  {
+    "id": "com.pozitron.YKB",
+    "ad": "YapıKrediMobil",
+    "digerAdlar": [
+      "YapıKrediMobil"
+    ],
+    "kestirme": "Mehmet Aç YapıKrediMobil",
+    "dosya": "com.pozitron.YKB"
+  },
+  {
+    "id": "com.google.ios.youtube",
+    "ad": "YouTube",
+    "digerAdlar": [
+      "YouTube"
+    ],
+    "kestirme": "Mehmet Aç YouTube",
+    "dosya": "com.google.ios.youtube"
+  },
+  {
+    "id": "tr.gov.turkiye.eDevKapisi",
+    "ad": "e-Devlet",
+    "digerAdlar": [
+      "e-Devlet"
+    ],
+    "kestirme": "Mehmet Aç e-Devlet",
+    "dosya": "tr.gov.turkiye.eDevKapisi"
+  },
+  {
+    "id": "com.meb.eOkul",
+    "ad": "e-Okul Öğretmen",
+    "digerAdlar": [
+      "e-Okul Öğretmen"
+    ],
+    "kestirme": "Mehmet Aç e-Okul Öğretmen",
+    "dosya": "com.meb.eOkul"
+  },
+  {
+    "id": "com.apple.MobileStore",
+    "ad": "iTunes Store",
+    "digerAdlar": [
+      "iTunes Store"
+    ],
+    "kestirme": "Mehmet Aç iTunes Store",
+    "dosya": "com.apple.MobileStore"
+  },
+  {
+    "id": "com.sahibinden.sahibinden",
+    "ad": "sahibinden",
+    "digerAdlar": [
+      "sahibinden"
+    ],
+    "kestirme": "Mehmet Aç sahibinden",
+    "dosya": "com.sahibinden.sahibinden"
+  },
+  {
+    "id": "tr.com.evrakcepte",
+    "ad": "ÖğretmenEvrak",
+    "digerAdlar": [
+      "ÖğretmenEvrak"
+    ],
+    "kestirme": "Mehmet Aç ÖğretmenEvrak",
+    "dosya": "tr.com.evrakcepte"
+  },
+  {
+    "id": "com.mehmetderin.derspodcast",
+    "ad": "İkra",
+    "digerAdlar": [
+      "İkra"
+    ],
+    "kestirme": "Mehmet Aç İkra",
+    "dosya": "com.mehmetderin.derspodcast"
+  },
+  {
+    "id": "net.whatsapp.WhatsApp",
+    "ad": "WhatsApp",
+    "digerAdlar": [
+      "WhatsApp"
+    ],
+    "kestirme": "Mehmet Aç WhatsApp",
+    "dosya": "net.whatsapp.WhatsApp"
+  }
+]

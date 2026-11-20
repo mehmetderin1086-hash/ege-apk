@@ -1,0 +1,26 @@
+[
+  {
+    "basarili" : true,
+    "beklenen" : "kod",
+    "istek" : "Python ile CSV dosyasını okuyup toplam hesaplayan fonksiyon yaz",
+    "secilen" : "kod"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "kod",
+    "istek" : "Buna birim testlerini de ekle",
+    "secilen" : "kod"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "yazi",
+    "istek" : "Bana kısa bir doğum günü mesajı hazırla",
+    "secilen" : "yazi"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "yazi",
+    "istek" : "Bunu daha samimi yap",
+    "secilen" : "yazi"
+  }
+]

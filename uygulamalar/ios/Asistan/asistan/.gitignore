@@ -1,0 +1,11 @@
+Secrets.xcconfig
+*.xcodeproj
+.build/
+DerivedData/
+*.xcuserstate
+.DS_Store
+verification/**/*.tgz
+verification/**/*.log
+verification/**/*.xcresult/
+
+Bagimliliklar/

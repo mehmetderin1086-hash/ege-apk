@@ -1,0 +1,26 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4895037A-59EE-45E9-BEF0-A555E9D0939D",
+        "deviceName" : "Ikra Tasarim",
+        "exportedFileName" : "36571905-EEB0-4959-B504-55C2EDB1B0B9.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Screenshot of Target Application 'com.mehmetderin.asistan'_0_F774E942-1756-421B-BA8E-4E82A41A4142.png",
+        "timestamp" : 1792315448.257
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "4895037A-59EE-45E9-BEF0-A555E9D0939D",
+        "deviceName" : "Ikra Tasarim",
+        "exportedFileName" : "DBE8BCA7-E47C-4F62-A7C0-4ED4F4EC760C.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "web-verisi-cikarma_0_4890FCDA-EA97-4913-B1FE-148384DBCEDC.png",
+        "timestamp" : 1792315445.081
+      }
+    ],
+    "testIdentifier" : "KisisellestirmeUITestleri/testIndirmeEkrani()",
+    "testIdentifierURL" : "test://com.apple.xcode/Asistan/AsistanUITests/KisisellestirmeUITestleri/testIndirmeEkrani"
+  }
+]

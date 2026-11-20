@@ -1,0 +1,25 @@
+{
+  "araclar" : [
+    {
+      "ad" : "Kaynak araştırması",
+      "durum" : "Araç yanıtladı"
+    },
+    {
+      "ad" : "Excel dosyası",
+      "durum" : "Araç yanıtladı"
+    }
+  ],
+  "dogrudanArastirma" : false,
+  "durum" : "bosta",
+  "hata" : "",
+  "istek" : "Kitapyurdu'da Simyacı'nın bütününü bul Excel dosyasında ver",
+  "kip" : "arastirma",
+  "model" : "iPhone · Kitapyurdu katalog",
+  "tamamlandi" : true,
+  "xlsx" : [
+    "1B3BA333-45A2-49EC-9D69-0F89E6538DDE-Kitapyurdu-Simyacı.xlsx"
+  ],
+  "yanitlar" : [
+    "Kitapyurdu canlı kataloğunda 40 sonuç buldum ve Kitapyurdu-Simyacı.xlsx dosyasını oluşturdum. İndirmeler ekranından açabilir veya paylaşabilirsin."
+  ]
+}

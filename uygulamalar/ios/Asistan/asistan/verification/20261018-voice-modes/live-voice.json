@@ -1,0 +1,39 @@
+{
+  "baslangicMikrofon" : "dinliyor",
+  "bitti" : true,
+  "durdu" : true,
+  "elleModelAyari" : "claude-opus-5-5",
+  "girdi" : "Azure test sesi hoparlörden fiziksel mikrofona; gerçek kullanıcı değil",
+  "girisDb" : -64.508209228515625,
+  "otomatikModel" : true,
+  "ses" : "azure:Elif",
+  "testSesiyleUyandi" : true,
+  "turlar" : [
+    {
+      "canliMod" : true,
+      "cikisDb" : -7.6498885154724121,
+      "dinlemeyeDondu" : true,
+      "hata" : "",
+      "ilkSesSn" : 15.970273017883301,
+      "istek" : "Bu konuşma için seçtiğim renk mercan. Yalnız 'Mercan, aklımda.' de.",
+      "model" : "claude-sonnet-5-5",
+      "sureSn" : 32.921962022781372,
+      "taninan" : "Bu konuşma için sectigim renk mercan yalnız mercan aklımda",
+      "yanit" : "Mercan güzel bir seçim, bu konuşma boyunca aklımda. Sıcak bir ton, bence sana yakışır. İstersen bunu kalıcı tercih olarak da kaydedebilirim. Şimdi sana nasıl yardımcı olayım?"
+    },
+    {
+      "canliMod" : true,
+      "cikisDb" : -6.5213508605957031,
+      "dinlemeyeDondu" : true,
+      "hata" : "",
+      "ilkSesSn" : 9.0619269609451294,
+      "istek" : "Az önce seçtiğim renk neydi? Yalnız rengin adını söyle.",
+      "model" : "claude-sonnet-5-5",
+      "sureSn" : 11.257584929466248,
+      "taninan" : "Az önce sectigim renk neydi yalnız rengin adını söyle",
+      "yanit" : "Mercan."
+    }
+  ],
+  "uyandirmaMikrofon" : "dinliyor",
+  "uyandirmaSesCaldi" : true
+}

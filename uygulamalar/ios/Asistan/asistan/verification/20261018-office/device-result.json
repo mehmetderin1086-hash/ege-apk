@@ -1,0 +1,25 @@
+{
+  "dosyalar" : [
+    {
+      "ad" : "Mehmet-Asistan-Ofis.docx",
+      "bayt" : 3152,
+      "okundu" : true
+    },
+    {
+      "ad" : "Mehmet-Asistan-Ofis.xlsx",
+      "bayt" : 4191,
+      "okundu" : true
+    },
+    {
+      "ad" : "Mehmet-Asistan-Ofis.pptx",
+      "bayt" : 9770,
+      "okundu" : true
+    },
+    {
+      "ad" : "Mehmet-Asistan-Ofis.pdf",
+      "bayt" : 18197,
+      "okundu" : true
+    }
+  ],
+  "tamamlandi" : true
+}

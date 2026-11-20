@@ -1,0 +1,15 @@
+# Mehmet Asistan 0.8.0 (15) — 18 Ekim 2026
+
+- iPhone installed-app inventory: 111 records, 86 launchable user/system apps included; 25 internal services excluded. Catalog is a snapshot, not a private-API runtime installed-app scanner.
+- `Mehmet Uygulama Koprusu`: Apple-signed shortcut, 86 explicit string-match branches, each opens only its catalog bundle identifier. No arbitrary script, message, account data, or URL input execution. Branch validation 86/86, 258 actions.
+- Created via exported Apple Open App action and native conditional format; imported into Mac Shortcuts. iCloud propagated to physical iPhone. Documented shortcuts URL with calculator input launched Calculator (absent before, present after). The app's own `uygulamaAc` tool then launched Compass (absent before, present after). No physical screen sharing was enabled.
+- Physical app 0.8.0 build 15 installed and normal launch restored. Bridge flag explicitly enabled only after successful device verification, using DEBUG acceptance argument. New installations default to bridge not installed and include the signed file in their setup page.
+- Files: user-selected security-scoped folder bookmarks, local recursive filename/content search, bounded text/PDF reads, result IDs, Quick Look. Physical test used a temporary fixture inside the app container; Turkish uppercase İstanbul matched and content read succeeded. It does not prove external iCloud provider permission/import on this phone. User still selects the folders to expose.
+- Limits: 12 folders, 1500 files/60 results/200 content reads, 20-second scan budget between files; text2MB/PDF20MB, first50k chars/PDF40pages. Scanned PDFs and not-downloaded cloud files are not content searched. Existing document attachment OCR remains available.
+- Registered app action bridge and optional WhatsApp JSON input (`telefon`, `mesaj`). WhatsApp native send shortcut was NOT created/verified; normal behavior opens prefilled chat, final send remains native WhatsApp. No message/call sent during tests. Generic app opening does not grant UI automation or access to other apps' private data.
+- Swift tests: 114 discovered, 104 passed, 10 existing conditional live/device tests skipped. New catalog UI test passed (search Telegram and open signed-file share sheet). First test run exposed a Turkish case/diacritic search issue, fixed with case matching before fallback folding; missing per-app resource assertion was replaced after final design switched to one bridge.
+- Existing automatic model routing, Azure HD Elif TTS, Live, and no-mirroring preference preserved. No new end-to-end real voice wake acceptance in this change.
+
+Evidence: `test-final.log`, `ui-test.log`, `phone-build-final.log`, `phone-install.log`, `phone-result.json`, `phone-compass-proof.json`, `shortcut-validation.json`, `phone-normal-launch.log`.
+
+Implementation: `DosyaKitapligi`, `DosyaAraci`, `DosyalarEkrani`, `UygulamaKatalogu`, `UygulamaKatalogEkrani`, `UygulamaBaglantilari`, `UygulamaIslemAraci`, `UygulamaBaglantiEkrani`. Access: Menü → Telefon işlemleri; files also from composer +.

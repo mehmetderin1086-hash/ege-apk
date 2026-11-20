@@ -1,0 +1,21 @@
+{
+  "adet" : 9,
+  "baslik" : "Telefon Kazıma Sınaması",
+  "canliBaslik" : "Example Domain",
+  "canliDurum" : "7 öğe çıkarıldı. Sonuçları seçebilir veya veri dosyası oluşturabilirsin.",
+  "canliKaynak" : "https:\/\/example.com\/",
+  "canliOge" : 7,
+  "csvBayt" : 664,
+  "durum" : "9 öğe çıkarıldı. Sonuçları seçebilir veya veri dosyası oluşturabilirsin.",
+  "jsonBayt" : 1577,
+  "pdf" : true,
+  "turler" : [
+    "dosya",
+    "gorsel",
+    "metin",
+    "ses",
+    "tablo",
+    "video",
+    "yapisal-veri"
+  ]
+}

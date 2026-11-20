@@ -1,0 +1,54 @@
+[
+  {
+    "adres": "https://download.samplelib.com/mp4/sample-5s.mp4",
+    "secim": {
+      "tur": "video",
+      "enFazla": 1080,
+      "otomatikAltyazi": true
+    },
+    "durum": "hata",
+    "hata": "Bu video için iPhone'da oynatılabilir bir biçim bulunamadı. \"Özgün dosya\" seçeneğini dene.",
+    "alinan": 0,
+    "toplam": null,
+    "kutuphaneID": null
+  },
+  {
+    "adres": "https://www.youtube.com/watch?v=BaW_jenozKc",
+    "secim": {
+      "tur": "video",
+      "enFazla": 1080,
+      "otomatikAltyazi": true
+    },
+    "durum": "hata",
+    "hata": "Video kullanılamıyor (kaldırılmış ya da bölgende kapalı olabilir).\n\nİndirilebilir biçim bulunamadı. Requested format is not available",
+    "alinan": 0,
+    "toplam": null,
+    "kutuphaneID": null
+  },
+  {
+    "adres": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+    "secim": {
+      "tur": "ses",
+      "enFazla": 1080,
+      "otomatikAltyazi": true
+    },
+    "durum": "tamam",
+    "hata": null,
+    "alinan": 309288,
+    "toplam": 309288,
+    "kutuphaneID": "1A8BE665-BC3E-451B-808D-D7CB20B7229A"
+  },
+  {
+    "adres": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+    "secim": {
+      "tur": "video",
+      "enFazla": 1080,
+      "otomatikAltyazi": true
+    },
+    "durum": "tamam",
+    "hata": null,
+    "alinan": 742369,
+    "toplam": 742369,
+    "kutuphaneID": "B503522D-E18B-4C3E-85A4-6DEF45C8BC65"
+  }
+]

@@ -1,0 +1,79 @@
+[
+  {
+    "basarili" : true,
+    "beklenen" : "kod",
+    "istek" : "Python ile CSV dosyasını okuyup toplam hesaplayan fonksiyon yaz",
+    "secilen" : "kod"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "kod",
+    "istek" : "Buna birim testlerini de ekle",
+    "secilen" : "kod"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "yazi",
+    "istek" : "Bana kısa bir doğum günü mesajı hazırla",
+    "secilen" : "yazi"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "yazi",
+    "istek" : "Bunu daha samimi yap",
+    "secilen" : "yazi"
+  },
+  {
+    "basarili" : false,
+    "beklenen" : "arastirma",
+    "istek" : "Apple'ın güncel iPhone mikrofon desteğini resmi kaynaklardan araştır",
+    "secilen" : "sohbet"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "gorsel",
+    "istek" : "Uzayda bir kütüphanenin suluboya resmini çiz",
+    "secilen" : "gorsel"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "yazi",
+    "istek" : "Resim üretme, bunun için bir açıklama metni yaz",
+    "secilen" : "yazi"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "sohbet",
+    "istek" : "Şimdi YouTube'u aç",
+    "secilen" : "sohbet"
+  },
+  {
+    "basarili" : true,
+    "beklenen" : "arsiv",
+    "istek" : "Sohbet arşivini aç",
+    "secilen" : "arsiv"
+  },
+  {
+    "hata" : "",
+    "istek" : "tam akis: tesekkur mesaji",
+    "secilen" : "yazi",
+    "sesliOkunur" : false,
+    "yanit" : "Desteğin ve inceliğin için çok teşekkür ederim. Yanımda olman benim için gerçekten çok değerli. İyi ki varsın, her şey için gönülden teşekkürler."
+  },
+  {
+    "istek" : "canli hava karti",
+    "saatSayisi" : 12,
+    "yanit" : "İstanbul, İstanbul: şu an 13°C (hissedilen 11°), kapalı, nem %67, rüzgâr 7 km\/sa. Bugün: 11–15°C, yağmurlu, yağış olasılığı %100. Yarın: 14–17°C, kapalı, yağış olasılığı %3. Öbür gün: 15–20°C, kapalı, yağış olasılığı %0."
+  },
+  {
+    "adimlar" : [
+      {
+        "ad" : "Saat ve tarih",
+        "durum" : "Araç yanıtladı"
+      }
+    ],
+    "hata" : "",
+    "istek" : "canli arac gunlugu",
+    "yanit" : "Saat 09:40."
+  }
+]

@@ -1,0 +1,114 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "apps",
+      "--device",
+      "00008120-001C592421D8A01E",
+      "--json-output",
+      "verification/20261018-v016/apps.json"
+    ],
+    "commandType" : "devicectl.device.info.apps",
+    "environment" : {
+      "TERM" : "dumb"
+    },
+    "jsonVersion" : 5,
+    "outcome" : "success",
+    "version" : "651.13.5"
+  },
+  "result" : {
+    "apps" : [
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "com.mehmetderin.asistan.uitests.xctrunner",
+        "bundleVersion" : "1",
+        "containerAccessible" : true,
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "AsistanUITests-Runner",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/DA4A2951-A2D8-46AE-9ACC-C009F9A49D4A/AsistanUITests-Runner.app/",
+        "version" : "1.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "com.mehmetderin.cliproxy",
+        "bundleVersion" : "1",
+        "containerAccessible" : true,
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "CLI Proxy",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/F2FD7C86-9D18-4FA3-86EA-0F58552AF464/CLIProxy.app/",
+        "version" : "1.0.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "com.mehmetderin.kepce",
+        "bundleVersion" : "1",
+        "containerAccessible" : true,
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "Kepçe",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/6B89D56D-DA1A-4685-A1CB-114C11656ED5/Kepce.app/",
+        "version" : "1.0.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "com.mehmetderin.kitapkatalogu",
+        "bundleVersion" : "1",
+        "containerAccessible" : true,
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "Kitap Bul",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/6702D7CD-F409-497F-AA4E-4AD8290501E1/001.app/",
+        "version" : "1.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "com.mehmetderin.asistan",
+        "bundleVersion" : "26",
+        "containerAccessible" : true,
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "Mehmet Asistan",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/78EC787D-BA60-4391-83D0-00ED2BC03DF8/Asistan.app/",
+        "version" : "0.16.0"
+      },
+      {
+        "appClip" : false,
+        "builtByDeveloper" : true,
+        "bundleIdentifier" : "com.mehmetderin.derspodcast",
+        "bundleVersion" : "1",
+        "containerAccessible" : true,
+        "defaultApp" : false,
+        "hidden" : false,
+        "internalApp" : false,
+        "name" : "İkra",
+        "removable" : true,
+        "url" : "file:///private/var/containers/Bundle/Application/8E24708F-3FB9-456A-ACD1-030A6F19EBDA/Ikra.app/",
+        "version" : "1.0.0"
+      }
+    ],
+    "defaultAppsIncluded" : false,
+    "deviceIdentifier" : "70DD4401-F1AC-509A-864D-FE8E22847E53",
+    "hiddenAppsIncluded" : false,
+    "internalAppsIncluded" : false,
+    "removableAppsIncluded" : true
+  }
+}

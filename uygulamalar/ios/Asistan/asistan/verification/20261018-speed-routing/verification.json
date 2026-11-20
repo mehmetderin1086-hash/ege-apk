@@ -1,0 +1,33 @@
+{
+  "version": "0.7.1",
+  "build": 14,
+  "physical_screen_sharing": false,
+  "routing": "prompt, effort, observed first-text latency, actual quota/credential errors and account cooldowns",
+  "swift_tests": {
+    "total": 108,
+    "passed": 98,
+    "conditional_skips": 10
+  },
+  "ui_tests_passed": 4,
+  "server_tests_passed": 12,
+  "phone_acceptance": "phone-release.json",
+  "live_acceptance": "live-result.json",
+  "live_input": "fixed text after STT, not own-voice wake verification",
+  "live_metadata_note": "live-result.json top-level model is old manual preference metadata, not actual automatic selection; diagnostic corrected after this test",
+  "model_comparison": "models-baseline.json",
+  "server_code_job": {
+    "id": "0dd0dc68-1d69-49d4-b553-61b50db9b2a3",
+    "status": "done",
+    "seconds": 4.04,
+    "python_exit_code": 0,
+    "assertions_passed": true,
+    "output": "5"
+  },
+  "server_source_sha256": "f9bcc7e1c09d44ccd52139190bccef901a3fa1b6c0c3e1f9b01b2a165ca60d35",
+  "limits": [
+    "Small sample benchmarks, not latency or quality guarantees",
+    "Quota percentages are unknown unless provider exposes them",
+    "Live mic wake with user voice not retested",
+    "Intermediate phone-acceptance.json/phone-vites.json show failures fixed before phone-release.json"
+  ]
+}

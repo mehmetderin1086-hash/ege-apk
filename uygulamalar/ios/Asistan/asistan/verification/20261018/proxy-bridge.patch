@@ -1,0 +1,114 @@
+diff --git a/ProxyKit/Sources/ProxyKit/Antigravity.swift b/ProxyKit/Sources/ProxyKit/Antigravity.swift
+index a1f339a..07ee875 100644
+--- a/ProxyKit/Sources/ProxyKit/Antigravity.swift
++++ b/ProxyKit/Sources/ProxyKit/Antigravity.swift
+@@ -59,7 +59,7 @@ public enum Antigravity {
+     }
+ 
+     /// Ortak ara biçimden Code Assist sarmalayıcısına.
+-    public static func body(_ r: CRequest, model: String, thinking: String?, project: String) -> JSON {
++    public static func body(_ r: CRequest, model: String, thinking: String?, project: String, signatures: [String: String] = [:]) -> JSON {
+         var names: [String: String] = [:]
+         for m in r.messages { for tc in m.toolCalls { names[tc.id] = tc.name } }
+         var contents: [JSON] = []
+@@ -87,7 +87,11 @@ public enum Antigravity {
+                         return ["fileData": ["fileUri": .string(u), "mimeType": "image/jpeg"]]
+                     }
+                 }
+-                for tc in m.toolCalls { parts.append(["functionCall": ["name": .string(tc.name), "args": parseArgs(tc.arguments), "id": .string(tc.id)]]) }
++                for tc in m.toolCalls {
++                    var part: JSON = ["functionCall": ["name": .string(tc.name), "args": parseArgs(tc.arguments), "id": .string(tc.id)]]
++                    if let signature = signatures[tc.id] { part["thoughtSignature"] = .string(signature) }
++                    parts.append(part)
++                }
+                 push(m.role == .assistant ? "model" : "user", parts)
+             }
+         }
+@@ -124,7 +128,9 @@ public struct GeminiDecoder: StreamDecoder {
+     var reason = "stop"
+     var toolCount = 0
+     var finished = false
++    var saveSignature: (@Sendable (String, String) -> Void)?
+     public init() {}
++    init(saveSignature: @escaping @Sendable (String, String) -> Void) { self.saveSignature = saveSignature }
+ 
+     public mutating func decode(_ e: SSEEvent) throws -> [CEvent] {
+         guard let j = try? JSON.parse(Data(e.data.utf8)) else { return [] }
+@@ -138,7 +144,9 @@ public struct GeminiDecoder: StreamDecoder {
+             for p in c["content"]?["parts"]?.array ?? [] {
+                 if let fc = p["functionCall"] {
+                     let idx = toolCount; toolCount += 1
+-                    out.append(.toolStart(index: idx, id: fc["id"]?.string ?? "call_\(idx)", name: fc["name"]?.string ?? ""))
++                    let id = fc["id"]?.string ?? "call_\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
++                    if let signature = p["thoughtSignature"]?.string { saveSignature?(id, signature) }
++                    out.append(.toolStart(index: idx, id: id, name: fc["name"]?.string ?? ""))
+                     out.append(.toolArgs(index: idx, (fc["args"] ?? .object([:])).text()))
+                 } else if let t = p["text"]?.string, !t.isEmpty {
+                     out.append(p["thought"]?.bool == true ? .thinking(t) : .text(t))
+@@ -159,3 +167,26 @@ public struct GeminiDecoder: StreamDecoder {
+         return [.finish(reason: toolCount > 0 ? "tool_calls" : reason, usage: usage)]
+     }
+ }
++
++/// Opaque provider signatures stay only in this engine's bounded memory, never logs or disk.
++final class GeminiSignatureCache: @unchecked Sendable {
++    private let lock = NSLock()
++    private var values: [String: String] = [:]
++    private var order: [String] = []
++    func save(model: String, id: String, signature: String) {
++        guard signature.utf8.count <= 65_536 else { return }
++        lock.withLock {
++            let key = model + ":" + id
++            if values[key] == nil { order.append(key) }
++            values[key] = signature
++            while order.count > 256 { values.removeValue(forKey: order.removeFirst()) }
++        }
++    }
++    func signatures(model: String, ids: [String]) -> [String: String] {
++        lock.withLock {
++            var result: [String: String] = [:]
++            for id in ids { if let value = values[model + ":" + id] { result[id] = value } }
++            return result
++        }
++    }
++}
+diff --git a/ProxyKit/Sources/ProxyKit/Engine.swift b/ProxyKit/Sources/ProxyKit/Engine.swift
+index baf98e4..eabba4e 100644
+--- a/ProxyKit/Sources/ProxyKit/Engine.swift
++++ b/ProxyKit/Sources/ProxyKit/Engine.swift
+@@ -43,6 +43,7 @@ public final class ProxyEngine: Sendable {
+     public let log: UsageLog
+     let transport: HTTPTransport
+     let remoteModels = RemoteModelCache()
++    let geminiSignatures = GeminiSignatureCache()
+ 
+     static let anthropicVersion = "2023-06-01"
+     static let oauthBeta = "oauth-2025-04-20,claude-code-20250219"
+@@ -462,10 +463,13 @@ public final class ProxyEngine: Sendable {
+             r.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+             r.setValue(OAuthConstants.Antigravity.userAgent, forHTTPHeaderField: "User-Agent")
+             let project = a.metadata["project"] ?? OAuthConstants.Antigravity.defaultProject
+-            r.httpBody = Antigravity.body(c, model: model, thinking: thinking, project: project).data()
++            let signatures = self.geminiSignatures.signatures(model: model, ids: c.messages.flatMap { $0.toolCalls.map(\.id) })
++            r.httpBody = Antigravity.body(c, model: model, thinking: thinking, project: project, signatures: signatures).data()
+             return try await self.transport.send(r)
+         }
+-        return try await pipe(resp, decoder: GeminiDecoder(), c: c, out: out, route: .antigravity(model: model, thinking: thinking), path: path, start: start)
++        let cache = geminiSignatures
++        let decoder = GeminiDecoder { id, signature in cache.save(model: model, id: id, signature: signature) }
++        return try await pipe(resp, decoder: decoder, c: c, out: out, route: .antigravity(model: model, thinking: thinking), path: path, start: start)
+     }
+ 
+     // MARK: API anahtarlı sağlayıcılar (OpenAI, Gemini uyumlu uç)
+@@ -530,6 +534,11 @@ public final class ProxyEngine: Sendable {
+ 
+     func apiCanonical(_ c: CRequest, provider p: APIKeyProvider, path: String) async throws -> ProxyResponse {
+         let start = Date()
++        // OpenAI function tools use Responses; newer reasoning models reject this combination on Chat Completions.
++        if URL(string: p.baseURL)?.host?.lowercased() == "api.openai.com" {
++            let resp = try await apiRequest(p, endpoint: "/responses", body: Outbound.responses(c, forCodex: false), accept: "text/event-stream")
++            return try await pipe(resp, decoder: ResponsesDecoder(), c: c, out: .anthropic, route: .api(p.name), path: path, start: start)
++        }
+         let resp = try await apiRequest(p, endpoint: "/chat/completions", body: Outbound.openAIChat(c, upstreamModel: c.model), accept: "text/event-stream")
+         return try await pipe(resp, decoder: OpenAIChatDecoder(), c: c, out: .anthropic, route: .api(p.name), path: path, start: start)
+     }
