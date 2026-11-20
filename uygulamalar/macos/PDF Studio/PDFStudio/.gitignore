@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.egg-info/
+
+# Çalışma dosyaları
+storage/
+build/
+dist/
+tests/fixtures/*.pdf
+tests/fixtures/*.docx
+tests/fixtures/*.xlsx
+
+# OS / editör
+.DS_Store
+.idea/
+.vscode/
