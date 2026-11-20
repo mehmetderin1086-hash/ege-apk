@@ -1,0 +1,146 @@
+name: Ikra
+options:
+  bundleIdPrefix: com.mehmetderin
+  deploymentTarget:
+    iOS: "18.0"
+  developmentLanguage: tr
+  createIntermediateGroups: true
+  xcodeVersion: "27.0"
+
+configFiles:
+  Debug: Secrets.xcconfig
+  Release: Secrets.xcconfig
+
+packages:
+  SupertonicRuntime:
+    path: Packages/SupertonicRuntime
+  PiperRuntime:
+    path: Packages/PiperRuntime
+  # Telefondaki CLI Proxy hesapları (17 Eki 2026): asıl kaynak ~/Developer/cliproxy-ios/ProxyKit, buradaki kopya.
+  ProxyKit:
+    path: Packages/ProxyKit
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: 838FF89FZ8
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "6.0"
+    SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    SWIFT_STRICT_CONCURRENCY: complete
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+
+targets:
+  Ikra:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+      - path: Features
+      - path: Core
+      - path: Shared
+      - path: Resources
+        excludes:
+          - ReadyScenarios
+      - path: Resources/ReadyScenarios
+        type: folder
+      # Soru Çöz ve konu videoları (eski Ders Video uygulaması, 16 Eki 2026'da birleştirildi): kaynaklar DersVideo klasöründe durur.
+      - path: ../DersVideo/App
+        group: Video/App
+      - path: ../DersVideo/Features
+        group: Video/Features
+      - path: ../DersVideo/Resources
+        group: Video/Resources
+        excludes:
+          - QuestionMath
+      # KaTeX ve yazı tipleri klasör yapısıyla pakete girmeli (kod "QuestionMath/fonts" yolunu okur).
+      - path: ../DersVideo/Resources/QuestionMath
+        type: folder
+        group: Video/Resources
+    dependencies:
+      - target: DersPodcastWidgets
+      - package: SupertonicRuntime
+      - package: PiperRuntime
+      - package: ProxyKit
+    settings:
+      base:
+        # Bundle kimliği Ders Podcast'ten kalır: podcast kütüphanesi, Keychain, widget uzantısı ve kocum:// şeması bozulmasın.
+        PRODUCT_BUNDLE_IDENTIFIER: com.mehmetderin.derspodcast
+        PRODUCT_NAME: Ikra
+        INFOPLIST_FILE: Resources/Info.plist
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: Resources/Ikra.entitlements
+        # Aşağıdaki betik paketlenmiş framework'ü düzenleyip yeniden imzalar; korumalı alanda yapılamaz.
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+      configs:
+        Debug:
+          # Uygulama sunucusu VPS'te (Ders Video ile aynı adres). Adres uygulama içinden Ayarlar › Sunucu'dan değiştirilebilir.
+          API_BASE_URL: https://xn--cumhuriyetanadolulisesiktphanesi-vmdb.com.tr/dersdas
+        Release:
+          API_BASE_URL: https://xn--cumhuriyetanadolulisesiktphanesi-vmdb.com.tr/dersdas
+          # Release paketine Claude anahtarı gömülmez (IPA'yı alan herkes plist'ten okurdu). Debug kurulumu anahtarı Keychain'e
+          # alır (`ClaudeKey.seedFromBundleIfNeeded`); temiz cihazda anahtar Ayarlar'dan girilir.
+          CLAUDE_API_KEY: ""
+    preBuildScripts:
+      - name: Build embedded question engine
+        basedOnDependencyAnalysis: false
+        outputFiles:
+          - $(SRCROOT)/Resources/Engine/engine.jsbundle
+          - $(SRCROOT)/Resources/Engine/vtracer_wasm_bg.wasm
+        script: |
+          /bin/sh "${SRCROOT}/../scripts/build-ikra-engine.sh"
+    postBuildScripts:
+      # onnxruntime.xcframework Info.plist'i MinimumOSVersion=13.0 der, ikili 18.0 ister: App Store Connect yüklemeyi
+      # "90208 Invalid Bundle" ile reddeder. Paketlenen kopyada sürüm düzeltilir ve framework yeniden imzalanır.
+      - name: Fix onnxruntime MinimumOSVersion
+        basedOnDependencyAnalysis: false
+        script: |
+          set -e
+          FW="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/onnxruntime.framework"
+          if [ -f "$FW/Info.plist" ]; then
+            /usr/libexec/PlistBuddy -c "Set :MinimumOSVersion ${IPHONEOS_DEPLOYMENT_TARGET}" "$FW/Info.plist"
+            if [ "${CODE_SIGNING_ALLOWED}" = "YES" ] && [ -n "${EXPANDED_CODE_SIGN_IDENTITY:-}" ]; then
+              codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" --preserve-metadata=identifier,entitlements,flags --timestamp=none "$FW"
+            fi
+          fi
+    scheme:
+      testTargets:
+        - IkraTests
+
+  DersPodcastWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widgets
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mehmetderin.derspodcast.widgets
+        PRODUCT_NAME: DersPodcastWidgets
+        INFOPLIST_FILE: Widgets/Info.plist
+        TARGETED_DEVICE_FAMILY: "1"
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: NO
+        SKIP_INSTALL: YES
+
+  IkraTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests
+      - path: ../DersVideo/Tests
+        group: Video/Tests
+    dependencies:
+      - target: Ikra
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.mehmetderin.derspodcast.tests

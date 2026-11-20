@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Debug: Personal Team App Attest'i desteklemediği için App Check debug sağlayıcısı kullanılır.
+	     Release yapılandırması DersPodcast-Release.entitlements dosyasını kullanır. -->
+	<!-- Eski Ders Video uygulamasıyla ortak klasör: oradan taşınan kayıtlar buradan alınır (VideoHandoff/OkuImport). -->
+	<!-- CLI Proxy uygulamasıyla ortak hesap kasası. İlk grup İkra'nın kendisi: var olan Keychain kayıtlarının varsayılan grubu değişmez. -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)com.mehmetderin.derspodcast</string>
+		<string>$(AppIdentifierPrefix)com.mehmetderin.ortak</string>
+	</array>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.mehmetderin.dersvideo</string>
+	</array>
+</dict>
+</plist>

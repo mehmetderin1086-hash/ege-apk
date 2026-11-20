@@ -1,0 +1,4 @@
+Supertonic-3 Swift inference subset from FluidInference/FluidAudio
+https://github.com/FluidInference/FluidAudio
+Revision 0b1f46289fe27d95b5e66ad8be46e64f5ee02ae7, Apache-2.0.
+Changes: only the Supertonic pipeline is packaged; resource acquisition is replaced with a local-only loader. Ders Podcast downloads revision-pinned, hash-verified models separately. AppLogger is a small OSLog adapter. Model weights remain subject to OpenRAIL-M.
