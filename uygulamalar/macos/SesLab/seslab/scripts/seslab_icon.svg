@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="160" y1="100" x2="850" y2="920" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#947FFF"/>
+      <stop offset="0.55" stop-color="#6E52F5"/>
+      <stop offset="1" stop-color="#352378"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="280" y1="320" x2="760" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#BFFCEF"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="28" stdDeviation="34" flood-color="#160D42" flood-opacity="0.48"/>
+    </filter>
+  </defs>
+  <rect x="62" y="62" width="900" height="900" rx="220" fill="url(#bg)"/>
+  <rect x="82" y="82" width="860" height="860" rx="202" fill="none" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="5"/>
+  <circle cx="512" cy="512" r="292" fill="#100B28" fill-opacity="0.23"/>
+  <g filter="url(#shadow)" fill="none" stroke="url(#wave)" stroke-width="46" stroke-linecap="round">
+    <path d="M254 466v92"/>
+    <path d="M340 392v240"/>
+    <path d="M426 314v396"/>
+    <path d="M512 374v276"/>
+    <path d="M598 276v472"/>
+    <path d="M684 388v248"/>
+    <path d="M770 458v108"/>
+  </g>
+  <circle cx="804" cy="218" r="50" fill="#29D3B3"/>
+  <circle cx="804" cy="218" r="25" fill="#DFFFF8"/>
+</svg>

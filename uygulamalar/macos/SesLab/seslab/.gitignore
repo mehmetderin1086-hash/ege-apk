@@ -1,0 +1,12 @@
+data/
+.venv*/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Eğitim/ham ses verisi: diskte duruyor, sürüm kontrolüne girmemeli
+colab/
+outputs/
+*.flac
+*.wav
+*.mp3

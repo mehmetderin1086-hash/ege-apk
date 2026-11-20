@@ -1,0 +1,40 @@
+[project]
+name = "seslab"
+version = "0.1.0"
+description = "SesLab — Türkçe odaklı, tamamen yerel TTS / STT / ses klonlama stüdyosu"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    # TTS + ses klonlama + ses değiştirme (MIT). Transitif pinler:
+    # torch==2.6.0, torchaudio==2.6.0, transformers==5.2.0, numpy<2,
+    # diffusers==0.29.0, gradio==6.8.0 (kullanılmıyor), resemble-perth (filigran)
+    "chatterbox-tts==0.1.7",
+    # STT — Apple Silicon'da MLX Whisper, diğer platformlarda faster-whisper
+    "mlx-whisper==0.4.3; sys_platform == 'darwin'",
+    "faster-whisper>=1.1; sys_platform != 'darwin'",
+    # Web sunucusu — gradio 6.8.0'ın fastapi pini ile uyumlu aralık
+    "fastapi>=0.115.2,<1.0",
+    "uvicorn[standard]>=0.30",
+    "python-multipart>=0.0.9",
+    # Ses G/Ç — PyAV FFmpeg kütüphanelerini gömülü taşır (sistem ffmpeg gerekmez)
+    "av>=15,<19",
+    "soundfile>=0.13",
+    # Türkçe sayı → yazı
+    "num2words>=0.5.14",
+    # Model indirme + bellek watchdog
+    "huggingface_hub>=0.24",
+    "psutil>=6",
+    # resemble-perth (filigran) hâlâ pkg_resources kullanıyor; modern venv'de
+    # setuptools gelmediği için açıkça ekliyoruz (<81: pkg_resources dahil son seri)
+    "setuptools<81",
+    "pypdf>=6.14.2",
+    "python-docx>=1.2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "httpx>=0.27"]
+
+# NOT: XTTS-v2 (coqui-tts) ASLA bu ortama eklenmez (transformers çakışması).
+# Gerekirse: uv venv .venv-xtts --python 3.11 && uv pip install --python .venv-xtts coqui-tts==0.27.5
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

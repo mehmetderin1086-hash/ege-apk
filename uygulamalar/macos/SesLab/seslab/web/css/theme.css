@@ -1,0 +1,100 @@
+/* SesLab tasarım belirteçleri — koyu stüdyo teması */
+:root {
+  --bg: #090b10;
+  --panel: #12151d;
+  --panel-2: #181c26;
+  --panel-3: #222838;
+  --border: #293040;
+  --text: #f2f3f8;
+  --muted: #949dad;
+  --accent: #8067ff;
+  --accent-hover: #947fff;
+  --accent-soft: rgba(128, 103, 255, 0.15);
+  --accent-2: #29d3b3;
+  --accent-2-soft: rgba(41, 211, 179, 0.13);
+  --danger: #ef5b6e;
+  --danger-soft: rgba(239, 91, 110, 0.12);
+  --warn: #e8b93e;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 18px 55px rgba(0, 0, 0, 0.34);
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background:
+    radial-gradient(circle at 72% -12%, rgba(128, 103, 255, 0.13), transparent 32rem),
+    radial-gradient(circle at 20% 110%, rgba(41, 211, 179, 0.06), transparent 30rem),
+    var(--bg);
+}
+
+::selection { background: var(--accent-soft); }
+
+/* Kaydırma çubukları */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--panel-3);
+  border-radius: 5px;
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--border); }
+
+/* Form temel öğeleri */
+button {
+  font-family: inherit;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s, opacity 0.15s, transform 0.05s;
+}
+button:active { transform: translateY(1px); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+input[type="text"], textarea, select {
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+input[type="text"]:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+textarea { width: 100%; resize: vertical; min-height: 120px; }
+
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent-hover);
+  outline-offset: 2px;
+}
+
+input[type="range"] {
+  accent-color: var(--accent);
+  width: 100%;
+}
+
+a { color: var(--accent-2); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 17px; font-weight: 600; }
+h3 { font-size: 15px; font-weight: 600; }
