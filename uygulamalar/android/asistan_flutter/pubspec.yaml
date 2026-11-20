@@ -1,0 +1,27 @@
+name: asistan_flutter
+description: "Asistan 3.0 — 3D Sesli Yapay Zekâ, CLIProxy Çoklu Model Konseyi (ChatGPT, Gemini, Claude, DeepSeek, Qwen, Grok), Siri & Google Asistan Cihaz Kontrolü, Derin Araştırma ve Belge Stüdyosu"
+publish_to: 'none'
+version: 3.0.0+30
+
+environment:
+  sdk: ^3.13.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  http: ^1.6.0
+  path_provider: ^2.1.5
+  archive: ^3.6.1
+  crypto: ^3.0.7
+  uuid: ^4.5.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
