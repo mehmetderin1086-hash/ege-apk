@@ -1,0 +1,38 @@
+name: kagit_flutter
+description: "Kâğıt — PDF Stüdyosu, Tarama, OCR, Öğretmen Merkezi ve Yapay Zekâ Belge Asistanı"
+publish_to: 'none'
+version: 1.0.1+2
+
+environment:
+  sdk: ^3.13.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  http: ^1.6.0
+  path_provider: ^2.1.5
+  archive: ^3.6.1
+  crypto: ^3.0.7
+  uuid: ^4.5.3
+  image: ^4.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/fonts/
+  fonts:
+    - family: NotoSans
+      fonts:
+        - asset: assets/fonts/NotoSans-Regular.ttf
+        - asset: assets/fonts/NotoSans-Bold.ttf
+          weight: 700
+    - family: NotoSerif
+      fonts:
+        - asset: assets/fonts/NotoSerif-Regular.ttf
