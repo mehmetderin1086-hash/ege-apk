@@ -1,0 +1,85 @@
+{% extends "temel.html" %}
+{% block baslik %}Toplu sınıf sonucu — sinav-okur{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/sinav/{{ veri.sinav_kimlik }}"><span aria-hidden="true">←</span> Sınava dön</a>
+    <h1>{% if isleniyor %}Sınıf kâğıtları işleniyor…{% elif veri.durum == "hata" %}Toplu işlem yarıda kaldı{% else %}Sınıf kâğıtları işlendi{% endif %}</h1>
+    <p>{{ basarili }} öğrenci kaydedildi{% if hatali %} · {{ hatali }} öğrenci işlenemedi{% endif %}.</p>
+    {% if veri.durum == "hata" %}<p class="uyari-kutusu" role="alert"><strong>İşlem beklenmedik bir hatayla durdu:</strong> {{ veri.hata }}. İşlenen kâğıtlar kaydedildi; kalanları yeniden yükleyin.</p>{% endif %}
+  </div>
+  {% if not isleniyor %}<a class="buton" href="/yukle?sinav={{ veri.sinav_kimlik }}">Yeni toplu yükleme</a>{% endif %}
+</section>
+
+{% if isleniyor %}
+<section class="panel" id="ilerleme-paneli" data-token="{{ token }}">
+  <div class="panel-baslik"><h2>İşleniyor</h2></div>
+  <div class="ilerleme" aria-label="Toplu işlem ilerlemesi">
+    <span id="ilerleme-cubuk" style="width:{{ (veri.biten / veri.toplam * 100) | round if veri.toplam else 0 }}%"></span>
+  </div>
+  <p class="ipucu" id="ilerleme-metin">
+    {{ veri.biten }}/{{ veri.toplam }} öğrenci
+    {% if veri.islenen_ogrenci %}· İşleniyor: {{ veri.islenen_ogrenci }}{% endif %}
+  </p>
+  <p class="alt-metin">Bu sayfa kendini yeniler; sekmeyi açık tutmanız gerekmez, sonuçlar kaydedilir.</p>
+</section>
+{% endif %}
+
+<div class="istatistikler" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+  <div class="istatistik"><span class="deger">{{ veri.sonuclar|length }}</span><span class="ad">Öğrenci grubu</span></div>
+  <div class="istatistik iyi"><span class="deger">{{ basarili }}</span><span class="ad">Başarılı</span></div>
+  <div class="istatistik{% if hatali %} uyari{% endif %}"><span class="deger">{{ hatali }}</span><span class="ad">Hatalı</span></div>
+</div>
+
+<section class="panel">
+  <div class="panel-baslik">
+    <div><h2>Okuma sonuçları</h2><p>Başlıklara tıklayarak sıralayın; hatalı kâğıtları ayırmak için arayın.</p></div>
+    <input class="arama" data-tablo-ara="#toplu-tablo" type="search" placeholder="Öğrenci, numara veya durum ara…" aria-label="Sonuçlarda ara">
+  </div>
+  <div class="tablo-sarma">
+    <table id="toplu-tablo">
+      <thead><tr><th data-sirala>Öğrenci</th><th data-sirala="sayi">No</th><th>Dosya / sayfa</th><th data-sirala>Durum</th><th>İşlem</th></tr></thead>
+      <tbody>
+      {% for r in veri.sonuclar %}
+        <tr data-ara="{{ r.ogrenci_ad or '' }} {{ r.ogrenci_soyad or '' }} {{ r.ogrenci_no or '' }} {{ 'okundu' if r.basarili else 'hata' }}">
+          <td><strong>{{ r.ogrenci_ad or "İsimsiz öğrenci" }}{% if r.ogrenci_soyad %} {{ r.ogrenci_soyad }}{% endif %}</strong>{% if r.sinif or r.sube %}<div class="alt-metin">{{ r.sinif or "?" }}{% if r.sube %}/{{ r.sube }}{% endif %}</div>{% endif %}</td>
+          <td>{{ r.ogrenci_no or "—" }}</td>
+          <td>{{ r.dosya }} dosya{% if r.basarili %} · {{ r.sayfa }} sayfa{% endif %}</td>
+          <td>
+            {% if r.basarili %}
+              <span class="rozet tamam">Okundu</span>
+              {% if r.uyarilar %}<div class="alt-metin">{{ r.uyarilar|join(" · ") }}</div>{% endif %}
+            {% else %}
+              <span class="rozet bekleyen">Hata</span><div class="alt-metin">{{ r.hata }}</div>
+            {% endif %}
+          </td>
+          <td>{% if r.basarili %}<a class="buton ikincil" href="/kagit/{{ r.kagit_id }}">İncele</a>{% else %}—{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
+{% block betik %}
+{% if isleniyor %}
+<script>
+  const panel = document.getElementById("ilerleme-paneli");
+  const token = panel?.dataset.token;
+  async function yenile() {
+    try {
+      const yanit = await fetch(`/toplu-sonuc/${token}/durum.json`, {cache: "no-store"});
+      if (!yanit.ok) return;
+      const veri = await yanit.json();
+      if (veri.durum === "bitti" || veri.durum === "hata") { window.location.reload(); return; }
+      const yuzde = veri.toplam ? Math.round(veri.biten / veri.toplam * 100) : 0;
+      document.getElementById("ilerleme-cubuk").style.width = yuzde + "%";
+      document.getElementById("ilerleme-metin").textContent =
+        `${veri.biten}/${veri.toplam} öğrenci` +
+        (veri.islenen_ogrenci ? ` · İşleniyor: ${veri.islenen_ogrenci}` : "");
+    } catch (_e) { /* ağ hatası: bir sonraki denemede toparlanır */ }
+  }
+  setInterval(yenile, 2000);
+</script>
+{% endif %}
+{% endblock %}

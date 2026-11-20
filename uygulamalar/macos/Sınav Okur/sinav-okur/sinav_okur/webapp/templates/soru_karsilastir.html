@@ -1,0 +1,27 @@
+{% extends "temel.html" %}
+{% block baslik %}Soru {{ soru.no }} karşılaştırması — sinav-okur{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/sinav/{{ sinav.kimlik }}/analiz">← Analiz</a>
+    <h1>Soru {{ soru.no }} cevaplarını karşılaştır</h1>
+    <p>{{ soru.metin }}</p>
+    <div class="hizli-eylemler">
+      <a class="buton" href="/sinav/{{ sinav.kimlik }}/soru/{{ soru.no }}/tezgah">⇉ Toplu puanlama tezgâhında aç</a>
+    </div>
+  </div>
+</section>
+<section class="panel">
+  <div class="panel-baslik"><div><h2>{{ cevaplar|length }} öğrenci cevabı</h2><p>Yüksek riskli cevaplar önce gösterilir; benzer cevapların puanlarını aynı ekranda denetleyin.</p></div></div>
+  <div class="cevap-izgara">
+  {% for c in cevaplar %}
+    <article class="cevap-karti">
+      <b><a href="/kagit/{{ c.satir.kagit_id }}">{{ c.satir.ogrenci_ad or "İsimsiz" }} {{ c.satir.ogrenci_soyad or "" }}</a> · {{ "%.1f"|format(c.satir.son_puan or 0) }}/{{ "%.0f"|format(c.satir.max_puan) }}</b>
+      <span>Risk %{{ "%.0f"|format((c.satir.risk or 0) * 100) }} · puan güveni %{{ "%.0f"|format((c.satir.puanlama_guveni or 0) * 100) }}</span>
+      {% if c.kirp_url %}<img class="cevap-gorseli" src="{{ c.kirp_url }}" alt="Öğrenci cevabı" loading="lazy">{% endif %}
+      <span>{{ c.metin or "Metin okunamadı" }}</span>
+    </article>
+  {% else %}<div class="bos-durum"><p>Bu soru için cevap yok.</p></div>{% endfor %}
+  </div>
+</section>
+{% endblock %}

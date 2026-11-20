@@ -1,0 +1,141 @@
+{% extends "temel.html" %}
+{% block baslik %}Cevap anahtarı yükle — {{ sinav.baslik }}{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/sinav/{{ kimlik }}/anahtar"><span aria-hidden="true">←</span> Cevap anahtarı</a>
+    <h1>Cevap anahtarını yükle</h1>
+    <p>Hazır bir anahtar dosyasını (CSV/Excel/JSON/YAML) veya anahtar kâğıdının fotoğrafını yükleyin. <strong>Uygulamadan önce</strong> ayrıştırma sonucunu ve puanlara etkisini görürsünüz.</p>
+  </div>
+</section>
+
+{% if sonuc and sonuc.hatalar %}
+  <div class="uyari-kutusu" role="alert">
+    <strong>Anahtar uygulanamaz:</strong>
+    <span>
+      {% for h in sonuc.hatalar %}<div>{{ h }}</div>{% endfor %}
+      Dosyadaki hatalar giderilene kadar hiçbir soru değiştirilmez.
+    </span>
+  </div>
+{% endif %}
+
+{% if sonuc and sonuc.uyarilar %}
+  <div class="basari-kutusu" role="status">
+    <strong>Uyarılar:</strong>
+    <span>{% for u in sonuc.uyarilar %}<div>{{ u }}</div>{% endfor %}</span>
+  </div>
+{% endif %}
+
+{% if satirlar %}
+<section class="panel">
+  <div class="panel-baslik">
+    <div>
+      <h2>Ayrıştırılan anahtar</h2>
+      <p>{{ satirlar|length }} soru için anahtar okundu. Henüz hiçbir şey kaydedilmedi.</p>
+    </div>
+  </div>
+  <div class="tablo-sarma">
+    <table>
+      <thead><tr><th>Soru</th><th>Tip</th><th>Anahtar</th><th>Otomatik puanlama</th><th>Durum</th></tr></thead>
+      <tbody>
+      {% for s in satirlar %}
+        <tr>
+          <td>Soru {{ s.soru_no }}</td>
+          <td>{{ s.tip|replace("_", " ")|title }}</td>
+          <td>{{ s.ozet }}</td>
+          <td>{% if s.otomatik_puanlama %}Açık{% else %}<b>Kapalı</b>{% endif %}</td>
+          <td>{{ "Onaylı" if s.onay_durumu == "onayli" else "Taslak" }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if onizleme %}
+<section class="panel">
+  <div class="panel-baslik">
+    <div>
+      <h2>Etki önizlemesi</h2>
+      <p>Bu anahtar <strong>{{ onizleme.toplam_etkilenen }}</strong> cevabın puanını değiştirir.</p>
+    </div>
+  </div>
+  {% if onizleme.sorular %}
+    <div class="tablo-sarma">
+      <table>
+        <thead><tr><th>Soru</th><th>Etkilenen</th><th>Yükselen</th><th>Düşen</th><th>Ortalama değişim</th></tr></thead>
+        <tbody>
+        {% for o in onizleme.sorular %}
+          <tr>
+            <td>Soru {{ o.soru_no }}</td>
+            <td>{{ o.etkilenen_kagit }}</td>
+            <td>{{ o.yukselen }}</td>
+            <td>{{ o.dusen }}</td>
+            <td>{{ "%+.2f"|format(o.ortalama_delta) }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="bos-durum"><p>Bu anahtar mevcut cevapların puanını değiştirmiyor.</p></div>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if token %}
+<form method="post" action="/sinav/{{ kimlik }}/anahtar/yukle/uygula" data-yukleniyor="Anahtar uygulanıyor, kâğıtlar yeniden puanlanıyor">
+  <input type="hidden" name="token" value="{{ token }}">
+  {% if satirlar | selectattr("otomatik_puanlama", "equalto", false) | list %}
+    <div class="uyari-kutusu" role="alert">
+      <strong>Dikkat:</strong>
+      <span>Otomatik puanlaması kapalı sorularda elle değiştirilmemiş tüm puanlar
+      0'a iner ve o cevaplar incelemeye düşer. Puanlar, anahtarı onayladıktan
+      sonra yeniden hesaplanır.</span>
+    </div>
+  {% endif %}
+  <div class="form-eylemler">
+    <button class="buton" type="submit"
+            onclick="return confirm('Yüklenen anahtar sürümlenip TÜM kâğıtlar yeniden puanlanacak ve onaylar kaldırılacak. Devam edilsin mi?')">✓ Uygula ve yeniden puanla</button>
+    <a class="buton ikincil" href="/sinav/{{ kimlik }}/anahtar">Vazgeç</a>
+  </div>
+</form>
+{% endif %}
+
+{% if ocr_metni %}
+<details class="panel detay">
+  <summary><b>Belgeden okunan ham metin</b> — anahtarın doğru okunup okunmadığını buradan denetleyin</summary>
+  <pre style="white-space:pre-wrap;font-size:.8rem;max-height:24rem;overflow:auto">{{ ocr_metni }}</pre>
+</details>
+{% endif %}
+
+<section class="panel">
+  <div class="panel-baslik"><div><h2>1 · Anahtar dosyası yükle</h2>
+    <p>Excel/CSV'de başlık satırı: <code>soru_no, cevap, rubrik, puan</code>. Birden çok rubrik ölçütünü <code>|</code> ile ayırın. JSON/YAML ile eş anlamlılar ve sayısal tolerans da verilebilir.</p></div></div>
+  <form method="post" action="/sinav/{{ kimlik }}/anahtar/yukle/dosya" enctype="multipart/form-data" data-yukleniyor="Dosya okunuyor">
+    <label class="alan">
+      <span>Anahtar dosyası (CSV, XLSX, JSON, YAML)</span>
+      <input type="file" name="anahtar_dosyasi" accept=".csv,.xlsx,.json,.yaml,.yml" required>
+    </label>
+    <div class="form-eylemler"><button class="buton" type="submit">⌕ Oku ve önizle</button></div>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="panel-baslik"><div><h2>2 · Anahtar kâğıdının fotoğrafı</h2>
+    <p>Fotoğraf yerel OCR ile okunur, ardından yerel model anahtarı yapılandırır. Bu yolla üretilen anahtar <strong>her zaman taslaktır</strong>; belgede karşılığı bulunamayan satırlar otomatik puanlamayı kapatır.</p></div></div>
+  {% if yerel_motor %}
+    <div class="{{ 'basari-kutusu' if yerel_motor.kullanilabilir else 'uyari-kutusu' }}" role="status">
+      <strong>Yerel model:</strong><span>{{ yerel_motor.mesaj }}</span>
+    </div>
+  {% endif %}
+  <form method="post" action="/sinav/{{ kimlik }}/anahtar/yukle/belge" enctype="multipart/form-data" data-yukleniyor="Belge okunuyor, ilk çalıştırmada model yüklenirken birkaç dakika sürebilir">
+    <label class="alan">
+      <span>Anahtar fotoğrafı veya PDF (en fazla 10 sayfa)</span>
+      <input type="file" name="anahtar_belgeleri" accept=".png,.jpg,.jpeg,.heic,.pdf" multiple required>
+    </label>
+    <div class="form-eylemler"><button class="buton" type="submit">⌕ Oku ve önizle</button></div>
+  </form>
+</section>
+{% endblock %}

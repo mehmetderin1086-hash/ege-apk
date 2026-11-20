@@ -1,0 +1,33 @@
+{% extends "temel.html" %}
+{% block baslik %}Gizlilik ve veri saklama — sinav-okur{% endblock %}
+{% block icerik %}
+{% if anonimlestirilen %}
+<div class="basari-kutusu"><strong>Anonimleştirme tamamlandı.</strong><span>{{ anonimlestirilen }} kâğıdın doğrudan öğrenci kimliği kaldırıldı; puan ve denetim geçmişi korundu.</span></div>
+{% endif %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/">← Ana panel</a>
+    <h1>Gizlilik ve veri saklama</h1>
+    <p>{{ durum.aciklama }}</p>
+  </div>
+</section>
+<section class="istatistikler">
+  <div class="istatistik iyi"><span class="deger">Yerel</span><span class="ad">Varsayılan depolama</span></div>
+  <div class="istatistik iyi"><span class="deger">Kapalı</span><span class="ad">Haricî servis</span></div>
+  <div class="istatistik"><span class="deger">{{ durum.varsayilan_saklama_gunu }}</span><span class="ad">Varsayılan saklama günü</span></div>
+  <div class="istatistik uyari"><span class="deger">{{ suresi_dolan|length }}</span><span class="ad">Süresi dolan kâğıt</span></div>
+</section>
+<section class="panel">
+  <div class="panel-baslik"><div><h2>Uygulanan korumalar</h2><p>Kimlik verisi puanlama metninden ayrı tutulur.</p></div></div>
+  <div class="adimlar">
+    <div class="adim"><b>Kimlik maskeleme</b><span>Ad, soyad ve öğrenci numarası haricî modele gönderilecek içerikten çıkarılır.</span></div>
+    <div class="adim"><b>Eğitim izni</b><span>Açık izin ve anonim yazar kodu yoksa gerçek kâğıt eğitim verisine aktarılmaz.</span></div>
+    <div class="adim"><b>Denetim geçmişi</b><span>Puan ve metin değişiklikleri nedenleriyle birlikte saklanır.</span></div>
+  </div>
+  {% if suresi_dolan %}
+  <form method="post" action="/gizlilik/anonimlestir" class="alt-eylem" onsubmit="return confirm('Süresi dolan kâğıtların ad, soyad, numara ve sınıf bilgilerini kalıcı olarak anonimleştirmek istiyor musunuz?')">
+    <button class="buton ikincil" type="submit">Süresi dolan kimlikleri anonimleştir</button>
+  </form>
+  {% else %}<div class="bos-durum"><p>Saklama süresi dolan öğrenci kaydı yok.</p></div>{% endif %}
+</section>
+{% endblock %}

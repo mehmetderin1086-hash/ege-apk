@@ -1,0 +1,95 @@
+{% extends "temel.html" %}
+{% block baslik %}Yazılıyı yükle ve tanıt — sinav-okur{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/"><span aria-hidden="true">←</span> Ana panel</a>
+    <h1>Herhangi bir yazılıyı yükle ve tanıt</h1>
+    <p>Word'de, başka bir programda veya elde hazırlanmış temiz yazılının PDF/fotoğrafını yükleyin. Sistem basılı soruları, puanları, sütunları ve cevap bölgelerini otomatik bulsun.</p>
+  </div>
+</section>
+
+<div class="sihirbaz-adimlari" aria-label="Serbest sınav adımları">
+  <div class="sihirbaz-adim etkin"><b>1</b><span>Boş sınavı yükle</span></div>
+  <div class="sihirbaz-adim"><b>2</b><span>Algılanan soruları doğrula</span></div>
+  <div class="sihirbaz-adim"><b>3</b><span>Öğrenci kâğıtlarını oku</span></div>
+</div>
+
+{% if hata %}<div class="uyari-kutusu" role="alert"><strong>İçe aktarılamadı:</strong><span>{{ hata }}</span></div>{% endif %}
+
+<div class="serbest-bilgi">
+  <div><b>6 motorlu Türkçe OCR</b>Vision, Tesseract, EasyOCR, PaddleOCR, Surya ve TrOCR sonuçlarını uzlaştırır.</div>
+  <div><b>Şekil ve iki sütun desteği</b>Basılı doku cevap sanılmaz; ana sayfadan çıkarılır.</div>
+  <div><b>Güvenli değerlendirme</b>Motorlar anlaşamazsa sonuç öğretmen incelemesine düşer.</div>
+</div>
+
+<form method="post" action="/serbest-yukle" enctype="multipart/form-data" id="serbest-form" data-yukleniyor="Çözümleniyor">
+  <section class="form-kart">
+    <h2>Sınav bilgileri</h2>
+    <p>Önce öğrencinin üzerine yazacağı boş/temiz sınavı yükleyin. Daha sonra doldurulmuş kâğıtlar bununla hizalanacaktır.</p>
+    <div class="form-grid">
+      <div class="alan">
+        <label for="kimlik">Sınav kodu</label>
+        <input id="kimlik" name="kimlik" required pattern="[A-Za-z0-9_-]{3,64}" maxlength="64" placeholder="BIO11-HAZIR-01">
+      </div>
+      <div class="alan">
+        <label for="ders">Ders / konu</label>
+        <input id="ders" name="ders" maxlength="160" placeholder="11. Sınıf Biyoloji">
+      </div>
+      <div class="alan tam">
+        <label for="baslik">Sınav başlığı</label>
+        <input id="baslik" name="baslik" required maxlength="200" placeholder="Biyoloji 1. Dönem 1. Yazılı">
+      </div>
+      <div class="alan tam">
+        <label for="kaynak_dosyalari">Boş sınav PDF veya fotoğrafları</label>
+        <div class="dosya-alani">
+          <input id="kaynak_dosyalari" name="kaynak_dosyalari" type="file" multiple required
+                 accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp,.heic,.heif,application/pdf,image/png,image/jpeg,image/tiff,image/bmp,image/webp,image/heic,image/heif">
+          <small>PDF, PNG, JPG, TIFF, BMP, WEBP veya iPhone HEIC/HEIF · tek çok sayfalı PDF ya da ayrı fotoğraflar · toplam en fazla 4 sayfa</small>
+        </div>
+      </div>
+      <div class="alan tam">
+        <span class="alan-baslik">OCR çalışma profili</span>
+        <div class="model-secimleri ocr-profilleri">
+          <label class="model-kart">
+            <input type="radio" name="ocr_profili" value="akilli" {% if ocr_profili != "hizli" and ocr_profili != "besli" %}checked{% endif %}>
+            <b>Akıllı kademeli <span class="rozet hazir">Önerilen</span></b>
+            <span>Vision + Tesseract ile başlar; düşük güven veya anlaşmazlıkta EasyOCR, PaddleOCR, TrOCR ve Surya'yı açar.</span>
+          </label>
+          <label class="model-kart">
+            <input type="radio" name="ocr_profili" value="besli" {% if ocr_profili == "besli" %}checked{% endif %}>
+            <b>Tam motor denetimi</b>
+            <span>Kurulu altı motoru (TrOCR el yazısı uzmanı dâhil) her sayfada çalıştırır. En ayrıntılı karşılaştırmadır; daha uzun sürer.</span>
+          </label>
+          <label class="model-kart">
+            <input type="radio" name="ocr_profili" value="hizli" {% if ocr_profili == "hizli" %}checked{% endif %}>
+            <b>Hızlı</b>
+            <span>Yalnız macOS Apple Vision kullanır. Temiz, basılı sınavlarda hızlı ön inceleme içindir.</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="form-kart">
+    <h2>OCR motor merkezi</h2>
+    <p>Yeşil motorlar hemen kullanılabilir. Kurulu olmayan motorlarda işlem kesilmez; sistem hazır motorlarla devam eder ve rapora yazar.</p>
+    <div class="ocr-motor-grid">
+      {% for motor in ocr_motorlari %}
+        <div class="ocr-motor">
+          <span class="ocr-nokta {% if motor.hazir %}acik{% endif %}" aria-hidden="true"></span>
+          <div>
+            <b>{{ motor.ad }}</b>
+            <small>{% if motor.hazir %}Hazır{% else %}Kurulum bekliyor{% endif %} · {{ motor.aciklama }}</small>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+  <div class="form-eylemler">
+    <div><strong>Türkçe metin + sütun + soru numarası analizi</strong><div class="alt-metin">Seçilen profile göre motorlar yerel olarak çalıştırılır.</div></div>
+    <div class="yukleniyor" id="cozumleniyor"><span class="donen"></span> Sınav sayfaları çözümleniyor…</div>
+    <button class="buton" id="cozumle-dugme" type="submit">Soruları otomatik bul <span aria-hidden="true">→</span></button>
+  </div>
+</form>
+{% endblock %}
+

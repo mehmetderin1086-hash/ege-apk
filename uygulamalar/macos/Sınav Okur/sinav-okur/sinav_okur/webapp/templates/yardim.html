@@ -1,0 +1,55 @@
+{% extends "temel.html" %}
+{% block baslik %}Nasıl kullanılır? — sinav-okur{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/"><span aria-hidden="true">←</span> Ana panel</a>
+    <h1>Başlangıç ve kullanım kılavuzu</h1>
+    <p>Yazılı sayfalarını tanıtmaktan sonuçları Excel'e almaya kadar tüm akış arayüzden yapılabilir.</p>
+  </div>
+</section>
+
+<div class="kilavuz-grid">
+  <section class="kilavuz-kart">
+    <h2>1 · Yazılıyı tanıtın</h2>
+    <p><a href="/serbest-yukle">Yazılıyı tanıt</a> ekranından temiz PDF'yi veya ön–arka en fazla dört fotoğrafı birlikte yükleyin. Word, fotokopi, farklı yayınevi veya elde hazırlanmış düzenler desteklenir.</p>
+  </section>
+  <section class="kilavuz-kart">
+    <h2>2 · Soruları ve anahtarı doğrulayın</h2>
+    <p>Programın bulduğu soru metinlerini, puanları ve cevap bölgelerini kontrol edin. Otomatik cevap anahtarını yerel ders kaynaklarıyla oluşturabilir, mantık ve yönteme verilecek kısmi puanları düzenleyebilirsiniz.</p>
+  </section>
+  <section class="kilavuz-kart">
+    <h2>3 · Öğrenci kâğıtlarını çekin</h2>
+    <p>Düz ve gölgesiz çekim önerilir. PDF, PNG, JPG ve TIFF desteklenir. Bir öğrencinin 1–4 sayfasını birlikte seçebilirsiniz; ön/arka ve karışık sayfa sırası görsel içerikten eşlenir.</p>
+  </section>
+  <section class="kilavuz-kart">
+    <h2>4 · Yükleyip değerlendirin</h2>
+    <p><a href="/yukle">Kâğıt yükle</a> ekranında sınavı ve dosyaları seçin. Sistem ad, soyad, numara ve sınıf/şubeyi üst bilgiden; cevapları el yazısından okur. Doğru mantık ve yönteme kısmi puan verir, düşük güvenlileri inceleme kuyruğuna gönderir.</p>
+  </section>
+  <section class="kilavuz-kart">
+    <h2>5 · Cevapları doğrulayın</h2>
+    <p>Gerçek cevap görüntüsü ile tanınan metni karşılaştırın. Metni ve puanı düzeltip kaydedin; tüm cevaplar bitince kâğıdı onaylayın.</p>
+  </section>
+  <section class="kilavuz-kart">
+    <h2>6 · Sonuçları alın</h2>
+    <p>Sınav ekranından Excel not dökümünü indirin. Onaylı ve izinli düzeltmeler gelecekteki gerçek satır modeline veri sağlayabilir.</p>
+  </section>
+</div>
+
+<section class="form-kart">
+  <h2>Tarama kontrol listesi</h2>
+  <ul>
+    <li>Sayfanın tamamı kadrajda; kenarlar, soru numaraları ve öğrenci bilgi alanı görünür.</li>
+    <li>Sayfa mümkün olduğunca düz; gölge, parmak veya kat izi cevapları kapatmıyor.</li>
+    <li>Fotoğraf yerine mümkünse 300 DPI tarayıcı PDF'si kullanılıyor.</li>
+    <li>Doğru yazılı seçiliyor; sayfalar temiz kaynak yazılıyla görsel olarak eşleştirilir.</li>
+    <li>Bir öğrenciye ait ön–arka veya devam sayfaları aynı yüklemede ve toplam en fazla dörttür.</li>
+    <li>Kimlik güveni düşükse ad, soyad, numara ve sınıf/şube kâğıt ekranında doğrulanır.</li>
+    <li>Bağlı veya okunaksız el yazıları öğretmen incelemesinden geçirilir.</li>
+  </ul>
+  <div class="hizli-eylemler">
+    <a class="buton" href="/serbest-yukle">Yazılıyı tanıt</a>
+    <a class="buton ikincil" href="/yukle">Kâğıt yükle</a>
+  </div>
+</section>
+{% endblock %}

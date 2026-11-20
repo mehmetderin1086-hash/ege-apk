@@ -1,0 +1,158 @@
+{% extends "temel.html" %}
+{% block baslik %}Sınavlar — sinav-okur{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <p class="geri">GENEL BAKIŞ</p>
+    <h1>Sınav değerlendirme merkezi</h1>
+    <p>Herhangi bir yazılıyı PDF veya fotoğraf olarak tanıtın; öğrencinin el yazılı kâğıtlarını yükleyip sonuçları tek ekrandan değerlendirin.</p>
+    <div class="hizli-eylemler">
+      <a class="buton" href="/yukle">⇧ Kâğıt yükle ve değerlendir <span aria-hidden="true">→</span></a>
+      <a class="buton ikincil" href="/serbest-yukle">⌁ Yeni yazılıyı tanıt</a>
+      {% if ozet.ilk_bekleyen_kagit %}
+        <a class="buton ikincil" href="/kagit/{{ ozet.ilk_bekleyen_kagit }}">İlk bekleyen kâğıdı incele</a>
+      {% endif %}
+      <a class="buton ikincil" href="/yardim">Nasıl kullanılır?</a>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-label="Hızlı başlangıç">
+  <div class="panel-baslik">
+    <div>
+      <h2>Üç adımda sınav okuyun</h2>
+      <p>Komut veya teknik dosya hazırlamanız gerekmez; bütün işlem butonlarla yapılır.</p>
+    </div>
+    {% if model_hazir %}<span class="rozet tamam">El yazısı modeli hazır</span>{% else %}<span class="rozet bekleyen">Model kurulumu gerekli</span>{% endif %}
+  </div>
+  <div class="adimlar">
+    <div class="adim"><b>1 · Yazılıyı tanıtın</b><span>Boş/temiz yazılının 1–4 sayfalık PDF veya fotoğraflarını yükleyin; program düzeni ve soruları bulsun.</span><a class="ana-link" href="/serbest-yukle">Yazılıyı tanıt →</a></div>
+    <div class="adim"><b>2 · Anahtarı doğrulayın</b><span>Algılanan soruları, puanları ve otomatik oluşturulan cevap anahtarını kontrol edin.</span><a class="ana-link" href="/yardim">Nasıl çalışır? →</a></div>
+    <div class="adim"><b>3 · Kâğıtları yükleyin</b><span>Ön–arka veya dört sayfaya kadar öğrenci kâğıdını seçin; sistem kimliği, el yazısını ve mantıksal çözüm yolunu değerlendirsin.</span><a class="ana-link" href="/yukle">Kâğıt yükle →</a></div>
+  </div>
+</section>
+
+<section class="istatistikler" aria-label="Genel istatistikler">
+  <div class="istatistik"><span class="deger">{{ ozet.sinav }}</span><span class="ad">Sınav</span></div>
+  <div class="istatistik"><span class="deger">{{ ozet.kagit }}</span><span class="ad">İşlenmiş kâğıt</span></div>
+  <div class="istatistik uyari"><span class="deger">{{ ozet.bekleyen }}</span><span class="ad">İnceleme bekliyor</span></div>
+  <div class="istatistik iyi"><span class="deger">{{ ozet.onayli }}</span><span class="ad">Onaylanmış kâğıt</span></div>
+</section>
+
+{% if kalibrasyon %}
+<section class="panel" aria-label="OCR kalibrasyonu">
+  <div class="panel-baslik">
+    <h2>OCR güven kalibrasyonu
+      {% if kalibrasyon.egitildi %}<span class="rozet tamam">eğitildi · {{ kalibrasyon.ornek_sayisi }} örnek</span>
+      {% else %}<span class="rozet bekleyen">muhafazakâr varsayılan</span>{% endif %}
+    </h2>
+  </div>
+  <p class="ipucu">
+    Öğretmen düzeltmeleri ve onaylarınızdan OCR güveni gerçek doğruluğa kalibre edilir.
+    {% if kalibrasyon.bekleyen < 200 %}
+      Şu an {{ kalibrasyon.bekleyen }} örnek birikti; güvenilir eğitim için ~200 gerekir.
+    {% else %}
+      {{ kalibrasyon.bekleyen }} örnek hazır — kalibrasyonu güncelleyebilirsiniz.
+    {% endif %}
+    {% if kalibrasyon.brier is defined and kalibrasyon.brier is not none %}
+      (Brier {{ kalibrasyon.brier }} · ECE {{ kalibrasyon.ece }})
+    {% endif %}
+  </p>
+  <form method="post" action="/kalibrasyon/guncelle" data-yukleniyor="Kalibrasyon eğitiliyor">
+    <button class="buton ikincil" type="submit"
+      {% if kalibrasyon.bekleyen < 200 %}disabled title="Yeterli örnek yok"{% endif %}>
+      Kalibrasyonu güncelle
+    </button>
+  </form>
+</section>
+{% endif %}
+
+{% if kapi and kapi.kapili_kutu %}
+<section class="panel" aria-label="Güvenlik kapısı durumu">
+  <div class="panel-baslik">
+    <h2>Güvenli kabul kapısı
+      <span class="rozet {% if kapi_modu == 'aktif' %}tamam{% else %}bekleyen{% endif %}">{{ kapi_modu }}</span>
+    </h2>
+    <a class="buton ikincil" href="/kapi">Telemetri paneli →</a>
+  </div>
+  <p class="ipucu">
+    {% if kapi_modu == 'golge' %}
+      Gölge modda kapı, otomatik kabul edebileceği kutuları işaretler ama karar uygulanmaz;
+      her kutu yine de incelemenize düşer. Aşağıdaki sayılar birikince kapı güvenle açılabilir.
+    {% elif kapi_modu == 'aktif' %}
+      Kapı etkin: aşağıdaki kutular otomatik kabul edildi, kalan kutular incelemeye alındı.
+    {% else %}
+      Kapı kapalı: tüm kutular incelemeye düşer.
+    {% endif %}
+  </p>
+  <div class="istatistikler">
+    <div class="istatistik"><span class="deger">{{ kapi.kapili_kutu }}</span><span class="ad">Değerlendirilen kutu</span></div>
+    <div class="istatistik iyi"><span class="deger">{{ kapi.kabul_edilebilir }}</span><span class="ad">Otomatik kabul edilebilir</span></div>
+    <div class="istatistik"><span class="deger">%{{ (kapi.kabul_orani * 100) | round }}</span><span class="ad">Kabul oranı</span></div>
+    <div class="istatistik {% if kapi.golge_yanlis_kabul %}uyari{% else %}iyi{% endif %}">
+      <span class="deger">{{ kapi.golge_yanlis_kabul }}</span><span class="ad">Sonradan düzeltilen</span>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="panel" id="baslangic">
+  <div class="panel-baslik">
+    <div>
+      <h2>Sınavlar</h2>
+      <p>Bir sınavı açarak öğrenci kâğıtlarına ve inceleme kuyruğuna ulaşın.</p>
+    </div>
+    {% if veri %}
+      <div>
+        <div class="filtreler" aria-label="Sınav durum filtresi">
+          <button class="filtre" type="button" data-filtre="tumu" data-filtre-hedef="#sinav-tablosu" aria-pressed="true">Tümü</button>
+          <button class="filtre" type="button" data-filtre="bekleyen" data-filtre-hedef="#sinav-tablosu" aria-pressed="false">Bekleyen</button>
+          <button class="filtre" type="button" data-filtre="tamam" data-filtre-hedef="#sinav-tablosu" aria-pressed="false">Tamamlanan</button>
+        </div>
+        <input class="arama" id="sinav-ara" data-tablo-ara="#sinav-tablosu" type="search" placeholder="Sınav veya ders ara…" aria-label="Sınavlarda ara" style="margin-top:8px">
+      </div>
+    {% endif %}
+  </div>
+  {% if not veri %}
+    <div class="bos-durum">
+      <div class="bos-ikon" aria-hidden="true">✎</div>
+      <h2>İlk yazılınızı tanıtın</h2>
+      <p>Boş yazılı PDF'sini veya 1–4 sayfalık fotoğrafları yükleyin. Program soruları, puanları ve cevap bölgelerini otomatik bulacak.</p>
+      <div class="hizli-eylemler" style="justify-content:center">
+        <a class="buton" href="/serbest-yukle">⌁ Yazılıyı yükle ve tanıt</a>
+        <a class="buton ikincil" href="/yardim">Kullanım rehberini aç</a>
+      </div>
+    </div>
+  {% else %}
+    <div class="tablo-sarma">
+      <table id="sinav-tablosu">
+        <thead><tr><th>Sınav</th><th>Ders</th><th>Kâğıt</th><th>İlerleme</th><th>Durum</th><th></th></tr></thead>
+        <tbody>
+        {% for v in veri %}
+          <tr data-ara="{{ v.sinav.kimlik }} {{ v.sinav.baslik }} {{ v.sinav.ders or '' }}"
+              data-durum="{% if v.bekleyen %}bekleyen{% elif v.kagit_sayisi and v.onayli == v.kagit_sayisi %}tamam{% else %}hazir{% endif %}">
+            <td>
+              <a class="ana-link" href="/sinav/{{ v.sinav.kimlik }}">{{ v.sinav.baslik }}</a>
+              <div class="alt-metin">{{ v.sinav.kimlik }}</div>
+            </td>
+            <td>{{ v.sinav.ders or "—" }}</td>
+            <td><strong>{{ v.kagit_sayisi }}</strong></td>
+            <td>
+              <div class="ilerleme" aria-label="Yüzde {{ v.ilerleme }} tamamlandı"><span style="width:{{ v.ilerleme }}%"></span></div>
+              <div class="alt-metin">{{ v.onayli }}/{{ v.kagit_sayisi }} onaylı</div>
+            </td>
+            <td>
+              {% if v.bekleyen %}<span class="rozet bekleyen">{{ v.bekleyen }} kâğıt bekliyor</span>
+              {% elif v.kagit_sayisi and v.onayli == v.kagit_sayisi %}<span class="rozet tamam">Tamamlandı</span>
+              {% else %}<span class="rozet hazir">Hazır</span>{% endif %}
+            </td>
+            <td><a class="buton ikincil" href="/sinav/{{ v.sinav.kimlik }}">Aç <span aria-hidden="true">→</span></a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
+

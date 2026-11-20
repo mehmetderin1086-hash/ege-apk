@@ -1,0 +1,140 @@
+{% extends "temel.html" %}
+{% block baslik %}Güvenlik kapısı — sinav-okur{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/"><span aria-hidden="true">←</span> Tüm sınavlar</a>
+    <h1>Güvenlik kapısı telemetrisi</h1>
+    <p>Kapı şu an <strong>{{ kapi_modu }}</strong> modda. Gölge modda karar yalnız kaydedilir; hiçbir kutu otomatik kesinleşmez. Bu sayfa rapor üretir, eşikleri değiştirmez.</p>
+  </div>
+</section>
+
+{% if not kalibrasyon.var %}
+  <div class="uyari-kutusu" role="alert">
+    <strong>Kalibrasyon dosyası yok (modeller/ocr_kalibrasyon.json).</strong>
+    <span>Varsayılan muhafazakâr eğriyle ham 0,90 kanıt ≈ 0,864 kalibre güven üretir ve hiçbir kutu {{ "%.2f"|format(mevcut_esik) }} eşiğini geçemez.
+    {% if kalibrasyon.bekleyen %}{{ kalibrasyon.bekleyen }} düzeltme birikti — aşağıdan kalibrasyonu güncelleyebilirsiniz.{% else %}Önce inceleme ekranında düzeltme biriktirin.{% endif %}</span>
+    {% if kalibrasyon.bekleyen %}
+    <form method="post" action="/kalibrasyon/guncelle" style="margin-top:10px" data-yukleniyor="Kalibrasyon eğitiliyor">
+      <button class="buton" type="submit">Kalibrasyonu güncelle ({{ kalibrasyon.bekleyen }} örnek)</button>
+    </form>
+    {% endif %}
+  </div>
+{% endif %}
+
+<div class="istatistikler">
+  <div class="istatistik"><span class="deger">{{ ozet.kapili_kutu }}</span><span class="ad">kapılı kutu</span></div>
+  <div class="istatistik"><span class="deger">{{ ozet.kabul_edilebilir }}</span><span class="ad">kabul edilebilir</span></div>
+  <div class="istatistik"><span class="deger">%{{ "%.1f"|format(ozet.kabul_orani * 100) }}</span><span class="ad">kabul oranı</span></div>
+  <div class="istatistik{% if ozet.golge_yanlis_kabul %} uyari{% endif %}"><span class="deger">{{ ozet.golge_yanlis_kabul }}</span><span class="ad">gölge yanlış kabul</span></div>
+</div>
+
+<section class="panel">
+  <div class="panel-baslik">
+    <div>
+      <h2>Aktivasyona ilerleme</h2>
+      <p>Kapının aktif moda alınabilmesi için ≥{{ aktivasyon_hedefi }} kapılı kutu telemetrisi ve sıfıra yakın gölge-yanlış-kabul gerekir (docs/ml_dl_guvenilirlik.md).</p>
+    </div>
+    <span class="rozet {% if aktivasyon_yuzdesi >= 100 %}tamam{% else %}bekleyen{% endif %}">{{ ozet.kapili_kutu }}/{{ aktivasyon_hedefi }}</span>
+  </div>
+  <div style="padding:18px 20px">
+    <div class="ilerleme kalin"><span style="width:{{ aktivasyon_yuzdesi }}%"></span></div>
+    <p class="alt-metin" style="margin:8px 0 0">%{{ aktivasyon_yuzdesi }} — kapılı kutu sayısı arttıkça bu çubuk dolar; hedefe ulaşınca aktivasyon kararı yine öğretmenindir.</p>
+  </div>
+</section>
+
+{% if nedenler %}
+<section class="panel">
+  <div class="panel-baslik"><div><h2>Veto nedenleri</h2><p>İncelemeye düşürülen kutularda en sık görülen nedenler.</p></div></div>
+  <div style="padding:18px 20px; display:grid; gap:10px">
+    {% for neden, adet in nedenler %}
+    <div>
+      <div style="display:flex; justify-content:space-between; gap:12px; font-size:.85rem"><span>{{ neden }}</span><strong>{{ adet }}</strong></div>
+      <div class="ilerleme turuncu" style="margin-top:4px"><span style="width:{{ (adet / en_cok_neden * 100)|round }}%"></span></div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="panel">
+  <div class="panel-baslik">
+    <div>
+      <h2>Eşik süpürme simülasyonu</h2>
+      <p>Kayıtlı kararlardan "OCR güven eşiği X olsaydı" hesabı. Yalnız rapordur — mevcut eşik ({{ "%.2f"|format(mevcut_esik) }}) değişmez; diğer vetolar aynen korunur.</p>
+    </div>
+  </div>
+  {% if ozet.kapili_kutu == 0 %}
+  <div class="bos-durum">
+    <div class="bos-ikon" aria-hidden="true">◨</div>
+    <h2>Henüz kapılı kutu telemetrisi yok</h2>
+    <p>Kâğıt işledikçe kapı kararları burada birikir. Simülasyon en az bir kapılı kutu ister; sağlıklı okuma için birkaç sınıf gerekir.</p>
+  </div>
+  {% else %}
+  <div class="tablo-sarma">
+    <table>
+      <thead><tr><th data-sirala="sayi">OCR güven eşiği</th><th data-sirala="sayi">Kabul edilecek kutu</th><th data-sirala="sayi">Kabul oranı</th><th data-sirala="sayi">Simüle yanlış kabul</th></tr></thead>
+      <tbody>
+      {% for satir in supurme %}
+        <tr{% if satir.esik == mevcut_esik %} style="background:var(--mavi-acik)"{% endif %}>
+          <td>{{ "%.2f"|format(satir.esik) }}{% if satir.esik == mevcut_esik %} <span class="rozet hazir">mevcut</span>{% endif %}</td>
+          <td>{{ satir.sim_kabul }}</td>
+          <td>%{{ "%.1f"|format(satir.sim_kabul_orani * 100) }}</td>
+          <td>{% if satir.sim_yanlis_kabul %}<span class="rozet bekleyen">{{ satir.sim_yanlis_kabul }}</span>{% else %}0{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="alt-metin" style="padding:0 20px 16px">{{ ozet.kapili_kutu }} kapılı kutu üzerinden. Küçük örneklemde bu tablo duman testidir, istatistik değildir.</p>
+  {% endif %}
+</section>
+
+{% if perf.motorlar %}
+<section class="panel">
+  <div class="panel-baslik">
+    <div>
+      <h2>Sayfa-OCR performansı</h2>
+      <p>{{ perf.taslak_sayisi }} taslak · {{ perf.sayfa_sayisi }} sayfa · ortalama sayfa süresi {{ "%.1f"|format(perf.ort_sayfa_ms / 1000) }} sn. Sürekli çöken motor devre kesiciyle oturumdan düşürülür; sıcak havuz için <code>SINAV_OKUR_SICAK_HAVUZ=1</code>.</p>
+    </div>
+  </div>
+  <div class="tablo-sarma">
+    <table>
+      <thead><tr><th>Motor</th><th>İstek</th><th>Ortalama</th><th>Toplam</th><th>Hata</th></tr></thead>
+      <tbody>
+      {% for m in perf.motorlar %}
+        <tr>
+          <td>{{ m.motor }}</td>
+          <td>{{ m.istek }}</td>
+          <td>{{ "%.1f"|format(m.ort_ms / 1000) }} sn</td>
+          <td>{{ "%.1f"|format(m.toplam_ms / 1000) }} sn</td>
+          <td>{% if m.hata %}<span class="rozet bekleyen">{{ m.hata }}</span>{% else %}0{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+<section class="panel">
+  <div class="panel-baslik">
+    <div>
+      <h2>Gerçek veri flywheel'i</h2>
+      <p>İzinli ve anonim yazar kodlu düzeltmeler, Colab eğitim defterine taşınacak pakete dönüşür (JSONL + kırpıntı görselleri). Eksik kırpıntılar atlanır ve manifestte listelenir.</p>
+    </div>
+    <a class="buton ikincil" href="/disaaktar.zip">⇩ Eğitim paketini indir</a>
+  </div>
+</section>
+
+{% if kalibrasyon.var %}
+<section class="panel">
+  <div class="panel-baslik"><div><h2>Kalibrasyon durumu</h2><p>Öğretmen düzeltmelerinden eğitilen güven eğrisi.</p></div></div>
+  <div style="padding:18px 20px; display:flex; gap:24px; flex-wrap:wrap">
+    <div><span class="alt-metin">Bekleyen örnek</span><div><strong>{{ kalibrasyon.bekleyen }}</strong></div></div>
+    {% if kalibrasyon.ece is defined and kalibrasyon.ece is not none %}<div><span class="alt-metin">ECE</span><div><strong>{{ "%.4f"|format(kalibrasyon.ece) }}</strong></div></div>{% endif %}
+    {% if kalibrasyon.brier is defined and kalibrasyon.brier is not none %}<div><span class="alt-metin">Brier</span><div><strong>{{ "%.4f"|format(kalibrasyon.brier) }}</strong></div></div>{% endif %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

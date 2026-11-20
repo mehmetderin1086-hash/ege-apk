@@ -1,0 +1,60 @@
+{% extends "temel.html" %}
+{% block baslik %}Biyoloji kitapları ve yerel RAG — sinav-okur{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/"><span aria-hidden="true">←</span> Ana panel</a>
+    <h1>Biyoloji kitapları ve yerel RAG</h1>
+    <p>PDF, TXT veya Markdown kitap/notlarınızı yükleyin. Cevaplar Mac üzerinde, dış API ve üretim tokenı kullanılmadan bu kaynaklardan çıkarılsın.</p>
+  </div>
+</section>
+
+{% if hata %}<div class="uyari-kutusu" role="alert"><strong>İndekslenemedi:</strong><span>{{ hata }}</span></div>{% endif %}
+{% if basari %}<div class="basari-kutusu"><strong>Yerel RAG hazır</strong><span>{{ basari }}</span></div>{% endif %}
+
+<div class="serbest-bilgi">
+  <div><b>0 dış token</b>Kitap metni ve soru bilgisayardan çıkmaz.</div>
+  <div><b>Kaynak gösterimi</b>Her öneride kitap adı ve pasaj numarası saklanır.</div>
+  <div><b>BioProf desteği</b>{{ durum.bioprof.mesaj }}</div>
+</div>
+
+<form method="post" action="/referans" enctype="multipart/form-data" id="kitap-formu" data-yukleniyor="İndeksleniyor">
+  <section class="form-kart">
+    <h2>Kitap veya ders notu yükleyin</h2>
+    <div class="alan">
+      <label for="kitap_dosyalari">Kaynak dosyaları</label>
+      <div class="dosya-alani">
+        <input id="kitap_dosyalari" name="kitap_dosyalari" type="file" multiple required
+               accept=".pdf,.txt,.md,application/pdf,text/plain,text/markdown">
+        <small>Bir defada en fazla 20 dosya · dosya başına 250 MB · metin katmanlı PDF önerilir</small>
+      </div>
+    </div>
+  </section>
+  <div class="form-eylemler">
+    <div>
+      <strong>
+        {% if durum.kitap %}{{ durum.kitap }} kitap · {{ durum.pasaj }} pasaj hazır
+        {% elif durum.bioprof.kaynak_hazir %}BioProf'taki {{ durum.bioprof.kaynak_sayisi }} kaynak kullanıma hazır
+        {% else %}Henüz kitap indeksi yok{% endif %}
+      </strong>
+      <div class="alt-metin">Fine-tuning yerine kaynaklı RAG kullanılır; kitap değişince yalnız indeks yenilenir.</div>
+    </div>
+    <div class="yukleniyor" id="indeksleniyor"><span class="donen"></span> Kitaplar yerel olarak indeksleniyor…</div>
+    <button class="buton" id="indeks-dugme" type="submit">Kitapları ekle ve indeksle</button>
+  </div>
+</form>
+
+<section class="panel">
+  {% if kitaplar %}
+  <div class="panel-baslik"><div><h2>İndeksteki kaynaklar</h2></div></div>
+  <ul>{% for kitap in kitaplar %}<li>{{ kitap }}</li>{% endfor %}</ul>
+  {% else %}
+  <div class="bos-durum">
+    <div class="bos-ikon" aria-hidden="true">▤</div>
+    <h2>Henüz indekslenmiş kitap yok</h2>
+    <p>Yukarıdan MEB biyoloji kitabı PDF'i yükleyin; pasajlar yerel olarak indekslenir, hiçbir veri dışarı gönderilmez.</p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
+

@@ -1,0 +1,95 @@
+{% extends "temel.html" %}
+{% block baslik %}Cevap anahtarı — {{ sinav.baslik }}{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/sinav/{{ kimlik }}"><span aria-hidden="true">←</span> {{ sinav.baslik }}</a>
+    <h1>Cevap anahtarını düzenle</h1>
+    <p>Rubrik kalemlerini, kabul edilen yazımları ve kazanım etiketlerini değiştirin. <strong>Uygulamadan önce</strong> etkisini görebilirsiniz.</p>
+  </div>
+  <div><a class="buton ikincil" href="/sinav/{{ kimlik }}/anahtar/yukle">⭱ Dosyadan veya fotoğraftan yükle</a></div>
+</section>
+
+{% if uygulandi %}
+  <div class="basari-kutusu" role="status"><strong>Anahtar güncellendi.</strong><span>{{ uygulandi }} cevap kutusu yeni anahtarla yeniden puanlandı; kâğıtların onayı kaldırıldı.</span></div>
+{% endif %}
+
+{% if onizleme %}
+<section class="panel">
+  <div class="panel-baslik">
+    <div>
+      <h2>Etki önizlemesi</h2>
+      <p>Bu değişiklik <strong>{{ onizleme.toplam_etkilenen }}</strong> cevabın puanını değiştirir. Henüz hiçbir şey kaydedilmedi.</p>
+    </div>
+  </div>
+  {% if onizleme.sorular %}
+    <div class="tablo-sarma">
+      <table>
+        <thead><tr><th>Soru</th><th>Etkilenen</th><th>Yükselen</th><th>Düşen</th><th>Ortalama değişim</th></tr></thead>
+        <tbody>
+        {% for o in onizleme.sorular %}
+          <tr>
+            <td>Soru {{ o.soru_no }}</td>
+            <td>{{ o.etkilenen_kagit }}</td>
+            <td>{{ o.yukselen }}</td>
+            <td>{{ o.dusen }}</td>
+            <td>{{ "%+.2f"|format(o.ortalama_delta) }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if onizleme.ornekler %}
+      <div class="detay-liste">
+        <div><b>En çok değişen cevaplar</b></div>
+        {% for o in onizleme.ornekler %}
+          <div>Soru {{ o.soru_no }} · <a href="/kagit/{{ o.kagit_id }}#soru-{{ o.soru_no }}">Kâğıt #{{ o.kagit_id }}</a>: {{ "%.1f"|format(o.eski_puan) }} → {{ "%.1f"|format(o.yeni_puan) }} ({{ "%+.1f"|format(o.delta) }}) — {{ o.metin }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="bos-durum"><p>Bu değişiklik hiçbir cevabın puanını değiştirmiyor.</p></div>
+  {% endif %}
+</section>
+{% endif %}
+
+<form method="post" action="/sinav/{{ kimlik }}/anahtar" id="anahtar-form" data-yukleniyor="Anahtar uygulanıyor, kâğıtlar yeniden puanlanıyor">
+  {% for s in sorular %}
+  <section class="form-kart">
+    <div class="soru-karti-ust">
+      <div>
+        <h2>Soru {{ s.soru.no }} · {{ "%.0f"|format(s.soru.puan) }} puan</h2>
+        <p>{{ s.soru.metin }}</p>
+      </div>
+      <span class="rozet {% if s.soru.anahtar.onay_durumu == 'onayli' %}tamam{% else %}bekleyen{% endif %}">{{ s.soru.anahtar.onay_durumu }}</span>
+    </div>
+    <input type="hidden" name="soru_no" value="{{ s.soru.no }}">
+    <div class="form-grid">
+      <label class="alan">
+        <span>Soru tipi</span>
+        <select name="soru_tip">
+          {% for t in ["bosluk_doldurma", "kisa_cevap", "acik_uclu", "siralama", "eslestirme", "sayisal", "formul_ispat", "yorumlama", "deney_tasarlama", "etik", "grafik", "cizim", "tablo", "coktan_secmeli"] %}
+            <option value="{{ t }}" {% if s.soru.tip.value == t %}selected{% endif %}>{{ t|replace("_", " ")|title }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="alan">
+        <span>Kazanımlar (noktalı virgülle ayırın)</span>
+        <input type="text" name="soru_kazanim" value="{{ s.kazanim_metni }}" placeholder="Hücre organelleri; Enerji dönüşümü">
+      </label>
+    </div>
+    <label class="alan">
+      <span>Cevap anahtarı — her satır bir rubrik kalemi / kabul edilen yazım. Eşleştirmede "A = 1" biçimi kullanın.</span>
+      <textarea name="soru_anahtar" rows="4" spellcheck="true">{{ s.anahtar_metni }}</textarea>
+    </label>
+  </section>
+  {% endfor %}
+
+  <div class="form-eylemler">
+    <button class="buton ikincil" type="submit" formaction="/sinav/{{ kimlik }}/anahtar/onizle">⌕ Etkisini önizle (kaydetmez)</button>
+    <button class="buton" type="submit"
+            onclick="return confirm('Yeni anahtar sürümlenip TÜM kâğıtlar yeniden puanlanacak ve onaylar kaldırılacak. Devam edilsin mi?')">✓ Uygula ve yeniden puanla</button>
+    <a class="buton ikincil" href="/sinav/{{ kimlik }}">Vazgeç</a>
+  </div>
+</form>
+{% endblock %}

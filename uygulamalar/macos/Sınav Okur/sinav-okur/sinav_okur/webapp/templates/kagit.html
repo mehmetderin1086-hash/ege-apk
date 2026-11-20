@@ -1,0 +1,416 @@
+{% extends "temel.html" %}
+{% block baslik %}Kâğıt #{{ kagit.id }} — sinav-okur{% endblock %}
+{% block icerik %}
+{% if yeni_yuklendi %}
+  <div class="basari-kutusu" role="status"><strong>Kâğıt işlendi.</strong><span>Cevaplar tanındı ve puanlandı. Turuncu “İnsan incelemesi” etiketli cevapları görüntüyle karşılaştırın.</span></div>
+{% endif %}
+{% if request.query_params.get("kimlik_kaydedildi") %}
+  <div class="basari-kutusu" role="status"><strong>Öğrenci kimliği kaydedildi.</strong><span>Kâğıt onayı kaldırıldı — bilgileri kontrol edip yeniden onaylayın.</span></div>
+{% endif %}
+{% if request.query_params.get("kalibrasyon_bekleyen") %}
+  <div class="basari-kutusu" role="status"><strong>Düzeltme kaydedildi.</strong><span>Kalibrasyon havuzunda {{ request.query_params.get("kalibrasyon_bekleyen") }} örnek birikti — <a href="/kapi">kapı panelinden</a> güven eğrisini güncelleyebilirsiniz.</span></div>
+{% endif %}
+{% if yeniden_puanlandi %}
+  <div class="basari-kutusu" role="status"><strong>Kâğıt yeniden puanlandı.</strong><span>Düzeltilmiş metinler güncel cevap anahtarına göre değerlendirildi.</span></div>
+{% endif %}
+{% if goruntu_yenilendi %}
+  <div class="basari-kutusu" role="status"><strong>Görüntü yeniden incelendi.</strong><span>Siyah kurşun kalem, netlik, gölge ve girdi anomalisi ölçümleri güncellendi.</span></div>
+{% endif %}
+{% if toplu_onay %}
+  <div class="basari-kutusu" role="status"><strong>{{ toplu_onay }} cevap onaylandı.</strong><span>Görüntüyle doğruladığınız düşük riskli cevaplar incelemeden çıkarıldı.</span></div>
+  {% if toplu_atlanan and toplu_atlanan != "0" %}
+    <div class="uyari-kutusu" role="alert">
+      <strong>{{ toplu_atlanan }} cevap atlandı — puanı tartışmalı, tek tek bakın:</strong>
+      <span>
+        {% for a in toplu_atlanan_detay %}
+          <div>Soru {{ a.soru_no }} — {{ a.neden }} · <a href="#soru-{{ a.soru_no }}">git</a></div>
+        {% endfor %}
+      </span>
+    </div>
+  {% endif %}
+{% endif %}
+{% if islem_uyarilari %}
+  <div class="uyari-kutusu" role="alert">
+    <strong>Tarama uyarıları</strong>
+    <span>{% for uyari in islem_uyarilari %}{{ uyari }}{% if not loop.last %} · {% endif %}{% endfor %}</span>
+  </div>
+{% endif %}
+{% if onay_hata %}
+  <div class="uyari-kutusu" role="alert">
+    <strong>Kâğıt onaylanmadı</strong>
+    <span>{{ onay_hata }} cevapta OCR metni yok ve öğretmen doğrulaması yapılmamış. Görüntüyü kontrol edip her cevabı ayrı kaydedin.</span>
+  </div>
+{% endif %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/sinav/{{ kagit.sinav_kimlik }}"><span aria-hidden="true">←</span> {{ sinav.baslik }}</a>
+    <h1>{{ kagit.ogrenci_ad or "İsimsiz öğrenci" }}{% if kagit.ogrenci_soyad %} {{ kagit.ogrenci_soyad }}{% endif %}</h1>
+    <p>Kâğıt #{{ kagit.id }}{% if kagit.ogrenci_no %} · Öğrenci no {{ kagit.ogrenci_no }}{% endif %}{% if kagit.sinif or kagit.sube %} · Sınıf {{ kagit.sinif or "?" }}{% if kagit.sube %}/{{ kagit.sube }}{% endif %}{% endif %}</p>
+    <div class="hizli-eylemler">
+      <a class="buton" href="/yukle?sinav={{ kagit.sinav_kimlik }}">⇧ Sonraki kâğıdı yükle</a>
+      <form method="post" action="/kagit/{{ kagit.id }}/yeniden-puanla" data-yukleniyor="Yeniden puanlanıyor">
+        <button class="buton ikincil" type="submit">↻ Anahtara göre yeniden puanla</button>
+      </form>
+      <form method="post" action="/kagit/{{ kagit.id }}/goruntu-analizi" data-yukleniyor="Görüntü inceleniyor">
+        <button class="buton ikincil" type="submit">⌕ Görüntü kalitesini yenile</button>
+      </form>
+      <button class="buton ikincil" type="button" onclick="window.print()">Kâğıdı yazdır</button>
+      <a class="buton ikincil" href="/kagit/{{ kagit.id }}/geri-bildirim">Öğrenci geri bildirimi</a>
+      <button class="buton ikincil" type="button" id="bekleyen-goster">Yalnız bekleyenleri göster</button>
+      {% if sirala == "guven" %}
+        <a class="buton ikincil" href="/kagit/{{ kagit.id }}">Soru sırasına dön</a>
+      {% else %}
+        <a class="buton ikincil" href="/kagit/{{ kagit.id }}?sirala=guven">En şüpheli önce sırala</a>
+      {% endif %}
+      {% if bekleyen %}
+        <form method="post" action="/kagit/{{ kagit.id }}/kutulari-onayla"
+              onsubmit="return confirm('Puanı tartışmalı olmayan bekleyen cevaplar onaylanacak. Kararsız yazım, kısmi rubrik ve şüpheli sayısal sonuçlar atlanıp size listelenecek. Devam edilsin mi?')">
+          <button class="buton yesil" type="submit">✓ Düşük riskli bekleyenleri onayla</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+  {% if kagit.onaylandi %}<span class="rozet tamam">Kâğıt onaylandı</span>{% endif %}
+</section>
+
+<section class="form-kart" id="ogrenci-kimligi">
+  <div class="soru-karti-ust">
+    <div>
+      <h2>Öğrenci kimliği</h2>
+      <p>Kâğıdın üst bilgisinden otomatik okundu. Düşük güvenli veya eksik alanları düzeltip kaydedin.</p>
+    </div>
+    {% set kimlik_yuzde = (kagit.kimlik_guveni or 0) * 100 %}
+    <span class="rozet {% if kimlik_yuzde >= 72 %}tamam{% else %}bekleyen{% endif %}">
+      {% if kimlik_yuzde >= 99 %}Öğretmen doğruladı{% else %}Kimlik güveni %{{ "%.0f"|format(kimlik_yuzde) }}{% endif %}
+    </span>
+  </div>
+  <form method="post" action="/kagit/{{ kagit.id }}/kimlik">
+    <div class="form-grid">
+      <div class="alan"><label>Ad</label><input name="ogrenci_ad" value="{{ kagit.ogrenci_ad or '' }}" maxlength="160"></div>
+      <div class="alan"><label>Soyad</label><input name="ogrenci_soyad" value="{{ kagit.ogrenci_soyad or '' }}" maxlength="160"></div>
+      <div class="alan"><label>Öğrenci numarası</label><input name="ogrenci_no" value="{{ kagit.ogrenci_no or '' }}" maxlength="80"></div>
+      <div class="alan"><label>Sınıf</label><input name="sinif" value="{{ kagit.sinif or '' }}" maxlength="40"></div>
+      <div class="alan"><label>Şube</label><input name="sube" value="{{ kagit.sube or '' }}" maxlength="40"></div>
+      <div class="alan" style="align-self:end"><button class="buton ikincil" type="submit">Kimliği doğrula ve kaydet</button></div>
+    </div>
+  </form>
+  {% if kimlik_bilgileri.ek_alanlar %}
+    <details class="detay">
+      <summary>Kâğıttan bulunan diğer bilgiler</summary>
+      <div class="detay-liste">
+        {% for ad, deger in kimlik_bilgileri.ek_alanlar.items() %}
+          <div><b>{{ ad|replace("_", " ")|title }}:</b> {{ deger }}</div>
+        {% endfor %}
+      </div>
+    </details>
+  {% endif %}
+</section>
+
+{% if kalite_raporu %}
+<section class="form-kart" id="tarama-kalitesi">
+  <div class="soru-karti-ust">
+    <div>
+      <h2>Tarama kalite kapısı</h2>
+      <p>Puanlamadan önce netlik, parlama, gölge, sayfa bütünlüğü, tekrar ve siyah kurşun kalem girdi varsayımı denetlendi.</p>
+    </div>
+    {% if girdi_anomalisi %}
+      <span class="rozet bekleyen">Otomatik karar durduruldu</span>
+    {% else %}
+      <span class="rozet tamam">Kalite kapısı geçti</span>
+    {% endif %}
+  </div>
+  <div class="adimlar">
+    {% for r in kalite_raporu %}
+      <div class="adim">
+        <b>Sayfa {{ r.sayfa }} {% if r.kritik %}· Kritik{% else %}· Uygun{% endif %}</b>
+        <span>Netlik {{ "%.0f"|format(r.netlik) }} · parlama %{{ "%.1f"|format(r.parlama_orani * 100) }} · gölge %{{ "%.1f"|format(r.golge_sapmasi * 100) }} · kâğıt %{{ "%.0f"|format(r.sayfa_kapsama_orani * 100) }}</span>
+        {% if r.ogretmen_murekkep_orani > 0 %}<span><strong>Beklenmedik renk:</strong> görüntüden silinmedi; güvenlik kapısı bu sayfayı insan incelemesine ayırdı.</span>{% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="kagit-ozet" aria-label="Kâğıt özeti">
+  <div>
+    <div class="puan-buyuk">{{ "%.1f"|format(toplam) }} <small>/ {{ "%.0f"|format(max) }} program puanı</small></div>
+    <div class="ilerleme" aria-label="Puan yüzdesi"><span style="width:{{ [puan_yuzdesi, 100]|min }}%"></span></div>
+  </div>
+  <div>
+    {% if bekleyen %}
+      <a class="buton ikincil" href="#bekleyen-ilk"><span class="rozet bekleyen">{{ bekleyen }} cevap bekliyor</span></a>
+    {% else %}
+      <span class="rozet tamam">Tüm cevaplar incelendi</span>
+    {% endif %}
+  </div>
+  <nav class="kagit-gezinme" aria-label="Kâğıtlar arası gezinme">
+    {% if onceki_kagit %}<a class="buton ikincil" id="onceki-baglanti" href="/kagit/{{ onceki_kagit }}">← Önceki <kbd>J</kbd></a>{% endif %}
+    {% if sonraki_kagit %}<a class="buton ikincil" id="sonraki-baglanti" href="/kagit/{{ sonraki_kagit }}">Sonraki <kbd>K</kbd> →</a>{% endif %}
+  </nav>
+</section>
+
+{% if not kutular %}
+<section class="panel">
+  <div class="bos-durum">
+    <div class="bos-ikon" aria-hidden="true">∅</div>
+    <h2>Bu kâğıtta cevap kutusu yok</h2>
+    <p>Kâğıt işlenirken hiçbir cevap bölgesi eşlenememiş. Sayfa kalitesini kontrol edin ve kâğıdı yeniden yükleyin.</p>
+    <p><a class="buton ikincil" href="/yukle?sinav={{ kagit.sinav_kimlik }}">⇧ Kâğıdı yeniden yükle</a></p>
+  </div>
+</section>
+{% endif %}
+{% set ns = namespace(bekleyen_bulundu=false) %}
+{% for c in kutular %}
+<article class="kutu {% if c.b.incele %}incele{% endif %}" id="soru-{{ c.soru.no }}" data-incele="{{ 1 if c.b.incele else 0 }}">
+  {% if c.b.incele and not ns.bekleyen_bulundu %}
+    <span id="bekleyen-ilk" aria-hidden="true"></span>
+    {% set ns.bekleyen_bulundu = true %}
+  {% endif %}
+  <header class="kutu-ust">
+    <div>
+      <h2>Soru {{ c.soru.no }}</h2>
+      <div class="soru-meta">{{ c.soru.tip.value|replace("_", " ")|title }} · {{ c.soru.puan }} puan</div>
+    </div>
+    {% if c.b.incele %}<span class="rozet bekleyen">İnsan incelemesi</span>
+    {% elif c.b.otomatik_kabul %}<span class="rozet tamam">Güvenli otomatik kabul</span>
+    {% else %}<span class="rozet hazir">Öğretmen doğruladı</span>{% endif %}
+  </header>
+  {% if c.girdi_kalitesi.uyarilar %}
+    <div class="bolge-uyarilar">
+      {% for uyari in c.girdi_kalitesi.uyarilar %}<span class="rozet bekleyen mini">⚠ {{ uyari }}</span>{% endfor %}
+    </div>
+  {% endif %}
+  <p class="soru-metni">{{ c.soru.metin }}</p>
+  {% if c.soru.anahtar.otomatik_uretildi %}
+    <details class="detay">
+      <summary>RAG cevap anahtarı ve kaynakları</summary>
+      <div class="detay-liste">
+        <div><b>Örnek cevap:</b> {{ c.soru.anahtar.ornek_cevap }}</div>
+        {% for kalem in c.soru.anahtar.rubrik %}
+          <div><b>{{ "%.1f"|format(kalem.puan) }} puan:</b> {{ kalem.metin }}</div>
+        {% endfor %}
+        <div><b>Kaynak:</b> {{ c.soru.anahtar.kaynaklar|join(" · ") }}</div>
+        {% if not c.soru.anahtar.otomatik_puanlama %}
+          <div><b>Uyarı:</b> {{ c.soru.anahtar.uyari or "Otomatik puanlama kapalı." }}</div>
+        {% endif %}
+      </div>
+    </details>
+  {% endif %}
+  <form method="post" action="/kutu/{{ c.b.id }}">
+    <input type="hidden" name="kagit_id" value="{{ kagit.id }}">
+    <input type="hidden" name="donus" value="soru-{{ c.soru.no }}">
+    <div class="satir">
+      <div>
+        <span class="alan-etiket">Gerçek cevap görüntüsü</span>
+        {% if c.kirp_url %}
+          <div class="gorsel-sarma">
+            <img class="cevap-gorseli" src="{{ c.kirp_url }}" alt="Soru {{ c.soru.no }} için el yazısı cevap kırpıntısı" loading="lazy">
+            <button class="mini-buton buyut" type="button" data-buyut="{{ c.kirp_url }}">Görseli büyüt</button>
+          </div>
+        {% else %}
+          <div class="gorsel-yok">Görüntü bulunamadı</div>
+        {% endif %}
+      </div>
+      <div>
+        <label class="alan-etiket" for="metin-{{ c.b.id }}">Tanınan metin</label>
+        {% if c.b.duzeltilmis_metin is not none %}
+          <div class="guven"><span class="rozet hazir">Elle düzeltilmiş</span></div>
+        {% elif c.b.taninan_metin %}
+          {% set guven_yuzde = (c.b.tanima_guveni or 0) * 100 %}
+          <div class="guven">
+            <div class="ilerleme" aria-label="Tanıma güveni yüzde {{ '%.0f'|format(guven_yuzde) }}">
+              <span style="width:{{ [guven_yuzde, 100]|min }}%;{% if guven_yuzde < 75 %}background:#d97706{% endif %}"></span>
+            </div>
+            <b>%{{ "%.0f"|format(guven_yuzde) }}</b>
+          </div>
+        {% else %}
+          <div class="uyari-kutusu tanima-yok" role="status">
+            <strong>Tanıma güveni: Metin algılanmadı</strong>
+            <span>Bu bir %100 güven sonucu değildir; cevap görüntüsünü kontrol edin.</span>
+          </div>
+        {% endif %}
+        {% if c.sozluk_duzeltmeleri %}
+          <details class="detay">
+            <summary>Alan sözlüğü {{ c.sozluk_duzeltmeleri|length }} terimi düzeltti</summary>
+            <div class="detay-liste">
+              {% for d in c.sozluk_duzeltmeleri %}
+                <div><b>{{ d.onceki }}</b> → {{ d.sonraki }}</div>
+              {% endfor %}
+              <div class="alt-metin">Ham OCR metni aşağıdaki adaylar arasında saklanır; yanlışsa metni elle düzeltin.</div>
+            </div>
+          </details>
+        {% endif %}
+        {% if c.alternatifler|length > 1 %}
+          <details class="detay">
+            <summary>{{ c.alternatifler|length }} OCR adayını karşılaştır</summary>
+            <div class="detay-liste">
+              {% for a in c.alternatifler %}
+                <div><b>%{{ "%.0f"|format((a.guven or 0) * 100) }} · {{ a.destek or 1 }} okuma:</b> {{ a.metin }}</div>
+              {% endfor %}
+            </div>
+          </details>
+        {% endif %}
+        <div class="cevap-izgara" style="margin:12px 0; padding:0">
+          <div class="cevap-karti">
+            <b>Güven kanıtları</b>
+            {% if c.motor_sonuclari or c.girdi_kalitesi %}
+              <span>
+                OCR %{{ "%.0f"|format((c.b.tanima_guveni or 0) * 100) }}
+                · uzlaşma %{{ "%.0f"|format((c.b.uzlasma_guveni or 0) * 100) }}
+                · {{ c.b.bagimsiz_motor_sayisi or 0 }} bağımsız motor
+                · karar marjı %{{ "%.0f"|format((c.b.karar_marji or 0) * 100) }}
+                · bölge kalitesi %{{ "%.0f"|format((c.girdi_kalitesi.kalite or 0) * 100) }}
+              </span>
+            {% else %}
+              <span>Bu kayıt önceki sürümde işlendi; yeni çoklu-model kanıtları için kâğıdı yeniden okutun.</span>
+            {% endif %}
+            {% for neden in c.kabul_nedenleri %}
+              <span>{{ "✓" if c.b.otomatik_kabul else "⚠" }} {{ neden }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        <textarea id="metin-{{ c.b.id }}" name="metin" spellcheck="true" aria-describedby="metin-yardim-{{ c.b.id }}">{{ c.metin or "" }}</textarea>
+        <textarea class="ocr-kaynak" hidden>{{ c.b.taninan_metin or "" }}</textarea>
+        <div id="metin-yardim-{{ c.b.id }}" class="alt-metin">Görüntüyle karşılaştırın; hatalıysa metni doğrudan düzeltin.</div>
+        <div class="mini-grup">
+          <button class="mini-buton" type="button" data-kopyala="metin-{{ c.b.id }}">Metni kopyala</button>
+          {% if c.b.taninan_metin %}
+            <button class="mini-buton" type="button" data-itiraz="{{ c.b.id }}">İtiraz kaydet</button>
+            <button class="mini-buton" type="button" data-geri-yukle="metin-{{ c.b.id }}">OCR metnini geri yükle</button>
+          {% else %}
+            <button class="mini-buton" type="button" disabled title="Kaydedilmiş OCR metni yok">OCR metnini geri yükle</button>
+            <button class="mini-buton" type="button" data-itiraz="{{ c.b.id }}">İtiraz kaydet</button>
+          {% endif %}
+        </div>
+        <div id="itiraz-alani-{{ c.b.id }}" hidden>
+          <form method="post" action="/kagit/{{ kagit.id }}/itiraz" class="form-alt">
+            <input type="hidden" name="kutu_id" value="{{ c.b.id }}">
+            <label class="alan">
+              <span>İtiraz gerekçesi</span>
+              <input type="text" name="gerekce" required placeholder="Öğrencinin itiraz gerekçesi">
+            </label>
+            <button class="buton ikincil" type="submit">İtirazı kaydet</button>
+          </form>
+        </div>
+        <div class="form-alt">
+          <div class="puan-alani">
+            <strong>Program puanı: {{ "%.1f"|format(c.b.otomatik_puan or 0) }} / {{ c.b.max_puan }}</strong>
+            <span class="alt-metin">Program: {{ "%.1f"|format(c.b.otomatik_puan or 0) }} · puan güveni %{{ "%.0f"|format((c.b.puanlama_guveni or 0) * 100) }} · risk %{{ "%.0f"|format((c.b.risk or 0) * 100) }}</span>
+          </div>
+          <span class="mini-grup">
+            <button class="buton" type="submit" name="islem" value="otomatik">Metni düzelt ve program puanlasın</button>
+            {% if c.b.incele and (c.metin or "").strip() %}
+              <button class="buton yesil onayla-dugme" type="submit" name="islem" value="onayla"
+                      title="Görüntüyle doğruladım; programın puanını değiştirmeden kabul et">✓ Onayla</button>
+            {% endif %}
+          </span>
+        </div>
+        {% if c.b.aciklama %}
+          <div class="basari-kutusu" style="margin-top:12px"><strong>Programın gerekçesi</strong><span>{{ c.b.aciklama }}</span></div>
+        {% endif %}
+        <details class="detay">
+          <summary>Öğretmen istisnası ve denetim kaydı</summary>
+          <div class="alan" style="margin-top:10px">
+            <label for="puan-{{ c.b.id }}">İstisna puanı</label>
+            <input id="puan-{{ c.b.id }}" type="number" name="puan" step="0.5" min="0" max="{{ c.b.max_puan }}"
+                   value="{{ '%.1f'|format(c.b.son_puan or 0) }}">
+          </div>
+          <div class="alan" style="margin-top:10px">
+            <label for="neden-{{ c.b.id }}">Program puanını değiştirme nedeni</label>
+            <input id="neden-{{ c.b.id }}" name="neden" maxlength="300" placeholder="Yalnız zorunlu istisnalarda açıklayın">
+          </div>
+          <button class="mini-buton" type="button" data-puan-hedef="puan-{{ c.b.id }}" data-puan="{{ c.b.max_puan }}">Tam puan istisnası</button>
+          <button class="buton ikincil" type="submit" name="islem" value="elle" style="margin-top:8px">Düzeltmeyi kaydet (istisna ve denetim kaydı)</button>
+        </details>
+        {% if c.detaylar %}
+          <details class="detay">
+            <summary>Puanlama ayrıntılarını göster</summary>
+            <div class="detay-liste">
+              {% for d in c.detaylar %}
+                <div><b>{{ d.ad }}:</b> {{ d.deger }}</div>
+              {% endfor %}
+            </div>
+          </details>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+</article>
+{% endfor %}
+
+<div class="modal" id="gorsel-modal" role="dialog" aria-modal="true" aria-label="Büyütülmüş cevap görüntüsü">
+  <button class="modal-kapat" id="modal-kapat" type="button" aria-label="Görseli kapat">×</button>
+  <img id="modal-gorsel" alt="Büyütülmüş el yazısı cevap">
+</div>
+
+<form method="post" action="/kagit/{{ kagit.id }}/onayla" class="alt-eylem"
+      onsubmit="return confirm('Bu kâğıttaki tüm cevapları incelenmiş olarak işaretlemek istiyor musunuz?')">
+  <button class="buton yesil" type="submit">Kâğıdı onayla ve sınava dön</button>
+</form>
+{% endblock %}
+{% block betik %}
+<script>
+  const bekleyenDugme = document.getElementById("bekleyen-goster");
+  let yalnizBekleyen = false;
+  bekleyenDugme?.addEventListener("click", () => {
+    yalnizBekleyen = !yalnizBekleyen;
+    document.querySelectorAll("article.kutu").forEach((kutu) => {
+      kutu.hidden = yalnizBekleyen && kutu.dataset.incele !== "1";
+    });
+    bekleyenDugme.textContent = yalnizBekleyen ? "Tüm soruları göster" : "Yalnız bekleyenleri göster";
+  });
+
+  document.querySelectorAll("[data-puan-hedef]").forEach((dugme) => {
+    dugme.addEventListener("click", () => {
+      const alan = document.getElementById(dugme.dataset.puanHedef);
+      alan.value = Number(dugme.dataset.puan).toFixed(1);
+      alan.focus();
+    });
+  });
+  document.querySelectorAll("[data-kopyala]").forEach((dugme) => {
+    dugme.addEventListener("click", async () => {
+      const alan = document.getElementById(dugme.dataset.kopyala);
+      await navigator.clipboard.writeText(alan.value);
+      const eski = dugme.textContent; dugme.textContent = "Kopyalandı";
+      setTimeout(() => dugme.textContent = eski, 1200);
+    });
+  });
+  document.querySelectorAll("[data-geri-yukle]").forEach((dugme) => {
+    dugme.addEventListener("click", () => {
+      const alan = document.getElementById(dugme.dataset.geriYukle);
+      alan.value = dugme.closest("form").querySelector(".ocr-kaynak").value;
+      alan.focus();
+    });
+  });
+  // İtiraz kaydı: gerekçe gizli bir formla gönderilir (prompt yerine, çünkü
+  // tarayıcı diyalogları uzantı otomasyonunu bloklar).
+  document.querySelectorAll("[data-itiraz]").forEach((dugme) => {
+    dugme.addEventListener("click", () => {
+      const kutuId = dugme.dataset.itiraz;
+      const kutu = document.getElementById("itiraz-alani-" + kutuId);
+      if (kutu) kutu.hidden = !kutu.hidden;
+      if (kutu && !kutu.hidden) kutu.querySelector("input[name=gerekce]")?.focus();
+    });
+  });
+
+  const modal = document.getElementById("gorsel-modal");
+  const modalGorsel = document.getElementById("modal-gorsel");
+  function modalKapat() { modal.classList.remove("acik"); modalGorsel.removeAttribute("src"); }
+  document.querySelectorAll("[data-buyut]").forEach((dugme) => {
+    dugme.addEventListener("click", () => {
+      modalGorsel.src = dugme.dataset.buyut;
+      modal.classList.add("acik");
+      document.getElementById("modal-kapat").focus();
+    });
+  });
+  document.getElementById("modal-kapat")?.addEventListener("click", modalKapat);
+  modal?.addEventListener("click", (olay) => { if (olay.target === modal) modalKapat(); });
+  document.addEventListener("keydown", (olay) => {
+    if (olay.key === "Escape" && modal.classList.contains("acik")) modalKapat();
+    if ((olay.metaKey || olay.ctrlKey) && olay.key.toLocaleLowerCase("tr-TR") === "s") {
+      olay.preventDefault();
+      document.activeElement?.closest("form")?.requestSubmit();
+    }
+  });
+</script>
+{% endblock %}

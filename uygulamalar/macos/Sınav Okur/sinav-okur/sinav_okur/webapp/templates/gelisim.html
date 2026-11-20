@@ -1,0 +1,88 @@
+{% extends "temel.html" %}
+{% block baslik %}Öğrenci gelişimi — sinav-okur{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/"><span aria-hidden="true">←</span> Tüm sınavlar</a>
+    <h1>Öğrenci gelişimi</h1>
+    <p>Aynı öğrencinin farklı sınavlardaki sonuçları. Kâğıtlar öğrenci kayıtlarına bağlanmadan bu tablo boş kalır.</p>
+  </div>
+</section>
+
+{% if eslesme %}
+  <div class="basari-kutusu" role="status"><strong>{{ eslesme }} kâğıt öğrenciye bağlandı.</strong><span>Kimlik bilgisi olmayan kâğıtlar bağlanmadı; onları kâğıt ekranından elle girin.</span></div>
+{% endif %}
+
+<section class="form-kart">
+  <div class="soru-karti-ust">
+    <div>
+      <h2>Kâğıtları öğrencilere bağla</h2>
+      <p>Ad, soyad ve numaraya göre eşleştirir. Otomatik çalışmaz — yanlış birleştirme riski size bırakılmıştır.</p>
+    </div>
+    {% if veri.baglanmamis %}<span class="rozet bekleyen">{{ veri.baglanmamis }} bağlanmamış kâğıt</span>{% endif %}
+  </div>
+  <div class="form-grid">
+    <form method="post" action="/gelisim/esle" class="alan">
+      <label for="sinav_kimlik">Sınav (boş bırakırsanız tümü)</label>
+      <input id="sinav_kimlik" name="sinav_kimlik" type="text" placeholder="BIYO9-2026-01">
+      <button class="buton" type="submit" style="margin-top:8px">⇄ Eşleştirmeyi çalıştır</button>
+    </form>
+    <form method="get" action="/gelisim" class="alan">
+      <label for="sinif">Sınıf filtresi</label>
+      <select id="sinif" name="sinif">
+        <option value="">Tüm sınıflar</option>
+        {% for s in siniflar %}<option value="{{ s }}" {% if s == secili_sinif %}selected{% endif %}>{{ s }}</option>{% endfor %}
+      </select>
+      <button class="buton ikincil" type="submit" style="margin-top:8px">Filtrele</button>
+    </form>
+  </div>
+</section>
+
+{% if not veri.satirlar %}
+  <section class="panel">
+    <div class="bos-durum">
+      <div class="bos-ikon" aria-hidden="true">▤</div>
+      <h2>Henüz gelişim verisi yok</h2>
+      <p>Önce kâğıtları öğrencilere bağlayın. Gelişim eğrisi için aynı öğrencinin en az iki sınavı gerekir.</p>
+    </div>
+  </section>
+{% else %}
+<section class="panel">
+  <div class="panel-baslik">
+    <div><h2>{{ veri.satirlar|length }} öğrenci · {{ veri.sinavlar|length }} sınav</h2><p>Yüzde başarı; eğilim ilk ve son sınav arasındaki fark. Başlıklara tıklayarak sıralayın.</p></div>
+    <input class="arama" data-tablo-ara="#gelisim-tablosu" type="search" placeholder="Öğrenci veya numara ara…" aria-label="Öğrencilerde ara">
+  </div>
+  <div class="tablo-sarma">
+    <table id="gelisim-tablosu">
+      <thead>
+        <tr>
+          <th data-sirala>Öğrenci</th>
+          {% for k in veri.sinavlar %}<th title="{{ k }}">{{ sinav_basliklari.get(k, k) }}</th>{% endfor %}
+          <th data-sirala="sayi">Ortalama</th><th data-sirala="sayi">Eğilim</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for satir in veri.satirlar %}
+        <tr data-ara="{{ satir.ogrenci.ad }} {{ satir.ogrenci.soyad or '' }} {{ satir.ogrenci.ogrenci_no or '' }} {{ satir.ogrenci.sinif or '' }}">
+          <td>
+            <a class="ana-link" href="/ogrenci/{{ satir.ogrenci.id }}">{{ satir.ogrenci.ad }} {{ satir.ogrenci.soyad or "" }}</a>
+            <div class="alt-metin">{{ satir.ogrenci.ogrenci_no or "—" }}{% if satir.ogrenci.sinif %} · {{ satir.ogrenci.sinif }}{% if satir.ogrenci.sube %}/{{ satir.ogrenci.sube }}{% endif %}{% endif %}</div>
+          </td>
+          {% for y in satir.yuzdeler %}
+            <td>{% if y is not none %}%{{ "%.0f"|format(y) }}{% else %}<span class="alt-metin">—</span>{% endif %}</td>
+          {% endfor %}
+          <td><strong>%{{ "%.0f"|format(satir.ortalama or 0) }}</strong></td>
+          <td data-deger="{{ satir.egilim if satir.egilim is not none else '' }}">
+            {% if satir.egilim is none %}<span class="alt-metin">tek sınav</span>
+            {% elif satir.egilim > 0 %}<span class="rozet tamam">▲ {{ "%.0f"|format(satir.egilim) }}</span>
+            {% elif satir.egilim < 0 %}<span class="rozet bekleyen">▼ {{ "%.0f"|format(-satir.egilim) }}</span>
+            {% else %}<span class="rozet hazir">sabit</span>{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

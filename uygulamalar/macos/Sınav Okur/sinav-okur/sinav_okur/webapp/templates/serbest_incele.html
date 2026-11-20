@@ -1,0 +1,266 @@
+{% extends "temel.html" %}
+{% block baslik %}Algılanan soruları doğrula — sinav-okur{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/serbest-yukle"><span aria-hidden="true">←</span> Başka sınav yükle</a>
+    <h1>Algılanan soruları doğrulayın</h1>
+    <p>{{ taslak.baslik }} · {{ taslak.sorular|length }} soru bulundu. Mavi bölgeleri sürükleyip sağ alt köşesinden büyütebilir; OCR metnini, puanı ve cevap anahtarını düzeltebilirsiniz.</p>
+  </div>
+</section>
+
+<div class="sihirbaz-adimlari" aria-label="Serbest sınav adımları">
+  <div class="sihirbaz-adim etkin"><b>✓</b><span>Boş sınav yüklendi</span></div>
+  <div class="sihirbaz-adim etkin"><b>2</b><span>Soruları doğrula</span></div>
+  <div class="sihirbaz-adim"><b>3</b><span>Öğrenci kâğıtlarını oku</span></div>
+</div>
+
+{% if hata %}<div class="uyari-kutusu" role="alert"><strong>Kaydedilemedi:</strong><span>{{ hata }}</span></div>{% endif %}
+{% for uyari in taslak.ocr_uyarilari %}<div class="uyari-kutusu"><strong>OCR uyarısı:</strong><span>{{ uyari }}</span></div>{% endfor %}
+
+<section class="form-kart">
+  <div class="soru-karti-ust">
+    <div>
+      <h2>Yapay zekâ cevap asistanı</h2>
+      <p>Düzelttiğiniz sorular için BioProf/yerel kitaplardan kaynaklı cevap veya Claude API üzerinden örnek cevap ve rubrik oluşturur.</p>
+    </div>
+    <span class="rozet {% if yapay_zeka_durumu.hazir %}tamam{% else %}bekleyen{% endif %}">
+      {% if yapay_zeka_durumu.hazir %}Hazır{% else %}Anahtar yok{% endif %}
+    </span>
+  </div>
+  <div class="form-eylemler">
+    <div>
+      <strong>{{ yapay_zeka_durumu.mesaj }}</strong>
+      <div class="alt-metin">Üretilen cevaplar öneridir; kaydetmeden önce öğretmen doğrulaması gerekir.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="buton" type="submit" form="dogrulama-formu"
+              formaction="/serbest/{{ token }}/yerel-rag-cevaplari"
+              formmethod="post" formnovalidate
+              {% if not yerel_rag_durumu.hazir %}disabled{% endif %}>
+        ▤ Kitaplardan kaynaklı anahtar oluştur
+      </button>
+      <button class="buton ikincil" type="submit" form="dogrulama-formu"
+              formaction="/serbest/{{ token }}/yapay-zeka-cevaplari"
+              formmethod="post" formnovalidate
+              {% if not yapay_zeka_durumu.hazir %}disabled{% endif %}>
+        ✦ Claude API ile oluştur
+      </button>
+    </div>
+  </div>
+  <div class="alt-metin" style="margin-top:8px">
+    Yerel RAG: {{ yerel_rag_durumu.mesaj }}
+    · <a href="/referans">Kitap ekle veya indeksi yenile</a>
+    · {{ yerel_rag_durumu.bioprof.mesaj }}
+  </div>
+</section>
+
+{% if taslak.ocr_raporu %}
+<details class="ocr-rapor" open>
+  <summary>OCR motor raporu · {{ taslak.ocr_profili }} profil</summary>
+  <div class="ocr-rapor-grid">
+    {% for r in taslak.ocr_raporu %}
+      <div class="ocr-rapor-satir {% if r.basarili %}basarili{% else %}hatali{% endif %}">
+        <span class="ocr-nokta {% if r.basarili %}acik{% endif %}"></span>
+        <div>
+          <b>Sayfa {{ r.sayfa }} · {{ r.motor }}</b>
+          <small>
+            {% if r.basarili %}
+              {{ r.satir }} satır · güven %{{ "%.0f"|format(r.ortalama_guven * 100) }} · {{ "%.1f"|format(r.sure_ms / 1000) }} sn
+            {% else %}
+              {{ r.hata or "Sonuç üretmedi" }}
+            {% endif %}
+          </small>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</details>
+{% endif %}
+
+<form method="post" action="/serbest/{{ token }}" id="dogrulama-formu" data-yukleniyor="Kaydediliyor, RAG anahtarları yenileniyor">
+  <section class="form-kart" style="margin-bottom:16px">
+    <div class="soru-karti-ust">
+      <div>
+        <h2>Cevap anahtarı yöntemi</h2>
+        <p>Varsayılan yöntem, düzeltilmiş soru metninden yerel kitap kanıtlarını bulur ve atomik rubriği otomatik oluşturur.</p>
+      </div>
+    </div>
+    <div class="mini-grup" role="radiogroup" aria-label="Cevap anahtarı yöntemi">
+      <label class="mini-buton">
+        <input type="radio" name="anahtar_modu" value="otomatik_rag" checked
+               {% if not yerel_rag_durumu.hazir %}disabled{% endif %}>
+        RAG'dan otomatik oluştur ve puanla
+      </label>
+      <label class="mini-buton">
+        <input type="radio" name="anahtar_modu" value="elle"
+               {% if not yerel_rag_durumu.hazir %}checked{% endif %}>
+        Anahtarı elle kullan
+      </label>
+    </div>
+    <div class="alt-metin">
+      Kanıt yetersizse sistem puan uydurmaz; ilgili soruyu öğretmen incelemesine bırakır.
+      Boşluk doldurma sorularında “Elle” modunu seçin.
+    </div>
+  </section>
+  <div class="serbest-duzen">
+    <div class="sayfa-onizleme" aria-label="Algılanan soru bölgeleri">
+      {% for sayfa_yolu in taslak.sayfa_gorselleri %}
+        {% set sayfa_no = loop.index %}
+        <div class="sayfa-katman">
+          <img src="/serbest/{{ token }}/sayfa/{{ sayfa_no }}.png" alt="Sınav sayfası {{ sayfa_no }}">
+          {% for s in taslak.sorular if s.sayfa == sayfa_no %}
+            <div class="algilanan-bolge" data-bolge-no="{{ s.no }}"
+                 style="left:{{ s.kutu.x * 100 }}%;top:{{ s.kutu.y * 100 }}%;width:{{ s.kutu.width * 100 }}%;height:{{ s.kutu.height * 100 }}%">
+              <span>Soru {{ s.no }}</span>
+              <i class="bolge-tutamac" aria-hidden="true"></i>
+            </div>
+          {% endfor %}
+          {% for k in taslak.ek_kutular if k.sayfa == sayfa_no %}
+            <div class="algilanan-bolge" style="left:{{ k.x * 100 }}%;top:{{ k.y * 100 }}%;width:{{ k.width * 100 }}%;height:{{ k.height * 100 }}%;border-style:dashed;pointer-events:none">
+              <span>Soru {{ k.soru_no }} devamı</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+    <div>
+      {% if not taslak.sorular %}
+        <div class="bos-durum">
+          <div class="bos-ikon" aria-hidden="true">∅</div>
+          <h2>Soru algılanamadı</h2>
+          <p>Sayfada soru numarası deseni bulunamadı. Daha net bir tarama yükleyin ya da "akıllı/beşli" OCR profiliyle yeniden deneyin.</p>
+          <p><a class="buton ikincil" href="/serbest-yukle">← Yeniden yükle</a></p>
+        </div>
+      {% endif %}
+      {% for s in taslak.sorular %}
+        <article class="soru-karti">
+          <div class="soru-karti-ust">
+            <strong>Soru {{ s.no }} · Sayfa {{ s.sayfa }}</strong>
+            <span class="rozet {% if s.guven >= 0.75 %}tamam{% else %}bekleyen{% endif %}">OCR %{{ "%.0f"|format(s.guven * 100) }}</span>
+          </div>
+          <div class="soru-karti-ic">
+            <input type="hidden" name="soru_no" value="{{ s.no }}">
+            <input type="hidden" id="kutu-x-{{ s.no }}" name="kutu_x" value="{{ s.kutu.x }}">
+            <input type="hidden" id="kutu-y-{{ s.no }}" name="kutu_y" value="{{ s.kutu.y }}">
+            <input type="hidden" id="kutu-width-{{ s.no }}" name="kutu_width" value="{{ s.kutu.width }}">
+            <input type="hidden" id="kutu-height-{{ s.no }}" name="kutu_height" value="{{ s.kutu.height }}">
+            <div class="form-grid">
+              <div class="alan">
+                <label>Soru türü</label>
+                <select name="soru_tip">
+                  {% set algilanan_tip = s.yapay_zeka_cevap_turu or "acik_uclu" %}
+                  <option value="acik_uclu" {% if algilanan_tip == "acik_uclu" %}selected{% endif %}>Açık uçlu</option>
+                  <option value="kisa_cevap" {% if algilanan_tip == "kisa_cevap" %}selected{% endif %}>Kısa cevap</option>
+                  <option value="bosluk_doldurma" {% if algilanan_tip == "bosluk_doldurma" %}selected{% endif %}>Boşluk doldurma</option>
+                  <option value="coktan_secmeli" {% if algilanan_tip == "coktan_secmeli" %}selected{% endif %}>Çoktan seçmeli</option>
+                  <option value="eslestirme" {% if algilanan_tip == "eslestirme" %}selected{% endif %}>Eşleştirme</option>
+                  <option value="siralama" {% if algilanan_tip == "siralama" %}selected{% endif %}>Sıralama</option>
+                  <option value="sayisal" {% if algilanan_tip == "sayisal" %}selected{% endif %}>Sayısal</option>
+                  <option value="formul_ispat" {% if algilanan_tip == "formul_ispat" %}selected{% endif %}>Formül / ispat</option>
+                  <option value="tablo" {% if algilanan_tip == "tablo" %}selected{% endif %}>Tablo</option>
+                  <option value="grafik" {% if algilanan_tip == "grafik" %}selected{% endif %}>Grafik</option>
+                  <option value="cizim" {% if algilanan_tip == "cizim" %}selected{% endif %}>Çizim</option>
+                  <option value="deney_tasarlama" {% if algilanan_tip == "deney_tasarlama" %}selected{% endif %}>Deney tasarlama</option>
+                  <option value="yorumlama" {% if algilanan_tip == "yorumlama" %}selected{% endif %}>Yorumlama</option>
+                  <option value="etik" {% if algilanan_tip == "etik" %}selected{% endif %}>Etik değerlendirme</option>
+                </select>
+              </div>
+              <div class="alan">
+                <label>Puan</label>
+                <input name="soru_puan" type="text" inputmode="decimal" required value="{{ s.puan }}">
+              </div>
+              <div class="alan tam">
+                <label>Soru metni</label>
+                <textarea name="soru_metin" required>{{ s.metin }}</textarea>
+                {% if s.ocr_alternatifleri|length > 1 %}
+                <details class="ocr-alternatif">
+                  <summary>{{ s.ocr_alternatifleri|length }} motorun metnini karşılaştır</summary>
+                  {% for alternatif in s.ocr_alternatifleri %}
+                    <div>
+                      <b>{{ alternatif.motor }} · %{{ "%.0f"|format(alternatif.guven * 100) }}</b>
+                      <span>{{ alternatif.metin }}</span>
+                    </div>
+                  {% endfor %}
+                </details>
+                {% endif %}
+              </div>
+              <div class="alan tam">
+                <label>Cevap anahtarı / rubrik ölçütleri</label>
+                <textarea name="soru_anahtar" placeholder="Elle modunda her puanlanacak kavramı ayrı satıra yazın. RAG modunda sistem bunu yeniden oluşturur.">{{ s.yapay_zeka_rubrik|join("\n") }}</textarea>
+                {% if s.yapay_zeka_cevabi %}
+                <details class="ocr-alternatif" open>
+                  <summary>{{ s.yapay_zeka_kaynagi or "Yapay zekâ" }} örnek cevabı</summary>
+                  <div><span>{{ s.yapay_zeka_cevabi }}</span></div>
+                  <div>
+                    {% if s.yapay_zeka_puanlanabilir %}
+                      <span class="rozet tamam">Otomatik puanlamaya uygun</span>
+                    {% else %}
+                      <span class="rozet bekleyen">Öğretmen doğrulaması gerekli</span>
+                    {% endif %}
+                    {% if s.yapay_zeka_uyari %}<span>{{ s.yapay_zeka_uyari }}</span>{% endif %}
+                  </div>
+                  {% if s.yapay_zeka_kaynaklari %}
+                    <div><b>Kaynaklar:</b> <span>{{ s.yapay_zeka_kaynaklari|join(" · ") }}</span></div>
+                  {% endif %}
+                </details>
+                {% endif %}
+                <small>Yapay zekâ yalnız öneri üretir. Adil puanlama için öğretmen doğrulaması zorunludur.</small>
+              </div>
+            </div>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="form-eylemler">
+    <div><strong>{{ taslak.sorular|length }} soru · kaynaklı anahtar ve otomatik puanlama</strong><div class="alt-metin">Kaydetme sırasında düzeltilmiş soru metinleriyle RAG anahtarları yeniden oluşturulur.</div></div>
+    <button class="buton" type="submit">Serbest sınavı kaydet <span aria-hidden="true">→</span></button>
+  </div>
+</form>
+{% endblock %}
+{% block betik %}
+<script>
+  document.querySelectorAll(".algilanan-bolge").forEach((bolge) => {
+    const no = bolge.dataset.bolgeNo;
+    const katman = bolge.closest(".sayfa-katman");
+    let hareket = null;
+    const alanlariYaz = () => {
+      document.getElementById(`kutu-x-${no}`).value = parseFloat(bolge.style.left) / 100;
+      document.getElementById(`kutu-y-${no}`).value = parseFloat(bolge.style.top) / 100;
+      document.getElementById(`kutu-width-${no}`).value = parseFloat(bolge.style.width) / 100;
+      document.getElementById(`kutu-height-${no}`).value = parseFloat(bolge.style.height) / 100;
+    };
+    bolge.addEventListener("pointerdown", (olay) => {
+      olay.preventDefault();
+      document.querySelectorAll(".algilanan-bolge").forEach((b) => b.classList.remove("secili"));
+      bolge.classList.add("secili");
+      const rect = katman.getBoundingClientRect();
+      hareket = {
+        x:olay.clientX, y:olay.clientY,
+        left:parseFloat(bolge.style.left), top:parseFloat(bolge.style.top),
+        width:parseFloat(bolge.style.width), height:parseFloat(bolge.style.height),
+        rect, resize:olay.target.classList.contains("bolge-tutamac")
+      };
+      bolge.setPointerCapture(olay.pointerId);
+    });
+    bolge.addEventListener("pointermove", (olay) => {
+      if (!hareket) return;
+      const dx = (olay.clientX - hareket.x) / hareket.rect.width * 100;
+      const dy = (olay.clientY - hareket.y) / hareket.rect.height * 100;
+      if (hareket.resize) {
+        bolge.style.width = `${Math.max(3, Math.min(100 - hareket.left, hareket.width + dx))}%`;
+        bolge.style.height = `${Math.max(3, Math.min(100 - hareket.top, hareket.height + dy))}%`;
+      } else {
+        bolge.style.left = `${Math.max(0, Math.min(100 - hareket.width, hareket.left + dx))}%`;
+        bolge.style.top = `${Math.max(0, Math.min(100 - hareket.height, hareket.top + dy))}%`;
+      }
+      alanlariYaz();
+    });
+    bolge.addEventListener("pointerup", () => { hareket = null; alanlariYaz(); });
+    bolge.addEventListener("click", () => {
+      document.getElementById(`kutu-x-${no}`).closest(".soru-karti")?.scrollIntoView({behavior:"smooth",block:"center"});
+    });
+  });
+</script>
+{% endblock %}

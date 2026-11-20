@@ -1,0 +1,70 @@
+{% extends "temel.html" %}
+{% block baslik %}Tutarlılık kuyruğu — {{ sinav.baslik }}{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/sinav/{{ kimlik }}/analiz"><span aria-hidden="true">←</span> Analiz</a>
+    <h1>Tutarlılık kuyruğu</h1>
+    <p>Benzer yazılmış ama farklı puan almış cevap çiftleri. En büyük puan farkı önce; iki puanı da tek ekranda eşitleyin.</p>
+  </div>
+</section>
+
+{% if not kart %}
+  <section class="form-kart" style="text-align:center">
+    <h2>Tutarsızlık yok 🎉</h2>
+    <p>Benzer cevaplar arasında belirgin puan farkı bulunmadı.</p>
+    <a class="buton" href="/sinav/{{ kimlik }}/analiz">Analize dön</a>
+  </section>
+{% else %}
+  <div class="ilerleme" aria-label="Kuyruk ilerlemesi">
+    <span style="width:{{ ((konum + 1) / toplam * 100) | round }}%"></span>
+  </div>
+  <p class="alt-metin" style="text-align:center">{{ konum + 1 }} / {{ toplam }} tutarsız çift · Soru {{ kart.soru.no }} · %{{ "%.0f"|format(kart.cift.benzerlik) }} benzerlik, {{ "%.1f"|format(kart.cift.puan_farki) }} puan fark</p>
+
+  <article class="kutu incele">
+    <header class="kutu-ust">
+      <div>
+        <h2>Soru {{ kart.soru.no }}</h2>
+        <div class="soru-meta">{{ kart.soru.tip.value|replace("_", " ")|title }} · {{ kart.soru.puan }} puan</div>
+      </div>
+      <span class="rozet bekleyen">{{ "%.1f"|format(kart.cift.puan_farki) }} puan fark</span>
+    </header>
+    <p class="soru-metni">{{ kart.soru.metin }}</p>
+
+    <div class="satir">
+    {% for taraf in kart.taraflar %}
+      <div>
+        <span class="alan-etiket">
+          <a href="/kagit/{{ taraf.kutu.kagit_id }}#soru-{{ kart.soru.no }}">{{ taraf.ogrenci }}</a> · {{ "%.1f"|format(taraf.kutu.son_puan or 0) }} / {{ taraf.kutu.max_puan }}
+        </span>
+        {% if taraf.kirp_url %}
+          <div class="gorsel-sarma"><img class="cevap-gorseli" src="{{ taraf.kirp_url }}" alt="Cevap kırpıntısı" loading="lazy"></div>
+        {% else %}
+          <div class="gorsel-yok">Görüntü bulunamadı</div>
+        {% endif %}
+        <p class="soru-metni">{{ taraf.metin or "Metin okunamadı" }}</p>
+        <form method="post" action="/kutu/{{ taraf.kutu.id }}">
+          <input type="hidden" name="kagit_id" value="{{ taraf.kutu.kagit_id }}">
+          <input type="hidden" name="metin" value="{{ taraf.metin or '' }}">
+          <input type="hidden" name="hedef" value="/sinav/{{ kimlik }}/tutarlilik?cift={{ konum }}">
+          <div class="form-alt">
+            <label class="alan" style="max-width:140px">
+              <span>Puan</span>
+              <input type="number" name="puan" min="0" max="{{ taraf.kutu.max_puan }}" step="0.5" value="{{ '%.1f'|format(taraf.kutu.son_puan or 0) }}">
+            </label>
+            <button class="buton" type="submit" name="islem" value="elle">Puanı kaydet</button>
+          </div>
+        </form>
+      </div>
+    {% endfor %}
+    </div>
+  </article>
+
+  <nav class="kagit-gezinme" aria-label="Kuyrukta gezinme">
+    {% if onceki is not none %}<a class="buton ikincil" href="/sinav/{{ kimlik }}/tutarlilik?cift={{ onceki }}" id="onceki-baglanti">← Önceki</a>{% endif %}
+    {% if sonraki is not none %}<a class="buton ikincil" href="/sinav/{{ kimlik }}/tutarlilik?cift={{ sonraki }}" id="sonraki-baglanti">Sonraki →</a>{% endif %}
+    <a class="buton ikincil" href="/sinav/{{ kimlik }}/soru/{{ kart.soru.no }}/tezgah">Bu soruyu tezgâhta aç</a>
+  </nav>
+{% endif %}
+{% endblock %}
+

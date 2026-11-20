@@ -1,0 +1,239 @@
+{% extends "temel.html" %}
+{% block baslik %}{{ sinav.baslik }} — sinav-okur{% endblock %}
+{% block icerik %}
+{% if tanitildi %}
+  <div class="basari-kutusu" role="status"><strong>Yazılı tanındı.</strong><span>Sorular, puanlar, cevap bölgeleri ve cevap anahtarı kaydedildi. Artık öğrenci kâğıtlarını yükleyebilirsiniz.</span></div>
+{% endif %}
+{% if rag_yenilendi %}
+  <div class="basari-kutusu" role="status"><strong>RAG cevap anahtarı yenilendi.</strong><span>Kaynaklar sınavla birlikte kaydedildi ve mevcut öğrenci kâğıtları yeni rubriğe göre yeniden puanlandı.</span></div>
+{% endif %}
+{% if liste_yuklendi %}
+  <div class="basari-kutusu" role="status"><strong>Öğrenci listesi hazır.</strong><span>{{ liste_yuklendi }} öğrenci yerel eşleştirme listesine alındı.</span></div>
+{% endif %}
+{% if anahtar_onaylandi %}
+  <div class="basari-kutusu" role="status"><strong>Cevap anahtarı onaylandı.</strong><span>Yapısal rubrik sürümlendi ve kâğıtlar program tarafından yeniden puanlandı.</span></div>
+{% endif %}
+{% if toplu_sonuc %}
+  <div class="basari-kutusu" role="status"><strong>Toplu işlem tamamlandı.</strong><span>{{ toplu_sonuc.islenen }} kâğıt işlendi{% if toplu_sonuc.atlanan %}, {{ toplu_sonuc.atlanan }} kâğıt atlandı (çözülmemiş cevap veya listede olmayan kâğıt){% endif %}.</span></div>
+{% endif %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/"><span aria-hidden="true">←</span> Tüm sınavlar</a>
+    <h1>{{ sinav.baslik }}</h1>
+    <p>{{ sinav.ders or "Ders belirtilmemiş" }} · {{ kimlik }}</p>
+    <div class="hizli-eylemler">
+      {% if yazili_hazir %}
+        <a class="buton" href="/yukle?sinav={{ kimlik }}">⇧ Bu yazılıya kâğıt yükle <span aria-hidden="true">→</span></a>
+      {% else %}
+        <a class="buton" href="/serbest-yukle">⌁ Yazılıyı yeniden tanıt</a>
+      {% endif %}
+      <form method="post" action="/sinav/{{ kimlik }}/rag-anahtar-yenile" data-yukleniyor="RAG anahtarı yenileniyor"
+            onsubmit="return confirm('Cevap anahtarını yerel kitap RAG’ından yenileyip tüm kâğıtları yeniden puanlamak istiyor musunuz?')">
+        <button class="buton ikincil" type="submit">▤ RAG anahtarını yenile ve puanla</button>
+      </form>
+      {% if kaynak_hazir %}<a class="buton ikincil" href="/sinav/{{ kimlik }}/kaynak">↓ Kaynak yazılıyı indir</a>{% endif %}
+      {% if ozet.bekleyen %}
+        <a class="buton" href="/sinav/{{ kimlik }}/inceleme">İnceleme kuyruğunu başlat ({{ ozet.bekleyen }})</a>
+      {% endif %}
+      <a class="buton ikincil" href="/sinav/{{ kimlik }}/rapor.xlsx">Excel not dökümü</a>
+      <a class="buton ikincil" href="/sinav/{{ kimlik }}/anahtar">✎ Cevap anahtarını düzenle</a>
+      <a class="buton ikincil" href="/sinav/{{ kimlik }}/analiz">Analiz ve tutarlılık</a>
+      <a class="buton ikincil" href="/sinav/{{ kimlik }}/itirazlar">⚖ İtirazlar</a>
+      {% if ozet.onayli %}<a class="buton ikincil" href="/sinav/{{ kimlik }}/geri-bildirimler">Öğrenci geri bildirimleri</a>{% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="form-kart">
+  <div class="soru-karti-ust">
+    <div><h2>Puanlama ve öğrenci eşleştirme ayarları</h2><p>Program puanı kendi rubriğinden verir; kâğıttaki öğretmen puanlarını kullanmaz.</p></div>
+    <span class="rozet hazir">{{ ogrenci_listesi_adet }} öğrenci kayıtlı</span>
+  </div>
+  <div class="form-grid">
+    <form method="post" action="/sinav/{{ kimlik }}/esneklik" class="alan">
+      <label for="profil">Puanlama esnekliği</label>
+      <select id="profil" name="profil">
+        <option value="kati" {% if esneklik_profili == "kati" %}selected{% endif %}>Katı</option>
+        <option value="dengeli" {% if esneklik_profili == "dengeli" %}selected{% endif %}>Dengeli</option>
+        <option value="esnek" {% if esneklik_profili == "esnek" %}selected{% endif %}>Esnek — mantık ve yönteme daha çok kısmi puan</option>
+      </select>
+      <button class="buton ikincil" type="submit" style="margin-top:8px">Profili kaydet</button>
+    </form>
+    <form method="post" action="/sinav/{{ kimlik }}/ogrenci-listesi" enctype="multipart/form-data" class="alan" data-yukleniyor="Liste yükleniyor">
+      <label for="liste_dosyasi">Öğrenci listesi (CSV/XLSX)</label>
+      <input id="liste_dosyasi" name="liste_dosyasi" type="file" accept=".csv,.xlsx,.xlsm" required>
+      <button class="buton ikincil" type="submit" style="margin-top:8px">Listeyi içe aktar</button>
+    </form>
+    <form method="post" action="/sinav/{{ kimlik }}/anahtar-onayla" class="alan" data-yukleniyor="Anahtar sürümleniyor, kâğıtlar yeniden puanlanıyor" onsubmit="return confirm('Yapısal cevap anahtarını sürümleyip bütün kâğıtları programla yeniden puanlamak istiyor musunuz?')">
+      <label>Cevap anahtarı sürümü</label>
+      <p class="alt-metin">RAG rubriğini kontrol ettikten sonra onaylayın. Eski sürüm denetim için korunur.</p>
+      <button class="buton ikincil" type="submit">Anahtarı onayla ve yeniden puanla</button>
+    </form>
+  </div>
+</section>
+
+<section class="panel" id="kabul-yazimlari">
+  <div class="panel-baslik">
+    <div>
+      <h2>Öğrenilmiş kabul yazımları</h2>
+      <p>Öğretmenin tam puan verdiği ama anahtarda olmayan yazımlar. Onaylanan yazımlar sonraki puanlamalarda kabul edilir; onaylanmayan hiçbir puanı etkilemez.</p>
+    </div>
+    <form method="post" action="/sinav/{{ kimlik }}/kabul-yazimlari-tara" data-yukleniyor="Düzeltmeler taranıyor">
+      <button class="buton ikincil" type="submit">⌕ Düzeltmeleri tara</button>
+    </form>
+  </div>
+  {% if kabul_onerisi %}
+    <div class="basari-kutusu" role="status"><strong>{{ kabul_onerisi }} yazım önerisi güncellendi.</strong><span>Aşağıdan onaylayabilir ya da reddedebilirsiniz.</span></div>
+  {% endif %}
+  {% if kabul_karari %}
+    <div class="basari-kutusu" role="status"><strong>Yazım önerisi {% if kabul_karari == "onayla" %}onaylandı{% else %}kaldırıldı{% endif %}.</strong><span>Onaylı yazımlar boşluk puanlamasında kabul edilen alternatiflere eklenir.</span></div>
+  {% endif %}
+  {% if esneklik_kaydedildi %}
+    <div class="basari-kutusu" role="status"><strong>Puanlama esnekliği "{{ esneklik_kaydedildi }}" olarak kaydedildi.</strong><span>Yeni profil bundan sonraki puanlamalarda kullanılır; mevcut puanlar için "Yeniden puanla" çalıştırın.</span></div>
+  {% endif %}
+  {% if kabul_yazimlari %}
+    <div class="tablo-sarma">
+      <table>
+        <thead><tr><th>Soru</th><th>Yazım</th><th>Destek</th><th>Durum</th><th></th></tr></thead>
+        <tbody>
+        {% for k in kabul_yazimlari %}
+          <tr>
+            <td>Soru {{ k.soru_no }}</td>
+            <td><strong>{{ k.yazim }}</strong></td>
+            <td>{{ k.destek }} kez tam puan</td>
+            <td>
+              {% if k.onay_durumu == "onayli" %}<span class="rozet tamam">Onaylı</span>
+              {% elif k.onay_durumu == "reddedildi" %}<span class="rozet">Reddedildi</span>
+              {% else %}<span class="rozet bekleyen">Öneri</span>{% endif %}
+            </td>
+            <td>
+              {% if k.onay_durumu != "onayli" %}
+                <form method="post" action="/kabul-yazimi/{{ k.id }}" style="display:inline">
+                  <input type="hidden" name="kimlik" value="{{ kimlik }}">
+                  <button class="mini-buton" type="submit" name="karar" value="onayla">Onayla</button>
+                </form>
+              {% endif %}
+              {% if k.onay_durumu != "reddedildi" %}
+                <form method="post" action="/kabul-yazimi/{{ k.id }}" style="display:inline">
+                  <input type="hidden" name="kimlik" value="{{ kimlik }}">
+                  <button class="mini-buton" type="submit" name="karar" value="reddet">Reddet</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="bos-durum"><p>Henüz öneri yok. Boşluk doldurma sorularında yeterli öğretmen düzeltmesi biriktiğinde "Düzeltmeleri tara" ile öneri üretin.</p></div>
+  {% endif %}
+</section>
+
+<section class="istatistikler" aria-label="Sınav istatistikleri">
+  <div class="istatistik"><span class="deger">{{ ozet.kagit }}</span><span class="ad">Kâğıt</span></div>
+  <div class="istatistik uyari"><span class="deger">{{ ozet.bekleyen }}</span><span class="ad">Bekleyen cevap</span></div>
+  <div class="istatistik iyi"><span class="deger">{{ ozet.onayli }}</span><span class="ad">Onaylanmış</span></div>
+  <div class="istatistik">
+    <span class="deger">{% if ozet.ortalama is not none %}%{{ "%.1f"|format(ozet.ortalama) }}{% else %}—{% endif %}</span>
+    <span class="ad">Sınıf ortalaması</span>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-baslik">
+    <div><h2>Öğrenci kâğıtları</h2><p>İnceleme gerektiren kâğıtlar durum sütununda vurgulanır.</p></div>
+    {% if kagitlar %}
+      <div>
+        <div class="filtreler" aria-label="Kâğıt durum filtresi">
+          <button class="filtre" type="button" data-filtre="tumu" data-filtre-hedef="#kagit-tablosu" aria-pressed="true">Tümü</button>
+          <button class="filtre" type="button" data-filtre="bekleyen" data-filtre-hedef="#kagit-tablosu" aria-pressed="false">Bekleyen</button>
+          <button class="filtre" type="button" data-filtre="onayli" data-filtre-hedef="#kagit-tablosu" aria-pressed="false">Onaylı</button>
+          <button class="filtre" type="button" data-filtre="hazir" data-filtre-hedef="#kagit-tablosu" aria-pressed="false">Hazır</button>
+        </div>
+        <input class="arama" id="kagit-ara" data-tablo-ara="#kagit-tablosu" type="search" placeholder="Ad veya numara ara…" aria-label="Öğrenci kâğıtlarında ara" style="margin-top:8px">
+      </div>
+    {% endif %}
+  </div>
+  {% if not kagitlar %}
+    <div class="bos-durum">
+      <div class="bos-ikon" aria-hidden="true">▤</div>
+      <h2>Bu sınava ait kâğıt yok</h2>
+      <p>Öğrencinin doldurduğu PDF'yi veya çektiğiniz fotoğrafı yükleyin. Sistem cevap kutularını bulup otomatik değerlendirecek.</p>
+      <div class="hizli-eylemler" style="justify-content:center">
+        {% if yazili_hazir %}<a class="buton" href="/yukle?sinav={{ kimlik }}">⇧ İlk kâğıdı yükle ve değerlendir</a>{% endif %}
+        {% if kaynak_hazir %}<a class="buton ikincil" href="/sinav/{{ kimlik }}/kaynak">↓ Temiz kaynak yazılıyı indir</a>{% endif %}
+      </div>
+    </div>
+  {% else %}
+    <form method="post" action="/sinav/{{ kimlik }}/toplu-islem" id="toplu-form" data-yukleniyor="Toplu işlem çalışıyor">
+    <div class="tablo-sarma">
+      <table id="kagit-tablosu">
+        <thead><tr><th><input type="checkbox" id="tumunu-sec" aria-label="Görünen kâğıtların tümünü seç"></th><th data-sirala>Öğrenci</th><th data-sirala="sayi">Numara</th><th data-sirala="sayi">Puan</th><th data-sirala="sayi">Başarı</th><th data-sirala>Durum</th><th></th></tr></thead>
+        <tbody>
+        {% for r in kagitlar %}
+          <tr data-ara="{{ r.k.ogrenci_ad or '' }} {{ r.k.ogrenci_soyad or '' }} {{ r.k.ogrenci_no or '' }} {{ r.k.sinif or '' }} {{ r.k.sube or '' }}"
+              data-durum="{% if r.bekleyen %}bekleyen{% elif r.k.onaylandi %}onayli{% else %}hazir{% endif %}">
+            <td><input type="checkbox" name="kagit_id" value="{{ r.k.id }}" class="kagit-sec" aria-label="Kâğıt {{ r.k.id }} seç"></td>
+            <td><a class="ana-link" href="/kagit/{{ r.k.id }}">{{ r.k.ogrenci_ad or "İsimsiz öğrenci" }}{% if r.k.ogrenci_soyad %} {{ r.k.ogrenci_soyad }}{% endif %}</a><div class="alt-metin">Kâğıt #{{ r.k.id }}{% if r.k.sinif or r.k.sube %} · {{ r.k.sinif or "?" }}{% if r.k.sube %}/{{ r.k.sube }}{% endif %}{% endif %}</div></td>
+            <td>{{ r.k.ogrenci_no or "—" }}</td>
+            <td><strong>{{ "%.1f"|format(r.toplam) }}</strong> <span class="alt-metin">/ {{ "%.0f"|format(r.max) }}</span></td>
+            <td><div class="ilerleme" aria-label="Yüzde {{ '%.0f'|format(r.yuzde) }}"><span style="width:{{ [r.yuzde, 100]|min }}%"></span></div><div class="alt-metin">%{{ "%.0f"|format(r.yuzde) }}</div></td>
+            <td>
+              {% if r.bekleyen %}<span class="rozet bekleyen">{{ r.bekleyen }} cevap</span>
+              {% elif r.k.onaylandi %}<span class="rozet tamam">Onaylandı</span>
+              {% else %}<span class="rozet hazir">İncelemeye hazır</span>{% endif %}
+              {% if r.kritik %}<span class="rozet bekleyen mini" title="Sayfa kalite kapısı kritik uyarı verdi">⚠ kalite</span>
+              {% elif r.uyari_sayisi %}<span class="rozet bekleyen mini" title="Tarama uyarısı">⚠ {{ r.uyari_sayisi }}</span>{% endif %}
+            </td>
+            <td><a class="buton ikincil" href="/kagit/{{ r.k.id }}">İncele <span aria-hidden="true">→</span></a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="form-eylemler" id="toplu-cubuk" hidden>
+      <span class="alt-metin" id="toplu-sayac">0 kâğıt seçildi</span>
+      <button class="buton" type="submit" name="islem" value="onayla"
+              onclick="return confirm('Seçili kâğıtlar onaylansın mı? Çözülmemiş cevabı olanlar atlanır.')">✓ Seçilenleri onayla</button>
+      <button class="buton ikincil" type="submit" name="islem" value="yeniden_puanla"
+              onclick="return confirm('Seçili kâğıtlar güncel anahtarla yeniden puanlansın mı? Onayları kaldırılır.')">↻ Yeniden puanla</button>
+      <button class="buton ikincil" type="submit" name="islem" value="incelemeye_al">⌾ İncelemeye al</button>
+      <button class="buton ikincil" type="button" id="toplu-geri-bildirim">▤ Geri bildirimlerini yazdır</button>
+    </div>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}
+{% block betik %}
+{% if kagitlar %}
+<script>
+  // Toplu seçim: yalnız görünen (filtrelenmemiş) satırlar seçilir.
+  const topluCubuk = document.getElementById("toplu-cubuk");
+  const topluSayac = document.getElementById("toplu-sayac");
+  function secilenKutular() {
+    return [...document.querySelectorAll(".kagit-sec")].filter((k) => k.checked);
+  }
+  function topluDurumuTazele() {
+    const adet = secilenKutular().length;
+    topluSayac.textContent = adet + " kâğıt seçildi";
+    topluCubuk.hidden = adet === 0;
+  }
+  document.querySelectorAll(".kagit-sec").forEach((kutu) => {
+    kutu.addEventListener("change", topluDurumuTazele);
+  });
+  document.getElementById("tumunu-sec")?.addEventListener("change", (olay) => {
+    document.querySelectorAll("#kagit-tablosu tbody tr").forEach((satir) => {
+      if (satir.hidden) return;
+      const kutu = satir.querySelector(".kagit-sec");
+      if (kutu) kutu.checked = olay.target.checked;
+    });
+    topluDurumuTazele();
+  });
+  document.getElementById("toplu-geri-bildirim")?.addEventListener("click", () => {
+    const sorgu = secilenKutular().map((k) => "kagit=" + encodeURIComponent(k.value)).join("&");
+    if (sorgu) window.open("/sinav/{{ kimlik }}/geri-bildirimler?" + sorgu, "_blank");
+  });
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,205 @@
+{% extends "temel.html" %}
+{% block baslik %}{{ sinav.baslik }} analizi — sinav-okur{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/sinav/{{ sinav.kimlik }}">← {{ sinav.baslik }}</a>
+    <h1>Sınav analizi ve tutarlılık</h1>
+    <p>Soru başarısı, öğretmen düzeltmeleri, risk kuyruğu ve benzer cevapların puan tutarlılığı.</p>
+  </div>
+</section>
+
+<section class="istatistikler" aria-label="Sınav analiz özeti">
+  <div class="istatistik"><span class="deger">{{ analiz.kagit_sayisi }}</span><span class="ad">Kâğıt</span></div>
+  <div class="istatistik"><span class="deger">{% if analiz.ortalama is not none %}%{{ analiz.ortalama }}{% else %}—{% endif %}</span><span class="ad">Ortalama</span></div>
+  <div class="istatistik"><span class="deger">{% if analiz.medyan is not none %}%{{ analiz.medyan }}{% else %}—{% endif %}</span><span class="ad">Medyan</span></div>
+  <div class="istatistik uyari"><span class="deger">{{ analiz.tutarsizliklar|length }}</span><span class="ad">Tutarlılık uyarısı</span></div>
+</section>
+
+{% set psi = analiz.psikometri or {} %}
+{% if psi %}
+<section class="panel">
+  <div class="panel-baslik">
+    <div><h2>Sınavın kendi kalitesi</h2>
+    <p>Bu ölçüler öğrencileri değil <strong>sınavı</strong> değerlendirir: sorular birlikte tutarlı bir şey mi ölçüyor?</p></div>
+    <a class="buton ikincil" href="/sinav/{{ sinav.kimlik }}/puanlama-motoru">Anlamsal puanlamanın etkisi →</a>
+  </div>
+  <section class="istatistikler">
+    <div class="istatistik">
+      <span class="deger">
+        {% if psi.guvenilirlik and psi.guvenilirlik.get('deger') is not none %}{{ "%.2f"|format(psi.guvenilirlik.deger) }}{% else %}—{% endif %}
+      </span>
+      <span class="ad">Güvenilirlik (α)</span>
+    </div>
+    <div class="istatistik">
+      <span class="deger">
+        {% if psi.dagilim and psi.dagilim.get('standart_sapma') is not none %}{{ psi.dagilim.standart_sapma }}{% else %}—{% endif %}
+      </span>
+      <span class="ad">Standart sapma</span>
+    </div>
+    <div class="istatistik">
+      <span class="deger">
+        {% if psi.puanlayici_uyumu and psi.puanlayici_uyumu.get('mae') is not none %}{{ psi.puanlayici_uyumu.mae }}{% else %}—{% endif %}
+      </span>
+      <span class="ad">Program–öğretmen farkı</span>
+    </div>
+  </section>
+  <div class="detay-liste">
+    {% if psi.guvenilirlik and psi.guvenilirlik.get('deger') is not none %}
+      <div><b>α {{ "%.2f"|format(psi.guvenilirlik.deger) }}</b> — {{ psi.guvenilirlik.yorum }}
+        ({{ psi.guvenilirlik.kagit }} kâğıt, {{ psi.guvenilirlik.soru }} soru)</div>
+    {% else %}
+      <div class="alt-metin">Güvenilirlik katsayısı için yeterli veri yok
+        ({{ psi.guvenilirlik.get('mevcut', 0) if psi.guvenilirlik else 0 }}/{{ psi.guvenilirlik.get('gereken', '—') if psi.guvenilirlik else '—' }}).
+        Sayı uydurulmaz.</div>
+    {% endif %}
+    {% if psi.puanlayici_uyumu and psi.puanlayici_uyumu.get('mae') is not none %}
+      <div>Program puanı öğretmen puanından ortalama <b>{{ psi.puanlayici_uyumu.mae }}</b> puan sapıyor;
+        {{ "%+.2f"|format(psi.puanlayici_uyumu.sistematik_sapma) }} puanlık sistematik eğilim var
+        (artı: program cimri, eksi: cömert). Cevapların
+        %{{ (psi.puanlayici_uyumu.iki_puan_icinde * 100) | round }}'i iki puan içinde.</div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+{% set dagilim_max = analiz.dagilim | max %}
+<section class="panel">
+  <div class="panel-baslik"><div><h2>Puan dağılımı</h2><p>Kâğıtların %'lik dilimlere göre dağılımı.</p></div></div>
+  {% if dagilim_max %}
+  <div class="histogram" aria-label="Puan dağılım histogramı">
+    {% for adet in analiz.dagilim %}
+      <div class="hist-sutun">
+        <div class="hist-cubuk-sarma">
+          <div class="hist-cubuk" style="height:{{ (adet / dagilim_max * 100) | round if dagilim_max else 0 }}%" title="{{ adet }} kâğıt"></div>
+        </div>
+        <span class="hist-etiket">{{ loop.index0 * 10 }}–{{ loop.index0 * 10 + 10 }}</span>
+        <span class="hist-adet">{{ adet }}</span>
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}<div class="bos-durum"><p>Henüz puanlanmış kâğıt yok.</p></div>{% endif %}
+</section>
+
+<section class="panel">
+  <div class="panel-baslik">
+    <div><h2>Soru analizi</h2><p>Güçlük (ortalama başarı) ve ayırt edicilik (üst %27 − alt %27); düşük/negatif ayırt edicilik sorunlu soru işaretidir.</p></div>
+  </div>
+  <div class="tablo-sarma">
+    <table>
+      <thead><tr><th data-sirala>Soru</th><th>Cevap</th><th data-sirala="sayi">Güçlük</th><th data-sirala="sayi">Ayırt edicilik</th><th data-sirala="sayi" title="Madde-toplam korelasyonu: soruyu bilenler sınavın genelinde de iyi mi? Negatifse anahtar hatalı olabilir.">r<sub>pbis</sub></th><th data-sirala="sayi">Bekleyen</th><th data-sirala="sayi">Düzeltme</th><th data-sirala="sayi">İtiraz</th><th data-sirala>Durum</th></tr></thead>
+      <tbody>
+      {% for s in analiz.sorular %}
+        <tr>
+          <td><strong><a href="/sinav/{{ sinav.kimlik }}/soru/{{ s.no }}">Soru {{ s.no }}</a></strong><div class="alt-metin">{{ s.metin[:100] }}{% if s.metin|length > 100 %}…{% endif %}</div></td>
+          <td>{{ s.cevap }}</td>
+          <td>{% if s.ortalama_yuzde is not none %}%{{ s.ortalama_yuzde }}{% else %}—{% endif %}</td>
+          <td>
+            {% if s.ayirt_edicilik is not none %}
+              <span class="rozet {% if s.ayirt_edicilik >= 0.2 %}tamam{% elif s.ayirt_edicilik >= 0 %}hazir{% else %}bekleyen{% endif %}">{{ "%+.2f"|format(s.ayirt_edicilik) }}</span>
+            {% else %}<span class="alt-metin">yetersiz örneklem</span>{% endif %}
+          </td>
+          <td data-deger="{{ s.get('r_pbis') if s.get('r_pbis') is not none else -9 }}">
+            {% if s.get('r_pbis') is not none %}
+              <span class="rozet {% if s.get('r_pbis_band') == 'iyi' %}tamam{% elif s.get('r_pbis_band') == 'sinirda' %}hazir{% else %}bekleyen{% endif %}">{{ "%+.2f"|format(s.r_pbis) }}</span>
+            {% else %}<span class="alt-metin">—</span>{% endif %}
+          </td>
+          <td>{{ s.bekleyen }}</td>
+          <td>{{ s.elle_duzeltme }}</td>
+          <td>{% if s.itiraz %}<a class="rozet bekleyen" href="/sinav/{{ sinav.kimlik }}/itirazlar">{{ s.itiraz }}</a>{% else %}—{% endif %}</td>
+          <td>{% if s.anahtar_supheli %}<a class="rozet bekleyen" href="/sinav/{{ sinav.kimlik }}/anahtar#soru-{{ s.no }}" title="Cevap anahtarını düzenle">Anahtarı düzelt</a>{% else %}<span class="rozet hazir">Normal</span>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% if analiz.sinif_karsilastirma %}
+<section class="panel">
+  <div class="panel-baslik"><div><h2>Sınıf/şube karşılaştırması</h2></div></div>
+  <div class="tablo-sarma"><table>
+    <thead><tr><th>Sınıf</th><th>Kâğıt</th><th>Ortalama</th><th>Bekleyen</th></tr></thead>
+    <tbody>{% for g in analiz.sinif_karsilastirma %}
+      <tr><td><strong>{{ g.sinif }}</strong></td><td>{{ g.adet }}</td><td>{% if g.ortalama is not none %}%{{ g.ortalama }}{% else %}—{% endif %}</td><td>{{ g.bekleyen }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+</section>
+{% endif %}
+
+<section class="panel">
+  <div class="panel-baslik"><div><h2>Risk öncelikli inceleme kuyruğu</h2><p>Düşük kimlik/tarama/OCR/puan güveni önce gösterilir.</p></div></div>
+  {% if analiz.inceleme_kuyrugu %}
+    <div class="tablo-sarma"><table>
+      <thead><tr><th>Öğrenci</th><th>Risk önceliği</th><th>Kimlik güveni</th><th></th></tr></thead>
+      <tbody>{% for k in analiz.inceleme_kuyrugu %}
+        <tr><td>{{ k.ogrenci }}</td><td>%{{ "%.0f"|format(k.oncelik * 100) }}</td><td>%{{ "%.0f"|format(k.kimlik_guveni * 100) }}</td><td><a class="buton ikincil" href="/kagit/{{ k.kagit_id }}">İncele →</a></td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+  {% else %}<div class="bos-durum"><p>İnceleme bekleyen kâğıt yok.</p></div>{% endif %}
+</section>
+
+<section class="panel">
+  <div class="panel-baslik">
+    <div><h2>Benzer cevap–farklı puan uyarıları</h2><p>Birbirine çok benzeyen cevaplar arasında belirgin puan farkı aranır.</p></div>
+    <div class="hizli-eylemler">
+      {% if analiz.tutarsizliklar %}<a class="buton" href="/sinav/{{ sinav.kimlik }}/tutarlilik">⇉ Kuyrukta çöz ({{ analiz.tutarsizliklar|length }})</a>{% endif %}
+      <form method="post" action="/sinav/{{ sinav.kimlik }}/akran-uzlasmasi" data-yukleniyor="Akran uzlaşması taranıyor">
+        <button class="buton ikincil" type="submit" title="Puanları değiştirmez; yalnız sapan kutuları incelemeye işaretler">⚖ Akran uzlaşmasını tara</button>
+      </form>
+    </div>
+  </div>
+  {% if akran is not none %}
+    <div class="basari-kutusu" role="status"><strong>Akran uzlaşması tarandı.</strong><span>{{ akran }} kutu incelemeye işaretlendi. Hiçbir puan otomatik değiştirilmedi.</span></div>
+  {% endif %}
+  {% if analiz.tutarsizliklar %}
+    <div class="detay-liste">{% for t in analiz.tutarsizliklar %}
+      <div><b>Soru {{ t.soru_no }}:</b> Kâğıt <a href="/kagit/{{ t.kagit_a }}">#{{ t.kagit_a }}</a> ile <a href="/kagit/{{ t.kagit_b }}">#{{ t.kagit_b }}</a> · benzerlik %{{ t.benzerlik }} · puan farkı {{ t.puan_farki }}</div>
+    {% endfor %}</div>
+  {% else %}<div class="bos-durum"><p>Belirgin puan tutarsızlığı bulunmadı.</p></div>{% endif %}
+</section>
+
+{% if kazanim and kazanim.kazanimlar %}
+<section class="panel">
+  <div class="panel-baslik">
+    <div><h2>Kazanım ısı haritası</h2><p>En zayıf kazanım önce. Kazanım etiketleri cevap anahtarı düzenleyicisinden girilir.</p></div>
+    <a class="buton ikincil" href="/sinav/{{ sinav.kimlik }}/anahtar">✎ Kazanımları düzenle</a>
+  </div>
+  <div class="detay-liste">
+    {% for k in kazanim.kazanimlar %}
+      <div>
+        <b>{{ k.ad }}</b> — {{ k.soru_nolari|length }} soru, {{ k.cevap_sayisi }} cevap
+        <div class="ilerleme" aria-label="Kazanım başarısı"><span style="width:{{ [k.basari_yuzdesi or 0, 100]|min }}%"></span></div>
+        <span class="alt-metin">%{{ "%.0f"|format(k.basari_yuzdesi or 0) }} başarı · Soru {{ k.soru_nolari|join(", ") }}</span>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if analiz.zayif_konular %}
+<section class="panel">
+  <div class="panel-baslik"><div><h2>Zayıf konular</h2><p>En çok kaçırılan kavramlar; varsa ders kitabı kaynağıyla eşlenir.</p></div></div>
+  <div class="detay-liste">
+    {% for z in analiz.zayif_konular %}
+      <div>
+        <b>{{ z.adet }} cevap kaçırdı:</b> {{ z.kavram }}
+        {% if z.kaynak %}<div class="alt-metin">📖 Kitapta: {{ z.kaynak.kaynak }} — {{ z.kaynak.ozet }}</div>{% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="panel">
+  <div class="panel-baslik"><div><h2>En çok eksik kalan kavramlar</h2><p>Rubrik kararlarından kazanım eksikleri çıkarılır.</p></div></div>
+  <div class="detay-liste">
+    {% for k in analiz.kacirilan_kavramlar %}<div><b>{{ k.adet }} cevap:</b> {{ k.kavram }}</div>
+    {% else %}<div>Henüz yeterli yapısal rubrik kararı yok.</div>{% endfor %}
+  </div>
+  <div class="basari-kutusu" style="margin:20px">
+    <strong>Öğretmen kalibrasyonu</strong>
+    <span>{{ analiz.ogretmen_duzeltme_sayisi }} düzeltme · öğretmen–otomatik ortalama farkı {{ "%+.2f"|format(analiz.ogretmen_esneklik_farki) }} puan. Bu kayıtlar kişisel kimlik olmadan model kalibrasyonunda kullanılabilir.</span>
+  </div>
+</section>
+{% endblock %}

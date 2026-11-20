@@ -1,0 +1,191 @@
+{% extends "temel.html" %}
+{% block baslik %}Kâğıt yükle ve değerlendir — sinav-okur{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/"><span aria-hidden="true">←</span> Ana panel</a>
+    <h1>Kâğıt yükle ve değerlendir</h1>
+    <p>Taranmış PDF veya fotoğrafları seçin. Sistem sayfa düzenini eşleştirecek, öğrenci bilgilerini ve el yazısını okuyacak, cevapları esnek biçimde puanlayacak.</p>
+  </div>
+</section>
+
+<div class="sihirbaz-adimlari" aria-label="Kâğıt işleme adımları">
+  <div class="sihirbaz-adim etkin"><b>1</b><span>Sınavı seç</span></div>
+  <div class="sihirbaz-adim etkin"><b>2</b><span>Kâğıdı yükle</span></div>
+  <div class="sihirbaz-adim"><b>3</b><span>Sonuçları incele</span></div>
+</div>
+
+{% if hata %}<div class="uyari-kutusu" role="alert"><strong>İşlenemedi:</strong><span>{{ hata }}</span></div>{% endif %}
+{% if not sinavlar %}
+  <div class="uyari-kutusu"><strong>Önce yazılıyı tanıtın.</strong><span>Kâğıdın sorularını ve cevap bölgelerini eşleştirebilmek için boş/temiz yazılı sayfalarını yükleyin.</span></div>
+  <a class="buton" href="/serbest-yukle">Yazılıyı yükle ve tanıt</a>
+{% else %}
+<form method="post" action="/yukle" enctype="multipart/form-data" id="yukleme-formu" data-yukleniyor="İşleniyor">
+  <section class="form-kart">
+    <h2>1 · Sınavı seçin</h2>
+    <p>Kâğıt hangi yazılıya ait? Daha önce yükleyip tanıttığınız temiz sayfalar eşleştirme için otomatik kullanılır.</p>
+    <div class="form-grid">
+      <div class="alan tam">
+        <label for="sinav_kimlik">Sınav</label>
+        <select id="sinav_kimlik" name="sinav_kimlik" required>
+          <option value="">Sınav seçin…</option>
+          {% for s in sinavlar %}
+            <option value="{{ s.sinav.kimlik }}" {% if secili_sinav == s.sinav.kimlik %}selected{% endif %}>
+              {{ s.sinav.baslik }} — {{ s.sinav.kimlik }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-kart">
+    <h2>2 · Taranmış kâğıdı seçin</h2>
+    <p>Bir öğrencinin ön–arka veya ayrı çekilmiş en fazla dört sayfasını birlikte seçebilirsiniz. Sistem sayfa sırası karışsa da görsel içerikten eşler; ad, soyad, numara ve sınıf/şubeyi kâğıttan okumayı dener.</p>
+    <div class="form-grid">
+      <div class="alan tam">
+        <span class="alan-baslik">Yükleme biçimi</span>
+        <div class="model-secimleri">
+          <label class="model-kart">
+            <input type="radio" name="islem_modu" value="tek" checked>
+            <b>Tek öğrenci · çok sayfa</b>
+            <span>Seçtiğiniz 1–4 PDF/JPG/PNG sayfası aynı öğrenciye aittir. Ön–arka çekimler ve karışık sayfa sırası desteklenir.</span>
+          </label>
+          <label class="model-kart">
+            <input type="radio" name="islem_modu" value="sinif">
+            <b>Tüm sınıfı toplu oku</b>
+            <span>Her PDF bir öğrenci olabilir. Ayrı fotoğrafları <code>123_Ayse_Yilmaz__1.jpg</code>, <code>...__2.jpg</code> biçiminde adlandırın.</span>
+          </label>
+        </div>
+      </div>
+      <div class="alan tam">
+        <label for="kagit_dosyalari">Kâğıt dosyaları</label>
+        <div class="dosya-alani" id="birak-alani">
+          <input id="kagit_dosyalari" name="kagit_dosyalari" type="file" multiple required
+                 accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp,.heic,.heif,application/pdf,image/png,image/jpeg,image/tiff,image/bmp,image/webp,image/heic,image/heif">
+          <small>Dosyaları buraya sürükleyip bırakabilir ya da seçebilirsiniz · PDF, PNG, JPG, TIFF, BMP, WEBP, iPhone HEIC/HEIF · öğrenci başına en fazla 4 sayfa · dosya başına en fazla 80 MB</small>
+          <p id="dosya-onizleme" class="alt-metin" role="status"></p>
+        </div>
+      </div>
+      <div class="alan" id="ogrenci-ad-alani">
+        <label for="ogrenci_ad">Ad (isteğe bağlı düzeltme)</label>
+        <input id="ogrenci_ad" name="ogrenci_ad" type="text" maxlength="160" placeholder="Kâğıttan otomatik okunur">
+      </div>
+      <div class="alan" id="ogrenci-soyad-alani">
+        <label for="ogrenci_soyad">Soyad (isteğe bağlı düzeltme)</label>
+        <input id="ogrenci_soyad" name="ogrenci_soyad" type="text" maxlength="160" placeholder="Kâğıttan otomatik okunur">
+      </div>
+      <div class="alan" id="ogrenci-no-alani">
+        <label for="ogrenci_no">Öğrenci numarası (isteğe bağlı)</label>
+        <input id="ogrenci_no" name="ogrenci_no" type="text" maxlength="80" placeholder="Kâğıttan otomatik okunur">
+      </div>
+      <div class="alan" id="ogrenci-sinif-alani">
+        <label for="ogrenci_sinif">Sınıf</label>
+        <input id="ogrenci_sinif" name="ogrenci_sinif" type="text" maxlength="40" placeholder="Örn. 9">
+      </div>
+      <div class="alan" id="ogrenci-sube-alani">
+        <label for="ogrenci_sube">Şube</label>
+        <input id="ogrenci_sube" name="ogrenci_sube" type="text" maxlength="40" placeholder="Örn. A">
+      </div>
+    </div>
+  </section>
+
+  <section class="form-kart">
+    <h2>3 · El yazısı modelini seçin</h2>
+    <p>Varsayılan giriş yalnız öğrencinin siyah kurşun kalem yazısıdır. Sistem hiçbir rengi silmez; soluk kalemi gölge ve yerel kontrast görünümleriyle okur. Beklenmedik renk veya yetersiz model uzlaşması otomatik puanı incelemeye ayırır.</p>
+    <div class="model-secimleri">
+      {% for m in modeller %}
+        <label class="model-kart {% if not m.hazir %}devre-disi{% endif %}">
+          <input type="radio" name="model_turu" value="{{ m.deger }}"
+                 {% if m.onerilen and m.hazir %}checked{% endif %} {% if not m.hazir %}disabled{% endif %}>
+          <b>{{ m.ad }} {% if m.hazir %}<span class="rozet tamam">Hazır</span>{% else %}<span class="rozet bekleyen">Kurulu değil</span>{% endif %}</b>
+          <span>{{ m.aciklama }}</span>
+        </label>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="form-kart">
+    <h2>4 · İsteğe bağlı gerçek veri izni</h2>
+    <p>Bu bölüm yalnız kâğıt sahibinin anonim model eğitimi için açık izni varsa kullanılmalıdır.</p>
+    <label class="onay-satiri">
+      <input type="checkbox" id="egitim_izni" name="egitim_izni" value="true">
+      <span><strong>Bu kâğıdın anonim model eğitiminde kullanım izni var.</strong><br><small>Ad ve öğrenci numarası eğitim dosyasına aktarılmaz.</small></span>
+    </label>
+    <div class="alan" id="yazar-alani" hidden style="margin-top:12px">
+      <label for="yazar_grubu">Anonim yazar kodu</label>
+      <input id="yazar_grubu" name="yazar_grubu" type="text" maxlength="80" placeholder="yazar-001">
+      <small>Ad, e-posta veya öğrenci numarası kullanmayın.</small>
+    </div>
+  </section>
+
+  <div class="form-eylemler">
+    <div>
+      <strong>Yükle → oku → puanla → incele</strong>
+      <div class="alt-metin">İşlem cihaz hızına ve sayfa sayısına göre biraz sürebilir.</div>
+    </div>
+    <div class="yukleniyor" id="isleniyor"><span class="donen"></span> Kâğıt okunuyor ve değerlendiriliyor…</div>
+    <button class="buton" type="submit" id="isle-dugme">Kâğıdı yükle ve değerlendir <span aria-hidden="true">→</span></button>
+  </div>
+</form>
+{% endif %}
+{% endblock %}
+{% block betik %}
+{% if sinavlar %}
+<script>
+  document.getElementById("egitim_izni").addEventListener("change", (olay) => {
+    document.getElementById("yazar-alani").hidden = !olay.target.checked;
+    document.getElementById("yazar_grubu").required = olay.target.checked;
+  });
+  document.querySelectorAll('input[name="islem_modu"]').forEach((secim) => {
+    secim.addEventListener("change", () => {
+      const sinif = document.querySelector('input[name="islem_modu"]:checked').value === "sinif";
+      document.getElementById("ogrenci-ad-alani").hidden = sinif;
+      document.getElementById("ogrenci-soyad-alani").hidden = sinif;
+      document.getElementById("ogrenci-no-alani").hidden = sinif;
+      document.getElementById("ogrenci-sinif-alani").hidden = sinif;
+      document.getElementById("ogrenci-sube-alani").hidden = sinif;
+    });
+  });
+  // Sürükle-bırak + yüklemeden önce grup önizlemesi
+  const girdi = document.getElementById("kagit_dosyalari");
+  const birakAlani = document.getElementById("birak-alani");
+  const onizleme = document.getElementById("dosya-onizleme");
+
+  function ogrenciAnahtari(ad) {
+    // _ogrenci_dosya_anahtari mantığının istemci aynası: "__" öncesi öğrenci kimliği
+    const taban = ad.replace(/\.[^.]+$/, "");
+    const anahtar = taban.split("__")[0].replace(/^[ _-]+|[ _-]+$/g, "");
+    return anahtar || taban;
+  }
+  function onizlemeGuncelle() {
+    const dosyalar = Array.from(girdi.files || []);
+    if (!dosyalar.length) { onizleme.textContent = ""; return; }
+    const sinifModu = document.querySelector('input[name="islem_modu"]:checked')?.value === "sinif";
+    if (sinifModu) {
+      const gruplar = new Set(dosyalar.map((d) => ogrenciAnahtari(d.name)));
+      onizleme.textContent = `${dosyalar.length} dosya · ${gruplar.size} öğrenci grubu algılandı`;
+    } else {
+      onizleme.textContent = `${dosyalar.length} dosya seçildi`;
+    }
+  }
+  girdi?.addEventListener("change", onizlemeGuncelle);
+  document.querySelectorAll('input[name="islem_modu"]').forEach((s) =>
+    s.addEventListener("change", onizlemeGuncelle));
+
+  ["dragenter", "dragover"].forEach((olayAdi) =>
+    birakAlani?.addEventListener(olayAdi, (e) => {
+      e.preventDefault(); birakAlani.classList.add("surukleniyor");
+    }));
+  ["dragleave", "drop"].forEach((olayAdi) =>
+    birakAlani?.addEventListener(olayAdi, (e) => {
+      e.preventDefault(); birakAlani.classList.remove("surukleniyor");
+    }));
+  birakAlani?.addEventListener("drop", (e) => {
+    if (!e.dataTransfer?.files?.length) return;
+    girdi.files = e.dataTransfer.files;
+    onizlemeGuncelle();
+  });
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "temel.html" %}
+{% block baslik %}{{ durum }} — sinav-okur{% endblock %}
+{% block icerik %}
+<section class="panel" style="margin-top:32px">
+  <div class="bos-durum">
+    <div class="bos-ikon" aria-hidden="true">{% if durum == 404 %}∅{% else %}⚠{% endif %}</div>
+    <h2>{% if durum == 404 %}Sayfa bulunamadı{% elif durum == 403 %}Erişim reddedildi{% elif durum >= 500 %}Beklenmeyen bir sorun oluştu{% else %}İşlem tamamlanamadı{% endif %} ({{ durum }})</h2>
+    <p>{{ mesaj }}</p>
+    <div class="hizli-eylemler" style="justify-content:center; margin-top:20px">
+      <button class="buton ikincil" type="button" onclick="history.back()">← Önceki sayfa</button>
+      <a class="buton" href="/">Ana sayfa</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

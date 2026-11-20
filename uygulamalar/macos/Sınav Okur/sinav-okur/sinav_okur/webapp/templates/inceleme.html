@@ -1,0 +1,128 @@
+{% extends "temel.html" %}
+{% block baslik %}İnceleme kuyruğu — {{ sinav.baslik }}{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/sinav/{{ kimlik }}"><span aria-hidden="true">←</span> {{ sinav.baslik }}</a>
+    <h1>İnceleme kuyruğu</h1>
+    <p>En şüpheli cevaplar önce. Klavye: <kbd>A</kbd> onayla ve ilerle · <kbd>D</kbd> düzelt · <kbd>←</kbd>/<kbd>→</kbd> gezin.</p>
+  </div>
+</section>
+
+{% if not kart %}
+  <section class="form-kart" style="text-align:center">
+    <h2>Kuyruk boş 🎉</h2>
+    <p>Bu sınavda incelenmeyi bekleyen cevap kalmadı.</p>
+    <a class="buton" href="/sinav/{{ kimlik }}">Sınava dön</a>
+  </section>
+{% else %}
+  <div class="ilerleme" aria-label="Kuyruk ilerlemesi">
+    <span style="width:{{ ((konum + 1) / toplam * 100) | round }}%"></span>
+  </div>
+  <p class="alt-metin" style="text-align:center">
+    {{ konum + 1 }} / {{ toplam }} bekleyen cevap
+    {% if kuyruk_sagligi and kuyruk_sagligi.nedenler %}
+      · {% for n in kuyruk_sagligi.nedenler %}{{ n.adet }} {{ n.ad|lower }}{% if not loop.last %} · {% endif %}{% endfor %}
+    {% endif %}
+  </p>
+  {% if kuyruk_sagligi and kuyruk_sagligi.baskin %}
+    <div class="uyari-kutusu" role="status">
+      <strong>Kuyruk tek nedenle dolu:</strong>
+      <span>Bekleyenlerin %{{ (kuyruk_sagligi.baskin.oran * 100) | round }}'i
+        “{{ kuyruk_sagligi.baskin.ad|lower }}” yüzünden burada. Bu, kuyruğun
+        gerçekten şüpheli cevapları ayırt etmediği anlamına gelir — eşikler
+        gözden geçirilmeli.</span>
+    </div>
+  {% endif %}
+
+  <article class="kutu incele" id="aktif-kutu">
+    <header class="kutu-ust">
+      <div>
+        <h2>Soru {{ kart.soru.no }}</h2>
+        <div class="soru-meta">
+          {{ kart.soru.tip.value|replace("_", " ")|title }} · {{ kart.soru.puan }} puan ·
+          {{ kart.b.ogrenci_ad or "İsimsiz" }}{% if kart.b.ogrenci_soyad %} {{ kart.b.ogrenci_soyad }}{% endif %}
+        </div>
+      </div>
+      <span class="rozet bekleyen">Risk %{{ "%.0f"|format((kart.b.risk or 0) * 100) }}</span>
+    </header>
+    <p class="soru-metni">{{ kart.soru.metin }}</p>
+
+    <div class="satir">
+      <div>
+        <span class="alan-etiket">Gerçek cevap görüntüsü</span>
+        {% if kart.kirp_url %}
+          <div class="gorsel-sarma">
+            <img class="cevap-gorseli buyuk" src="{{ kart.kirp_url }}" alt="Soru {{ kart.soru.no }} cevap kırpıntısı">
+          </div>
+        {% else %}
+          <div class="gorsel-yok">Görüntü bulunamadı</div>
+        {% endif %}
+      </div>
+      <div>
+        <span class="alan-etiket">
+          Tanınan metin · OCR %{{ "%.0f"|format((kart.b.tanima_guveni or 0) * 100) }}
+        </span>
+        <form method="post" action="/kutu/{{ kart.b.id }}" id="duzelt-form">
+          <input type="hidden" name="kagit_id" value="{{ kart.b.kagit_id }}">
+          <textarea id="metin-alani" name="metin" spellcheck="true">{{ kart.metin or "" }}</textarea>
+          <div class="form-alt">
+            <div class="puan-alani">
+              <strong>Program puanı: {{ "%.1f"|format(kart.b.otomatik_puan or 0) }} / {{ kart.b.max_puan }}</strong>
+              <span class="alt-metin">puan güveni %{{ "%.0f"|format((kart.b.puanlama_guveni or 0) * 100) }}</span>
+            </div>
+            <span class="mini-grup">
+              <button class="buton" type="submit" name="islem" value="otomatik">Düzelt ve yeniden puanla</button>
+            </span>
+          </div>
+        </form>
+        <!-- İstisna puanı AYRI formda: boş bir number input "" gönderir ve
+             yukarıdaki forma eklenirse "Düzelt ve yeniden puanla" her
+             seferinde 422 verir. -->
+        <form method="post" action="/kutu/{{ kart.b.id }}" class="alt-eylem" id="istisna-form" data-yukleniyor="Puan kaydediliyor">
+          <input type="hidden" name="kagit_id" value="{{ kart.b.kagit_id }}">
+          <input type="hidden" name="metin" value="{{ kart.metin or '' }}">
+          <input type="hidden" name="islem" value="elle">
+          <input type="hidden" name="hedef" value="/sinav/{{ kimlik }}/inceleme">
+          <div class="form-alt">
+            <label class="alan mini">
+              <span>Program puanı yanlışsa kendi puanınızı verin</span>
+              <input type="number" name="puan" step="0.5" min="0"
+                     max="{{ kart.b.max_puan }}"
+                     placeholder="{{ "%.1f"|format(kart.b.otomatik_puan or 0) }}"
+                     aria-label="İstisna puanı">
+            </label>
+            <label class="alan mini">
+              <span>Gerekçe (denetim kaydına yazılır)</span>
+              <input type="text" name="neden" placeholder="ör. kısmi doğru, anahtar dışı geçerli cevap">
+            </label>
+            <span class="mini-grup">
+              <button class="buton ikincil" type="submit">Puanı ben vereyim</button>
+            </span>
+          </div>
+        </form>
+        <form method="post" action="/kutu/{{ kart.b.id }}" class="alt-eylem" id="onayla-form" data-yukleniyor="Onaylanıyor">
+          <input type="hidden" name="kagit_id" value="{{ kart.b.kagit_id }}">
+          <input type="hidden" name="metin" value="{{ kart.metin or '' }}">
+          <!-- islem gizli input'ta: requestSubmit() submitter iletmese de gönderilir -->
+          <input type="hidden" name="islem" value="onayla">
+          <!-- Onaydan sonra kuyruğa dön (liste kaydığından hep en şüpheli kalır) -->
+          <input type="hidden" name="hedef" value="/sinav/{{ kimlik }}/inceleme">
+          {% if (kart.metin or "").strip() %}
+            <button class="buton yesil" type="submit" id="onayla-dugme">✓ Onayla ve sonrakine geç (A)</button>
+          {% else %}
+            <span class="alt-metin">Metin boş — onaylanamaz, önce düzeltin.</span>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </article>
+
+  <nav class="kagit-gezinme" aria-label="Kuyrukta gezinme">
+    {% if onceki is not none %}<a class="buton ikincil" href="/sinav/{{ kimlik }}/inceleme?kutu={{ onceki }}" id="onceki-baglanti">← Önceki</a>{% endif %}
+    {% if sonraki is not none %}<a class="buton ikincil" href="/sinav/{{ kimlik }}/inceleme?kutu={{ sonraki }}" id="sonraki-baglanti">Sonraki →</a>{% endif %}
+    <a class="buton ikincil" href="/kagit/{{ kart.b.kagit_id }}">Tüm kâğıdı aç</a>
+  </nav>
+{% endif %}
+{% endblock %}
+

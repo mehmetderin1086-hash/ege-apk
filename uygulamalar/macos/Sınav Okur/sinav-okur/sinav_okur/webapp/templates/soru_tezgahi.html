@@ -1,0 +1,79 @@
+{% extends "temel.html" %}
+{% block baslik %}Soru {{ soru.no }} tezgâhı — sinav-okur{% endblock %}
+{% block icerik %}
+{% if toplu_puan %}
+  <div class="basari-kutusu" role="status"><strong>Küme puanlandı.</strong><span>{{ toplu_puan }} cevap tek hamlede güncellendi ve incelemeden çıkarıldı.</span></div>
+{% endif %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/sinav/{{ sinav.kimlik }}/soru/{{ soru.no }}">← Soru karşılaştırması</a>
+    <h1>Soru {{ soru.no }} · toplu puanlama tezgâhı</h1>
+    <p>{{ soru.metin }}</p>
+    <p class="alt-metin">{{ toplam }} cevap, {{ kumeler|length }} benzerlik kümesi. Aynı yazılmış cevaplara tek hamlede aynı puanı verin.</p>
+  </div>
+</section>
+
+{% if not kumeler %}
+  <section class="panel">
+    <div class="bos-durum">
+      <div class="bos-ikon" aria-hidden="true">▤</div>
+      <h2>Bu soru için cevap yok</h2>
+      <p>Önce bu sınava öğrenci kâğıdı yükleyin.</p>
+    </div>
+  </section>
+{% endif %}
+
+{% for kume in kumeler %}
+<section class="panel kume" data-kume="{{ kume.sira }}">
+  <div class="panel-baslik">
+    <div>
+      <h2>Küme {{ kume.sira }} · {{ kume.adet }} cevap</h2>
+      <p>{{ kume.temsilci or "Boş / okunamayan cevap" }}</p>
+    </div>
+    <div>
+      {% if kume.bekleyen %}<span class="rozet bekleyen">{{ kume.bekleyen }} bekleyen</span>{% endif %}
+      {% if kume.ortak_puan is not none %}<span class="rozet tamam">Tümü {{ "%.1f"|format(kume.ortak_puan) }} puan</span>
+      {% else %}<span class="rozet bekleyen" title="Aynı kümedeki cevaplar farklı puan almış">Puanlar tutarsız</span>{% endif %}
+    </div>
+  </div>
+  <form method="post" action="/sinav/{{ sinav.kimlik }}/soru/{{ soru.no }}/toplu-puan" class="form-eylemler">
+    {% for u in kume.uyeler %}<input type="hidden" name="kutu_id" value="{{ u.satir.id }}">{% endfor %}
+    <label class="alan" style="max-width:160px">
+      <span>Küme puanı</span>
+      <input type="number" name="puan" min="0" max="{{ soru.puan }}" step="0.5" value="{{ '%.1f'|format(kume.ortak_puan if kume.ortak_puan is not none else soru.puan) }}" data-kume-puan>
+    </label>
+    <button class="buton" type="submit" name="islem" value="elle">✓ Kümeye bu puanı ver</button>
+    <button class="buton ikincil" type="submit" name="islem" value="yeniden_puanla">↻ Kümeyi anahtarla yeniden puanla</button>
+  </form>
+  <div class="cevap-izgara">
+  {% for u in kume.uyeler %}
+    <article class="cevap-karti">
+      <b><a href="/kagit/{{ u.satir.kagit_id }}#soru-{{ soru.no }}">{{ u.satir.ogrenci_ad or "İsimsiz" }} {{ u.satir.ogrenci_soyad or "" }}</a> · {{ "%.1f"|format(u.satir.son_puan or 0) }}/{{ "%.0f"|format(u.satir.max_puan or soru.puan) }}</b>
+      <span>Risk %{{ "%.0f"|format((u.satir.risk or 0) * 100) }}{% if u.satir.incele %} · incelemede{% endif %}</span>
+      {% if u.kirp_url %}<img class="cevap-gorseli" src="{{ u.kirp_url }}" alt="Öğrenci cevabı" loading="lazy">{% endif %}
+      <span>{{ u.metin or "Metin okunamadı" }}</span>
+    </article>
+  {% endfor %}
+  </div>
+</section>
+{% endfor %}
+{% endblock %}
+{% block betik %}
+<script>
+  // J/K ile kümeler arasında gez, ilk küme puan alanına odaklan (inceleme
+  // kuyruğundaki klavye alışkanlığını korur).
+  const kumeler = [...document.querySelectorAll(".kume")];
+  let etkin = 0;
+  function kumeyeGit(indeks) {
+    if (!kumeler.length) return;
+    etkin = Math.max(0, Math.min(kumeler.length - 1, indeks));
+    kumeler[etkin].scrollIntoView({behavior: "smooth", block: "start"});
+    kumeler[etkin].querySelector("[data-kume-puan]")?.focus();
+  }
+  document.addEventListener("keydown", (olay) => {
+    if (window.sinavOkur?.yaziyorMu()) return;
+    if (olay.key === "j" || olay.key === "ArrowDown") { olay.preventDefault(); kumeyeGit(etkin + 1); }
+    if (olay.key === "k" || olay.key === "ArrowUp") { olay.preventDefault(); kumeyeGit(etkin - 1); }
+  });
+</script>
+{% endblock %}

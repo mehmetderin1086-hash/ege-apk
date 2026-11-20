@@ -1,0 +1,86 @@
+{% extends "temel.html" %}
+{% block baslik %}İtirazlar — {{ sinav.baslik }}{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/sinav/{{ kimlik }}"><span aria-hidden="true">←</span> {{ sinav.baslik }}</a>
+    <h1>İtirazlar</h1>
+    <p>Kâğıt dağıtıldıktan sonra gelen puan itirazları. Kabul edilen itirazlar puanı günceller ve düzeltme öğrenimine yazılır.</p>
+    <div class="filtreler" aria-label="İtiraz durumu">
+      <a class="filtre" href="/sinav/{{ kimlik }}/itirazlar" aria-pressed="{{ 'true' if not durum else 'false' }}">Tümü</a>
+      <a class="filtre" href="/sinav/{{ kimlik }}/itirazlar?durum=acik" aria-pressed="{{ 'true' if durum == 'acik' else 'false' }}">Açık</a>
+      <a class="filtre" href="/sinav/{{ kimlik }}/itirazlar?durum=kabul" aria-pressed="{{ 'true' if durum == 'kabul' else 'false' }}">Kabul</a>
+      <a class="filtre" href="/sinav/{{ kimlik }}/itirazlar?durum=ret" aria-pressed="{{ 'true' if durum == 'ret' else 'false' }}">Ret</a>
+    </div>
+  </div>
+</section>
+
+{% if karar %}
+  <div class="basari-kutusu" role="status"><strong>İtiraz {% if karar == "kabul" %}kabul edildi{% else %}reddedildi{% endif %}.</strong><span>{% if karar == "kabul" %}Puan güncellendi ve düzeltme öğrenimine yazıldı.{% else %}Mevcut puan korundu; karar notu öğrenci geri bildiriminde görünür.{% endif %}</span></div>
+{% endif %}
+
+{% if not kayitlar %}
+  <section class="panel">
+    <div class="bos-durum">
+      <div class="bos-ikon" aria-hidden="true">⚖</div>
+      <h2>{% if durum %}Bu filtreyle itiraz yok{% else %}İtiraz yok{% endif %}</h2>
+      <p>İtirazlar kâğıt ekranındaki "İtiraz kaydet" formundan açılır.</p>
+          {% if durum %}<p><a class="buton ikincil" href="/sinav/{{ kimlik }}/itirazlar">Filtreyi temizle</a></p>{% endif %}
+    </div>
+  </section>
+{% endif %}
+
+{% for k in kayitlar %}
+<section class="form-kart">
+  <div class="soru-karti-ust">
+    <div>
+      <h2>
+        {{ k.itiraz.ogrenci_ad or "İsimsiz" }} {{ k.itiraz.ogrenci_soyad or "" }}
+        {% if k.itiraz.soru_no %}· Soru {{ k.itiraz.soru_no }}{% endif %}
+      </h2>
+      <p>{{ k.itiraz.gerekce }}</p>
+    </div>
+    {% if k.itiraz.durum == "acik" %}<span class="rozet bekleyen">Açık</span>
+    {% elif k.itiraz.durum == "kabul" %}<span class="rozet tamam">Kabul</span>
+    {% else %}<span class="rozet">Ret</span>{% endif %}
+  </div>
+  {% if k.kutu %}
+    <div class="satir">
+      <div>
+        {% if k.kirp_url %}<img class="cevap-gorseli" src="{{ k.kirp_url }}" alt="Cevap kırpıntısı" loading="lazy">{% endif %}
+        <p class="soru-metni">{{ k.metin or "Metin okunamadı" }}</p>
+      </div>
+      <div>
+        <div class="alt-metin">
+          Mevcut puan: <strong>{{ "%.1f"|format(k.kutu.son_puan or 0) }}</strong> / {{ k.kutu.max_puan }}
+          {% if k.itiraz.onceki_puan is not none %} · itiraz anındaki puan {{ "%.1f"|format(k.itiraz.onceki_puan) }}{% endif %}
+        </div>
+        {% if k.itiraz.durum == "acik" %}
+          <form method="post" action="/itiraz/{{ k.itiraz.id }}/karar" class="form-alt">
+            <input type="hidden" name="kimlik" value="{{ kimlik }}">
+            <label class="alan" style="max-width:140px">
+              <span>Yeni puan</span>
+              <input type="number" name="yeni_puan" min="0" max="{{ k.kutu.max_puan }}" step="0.5" value="{{ '%.1f'|format(k.kutu.son_puan or 0) }}">
+            </label>
+            <label class="alan">
+              <span>Karar notu</span>
+              <input type="text" name="karar_notu" placeholder="Gerekçenizi yazın">
+            </label>
+            <span class="mini-grup">
+              <button class="buton" type="submit" name="karar" value="kabul">Kabul et</button>
+              <button class="buton ikincil" type="submit" name="karar" value="ret">Reddet</button>
+            </span>
+          </form>
+        {% else %}
+          <div class="alt-metin">
+            Karar: <strong>{{ k.itiraz.durum }}</strong>
+            {% if k.itiraz.yeni_puan is not none %} · yeni puan {{ "%.1f"|format(k.itiraz.yeni_puan) }}{% endif %}
+            {% if k.itiraz.karar_notu %}<br>{{ k.itiraz.karar_notu }}{% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+</section>
+{% endfor %}
+{% endblock %}

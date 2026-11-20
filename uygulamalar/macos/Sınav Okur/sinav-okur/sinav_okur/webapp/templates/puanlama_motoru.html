@@ -1,0 +1,78 @@
+{% extends "temel.html" %}
+{% block baslik %}Puanlama motoru — {{ sinav.baslik }}{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/sinav/{{ kimlik }}/analiz"><span aria-hidden="true">←</span> Analiz</a>
+    <h1>Anlamsal puanlamanın etkisi</h1>
+    <p>Anlamsal katmanı açmak mevcut puanları nasıl değiştirirdi? Bu rapor
+    <strong>hiçbir şey kaydetmez</strong>; karar ölçüme dayansın diye vardır.</p>
+  </div>
+</section>
+
+{% if not gomlemci_yuklendi %}
+  <div class="uyari-kutusu" role="alert">
+    <strong>Anlamsal model yüklenemedi.</strong>
+    <span>Gömme modeli bu kurulumda kullanılamıyor; puanlama sözcüksel
+    katmanla çalışmaya devam ediyor.</span>
+  </div>
+{% endif %}
+
+<section class="istatistikler" aria-label="Etki özeti">
+  <div class="istatistik"><span class="deger">{{ rapor.incelenen }}</span><span class="ad">İncelenen cevap</span></div>
+  <div class="istatistik"><span class="deger">{{ rapor.degisen }}</span><span class="ad">Puanı değişen</span></div>
+  <div class="istatistik iyi"><span class="deger">{{ rapor.yukselen }}</span><span class="ad">Yükselen</span></div>
+  <div class="istatistik uyari"><span class="deger">{{ rapor.dusen }}</span><span class="ad">Düşen</span></div>
+</section>
+
+<section class="panel">
+  <div class="panel-baslik">
+    <div><h2>Karar</h2><p>Kapı üç şeye bakar: öğretmen puanlarına yaklaşma, elle
+    verilmiş puanların korunması ve düşen puan oranı.</p></div>
+  </div>
+  <div class="detay-liste">
+    {% if rapor.acilabilir %}
+      <div><span class="rozet tamam">Açılabilir</span>
+        Ölçülen etki güvenli görünüyor. Açmak için sunucuyu
+        <code>SINAV_OKUR_GOMLEMCI=acik</code> ile başlatın.</div>
+    {% else %}
+      <div><span class="rozet bekleyen">Şimdilik açılmamalı</span></div>
+      {% for engel in rapor.engeller %}<div>· {{ engel }}</div>{% endfor %}
+    {% endif %}
+    {% if rapor.ogretmen_puaniyla_uyum %}
+      {% set u = rapor.ogretmen_puaniyla_uyum %}
+      <div>Öğretmenin elle puanladığı <b>{{ u.ornek }}</b> cevapta ortalama sapma
+        {{ u.mae_eski }} → {{ u.mae_yeni }}
+        ({{ "%+.3f"|format(u.iyilesme) }} iyileşme).</div>
+    {% else %}
+      <div class="alt-metin">Karşılaştırma için elle puanlanmış cevap yok.
+        Birkaç cevaba kendi puanınızı verirseniz bu rapor değişimin doğru
+        yönde olup olmadığını söyleyebilir.</div>
+    {% endif %}
+    <div class="alt-metin">Kuyruğa giren {{ rapor.kuyruga_giren }} ·
+      kuyruktan çıkan {{ rapor.kuyruktan_cikan }} cevap.</div>
+  </div>
+</section>
+
+{% if rapor.ornekler %}
+<section class="panel">
+  <div class="panel-baslik"><div><h2>En çok değişen cevaplar</h2></div></div>
+  <div class="tablo-sarma">
+    <table>
+      <thead><tr><th>Soru</th><th>Cevap</th><th data-sirala="sayi">Şimdi</th><th data-sirala="sayi">Anlamsalla</th><th data-sirala="sayi">Fark</th></tr></thead>
+      <tbody>
+      {% for o in rapor.ornekler %}
+        <tr>
+          <td><a href="/kagit/{{ o.kagit_id }}#soru-{{ o.soru_no }}">Soru {{ o.soru_no }}</a></td>
+          <td>{{ o.metin }}</td>
+          <td>{{ o.eski_puan }}</td>
+          <td>{{ o.yeni_puan }}</td>
+          <td><span class="rozet {% if o.delta > 0 %}tamam{% else %}bekleyen{% endif %}">{{ "%+.1f"|format(o.delta) }}</span></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

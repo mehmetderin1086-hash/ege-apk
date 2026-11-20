@@ -1,0 +1,68 @@
+kimlik: BIYO9-2026-01
+baslik: 9. Sınıf Biyoloji - 1. Yazılı
+ders: Biyoloji — Hücre ve Organeller
+sorular:
+  - no: 1
+    tip: bosluk_doldurma
+    metin: "Hücrenin enerji üretiminden sorumlu organeli ....................... 'dir."
+    puan: 10
+    kutu_yuksekligi_mm: 12
+    anahtar:
+      dogru_cevaplar: ["mitokondri", "mitokondri organeli"]
+
+  - no: 2
+    tip: bosluk_doldurma
+    metin: "Fotosentezin gerçekleştiği organel ....................... 'tır."
+    puan: 10
+    kutu_yuksekligi_mm: 12
+    anahtar:
+      dogru_cevaplar: ["kloroplast"]
+
+  - no: 3
+    tip: kisa_cevap
+    metin: "Hücre zarının iki temel görevini yazınız."
+    puan: 20
+    kutu_yuksekligi_mm: 28
+    anahtar:
+      rubrik:
+        - metin: "madde giriş çıkışını kontrol eder"
+          puan: 10
+          esanlamlilar: ["seçici geçirgenlik", "madde alışverişini düzenler", "geçirgenliği kontrol eder"]
+        - metin: "hücreyi dış ortamdan ayırır"
+          puan: 10
+          esanlamlilar: ["hücreyi korur", "hücreye şekil verir", "sınır oluşturur"]
+
+  - no: 4
+    tip: acik_uclu
+    metin: "Difüzyon olayını bir örnekle açıklayınız."
+    puan: 30
+    kutu_yuksekligi_mm: 45
+    anahtar:
+      ornek_cevap: >
+        Difüzyon, moleküllerin çok yoğun ortamdan az yoğun ortama doğru
+        yayılmasıdır. Örneğin bir bardak suya damlatılan mürekkebin suyun
+        her yerine yayılması difüzyondur.
+      rubrik:
+        - metin: "yoğun ortamdan az yoğun ortama geçiş"
+          puan: 12
+          esanlamlilar: ["derişimin yüksek olduğu yerden düşük olduğu yere", "konsantrasyon farkı"]
+        - metin: "moleküllerin yayılması hareketidir"
+          puan: 8
+          esanlamlilar: ["taneciklerin yayılması", "kendiliğinden yayılma"]
+        - metin: "geçerli bir örnek verilmiş"
+          puan: 10
+          esanlamlilar: ["mürekkebin suya yayılması", "kokunun odaya yayılması", "şekerin suda çözünmesi"]
+
+  - no: 5
+    tip: kisa_cevap
+    metin: "Mitoz bölünmenin canlılar için önemi nedir? Bir madde yazınız."
+    puan: 20
+    kutu_yuksekligi_mm: 28
+    anahtar:
+      rubrik:
+        - metin: "büyüme ve gelişmeyi sağlar"
+          puan: 10
+          esanlamlilar: ["büyümeyi sağlar", "gelişmeyi sağlar"]
+        - metin: "yaraların onarılmasını sağlar"
+          puan: 10
+          esanlamlilar: ["doku onarımı", "yenilenme", "rejenerasyon", "hücre yenilenmesi"]

@@ -1,0 +1,90 @@
+{% extends "temel.html" %}
+{% block baslik %}Geri bildirim — {{ sinav.baslik }}{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik yazdirma-gizle">
+  <div>
+    {% if toplu %}
+      <a class="geri" href="/sinav/{{ kimlik }}"><span aria-hidden="true">←</span> {{ sinav.baslik }}</a>
+      <h1>Öğrenci geri bildirimleri</h1>
+      <p>Yazdır → PDF olarak kaydet ile dağıtabilirsiniz. Her öğrenci ayrı sayfada başlar.</p>
+    {% else %}
+      <a class="geri" href="/kagit/{{ kagitlar[0].kagit.id }}"><span aria-hidden="true">←</span> Kâğıda dön</a>
+      <h1>Öğrenci geri bildirimi</h1>
+    {% endif %}
+  </div>
+  <div class="hizli-eylemler">
+    <button class="buton" type="button" onclick="window.print()">Yazdır / PDF kaydet</button>
+    {% if gorsel %}
+      <a class="buton ikincil" href="?">Cevap görsellerini gizle</a>
+    {% else %}
+      <a class="buton ikincil" href="?gorsel=1">Cevap görsellerini göster</a>
+    {% endif %}
+  </div>
+</section>
+
+{% for k in kagitlar %}
+<article class="geri-bildirim-karti">
+  {% if k.taslak %}
+    <div class="uyari-kutusu" role="alert">
+      <strong>TASLAK — kâğıt henüz onaylanmadı.</strong>
+      <span>Okunan cevaplar öğretmence doğrulanmadı; bu çıktı dağıtım için hazır değildir.</span>
+    </div>
+  {% endif %}
+  <header class="gb-ust">
+    <div>
+      <h2>{{ k.kagit.ogrenci_ad or "İsimsiz öğrenci" }}{% if k.kagit.ogrenci_soyad %} {{ k.kagit.ogrenci_soyad }}{% endif %}</h2>
+      <p class="alt-metin">
+        {{ sinav.baslik }}{% if k.kagit.ogrenci_no %} · No {{ k.kagit.ogrenci_no }}{% endif %}
+        {% if k.kagit.sinif or k.kagit.sube %} · {{ k.kagit.sinif or "?" }}{% if k.kagit.sube %}/{{ k.kagit.sube }}{% endif %}{% endif %}
+      </p>
+    </div>
+    <div class="gb-puan">
+      <span class="deger">{{ "%.1f"|format(k.toplam) }}</span>
+      <span class="ad">/ {{ "%.0f"|format(k.max) }} · %{{ "%.0f"|format(k.yuzde) }}</span>
+    </div>
+  </header>
+
+  {% for s in k.sorular %}
+  <div class="gb-soru">
+    <div class="gb-soru-ust">
+      <strong>Soru {{ s.soru.no }}</strong>
+      <span class="rozet {% if s.puan >= s.max_puan %}tamam{% elif s.puan > 0 %}hazir{% else %}bekleyen{% endif %}">
+        {{ "%.1f"|format(s.puan or 0) }} / {{ "%.0f"|format(s.max_puan) }} puan
+      </span>
+    </div>
+    <p class="soru-metni">{{ s.soru.metin }}</p>
+    {% if s.kirp_url %}
+      <img class="cevap-gorseli" src="{{ s.kirp_url }}" alt="Soru {{ s.soru.no }} cevabınız" loading="lazy">
+    {% endif %}
+    <div class="gb-cevap">
+      <div><b>Senin cevabın:</b> {{ s.cevap or "—" }}</div>
+      {% if s.dogru_cevap %}<div><b>Doğru cevap:</b> {{ s.dogru_cevap }}</div>{% endif %}
+      {% if s.aciklama %}<div class="alt-metin">{{ s.aciklama }}</div>{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  {% if k.zayif_kazanimlar %}
+    <div class="gb-tekrar">
+      <b>Tekrar edilecek kazanımlar</b>
+      <ul>{% for kz in k.zayif_kazanimlar %}<li>{{ kz }}</li>{% endfor %}</ul>
+    </div>
+  {% endif %}
+</article>
+{% endfor %}
+{% endblock %}
+{% block betik %}
+<style>
+  .geri-bildirim-karti { border:1px solid var(--cizgi); border-radius:16px; padding:22px; margin-bottom:22px; break-inside:avoid; }
+  .geri-bildirim-karti + .geri-bildirim-karti { break-before:page; }
+  .gb-ust { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; border-bottom:1px solid var(--cizgi); padding-bottom:14px; margin-bottom:14px; }
+  .gb-puan { text-align:right; }
+  .gb-puan .deger { font-size:1.6rem; font-weight:760; display:block; }
+  .gb-soru { padding:12px 0; border-bottom:1px dashed var(--cizgi); }
+  .gb-soru-ust { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .gb-cevap { margin-top:8px; display:grid; gap:4px; font-size:.92rem; }
+  .gb-soru .cevap-gorseli { max-height:180px; margin:8px 0; }
+  .gb-tekrar { margin-top:14px; padding:12px 14px; border-radius:12px; background:rgba(37,99,235,.08); }
+  .gb-tekrar ul { margin:6px 0 0; padding-left:20px; }
+  @media print { .geri-bildirim-karti { border:none; padding:0; } }
+</style>
+{% endblock %}

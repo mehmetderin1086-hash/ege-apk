@@ -1,0 +1,64 @@
+{% extends "temel.html" %}
+{% block baslik %}{{ seri.ogrenci.ad }} {{ seri.ogrenci.soyad or "" }} — sinav-okur{% endblock %}
+{% block icerik %}
+<section class="sayfa-baslik">
+  <div>
+    <a class="geri" href="/gelisim"><span aria-hidden="true">←</span> Öğrenci gelişimi</a>
+    <h1>{{ seri.ogrenci.ad }} {{ seri.ogrenci.soyad or "" }}</h1>
+    <p>{{ seri.ogrenci.ogrenci_no or "Numara yok" }}{% if seri.ogrenci.sinif %} · {{ seri.ogrenci.sinif }}{% if seri.ogrenci.sube %}/{{ seri.ogrenci.sube }}{% endif %}{% endif %}</p>
+  </div>
+</section>
+
+<section class="istatistikler" aria-label="Öğrenci özeti">
+  <div class="istatistik"><span class="deger">{{ seri.sinav_sayisi }}</span><span class="ad">Sınav</span></div>
+  <div class="istatistik"><span class="deger">{% if seri.ortalama is not none %}%{{ "%.0f"|format(seri.ortalama) }}{% else %}—{% endif %}</span><span class="ad">Ortalama</span></div>
+  <div class="istatistik {% if seri.egilim and seri.egilim > 0 %}iyi{% elif seri.egilim and seri.egilim < 0 %}uyari{% endif %}">
+    <span class="deger">{% if seri.egilim is not none %}{{ "%+.0f"|format(seri.egilim) }}{% else %}—{% endif %}</span>
+    <span class="ad">Eğilim (ilk → son)</span>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-baslik"><div><h2>Sınav sınav başarı</h2><p>Kronolojik sırada; her çubuk bir sınavın yüzde başarısı.</p></div></div>
+  {% if seri.noktalar %}
+    <div class="histogram" aria-label="Sınav başarı grafiği">
+      {% for n in seri.noktalar %}
+        <div class="hist-sutun">
+          <div class="hist-cubuk-sarma">
+            <div class="hist-cubuk" style="height:{{ [n.yuzde, 100]|min }}%" title="{{ n.sinav_baslik }}: %{{ '%.0f'|format(n.yuzde) }}"></div>
+          </div>
+          <span class="hist-etiket">{{ n.sinav_baslik[:14] }}</span>
+          <span class="hist-adet">%{{ "%.0f"|format(n.yuzde) }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="tablo-sarma">
+      <table>
+        <thead><tr><th>Sınav</th><th>Puan</th><th>Başarı</th><th>Durum</th><th></th></tr></thead>
+        <tbody>
+        {% for n in seri.noktalar %}
+          <tr>
+            <td>{{ n.sinav_baslik }}</td>
+            <td>{{ "%.1f"|format(n.toplam) }} / {{ "%.0f"|format(n.max) }}</td>
+            <td>%{{ "%.0f"|format(n.yuzde) }}</td>
+            <td>{% if n.onaylandi %}<span class="rozet tamam">Onaylı</span>{% else %}<span class="rozet bekleyen">Taslak</span>{% endif %}</td>
+            <td><a class="buton ikincil" href="/kagit/{{ n.kagit_id }}">Kâğıdı aç</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="bos-durum"><p>Bu öğrenciye bağlı kâğıt yok.</p></div>
+  {% endif %}
+</section>
+
+{% if zayif %}
+<section class="panel">
+  <div class="panel-baslik"><div><h2>Tekrar edilecek kazanımlar</h2><p>Son sınavda %60 altında kalan konular.</p></div></div>
+  <div class="detay-liste">
+    {% for k in zayif %}<div>{{ k }}</div>{% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}
