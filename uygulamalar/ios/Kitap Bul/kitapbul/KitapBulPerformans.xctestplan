@@ -1,0 +1,26 @@
+{
+  "configurations": [
+    {
+      "id": "A3C1F0E2-7B1D-4F5A-9C21-1D0000000002",
+      "name": "Performans",
+      "options": {}
+    }
+  ],
+  "defaultOptions": {
+    "codeCoverage": false
+  },
+  "testTargets": [
+    {
+      "selectedTests": [
+        "BuyukKatalogPerformansTestleri",
+        "PlanPerformanceTestleri"
+      ],
+      "target": {
+        "containerPath": "container:001.xcodeproj",
+        "identifier": "347C4A433061798F00085F68",
+        "name": "KitapBulTests"
+      }
+    }
+  ],
+  "version": 1
+}

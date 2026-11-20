@@ -1,0 +1,26 @@
+{
+  "configurations": [
+    {
+      "id": "A3C1F0E2-7B1D-4F5A-9C21-1D0000000004",
+      "name": "Arayüz",
+      "options": {}
+    }
+  ],
+  "defaultOptions": {
+    "codeCoverage": false
+  },
+  "testTargets": [
+    {
+      "parallelizable": true,
+      "skippedTests": [
+        "PhysicalDeviceSmokeTests"
+      ],
+      "target": {
+        "containerPath": "container:001.xcodeproj",
+        "identifier": "3454E095306BE28300D1480E",
+        "name": "KitapBulUITests"
+      }
+    }
+  ],
+  "version": 1
+}

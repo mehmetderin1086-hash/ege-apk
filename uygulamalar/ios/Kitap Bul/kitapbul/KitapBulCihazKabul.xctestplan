@@ -1,0 +1,41 @@
+{
+  "configurations": [
+    {
+      "id": "A3C1F0E2-7B1D-4F5A-9C21-1D0000000003",
+      "name": "Cihaz Kabul",
+      "options": {}
+    }
+  ],
+  "defaultOptions": {
+    "codeCoverage": false,
+    "environmentVariableEntries": [
+      {
+        "key": "KITAPBUL_REAL_STORE_FIXTURE",
+        "value": "bundle"
+      }
+    ]
+  },
+  "testTargets": [
+    {
+      "selectedTests": [
+        "RealStoreMigrationTestleri"
+      ],
+      "target": {
+        "containerPath": "container:001.xcodeproj",
+        "identifier": "347C4A433061798F00085F68",
+        "name": "KitapBulTests"
+      }
+    },
+    {
+      "selectedTests": [
+        "PhysicalDeviceSmokeTests"
+      ],
+      "target": {
+        "containerPath": "container:001.xcodeproj",
+        "identifier": "3454E095306BE28300D1480E",
+        "name": "KitapBulUITests"
+      }
+    }
+  ],
+  "version": 1
+}

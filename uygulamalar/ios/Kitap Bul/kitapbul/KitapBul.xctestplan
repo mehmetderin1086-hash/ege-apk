@@ -1,0 +1,35 @@
+{
+  "configurations": [
+    {
+      "id": "A3C1F0E2-7B1D-4F5A-9C21-1D0000000001",
+      "name": "Hızlı",
+      "options": {}
+    }
+  ],
+  "defaultOptions": {
+    "codeCoverage": true,
+    "codeCoverageTargets": [
+      {
+        "containerPath": "container:001.xcodeproj",
+        "identifier": "000000000000000100000000",
+        "name": "001"
+      }
+    ]
+  },
+  "testTargets": [
+    {
+      "skippedTests": [
+        "BuyukKatalogPerformansTestleri",
+        "PlanPerformanceTestleri",
+        "RealStoreMigrationTestleri"
+      ],
+      "target": {
+        "containerPath": "container:001.xcodeproj",
+        "identifier": "347C4A433061798F00085F68",
+        "name": "KitapBulTests"
+      },
+      "parallelizable": false
+    }
+  ],
+  "version": 1
+}
