@@ -1,0 +1,8 @@
+Additional bundled fonts: Google Fonts official distribution.
+License: SIL Open Font License; see the accompanying family-OFL.txt files.
+
+https://github.com/google/fonts/tree/main/ofl/notonaskharabic
+https://github.com/google/fonts/tree/main/ofl/notosansarabic
+https://github.com/google/fonts/tree/main/ofl/lora
+https://github.com/google/fonts/tree/main/ofl/sourceserif4
+https://github.com/google/fonts/tree/main/ofl/roboto

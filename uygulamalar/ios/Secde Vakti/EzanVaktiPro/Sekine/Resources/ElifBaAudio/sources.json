@@ -1,0 +1,254 @@
+[
+  {
+    "id": "alif",
+    "letter": "ا",
+    "name": "Elif",
+    "spokenText": "أَلِف",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "ba",
+    "letter": "ب",
+    "name": "Be",
+    "spokenText": "بَاء",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "ta",
+    "letter": "ت",
+    "name": "Te",
+    "spokenText": "تَاء",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "tha",
+    "letter": "ث",
+    "name": "Se",
+    "spokenText": "ثَاء",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "jim",
+    "letter": "ج",
+    "name": "Cim",
+    "spokenText": "جِيم",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "ha",
+    "letter": "ح",
+    "name": "Hâ",
+    "spokenText": "حَاء",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "kha",
+    "letter": "خ",
+    "name": "Hı",
+    "spokenText": "خَاء",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "dal",
+    "letter": "د",
+    "name": "Dal",
+    "spokenText": "دَال",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "dhal",
+    "letter": "ذ",
+    "name": "Zel",
+    "spokenText": "ذَال",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "ra",
+    "letter": "ر",
+    "name": "Ra",
+    "spokenText": "رَاء",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "zay",
+    "letter": "ز",
+    "name": "Ze",
+    "spokenText": "زَاي",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "sin",
+    "letter": "س",
+    "name": "Sin",
+    "spokenText": "سِين",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "shin",
+    "letter": "ش",
+    "name": "Şın",
+    "spokenText": "شِين",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "sad",
+    "letter": "ص",
+    "name": "Sad",
+    "spokenText": "صَاد",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "dad",
+    "letter": "ض",
+    "name": "Dad",
+    "spokenText": "ضَاد",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "tta",
+    "letter": "ط",
+    "name": "Tı",
+    "spokenText": "طَاء",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "zza",
+    "letter": "ظ",
+    "name": "Zı",
+    "spokenText": "ظَاء",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "ayn",
+    "letter": "ع",
+    "name": "Ayn",
+    "spokenText": "عَيْن",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "ghayn",
+    "letter": "غ",
+    "name": "Gayn",
+    "spokenText": "غَيْن",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "fa",
+    "letter": "ف",
+    "name": "Fe",
+    "spokenText": "فَاء",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "qaf",
+    "letter": "ق",
+    "name": "Kaf",
+    "spokenText": "قَاف",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "kaf",
+    "letter": "ك",
+    "name": "Kef",
+    "spokenText": "كَاف",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "lam",
+    "letter": "ل",
+    "name": "Lâm",
+    "spokenText": "لَام",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "mim",
+    "letter": "م",
+    "name": "Mim",
+    "spokenText": "مِيم",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "nun",
+    "letter": "ن",
+    "name": "Nun",
+    "spokenText": "نُون",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "he",
+    "letter": "ه",
+    "name": "He",
+    "spokenText": "هَاء",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "waw",
+    "letter": "و",
+    "name": "Vav",
+    "spokenText": "وَاو",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  },
+  {
+    "id": "ya",
+    "letter": "ي",
+    "name": "Ye",
+    "spokenText": "يَاء",
+    "voice": "ar-SA-HamedNeural",
+    "synthetic": true,
+    "durationSeconds": 1.872
+  }
+]

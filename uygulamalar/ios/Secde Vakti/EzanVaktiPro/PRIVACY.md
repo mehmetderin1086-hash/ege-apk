@@ -1,0 +1,71 @@
+# Gizlilik Politikası — Sekine
+
+**Son güncelleme: 23 Ağustos 2026**
+
+Sekine, gizliliğe saygıyı temel bir ilke olarak benimser. Kısaca: **hiçbir kişisel
+verinizi toplamıyor, saklamıyor veya paylaşmıyoruz.**
+
+## Topladığımız veriler
+**Hiçbiri.** Sekine'nin arka uç sunucusu, hesabı, girişi veya analiz/izleme yazılımı
+(SDK) yoktur. Reklam göstermez, reklam ağı içermez.
+
+## Konum
+- Konumunuz, bulunduğunuz yere göre namaz vakitlerini belirlemek için **cihazınızda** işlenir.
+- Konumunuz tarafımızca **toplanmaz, saklanmaz, satılmaz** ve kimliğinizle ilişkilendirilmez.
+  Vakit servislerine iletilen bilgi aşağıdaki "İnternet bağlantısı" bölümünde açıklanmıştır.
+
+## İnternet bağlantısı
+Sekine, seçtiğiniz il/ilçe için namaz vakitlerini bir kez indirip cihazınızda saklar ve
+ardından çevrimdışı çalışır. Vakitleri indirmek için:
+- **Diyanet İşleri Başkanlığı** kaynaklı vakit servisine (ezanvakti / namazvakti.diyanet.gov.tr),
+- ve yedek olarak **Aladhan** vakit servisine
+
+yalnızca **seçtiğiniz konumun bilgisi (il/ilçe veya koordinat)** iletilir. Aylık imsakiyede Diyanet'in
+yayımladığı pencerenin ötesindeki günler için ("yaklaşık" vakitler) aynı konumun koordinatı (yaklaşık 1 km'ye
+yuvarlanmış olarak) Aladhan servisine iletilir. Konumdan il/ilçe adını bulmak ve ilçe aramak için
+cihazın konum çözümleme servisi (Apple) kullanılır; Sekine ayrıca App Store sürüm kontrolü için Apple'a
+yalnızca uygulama kimliğini ve ülke kodunu gönderir. Kimliğinizi
+belirleyen hiçbir bilgi (isim, e-posta, cihaz kimliği vb.) gönderilmez.
+
+## Bildirimler
+Namaz vakti bildirimleri tamamen cihazınızda, yerel olarak zamanlanır. Bildirim içeriği
+cihazınızdan dışarı çıkmaz.
+
+## Satın almalar
+Uygulama içi satın almalar (Ömürlük Premium, yıllık abonelik ve bağışlar) tamamen **Apple** tarafından
+yürütülür. Ödeme bilgilerinizi görmez, toplamaz ve saklamayız; satın alma durumu yalnızca
+cihazınızda tutulur. Kendi sunucumuz veya hesap sistemimiz yoktur.
+
+## Çocukların gizliliği
+Sekine her yaştan kullanıcıya uygundur ve hiçbir kişisel veri toplamadığından çocuklardan
+da veri toplamaz.
+
+## Değişiklikler
+Bu politika güncellenirse bu sayfada yayımlanır ve "Son güncelleme" tarihi değiştirilir.
+
+## İletişim
+Soru veya talepleriniz için: **yusuff.gull@icloud.com**
+
+---
+
+# Privacy Policy — Sekine (English)
+
+**Last updated: August 23, 2026**
+
+Sekine is built around privacy. In short: **we do not collect, store, or share any of
+your personal data.**
+
+- **No data collection.** No backend, no account, no login, no analytics/tracking SDKs,
+  no ads.
+- **Location** is used **only on your device** to determine local prayer times. It is
+  never sent to us or any third party, never stored remotely, never sold.
+- **Network use:** to download prayer times for your selected district, only the location
+  you choose (district or coordinates) is sent to a Diyanet-sourced times service
+  (ezanvakti / namazvakti.diyanet.gov.tr) and, as a fallback, the Aladhan service. No
+  identifying information is transmitted. Times are cached on-device and the app then
+  works offline.
+- **Notifications** are scheduled locally on your device.
+- **Purchases** (lifetime Premium and tips) are handled entirely by Apple. We never see,
+  collect, or store your payment details; entitlement is kept on-device only.
+
+Contact: **yusuff.gull@icloud.com**

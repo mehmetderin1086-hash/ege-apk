@@ -1,0 +1,293 @@
+import XCTest
+import CoreLocation
+@testable import Sekine
+
+final class PrayerTimeTests: XCTestCase {
+
+    private func makeSchedule() -> PrayerSchedule {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "Europe/Istanbul")!
+        let day0 = cal.date(from: DateComponents(
+            timeZone: cal.timeZone, year: 2026, month: 8, day: 1, hour: 0))!
+        func t(_ p: Prayer, _ h: Int, _ m: Int) -> PrayerTime {
+            PrayerTime(prayer: p, date: cal.date(from: DateComponents(
+                timeZone: cal.timeZone, year: 2026, month: 8, day: 1, hour: h, minute: m))!)
+        }
+        let day = PrayerDay(dayStart: day0, times: [
+            t(.fajr, 4, 8), t(.sunrise, 5, 53), t(.dhuhr, 13, 15),
+            t(.asr, 17, 10), t(.maghrib, 20, 27), t(.isha, 22, 4)
+        ])
+        return PrayerSchedule(
+            placeName: "İstanbul", latitude: 41.0082, longitude: 28.9784,
+            timeZoneIdentifier: "Europe/Istanbul", source: "test",
+            fetchedAt: Date(), days: [day])
+    }
+
+    // MARK: - İl/ilçe ad düzeltmesi + alias (bundle'lı override)
+
+    func testDistrictNameFixAndIstanbulAliases() {
+        // emushaf'ın İstanbul için döndürdüğü (eksik/ASCII-hasarlı) örnek alt küme.
+        let dtos = [
+            DiyanetDistrictDTO(IlceAdi: "ARNAVUTKOY", IlceID: "9535"),
+            DiyanetDistrictDTO(IlceAdi: "İSTANBUL", IlceID: "9541"),
+            DiyanetDistrictDTO(IlceAdi: "ÇEKMEKÖY", IlceID: "9539"),
+        ]
+        let result = DiyanetDirectory.applyingOverrides(dtos, cityID: "539")
+        let byName = Dictionary(grouping: result, by: \.name).mapValues { $0.first! }
+
+        // ASCII-hasarlı ad doğru Türkçe'ye düzeldi.
+        XCTAssertNotNil(byName["Arnavutköy"], "Arnavutköy adı düzelmeli")
+        XCTAssertEqual(byName["Arnavutköy"]?.IlceID, "9535", "ID (vakit) değişmemeli")
+        // Zaten doğru olan ad korunur.
+        XCTAssertNotNil(byName["Çekmeköy"])
+        // Eksik idari ilçeler alias olarak eklendi ve merkez (İstanbul) ID'sine bağlı.
+        XCTAssertEqual(byName["Üsküdar"]?.IlceID, "9541", "Üsküdar merkez ID'ye bağlanmalı")
+        XCTAssertEqual(byName["Ataşehir"]?.IlceID, "9541")
+        XCTAssertEqual(byName["Kadıköy"]?.IlceID, "9541")
+        // Liste kimlikleri benzersiz (alias'lar aynı IlceID'yi paylaşsa da).
+        XCTAssertEqual(Set(result.map(\.id)).count, result.count, "id çakışması olmamalı")
+    }
+
+    func testExtraNotificationsContent() {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "Europe/Istanbul")!
+        let d = cal.date(from: DateComponents(
+            timeZone: cal.timeZone, year: 2026, month: 8, day: 25))!
+
+        // dateKey biçimi
+        XCTAssertEqual(ExtraNotifications.dateKey(d, cal), "2026-08-25")
+
+        // Sabit Hicri eşleşme: Mevlid = 12 Rebiülevvel (ay 3, gün 12)
+        let mevlid = ExtraNotifications.holyDay(hijriMonth: 3, hijriDay: 12, weekday: nil)
+        XCTAssertEqual(mevlid?.name, "Mevlid Kandili")
+        XCTAssertEqual(mevlid?.isEve, true)
+
+        // Regaib: Recep (7) ilk Cuması → gün ≤ 7 ve Cuma (weekday 6)
+        XCTAssertEqual(
+            ExtraNotifications.holyDay(hijriMonth: 7, hijriDay: 3, weekday: 6)?.name,
+            "Regaib Kandili")
+        // Recep 3 ama Perşembe (weekday 5) → Regaib değil
+        XCTAssertNil(ExtraNotifications.holyDay(hijriMonth: 7, hijriDay: 3, weekday: 5))
+        // Bayram gündüz: Kurban = 10 Zilhicce (ay 12, gün 10), eve=false
+        XCTAssertEqual(ExtraNotifications.holyDay(hijriMonth: 12, hijriDay: 10, weekday: nil)?.isEve, false)
+
+        // Özel günde temalı ayet gösterilir
+        XCTAssertEqual(
+            ExtraNotifications.verse(on: d, calendar: cal, holyDay: mevlid)?.source,
+            "Enbiyâ 21/107")
+        // Normal günde (holyDay nil) rotasyon dolu gelir
+        XCTAssertNotNil(ExtraNotifications.verse(on: d, calendar: cal, holyDay: nil))
+        // Ardışık günlerde rotasyon değişir (liste >1)
+        if ExtraNotifications.dailyVerses.count > 1 {
+            let next = cal.date(byAdding: .day, value: 1, to: d)!
+            XCTAssertNotEqual(
+                ExtraNotifications.verse(on: d, calendar: cal, holyDay: nil),
+                ExtraNotifications.verse(on: next, calendar: cal, holyDay: nil))
+        }
+    }
+
+    func testSpiritualContentLoads() {
+        // Esmaül Hüsna: Allah + 99 isim = 100
+        XCTAssertEqual(SpiritualContent.esmaulHusna.count, 100)
+        XCTAssertEqual(SpiritualContent.esmaulHusna.first?.name, "Allah")
+        XCTAssertEqual(SpiritualContent.esmaulHusna.last?.name, "Es-Sabûr")
+        // Dualar dolu ve alanları eksiksiz
+        XCTAssertGreaterThanOrEqual(SpiritualContent.duas.count, 10)
+        XCTAssertTrue(SpiritualContent.duas.allSatisfy {
+            !$0.title.isEmpty && !$0.reading.isEmpty && !$0.meaning.isEmpty && !$0.source.isEmpty
+        })
+    }
+
+    func testNextTimeReturnsUpcomingPrayer() {
+        let schedule = makeSchedule()
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = schedule.timeZone
+        let noonish = cal.date(from: DateComponents(
+            timeZone: schedule.timeZone, year: 2026, month: 8, day: 1, hour: 12))!
+        XCTAssertEqual(schedule.nextTime(after: noonish)?.prayer, .dhuhr)
+    }
+
+    func testCurrentTimeReturnsMostRecentPast() {
+        let schedule = makeSchedule()
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = schedule.timeZone
+        let afternoon = cal.date(from: DateComponents(
+            timeZone: schedule.timeZone, year: 2026, month: 8, day: 1, hour: 18))!
+        XCTAssertEqual(schedule.currentTime(at: afternoon)?.prayer, .asr)
+    }
+
+    func testDayContainingMatchesSameDay() {
+        let schedule = makeSchedule()
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = schedule.timeZone
+        let mid = cal.date(from: DateComponents(
+            timeZone: schedule.timeZone, year: 2026, month: 8, day: 1, hour: 15))!
+        XCTAssertNotNil(schedule.day(containing: mid))
+        XCTAssertEqual(schedule.day(containing: mid)?.times.count, 6)
+    }
+
+    func testPrayerOrderAndNames() {
+        XCTAssertEqual(Prayer.ordered.first, .fajr)
+        XCTAssertEqual(Prayer.ordered.last, .isha)
+        XCTAssertEqual(Prayer.fajr.displayName, "İmsak")
+        XCTAssertFalse(Prayer.sunrise.isNotifiable)
+        XCTAssertTrue(Prayer.dhuhr.isNotifiable)
+    }
+
+    func testQiblaBearingFromIstanbulIsSoutheast() {
+        // İstanbul'dan Kâbe güneydoğudadır (~150–160°).
+        let istanbul = CLLocationCoordinate2D(latitude: 41.0082, longitude: 28.9784)
+        let kaaba = CLLocationCoordinate2D(latitude: 21.4225, longitude: 39.8262)
+        let bearing = QiblaManager.bearing(from: istanbul, to: kaaba)
+        XCTAssertGreaterThan(bearing, 120)
+        XCTAssertLessThan(bearing, 180)
+    }
+
+    func testCountdownFormatter() {
+        let now = Date()
+        XCTAssertEqual(CountdownFormatter.string(from: now, to: now.addingTimeInterval(3720)),
+                       "1 sa 02 dk")
+        XCTAssertEqual(CountdownFormatter.string(from: now, to: now.addingTimeInterval(65)),
+                       "1 dk 05 sn")
+        XCTAssertEqual(CountdownFormatter.string(from: now, to: now.addingTimeInterval(5)),
+                       "5 sn")
+        XCTAssertEqual(CountdownFormatter.string(from: now, to: now.addingTimeInterval(-10)),
+                       "0 sn")
+    }
+
+    func testDiyanetVakitParsing() {
+        var cal = Calendar(identifier: .gregorian)
+        let tz = TimeZone(identifier: "Europe/Istanbul")!
+        cal.timeZone = tz
+        let vakit = DiyanetVakit(
+            MiladiTarihKisa: "01.08.2026",
+            Imsak: "04:08", Gunes: "05:53", Ogle: "13:16",
+            Ikindi: "17:10", Aksam: "20:28", Yatsi: "22:05",
+            HicriTarihUzun: "18 Safer 1448", HicriTarihKisa: "18.2.1448", KibleSaati: "12:17",
+            MiladiTarihUzunIso8601: nil)
+        let day = vakit.toPrayerDay(calendar: cal, defaultTimeZone: tz)
+        XCTAssertNotNil(day)
+        XCTAssertEqual(day?.times.count, 6)
+        let maghrib = day?.time(for: .maghrib)
+        let comps = cal.dateComponents([.hour, .minute], from: maghrib ?? Date())
+        XCTAssertEqual(comps.hour, 20)
+        XCTAssertEqual(comps.minute, 28)
+        // İmsak güneşten önce olmalı (sıralama)
+        XCTAssertLessThan(day!.time(for: .fajr)!, day!.time(for: .sunrise)!)
+        // Hicri tarih + kıble saati ayrıştırıldı mı
+        XCTAssertEqual(day?.hicriDate, "18 Safer 1448")
+        XCTAssertEqual(day?.hicriMonth, 2)
+        XCTAssertEqual(day?.hicriDay, 18)
+        let qc = cal.dateComponents([.hour, .minute], from: day?.qiblaTime ?? Date())
+        XCTAssertEqual(qc.hour, 12)
+        XCTAssertEqual(qc.minute, 17)
+    }
+
+    /// KRİTİK: yurt dışı bir ilçe için API'nin döndürdüğü GERÇEK ofset (ör. Berlin
+    /// +02:00) kullanılmalı, `defaultTimeZone` (Türkiye +03:00) yedeğine SESSİZCE
+    /// düşülmemeli. Aksi halde Berlin için "19:15" etiketli akşam vakti Türkiye saatiyle
+    /// yorumlanır ve mutlak `Date` 1 saat YANLIŞ olur (bkz. docs/decisions.md 2026-09-24).
+    func testDiyanetVakitUsesLocationOwnOffsetNotTurkeyFallback() throws {
+        let cal = Calendar(identifier: .gregorian)
+        let istanbul = TimeZone(identifier: "Europe/Istanbul")!
+        let berlinVakit = DiyanetVakit(
+            MiladiTarihKisa: "19.09.2026",
+            Imsak: "04:49", Gunes: "06:47", Ogle: "13:05",
+            Ikindi: "16:26", Aksam: "19:21", Yatsi: "20:57",
+            HicriTarihUzun: nil, HicriTarihKisa: nil, KibleSaati: nil,
+            MiladiTarihUzunIso8601: "2026-09-19T00:00:00.0000000+02:00")
+        let day = berlinVakit.toPrayerDay(calendar: cal, defaultTimeZone: istanbul)
+        let maghrib = try XCTUnwrap(day?.time(for: .maghrib))
+
+        // Berlin +02:00'da 19:21 = UTC 17:21 = İstanbul +03:00'te 20:21.
+        var istCal = cal
+        istCal.timeZone = istanbul
+        let comps = istCal.dateComponents([.hour, .minute], from: maghrib)
+        XCTAssertEqual(comps.hour, 20)
+        XCTAssertEqual(comps.minute, 21)
+    }
+
+    /// `defaultTimeZone` yedeği yalnızca ofset ayrıştırılamadığında devreye girer.
+    func testDiyanetVakitFallsBackToDefaultTimeZoneWhenOffsetMissing() {
+        let cal = Calendar(identifier: .gregorian)
+        let istanbul = TimeZone(identifier: "Europe/Istanbul")!
+        let vakit = DiyanetVakit(
+            MiladiTarihKisa: "19.09.2026",
+            Imsak: "04:49", Gunes: "06:47", Ogle: "13:05",
+            Ikindi: "16:26", Aksam: "19:21", Yatsi: "20:57",
+            HicriTarihUzun: nil, HicriTarihKisa: nil, KibleSaati: nil,
+            MiladiTarihUzunIso8601: nil)
+        let day = vakit.toPrayerDay(calendar: cal, defaultTimeZone: istanbul)
+        let maghrib = try? XCTUnwrap(day?.time(for: .maghrib))
+        var istCal = cal
+        istCal.timeZone = istanbul
+        let comps = istCal.dateComponents([.hour, .minute], from: maghrib ?? Date())
+        XCTAssertEqual(comps.hour, 19)
+        XCTAssertEqual(comps.minute, 21)
+    }
+
+    func testParseUTCOffsetSecondsHandlesPositiveNegativeAndMalformed() {
+        XCTAssertEqual(
+            DiyanetVakit.parseUTCOffsetSeconds(fromISO8601: "2026-09-19T00:00:00.0000000+02:00"), 7200)
+        XCTAssertEqual(
+            DiyanetVakit.parseUTCOffsetSeconds(fromISO8601: "2026-09-19T00:00:00.0000000-05:00"), -18000)
+        XCTAssertNil(DiyanetVakit.parseUTCOffsetSeconds(fromISO8601: nil))
+        XCTAssertNil(DiyanetVakit.parseUTCOffsetSeconds(fromISO8601: "2026-09-19T00:00:00.0000000Z"))
+        XCTAssertNil(DiyanetVakit.parseUTCOffsetSeconds(fromISO8601: "kısa"))
+    }
+
+    func testDiyanetProviderRequiresDistrictID() {
+        let provider = DiyanetProvider()
+        XCTAssertFalse(provider.canHandle(SavedLocation(name: "x", latitude: 41, longitude: 29)))
+        XCTAssertTrue(provider.canHandle(SavedLocation(name: "x", latitude: 41, longitude: 29, diyanetDistrictID: "9541")))
+    }
+
+    func testCacheRoundTrip() {
+        let schedule = makeSchedule()
+        PrayerCache.save(schedule)
+        let loaded = PrayerCache.load()
+        XCTAssertEqual(loaded?.placeName, "İstanbul")
+        XCTAssertEqual(loaded?.days.first?.times.count, 6)
+    }
+
+    // MARK: Konum doğruluğu (1.5)
+
+    /// Koordinat yoksa kıble açısı ÜRETİLMEMELİ — uydurma yön kabul edilemez.
+    func testSavedLocationWithoutCoordinateHasNoCoordinate() {
+        let noCoord = SavedLocation(name: "Çankaya, Ankara", latitude: nil, longitude: nil,
+                                    diyanetDistrictID: "9206")
+        XCTAssertNil(noCoord.coordinate)
+
+        let withCoord = SavedLocation(name: "İstanbul", latitude: 41.0082, longitude: 28.9784,
+                                      diyanetDistrictID: "9541")
+        XCTAssertNotNil(withCoord.coordinate)
+    }
+
+    /// 1.4 ve öncesinde yazılmış (koordinatları dolu) kayıtlar bozulmadan okunmalı.
+    func testSavedLocationDecodesLegacyPayloadWithCoordinates() throws {
+        let legacy = #"{"name":"Ümraniye, İstanbul","latitude":41.0082,"longitude":28.9784,"diyanetDistrictID":"9541"}"#
+        let decoded = try JSONDecoder().decode(SavedLocation.self, from: Data(legacy.utf8))
+        XCTAssertEqual(decoded.latitude, 41.0082)
+        XCTAssertEqual(decoded.diyanetDistrictID, "9541")
+        XCTAssertNotNil(decoded.coordinate)
+    }
+
+    /// İlçe sınırındaki GPS gürültüsü konum önerisi tetiklememeli; gerçek seyahat tetiklemeli.
+    func testLocationDriftRequiresMeaningfulDistance() {
+        let home = SavedLocation(name: "Çankaya, Ankara", latitude: 39.9208, longitude: 32.8541)
+        // ~8 km kuzey: komşu ilçeye düşse bile "taşındı" sayılmamalı.
+        let nextDistrict = SavedLocation(name: "Yenimahalle, Ankara", latitude: 39.9930, longitude: 32.8541)
+        XCTAssertFalse(SekineApp.isMeaningfulMove(from: home, to: nextDistrict))
+
+        // İstanbul: gerçek şehirlerarası seyahat.
+        let istanbul = SavedLocation(name: "İstanbul", latitude: 41.0082, longitude: 28.9784)
+        XCTAssertTrue(SekineApp.isMeaningfulMove(from: home, to: istanbul))
+    }
+
+    /// Kayıtlı koordinat yoksa mesafe bilinemez → ilçe değişikliği tek sinyal kalır.
+    func testLocationDriftAllowedWhenPreviousCoordinateUnknown() {
+        let unknown = SavedLocation(name: "Çankaya, Ankara", latitude: nil, longitude: nil)
+        let detected = SavedLocation(name: "İstanbul", latitude: 41.0082, longitude: 28.9784)
+        XCTAssertTrue(SekineApp.isMeaningfulMove(from: unknown, to: detected))
+    }
+}

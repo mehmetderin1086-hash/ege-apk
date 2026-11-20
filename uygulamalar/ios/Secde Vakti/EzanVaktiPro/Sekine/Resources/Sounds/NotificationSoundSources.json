@@ -1,0 +1,76 @@
+{
+  "spokenVoice": "Azure tr-TR-Aydın:MAI-Voice-2-Flash; AI-generated studio narration; 24 kHz PCM CAF",
+  "recording": "notify-besmele.caf: complete existing besmele.mp3, no truncation",
+  "reminders": [
+    [
+      "prayerCall",
+      "Namaza davet",
+      "Namaz vakti geldi. Haydi namaza. Allah ibadetinizi kabul etsin."
+    ],
+    [
+      "imsakReminder",
+      "İmsak hatırlatması",
+      "İmsak vakti geldi. Allah orucunuzu kabul etsin."
+    ],
+    [
+      "sabahReminder",
+      "Sabah namazı",
+      "Sabah namazı vakti. Güne dua ve namazla başlayalım."
+    ],
+    [
+      "ogleReminder",
+      "Öğle namazı",
+      "Öğle namazı vakti geldi. Allah namazınızı kabul etsin."
+    ],
+    [
+      "ikindiReminder",
+      "İkindi namazı",
+      "İkindi namazı vakti geldi. Haydi namaza."
+    ],
+    [
+      "aksamReminder",
+      "Akşam namazı",
+      "Akşam namazı vakti geldi. Allah ibadetinizi kabul etsin."
+    ],
+    [
+      "yatsiReminder",
+      "Yatsı namazı",
+      "Yatsı namazı vakti geldi. Günü dua ve namazla tamamlayalım."
+    ],
+    [
+      "iftarReminder",
+      "İftar müjdesi",
+      "İftar vakti geldi. Allah orucunuzu kabul etsin. Hayırlı iftarlar."
+    ],
+    [
+      "fridayReminder",
+      "Hayırlı cumalar",
+      "Hayırlı cumalar. Bugün dualarımızda sevdiklerimizi de hatırlayalım."
+    ],
+    [
+      "duaReminder",
+      "Dua molası",
+      "Dua için kısa bir mola. Kendiniz ve sevdikleriniz için dua edebilirsiniz."
+    ],
+    [
+      "dhikrReminder",
+      "Zikir hatırlatması",
+      "Allah'ı anmak için kısa bir mola. Zikrinizi tamamlamayı unutmayın."
+    ],
+    [
+      "salawatReminder",
+      "Salavat hatırlatması",
+      "Peygamberimize salavat getirmek için güzel bir an."
+    ],
+    [
+      "quranReminder",
+      "Kur’an okuma vakti",
+      "Kur'an okuma vakti. Bugünkü okumanıza kaldığınız yerden devam edebilirsiniz."
+    ],
+    [
+      "gratitudeReminder",
+      "Şükür hatırlatması",
+      "Bugünün nimetlerini hatırlayalım. Şükretmek için kısa bir mola."
+    ]
+  ]
+}

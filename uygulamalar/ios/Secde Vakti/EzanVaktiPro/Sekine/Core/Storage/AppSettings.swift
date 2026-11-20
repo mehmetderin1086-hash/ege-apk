@@ -1,0 +1,361 @@
+import Foundation
+import SwiftUI
+import CoreLocation
+
+enum AppTheme: String, CaseIterable, Identifiable {
+    case system, light, dark
+    var id: String { rawValue }
+    var displayName: String {
+        switch self {
+        case .system: return "Sistem"
+        case .light: return "Açık"
+        case .dark: return "Koyu"
+        }
+    }
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+}
+
+enum FontScale: String, CaseIterable, Identifiable {
+    case normal, large, extraLarge
+    var id: String { rawValue }
+    var displayName: String {
+        switch self {
+        case .normal: return "Normal"
+        case .large: return "Büyük"
+        case .extraLarge: return "Çok Büyük"
+        }
+    }
+    /// Özel (sabit punto) SekineFont öğelerine uygulanan çarpan.
+    var multiplier: CGFloat {
+        switch self {
+        case .normal: return 1.0
+        case .large: return 1.15
+        case .extraLarge: return 1.3
+        }
+    }
+
+    /// Varsayılan SwiftUI fontlarını (Form, liste, başlık) ölçekler. Kökte
+    /// uygulanır → Ayarlar/Onboarding/Aylık dahil tüm ekranları etkiler.
+    var dynamicTypeSize: DynamicTypeSize {
+        switch self {
+        case .normal: return .large      // sistem varsayılanı
+        case .large: return .xLarge
+        case .extraLarge: return .xxLarge
+        }
+    }
+}
+
+/// Seçili konum. Diyanet ilçe ID'si varsa vakitler birebir Diyanet resmi verisinden
+/// gelir; yoksa koordinatla Aladhan'a/lokal hesaba düşülür.
+///
+/// Koordinat OPSİYONEL ve yalnızca gerçekten doğrulanmışsa (GPS ya da başarılı geocode)
+/// doldurulur. Uydurma/placeholder koordinat ASLA saklanmaz: kıble bu koordinattan
+/// hesaplandığı için yanlış bir değer kullanıcıyı sessizce yanlış yöne yönlendirir.
+/// Koordinat yoksa vakitler `diyanetDistrictID` ile çalışmaya devam eder, kıble ise
+/// gerçek konuma düşer veya konum izni ister (bkz. `QiblaManager`).
+struct SavedLocation: Codable, Equatable, Identifiable {
+    var name: String
+    var latitude: Double?
+    var longitude: Double?
+    var diyanetDistrictID: String?
+
+    var id: String { "\(name)|\(latitude?.description ?? "-")|\(longitude?.description ?? "-")" }
+
+    /// Doğrulanmış koordinat (ikisi de varsa).
+    var coordinate: CLLocationCoordinate2D? {
+        guard let latitude, let longitude else { return nil }
+        return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+
+    init(name: String, latitude: Double?, longitude: Double?, diyanetDistrictID: String? = nil) {
+        self.name = name
+        self.latitude = latitude
+        self.longitude = longitude
+        self.diyanetDistrictID = diyanetDistrictID
+    }
+}
+
+/// Uygulama ayarları. App group defaults'ta saklanır (widget da okuyabilir).
+@MainActor
+final class AppSettings: ObservableObject {
+    private let defaults: UserDefaults
+
+    init() {
+        self.defaults = UserDefaults(suiteName: AppGroup.identifier) ?? .standard
+        self.location = Self.loadLocation(defaults) ?? SavedLocation(
+            name: "İstanbul",
+            latitude: 41.0082,
+            longitude: 28.9784,
+            diyanetDistrictID: "9541"
+        )
+        self.savedLocations = Self.loadSavedLocations(defaults)
+        self.disabledPrayers = Self.loadDisabledPrayers(defaults)
+        self.theme = AppTheme(rawValue: defaults.string(forKey: Keys.theme) ?? "") ?? .system
+        self.colorTheme = ColorTheme(rawValue: defaults.string(forKey: Keys.colorTheme) ?? "") ?? .zumrut
+        self.patternEnabled = defaults.object(forKey: "appearance.pattern") as? Bool ?? true
+        self.cardStyle = defaults.string(forKey: "appearance.cardStyle") ?? "soft"
+        self.highContrast = defaults.bool(forKey: "appearance.highContrast")
+        self.fontScale = FontScale(rawValue: defaults.string(forKey: Keys.fontScale) ?? "") ?? .large
+        self.notificationSound = defaults.string(forKey: Keys.sound) ?? NotificationSound.ezan.rawValue
+        self.perPrayerSounds = Self.loadPerPrayerSounds(defaults)
+        self.silentNotifications = defaults.bool(forKey: Keys.silent)
+        self.breakThroughFocus = defaults.bool(forKey: Keys.breakThroughFocus)
+        // Ek hatırlatmalar: anahtar yoksa AÇIK varsay (nazik içerik).
+        self.fridayReminder = defaults.object(forKey: Keys.fridayReminder) as? Bool ?? true
+        self.specialDayGreetings = defaults.object(forKey: Keys.specialDayGreetings) as? Bool ?? true
+        self.dailyVerse = defaults.object(forKey: Keys.dailyVerse) as? Bool ?? true
+        self.ramadanReminders = defaults.object(forKey: Keys.ramadanReminders) as? Bool ?? true
+        self.sahurLeadMinutes = SchedulerConfig.sanitizedSahurLead(defaults.object(forKey: Keys.sahurLead) as? Int)
+        self.iftarLiveActivity = defaults.object(forKey: Keys.iftarLiveActivity) as? Bool ?? true
+        self.dailyVerseHour = defaults.object(forKey: Keys.dailyVerseHour) as? Int ?? 8
+        self.fridayReminderHour = defaults.object(forKey: Keys.fridayReminderHour) as? Int ?? 9
+        self.hasCompletedOnboarding = defaults.object(forKey: Keys.onboarded) as? Bool ?? true
+        self.preReminderMinutes = defaults.object(forKey: Keys.preReminder) as? Int ?? 15
+        self.lastLocationCheckAt = defaults.object(forKey: Keys.lastLocationCheckAt) as? Date
+        self.declinedLocationDistrictID = defaults.string(forKey: Keys.declinedLocationDistrictID)
+        migrateUnavailableSounds()
+    }
+
+    /// Dosyası bundle'da olmayan bir ses (ör. henüz eklenmemiş `.ezan`) daha önce
+    /// seçilmiş olabilir — picker artık bunu göstermiyor ama kayıtlı state öyle
+    /// kalırsa scheduler sessizce `.default`'a düşmeye devam eder (kullanıcı hiç
+    /// fark etmeden). Burada kalıcı olarak normalize ediyoruz.
+    private func migrateUnavailableSounds() {
+        if let sound = NotificationSound(rawValue: notificationSound), !sound.isAvailable {
+            notificationSound = NotificationSound.default.rawValue
+        }
+        for (prayer, sound) in perPrayerSounds where !sound.isAvailable {
+            perPrayerSounds[prayer] = nil
+        }
+    }
+
+    @Published var location: SavedLocation? {
+        didSet {
+            if let location, let data = try? JSONEncoder().encode(location) {
+                defaults.set(data, forKey: Keys.location)
+            } else if location == nil {
+                defaults.removeObject(forKey: Keys.location)
+            }
+            // Konumu elle değiştiren kullanıcı için ret hafızası anlamını yitirir;
+            // sıfırlanır ki gerçekten başka bir yere taşınınca tekrar sorulabilsin.
+            // (didSet init sırasında çalışmaz → açılışta yüklenen değer silinmez.)
+            declinedLocationDistrictID = nil
+        }
+    }
+
+    /// Kullanıcı seyahat ettiğinde konumun bayatlamasını önlemek için: uygulama ön
+    /// plana her geldiğinde GPS'i sessizce yeniden kontrol ederiz, ama pil/GPS
+    /// kullanımını sınırlamak için günde en fazla bir kez (bkz. `SekineApp.bootstrap`).
+    @Published var lastLocationCheckAt: Date? {
+        didSet { defaults.set(lastLocationCheckAt, forKey: Keys.lastLocationCheckAt) }
+    }
+
+    /// Foreground konum kontrolü mevcut konumdan farklı bir yer bulduğunda burada
+    /// tutulur; UI bir onay banner'ı gösterir. Kalıcı DEĞİL (oturum içi, kasıtlı).
+    @Published var pendingLocationSuggestion: SavedLocation?
+
+    /// Kullanıcının "Hayır" dediği Diyanet ilçe ID'si. Aynı ilçe için bir daha
+    /// sorulmaz — aksi halde konumunu bilerek farklı tutan kullanıcı (ör. Kocaeli'de
+    /// oturup İstanbul vakitlerini tercih eden) her gün aynı uyarıyı alırdı.
+    @Published var declinedLocationDistrictID: String? {
+        didSet {
+            if let declinedLocationDistrictID {
+                defaults.set(declinedLocationDistrictID, forKey: Keys.declinedLocationDistrictID)
+            } else {
+                defaults.removeObject(forKey: Keys.declinedLocationDistrictID)
+            }
+        }
+    }
+
+    /// Premium: kayıtlı konum yer imleri (hızlı geçiş için). Ücretsizde kullanılmaz.
+    @Published var savedLocations: [SavedLocation] {
+        didSet {
+            if let data = try? JSONEncoder().encode(savedLocations) {
+                defaults.set(data, forKey: Keys.savedLocations)
+            }
+        }
+    }
+
+    /// Yer imi ekle (varsa tekrar eklemez).
+    func addSavedLocation(_ loc: SavedLocation) {
+        guard !savedLocations.contains(where: { $0.id == loc.id }) else { return }
+        savedLocations.append(loc)
+    }
+
+    /// Bildirimi KAPALI olan vakitler (varsayılan: hepsi açık, güneş hariç).
+    @Published var disabledPrayers: Set<Prayer> {
+        didSet {
+            let raw = disabledPrayers.map(\.rawValue)
+            defaults.set(raw, forKey: Keys.disabledPrayers)
+        }
+    }
+
+    @Published var theme: AppTheme {
+        didSet { defaults.set(theme.rawValue, forKey: Keys.theme) }
+    }
+
+    /// Premium renk teması (accent/gold). app-group'a yazılır → Palette okur.
+    @Published var colorTheme: ColorTheme {
+        didSet { defaults.set(colorTheme.rawValue, forKey: Keys.colorTheme) }
+    }
+
+    @Published var patternEnabled: Bool { didSet { defaults.set(patternEnabled, forKey: "appearance.pattern") } }
+    @Published var cardStyle: String { didSet { defaults.set(cardStyle, forKey: "appearance.cardStyle") } }
+    @Published var highContrast: Bool { didSet { defaults.set(highContrast, forKey: "appearance.highContrast") } }
+
+    @Published var fontScale: FontScale {
+        didSet { defaults.set(fontScale.rawValue, forKey: Keys.fontScale) }
+    }
+
+    @Published var notificationSound: String {
+        didSet { defaults.set(notificationSound, forKey: Keys.sound) }
+    }
+
+    /// Premium: vakit-başına özel bildirim sesi (yoksa genel `notificationSound`).
+    @Published var perPrayerSounds: [Prayer: NotificationSound] {
+        didSet {
+            let raw = Dictionary(uniqueKeysWithValues:
+                perPrayerSounds.map { ($0.key.rawValue, $0.value.rawValue) })
+            defaults.set(raw, forKey: Keys.perPrayerSounds)
+        }
+    }
+
+    /// Bir vakit için efektif ses (vakit-başına varsa o, yoksa genel).
+    func sound(for prayer: Prayer) -> NotificationSound {
+        perPrayerSounds[prayer] ?? (NotificationSound(rawValue: notificationSound) ?? .default)
+    }
+
+    @Published var silentNotifications: Bool {
+        didSet { defaults.set(silentNotifications, forKey: Keys.silent) }
+    }
+
+    /// Açıkken bildirimler Odak/Uyku/Rahatsız Etmeyin'i deler (opt-in, varsayılan kapalı).
+    @Published var breakThroughFocus: Bool {
+        didSet { defaults.set(breakThroughFocus, forKey: Keys.breakThroughFocus) }
+    }
+
+    // MARK: Ek hatırlatmalar (nazik içerik → varsayılan AÇIK, kullanıcı kapatabilir)
+
+    /// Cuma günü hatırlatması (Kehf/salavat).
+    @Published var fridayReminder: Bool {
+        didSet { defaults.set(fridayReminder, forKey: Keys.fridayReminder) }
+    }
+    /// Kandil & bayram tebrikleri.
+    @Published var specialDayGreetings: Bool {
+        didSet { defaults.set(specialDayGreetings, forKey: Keys.specialDayGreetings) }
+    }
+    /// Günlük ayet/dua bildirimi.
+    @Published var dailyVerse: Bool {
+        didSet { defaults.set(dailyVerse, forKey: Keys.dailyVerse) }
+    }
+    /// Ramazan'da sahur hatırlatması + iftar metinleri (yalnızca Diyanet'in kesin hicri verisiyle).
+    @Published var ramadanReminders: Bool {
+        didSet { defaults.set(ramadanReminders, forKey: Keys.ramadanReminders) }
+    }
+    /// Sahur hatırlatması imsaktan kaç dakika önce (0 = kapalı).
+    @Published var sahurLeadMinutes: Int {
+        didSet { defaults.set(sahurLeadMinutes, forKey: Keys.sahurLead) }
+    }
+    /// Ramazan'da oruç sürerken kilit ekranı/Dynamic Island iftar sayacı (Live Activity).
+    @Published var iftarLiveActivity: Bool {
+        didSet { defaults.set(iftarLiveActivity, forKey: Keys.iftarLiveActivity) }
+    }
+    /// Günlük ayet/dua bildiriminin saati (0–23).
+    @Published var dailyVerseHour: Int {
+        didSet { defaults.set(dailyVerseHour, forKey: Keys.dailyVerseHour) }
+    }
+    /// Cuma hatırlatmasının saati (0–23).
+    @Published var fridayReminderHour: Int {
+        didSet { defaults.set(fridayReminderHour, forKey: Keys.fridayReminderHour) }
+    }
+
+    /// Vakitten kaç dakika önce hatırlatma (0 = yalnızca vakit girişinde).
+    @Published var preReminderMinutes: Int {
+        didSet { defaults.set(preReminderMinutes, forKey: Keys.preReminder) }
+    }
+
+    @Published var hasCompletedOnboarding: Bool {
+        didSet { defaults.set(hasCompletedOnboarding, forKey: Keys.onboarded) }
+    }
+
+    func isNotificationEnabled(for prayer: Prayer) -> Bool {
+        prayer.isNotifiable && !disabledPrayers.contains(prayer)
+    }
+
+    /// Yalnızca Watch app çağırır (bkz. SekineWatchApp.bootstrap). Cuma/kandil/günlük-ayet
+    /// bildirimlerinin kimlikleri konum değil ayar bazlı türüyor; iki cihazın ayarları
+    /// senkron değilse sistem dedup'ı garanti edilemez, bu yüzden watch'ta kalıcı kapatılır.
+    /// iOS hiç çağırmadığı için telefon davranışını etkilemez.
+    func disableCrossDeviceExtraNotifications() {
+        if fridayReminder { fridayReminder = false }
+        if specialDayGreetings { specialDayGreetings = false }
+        if dailyVerse { dailyVerse = false }
+        // Ramazan metin dönüşümü telefonla tutarlı kalsın diye açık bırakılır; yalnızca ayara
+        // bağlı EK sahur bildirimi (telefonla süre uyuşmayabilir) watch'ta kapatılır.
+        if sahurLeadMinutes != 0 { sahurLeadMinutes = 0 }
+    }
+
+    func setNotification(_ enabled: Bool, for prayer: Prayer) {
+        if enabled { disabledPrayers.remove(prayer) }
+        else { disabledPrayers.insert(prayer) }
+    }
+
+    // MARK: - Persistence helpers
+
+    private static func loadLocation(_ d: UserDefaults) -> SavedLocation? {
+        guard let data = d.data(forKey: Keys.location) else { return nil }
+        return try? JSONDecoder().decode(SavedLocation.self, from: data)
+    }
+
+    private static func loadPerPrayerSounds(_ d: UserDefaults) -> [Prayer: NotificationSound] {
+        let raw = d.dictionary(forKey: Keys.perPrayerSounds) as? [String: String] ?? [:]
+        var out: [Prayer: NotificationSound] = [:]
+        for (k, v) in raw {
+            if let p = Prayer(rawValue: k), let s = NotificationSound(rawValue: v) { out[p] = s }
+        }
+        return out
+    }
+
+    private static func loadSavedLocations(_ d: UserDefaults) -> [SavedLocation] {
+        guard let data = d.data(forKey: Keys.savedLocations),
+              let list = try? JSONDecoder().decode([SavedLocation].self, from: data)
+        else { return [] }
+        return list
+    }
+
+    private static func loadDisabledPrayers(_ d: UserDefaults) -> Set<Prayer> {
+        let raw = d.stringArray(forKey: Keys.disabledPrayers) ?? []
+        return Set(raw.compactMap(Prayer.init(rawValue:)))
+    }
+
+    private enum Keys {
+        static let location = "settings.location"
+        static let savedLocations = "settings.savedLocations"
+        static let disabledPrayers = "settings.disabledPrayers"
+        static let theme = "settings.theme"
+        static let colorTheme = "settings.colorTheme"
+        static let fontScale = "settings.fontScale"
+        static let sound = "settings.sound"
+        static let perPrayerSounds = "settings.perPrayerSounds"
+        static let silent = "settings.silent"
+        static let breakThroughFocus = "settings.breakThroughFocus"
+        static let fridayReminder = "settings.fridayReminder"
+        static let specialDayGreetings = "settings.specialDayGreetings"
+        static let dailyVerse = "settings.dailyVerse"
+        static let ramadanReminders = "settings.ramadanReminders"
+        static let sahurLead = "settings.sahurLeadMinutes"
+        static let iftarLiveActivity = "settings.iftarLiveActivity"
+        static let dailyVerseHour = "settings.dailyVerseHour"
+        static let fridayReminderHour = "settings.fridayReminderHour"
+        static let preReminder = "settings.preReminder"
+        static let onboarded = "settings.onboarded"
+        static let lastLocationCheckAt = "settings.lastLocationCheckAt"
+        static let declinedLocationDistrictID = "settings.declinedLocationDistrictID"
+    }
+}

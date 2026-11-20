@@ -1,0 +1,44 @@
+[
+  {
+    "id": "fatiha2",
+    "title": "Fâtiha · 2. âyet",
+    "reciter": "Mişârî Râşid el-Afâsî",
+    "source": "https://everyayah.com/data/Alafasy_128kbps/001002.mp3",
+    "completeVerse": true
+  },
+  {
+    "id": "fatiha5",
+    "title": "Fâtiha · 5. âyet",
+    "reciter": "Mişârî Râşid el-Afâsî",
+    "source": "https://everyayah.com/data/Alafasy_128kbps/001005.mp3",
+    "completeVerse": true
+  },
+  {
+    "id": "ihlas1",
+    "title": "İhlâs · 1. âyet",
+    "reciter": "Mişârî Râşid el-Afâsî",
+    "source": "https://everyayah.com/data/Alafasy_128kbps/112001.mp3",
+    "completeVerse": true
+  },
+  {
+    "id": "ihlas2",
+    "title": "İhlâs · 2. âyet",
+    "reciter": "Mişârî Râşid el-Afâsî",
+    "source": "https://everyayah.com/data/Alafasy_128kbps/112002.mp3",
+    "completeVerse": true
+  },
+  {
+    "id": "ihlas3",
+    "title": "İhlâs · 3. âyet",
+    "reciter": "Mişârî Râşid el-Afâsî",
+    "source": "https://everyayah.com/data/Alafasy_128kbps/112003.mp3",
+    "completeVerse": true
+  },
+  {
+    "id": "ihlas4",
+    "title": "İhlâs · 4. âyet",
+    "reciter": "Mişârî Râşid el-Afâsî",
+    "source": "https://everyayah.com/data/Alafasy_128kbps/112004.mp3",
+    "completeVerse": true
+  }
+]

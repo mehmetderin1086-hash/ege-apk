@@ -1,0 +1,94 @@
+{
+  "identifier" : "1D9E8F2A-4C3B-4A1E-9F7D-2B6C5A8E1F00",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : true,
+      "internalID" : "11111111-0000-4000-8000-000000000001",
+      "localizations" : [
+        {
+          "description" : "Tüm premium özellikler — tek seferlik ödeme, ömür boyu.",
+          "displayName" : "Sekine Premium",
+          "locale" : "tr"
+        }
+      ],
+      "productID" : "com.sekineapp.sekine.premium.lifetime",
+      "referenceName" : "Sekine Premium (Lifetime)",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "22222222-0000-4000-8000-000000000002",
+      "localizations" : [
+        { "description" : "Küçük destek — reklamsız kalsın.", "displayName" : "Küçük Destek", "locale" : "tr" }
+      ],
+      "productID" : "com.sekineapp.sekine.tip.small",
+      "referenceName" : "Bağış — Küçük",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "33333333-0000-4000-8000-000000000003",
+      "localizations" : [
+        { "description" : "Orta destek — geliştirmeye katkı.", "displayName" : "Orta Destek", "locale" : "tr" }
+      ],
+      "productID" : "com.sekineapp.sekine.tip.medium",
+      "referenceName" : "Bağış — Orta",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "9.99",
+      "familyShareable" : false,
+      "internalID" : "44444444-0000-4000-8000-000000000004",
+      "localizations" : [
+        { "description" : "Büyük destek — çok teşekkürler.", "displayName" : "Büyük Destek", "locale" : "tr" }
+      ],
+      "productID" : "com.sekineapp.sekine.tip.large",
+      "referenceName" : "Bağış — Büyük",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21000000-0000-4000-8000-000000000005",
+      "localizations" : [],
+      "name" : "Sekine Premium (Yıllık)",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "149.99",
+          "familyShareable" : true,
+          "groupNumber" : 1,
+          "internalID" : "55555555-0000-4000-8000-000000000005",
+          "introductoryOffer" : {
+            "internalID" : "66666666-0000-4000-8000-000000000006",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Tüm premium özellikler — yıllık, otomatik yenilenir. 7 gün ücretsiz deneme.",
+              "displayName" : "Sekine Premium (Yıllık)",
+              "locale" : "tr"
+            }
+          ],
+          "productID" : "com.sekineapp.sekine.premium.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Sekine Premium (Yearly)",
+          "subscriptionGroupID" : "21000000-0000-4000-8000-000000000005",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

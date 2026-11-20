@@ -1,0 +1,5 @@
+Quran-align timing data by cpfair, release 2016-11-24.
+https://github.com/cpfair/quran-align
+Licensed CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+Changes: removed diagnostic stats; compacted JSON. Invalid zero-length or reversed time spans omitted (Alafasy: 21; Husary: 15; Minshawy: 19). All retained word ranges and timestamps unchanged.
+Audio is streamed from the matching EveryAyah recording directories.

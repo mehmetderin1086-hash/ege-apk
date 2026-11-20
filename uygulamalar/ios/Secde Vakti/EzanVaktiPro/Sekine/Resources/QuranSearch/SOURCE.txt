@@ -1,0 +1,11 @@
+QuranEnc.com — Rowwad Translation Center
+Edition: turkish_rwwad, version 1.0.4
+Source: https://quranenc.com/en/browse/turkish_rwwad
+API: https://quranenc.com/en/home/api/
+Downloaded: 2026-10-26
+SHA-256: 74017a01fe9a1336115e9c8b7782247337df7c5697e99f684d276e709ba3337b
+Arabic text, translation, footnotes and edition metadata are retained verbatim.
+Republication terms: retain content unchanged, credit publisher and QuranEnc.com,
+state edition/version and retain edition information, report translation observations
+to the source, keep up with source updates, and do not display inappropriate ads.
+Refresh using scripts/build_quran_search.py before content releases.
