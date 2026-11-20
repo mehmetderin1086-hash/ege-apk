@@ -1,0 +1,5 @@
+.derleme/
+*.apk
+*.p12
+*.jks
+*.keystore
