@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Cep telefonundaki yerel CLIProxyAPI (127.0.0.1:8317) ve yerel ağ / özel sunucu CLIProxy bağlantıları için HTTP izni -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
