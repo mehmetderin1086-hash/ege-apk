@@ -2,9 +2,9 @@
 
 | Platform | Uygulama | Bulunan kaynak sürümü | Kopyalanan dosya | Ayıklanan dosya |
 |---|---|---|---:|---:|
-| ios | Asistan | Arşiv anlık görüntüsü | 4861 | 278 |
+| ios | Asistan | 0.21.0 | 4861 | 278 |
 | ios | Bilgi Arenası | 2.7.0 | 12057 | 183 |
-| ios | CLI Proxy | Arşiv anlık görüntüsü | 48 | 3 |
+| ios | CLI Proxy | 1.0.0 | 48 | 3 |
 | ios | İkra | 1.0.0 | 522 | 5 |
 | ios | Kepçe | 1.0.0 | 4307 | 64 |
 | ios | Kitap Bul | 1.0 | 219 | 0 |
