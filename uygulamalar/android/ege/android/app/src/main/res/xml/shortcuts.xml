@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="konus"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/sc_listen_short"
+        android:shortcutLongLabel="@string/sc_listen_long">
+        <intent android:action="com.jarvis.assistant.LISTEN"
+            android:targetPackage="com.jarvis.assistant.jarvis_mobile"
+            android:targetClass="com.jarvis.assistant.jarvis_mobile.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="ozet"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/sc_brief_short"
+        android:shortcutLongLabel="@string/sc_brief_long">
+        <intent android:action="com.jarvis.assistant.BRIEFING"
+            android:targetPackage="com.jarvis.assistant.jarvis_mobile"
+            android:targetClass="com.jarvis.assistant.jarvis_mobile.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="sohbet"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/sc_chat_short"
+        android:shortcutLongLabel="@string/sc_chat_long">
+        <intent android:action="com.jarvis.assistant.CHAT"
+            android:targetPackage="com.jarvis.assistant.jarvis_mobile"
+            android:targetClass="com.jarvis.assistant.jarvis_mobile.MainActivity" />
+    </shortcut>
+</shortcuts>

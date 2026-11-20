@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sc_listen_short">Konuş</string>
+    <string name="sc_listen_long">Ege\'yle konuş</string>
+    <string name="sc_brief_short">Sabah özeti</string>
+    <string name="sc_brief_long">Sabah özetini dinle</string>
+    <string name="sc_chat_short">Sohbet</string>
+    <string name="sc_chat_long">Yazılı sohbet</string>
+    <string name="app_control_description">İstediğiniz uygulamayı açar, belirttiğiniz düğmeye dokunur veya metin alanını doldurur. İstediğinizde ekrandaki metni ve görüntüyü okuyabilir; ekran görüntüsü diske yazılmaz. Ekran sorusu seçtiğiniz yapay zekâ hizmetinde işlenir. Ayarlardan istediğiniz zaman kapatabilirsiniz.</string>
+</resources>
