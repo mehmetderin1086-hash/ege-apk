@@ -1,0 +1,975 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		061AF1B7BDDD8CB145863A88 /* AracKatalogu+Sayfa.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D535A958055B36FBB9FABD1 /* AracKatalogu+Sayfa.swift */; };
+		0F7DDE046CA1182B12B02260 /* DuzenleSayfalari.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2DC76C71CEE5996BD2EF4EA /* DuzenleSayfalari.swift */; };
+		188F0B8FEB121A0E20B1D98F /* KagitPaylas.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B87B0529707FD2FAA37797AA /* KagitPaylas.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		189C5EA8EEA920DDAFDE7AD0 /* BelgeKamerasi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170FDE44680FFEADB93280BD /* BelgeKamerasi.swift */; };
+		1A474B26228170C587594B3E /* TaramaModeli.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10D05DC45D4575FEF1F3FA19 /* TaramaModeli.swift */; };
+		1B0A2AB3412230E7A7E89853 /* BulutAyarlari.swift in Sources */ = {isa = PBXBuildFile; fileRef = 832731A5C13EF7EE58211319 /* BulutAyarlari.swift */; };
+		1F4F96BE5D8DC9D7C8933F06 /* SoruUretEkrani.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26CBD6D9F101DA6A7BAA94D /* SoruUretEkrani.swift */; };
+		2745AD2FA976D833A5B636E7 /* OgretmenDeposu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B387F6121E3730D8C4C8A06C /* OgretmenDeposu.swift */; };
+		2D50A64F019DB9F639EF552D /* AyarlarGorunumu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A20464B01EBACF23739FE2D /* AyarlarGorunumu.swift */; };
+		309C86A6837BA4EAD10047F6 /* GuvenlikAyarlari.swift in Sources */ = {isa = PBXBuildFile; fileRef = 883E5ED98AC506D0FD26EC3C /* GuvenlikAyarlari.swift */; };
+		3E597B04882B236531F22CE7 /* TaramaKayitFormu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A7518443D3E16F6BFCBC088 /* TaramaKayitFormu.swift */; };
+		3F3CC400EB6314E2C85BBA7E /* SayfaDuzenleyici.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BB9F9FAFFDA74821535E698 /* SayfaDuzenleyici.swift */; };
+		420B6DC1F5ED12CA42865871 /* OgretmenMerkezi.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0812AB4B1FE9E16B0A8CBF6 /* OgretmenMerkezi.swift */; };
+		422578F0F4E120642C6A7214 /* Gizli.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27223689B70C9E46378F2EA4 /* Gizli.swift */; };
+		448B353E85B6B507B2D068A2 /* ImzalaCubugu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D4DA6E598D94D31B0F4837 /* ImzalaCubugu.swift */; };
+		44F1E29445D0E09B4F4376D5 /* KagitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702C1F9FC48A9BAB072D9B35 /* KagitApp.swift */; };
+		4615D96183FE4EAAB1409B56 /* DamgaSikistirEkranlari.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25D8EA6DA0599A2DC32EA8C7 /* DamgaSikistirEkranlari.swift */; };
+		4AA728B26343617A1996D171 /* Kitaplik.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73ECFDAE497009A1EAB93306 /* Kitaplik.swift */; };
+		4D1F04D104FB1A217BD7EC6F /* YapayZekaCubugu.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39F30222D6C34F29C00AFE0 /* YapayZekaCubugu.swift */; };
+		4D717E68350EFD349523DD4B /* DuzenEkranlari.swift in Sources */ = {isa = PBXBuildFile; fileRef = C50FF1590E8283E8A2E7D150 /* DuzenEkranlari.swift */; };
+		55DE5183D04B76E808FB1BC6 /* YiginBolEkrani.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4EF4AD30EDF9115C440534 /* YiginBolEkrani.swift */; };
+		55E4EE94B3993A349AF14045 /* DuzenleCubugu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A1DB508BBB0F40FED0C485F /* DuzenleCubugu.swift */; };
+		566BF8E683A07759FF071FC0 /* KucukResim.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2148070FE05EAB44CBC28FBD /* KucukResim.swift */; };
+		575E14C59A3F590793F0478D /* AracKatalogu+Duzenle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9380D24378BEC3B6CA752B8 /* AracKatalogu+Duzenle.swift */; };
+		60295C00BC6B64BBF4898BCE /* TaramaEkrani.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94629C4C8DC5B47198B4AEC1 /* TaramaEkrani.swift */; };
+		6C81D1E136C4C855848A0870 /* KagitKit in Frameworks */ = {isa = PBXBuildFile; productRef = 15BC9DAB3156D165681002B4 /* KagitKit */; };
+		7072AF426D04621CA8B73A84 /* TaramaAraclari.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEF5FA3E3C87B5179C3346E4 /* TaramaAraclari.swift */; };
+		7186674FF7239F4CEB4CC204 /* PDFGorunumu.swift in Sources */ = {isa = PBXBuildFile; fileRef = D426C26E30E9D4C4678D78F7 /* PDFGorunumu.swift */; };
+		7548B0EB92AA9D9729DE8C4B /* GuvenlikAraclari.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9A78C2852AB432DE479D10B /* GuvenlikAraclari.swift */; };
+		766445A62CAF6E6C0C5FF5CC /* YapayZekaSayfalari.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5834F109A0F53DEFAFF1D55B /* YapayZekaSayfalari.swift */; };
+		7918D07BC455547C30446072 /* GuvenlikYardimcilari.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FD196B76752ADCC37C9829C /* GuvenlikYardimcilari.swift */; };
+		7AE872586B8A004489F7D0E9 /* BelgeOturumu.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2DBC84DA9FBD8049B02F908 /* BelgeOturumu.swift */; };
+		810896190BBCEA15DED106EE /* ImzaDamgaAyarlari.swift in Sources */ = {isa = PBXBuildFile; fileRef = A41A908B5347A47669903DA5 /* ImzaDamgaAyarlari.swift */; };
+		842BDBA3AD418DF7D01AC353 /* AracKatalogu+Guvenlik.swift in Sources */ = {isa = PBXBuildFile; fileRef = A95AA2CDF3BD62EC3AF96860 /* AracKatalogu+Guvenlik.swift */; };
+		85F3A729C14A926A2D93AD63 /* TopluAracSecici.swift in Sources */ = {isa = PBXBuildFile; fileRef = 240E1E2854EB579B533218AC /* TopluAracSecici.swift */; };
+		86AA647533E1492535D16109 /* OgretmenAyarlari.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFB36C660FC213CE8AB51658 /* OgretmenAyarlari.swift */; };
+		8804728DD6732C3B4B220681 /* Arac.swift in Sources */ = {isa = PBXBuildFile; fileRef = B14AA371E3399760C89CB84A /* Arac.swift */; };
+		8BD5CA19C5C678D15CE8AEC8 /* SayfaKatmani.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD2A7A3FA205D825F586CC47 /* SayfaKatmani.swift */; };
+		8FF5D06995DC09DF26E10D5B /* KarartmaAraci.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF5B4B0B57E9F9111AF929E5 /* KarartmaAraci.swift */; };
+		97E1AFC12E760957E60C0E50 /* AnaGorunum.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDB258BD6FFEC9EDC66222F8 /* AnaGorunum.swift */; };
+		9924AC6C9081D067EF2C5212 /* DonusturEkranlari.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA732FE47F42B696F1CD2F81 /* DonusturEkranlari.swift */; };
+		99E6ECC6DE9FF65CB31DDF63 /* AracKatalogu+Ogretmen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EF0C35ADBE8CB4E76E1978C /* AracKatalogu+Ogretmen.swift */; };
+		9AC8B9808A9D480D8DBC9E3D /* OrtakGorunumler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C97A82C670A298BAD35BF1 /* OrtakGorunumler.swift */; };
+		A05038FDC701CE5995FD17C4 /* KagitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D224E3D9403323E76ED445B7 /* KagitTests.swift */; };
+		A1522AA9ADC9A34FD76AAFBB /* DuzenleyiciDurumu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B852F780E1C48D97FF780 /* DuzenleyiciDurumu.swift */; };
+		A1C53D2E78D1D96E154114F2 /* SistemKurulumu.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA0F64DEBC0837B7AA19961C /* SistemKurulumu.swift */; };
+		A4DE6565E57918527F9B941F /* AracYardimcilari.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA308BAFE355335116FB1118 /* AracYardimcilari.swift */; };
+		A951D6C3562D3D1710F526E7 /* OgretmenCubugu.swift in Sources */ = {isa = PBXBuildFile; fileRef = A275EADA62D022EBFA0799A6 /* OgretmenCubugu.swift */; };
+		AE94E92B4964ECD1160716BE /* KirpmaGorunumu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2980FFF58E6C988214F840E /* KirpmaGorunumu.swift */; };
+		B4E99AB8A557943C971711BD /* DosyalarGorunumu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6049C2CA62B9D95B436ABFBD /* DosyalarGorunumu.swift */; };
+		B88306B81A8BBAA3C4498C5A /* KitapcikEkrani.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3898E544D88D59DADA3F2AE0 /* KitapcikEkrani.swift */; };
+		BFDA64DF601F882F107A47CB /* YapayAyar.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF09DF3755768052CDC87B51 /* YapayAyar.swift */; };
+		C18F9C477FD11DFAF75F9EF3 /* AraclarGorunumu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45094143564B648F7FBB33AC /* AraclarGorunumu.swift */; };
+		CD41F85985C9F596F42A3D03 /* BelgeEkrani.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12F4A79444975EBDB6145C4D /* BelgeEkrani.swift */; };
+		CD94CF46CC5AE3C7A2D399BB /* SayfaEkranlari.swift in Sources */ = {isa = PBXBuildFile; fileRef = 127BE8581A17007AD637270F /* SayfaEkranlari.swift */; };
+		D45484532B51A59AD875C9DB /* OrtakKlasor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9A2E6B89358EC1AD04C07B /* OrtakKlasor.swift */; };
+		D494E0E21AA793BF3C698F62 /* PaylasimDenetcisi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72163AD3D50000F5CFF9CB2D /* PaylasimDenetcisi.swift */; };
+		D4D795A854AD0DBA11631808 /* AracSablonu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D0B5FA5AC47FB9A4A763E94 /* AracSablonu.swift */; };
+		DA136FE0A8B65B3B8CE7F9CE /* Ayarlar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C354AFCA2D5A046811082DDA /* Ayarlar.swift */; };
+		DB867791CA1366517EE457DB /* YapayZekaAyarlari.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91790CA46CFE0AE826ABFA02 /* YapayZekaAyarlari.swift */; };
+		DBF7AF86AAD30276ECB1B0AA /* IsaretleCubugu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47454D800AB441A7776F98CC /* IsaretleCubugu.swift */; };
+		DCB7CF6ECF721D17A3BFF812 /* KilitKatmani.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5F9EB5B5BF09749EEAB18E /* KilitKatmani.swift */; };
+		DFCE1C9EFA6A5EFC1DA24A98 /* KagitIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A605F199996B65EAE68B46C0 /* KagitIntents.swift */; };
+		E01B5BB613D924973700C642 /* AnaSayfa.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54311FC388B41CDC4888C505 /* AnaSayfa.swift */; };
+		EA3F96567F7E043A746B3625 /* OrtakKlasor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9A2E6B89358EC1AD04C07B /* OrtakKlasor.swift */; };
+		EAEAFE9558088C56F16B6D19 /* IsaretAyarlari.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC367F6E8F0C99B6C0F114E /* IsaretAyarlari.swift */; };
+		EF7F3F7277FF3D3525B446C9 /* Yonlendirici.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF52C2BEAB2DE395BF0442C5 /* Yonlendirici.swift */; };
+		F24C00F49EDCB4DE9E4FC3F3 /* ImzaDeposu.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70186957B70B0496ABBE0C4 /* ImzaDeposu.swift */; };
+		FA6F1D32659E138285CE5A32 /* TaramaDuzenleyici.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7B00CFBA7A813303D4B687 /* TaramaDuzenleyici.swift */; };
+		FC1D441269E3720F21A63941 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2117EB38B57E33F4C56D6EC6 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4B60EF64A113DFA8CF404992 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D1500DC102F23755E902783C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 91ED4126DF80F2014EEDF342;
+			remoteInfo = Kagit;
+		};
+		57D6F3A8B1D40A6CBE066D75 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D1500DC102F23755E902783C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7CAA3EAABA83FA4C14A15348;
+			remoteInfo = KagitPaylas;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		2FDA0AF85C7F1394AC7B8476 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				188F0B8FEB121A0E20B1D98F /* KagitPaylas.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0CBCDF27C380316FC5648680 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		0E038C4E16E5146A3CCEFED3 /* Kagit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Kagit.entitlements; sourceTree = "<group>"; };
+		10D05DC45D4575FEF1F3FA19 /* TaramaModeli.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaramaModeli.swift; sourceTree = "<group>"; };
+		127BE8581A17007AD637270F /* SayfaEkranlari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SayfaEkranlari.swift; sourceTree = "<group>"; };
+		12F4A79444975EBDB6145C4D /* BelgeEkrani.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BelgeEkrani.swift; sourceTree = "<group>"; };
+		170FDE44680FFEADB93280BD /* BelgeKamerasi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BelgeKamerasi.swift; sourceTree = "<group>"; };
+		2117EB38B57E33F4C56D6EC6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2148070FE05EAB44CBC28FBD /* KucukResim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KucukResim.swift; sourceTree = "<group>"; };
+		240E1E2854EB579B533218AC /* TopluAracSecici.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopluAracSecici.swift; sourceTree = "<group>"; };
+		25D8EA6DA0599A2DC32EA8C7 /* DamgaSikistirEkranlari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DamgaSikistirEkranlari.swift; sourceTree = "<group>"; };
+		27223689B70C9E46378F2EA4 /* Gizli.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gizli.swift; sourceTree = "<group>"; };
+		2C5B852F780E1C48D97FF780 /* DuzenleyiciDurumu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuzenleyiciDurumu.swift; sourceTree = "<group>"; };
+		3898E544D88D59DADA3F2AE0 /* KitapcikEkrani.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KitapcikEkrani.swift; sourceTree = "<group>"; };
+		3FD196B76752ADCC37C9829C /* GuvenlikYardimcilari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuvenlikYardimcilari.swift; sourceTree = "<group>"; };
+		44E89D8A1E6909DE8051831E /* KagitTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KagitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		45094143564B648F7FBB33AC /* AraclarGorunumu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AraclarGorunumu.swift; sourceTree = "<group>"; };
+		47454D800AB441A7776F98CC /* IsaretleCubugu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IsaretleCubugu.swift; sourceTree = "<group>"; };
+		476FCBED3E15138876F09374 /* Kagit.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Kagit.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4A1DB508BBB0F40FED0C485F /* DuzenleCubugu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuzenleCubugu.swift; sourceTree = "<group>"; };
+		4A5F9EB5B5BF09749EEAB18E /* KilitKatmani.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KilitKatmani.swift; sourceTree = "<group>"; };
+		4B4EF4AD30EDF9115C440534 /* YiginBolEkrani.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YiginBolEkrani.swift; sourceTree = "<group>"; };
+		52C97A82C670A298BAD35BF1 /* OrtakGorunumler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrtakGorunumler.swift; sourceTree = "<group>"; };
+		54311FC388B41CDC4888C505 /* AnaSayfa.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnaSayfa.swift; sourceTree = "<group>"; };
+		5834F109A0F53DEFAFF1D55B /* YapayZekaSayfalari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YapayZekaSayfalari.swift; sourceTree = "<group>"; };
+		6049C2CA62B9D95B436ABFBD /* DosyalarGorunumu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DosyalarGorunumu.swift; sourceTree = "<group>"; };
+		6A7518443D3E16F6BFCBC088 /* TaramaKayitFormu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaramaKayitFormu.swift; sourceTree = "<group>"; };
+		6BB9F9FAFFDA74821535E698 /* SayfaDuzenleyici.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SayfaDuzenleyici.swift; sourceTree = "<group>"; };
+		6D0B5FA5AC47FB9A4A763E94 /* AracSablonu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AracSablonu.swift; sourceTree = "<group>"; };
+		702C1F9FC48A9BAB072D9B35 /* KagitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KagitApp.swift; sourceTree = "<group>"; };
+		72163AD3D50000F5CFF9CB2D /* PaylasimDenetcisi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaylasimDenetcisi.swift; sourceTree = "<group>"; };
+		73ECFDAE497009A1EAB93306 /* Kitaplik.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kitaplik.swift; sourceTree = "<group>"; };
+		832731A5C13EF7EE58211319 /* BulutAyarlari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulutAyarlari.swift; sourceTree = "<group>"; };
+		883E5ED98AC506D0FD26EC3C /* GuvenlikAyarlari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuvenlikAyarlari.swift; sourceTree = "<group>"; };
+		8A20464B01EBACF23739FE2D /* AyarlarGorunumu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AyarlarGorunumu.swift; sourceTree = "<group>"; };
+		8EF0C35ADBE8CB4E76E1978C /* AracKatalogu+Ogretmen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AracKatalogu+Ogretmen.swift"; sourceTree = "<group>"; };
+		91790CA46CFE0AE826ABFA02 /* YapayZekaAyarlari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YapayZekaAyarlari.swift; sourceTree = "<group>"; };
+		94629C4C8DC5B47198B4AEC1 /* TaramaEkrani.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaramaEkrani.swift; sourceTree = "<group>"; };
+		9D535A958055B36FBB9FABD1 /* AracKatalogu+Sayfa.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AracKatalogu+Sayfa.swift"; sourceTree = "<group>"; };
+		A275EADA62D022EBFA0799A6 /* OgretmenCubugu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OgretmenCubugu.swift; sourceTree = "<group>"; };
+		A41A908B5347A47669903DA5 /* ImzaDamgaAyarlari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImzaDamgaAyarlari.swift; sourceTree = "<group>"; };
+		A605F199996B65EAE68B46C0 /* KagitIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KagitIntents.swift; sourceTree = "<group>"; };
+		A95AA2CDF3BD62EC3AF96860 /* AracKatalogu+Guvenlik.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AracKatalogu+Guvenlik.swift"; sourceTree = "<group>"; };
+		AA308BAFE355335116FB1118 /* AracYardimcilari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AracYardimcilari.swift; sourceTree = "<group>"; };
+		AD2A7A3FA205D825F586CC47 /* SayfaKatmani.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SayfaKatmani.swift; sourceTree = "<group>"; };
+		B14AA371E3399760C89CB84A /* Arac.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Arac.swift; sourceTree = "<group>"; };
+		B26CBD6D9F101DA6A7BAA94D /* SoruUretEkrani.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoruUretEkrani.swift; sourceTree = "<group>"; };
+		B387F6121E3730D8C4C8A06C /* OgretmenDeposu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OgretmenDeposu.swift; sourceTree = "<group>"; };
+		B87B0529707FD2FAA37797AA /* KagitPaylas.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = KagitPaylas.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B9979023BCA607A6952DB8C7 /* KagitPaylas.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = KagitPaylas.entitlements; sourceTree = "<group>"; };
+		B9A78C2852AB432DE479D10B /* GuvenlikAraclari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuvenlikAraclari.swift; sourceTree = "<group>"; };
+		BA0F64DEBC0837B7AA19961C /* SistemKurulumu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SistemKurulumu.swift; sourceTree = "<group>"; };
+		BF09DF3755768052CDC87B51 /* YapayAyar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YapayAyar.swift; sourceTree = "<group>"; };
+		C2980FFF58E6C988214F840E /* KirpmaGorunumu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KirpmaGorunumu.swift; sourceTree = "<group>"; };
+		C354AFCA2D5A046811082DDA /* Ayarlar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ayarlar.swift; sourceTree = "<group>"; };
+		C50FF1590E8283E8A2E7D150 /* DuzenEkranlari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuzenEkranlari.swift; sourceTree = "<group>"; };
+		C9D4DA6E598D94D31B0F4837 /* ImzalaCubugu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImzalaCubugu.swift; sourceTree = "<group>"; };
+		CF52C2BEAB2DE395BF0442C5 /* Yonlendirici.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Yonlendirici.swift; sourceTree = "<group>"; };
+		D224E3D9403323E76ED445B7 /* KagitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KagitTests.swift; sourceTree = "<group>"; };
+		D39F30222D6C34F29C00AFE0 /* YapayZekaCubugu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YapayZekaCubugu.swift; sourceTree = "<group>"; };
+		D426C26E30E9D4C4678D78F7 /* PDFGorunumu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFGorunumu.swift; sourceTree = "<group>"; };
+		DEF5FA3E3C87B5179C3346E4 /* TaramaAraclari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaramaAraclari.swift; sourceTree = "<group>"; };
+		DF5B4B0B57E9F9111AF929E5 /* KarartmaAraci.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KarartmaAraci.swift; sourceTree = "<group>"; };
+		E0812AB4B1FE9E16B0A8CBF6 /* OgretmenMerkezi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OgretmenMerkezi.swift; sourceTree = "<group>"; };
+		E70186957B70B0496ABBE0C4 /* ImzaDeposu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImzaDeposu.swift; sourceTree = "<group>"; };
+		E9380D24378BEC3B6CA752B8 /* AracKatalogu+Duzenle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AracKatalogu+Duzenle.swift"; sourceTree = "<group>"; };
+		E94C84D31117E86A9495F8EB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		EDC367F6E8F0C99B6C0F114E /* IsaretAyarlari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IsaretAyarlari.swift; sourceTree = "<group>"; };
+		EEEC9E42A4FFCBAA39640F59 /* KagitKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KagitKit; path = KagitKit; sourceTree = SOURCE_ROOT; };
+		EFB36C660FC213CE8AB51658 /* OgretmenAyarlari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OgretmenAyarlari.swift; sourceTree = "<group>"; };
+		F2DBC84DA9FBD8049B02F908 /* BelgeOturumu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BelgeOturumu.swift; sourceTree = "<group>"; };
+		F2DC76C71CEE5996BD2EF4EA /* DuzenleSayfalari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuzenleSayfalari.swift; sourceTree = "<group>"; };
+		FA732FE47F42B696F1CD2F81 /* DonusturEkranlari.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonusturEkranlari.swift; sourceTree = "<group>"; };
+		FA7B00CFBA7A813303D4B687 /* TaramaDuzenleyici.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaramaDuzenleyici.swift; sourceTree = "<group>"; };
+		FC9A2E6B89358EC1AD04C07B /* OrtakKlasor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrtakKlasor.swift; sourceTree = "<group>"; };
+		FDB258BD6FFEC9EDC66222F8 /* AnaGorunum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnaGorunum.swift; sourceTree = "<group>"; };
+		"TEMP_50B9FD4B-082A-4514-B954-21EEB6BDC28C" /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E47BC07A259197A9CF029057 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6C81D1E136C4C855848A0870 /* KagitKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		051ECD9B015E4260D9506FE5 /* Kitaplik */ = {
+			isa = PBXGroup;
+			children = (
+				54311FC388B41CDC4888C505 /* AnaSayfa.swift */,
+				6049C2CA62B9D95B436ABFBD /* DosyalarGorunumu.swift */,
+				73ECFDAE497009A1EAB93306 /* Kitaplik.swift */,
+				2148070FE05EAB44CBC28FBD /* KucukResim.swift */,
+			);
+			path = Kitaplik;
+			sourceTree = "<group>";
+		};
+		214F4BFB6B2607D484F76CF6 /* Sayfa */ = {
+			isa = PBXGroup;
+			children = (
+				AA308BAFE355335116FB1118 /* AracYardimcilari.swift */,
+				25D8EA6DA0599A2DC32EA8C7 /* DamgaSikistirEkranlari.swift */,
+				C50FF1590E8283E8A2E7D150 /* DuzenEkranlari.swift */,
+				127BE8581A17007AD637270F /* SayfaEkranlari.swift */,
+			);
+			path = Sayfa;
+			sourceTree = "<group>";
+		};
+		3F9EBA288E6B6883C9A59D3A /* KagitTests */ = {
+			isa = PBXGroup;
+			children = (
+				D224E3D9403323E76ED445B7 /* KagitTests.swift */,
+			);
+			path = KagitTests;
+			sourceTree = "<group>";
+		};
+		4B36357FC57D15E0382EA9BF /* Ogretmen */ = {
+			isa = PBXGroup;
+			children = (
+				3898E544D88D59DADA3F2AE0 /* KitapcikEkrani.swift */,
+				EFB36C660FC213CE8AB51658 /* OgretmenAyarlari.swift */,
+				A275EADA62D022EBFA0799A6 /* OgretmenCubugu.swift */,
+				B387F6121E3730D8C4C8A06C /* OgretmenDeposu.swift */,
+				E0812AB4B1FE9E16B0A8CBF6 /* OgretmenMerkezi.swift */,
+				52C97A82C670A298BAD35BF1 /* OrtakGorunumler.swift */,
+				B26CBD6D9F101DA6A7BAA94D /* SoruUretEkrani.swift */,
+				4B4EF4AD30EDF9115C440534 /* YiginBolEkrani.swift */,
+			);
+			path = Ogretmen;
+			sourceTree = "<group>";
+		};
+		4C3F59A2540CB79A6F1C89DD /* Yapay */ = {
+			isa = PBXGroup;
+			children = (
+				BF09DF3755768052CDC87B51 /* YapayAyar.swift */,
+				91790CA46CFE0AE826ABFA02 /* YapayZekaAyarlari.swift */,
+				D39F30222D6C34F29C00AFE0 /* YapayZekaCubugu.swift */,
+				5834F109A0F53DEFAFF1D55B /* YapayZekaSayfalari.swift */,
+			);
+			path = Yapay;
+			sourceTree = "<group>";
+		};
+		501186B22D3E567F76816A03 /* Goruntuleyici */ = {
+			isa = PBXGroup;
+			children = (
+				12F4A79444975EBDB6145C4D /* BelgeEkrani.swift */,
+				F2DBC84DA9FBD8049B02F908 /* BelgeOturumu.swift */,
+				D426C26E30E9D4C4678D78F7 /* PDFGorunumu.swift */,
+			);
+			path = Goruntuleyici;
+			sourceTree = "<group>";
+		};
+		50384E1C37E6608B4A6CF4B9 = {
+			isa = PBXGroup;
+			children = (
+				6F66C903D650AA0A2DB90EF7 /* Kagit */,
+				7D68858DE262A871EA498F13 /* KagitPaylas */,
+				3F9EBA288E6B6883C9A59D3A /* KagitTests */,
+				5B558A7AE17001A95D96B563 /* Ortak */,
+				99C3CD27A9511B82D1950158 /* Packages */,
+				F00BD6C1F7C3A51BF189345C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		5B558A7AE17001A95D96B563 /* Ortak */ = {
+			isa = PBXGroup;
+			children = (
+				FC9A2E6B89358EC1AD04C07B /* OrtakKlasor.swift */,
+			);
+			path = Ortak;
+			sourceTree = "<group>";
+		};
+		6F66C903D650AA0A2DB90EF7 /* Kagit */ = {
+			isa = PBXGroup;
+			children = (
+				2117EB38B57E33F4C56D6EC6 /* Assets.xcassets */,
+				E94C84D31117E86A9495F8EB /* Info.plist */,
+				0E038C4E16E5146A3CCEFED3 /* Kagit.entitlements */,
+				BFC562B837408E3E72180812 /* App */,
+				D93A55DE1C2B83D31B612BFF /* Araclar */,
+				DE280E13831C4DE4E20AE3BB /* Ayarlar */,
+				7B19E1CC237FDB47337AEE82 /* Duzenleyici */,
+				501186B22D3E567F76816A03 /* Goruntuleyici */,
+				B0B3508E228B12A2E2B1D8E6 /* Guvenlik */,
+				051ECD9B015E4260D9506FE5 /* Kitaplik */,
+				4B36357FC57D15E0382EA9BF /* Ogretmen */,
+				D9C658C52C439805197C8C4A /* Sistem */,
+				C9C8191AB8ADF2F39E3E3FA4 /* Tarayici */,
+				4C3F59A2540CB79A6F1C89DD /* Yapay */,
+			);
+			path = Kagit;
+			sourceTree = "<group>";
+		};
+		7B19E1CC237FDB47337AEE82 /* Duzenleyici */ = {
+			isa = PBXGroup;
+			children = (
+				4A1DB508BBB0F40FED0C485F /* DuzenleCubugu.swift */,
+				F2DC76C71CEE5996BD2EF4EA /* DuzenleSayfalari.swift */,
+				2C5B852F780E1C48D97FF780 /* DuzenleyiciDurumu.swift */,
+				A41A908B5347A47669903DA5 /* ImzaDamgaAyarlari.swift */,
+				E70186957B70B0496ABBE0C4 /* ImzaDeposu.swift */,
+				C9D4DA6E598D94D31B0F4837 /* ImzalaCubugu.swift */,
+				EDC367F6E8F0C99B6C0F114E /* IsaretAyarlari.swift */,
+				47454D800AB441A7776F98CC /* IsaretleCubugu.swift */,
+				6BB9F9FAFFDA74821535E698 /* SayfaDuzenleyici.swift */,
+				AD2A7A3FA205D825F586CC47 /* SayfaKatmani.swift */,
+			);
+			path = Duzenleyici;
+			sourceTree = "<group>";
+		};
+		7D68858DE262A871EA498F13 /* KagitPaylas */ = {
+			isa = PBXGroup;
+			children = (
+				0CBCDF27C380316FC5648680 /* Info.plist */,
+				B9979023BCA607A6952DB8C7 /* KagitPaylas.entitlements */,
+				72163AD3D50000F5CFF9CB2D /* PaylasimDenetcisi.swift */,
+			);
+			path = KagitPaylas;
+			sourceTree = "<group>";
+		};
+		99C3CD27A9511B82D1950158 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				EEEC9E42A4FFCBAA39640F59 /* KagitKit */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		B0B3508E228B12A2E2B1D8E6 /* Guvenlik */ = {
+			isa = PBXGroup;
+			children = (
+				B9A78C2852AB432DE479D10B /* GuvenlikAraclari.swift */,
+				883E5ED98AC506D0FD26EC3C /* GuvenlikAyarlari.swift */,
+				3FD196B76752ADCC37C9829C /* GuvenlikYardimcilari.swift */,
+				DF5B4B0B57E9F9111AF929E5 /* KarartmaAraci.swift */,
+				4A5F9EB5B5BF09749EEAB18E /* KilitKatmani.swift */,
+			);
+			path = Guvenlik;
+			sourceTree = "<group>";
+		};
+		BFC562B837408E3E72180812 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				FDB258BD6FFEC9EDC66222F8 /* AnaGorunum.swift */,
+				702C1F9FC48A9BAB072D9B35 /* KagitApp.swift */,
+				CF52C2BEAB2DE395BF0442C5 /* Yonlendirici.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		C9C8191AB8ADF2F39E3E3FA4 /* Tarayici */ = {
+			isa = PBXGroup;
+			children = (
+				170FDE44680FFEADB93280BD /* BelgeKamerasi.swift */,
+				C2980FFF58E6C988214F840E /* KirpmaGorunumu.swift */,
+				DEF5FA3E3C87B5179C3346E4 /* TaramaAraclari.swift */,
+				FA7B00CFBA7A813303D4B687 /* TaramaDuzenleyici.swift */,
+				94629C4C8DC5B47198B4AEC1 /* TaramaEkrani.swift */,
+				6A7518443D3E16F6BFCBC088 /* TaramaKayitFormu.swift */,
+				10D05DC45D4575FEF1F3FA19 /* TaramaModeli.swift */,
+			);
+			path = Tarayici;
+			sourceTree = "<group>";
+		};
+		D93A55DE1C2B83D31B612BFF /* Araclar */ = {
+			isa = PBXGroup;
+			children = (
+				B14AA371E3399760C89CB84A /* Arac.swift */,
+				E9380D24378BEC3B6CA752B8 /* AracKatalogu+Duzenle.swift */,
+				A95AA2CDF3BD62EC3AF96860 /* AracKatalogu+Guvenlik.swift */,
+				8EF0C35ADBE8CB4E76E1978C /* AracKatalogu+Ogretmen.swift */,
+				9D535A958055B36FBB9FABD1 /* AracKatalogu+Sayfa.swift */,
+				45094143564B648F7FBB33AC /* AraclarGorunumu.swift */,
+				6D0B5FA5AC47FB9A4A763E94 /* AracSablonu.swift */,
+				832731A5C13EF7EE58211319 /* BulutAyarlari.swift */,
+				240E1E2854EB579B533218AC /* TopluAracSecici.swift */,
+				DA9F82754FB0E3FC1746418F /* Donustur */,
+				214F4BFB6B2607D484F76CF6 /* Sayfa */,
+			);
+			path = Araclar;
+			sourceTree = "<group>";
+		};
+		D9C658C52C439805197C8C4A /* Sistem */ = {
+			isa = PBXGroup;
+			children = (
+				27223689B70C9E46378F2EA4 /* Gizli.swift */,
+				A605F199996B65EAE68B46C0 /* KagitIntents.swift */,
+				BA0F64DEBC0837B7AA19961C /* SistemKurulumu.swift */,
+			);
+			path = Sistem;
+			sourceTree = "<group>";
+		};
+		DA9F82754FB0E3FC1746418F /* Donustur */ = {
+			isa = PBXGroup;
+			children = (
+				FA732FE47F42B696F1CD2F81 /* DonusturEkranlari.swift */,
+			);
+			path = Donustur;
+			sourceTree = "<group>";
+		};
+		DE280E13831C4DE4E20AE3BB /* Ayarlar */ = {
+			isa = PBXGroup;
+			children = (
+				C354AFCA2D5A046811082DDA /* Ayarlar.swift */,
+				8A20464B01EBACF23739FE2D /* AyarlarGorunumu.swift */,
+			);
+			path = Ayarlar;
+			sourceTree = "<group>";
+		};
+		F00BD6C1F7C3A51BF189345C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				476FCBED3E15138876F09374 /* Kagit.app */,
+				B87B0529707FD2FAA37797AA /* KagitPaylas.appex */,
+				44E89D8A1E6909DE8051831E /* KagitTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		"TEMP_ADDE2D11-5167-4927-8CF8-0A977F66B9EE" /* kagit */ = {
+			isa = PBXGroup;
+			children = (
+				"TEMP_50B9FD4B-082A-4514-B954-21EEB6BDC28C" /* Secrets.xcconfig */,
+			);
+			path = kagit;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		125BCD019C895DA8E44D8E6E /* KagitTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6D5728A3D6CAB35F4A723B9F /* Build configuration list for PBXNativeTarget "KagitTests" */;
+			buildPhases = (
+				7D09E114FDF328CA7C097C76 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				29F102DE83A1EEF761F7053C /* PBXTargetDependency */,
+			);
+			name = KagitTests;
+			packageProductDependencies = (
+			);
+			productName = KagitTests;
+			productReference = 44E89D8A1E6909DE8051831E /* KagitTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		7CAA3EAABA83FA4C14A15348 /* KagitPaylas */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CDEC6A3817A1F3B0E06A9AE2 /* Build configuration list for PBXNativeTarget "KagitPaylas" */;
+			buildPhases = (
+				FE3ACD422602A836E3BC32E2 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KagitPaylas;
+			packageProductDependencies = (
+			);
+			productName = KagitPaylas;
+			productReference = B87B0529707FD2FAA37797AA /* KagitPaylas.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		91ED4126DF80F2014EEDF342 /* Kagit */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 02E3AD90F55347078FAB234D /* Build configuration list for PBXNativeTarget "Kagit" */;
+			buildPhases = (
+				15AFDE4D65EBD96E32C5AA57 /* Sources */,
+				11DB343052943327A967A6C3 /* Resources */,
+				E47BC07A259197A9CF029057 /* Frameworks */,
+				2FDA0AF85C7F1394AC7B8476 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BF3D5B109FA5E291B678D5A6 /* PBXTargetDependency */,
+			);
+			name = Kagit;
+			packageProductDependencies = (
+				15BC9DAB3156D165681002B4 /* KagitKit */,
+			);
+			productName = Kagit;
+			productReference = 476FCBED3E15138876F09374 /* Kagit.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D1500DC102F23755E902783C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					125BCD019C895DA8E44D8E6E = {
+						DevelopmentTeam = 838FF89FZ8;
+						ProvisioningStyle = Automatic;
+					};
+					7CAA3EAABA83FA4C14A15348 = {
+						DevelopmentTeam = 838FF89FZ8;
+						ProvisioningStyle = Automatic;
+					};
+					91ED4126DF80F2014EEDF342 = {
+						DevelopmentTeam = 838FF89FZ8;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 338D6363B19AAB1FFD69EECD /* Build configuration list for PBXProject "Kagit" */;
+			developmentRegion = tr;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				tr,
+			);
+			mainGroup = 50384E1C37E6608B4A6CF4B9;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				2020DF708B8CCB5D5D691CA4 /* XCLocalSwiftPackageReference "KagitKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = F00BD6C1F7C3A51BF189345C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				91ED4126DF80F2014EEDF342 /* Kagit */,
+				7CAA3EAABA83FA4C14A15348 /* KagitPaylas */,
+				125BCD019C895DA8E44D8E6E /* KagitTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		11DB343052943327A967A6C3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FC1D441269E3720F21A63941 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		15AFDE4D65EBD96E32C5AA57 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				97E1AFC12E760957E60C0E50 /* AnaGorunum.swift in Sources */,
+				E01B5BB613D924973700C642 /* AnaSayfa.swift in Sources */,
+				8804728DD6732C3B4B220681 /* Arac.swift in Sources */,
+				575E14C59A3F590793F0478D /* AracKatalogu+Duzenle.swift in Sources */,
+				842BDBA3AD418DF7D01AC353 /* AracKatalogu+Guvenlik.swift in Sources */,
+				99E6ECC6DE9FF65CB31DDF63 /* AracKatalogu+Ogretmen.swift in Sources */,
+				061AF1B7BDDD8CB145863A88 /* AracKatalogu+Sayfa.swift in Sources */,
+				D4D795A854AD0DBA11631808 /* AracSablonu.swift in Sources */,
+				A4DE6565E57918527F9B941F /* AracYardimcilari.swift in Sources */,
+				C18F9C477FD11DFAF75F9EF3 /* AraclarGorunumu.swift in Sources */,
+				DA136FE0A8B65B3B8CE7F9CE /* Ayarlar.swift in Sources */,
+				2D50A64F019DB9F639EF552D /* AyarlarGorunumu.swift in Sources */,
+				CD41F85985C9F596F42A3D03 /* BelgeEkrani.swift in Sources */,
+				189C5EA8EEA920DDAFDE7AD0 /* BelgeKamerasi.swift in Sources */,
+				7AE872586B8A004489F7D0E9 /* BelgeOturumu.swift in Sources */,
+				1B0A2AB3412230E7A7E89853 /* BulutAyarlari.swift in Sources */,
+				4615D96183FE4EAAB1409B56 /* DamgaSikistirEkranlari.swift in Sources */,
+				9924AC6C9081D067EF2C5212 /* DonusturEkranlari.swift in Sources */,
+				B4E99AB8A557943C971711BD /* DosyalarGorunumu.swift in Sources */,
+				4D717E68350EFD349523DD4B /* DuzenEkranlari.swift in Sources */,
+				55E4EE94B3993A349AF14045 /* DuzenleCubugu.swift in Sources */,
+				0F7DDE046CA1182B12B02260 /* DuzenleSayfalari.swift in Sources */,
+				A1522AA9ADC9A34FD76AAFBB /* DuzenleyiciDurumu.swift in Sources */,
+				422578F0F4E120642C6A7214 /* Gizli.swift in Sources */,
+				7548B0EB92AA9D9729DE8C4B /* GuvenlikAraclari.swift in Sources */,
+				309C86A6837BA4EAD10047F6 /* GuvenlikAyarlari.swift in Sources */,
+				7918D07BC455547C30446072 /* GuvenlikYardimcilari.swift in Sources */,
+				810896190BBCEA15DED106EE /* ImzaDamgaAyarlari.swift in Sources */,
+				F24C00F49EDCB4DE9E4FC3F3 /* ImzaDeposu.swift in Sources */,
+				448B353E85B6B507B2D068A2 /* ImzalaCubugu.swift in Sources */,
+				EAEAFE9558088C56F16B6D19 /* IsaretAyarlari.swift in Sources */,
+				DBF7AF86AAD30276ECB1B0AA /* IsaretleCubugu.swift in Sources */,
+				44F1E29445D0E09B4F4376D5 /* KagitApp.swift in Sources */,
+				DFCE1C9EFA6A5EFC1DA24A98 /* KagitIntents.swift in Sources */,
+				8FF5D06995DC09DF26E10D5B /* KarartmaAraci.swift in Sources */,
+				DCB7CF6ECF721D17A3BFF812 /* KilitKatmani.swift in Sources */,
+				AE94E92B4964ECD1160716BE /* KirpmaGorunumu.swift in Sources */,
+				B88306B81A8BBAA3C4498C5A /* KitapcikEkrani.swift in Sources */,
+				4AA728B26343617A1996D171 /* Kitaplik.swift in Sources */,
+				566BF8E683A07759FF071FC0 /* KucukResim.swift in Sources */,
+				86AA647533E1492535D16109 /* OgretmenAyarlari.swift in Sources */,
+				A951D6C3562D3D1710F526E7 /* OgretmenCubugu.swift in Sources */,
+				2745AD2FA976D833A5B636E7 /* OgretmenDeposu.swift in Sources */,
+				420B6DC1F5ED12CA42865871 /* OgretmenMerkezi.swift in Sources */,
+				9AC8B9808A9D480D8DBC9E3D /* OrtakGorunumler.swift in Sources */,
+				D45484532B51A59AD875C9DB /* OrtakKlasor.swift in Sources */,
+				7186674FF7239F4CEB4CC204 /* PDFGorunumu.swift in Sources */,
+				3F3CC400EB6314E2C85BBA7E /* SayfaDuzenleyici.swift in Sources */,
+				CD94CF46CC5AE3C7A2D399BB /* SayfaEkranlari.swift in Sources */,
+				8BD5CA19C5C678D15CE8AEC8 /* SayfaKatmani.swift in Sources */,
+				A1C53D2E78D1D96E154114F2 /* SistemKurulumu.swift in Sources */,
+				1F4F96BE5D8DC9D7C8933F06 /* SoruUretEkrani.swift in Sources */,
+				7072AF426D04621CA8B73A84 /* TaramaAraclari.swift in Sources */,
+				FA6F1D32659E138285CE5A32 /* TaramaDuzenleyici.swift in Sources */,
+				60295C00BC6B64BBF4898BCE /* TaramaEkrani.swift in Sources */,
+				3E597B04882B236531F22CE7 /* TaramaKayitFormu.swift in Sources */,
+				1A474B26228170C587594B3E /* TaramaModeli.swift in Sources */,
+				85F3A729C14A926A2D93AD63 /* TopluAracSecici.swift in Sources */,
+				BFDA64DF601F882F107A47CB /* YapayAyar.swift in Sources */,
+				DB867791CA1366517EE457DB /* YapayZekaAyarlari.swift in Sources */,
+				4D1F04D104FB1A217BD7EC6F /* YapayZekaCubugu.swift in Sources */,
+				766445A62CAF6E6C0C5FF5CC /* YapayZekaSayfalari.swift in Sources */,
+				55DE5183D04B76E808FB1BC6 /* YiginBolEkrani.swift in Sources */,
+				EF7F3F7277FF3D3525B446C9 /* Yonlendirici.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7D09E114FDF328CA7C097C76 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A05038FDC701CE5995FD17C4 /* KagitTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FE3ACD422602A836E3BC32E2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EA3F96567F7E043A746B3625 /* OrtakKlasor.swift in Sources */,
+				D494E0E21AA793BF3C698F62 /* PaylasimDenetcisi.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		29F102DE83A1EEF761F7053C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 91ED4126DF80F2014EEDF342 /* Kagit */;
+			targetProxy = 4B60EF64A113DFA8CF404992 /* PBXContainerItemProxy */;
+		};
+		BF3D5B109FA5E291B678D5A6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7CAA3EAABA83FA4C14A15348 /* KagitPaylas */;
+			targetProxy = 57D6F3A8B1D40A6CBE066D75 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		4515E9A700231C11B91952A5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.KagitTests;
+				SDKROOT = iphoneos;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Kagit.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Kagit";
+			};
+			name = Release;
+		};
+		506FAA37FC19A5722A4DE1B9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = "TEMP_50B9FD4B-082A-4514-B954-21EEB6BDC28C" /* Secrets.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 838FF89FZ8;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		5E400BB69BCFF1250D00129F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Kagit/Kagit.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				INFOPLIST_FILE = Kagit/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.kagit;
+				PRODUCT_NAME = Kagit;
+				SDKROOT = iphoneos;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		6342C72AD99EA44C75B08301 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.KagitTests;
+				SDKROOT = iphoneos;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Kagit.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Kagit";
+			};
+			name = Debug;
+		};
+		895EF9CFBAE815F8E2F026BF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = KagitPaylas/KagitPaylas.entitlements;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				INFOPLIST_FILE = KagitPaylas/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.kagit.paylas;
+				SDKROOT = iphoneos;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B0D394FC3C9D6DD0FA3FDD42 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = KagitPaylas/KagitPaylas.entitlements;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				INFOPLIST_FILE = KagitPaylas/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.kagit.paylas;
+				SDKROOT = iphoneos;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B3B14B56A59DA58A1D93121D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = "TEMP_50B9FD4B-082A-4514-B954-21EEB6BDC28C" /* Secrets.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 838FF89FZ8;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		EAB37EC3D9A44F14AF6B941E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Kagit/Kagit.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				INFOPLIST_FILE = Kagit/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.kagit;
+				PRODUCT_NAME = Kagit;
+				SDKROOT = iphoneos;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		02E3AD90F55347078FAB234D /* Build configuration list for PBXNativeTarget "Kagit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EAB37EC3D9A44F14AF6B941E /* Debug */,
+				5E400BB69BCFF1250D00129F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		338D6363B19AAB1FFD69EECD /* Build configuration list for PBXProject "Kagit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B3B14B56A59DA58A1D93121D /* Debug */,
+				506FAA37FC19A5722A4DE1B9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6D5728A3D6CAB35F4A723B9F /* Build configuration list for PBXNativeTarget "KagitTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6342C72AD99EA44C75B08301 /* Debug */,
+				4515E9A700231C11B91952A5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CDEC6A3817A1F3B0E06A9AE2 /* Build configuration list for PBXNativeTarget "KagitPaylas" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				895EF9CFBAE815F8E2F026BF /* Debug */,
+				B0D394FC3C9D6DD0FA3FDD42 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		2020DF708B8CCB5D5D691CA4 /* XCLocalSwiftPackageReference "KagitKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = KagitKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		15BC9DAB3156D165681002B4 /* KagitKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KagitKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = D1500DC102F23755E902783C /* Project object */;
+}

@@ -1,0 +1,141 @@
+name: Kagit
+options:
+  bundleIdPrefix: com.mehmetderin
+  deploymentTarget:
+    iOS: "27.0"
+  developmentLanguage: tr
+  createIntermediateGroups: true
+  xcodeVersion: "27.0"
+
+configFiles:
+  Debug: Secrets.xcconfig
+  Release: Secrets.xcconfig
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: 838FF89FZ8
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "6.0"
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    SWIFT_STRICT_CONCURRENCY: complete
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    TARGETED_DEVICE_FAMILY: "1,2"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    "EXCLUDED_ARCHS[sdk=iphonesimulator*]": x86_64
+
+packages:
+  KagitKit:
+    path: KagitKit
+
+targets:
+  Kagit:
+    type: application
+    platform: iOS
+    sources:
+      - path: Kagit
+      - path: Ortak
+    dependencies:
+      - package: KagitKit
+      - target: KagitPaylas
+        embed: true
+    entitlements:
+      path: Kagit/Kagit.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.mehmetderin.kagit]
+    info:
+      path: Kagit/Info.plist
+      properties:
+        CFBundleDisplayName: Kâğıt
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        ITSAppUsesNonExemptEncryption: false
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UIBackgroundModes: [processing, audio]
+        NSCameraUsageDescription: "Belge taramak için kamerayı kullanır."
+        NSPhotoLibraryUsageDescription: "Fotoğraflarından PDF oluşturmak için."
+        NSPhotoLibraryAddUsageDescription: "PDF sayfalarını görsel olarak Fotoğraflar'a kaydetmek için."
+        NSFaceIDUsageDescription: "Belgelerini Face ID ile kilitlemek için."
+        NSMicrophoneUsageDescription: "Belgeye sesli not eklemek için."
+        NSSpeechRecognitionUsageDescription: "Sesli notları yazıya dökmek için."
+        KagitVekilAnahtari: $(KAGIT_VEKIL_ANAHTARI)
+        CFBundleURLTypes:
+          - CFBundleURLName: com.mehmetderin.kagit
+            CFBundleURLSchemes: [kagit]
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: PDF
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [com.adobe.pdf]
+          - CFBundleTypeName: Görsel
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [public.image]
+          - CFBundleTypeName: Belge
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [org.openxmlformats.wordprocessingml.document, com.microsoft.word.doc, org.openxmlformats.spreadsheetml.sheet, com.microsoft.excel.xls, org.openxmlformats.presentationml.presentation, com.microsoft.powerpoint.ppt, public.plain-text, public.rtf, public.html, net.daringfireball.markdown]
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: true
+        BGTaskSchedulerPermittedIdentifiers: [com.mehmetderin.kagit.toplu]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mehmetderin.kagit
+        PRODUCT_NAME: Kagit
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+  KagitPaylas:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: KagitPaylas
+      - path: Ortak
+    entitlements:
+      path: KagitPaylas/KagitPaylas.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.mehmetderin.kagit]
+    info:
+      path: KagitPaylas/Info.plist
+      properties:
+        CFBundleDisplayName: Kâğıt'a kaydet
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).PaylasimDenetcisi
+          NSExtensionAttributes:
+            NSExtensionActivationRule: "SUBQUERY (extensionItems, $extensionItem, SUBQUERY ($extensionItem.attachments, $attachment, ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO \"com.adobe.pdf\" OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO \"public.image\" OR ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO \"public.content\").@count >= 1).@count >= 1"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mehmetderin.kagit.paylas
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+  KagitTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: KagitTests
+    dependencies:
+      - target: Kagit
+    settings:
+      base:
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Kagit.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Kagit
+        BUNDLE_LOADER: $(TEST_HOST)
+
+schemes:
+  Kagit:
+    build:
+      targets:
+        Kagit: all
+        KagitTests: [test]
+    test:
+      targets: [KagitTests]

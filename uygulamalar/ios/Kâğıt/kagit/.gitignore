@@ -1,0 +1,10 @@
+.DS_Store
+.build/
+*.xcodeproj/
+!*.xcodeproj/
+xcuserdata/
+DerivedData/
+KagitKit/Ikili/
+Secrets.xcconfig
+*.kagit-gecici
+.claude/
