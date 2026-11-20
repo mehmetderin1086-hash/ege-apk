@@ -1,0 +1,52 @@
+{
+ "schema_version": "soru-kesici.golden-count/v1",
+ "document": {
+  "id": "soru-kesici:10sinif",
+  "source": "10.sınıf.pdf",
+  "source_sha256": "edf8fffd18c01c213b0d8d5e17cad579f6cf2a80f1bb02636854f60838915927",
+  "page_count": 2
+ },
+ "sampling": {
+  "dpi": 300,
+  "max_sayfa": 2,
+  "bas": null,
+  "son": null,
+  "kapsam": "kismi",
+  "ornek_no": [
+   1,
+   2
+  ]
+ },
+ "verifier": "claude-opus-5 çift kör sayım (iki bağımsız sayıcı, çıplak render, mutabakat şartı)",
+ "method": "kor-sayim",
+ "pages": [
+  {
+   "page": 1,
+   "question_count": 7,
+   "question_numbers": [
+    1,
+    1,
+    2,
+    2,
+    3,
+    3,
+    3
+   ],
+   "role": "soru",
+   "notes": "Sayfada 3 numaralı soru bloğu var ama hepsi ayrı ayrı cevaplanan alt sorulardan oluşuyor; kurala göre (gövde + ayrı ayrı cevaplanacak a/b/c) alt soru sayısı sayıldı. Soru-1: A) klorofilin ışıkla uyarılması sonucu hangi olay + B) suyun fotolizi neden gerekli = 2 (şema paylaşılan uyaran, sayılmadı). Soru-2: A) ters çevrilmiş tüpte biriken gaz + B) ışık şiddeti azalırsa kabarcık hızı = 2 (Elodea düzeneği görseli paylaşılan uyaran). Soru-3: a) Calvin'e giren gazın adı, b) ışığa bağımlı tepkimelerden taşınan iki molekül, c) üç karbonlu ürünün kısaltması = 3 ayrı boşluk (b'de iki boşluk var ama tek madde sayıldı). question_numbers alanına alt sorular için ana soru numarası tekrarlandı; harfli alt numaralar tam sayı olarak yazılamıyor. Guven 'orta': alternatif okuma her numaralı bloğu 1 soru sayıp toplamı 3 yapardı. | Sayfada 3 numaralı soru bloğu var ama hepsi ayrı ayrı cevaplanan alt sorular içeriyor. Soru-1: A) klorofilin ışıkla uyarılması sonucu ne olur (Açıklayınız) + B) suyun fotolizi neden gerekli (Açıklayınız) = 2. Soru-2: A) ters tüpte biriken gaz nedir/hangi süreçle oluşur + B) ışık şiddeti azalırsa kabarcık hızı nasıl değişir = 2. Soru-3: a) Calvin'e giren gazın adı, b) ışığa bağımlıdan taşınan iki molekül, c) üç karbonlu ürünün kısaltması = 3 (her biri ayrı boşluk/ayrı cevap). Toplam 7. Şekiller (ETS şeması, Elodea düzeneği, Calvin döngüsü çizimi) paylaşılan uyaran sayıldı, soru sayılmadı. Üstteki başlık/ad-soyad satırı ve alttaki imza satırları sayılmadı. 'orta' dedim çünkü A)/B) ayrımını tek soru sayan bir okuma sayfayı 3 gösterir; ben kurallardaki 'ayrı ayrı cevaplanacak alt sorular' maddesini uyguladım. question_numbers'ta alt harfler tam sayı olarak kodlanamadığı için ana soru numarası tekrarlandı. | güven: orta"
+  },
+  {
+   "page": 2,
+   "question_count": 5,
+   "question_numbers": [
+    4,
+    4,
+    4,
+    5,
+    6
+   ],
+   "role": "soru",
+   "notes": "Soru-4 (ATP şeması, paylaşılan uyaran sayılmadı): a) X, Y, Z moleküllerinin isimleri, b) hangi harfte yüksek enerjili bağ var, c) hangileri organik = ayrı ayrı cevaplanan 3 alt soru. a) şıkkında X/Y/Z için üç boşluk var ama tek madde sayıldı. Soru-5: izotop deneyi (YÖNTEM/BULGULAR tablosu paylaşılan uyaran) + tek açık uçlu 'nasıl bir sonuca ulaşılabilir' = 1. Soru-6 EN BÜYÜK BELİRSİZLİK: kloroplast şeması üzerinde 1-11 numaralı boş kutucuklar doldurulacak. Tek tek kutucuklar şemadan koparıldığında anlamsız olduğu için 'kendi başına kesilip soru bankasına konabilecek madde' ölçütüne göre 1 soru saydım (şema paylaşılan uyaran, kesilen birim tüm blok). Literal 'öğrencinin cevaplaması gereken her madde' okuması ise 11 verirdi ve sayfa toplamını 15 yapardı. Bu sayfa hakemliğe muhtaç. | soru-4 (ATP şeması): a) X, Y, Z moleküllerinin isimleri (tek madde; X/Y/Z satırları aynı maddenin üç boşluğu), b) hangi kısımlarda yüksek enerjili bağ bulunur, c) hangileri organik yapılıdır = 3 ayrı cevap. soru-5 (izotop deneyi): tek açık uçlu soru = 1. soru-6 (kloroplast şeması, 1-11 arası numaralı kutular): tek bir etiketleme sorusu olarak 1 sayıldı — numaralı kutular şeklin üzerindeki etiket yerleri, kendi başına kesilip soru bankasına konabilecek bağımsız maddeler değil; şekil paylaşılan uyaran. Bu, sayfadaki en tartışmalı yer: her numaralı boşluğu ayrı madde sayan bir okuma soru-6'yı 11 sayar ve sayfa toplamı 15 olur. Yöntem/Bulgular kutuları ve deney şemaları uyaran; başlık ve imza satırları sayılmadı. | güven: belirsiz/orta"
+  }
+ ]
+}

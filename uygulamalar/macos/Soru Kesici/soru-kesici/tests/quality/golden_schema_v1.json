@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soru-kesici.local/schemas/golden-v1.json",
+  "title": "Soru Kesici Golden Dataset V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "dataset", "documents"],
+  "properties": {
+    "schema_version": {
+      "const": "soru-kesici.golden/v1"
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "description"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["synthetic", "annotated"]},
+        "description": {"type": "string"}
+      }
+    },
+    "documents": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/document"}
+    }
+  },
+  "$defs": {
+    "box": {
+      "type": "array",
+      "prefixItems": [
+        {"type": "number", "minimum": 0},
+        {"type": "number", "minimum": 0},
+        {"type": "number", "exclusiveMinimum": 0},
+        {"type": "number", "exclusiveMinimum": 0}
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "box", "type"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "box": {"$ref": "#/$defs/box"},
+        "type": {
+          "enum": [
+            "coktan_secmeli",
+            "acik_uclu",
+            "kisa_cevapli",
+            "dogru_yanlis",
+            "eslestirme",
+            "karma",
+            "bilinmiyor"
+          ]
+        }
+      }
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["page", "width", "height", "role", "questions"],
+      "properties": {
+        "page": {"type": "integer", "minimum": 1},
+        "width": {"type": "number", "exclusiveMinimum": 0},
+        "height": {"type": "number", "exclusiveMinimum": 0},
+        "role": {
+          "enum": [
+            "kapak",
+            "icindekiler",
+            "konu",
+            "soru",
+            "cozum",
+            "cevap_anahtari",
+            "karma"
+          ]
+        },
+        "questions": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/question"}
+        },
+        "ignore_regions": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/box"}
+        }
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source", "pages"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "pages": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/page"}
+        }
+      }
+    }
+  }
+}

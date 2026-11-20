@@ -1,0 +1,164 @@
+{
+ "schema_version": "soru-kesici.golden-count/v1",
+ "document": {
+  "id": "soru-kesici:cozumler1",
+  "source": "Çözümler_1.kitap.pdf",
+  "source_sha256": "2a24d8b0f239fddb8296d92258295c931a4c1331da3f0cc2be9bb94cdb96063e",
+  "page_count": 176
+ },
+ "sampling": {
+  "dpi": 300,
+  "max_sayfa": 40,
+  "bas": null,
+  "son": null,
+  "kapsam": "kismi",
+  "ornek_no": [
+   1,
+   25,
+   41,
+   57,
+   61,
+   85,
+   109,
+   157
+  ]
+ },
+ "verifier": "claude-opus-5 çift kör sayım (iki bağımsız sayıcı, çıplak render, mutabakat şartı; örtüşen sayfalarda önceki altınla birebir doğrulandı)",
+ "method": "kor-sayim",
+ "pages": [
+  {
+   "page": 1,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "kapak",
+   "notes": "Kitap ön kapağı: YKS TYT-AYT Biyoloji Soru Kütüphanesi ÇÖZÜMLER 1. Kitap, PRF Yayınları, Tuncay TURSUN. Hiçbir soru/çözüm bloğu yok. | Kitap ön kapağı: YKS TYT-AYT BİYOLOJİ SORU KÜTÜPHANESİ ÇÖZÜMLER 1.Kitap, PRF Yayınları, Tuncay TURSUN. Hiç soru/çözüm bloğu yok."
+  },
+  {
+   "page": 25,
+   "question_count": 6,
+   "question_numbers": [
+    10,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "role": "cozum",
+   "notes": "Sol sütun: önceki testten devam eden 'Soru 10 :' bloğu (bu sayfada başlıyor, sayıldı; içindeki (A)-(E) gerekçe paragrafları tek çözümün parçası) + 'Canlıların Ortak Özellikleri / Test - 5' başlığı (sayılmadı) ardından 'Soru 1 :'. Sağ sütun: Soru 2, 3, 4, 5. Toplam 6 çözüm bloğu. Numaralar test başlığında 1'e sıfırlanıyor. | Sol sütun: önceki testten devam eden 'Soru 10' bloğu bu sayfada başlıyor (başlık burada) -> sayıldı; ardından 'Canlıların Ortak Özellikleri / Test - 5' başlığı (sayılmadı) ve 'Soru 1'. Sağ sütun: Soru 2, 3, 4, 5. Blok içi madde işaretli açıklama satırları ve (A)(B)(C)(D)(E)"
+  },
+  {
+   "page": 41,
+   "question_count": 11,
+   "question_numbers": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "role": "cozum",
+   "notes": "Sol sütun: Soru 6, 7, 8, 9, 10 (5 blok; Soru 10 uzun paragraf, sayfa dibinde bitiyor). Sağ sütun: 'Vitaminler, Hormonlar ve ATP / Test - 20' başlığı (sayılmadı) ardından Soru 1, 2, 3, 4, 5, 6 (6 blok). Numaralar sağ sütunda 1'e sıfırlanıyor, bu yüzden listede 6 ve 10 iki kez geçiyor. | Sol sütun: Soru 6,7,8,9,10 (5 blok). Sağ sütun: 'Vitaminler, Hormonlar ve ATP / Test - 20' başlığı (sayılmadı) sonrası Soru 1,2,3,4,5,6 (6 blok). Toplam 11. Sağ sütunda Soru 6 bloğu sayfa sonunda tamamlanıyor."
+  },
+  {
+   "page": 57,
+   "question_count": 11,
+   "question_numbers": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    1
+   ],
+   "role": "cozum",
+   "notes": "Sol sütun: Soru 2, 3, 4, 5, 6 (Soru 6'nın (I)-(IV) madde açıklamaları tek blok sayıldı, sayfa dibinde 'Cevap A' ile bitiyor). Sağ sütun: Soru 7, 8, 9, 10, 11 ardından 'Ribozom-Er-Golgi-Lizozom / Test - 8' başlığı (sayılmadı) ve 'Soru 1 :' bloğu. Toplam 11. | Sol sütun: Soru 2,3,4,5,6 (5 blok). Sağ sütun: Soru 7,8,9,10,11 (5 blok), sonra 'Ribozom-Er-Golgi-Lizozom / Test - 8' başlığı (sayılmadı) ve sayfa altında başlayan 'Soru 1' bloğu -> başladığı sayfada sayıldı. Toplam 11."
+  },
+  {
+   "page": 61,
+   "question_count": 12,
+   "question_numbers": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "role": "cozum",
+   "notes": "Sol sütun: Soru 6, 7, 8, 9, 10, 11, 12 (7 blok). Sağ sütun: 'Sentriol-Kamçı-Hücre iskeleti / Test - 12' başlığı (sayılmadı) ardından Soru 1, 2, 3, 4, 5 (5 blok). Soru 2/3/4/5 içindeki (A)-(E) madde imli gerekçeler ayrı sayılmadı. Toplam 12 — bu setin en yoğun sayfası. | Sol sütun: Soru 6,7,8,9,10,11,12 (7 blok). Sağ sütun: 'Sentriol-Kamçı-Hücre iskeleti / Test - 12' başlığı (sayılmadı) sonrası Soru 1,2,3,4,5 (5 blok). Toplam 12. Soru 2/3/4/5 bloklarındaki (A)-(E) madde açıklamaları tek blok içinde sayıldı."
+  },
+  {
+   "page": 85,
+   "question_count": 11,
+   "question_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    1
+   ],
+   "role": "cozum",
+   "notes": "Sol sütun: 'Bakteri ve Arkeler / Test - 5' başlığı (sayılmadı) ardından Soru 1, 2, 3, 4, 5. Soru 1'in A→…E→ satırları ve Soru 2'nin I→…IV→ satırları tek çözümün gerekçeleri olduğu için AYRI SAYILMADI (doğru-yanlış tablosu değil, çözüm açıklaması). Sağ sütun: Soru 6, 7, 8, 9, 10 ardından 'Prostita ve Mantarlar / Test - 6' başlığı ve 'Soru 1 :'. Toplam 11. | Sol sütun: 'Bakteri ve Arkeler / Test - 5' başlığı (sayılmadı) sonrası Soru 1,2,3,4,5 (5 blok). Sağ sütun: Soru 6,7,8,9,10 (5 blok), sonra 'Prostita ve Mantarlar / Test - 6' başlığı ve sayfa altında başlayan 'Soru 1' bloğu -> sayıldı. Toplam"
+  },
+  {
+   "page": 109,
+   "question_count": 10,
+   "question_numbers": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    1,
+    2,
+    3
+   ],
+   "role": "cozum",
+   "notes": "Sol sütun: Soru 6, 7, 8, 9, 10 (5 blok). Sağ sütun: Soru 11 (I/II/III satırlı ama tek çözüm), Soru 12, ardından 'Konjugasyon - Partenogenez / Test - 12' başlığı (sayılmadı) ve Soru 1, 2, 3. Toplam 10. | Sol sütun: Soru 6,7,8,9,10 (5 blok). Sağ sütun: Soru 11,12 (2 blok), sonra 'Konjugasyon - Partenogenez / Test - 12' başlığı (sayılmadı) ve Soru 1,2,3 (3 blok). Toplam 10. Soru 11'deki I/II/III satırları ve Soru 1-2'deki A→..E→ satırları kendi bloklarının içinde sayıldı."
+  },
+  {
+   "page": 157,
+   "question_count": 10,
+   "question_numbers": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "role": "cozum",
+   "notes": "Sol sütun: Soru 8, 9, 10, 11, 12 (5 blok). Sağ sütun: 'Süksesyon, Baskın Tür, Kilit Taşı Tür / Test-11' başlığı (sayılmadı) ardından Soru 1, 2, 3, 4, 5 (5 blok). Soru 5'in A→…E→ şıkları tek çözüm içi gerekçe olarak sayıldı. Toplam 10. | Sol sütun: Soru 8,9,10,11,12 (5 blok). Sağ sütun: 'Süksesyon, Baskın Tür, Kilit Taşı Tür / Test-11' başlığı (sayılmadı) sonrası Soru 1,2,3,4,5 (5 blok). Toplam 10. Soru 8'in ilk paragrafı önceki sayfadan taşan metin gibi görünse de 'Soru 8 :' başlığı bu sayfada olduğu için burada sayıldı."
+  }
+ ]
+}

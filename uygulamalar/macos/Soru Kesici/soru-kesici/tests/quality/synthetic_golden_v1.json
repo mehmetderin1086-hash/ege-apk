@@ -1,0 +1,74 @@
+{
+  "schema_version": "soru-kesici.golden/v1",
+  "dataset": {
+    "id": "synthetic-layouts-v1",
+    "kind": "synthetic",
+    "description": "Konu, soru, karma ve cozum sayfalari icin el yapimi koordinatlar"
+  },
+  "documents": [
+    {
+      "id": "synthetic:quality-v2-layouts",
+      "source": "synthetic-quality-v2.pdf",
+      "pages": [
+        {
+          "page": 1,
+          "width": 1000,
+          "height": 1400,
+          "role": "kapak",
+          "questions": []
+        },
+        {
+          "page": 2,
+          "width": 1000,
+          "height": 1400,
+          "role": "konu",
+          "questions": [],
+          "ignore_regions": [[60, 100, 940, 1280]]
+        },
+        {
+          "page": 3,
+          "width": 1000,
+          "height": 1400,
+          "role": "soru",
+          "questions": [
+            {
+              "id": "q1",
+              "box": [70, 90, 480, 610],
+              "type": "coktan_secmeli"
+            },
+            {
+              "id": "q2",
+              "box": [520, 90, 930, 660],
+              "type": "kisa_cevapli"
+            }
+          ]
+        },
+        {
+          "page": 4,
+          "width": 1000,
+          "height": 1400,
+          "role": "karma",
+          "questions": [
+            {
+              "id": "q3",
+              "box": [70, 110, 930, 620],
+              "type": "acik_uclu"
+            },
+            {
+              "id": "q4",
+              "box": [70, 700, 930, 1220],
+              "type": "dogru_yanlis"
+            }
+          ]
+        },
+        {
+          "page": 5,
+          "width": 1000,
+          "height": 1400,
+          "role": "cozum",
+          "questions": []
+        }
+      ]
+    }
+  ]
+}

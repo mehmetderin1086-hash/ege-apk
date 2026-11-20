@@ -1,0 +1,42 @@
+{
+ "schema_version": "soru-kesici.golden-audit/v1",
+ "dataset": "tyt1_2026_calibration",
+ "source_sha256": "dc8582cfd3b8d06a083a49075af987a8fcc7524ebf6c1834a8b454e8cfe0f204",
+ "page_count": 276,
+ "question_count": 750,
+ "shared_stimulus_count": 30,
+ "ignored_duplicate_count": 0,
+ "region_counts": {
+  "forbidden_regions.komsu_soru": 436,
+  "required_regions.metin": 750,
+  "required_regions.secenek": 750,
+  "required_regions.sekil": 287
+ },
+ "counts": {
+  "d1-turkce": 40,
+  "d1-sosyal": 25,
+  "d1-matematik": 40,
+  "d1-fen": 20,
+  "d2-turkce": 40,
+  "d2-sosyal": 25,
+  "d2-matematik": 40,
+  "d2-fen": 20,
+  "d3-turkce": 40,
+  "d3-sosyal": 25,
+  "d3-matematik": 40,
+  "d3-fen": 20,
+  "d4-turkce": 40,
+  "d4-sosyal": 25,
+  "d4-matematik": 40,
+  "d4-fen": 20,
+  "d5-turkce": 40,
+  "d5-sosyal": 25,
+  "d5-matematik": 40,
+  "d5-fen": 20,
+  "d6-turkce": 40,
+  "d6-sosyal": 25,
+  "d6-matematik": 40,
+  "d6-fen": 20
+ },
+ "duplicate_locations": []
+}

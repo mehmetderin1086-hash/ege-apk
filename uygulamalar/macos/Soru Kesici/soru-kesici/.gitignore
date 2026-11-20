@@ -1,0 +1,23 @@
+.venv/
+.venv-ml/
+.venv-gui/
+Desktop/
+__pycache__/
+*.zip
+.DS_Store
+*_onizleme/
+.playwright-mcp/
+
+# kalite/: ölçüm çıktıları dışarıda, ALTIN VERİ ve kapı yapılandırması içeride.
+# (Dizinin tamamı yok sayılırsa git içine inmez ve "!" negasyonları çalışmaz.)
+kalite/*
+!kalite/koleksiyon.json
+!kalite/altin/
+!kalite/altin_sayim/
+!kalite/altin_profil/
+!kalite/once_*.json
+!kalite/kapi_esikleri.json
+!kalite/holdout_gunlugu.json
+!kalite/*.md
+kalite/altin_onizleme/
+kalite/altin_taslak/

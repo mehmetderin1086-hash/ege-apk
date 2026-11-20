@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soru-kesici.local/schemas/golden-v2.json",
+  "title": "Soru Kesici Golden Dataset V2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "dataset", "documents"],
+  "properties": {
+    "schema_version": {"const": "soru-kesici.golden/v2"},
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "description"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["synthetic", "annotated"]},
+        "description": {"type": "string"},
+        "split": {"enum": ["train", "calibration", "holdout"]}
+      }
+    },
+    "documents": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/document"}
+    }
+  },
+  "$defs": {
+    "box": {
+      "type": "array",
+      "prefixItems": [
+        {"type": "number", "minimum": 0},
+        {"type": "number", "minimum": 0},
+        {"type": "number", "exclusiveMinimum": 0},
+        {"type": "number", "exclusiveMinimum": 0}
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["box"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "page": {"type": "integer", "minimum": 1},
+        "box": {"$ref": "#/$defs/box"},
+        "kind": {
+          "enum": ["soru_govdesi", "devam", "ortak_uyaran", "sekil", "tablo", "formul", "diger"]
+        }
+      }
+    },
+    "requiredRegion": {
+      "oneOf": [
+        {"$ref": "#/$defs/box"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["box"],
+          "properties": {
+            "id": {"type": "string", "minLength": 1},
+            "page": {"type": "integer", "minimum": 1},
+            "box": {"$ref": "#/$defs/box"},
+            "kind": {"enum": ["sekil", "tablo", "formul", "metin", "secenek", "yazma_alani", "diger"]}
+          }
+        }
+      ]
+    },
+    "forbiddenRegion": {
+      "oneOf": [
+        {"$ref": "#/$defs/box"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["box"],
+          "properties": {
+            "id": {"type": "string", "minLength": 1},
+            "page": {"type": "integer", "minimum": 1},
+            "box": {"$ref": "#/$defs/box"},
+            "kind": {"enum": ["komsu_soru", "baslik", "altbilgi", "cevap", "cozum", "diger"]}
+          }
+        }
+      ]
+    },
+    "finalOutput": {
+      "type": "object",
+      "properties": {
+        "question_number": {"type": ["integer", "string", "null"]},
+        "part_count": {"type": "integer", "minimum": 0},
+        "question_count": {"type": "integer", "minimum": 0},
+        "png_count": {"type": "integer", "minimum": 0},
+        "metadata_count": {"type": "integer", "minimum": 0},
+        "output_count": {"type": "integer", "minimum": 0},
+        "metadata": {"type": "object"}
+      }
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "anyOf": [
+        {"required": ["box"]},
+        {"required": ["parts"]}
+      ],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "number": {"type": ["integer", "string", "null"]},
+        "box": {"$ref": "#/$defs/box"},
+        "parts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/part"}
+        },
+        "type": {
+          "enum": ["coktan_secmeli", "acik_uclu", "kisa_cevapli", "dogru_yanlis", "eslestirme", "karma", "bilinmiyor"]
+        },
+        "shared_stimulus_id": {"type": "string", "minLength": 1},
+        "shared_stimulus": {
+          "oneOf": [
+            {"type": "string", "minLength": 1},
+            {"$ref": "#/$defs/requiredRegion"}
+          ]
+        },
+        "required_regions": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/requiredRegion"}
+        },
+        "forbidden_regions": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/forbiddenRegion"}
+        },
+        "final_output": {"$ref": "#/$defs/finalOutput"}
+      }
+    },
+    "sharedStimulus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "anyOf": [{"required": ["box"]}, {"required": ["parts"]}],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "box": {"$ref": "#/$defs/box"},
+        "parts": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/part"}},
+        "question_ids": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["page", "width", "height", "role", "questions"],
+      "properties": {
+        "page": {"type": "integer", "minimum": 1},
+        "width": {"type": "number", "exclusiveMinimum": 0},
+        "height": {"type": "number", "exclusiveMinimum": 0},
+        "role": {"enum": ["kapak", "icindekiler", "konu", "soru", "cozum", "cevap_anahtari", "karma"]},
+        "questions": {"type": "array", "items": {"$ref": "#/$defs/question"}},
+        "shared_stimuli": {"type": "array", "items": {"$ref": "#/$defs/sharedStimulus"}},
+        "required_regions": {"type": "array", "items": {"$ref": "#/$defs/requiredRegion"}},
+        "forbidden_regions": {"type": "array", "items": {"$ref": "#/$defs/forbiddenRegion"}},
+        "ignore_regions": {"type": "array", "items": {"$ref": "#/$defs/box"}}
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source", "pages"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "source_hash": {"type": "string"},
+        "source_sha256": {"type": "string"},
+        "final_output": {"$ref": "#/$defs/finalOutput"},
+        "pages": {"type": "array", "items": {"$ref": "#/$defs/page"}}
+      }
+    }
+  }
+}

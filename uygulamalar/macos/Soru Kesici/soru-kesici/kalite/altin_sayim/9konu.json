@@ -1,0 +1,101 @@
+{
+ "schema_version": "soru-kesici.golden-count/v1",
+ "document": {
+  "id": "soru-kesici:9konu",
+  "source": "9. Sınıf Biyoloji Konu Anlatımlı.pdf",
+  "source_sha256": "bf230dadf6bcef17578ed77e1f9336871b2a9e2d721b14585920fe8ae13d38e9",
+  "page_count": 240
+ },
+ "sampling": {
+  "dpi": 300,
+  "max_sayfa": 40,
+  "bas": null,
+  "son": null,
+  "kapsam": "kismi",
+  "ornek_no": [
+   1,
+   37,
+   67,
+   103,
+   133,
+   169,
+   199,
+   235
+  ]
+ },
+ "verifier": "claude-opus-5 çift kör sayım (iki bağımsız sayıcı, çıplak render, mutabakat şartı)",
+ "method": "kor-sayim",
+ "pages": [
+  {
+   "page": 1,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "kapak",
+   "notes": "Kitap kapağı: '9 Biyoloji Konu Anlatım', Palme Yayınevi, yazar adları ve MEB müfredat rozeti. Cevaplanacak hiçbir madde yok. | Kitap kapağı: \"9 Biyoloji Konu Anlatım\", Palme Yayınevi, yazarlar Bilgehan PERİ / Banu KARAAĞAÇ, MEB müfredat rozeti. Soru yok."
+  },
+  {
+   "page": 37,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "Tamamı konu anlatımı: Galaktoz maddeleri, '2. Disakkaritler' başlığı, dört adet NOT kutusu, dehidrasyon/hidroliz şemaları ve sağ sütunda açıklamalı figürler. Soru numarası, şık dizisi veya cevap istenen madde yok. | Tamamen konu anlatımı: Galaktoz maddeleri, \"2. Disakkaritler\" başlığı, dört adet NOT kutusu, dehidrasyon/hidroliz şemaları ve sağ sütunda iki açıklamalı polimer figürü. Öğrenciden cevap istenen hiçbir madde yok; NOT kutuları bilgi kutusudur, soru değildir."
+  },
+  {
+   "page": 67,
+   "question_count": 7,
+   "question_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "role": "soru",
+   "notes": "TEST - 3 sayfası, iki sütun. Sol sütun 1-4, sağ sütun 5-7. Hepsi A-E şıklı çoktan seçmeli, her biri bağımsız gövdeye sahip. 2. sorudaki A/B protein kutuları ve 7. sorudaki dipeptit şeması ilgili sorunun kendi uyaranı, ayrı sayılmadı. | TEST - 3 başlıklı iki sütunlu test sayfası. Sol sütun 1-4, sağ sütun 5-7. Yedisi de gövde + A-E şıkları ile sayfa içinde tamamlanıyor; sayfa altında yarım kalan soru yok. 2. sorunun A/B proteini kutuları ile 7. sorunun dipeptit şeması paylaşılan uyaran olup ayrı sayılmadı."
+  },
+  {
+   "page": 103,
+   "question_count": 1,
+   "question_numbers": null,
+   "role": "soru",
+   "notes": "SINIR DURUM: 'Etkinlik - 6' başlıklı tanılayıcı dallanmış ağaç. Yönerge açıkça 'bir soru verilmiştir' diyor ve öğrenciden 8 çıkıştan SADECE BİRİNİ işaretlemesi isteniyor -> tek cevap, 1 soru saydım. Alternatif okuma: a-g arası 7 D/Y ifadesi ayrı sayılabilirdi (7), ama D/Y tablosu değil tek yollu ağaç olduğu ve tek cevap istendiği için 1 dedim. 8 'çıkış' kutusu cevap seçeneği, sayılmadı. Görünür soru numarası yok (Etkinlik numarası soru numarası sayılmadı) -> null. | \"Etkinlik – 6\" başlıklı tanılayıcı dallanmış ağaç. Yönerge metni açıkça \"...bir soru verilmiştir\" diyor ve \"çıkışlardan sadece birini işaretleyiniz\" ile TEK cevap isteniyor; bu yüzden 1 saydım. Sınır durumu: (a) sayfa \"Etkinlik\" başlıklı — kural etkinlik/çalışma YÖNERGESİNİ saymamayı söylüyor, ama buradaki içerik gerçekten cevaplanabilir, tek başına kesilip bankaya konabilir bir ölçme maddesi; (b) alternatif okuma olarak ağaçtaki a-g ifadelerinin her biri D/Y maddesi sayılırsa 7, öğrencinin fiilen yargıladığı yol üzerindeki ifadeler sayılırsa 3 çıkardı. Tek cevap/tek çıkış işaretlendiği için 1'de karar kıldım. Görünür soru numarası yok (başlıktaki 6 etkinlik numarasıdır, soru numarası değil) → question_numbers null. | güven: orta"
+  },
+  {
+   "page": 133,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "'BİTKİ HÜCRESİ' başlıklı tam sayfa etiketli bitki hücresi şeması + organel açıklamaları ve altta 'Bitki hücresinin genel görünüşü' paragrafı. Ders kitabı tarzı konu anlatımı, soru yok. | \"BİTKİ HÜCRESİ\" başlıklı tam sayfa etiketli şema + altında açıklama paragrafı. Etiketler (çekirdek, golgi, kloroplast, plazmodesma vb.) konu anlatımı; boşluk doldurma ya da eşleştirme istenmiyor."
+  },
+  {
+   "page": 169,
+   "question_count": 6,
+   "question_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "role": "soru",
+   "notes": "TEST - 1 sayfası, iki sütun. Sol sütun 1-4, sağ sütun 5-6. Hepsi A-E şıklı. 1. sorudaki hücre zarı şeması, 5. sorudaki U borusu düzeneği ve 6. sorudaki A-E grafik seçenekleri ilgili soruların kendi uyaranı/şıkları, ayrı sayılmadı. | TEST - 1 başlıklı iki sütunlu test. Sol sütun 1-4, sağ sütun 5-6. Hepsi A-E şıklarıyla sayfa içinde tamamlanıyor. 1. sorunun zar şeması, 5. sorunun U borusu düzeneği ve 6. sorunun grafik şıkları uyaran/şık olduğu için ayrı sayılmadı."
+  },
+  {
+   "page": 199,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "Omurgalı hayvanlar konu anlatımı: madde işaretli özellikler, 'Omurgalı Hayvanlar' sınıflandırma şeması, '1. Balıklar' ve '2. İki Yaşamlılar' alt başlıkları, larva-ergin şeması ve sağda kurbağa fotoğrafı + açıklama kutusu. Soru yok. | Omurgalı hayvanlar konu anlatımı: madde işaretli bilgi listeleri, \"Omurgalı Hayvanlar\" sınıflandırma şeması, \"1. Balıklar\" ve \"2. İki Yaşamlılar\" alt başlıkları, sağda kurbağa fotoğrafı + açıklaması. Baştaki \"1.\" ve \"2.\" numaraları konu başlığı numarasıdır, soru numarası değil."
+  },
+  {
+   "page": 235,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "cevap_anahtari",
+   "notes": "SINIR DURUM: Sağ kenar sekmesi 'ETKİNLİK ÇÖZÜMLERİ'. Sayfada Etkinlik 5-13 için 9 cevap bloğu var; çoğu çıplak cevap satırı (a) 5 ve 8 / I Ribozom / I, II, III, IV ve V), Etkinlik-8 bir cevap tablosu, Etkinlik-12 ve -13 kısa açıklama paragrafı. Bu bir çözüm KİTABI değil, konu anlatım kitabının cevap bölümü olduğu ve blokların çoğu yalın cevap olduğu için kural gereği 0 saydım. Alternatif okuma ('her çözüm bloğu' kuralı uygulansaydı) 9 olurdu; bu yüzden güven 'orta'. | Kenar sekmesi \"ETKİNLİK ÇÖZÜMLERİ\". Sayfada Etkinlik 5, 6, 7, 8, 9, 10, 11, 12, 13 başlıkları altında SORU değil CEVAP bulunuyor (ör. \"a) 5 ve 8\", \"I Ribozom\", genç/yaşlı hücre karşılaştırma tablosu, \"I, II, III, IV ve V\"). Sınır durumu: kural \"çözüm kitabında her çözüm bloğu\" sayılır diyor; ancak bu bir çözüm kitabı değil, konu anlatım kitabının arkasındaki cevap bölümü ve girdilerin çoğu çıplak cevap (yalnız Etkinlik-12 ve 13 gerekçeli açıklama içeriyor). Cevap anahtarı olarak yorumlayıp 0 saydım. Eğer \"çözüm bloğu\" sayımı tercih edilirse bu sayfa 9 (Etkinlik 5-13) olurdu — hakemlikte ayrışma çıkması en olası sayfa budur. | güven: orta"
+  }
+ ]
+}

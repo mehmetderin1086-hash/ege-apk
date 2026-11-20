@@ -1,0 +1,115 @@
+{
+ "schema_version": "soru-kesici.golden-count/v1",
+ "document": {
+  "id": "soru-kesici:cozumyazili",
+  "source": "11. SINIF BIYOLOJI SB YAZILI COZUM.pdf",
+  "source_sha256": "b4d88104f18b7dbd507a8e84a0f59d68a8d23abdf3c95ae0a7aa432ab6944f8c",
+  "page_count": 6
+ },
+ "sampling": {
+  "dpi": 300,
+  "max_sayfa": 6,
+  "bas": null,
+  "son": null,
+  "ornek_no": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6
+  ]
+ },
+ "verifier": "claude-opus-5 (kör sayım, çıplak render)",
+ "method": "kor-sayim",
+ "pages": [
+  {
+   "page": 1,
+   "question_count": 6,
+   "question_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "role": "soru",
+   "notes": ""
+  },
+  {
+   "page": 2,
+   "question_count": 6,
+   "question_numbers": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "role": "soru",
+   "notes": ""
+  },
+  {
+   "page": 3,
+   "question_count": 7,
+   "question_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "role": "soru",
+   "notes": ""
+  },
+  {
+   "page": 4,
+   "question_count": 5,
+   "question_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "role": "soru",
+   "notes": ""
+  },
+  {
+   "page": 5,
+   "question_count": 5,
+   "question_numbers": [
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "role": "soru",
+   "notes": ""
+  },
+  {
+   "page": 6,
+   "question_count": 10,
+   "question_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "role": "soru",
+   "notes": ""
+  }
+ ],
+ "notes": "Yazılı deneme çözüm kâğıdı; cevaplar düz metin/alt madde biçiminde."
+}

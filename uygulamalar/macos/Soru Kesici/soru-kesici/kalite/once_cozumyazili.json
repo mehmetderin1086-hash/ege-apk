@@ -1,0 +1,54 @@
+{
+ "dosya": "11. SINIF BIYOLOJI SB YAZILI COZUM.pdf",
+ "format": "coktan_secmeli",
+ "sayfa": 6,
+ "ornek_no": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6
+ ],
+ "soru_sayfa": 6,
+ "toplam_kutu": 35,
+ "sayfa_soru": [
+  6,
+  4,
+  7,
+  5,
+  5,
+  8
+ ],
+ "anomali_sayisi": 0,
+ "anomaliler": [],
+ "birlestirilen": 0,
+ "yarim_soru": [
+  {
+   "sayfa": 1,
+   "bant": 0
+  },
+  {
+   "sayfa": 3,
+   "bant": 1
+  },
+  {
+   "sayfa": 6,
+   "bant": 0
+  }
+ ],
+ "duzen_model": true,
+ "kaynak_sha256": "b4d88104f18b7dbd507a8e84a0f59d68a8d23abdf3c95ae0a7aa432ab6944f8c",
+ "ham_aday": 45,
+ "sayfa_ham_aday": [
+  8,
+  6,
+  7,
+  5,
+  9,
+  10
+ ],
+ "reddedilen_kutu": 0,
+ "incele_kutu": 17,
+ "anomali_turleri": {}
+}

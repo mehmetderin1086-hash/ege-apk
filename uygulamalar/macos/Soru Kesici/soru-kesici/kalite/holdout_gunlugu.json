@@ -1,0 +1,10 @@
+{
+ "schema_version": "soru-kesici.holdout-log/v1",
+ "_not": "HOLDOUT KOŞUM GÜNLÜĞÜ. tyt1_2026_holdout yalnız YAYIN KARARI için koşulur; parametre ayarı, eşik seçimi veya hata ayıklama için ASLA. Her koşum buraya bir satır olarak yazılır. Kaç kez koşulduğu görünmezse 'tuning için asla' kuralı denetlenemez — dosyanın varlık sebebi budur.",
+ "kural": {
+  "izinli": "faz kabulü / yayın kararı",
+  "yasak": "eşik ayarı, sabit kalibrasyonu, hata ayıklama, 'bir de şuna bakalım'",
+  "komut": ".venv/bin/python kalite_kosusu.py --sadece tyt1_2026_holdout"
+ },
+ "kosumlar": []
+}

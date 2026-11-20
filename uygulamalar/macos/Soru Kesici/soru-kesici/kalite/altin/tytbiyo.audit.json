@@ -1,0 +1,107 @@
+{
+ "schema_version": "soru-kesici.golden-audit/v1",
+ "dataset": "tytbiyo",
+ "source_sha256": "d42dd12895f179c72d7e9f73f0a74c56d0477b7856b1664c270c485fa3404267",
+ "page_count": 40,
+ "question_count": 119,
+ "shared_stimulus_count": 0,
+ "ignored_duplicate_count": 0,
+ "region_counts": {
+  "forbidden_regions.komsu_soru": 120,
+  "required_regions.metin": 119,
+  "required_regions.secenek": 119,
+  "required_regions.sekil": 31
+ },
+ "counts": {
+  "b1": 10,
+  "b2": 31,
+  "b3": 20,
+  "b4": 22,
+  "b5": 28,
+  "b6": 8
+ },
+ "profile": "mebi-2col",
+ "free_mode": true,
+ "duplicate_locations": [],
+ "chain": [
+  {
+   "bolum": 1,
+   "konu": "",
+   "adet": 10,
+   "ilk": 1,
+   "son": 10,
+   "sayfalar": [
+    11,
+    12
+   ],
+   "eksik": [],
+   "birden_baslamiyor": false
+  },
+  {
+   "bolum": 2,
+   "konu": "",
+   "adet": 31,
+   "ilk": 1,
+   "son": 31,
+   "sayfalar": [
+    13,
+    20
+   ],
+   "eksik": [],
+   "birden_baslamiyor": false
+  },
+  {
+   "bolum": 3,
+   "konu": "",
+   "adet": 20,
+   "ilk": 1,
+   "son": 20,
+   "sayfalar": [
+    21,
+    26
+   ],
+   "eksik": [],
+   "birden_baslamiyor": false
+  },
+  {
+   "bolum": 4,
+   "konu": "",
+   "adet": 22,
+   "ilk": 1,
+   "son": 22,
+   "sayfalar": [
+    27,
+    32
+   ],
+   "eksik": [],
+   "birden_baslamiyor": false
+  },
+  {
+   "bolum": 5,
+   "konu": "",
+   "adet": 28,
+   "ilk": 1,
+   "son": 28,
+   "sayfalar": [
+    33,
+    38
+   ],
+   "eksik": [],
+   "birden_baslamiyor": false
+  },
+  {
+   "bolum": 6,
+   "konu": "",
+   "adet": 8,
+   "ilk": 1,
+   "son": 8,
+   "sayfalar": [
+    39,
+    40
+   ],
+   "eksik": [],
+   "birden_baslamiyor": false
+  }
+ ],
+ "unresolved_duplicates": []
+}

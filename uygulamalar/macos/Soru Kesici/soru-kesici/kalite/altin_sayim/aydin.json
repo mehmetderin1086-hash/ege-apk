@@ -1,0 +1,103 @@
+{
+ "schema_version": "soru-kesici.golden-count/v1",
+ "document": {
+  "id": "soru-kesici:aydin",
+  "source": "Aydın YKS-TYT Biyoloji Soru Bankası PDF indir.pdf",
+  "source_sha256": "a1a92dc5cd72c62819b5059ac5223129eb891fa707391d20fde82955141a202b",
+  "page_count": 249
+ },
+ "sampling": {
+  "dpi": 300,
+  "max_sayfa": 40,
+  "bas": null,
+  "son": null,
+  "kapsam": "kismi",
+  "ornek_no": [
+   1,
+   31,
+   79,
+   157,
+   211,
+   235
+  ]
+ },
+ "verifier": "claude-opus-5 çift kör sayım (iki bağımsız sayıcı, çıplak render, mutabakat şartı; örtüşen sayfalarda önceki altınla birebir doğrulandı)",
+ "method": "kor-sayim",
+ "pages": [
+  {
+   "page": 1,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "kapak",
+   "notes": "Kitap ön kapağı: yeşil zeminli, martı/yalıçapkını fotoğrafı, 'Sınavlara Hazırlıkta 35 YILLIK DENEYİM', 'TYT Biyoloji Soru Bankası', madde işaretli tanıtım satırları ve Aydın Yayınları logosu. Hiçbir soru yok. | Kitap ön kapağı: 'YKS TYT Biyoloji Soru Bankası', Aydın Yayınları logosu, tanıtım maddeleri (yeni sınav sistemine uygun vb.). Hiçbir soru yok."
+  },
+  {
+   "page": 31,
+   "question_count": 6,
+   "question_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "role": "soru",
+   "notes": "Üstte 'TEST 9 — Canlıların Yapısında Bulunan Temel Bileşikler / Enzimler - ATP', sağda 13 rozeti. Sol sütun 1-2-3, sağ sütun 4-5-6. Hepsi A-E tek cevaplı. 1. soruda enzim-substrat şeması, 5. soruda maltaz enzimi şeması sorunun kendi uyaranı; paylaşılan uyaran yok. I/II/III maddeleri şık listesi olduğu için ayrı sayılmadı. | TEST 9 (Enzimler-ATP) başlangıcı. İki sütun: sol 1,2,3 / sağ 4,5,6. Hepsi klasik çoktan seçmeli (A-E). 1 ve 5'te şekil var ama şekil o soruya ait, ayrı sayılmadı; 5'in gövdesi şeklin altında. Sayfa üstündeki TEST başlığı ve '13' bölüm rozeti sayılmadı."
+  },
+  {
+   "page": 79,
+   "question_count": 6,
+   "question_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "role": "soru",
+   "notes": "'TEST 2 — Hücre Bölünmeleri', rozet 37. Sol sütun 1-2-3, sağ sütun 4-5-6, altı da çoktan seçmeli. 1. soru eşleştirme ifadelerini şık olarak veriyor (tek cevap) → 1 soru. Sayfada şekil yok, sayım net. | TEST 2 (Hücre Bölünmeleri). Sol sütun 1,2,3 / sağ sütun 4,5,6, tamamı çoktan seçmeli. Soru 1 eşleştirme biçiminde ama tek cevap isteyen çoktan seçmeli olduğu için 1 sayıldı."
+  },
+  {
+   "page": 157,
+   "question_count": 5,
+   "question_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "role": "soru",
+   "notes": "'TEST 4 — Dolaşım ve Bağışıklık Sistemi', rozet 76. Sol sütun 1-2 (2. soruda X/Y/Z bakteri grafiği kendi uyaranı), sağ sütun 3-4-5. Bu sayfa 6 değil 5 soru içeriyor; sol sütunda 1 ve 2 arasında geniş boşluk var ama üçüncü bir soru başlamıyor. 5. soruda I-V maddeleri şıklara (A) I ... E) V) karşılık geliyor, tek cevap → 1 soru. | TEST 4 (Dolaşım ve Bağışıklık Sistemi). Sol sütun 1,2 / sağ sütun 3,4,5 — toplam 5. Soru 2'nin grafiği (birey sayısı-antibiyotik) o soruya ait uyaran, ayrı sayılmadı. Sayfada 6 numaralı soru yok, sağ sütun 5 ile bitiyor."
+  },
+  {
+   "page": 211,
+   "question_count": 6,
+   "question_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "role": "soru",
+   "notes": "'TEST 1 — Fermentasyon - Hücresel Solunum', rozet 103. Sol sütun 1-2-3, sağ sütun 4-5-6. 2. soruda üç deney düzeneği çizimi, 4. soruda fermentasyon şeması, 5. soruda glikoliz basamak şeması, 6. soruda pirüvik asit → asetil CoA şeması — her biri kendi sorusunun uyaranı, hiçbiri paylaşılmıyor. | TEST 1 (Fermentasyon - Hücresel Solunum). Sol 1,2,3 / sağ 4,5,6. Soru 2'nin üç deney düzeneği şekli, 5'in glikoliz şeması ve 6'nın pirüvik asit şeması ilgili sorunun uyaranı; ayrı sayılmadı. 5 ve 6'da numara şeklin solunda, gövde şeklin altında."
+  },
+  {
+   "page": 235,
+   "question_count": 5,
+   "question_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "role": "soru",
+   "notes": "'TEST 6 — Bitki Biyolojisi', rozet 115. Sol sütun 1-2-3, sağ sütun 4-5. 1. soru hormon (a,b,c) ile işlev (I,II,III) eşleştirmesi ama cevap tek bir A-E şıkkı olarak isteniyor → kural gereği 1 soru (3 değil). 4. soruda stoma konum şekli kendi uyaranı. Sağ sütunda 5'ten sonra soru yok, toplam 5. | TEST 6 (Bitki Biyolojisi). Sol sütun 1,2,3 / sağ sütun 4,5 — toplam 5. Soru 1'deki a/b/c hormonları ve I/II/III işlevleri tek cevap isteyen eşleştirmeli çoktan seçmeli olduğundan 1 sayıldı. Soru 4'ün stoma şekli uyaran, ayrı sayılmadı. Sağ sütunda 6. soru yok."
+  }
+ ]
+}

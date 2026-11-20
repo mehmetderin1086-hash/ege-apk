@@ -1,0 +1,6466 @@
+{
+ "schema_version": "soru-kesici.golden/v2",
+ "dataset": {
+  "id": "tytbiyo",
+  "kind": "annotated",
+  "description": "PDF metin/geometri katmanından bağımsız çıkarılmış, 2026-07-25 tarihinde görsel denetim için temas sayfaları üretilmiş TYT altın verisi",
+  "split": "calibration"
+ },
+ "documents": [
+  {
+   "id": "sha256:d42dd12895f179c72d7e9f73f0a74c56d0477b7856b1664c270c485fa3404267",
+   "source": "tyt-biyo.pdf",
+   "source_sha256": "d42dd12895f179c72d7e9f73f0a74c56d0477b7856b1664c270c485fa3404267",
+   "final_output": {
+    "question_count": 119,
+    "png_count": 119,
+    "metadata_count": 119
+   },
+   "pages": [
+    {
+     "page": 1,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "kapak",
+     "questions": []
+    },
+    {
+     "page": 2,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "kapak",
+     "questions": []
+    },
+    {
+     "page": 3,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "kapak",
+     "questions": []
+    },
+    {
+     "page": 4,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "kapak",
+     "questions": []
+    },
+    {
+     "page": 5,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "kapak",
+     "questions": []
+    },
+    {
+     "page": 6,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "kapak",
+     "questions": []
+    },
+    {
+     "page": 7,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "kapak",
+     "questions": []
+    },
+    {
+     "page": 8,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "kapak",
+     "questions": []
+    },
+    {
+     "page": 9,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "icindekiler",
+     "questions": []
+    },
+    {
+     "page": 10,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "kapak",
+     "questions": []
+    },
+    {
+     "page": 11,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b1-q1",
+       "number": 1,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        265.661
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 1,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 11,
+         "box": [
+          36.0,
+          78.983,
+          142.378,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 11,
+         "box": [
+          55.842,
+          171.581,
+          105.035,
+          261.661
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 11,
+         "box": [
+          36.0,
+          311.439,
+          99.358,
+          323.2
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b1-q2",
+       "number": 2,
+       "box": [
+        31.0,
+        305.439,
+        275.0,
+        496.118
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 2,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 11,
+         "box": [
+          36.0,
+          309.439,
+          99.358,
+          323.2
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 11,
+         "box": [
+          55.842,
+          402.038,
+          104.541,
+          492.118
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 11,
+         "box": [
+          36.0,
+          541.896,
+          243.925,
+          553.657
+         ],
+         "kind": "komsu_soru"
+        },
+        {
+         "page": 11,
+         "box": [
+          55.842,
+          247.927,
+          97.035,
+          259.661
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b1-q3",
+       "number": 3,
+       "box": [
+        31.0,
+        535.896,
+        275.0,
+        665.063
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 3,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 11,
+         "box": [
+          36.0,
+          539.896,
+          243.925,
+          553.657
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 11,
+         "box": [
+          55.842,
+          570.982,
+          187.565,
+          661.063
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 11,
+         "box": [
+          55.842,
+          478.384,
+          104.541,
+          490.118
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b1-q4",
+       "number": 4,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        204.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 4,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 11,
+         "box": [
+          287.717,
+          78.983,
+          507.621,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 11,
+         "box": [
+          307.559,
+          110.069,
+          444.285,
+          200.15
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 11,
+         "box": [
+          287.717,
+          311.439,
+          472.134,
+          323.2
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b1-q5",
+       "number": 5,
+       "box": [
+        282.0,
+        305.439,
+        527.0,
+        573.787
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 5,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 11,
+         "box": [
+          287.717,
+          309.439,
+          472.134,
+          323.2
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 11,
+         "box": [
+          307.559,
+          479.707,
+          369.261,
+          569.787
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 11,
+         "box": [
+          307.559,
+          186.416,
+          444.285,
+          198.15
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 12,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b1-q6",
+       "number": 6,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        216.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 6,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 12,
+         "box": [
+          36.0,
+          78.983,
+          261.43,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 12,
+         "box": [
+          55.842,
+          122.069,
+          121.028,
+          212.15
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 12,
+         "box": [
+          36.0,
+          282.431,
+          248.91,
+          294.192
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b1-q7",
+       "number": 7,
+       "box": [
+        31.0,
+        276.431,
+        275.0,
+        477.598
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 7,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 12,
+         "box": [
+          36.0,
+          280.431,
+          248.91,
+          294.192
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 12,
+         "box": [
+          55.842,
+          323.518,
+          253.589,
+          473.598
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 12,
+         "box": [
+          36.0,
+          543.88,
+          129.861,
+          555.641
+         ],
+         "kind": "komsu_soru"
+        },
+        {
+         "page": 12,
+         "box": [
+          55.842,
+          198.416,
+          117.527,
+          210.15
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b1-q8",
+       "number": 8,
+       "box": [
+        31.0,
+        537.88,
+        275.0,
+        683.524
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 8,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 12,
+         "box": [
+          36.0,
+          541.88,
+          129.861,
+          555.641
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 12,
+         "box": [
+          55.842,
+          645.178,
+          265.039,
+          679.524
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 12,
+         "box": [
+          70.016,
+          459.864,
+          167.549,
+          471.598
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b1-q9",
+       "number": 9,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        301.661
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 9,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 12,
+         "box": [
+          287.717,
+          78.983,
+          386.58,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 12,
+         "box": [
+          307.559,
+          207.581,
+          356.751,
+          297.661
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 12,
+         "box": [
+          287.717,
+          367.943,
+          519.242,
+          379.704
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b1-q10",
+       "number": 10,
+       "box": [
+        282.0,
+        361.943,
+        527.0,
+        600.622
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 10,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 12,
+         "box": [
+          287.717,
+          365.943,
+          519.242,
+          379.704
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 12,
+         "box": [
+          307.559,
+          506.542,
+          356.751,
+          596.622
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 12,
+         "box": [
+          307.559,
+          283.927,
+          356.258,
+          295.661
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 13,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b2-q1",
+       "number": 1,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        264.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 1,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 13,
+         "box": [
+          36.0,
+          78.983,
+          243.43,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 13,
+         "box": [
+          55.842,
+          110.069,
+          265.073,
+          260.15
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 13,
+         "box": [
+          36.0,
+          391.943,
+          164.869,
+          403.704
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q2",
+       "number": 2,
+       "box": [
+        31.0,
+        385.943,
+        275.0,
+        600.622
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 2,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 13,
+         "box": [
+          36.0,
+          389.943,
+          164.869,
+          403.704
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 13,
+         "box": [
+          55.842,
+          506.542,
+          104.54,
+          596.622
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 13,
+         "box": [
+          70.016,
+          246.416,
+          119.543,
+          258.15
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q3",
+       "number": 3,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        351.862
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 3,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 13,
+         "box": [
+          287.717,
+          78.983,
+          515.127,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 13,
+         "box": [
+          311.56,
+          274.942,
+          514.245,
+          347.862
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 13,
+         "box": [
+          307.56,
+          127.445,
+          517.823,
+          220.47
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 13,
+         "box": [
+          287.717,
+          430.144,
+          496.146,
+          441.905
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q4",
+       "number": 4,
+       "box": [
+        282.0,
+        424.144,
+        527.0,
+        642.319
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 4,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 13,
+         "box": [
+          287.717,
+          428.144,
+          496.146,
+          441.905
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 13,
+         "box": [
+          307.559,
+          536.238,
+          519.275,
+          638.319
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 13,
+         "box": [
+          311.56,
+          334.128,
+          514.245,
+          345.862
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 14,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b2-q5",
+       "number": 5,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        232.402
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 5,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 14,
+         "box": [
+          36.0,
+          78.983,
+          140.884,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 14,
+         "box": [
+          55.842,
+          195.581,
+          265.048,
+          228.402
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 14,
+         "box": [
+          36.0,
+          298.683,
+          260.925,
+          310.444
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q6",
+       "number": 6,
+       "box": [
+        31.0,
+        292.683,
+        275.0,
+        457.85
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 6,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 14,
+         "box": [
+          36.0,
+          296.683,
+          260.925,
+          310.444
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 14,
+         "box": [
+          55.842,
+          315.77,
+          258.566,
+          453.85
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 14,
+         "box": [
+          36.0,
+          524.132,
+          247.921,
+          535.893
+         ],
+         "kind": "komsu_soru"
+        },
+        {
+         "page": 14,
+         "box": [
+          98.062,
+          214.668,
+          227.823,
+          226.402
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q7",
+       "number": 7,
+       "box": [
+        31.0,
+        518.132,
+        275.0,
+        683.299
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 7,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 14,
+         "box": [
+          36.0,
+          522.132,
+          247.921,
+          535.893
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 14,
+         "box": [
+          55.842,
+          553.219,
+          267.549,
+          679.299
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 14,
+         "box": [
+          55.842,
+          440.116,
+          249.089,
+          451.85
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q8",
+       "number": 8,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        301.661
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 8,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 14,
+         "box": [
+          287.717,
+          78.983,
+          377.589,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 14,
+         "box": [
+          307.559,
+          207.581,
+          356.751,
+          297.661
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 14,
+         "box": [
+          287.717,
+          429.455,
+          518.162,
+          441.216
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q9",
+       "number": 9,
+       "box": [
+        282.0,
+        423.455,
+        527.0,
+        600.622
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 9,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 14,
+         "box": [
+          287.717,
+          427.455,
+          518.162,
+          441.216
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 14,
+         "box": [
+          307.559,
+          458.542,
+          514.332,
+          596.622
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 14,
+         "box": [
+          307.559,
+          283.927,
+          356.256,
+          295.661
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 15,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b2-q10",
+       "number": 10,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        228.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 10,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 15,
+         "box": [
+          36.0,
+          78.983,
+          236.41,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 15,
+         "box": [
+          55.842,
+          110.069,
+          265.039,
+          224.15
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 15,
+         "box": [
+          36.0,
+          294.431,
+          267.568,
+          306.192
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q11",
+       "number": 11,
+       "box": [
+        31.0,
+        288.431,
+        275.0,
+        650.466
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 11,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 15,
+         "box": [
+          36.0,
+          292.431,
+          267.568,
+          306.192
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 15,
+         "box": [
+          55.842,
+          556.385,
+          105.035,
+          646.466
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 15,
+         "box": [
+          55.843,
+          340.894,
+          268.941,
+          446.742
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 15,
+         "box": [
+          55.842,
+          210.416,
+          263.516,
+          222.15
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q12",
+       "number": 12,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        498.669
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 12,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 15,
+         "box": [
+          287.717,
+          78.983,
+          486.615,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 15,
+         "box": [
+          307.559,
+          404.589,
+          356.256,
+          494.669
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 15,
+         "box": [
+          307.559,
+          132.775,
+          457.475,
+          255.833
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 15,
+         "box": [
+          287.717,
+          544.447,
+          493.644,
+          556.208
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q13",
+       "number": 13,
+       "box": [
+        282.0,
+        538.447,
+        527.0,
+        703.614
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 13,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 15,
+         "box": [
+          287.717,
+          542.447,
+          493.644,
+          556.208
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 15,
+         "box": [
+          307.559,
+          573.534,
+          503.793,
+          699.614
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 15,
+         "box": [
+          307.559,
+          480.935,
+          356.256,
+          492.669
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 16,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b2-q14",
+       "number": 14,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        450.669
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 14,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 16,
+         "box": [
+          36.0,
+          78.983,
+          263.851,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 16,
+         "box": [
+          55.842,
+          356.589,
+          105.035,
+          446.669
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 16,
+         "box": [
+          83.925,
+          114.025,
+          202.84,
+          210.663
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 16,
+         "box": [
+          36.0,
+          496.447,
+          265.039,
+          508.208
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q15",
+       "number": 15,
+       "box": [
+        31.0,
+        490.447,
+        275.0,
+        655.614
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 15,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 16,
+         "box": [
+          36.0,
+          494.447,
+          265.039,
+          508.208
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 16,
+         "box": [
+          55.842,
+          525.534,
+          267.566,
+          651.614
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 16,
+         "box": [
+          55.842,
+          432.935,
+          104.54,
+          444.669
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q16",
+       "number": 16,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        289.661
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 16,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 16,
+         "box": [
+          287.717,
+          78.983,
+          394.581,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 16,
+         "box": [
+          307.559,
+          195.581,
+          356.751,
+          285.661
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 16,
+         "box": [
+          287.717,
+          398.951,
+          516.44,
+          410.712
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q17",
+       "number": 17,
+       "box": [
+        282.0,
+        392.951,
+        527.0,
+        626.622
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 17,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 16,
+         "box": [
+          287.717,
+          396.951,
+          516.44,
+          410.712
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 16,
+         "box": [
+          307.559,
+          520.542,
+          519.239,
+          622.622
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 16,
+         "box": [
+          301.273,
+          415.287,
+          518.669,
+          474.222
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 16,
+         "box": [
+          307.559,
+          271.927,
+          356.256,
+          283.661
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 17,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b2-q18",
+       "number": 18,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        204.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 18,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 17,
+         "box": [
+          36.0,
+          78.983,
+          267.534,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 17,
+         "box": [
+          55.842,
+          110.069,
+          161.042,
+          200.15
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 17,
+         "box": [
+          36.0,
+          352.447,
+          234.439,
+          364.208
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q19",
+       "number": 19,
+       "box": [
+        31.0,
+        346.447,
+        275.0,
+        571.614
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 19,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 17,
+         "box": [
+          36.0,
+          350.447,
+          234.439,
+          364.208
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 17,
+         "box": [
+          55.842,
+          381.534,
+          264.173,
+          567.614
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 17,
+         "box": [
+          55.842,
+          186.416,
+          126.032,
+          198.15
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q20",
+       "number": 20,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        439.331
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 20,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 17,
+         "box": [
+          287.717,
+          78.983,
+          519.24,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 17,
+         "box": [
+          307.559,
+          261.25,
+          519.257,
+          435.331
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 17,
+         "box": [
+          287.717,
+          501.361,
+          473.133,
+          513.122
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q21",
+       "number": 21,
+       "box": [
+        282.0,
+        495.361,
+        527.0,
+        684.528
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 21,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 17,
+         "box": [
+          287.717,
+          499.361,
+          473.133,
+          513.122
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 17,
+         "box": [
+          307.559,
+          530.447,
+          513.155,
+          680.528
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 17,
+         "box": [
+          321.732,
+          421.597,
+          394.245,
+          433.331
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 18,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b2-q22",
+       "number": 22,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        277.661
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 22,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 18,
+         "box": [
+          36.0,
+          78.983,
+          218.392,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 18,
+         "box": [
+          55.842,
+          183.581,
+          101.868,
+          273.661
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 18,
+         "box": [
+          36.0,
+          405.455,
+          224.91,
+          417.216
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q23",
+       "number": 23,
+       "box": [
+        31.0,
+        399.455,
+        275.0,
+        590.134
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 23,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 18,
+         "box": [
+          36.0,
+          403.455,
+          224.91,
+          417.216
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 18,
+         "box": [
+          55.842,
+          496.053,
+          101.868,
+          586.134
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 18,
+         "box": [
+          55.842,
+          259.927,
+          101.868,
+          271.661
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q24",
+       "number": 24,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        277.661
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 24,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 18,
+         "box": [
+          287.717,
+          78.983,
+          514.128,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 18,
+         "box": [
+          307.559,
+          183.581,
+          354.08,
+          273.661
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 18,
+         "box": [
+          287.717,
+          405.455,
+          500.646,
+          417.216
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q25",
+       "number": 25,
+       "box": [
+        282.0,
+        399.455,
+        527.0,
+        564.622
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 25,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 18,
+         "box": [
+          287.717,
+          403.455,
+          500.646,
+          417.216
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 18,
+         "box": [
+          307.559,
+          434.542,
+          518.805,
+          560.622
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 18,
+         "box": [
+          307.559,
+          259.927,
+          353.585,
+          271.661
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 19,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b2-q26",
+       "number": 26,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        307.898
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 26,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 19,
+         "box": [
+          36.0,
+          78.983,
+          252.934,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 19,
+         "box": [
+          55.842,
+          271.077,
+          265.048,
+          303.898
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 19,
+         "box": [
+          192.331,
+          167.416,
+          249.024,
+          219.29
+         ],
+         "kind": "sekil"
+        },
+        {
+         "page": 19,
+         "box": [
+          123.874,
+          167.416,
+          180.568,
+          219.29
+         ],
+         "kind": "sekil"
+        },
+        {
+         "page": 19,
+         "box": [
+          56.268,
+          167.416,
+          112.961,
+          219.29
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 19,
+         "box": [
+          36.0,
+          374.179,
+          250.441,
+          385.94
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q27",
+       "number": 27,
+       "box": [
+        31.0,
+        368.179,
+        275.0,
+        672.954
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 27,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 19,
+         "box": [
+          36.0,
+          372.179,
+          250.441,
+          385.94
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 19,
+         "box": [
+          55.842,
+          636.133,
+          265.048,
+          668.954
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 19,
+         "box": [
+          55.843,
+          420.642,
+          266.107,
+          526.49
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 19,
+         "box": [
+          98.898,
+          290.164,
+          226.995,
+          301.898
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q28",
+       "number": 28,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        315.835
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 28,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 19,
+         "box": [
+          287.717,
+          78.983,
+          485.642,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 19,
+         "box": [
+          307.559,
+          221.754,
+          367.076,
+          311.835
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 19,
+         "box": [
+          287.717,
+          382.116,
+          494.616,
+          393.877
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b2-q29",
+       "number": 29,
+       "box": [
+        282.0,
+        376.116,
+        527.0,
+        695.033
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 29,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 19,
+         "box": [
+          287.717,
+          380.116,
+          494.616,
+          393.877
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 19,
+         "box": [
+          307.559,
+          429.665,
+          510.107,
+          691.033
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 19,
+         "box": [
+          321.449,
+          441.827,
+          385.121,
+          495.295
+         ],
+         "kind": "sekil"
+        },
+        {
+         "page": 19,
+         "box": [
+          391.606,
+          630.007,
+          455.278,
+          683.474
+         ],
+         "kind": "sekil"
+        },
+        {
+         "page": 19,
+         "box": [
+          442.083,
+          538.589,
+          505.756,
+          592.707
+         ],
+         "kind": "sekil"
+        },
+        {
+         "page": 19,
+         "box": [
+          319.606,
+          538.589,
+          383.278,
+          592.707
+         ],
+         "kind": "sekil"
+        },
+        {
+         "page": 19,
+         "box": [
+          442.083,
+          441.148,
+          505.756,
+          494.616
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 19,
+         "box": [
+          307.559,
+          298.101,
+          366.581,
+          309.835
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 20,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b2-q30",
+       "number": 30,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        216.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 30,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 20,
+         "box": [
+          36.0,
+          78.983,
+          249.946,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 20,
+         "box": [
+          55.842,
+          122.069,
+          250.431,
+          212.15
+         ],
+         "kind": "secenek"
+        }
+       ]
+      },
+      {
+       "id": "b2-q31",
+       "number": 31,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        204.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 31,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 20,
+         "box": [
+          287.717,
+          78.983,
+          495.12,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 20,
+         "box": [
+          307.559,
+          110.069,
+          481.619,
+          200.15
+         ],
+         "kind": "secenek"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 21,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b3-q1",
+       "number": 1,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        437.0
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 1,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 21,
+         "box": [
+          36.0,
+          78.983,
+          262.42,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 21,
+         "box": [
+          55.843,
+          361.418,
+          138.282,
+          433.0
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 21,
+         "box": [
+          40.502,
+          135.25,
+          269.75,
+          269.042
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 21,
+         "box": [
+          36.0,
+          492.777,
+          253.411,
+          504.538
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b3-q2",
+       "number": 2,
+       "box": [
+        31.0,
+        486.777,
+        275.0,
+        663.944
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 2,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 21,
+         "box": [
+          36.0,
+          490.777,
+          253.411,
+          504.538
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 21,
+         "box": [
+          55.843,
+          521.864,
+          251.584,
+          659.944
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 21,
+         "box": [
+          55.843,
+          419.266,
+          138.282,
+          431.0
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b3-q3",
+       "number": 3,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        264.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 3,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 21,
+         "box": [
+          287.717,
+          78.983,
+          489.126,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 21,
+         "box": [
+          307.559,
+          134.069,
+          519.26,
+          260.15
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 21,
+         "box": [
+          287.717,
+          391.943,
+          502.608,
+          403.704
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b3-q4",
+       "number": 4,
+       "box": [
+        282.0,
+        385.943,
+        527.0,
+        575.11
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 4,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 21,
+         "box": [
+          287.717,
+          389.943,
+          502.608,
+          403.704
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 21,
+         "box": [
+          307.559,
+          433.03,
+          518.294,
+          571.11
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 21,
+         "box": [
+          321.732,
+          246.416,
+          354.24,
+          258.15
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 22,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b3-q5",
+       "number": 5,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        216.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 5,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 22,
+         "box": [
+          36.0,
+          78.983,
+          265.039,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 22,
+         "box": [
+          55.842,
+          122.069,
+          176.064,
+          212.15
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 22,
+         "box": [
+          36.0,
+          261.927,
+          258.918,
+          273.688
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b3-q6",
+       "number": 6,
+       "box": [
+        31.0,
+        255.927,
+        275.0,
+        445.095
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 6,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 22,
+         "box": [
+          36.0,
+          259.927,
+          258.918,
+          273.688
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 22,
+         "box": [
+          55.842,
+          279.014,
+          264.056,
+          441.095
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 22,
+         "box": [
+          36.0,
+          490.872,
+          232.404,
+          505.525
+         ],
+         "kind": "komsu_soru"
+        },
+        {
+         "page": 22,
+         "box": [
+          55.842,
+          198.416,
+          176.064,
+          210.15
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b3-q7",
+       "number": 7,
+       "box": [
+        31.0,
+        484.872,
+        275.0,
+        694.543
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 7,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 22,
+         "box": [
+          36.0,
+          488.872,
+          232.404,
+          505.525
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 22,
+         "box": [
+          55.842,
+          600.463,
+          196.053,
+          690.543
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 22,
+         "box": [
+          70.016,
+          427.361,
+          111.533,
+          439.095
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b3-q8",
+       "number": 8,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        220.05
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 8,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 22,
+         "box": [
+          287.717,
+          78.983,
+          497.126,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 22,
+         "box": [
+          307.559,
+          125.969,
+          458.786,
+          216.05
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 22,
+         "box": [
+          287.717,
+          368.347,
+          519.26,
+          380.108
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b3-q9",
+       "number": 9,
+       "box": [
+        282.0,
+        362.347,
+        527.0,
+        515.514
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 9,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 22,
+         "box": [
+          287.717,
+          366.347,
+          519.26,
+          380.108
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 22,
+         "box": [
+          307.559,
+          409.434,
+          503.795,
+          511.514
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 22,
+         "box": [
+          307.559,
+          202.316,
+          451.793,
+          214.05
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 23,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b3-q10",
+       "number": 10,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        353.158
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 10,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 23,
+         "box": [
+          36.0,
+          78.983,
+          238.426,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 23,
+         "box": [
+          55.842,
+          223.077,
+          255.597,
+          349.158
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 23,
+         "box": [
+          165.337,
+          143.969,
+          247.757,
+          166.433
+         ],
+         "kind": "sekil"
+        },
+        {
+         "page": 23,
+         "box": [
+          72.994,
+          136.454,
+          155.488,
+          174.796
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 23,
+         "box": [
+          36.0,
+          419.439,
+          129.364,
+          431.2
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b3-q11",
+       "number": 11,
+       "box": [
+        31.0,
+        413.439,
+        275.0,
+        652.118
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 11,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 23,
+         "box": [
+          36.0,
+          417.439,
+          129.364,
+          431.2
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 23,
+         "box": [
+          55.842,
+          558.038,
+          102.858,
+          648.118
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 23,
+         "box": [
+          70.016,
+          335.424,
+          212.567,
+          347.158
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b3-q12",
+       "number": 12,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        252.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 12,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 23,
+         "box": [
+          287.717,
+          78.983,
+          514.508,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 23,
+         "box": [
+          307.559,
+          110.069,
+          515.279,
+          248.15
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 23,
+         "box": [
+          287.717,
+          400.447,
+          511.653,
+          412.208
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b3-q13",
+       "number": 13,
+       "box": [
+        282.0,
+        394.447,
+        527.0,
+        559.614
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 13,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 23,
+         "box": [
+          287.717,
+          398.447,
+          511.653,
+          412.208
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 23,
+         "box": [
+          307.559,
+          429.534,
+          514.298,
+          555.614
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 23,
+         "box": [
+          321.732,
+          234.416,
+          415.764,
+          246.15
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 24,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b3-q14",
+       "number": 14,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        264.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 14,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 24,
+         "box": [
+          36.0,
+          78.983,
+          252.403,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 24,
+         "box": [
+          55.842,
+          122.069,
+          260.61,
+          260.15
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 24,
+         "box": [
+          36.0,
+          371.439,
+          218.419,
+          383.2
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b3-q15",
+       "number": 15,
+       "box": [
+        31.0,
+        365.439,
+        275.0,
+        592.118
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 15,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 24,
+         "box": [
+          36.0,
+          369.439,
+          218.419,
+          383.2
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 24,
+         "box": [
+          55.842,
+          498.038,
+          105.036,
+          588.118
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 24,
+         "box": [
+          55.842,
+          246.416,
+          253.59,
+          258.15
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b3-q16",
+       "number": 16,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        300.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 16,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 24,
+         "box": [
+          287.717,
+          78.983,
+          511.635,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 24,
+         "box": [
+          307.559,
+          110.069,
+          516.816,
+          296.15
+         ],
+         "kind": "secenek"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 25,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b3-q17",
+       "number": 17,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        558.669
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 17,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 25,
+         "box": [
+          36.0,
+          78.983,
+          243.439,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 25,
+         "box": [
+          55.842,
+          464.589,
+          102.363,
+          554.669
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 25,
+         "box": [
+          55.843,
+          121.418,
+          252.471,
+          319.418
+         ],
+         "kind": "sekil"
+        }
+       ]
+      },
+      {
+       "id": "b3-q18",
+       "number": 18,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        332.654
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 18,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 25,
+         "box": [
+          287.717,
+          78.983,
+          495.299,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 25,
+         "box": [
+          307.559,
+          178.573,
+          502.429,
+          328.654
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 25,
+         "box": [
+          287.717,
+          419.439,
+          512.132,
+          431.2
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b3-q19",
+       "number": 19,
+       "box": [
+        282.0,
+        413.439,
+        527.0,
+        626.606
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 19,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 25,
+         "box": [
+          287.717,
+          417.439,
+          512.132,
+          431.2
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 25,
+         "box": [
+          307.559,
+          448.526,
+          516.296,
+          622.606
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 25,
+         "box": [
+          321.732,
+          314.92,
+          363.24,
+          326.654
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 26,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b3-q20",
+       "number": 20,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        228.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 20,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 26,
+         "box": [
+          36.0,
+          78.983,
+          247.293,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 26,
+         "box": [
+          55.842,
+          122.069,
+          264.579,
+          224.15
+         ],
+         "kind": "secenek"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 27,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b4-q1",
+       "number": 1,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        355.157
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 1,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 27,
+         "box": [
+          36.0,
+          78.983,
+          267.542,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 27,
+         "box": [
+          55.842,
+          244.78,
+          267.543,
+          351.157
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 27,
+         "box": [
+          52.602,
+          110.4,
+          265.833,
+          211.227
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 27,
+         "box": [
+          36.0,
+          400.935,
+          164.869,
+          412.696
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b4-q2",
+       "number": 2,
+       "box": [
+        31.0,
+        394.935,
+        275.0,
+        528.354
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 2,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 27,
+         "box": [
+          36.0,
+          398.935,
+          164.869,
+          412.696
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 27,
+         "box": [
+          55.842,
+          491.534,
+          265.039,
+          524.354
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 27,
+         "box": [
+          36.0,
+          567.959,
+          219.409,
+          579.72
+         ],
+         "kind": "komsu_soru"
+        },
+        {
+         "page": 27,
+         "box": [
+          55.842,
+          337.423,
+          265.042,
+          349.157
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b4-q3",
+       "number": 3,
+       "box": [
+        31.0,
+        561.959,
+        275.0,
+        719.026
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 3,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 27,
+         "box": [
+          36.0,
+          565.959,
+          219.409,
+          579.72
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 27,
+         "box": [
+          55.842,
+          612.945,
+          265.042,
+          715.026
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 27,
+         "box": [
+          99.727,
+          510.62,
+          226.149,
+          522.354
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b4-q4",
+       "number": 4,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        463.488
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 4,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 27,
+         "box": [
+          287.717,
+          78.983,
+          490.107,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 27,
+         "box": [
+          307.559,
+          309.408,
+          514.802,
+          459.488
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 27,
+         "box": [
+          324.098,
+          164.771,
+          498.704,
+          259.729
+         ],
+         "kind": "sekil"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 28,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b4-q5",
+       "number": 5,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        307.504
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 5,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 28,
+         "box": [
+          36.0,
+          78.983,
+          236.887,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 28,
+         "box": [
+          55.843,
+          231.922,
+          235.848,
+          303.504
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 28,
+         "box": [
+          36.0,
+          394.289,
+          248.9,
+          406.05
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b4-q6",
+       "number": 6,
+       "box": [
+        31.0,
+        388.289,
+        275.0,
+        669.96
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 6,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 28,
+         "box": [
+          36.0,
+          392.289,
+          248.9,
+          406.05
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 28,
+         "box": [
+          55.842,
+          515.88,
+          264.1,
+          665.96
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 28,
+         "box": [
+          55.843,
+          289.77,
+          232.851,
+          301.504
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b4-q7",
+       "number": 7,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        344.654
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 7,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 28,
+         "box": [
+          287.717,
+          78.983,
+          490.602,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 28,
+         "box": [
+          307.559,
+          190.573,
+          515.801,
+          340.654
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 28,
+         "box": [
+          287.717,
+          410.935,
+          511.14,
+          422.696
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b4-q8",
+       "number": 8,
+       "box": [
+        282.0,
+        404.935,
+        527.0,
+        685.354
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 8,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 28,
+         "box": [
+          287.717,
+          408.935,
+          511.14,
+          422.696
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 28,
+         "box": [
+          307.559,
+          648.534,
+          516.755,
+          681.354
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 28,
+         "box": [
+          321.732,
+          326.92,
+          374.247,
+          338.654
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 29,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b4-q9",
+       "number": 9,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        332.654
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 9,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 29,
+         "box": [
+          36.0,
+          78.983,
+          265.939,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 29,
+         "box": [
+          55.842,
+          178.573,
+          266.073,
+          328.654
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 29,
+         "box": [
+          36.0,
+          356.51,
+          257.92,
+          368.271
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b4-q10",
+       "number": 10,
+       "box": [
+        31.0,
+        350.51,
+        275.0,
+        700.685
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 10,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 29,
+         "box": [
+          36.0,
+          354.51,
+          257.92,
+          368.271
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 29,
+         "box": [
+          55.842,
+          582.605,
+          248.586,
+          696.685
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 29,
+         "box": [
+          55.843,
+          398.723,
+          265.948,
+          529.64
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 29,
+         "box": [
+          70.016,
+          314.92,
+          111.02,
+          326.654
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b4-q11",
+       "number": 11,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        459.173
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 11,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 29,
+         "box": [
+          287.717,
+          78.983,
+          512.13,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 29,
+         "box": [
+          307.559,
+          365.093,
+          354.575,
+          455.173
+         ],
+         "kind": "secenek"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 30,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b4-q12",
+       "number": 12,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        510.669
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 12,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 30,
+         "box": [
+          36.0,
+          78.983,
+          246.895,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 30,
+         "box": [
+          55.842,
+          416.589,
+          105.36,
+          506.669
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 30,
+         "box": [
+          169.953,
+          178.707,
+          249.573,
+          284.476
+         ],
+         "kind": "sekil"
+        },
+        {
+         "page": 30,
+         "box": [
+          55.336,
+          178.707,
+          135.486,
+          284.648
+         ],
+         "kind": "sekil"
+        }
+       ]
+      },
+      {
+       "id": "b4-q13",
+       "number": 13,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        277.661
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 13,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 30,
+         "box": [
+          287.717,
+          78.983,
+          508.629,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 30,
+         "box": [
+          307.559,
+          183.581,
+          354.575,
+          273.661
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 30,
+         "box": [
+          287.717,
+          364.447,
+          510.141,
+          376.208
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b4-q14",
+       "number": 14,
+       "box": [
+        282.0,
+        358.447,
+        527.0,
+        609.126
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 14,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 30,
+         "box": [
+          287.717,
+          362.447,
+          510.141,
+          376.208
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 30,
+         "box": [
+          307.559,
+          515.046,
+          361.082,
+          605.126
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 30,
+         "box": [
+          307.559,
+          259.927,
+          353.585,
+          271.661
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 31,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b4-q15",
+       "number": 15,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        264.905
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 15,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 31,
+         "box": [
+          36.0,
+          78.983,
+          256.39,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 31,
+         "box": [
+          55.842,
+          228.085,
+          265.039,
+          260.905
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 31,
+         "box": [
+          36.0,
+          310.683,
+          240.433,
+          322.444
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b4-q16",
+       "number": 16,
+       "box": [
+        31.0,
+        304.683,
+        275.0,
+        671.11
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 16,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 31,
+         "box": [
+          36.0,
+          308.683,
+          240.433,
+          322.444
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 31,
+         "box": [
+          55.842,
+          634.29,
+          265.039,
+          667.11
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 31,
+         "box": [
+          55.843,
+          345.81,
+          265.607,
+          511.282
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 31,
+         "box": [
+          98.062,
+          247.171,
+          227.823,
+          258.905
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b4-q17",
+       "number": 17,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        377.158
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 17,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 31,
+         "box": [
+          287.717,
+          78.983,
+          510.645,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 31,
+         "box": [
+          307.559,
+          271.077,
+          493.787,
+          373.158
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 31,
+         "box": [
+          307.56,
+          120.674,
+          509.682,
+          232.756
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 31,
+         "box": [
+          287.717,
+          443.439,
+          465.62,
+          455.2
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b4-q18",
+       "number": 18,
+       "box": [
+        282.0,
+        437.439,
+        527.0,
+        628.118
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 18,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 31,
+         "box": [
+          287.717,
+          441.439,
+          465.62,
+          455.2
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 31,
+         "box": [
+          307.559,
+          534.038,
+          354.575,
+          624.118
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 31,
+         "box": [
+          307.559,
+          359.424,
+          457.787,
+          371.158
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 32,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b4-q19",
+       "number": 19,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        393.409
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 19,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 32,
+         "box": [
+          36.0,
+          78.983,
+          267.415,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 32,
+         "box": [
+          55.842,
+          356.589,
+          265.048,
+          389.409
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 32,
+         "box": [
+          62.876,
+          109.997,
+          268.12,
+          245.994
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 32,
+         "box": [
+          36.0,
+          480.195,
+          200.412,
+          491.956
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b4-q20",
+       "number": 20,
+       "box": [
+        31.0,
+        474.195,
+        275.0,
+        663.362
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 20,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 32,
+         "box": [
+          36.0,
+          478.195,
+          200.412,
+          491.956
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 32,
+         "box": [
+          55.842,
+          509.282,
+          263.067,
+          659.362
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 32,
+         "box": [
+          98.062,
+          375.675,
+          227.823,
+          387.409
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b4-q21",
+       "number": 21,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        308.654
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 21,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 32,
+         "box": [
+          287.717,
+          78.983,
+          480.639,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 32,
+         "box": [
+          307.559,
+          214.573,
+          394.067,
+          304.654
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 32,
+         "box": [
+          287.717,
+          333.927,
+          504.065,
+          345.688
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b4-q22",
+       "number": 22,
+       "box": [
+        282.0,
+        327.927,
+        527.0,
+        705.598
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 22,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 32,
+         "box": [
+          287.717,
+          331.927,
+          504.065,
+          345.688
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 32,
+         "box": [
+          307.559,
+          551.518,
+          509.303,
+          701.598
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 32,
+         "box": [
+          307.559,
+          290.92,
+          369.578,
+          302.654
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 33,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b5-q1",
+       "number": 1,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        473.157
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 1,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 33,
+         "box": [
+          36.0,
+          78.983,
+          247.39,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 33,
+         "box": [
+          55.842,
+          319.077,
+          264.606,
+          469.157
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 33,
+         "box": [
+          55.843,
+          147.857,
+          265.039,
+          270.688
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 33,
+         "box": [
+          36.0,
+          518.935,
+          267.543,
+          530.696
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q2",
+       "number": 2,
+       "box": [
+        31.0,
+        512.935,
+        275.0,
+        666.102
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 2,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 33,
+         "box": [
+          36.0,
+          516.935,
+          267.543,
+          530.696
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 33,
+         "box": [
+          55.842,
+          560.022,
+          237.543,
+          662.102
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 33,
+         "box": [
+          70.016,
+          455.423,
+          259.565,
+          467.157
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q3",
+       "number": 3,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        276.905
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 3,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 33,
+         "box": [
+          287.717,
+          78.983,
+          516.63,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 33,
+         "box": [
+          307.559,
+          240.085,
+          516.764,
+          272.905
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 33,
+         "box": [
+          287.717,
+          312.179,
+          519.259,
+          323.94
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q4",
+       "number": 4,
+       "box": [
+        282.0,
+        306.179,
+        527.0,
+        719.626
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 4,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 33,
+         "box": [
+          287.717,
+          310.179,
+          519.259,
+          323.94
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 33,
+         "box": [
+          307.559,
+          577.545,
+          519.261,
+          715.626
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 33,
+         "box": [
+          307.56,
+          346.642,
+          517.823,
+          541.414
+         ],
+         "kind": "sekil"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 33,
+         "box": [
+          349.778,
+          259.171,
+          479.54,
+          270.905
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 34,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b5-q5",
+       "number": 5,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        204.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 5,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 34,
+         "box": [
+          36.0,
+          78.983,
+          247.426,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 34,
+         "box": [
+          55.842,
+          110.069,
+          262.113,
+          200.15
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 34,
+         "box": [
+          36.0,
+          311.439,
+          263.428,
+          323.2
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q6",
+       "number": 6,
+       "box": [
+        31.0,
+        305.439,
+        275.0,
+        623.11
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 6,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 34,
+         "box": [
+          36.0,
+          309.439,
+          263.428,
+          323.2
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 34,
+         "box": [
+          55.842,
+          421.03,
+          265.092,
+          619.11
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 34,
+         "box": [
+          55.842,
+          186.416,
+          262.113,
+          198.15
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q7",
+       "number": 7,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        325.661
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 7,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 34,
+         "box": [
+          287.717,
+          78.983,
+          505.65,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 34,
+         "box": [
+          307.559,
+          231.581,
+          509.276,
+          321.661
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 34,
+         "box": [
+          287.717,
+          391.943,
+          468.587,
+          403.704
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q8",
+       "number": 8,
+       "box": [
+        282.0,
+        385.943,
+        527.0,
+        667.614
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 8,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 34,
+         "box": [
+          287.717,
+          389.943,
+          468.587,
+          403.704
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 34,
+         "box": [
+          307.559,
+          537.534,
+          519.26,
+          663.614
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 34,
+         "box": [
+          307.559,
+          307.927,
+          486.308,
+          319.661
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 35,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b5-q9",
+       "number": 9,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        320.654
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 9,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 35,
+         "box": [
+          36.0,
+          78.983,
+          261.412,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 35,
+         "box": [
+          55.842,
+          190.573,
+          267.543,
+          316.654
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 35,
+         "box": [
+          36.0,
+          386.935,
+          246.913,
+          398.696
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q10",
+       "number": 10,
+       "box": [
+        31.0,
+        380.935,
+        275.0,
+        662.606
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 10,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 35,
+         "box": [
+          36.0,
+          384.935,
+          246.913,
+          398.696
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 35,
+         "box": [
+          55.842,
+          508.526,
+          267.081,
+          658.606
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 35,
+         "box": [
+          55.842,
+          302.92,
+          265.041,
+          314.654
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q11",
+       "number": 11,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        264.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 11,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 35,
+         "box": [
+          287.717,
+          78.983,
+          519.269,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 35,
+         "box": [
+          307.559,
+          110.069,
+          494.795,
+          260.15
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 35,
+         "box": [
+          287.717,
+          309.927,
+          483.132,
+          321.688
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q12",
+       "number": 12,
+       "box": [
+        282.0,
+        303.927,
+        527.0,
+        493.095
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 12,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 35,
+         "box": [
+          287.717,
+          307.927,
+          483.132,
+          321.688
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 35,
+         "box": [
+          307.559,
+          339.014,
+          515.792,
+          489.095
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 35,
+         "box": [
+          287.717,
+          536.038,
+          513.651,
+          547.799
+         ],
+         "kind": "komsu_soru"
+        },
+        {
+         "page": 35,
+         "box": [
+          321.732,
+          246.416,
+          421.272,
+          258.15
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q13",
+       "number": 13,
+       "box": [
+        282.0,
+        530.038,
+        527.0,
+        695.205
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 13,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 35,
+         "box": [
+          287.717,
+          534.038,
+          513.651,
+          547.799
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 35,
+         "box": [
+          307.559,
+          565.124,
+          519.261,
+          691.205
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 35,
+         "box": [
+          321.732,
+          475.361,
+          432.261,
+          487.095
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 36,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b5-q14",
+       "number": 14,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        355.331
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 14,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 36,
+         "box": [
+          36.0,
+          78.983,
+          229.903,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 36,
+         "box": [
+          55.842,
+          261.25,
+          185.046,
+          351.331
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 36,
+         "box": [
+          36.0,
+          442.116,
+          258.406,
+          453.877
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q15",
+       "number": 15,
+       "box": [
+        31.0,
+        436.116,
+        275.0,
+        589.284
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 15,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 36,
+         "box": [
+          36.0,
+          440.116,
+          258.406,
+          453.877
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 36,
+         "box": [
+          55.842,
+          471.203,
+          267.543,
+          585.284
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 36,
+         "box": [
+          55.842,
+          337.597,
+          185.046,
+          349.331
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q16",
+       "number": 16,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        216.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 16,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 36,
+         "box": [
+          287.717,
+          78.983,
+          499.143,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 36,
+         "box": [
+          307.559,
+          110.069,
+          516.756,
+          212.15
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 36,
+         "box": [
+          287.717,
+          282.431,
+          510.653,
+          294.192
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q17",
+       "number": 17,
+       "box": [
+        282.0,
+        276.431,
+        527.0,
+        405.598
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 17,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 36,
+         "box": [
+          287.717,
+          280.431,
+          510.653,
+          294.192
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 36,
+         "box": [
+          307.559,
+          311.518,
+          441.281,
+          401.598
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 36,
+         "box": [
+          287.717,
+          492.384,
+          516.756,
+          504.145
+         ],
+         "kind": "komsu_soru"
+        },
+        {
+         "page": 36,
+         "box": [
+          307.559,
+          198.416,
+          439.274,
+          210.15
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q18",
+       "number": 18,
+       "box": [
+        282.0,
+        486.384,
+        527.0,
+        615.551
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 18,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 36,
+         "box": [
+          287.717,
+          490.384,
+          516.756,
+          504.145
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 36,
+         "box": [
+          307.559,
+          521.471,
+          460.793,
+          611.551
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 36,
+         "box": [
+          307.559,
+          387.864,
+          359.237,
+          399.598
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 37,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b5-q19",
+       "number": 19,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        220.402
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 19,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 37,
+         "box": [
+          36.0,
+          78.983,
+          114.361,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 37,
+         "box": [
+          55.842,
+          183.581,
+          265.039,
+          216.402
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 37,
+         "box": [
+          36.0,
+          307.187,
+          261.916,
+          318.948
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q20",
+       "number": 20,
+       "box": [
+        31.0,
+        301.187,
+        275.0,
+        430.354
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 20,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 37,
+         "box": [
+          36.0,
+          305.187,
+          261.916,
+          318.948
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 37,
+         "box": [
+          55.842,
+          336.274,
+          229.902,
+          426.354
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 37,
+         "box": [
+          36.0,
+          517.14,
+          259.936,
+          528.901
+         ],
+         "kind": "komsu_soru"
+        },
+        {
+         "page": 37,
+         "box": [
+          98.898,
+          202.668,
+          226.995,
+          214.402
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q21",
+       "number": 21,
+       "box": [
+        31.0,
+        511.14,
+        275.0,
+        640.307
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 21,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 37,
+         "box": [
+          36.0,
+          515.14,
+          259.936,
+          528.901
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 37,
+         "box": [
+          55.842,
+          546.227,
+          247.398,
+          636.307
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 37,
+         "box": [
+          55.842,
+          412.62,
+          229.902,
+          424.354
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q22",
+       "number": 22,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        228.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 22,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 37,
+         "box": [
+          287.717,
+          78.983,
+          516.164,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 37,
+         "box": [
+          307.559,
+          110.069,
+          516.791,
+          224.15
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 37,
+         "box": [
+          287.717,
+          294.431,
+          486.633,
+          306.192
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q23",
+       "number": 23,
+       "box": [
+        282.0,
+        288.431,
+        527.0,
+        417.598
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 23,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 37,
+         "box": [
+          287.717,
+          292.431,
+          486.633,
+          306.192
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 37,
+         "box": [
+          307.559,
+          323.518,
+          513.632,
+          413.598
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 37,
+         "box": [
+          287.717,
+          483.88,
+          440.094,
+          495.641
+         ],
+         "kind": "komsu_soru"
+        },
+        {
+         "page": 37,
+         "box": [
+          321.732,
+          210.416,
+          352.242,
+          222.15
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q24",
+       "number": 24,
+       "box": [
+        282.0,
+        477.88,
+        527.0,
+        680.559
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 24,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 37,
+         "box": [
+          287.717,
+          481.88,
+          440.094,
+          495.641
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 37,
+         "box": [
+          307.559,
+          586.479,
+          354.575,
+          676.559
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 37,
+         "box": [
+          307.559,
+          399.864,
+          475.103,
+          411.598
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 38,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b5-q25",
+       "number": 25,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        277.661
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 25,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 38,
+         "box": [
+          36.0,
+          78.983,
+          104.362,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 38,
+         "box": [
+          55.842,
+          183.581,
+          101.868,
+          273.661
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 38,
+         "box": [
+          36.0,
+          405.455,
+          164.392,
+          417.216
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q26",
+       "number": 26,
+       "box": [
+        31.0,
+        399.455,
+        275.0,
+        602.134
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 26,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 38,
+         "box": [
+          36.0,
+          403.455,
+          164.392,
+          417.216
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 38,
+         "box": [
+          55.842,
+          508.053,
+          102.858,
+          598.134
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 38,
+         "box": [
+          55.842,
+          259.927,
+          101.868,
+          271.661
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q27",
+       "number": 27,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        236.654
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 27,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 38,
+         "box": [
+          287.717,
+          78.983,
+          498.611,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 38,
+         "box": [
+          307.559,
+          142.573,
+          438.617,
+          232.654
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 38,
+         "box": [
+          287.717,
+          384.951,
+          478.623,
+          396.712
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b5-q28",
+       "number": 28,
+       "box": [
+        282.0,
+        378.951,
+        527.0,
+        569.63
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 28,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 38,
+         "box": [
+          287.717,
+          382.951,
+          478.623,
+          396.712
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 38,
+         "box": [
+          307.559,
+          475.549,
+          354.08,
+          565.63
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 38,
+         "box": [
+          307.559,
+          218.92,
+          438.617,
+          230.654
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 39,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b6-q1",
+       "number": 1,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        264.15
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 1,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 39,
+         "box": [
+          36.0,
+          78.983,
+          211.903,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 39,
+         "box": [
+          55.842,
+          122.069,
+          265.039,
+          260.15
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 39,
+         "box": [
+          36.0,
+          309.927,
+          232.405,
+          321.688
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b6-q2",
+       "number": 2,
+       "box": [
+        31.0,
+        303.927,
+        275.0,
+        457.094
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 2,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 39,
+         "box": [
+          36.0,
+          307.927,
+          232.405,
+          321.688
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 39,
+         "box": [
+          55.842,
+          363.014,
+          237.39,
+          453.094
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 39,
+         "box": [
+          36.0,
+          502.872,
+          251.395,
+          514.633
+         ],
+         "kind": "komsu_soru"
+        },
+        {
+         "page": 39,
+         "box": [
+          70.016,
+          246.416,
+          181.067,
+          258.15
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b6-q3",
+       "number": 3,
+       "box": [
+        31.0,
+        496.872,
+        275.0,
+        690.291
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 3,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 39,
+         "box": [
+          36.0,
+          500.872,
+          251.395,
+          514.633
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 39,
+         "box": [
+          55.842,
+          653.471,
+          265.048,
+          686.291
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 39,
+         "box": [
+          55.842,
+          439.36,
+          237.39,
+          451.094
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b6-q4",
+       "number": 4,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        289.661
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 4,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 39,
+         "box": [
+          287.717,
+          78.983,
+          406.587,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 39,
+         "box": [
+          307.559,
+          195.581,
+          356.751,
+          285.661
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 39,
+         "box": [
+          287.717,
+          429.455,
+          516.756,
+          441.216
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b6-q5",
+       "number": 5,
+       "box": [
+        282.0,
+        423.455,
+        527.0,
+        576.464
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 5,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 39,
+         "box": [
+          287.717,
+          427.455,
+          516.756,
+          441.216
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 39,
+         "box": [
+          307.56,
+          500.883,
+          498.17,
+          572.464
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 39,
+         "box": [
+          307.559,
+          271.927,
+          356.258,
+          283.661
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "page": 40,
+     "width": 552.756,
+     "height": 779.528,
+     "role": "soru",
+     "questions": [
+      {
+       "id": "b6-q6",
+       "number": 6,
+       "box": [
+        31.0,
+        74.983,
+        275.0,
+        510.669
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 6,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 40,
+         "box": [
+          36.0,
+          78.983,
+          267.523,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 40,
+         "box": [
+          55.842,
+          416.589,
+          104.541,
+          506.669
+         ],
+         "kind": "secenek"
+        },
+        {
+         "page": 40,
+         "box": [
+          100.906,
+          229.786,
+          226.406,
+          293.704
+         ],
+         "kind": "sekil"
+        },
+        {
+         "page": 40,
+         "box": [
+          156.968,
+          125.286,
+          271.468,
+          190.198
+         ],
+         "kind": "sekil"
+        },
+        {
+         "page": 40,
+         "box": [
+          55.843,
+          113.936,
+          138.593,
+          201.674
+         ],
+         "kind": "sekil"
+        }
+       ]
+      },
+      {
+       "id": "b6-q7",
+       "number": 7,
+       "box": [
+        282.0,
+        74.983,
+        527.0,
+        301.661
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 7,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 40,
+         "box": [
+          287.717,
+          78.983,
+          519.242,
+          92.744
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 40,
+         "box": [
+          307.559,
+          207.581,
+          356.258,
+          297.661
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 40,
+         "box": [
+          287.717,
+          429.455,
+          491.133,
+          441.216
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      },
+      {
+       "id": "b6-q8",
+       "number": 8,
+       "box": [
+        282.0,
+        423.455,
+        527.0,
+        576.622
+       ],
+       "type": "coktan_secmeli",
+       "final_output": {
+        "question_number": 8,
+        "part_count": 1
+       },
+       "required_regions": [
+        {
+         "page": 40,
+         "box": [
+          287.717,
+          427.455,
+          491.133,
+          441.216
+         ],
+         "kind": "metin"
+        },
+        {
+         "page": 40,
+         "box": [
+          307.559,
+          458.542,
+          519.266,
+          572.622
+         ],
+         "kind": "secenek"
+        }
+       ],
+       "forbidden_regions": [
+        {
+         "page": 40,
+         "box": [
+          307.559,
+          283.927,
+          356.258,
+          295.661
+         ],
+         "kind": "komsu_soru"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

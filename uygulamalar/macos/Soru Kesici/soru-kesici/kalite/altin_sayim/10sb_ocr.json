@@ -1,0 +1,113 @@
+{
+ "schema_version": "soru-kesici.golden-count/v1",
+ "document": {
+  "id": "10sb_ocr",
+  "source": "Desktop/Yeni klasör (3)/10. Sınıf Biyoloji Soru Bankası_Searchable.pdf",
+  "source_sha256": "7ef368506b4bbefa3898da67ad3e527a0cc8ef11bea3b592ff39bcc58d778025",
+  "page_count": 224
+ },
+ "sampling": {
+  "dpi": 300,
+  "max_sayfa": 24,
+  "bas": null,
+  "son": null,
+  "kapsam": "kismi",
+  "ornek_no": [
+   1,
+   31,
+   56,
+   86,
+   111,
+   141,
+   166,
+   196
+  ]
+ },
+ "verifier": "claude-opus-5 çift kör sayım (iki bağımsız sayıcı, çıplak render, mutabakat şartı) | İKİZ AKTARIMI: 10sb ile PİKSEL BİREBİR aynı PDF (224 sayfa, rect 956,35×1190,37, render SHA-256 eşit); sayfa N'deki sorular özdeş olduğu için sayım altını değişmeden taşındı. Yeniden sayım GEREKMEZ.",
+ "method": "kor-sayim",
+ "pages": [
+  {
+   "page": 1,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "kapak",
+   "notes": "Palme Yayinevi 10. sinif Biyoloji Soru Kitabi on kapagi; yazar adlari ve MEB rozeti disinda icerik yok. | Palme Yayinevi 10. sinif Biyoloji Soru Kitabi on kapagi; yazar adlari, MEB rozeti ve logo disinda icerik yok."
+  },
+  {
+   "page": 31,
+   "question_count": 21,
+   "question_numbers": null,
+   "role": "soru",
+   "notes": "'Mini Sinav' sayfasi, 4 ust duzey numarali madde var ama kurallar geregi alt maddeler ayri sayildi: S1 eslestirme -> ustteki terim gridi paylasilan uyaran (sayilmadi), 1-5 numarali tanim bosluklari = 5; S2 gövde + a,b,c,d,e ayri ayri yazilacak evre adi = 5; S3 dogru-yanlis tablosu 1-8 her satir ayri = 8; S4 X, Y, Z ayri ayri yazilacak = 3. Toplam 5+5+8+3=21. Ust duzey sayim tercih edilseydi 4 olurdu; granülerlik karari nedeniyle guven 'orta'. question_numbers null cunku numaralar sayfa icinde iki kez 1'den basliyor (S1'de 1-5, S3'te 1-8) ve tek duz liste kurulamiyor. | \"Mini Sinav\" sayfasi, 4 ana madde ama her biri ayri ayri cevaplanan alt maddelerden olusuyor. 1. madde: terim kutusu paylasilan liste (sayilmadi), 5 tanim bulutu + 1-5 numarali bosluk = 5. 2. madde: a-e harfli 5 sekil, her birinin altina bolunme evresi yazilacak = 5. 3. madde: D/Y tablosu 1-8 satir, her satir ayri = 8. 4. madde: X, Y, Z icin ayri ayri cevap satiri = 3. Toplam 5+5+8+3=21. Ana madde bazinda sayilsa 4 olurdu; kurallar (esleştirme her madde, D/Y her satir, ayri cevaplanan alt sorular) ayristirmayi emrediyor. Numaralandirma sayfa icinde cakisiyor (1-5 ve 1-8 ayri bloklarda, a-e ve X/Y/Z harfli) oldugu icin question_numbers null. | güven: orta"
+  },
+  {
+   "page": 56,
+   "question_count": 6,
+   "question_numbers": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "role": "soru",
+   "notes": "Klasik iki sutunlu coktan secmeli test sayfasi; sol sutun 7-9, sag sutun 10-12. Alt bantta '1.A 2.B ... 12.E' cevap anahtari seridi var, kural geregi sayilmadi (altbilgi/cevap anahtari). | Iki sutunlu klasik test sayfasi, 7-12 numarali coktan secmeli sorular. Alt kenardaki \"1.A 2.B ... 12.E\" seridi cevap anahtari altbilgisi, sayilmadi."
+  },
+  {
+   "page": 86,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "Tamamen konu anlatimi: Mendel ilkeleri, Mendel genetiginin genisletilmesi, kan gruplari tablosu ve gorseller. Sorulmus tek bir madde yok. | Tamamen konu anlatimi: Mendel ilkeleri, Mendel genetiginin genisletilmesi ve KAN GRUPLARI basliklari; madde isaretli bilgi maddeleri, kan gruplari tablosu ve iki fotograf. Ogrenciden cevap istenen hicbir madde yok."
+  },
+  {
+   "page": 111,
+   "question_count": 6,
+   "question_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "role": "soru",
+   "notes": "TEST-12 (Cinsiyete Bagli Kalitim) basligiyla acilan yeni test; sol sutun 1-3, sag sutun 4-6. Soru 2 ve 5'teki soyagaci semalari ile Disi/Erkek lejantlari paylasilan uyaran, ayrica sayilmadi. | TEST-12 (Cinsiyete Bagli Kalitim) baslangici, iki sutunda 1-6 numarali coktan secmeli sorular. Soyagaci semalari sorularin uyarani, ayri sayilmadi."
+  },
+  {
+   "page": 141,
+   "question_count": 8,
+   "question_numbers": null,
+   "role": "soru",
+   "notes": "'Mini Sinav / Karma' sayfasi; tek ust duzey soru (1.) altinda a) - h) olmak uzere 8 soyagaci var, her biri ayri cevaplanacagi icin 8 sayildi. 'Ornek:' etiketli cozulmus soyagaci cozumlu ornek gosterimi oldugundan sayilmadi. Belirsizlik: her soyagacinin yaninda I/II/III (cekinik/baskin/es baskin) icin ayri isaret isteniyor; bunlar dogru-yanlis satiri gibi ayri sayilsaydi 8x3=24 olurdu. Kesilebilir birim soyagaci oldugu icin 8 tercih edildi; ust duzey sayimda ise 1 olurdu. Uc olasi deger (1 / 8 / 24) nedeniyle guven 'belirsiz'. | \"Mini Sinav - Karma\" sayfasi, tek ana madde (1) ve a) ... h) harfli 8 soyagaci; her soyagacinin yaninda I/II/III icin isaret konacak satirlar var. \"Ornek:\" bloguna cevap zaten yazilmis (cozumlu ornek, sayilmadi). Kesilebilir birim olarak her soyagacini 1 soru kabul ettim -> 8. Alternatif okuma: her soyagacindaki I/II/III degerlendirmesi ayri madde sayilirsa 8x3=24. D/Y tablosu benzetmesi 24'u, \"paylasilan uyaran + alt soru\" benzetmesi 8'i destekliyor; bu yuzden guven belirsiz. Harf disinda soru numarasi olmadigi icin question_numbers null. | güven: belirsiz"
+  },
+  {
+   "page": 166,
+   "question_count": 5,
+   "question_numbers": [
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "role": "soru",
+   "notes": "Iki sutunlu coktan secmeli test sayfasi; sol sutun 7-9, sag sutun 10-11. Alt bantta 1-11 cevap anahtari seridi sayilmadi. Soru 7'deki azot dongusu semasi ve soru 11'deki grafik paylasilan uyaran. | Iki sutunlu test sayfasi, 7-11 numarali coktan secmeli sorular (azot dongusu semasi, tablo ve grafik uyaran olarak kullaniliyor). Alttaki 1.C ... 11.D seridi cevap anahtari altbilgisi, sayilmadi."
+  },
+  {
+   "page": 196,
+   "question_count": 6,
+   "question_numbers": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ],
+   "role": "soru",
+   "notes": "Iki sutunlu coktan secmeli test sayfasi; sol sutun 7-9, sag sutun 10-12. Soru 8 numarasi gorselin (karbon ayak izi) solunda tek basina duruyor, govde gorselin altinda devam ediyor - tek soru. Alt bantta 1-12 cevap anahtari seridi sayilmadi. | Iki sutunlu test sayfasi, 7-12 numarali coktan secmeli sorular. 8. soruda karbon ayak izi gorseli + aciklama metni ayni sorunun uyanini olusturuyor, tek soru sayildi. Alttaki 1.B ... 12.A seridi cevap anahtari altbilgisi, sayilmadi."
+  }
+ ]
+}

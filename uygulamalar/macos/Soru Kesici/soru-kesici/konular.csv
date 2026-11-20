@@ -1,0 +1,14 @@
+# Konu/kazanım sözlüğü — soruları OCR metninden otomatik etiketlemek için.
+# Biçim:  Konu Adı;anahtar kelime 1,anahtar kelime 2,...
+# Satır başındaki # yorumdur. Kendi dersinize göre serbestçe düzenleyin.
+# Eşleşme Türkçe-güvenlidir (büyük/küçük harf ve ç/ğ/ı/ö/ş/ü fark etmez).
+#
+# --- Biyoloji örnek (11. sınıf sinir/duyu) ---
+Sinir Sistemi;nöron,akson,dendrit,sinaps,impuls,refleks,omurilik,merkezi sinir,çevresel sinir,miyelin
+Beyin ve Kısımları;beyin,beyincik,hipotalamus,talamus,beyin kabuğu,omurilik soğanı,pons,serebrum
+Duyu Organları;göz,kulak,retina,koku,tat,deri,duyu,reseptör,fotoreseptör
+Endokrin Sistem;hormon,bez,tiroit,insülin,adrenalin,hipofiz,salgı,endokrin
+Hücre;hücre,zar,çekirdek,mitokondri,ribozom,golgi,sitoplazma,organel,lizozom
+Kalıtım;gen,kromozom,dna,alel,genotip,fenotip,mendel,çaprazlama,mutasyon
+Ekoloji;ekosistem,popülasyon,tür,besin zinciri,üretici,tüketici,ayrıştırıcı,habitat
+Fotosentez ve Solunum;fotosentez,solunum,klorofil,atp,glikoz,oksijen,karbondioksit,kloroplast

@@ -1,0 +1,88 @@
+{
+ "surum": 1,
+ "_not": "altin_pdf_katmani.py'nin kitap ailesine özgü dizgi varsayımları. Motor (soru_kes/dogrula) burada da hiç kullanılmaz: değerler PDF'lerin kendi kelime koordinatlarından ölçüldü (kalite/korpus_geometri_2026-07-25.md). Kenar payları sayfa dikdörtgenine ORANLIDIR; mutlak nokta değil.",
+ "_alanlar": {
+  "sutunlar": "Sütun gövde bandı (x0,x1) ve numara çapası. null verilirse çapalar numara kelimelerinin konum histogramından türetilir (bkz. sutun_turetme).",
+  "capa_hizasi": "Numaraların hangi kenarı sabit: 'x0' (sola hizalı dizgi) veya 'x1' (sağa hizalı dizgi). ÖSYM 2026 kitapçıklarında '1.' ile '10.' aynı SAĞ kenarda biter; x0 kullanılırsa yönerge maddeleri de çapa sanılır.",
+  "capa_toleransi": "Çapaya izin verilen sapma (pt).",
+  "numara_azami_hane": "Soru numarasının azami basamak sayısı.",
+  "kenar_paylari": "capa_ust/capa_alt: numara çapasının aranacağı dikey bant. govde_alt: soru gövdesinin inebileceği en alt sınır. Hepsi page.rect.height ile çarpılır.",
+  "bolum_kipi": "'konu' = bölüm sayfadaki konu başlığı + deneme numarasından okunur, beklenen adet dayatılabilir. 'dizi' = bölüm numara zincirinden türetilir (numara düştüğünde yeni test), adet bilinmez.",
+  "konular": "[[ad, normalize başlık, beklenen adet|null], ...]. Yalnız 'konu' kipinde anlamlı.",
+  "deneme_deseni": "Deneme numarasını yakalayan regex; yoksa null.",
+  "aralik_deseni": "'12-16. sorular' benzeri ortak uyaran başlığı; yoksa null (ortak uyaran üretilmez).",
+  "atlanacak_sayfa_deseni": "Bu desene uyan sayfada çapa aranmaz (yönerge/açıklama sayfaları)."
+ },
+ "profiller": {
+  "mebi-tyt-deneme": {
+   "aciklama": "MEBİ YKS Denemeleri TYT (tyt-1). Modülün gömülü varsayılanının birebir aynısı; --profil verilmediğinde bu davranış geçerlidir.",
+   "sayfa_rect": [552.756, 779.528],
+   "sutunlar": [
+    {"ad": "sol", "x0": 31.0, "x1": 275.0, "capa": 36.0},
+    {"ad": "sag", "x0": 282.0, "x1": 527.0, "capa": 287.7}
+   ],
+   "capa_hizasi": "x0",
+   "capa_toleransi": 6.0,
+   "numara_azami_hane": 2,
+   "kenar_paylari": {
+    "capa_ust": 0.08723227219495595,
+    "capa_alt": 0.9364640985634978,
+    "govde_alt": 0.9403125811603341
+   },
+   "bolum_kipi": "konu",
+   "konular": [
+    ["turkce", "turkce testi", 40],
+    ["sosyal", "sosyal bilimler testi", 25],
+    ["matematik", "temel matematik testi", 40],
+    ["fen", "fen bilimleri testi", 20]
+   ],
+   "deneme_deseni": "(?<!\\d)([1-8])\\.\\s*deneme",
+   "aralik_deseni": "(?<!\\d)(\\d{1,2})\\s*[-–]\\s*(\\d{1,2})\\.\\s*sorular",
+   "atlanacak_sayfa_deseni": null
+  },
+  "mebi-2col": {
+   "aciklama": "MEBİ 552,8x779,5 iki sütun ailesi: tyt-1, tyt-2, ayt-say, ayt-ea, tyt-biyo, YKS Çıkmış Sorular TYT/AYT-EA. Numaralar SOLA hizalı (x0 36,0 / 287,7); dizgi zaman zaman 2,5 pt kayıyor (ayt-ea s.21) o yüzden tolerans 4,0. Yönerge maddelerinin çapa sanılmasını tolerans değil atlanacak_sayfa_deseni engeller. Beklenen adet ve deneme deseni bu ailede genellemediği için bölüm zincirden türetilir; --serbest ile kullanılmalıdır.",
+   "sayfa_rect": [552.756, 779.528],
+   "sutunlar": [
+    {"ad": "sol", "x0": 31.0, "x1": 275.0, "capa": 36.0},
+    {"ad": "sag", "x0": 282.0, "x1": 527.0, "capa": 287.7}
+   ],
+   "capa_hizasi": "x0",
+   "capa_toleransi": 4.0,
+   "numara_azami_hane": 3,
+   "kenar_paylari": {
+    "capa_ust": 0.06927268674305326,
+    "capa_alt": 0.9364640985634978,
+    "govde_alt": 0.9403125811603341
+   },
+   "bolum_kipi": "dizi",
+   "konular": null,
+   "deneme_deseni": null,
+   "aralik_deseni": "(?<!\\d)(\\d{1,2})\\s*[-–]\\s*(\\d{1,2})\\.\\s*sorular",
+   "atlanacak_sayfa_deseni": "bu kitapcikta \\d+ soru bulunmaktadir",
+   "sutun_turetme": {"yaricap": 6.0, "asgari_adet": 12, "sol_payi": 5.0, "genislik": 244.0}
+  },
+  "osym-2026": {
+   "aciklama": "ÖSYM 2026 YKS kitapçıkları (yks_tyt_2026_d350, yks_ayt_2026_kt12). Sayfa 595,3x864,6; numaralar SAĞA hizalı, x1 56,9 (sol) ve 330,8 (sağ). Test yönergesinin '1.'/'2.' maddeleri x1 54,4'te durduğu için 1,5 pt tolerans onları eler.",
+   "sayfa_rect": [595.276, 864.567],
+   "sutunlar": [
+    {"ad": "sol", "x0": 39.4, "x1": 316.5, "capa": 56.9},
+    {"ad": "sag", "x0": 317.0, "x1": 567.5, "capa": 330.8}
+   ],
+   "capa_hizasi": "x1",
+   "capa_toleransi": 1.5,
+   "numara_azami_hane": 2,
+   "kenar_paylari": {
+    "capa_ust": 0.09021857647670518,
+    "capa_alt": 0.8582331249450673,
+    "govde_alt": 0.8617030701941714
+   },
+   "bolum_kipi": "dizi",
+   "konular": null,
+   "deneme_deseni": null,
+   "aralik_deseni": "(?<!\\d)(\\d{1,2})\\s*[-–]\\s*(\\d{1,2})\\.\\s*sorular",
+   "atlanacak_sayfa_deseni": null,
+   "sutun_turetme": {"yaricap": 6.0, "asgari_adet": 12, "sol_payi": 0.0, "genislik": 260.0}
+  }
+ }
+}

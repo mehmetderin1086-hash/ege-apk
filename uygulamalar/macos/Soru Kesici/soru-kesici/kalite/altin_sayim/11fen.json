@@ -1,0 +1,92 @@
+{
+ "schema_version": "soru-kesici.golden-count/v1",
+ "document": {
+  "id": "soru-kesici:11fen",
+  "source": "11 fen.pdf",
+  "source_sha256": "15b38e6e5de726b8e88ddebd131a1859e54a026cf4a05a60c35f8d885df3b3d3",
+  "page_count": 261
+ },
+ "sampling": {
+  "dpi": 300,
+  "max_sayfa": 40,
+  "bas": null,
+  "son": null,
+  "kapsam": "kismi",
+  "ornek_no": [
+   1,
+   37,
+   67,
+   103,
+   133,
+   169,
+   199,
+   235
+  ]
+ },
+ "verifier": "claude-opus-5 çift kör sayım (iki bağımsız sayıcı, çıplak render, mutabakat şartı)",
+ "method": "kor-sayim",
+ "pages": [
+  {
+   "page": 1,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "kapak",
+   "notes": "İç kapak: ORTAÖĞRETİM / FEN LİSESİ BİYOLOJİ 11. SINIF Ders Kitabı, yazar listesi, MEB mührü, DEVLET KİTAPLARI. Soru yok. | Ic kapak: ORTAOGRETIM / FEN LISESI BIYOLOJI 11. SINIF Ders Kitabi, yazar listesi, MEB muhru, DEVLET KITAPLARI. Soru yok."
+  },
+  {
+   "page": 37,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "\"ENDOKRİN BEZLER VE SALGILADIKLARI HORMONLAR\" konu anlatımı + Görsel 1.18 (erkek/dişide endokrin bezler etiketli şema). Cevaplanacak madde yok. | ENDOKRIN BEZLER VE SALGILADIKLARI HORMONLAR konu anlatimi + Gorsel 1.18 etiketli sema. Metindeki 'neler hissedersiniz?' / 'hizlandiran nedir?' ifadeleri anlatim icinde retorik giris cumleleri, cevaplanacak madde degil."
+  },
+  {
+   "page": 67,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "\"DUYU ORGANLARI RAHATSIZLIKLARI / Görme Bozuklukları\" konu anlatımı, Görsel 1.48 ve QR kutusu. Sağdaki \"Araştırınız\" kutusu araştırma/paylaşım yönergesi olduğu için kural gereği sayılmadı. | DUYU ORGANLARI RAHATSIZLIKLARI konu anlatimi + Gorsel 1.48. Sag kenardaki 'Arastiriniz' kutusu arastirma/etkinlik yonergesi ('arastirma yapip sinifta arkadaslarinizla paylasiniz'), kural geregi sayilmaz. QR kod kutusu da sayilmaz."
+  },
+  {
+   "page": 103,
+   "question_count": 5,
+   "question_numbers": [
+    23,
+    24,
+    25,
+    26,
+    27
+   ],
+   "role": "soru",
+   "notes": "İki sütunlu test sayfası; hepsi A-E şıklı çoktan seçmeli. Sol sütun 23-25, sağ sütun 26-27. 27'nin altındaki Kırık/Osteoporoz/Osteoartrit tablosu sorunun şık düzeni, ayrı soru değil. Sayfa üstünde/altında yarım kalan soru yok. | Iki sutunlu coktan secmeli test sayfasi. 23, 24, 25 sol sutunda; 26, 27 sag sutunda. Her birinin I/II/III roma rakamli oncul listesi ayri soru degil, tek sorunun uyarani; A-E siklari tek cevap istiyor. 27'nin altindaki Kirik/Osteoporoz/Osteoartrit tablosu secenek gridi, ayri soru degil. Sayfa altinda yarim kalan/tasan soru yok."
+  },
+  {
+   "page": 133,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "Kalbin çalışmasını düzenleyen yapılar konu anlatımı + Görsel 1.84. Alttaki numaralı 1-4 maddeleri görseldeki 1-4 numaralarının açıklaması (düz anlatım), soru değil. \"Bilgi Hücresi\" kutusu ve QR bilgi kutusu da sayılmadı. | Kalbin calismasi konu anlatimi + Gorsel 1.84. 1-4 numarali liste, semadaki adimlarin aciklamasi (anlatim), soru degil. 'Bilgi Hucresi' kutusu ve QR kutusu sayilmaz."
+  },
+  {
+   "page": 169,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "\"Soluk Alıp Verme Mekanizması\" konu anlatımı, iki Bilgi Hücresi kutusu, SOLUK ALMA/SOLUK VERME karşılaştırma tablosu (Görsel 1.104) ve iki QR kutusu. Metindeki \"Solunumunuzu hızlandırıp yavaşlatabilir misiniz?\" gibi ifadeler anlatım içi retorik giriş sorusu, cevaplanacak madde değil. | Soluk Alip Verme Mekanizmasi konu anlatimi + Gorsel 1.104 karsilastirma tablosu (SOLUK ALMA / SOLUK VERME madde isaretli aciklamalar). Ilk paragraftaki 'Solunumunuzu hizlandirip yavaslatabilir misiniz?' ve 'Istemsiz nasil soluk alip veririz?' anlatim icinde retorik sorular, hemen ardindan metnin kendisi cevapliyor; cevaplanacak madde degil. Iki 'Bilgi Hucresi' kutusu ve iki QR kutusu sayilmaz."
+  },
+  {
+   "page": 199,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "\"Erkek Üreme Sistemi\" konu anlatımı + Görsel 1.115 etiketli şema. Soru yok. | Erkek Ureme Sistemi konu anlatimi + Gorsel 1.115 etiketli sema. Sayfada hicbir soru, etkinlik veya kenar kutusu yok."
+  },
+  {
+   "page": 235,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "\"KOMÜNİTEDE TÜR İÇİ VE TÜRLER ARASI REKABET\" konu anlatımı; alttaki Grafik 2.1 a/b/c anlatımın görsel desteği, soru uyaranı olarak bir soruya bağlanmıyor. | KOMUNITEDE TUR ICI VE TURLER ARASI REKABET konu anlatimi + Grafik 2.1 a/b/c. Grafiklerin altindaki a) b) c) etiketleri grafik alt yazisi/uyaran, cevaplanacak alt soru degil."
+  }
+ ]
+}

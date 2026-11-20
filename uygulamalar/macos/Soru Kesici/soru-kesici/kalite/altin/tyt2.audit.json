@@ -1,0 +1,562 @@
+{
+ "schema_version": "soru-kesici.golden-audit/v1",
+ "dataset": "tyt2",
+ "source_sha256": "a6b6901b4856556bbbfd97106617f81ad4c3c61113708336581aa89705980ca6",
+ "page_count": 40,
+ "question_count": 102,
+ "shared_stimulus_count": 2,
+ "ignored_duplicate_count": 0,
+ "region_counts": {
+  "forbidden_regions.komsu_soru": 60,
+  "required_regions.metin": 102,
+  "required_regions.secenek": 102,
+  "required_regions.sekil": 26
+ },
+ "counts": {
+  "b1": 6,
+  "b2": 6,
+  "b3": 4,
+  "b4": 5,
+  "b5": 3,
+  "b6": 5,
+  "b7": 4,
+  "b8": 4,
+  "b9": 3,
+  "b10": 7,
+  "b11": 4,
+  "b12": 4,
+  "b13": 4,
+  "b14": 7,
+  "b15": 2,
+  "b16": 6,
+  "b17": 7,
+  "b18": 5,
+  "b19": 2,
+  "b20": 7,
+  "b21": 4,
+  "b22": 3
+ },
+ "profile": "mebi-2col",
+ "free_mode": true,
+ "duplicate_locations": [],
+ "chain": [
+  {
+   "bolum": 1,
+   "konu": "",
+   "adet": 6,
+   "ilk": 14,
+   "son": 33,
+   "sayfalar": [
+    17,
+    25
+   ],
+   "eksik": [
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31
+   ],
+   "birden_baslamiyor": true
+  },
+  {
+   "bolum": 2,
+   "konu": "",
+   "adet": 6,
+   "ilk": 14,
+   "son": 19,
+   "sayfalar": [
+    33,
+    41
+   ],
+   "eksik": [],
+   "birden_baslamiyor": true
+  },
+  {
+   "bolum": 3,
+   "konu": "",
+   "adet": 4,
+   "ilk": 1,
+   "son": 4,
+   "sayfalar": [
+    49,
+    49
+   ],
+   "eksik": [],
+   "birden_baslamiyor": false
+  },
+  {
+   "bolum": 4,
+   "konu": "",
+   "adet": 5,
+   "ilk": 1,
+   "son": 25,
+   "sayfalar": [
+    57,
+    65
+   ],
+   "eksik": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ],
+   "birden_baslamiyor": false
+  },
+  {
+   "bolum": 5,
+   "konu": "",
+   "adet": 3,
+   "ilk": 1,
+   "son": 3,
+   "sayfalar": [
+    73,
+    73
+   ],
+   "eksik": [],
+   "birden_baslamiyor": false
+  },
+  {
+   "bolum": 6,
+   "konu": "",
+   "adet": 5,
+   "ilk": 1,
+   "son": 25,
+   "sayfalar": [
+    81,
+    89
+   ],
+   "eksik": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+   ],
+   "birden_baslamiyor": false
+  },
+  {
+   "bolum": 7,
+   "konu": "",
+   "adet": 4,
+   "ilk": 8,
+   "son": 11,
+   "sayfalar": [
+    97,
+    97
+   ],
+   "eksik": [],
+   "birden_baslamiyor": true
+  },
+  {
+   "bolum": 8,
+   "konu": "",
+   "adet": 4,
+   "ilk": 6,
+   "son": 26,
+   "sayfalar": [
+    105,
+    113
+   ],
+   "eksik": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24
+   ],
+   "birden_baslamiyor": true
+  },
+  {
+   "bolum": 9,
+   "konu": "",
+   "adet": 3,
+   "ilk": 1,
+   "son": 3,
+   "sayfalar": [
+    121,
+    121
+   ],
+   "eksik": [],
+   "birden_baslamiyor": false
+  },
+  {
+   "bolum": 10,
+   "konu": "",
+   "adet": 7,
+   "ilk": 1,
+   "son": 33,
+   "sayfalar": [
+    129,
+    137
+   ],
+   "eksik": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31
+   ],
+   "birden_baslamiyor": false
+  },
+  {
+   "bolum": 11,
+   "konu": "",
+   "adet": 4,
+   "ilk": 14,
+   "son": 17,
+   "sayfalar": [
+    145,
+    145
+   ],
+   "eksik": [],
+   "birden_baslamiyor": true
+  },
+  {
+   "bolum": 12,
+   "konu": "",
+   "adet": 4,
+   "ilk": 12,
+   "son": 30,
+   "sayfalar": [
+    153,
+    161
+   ],
+   "eksik": [
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28
+   ],
+   "birden_baslamiyor": true
+  },
+  {
+   "bolum": 13,
+   "konu": "",
+   "adet": 4,
+   "ilk": 6,
+   "son": 9,
+   "sayfalar": [
+    169,
+    169
+   ],
+   "eksik": [],
+   "birden_baslamiyor": true
+  },
+  {
+   "bolum": 14,
+   "konu": "",
+   "adet": 7,
+   "ilk": 8,
+   "son": 38,
+   "sayfalar": [
+    177,
+    185
+   ],
+   "eksik": [
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35
+   ],
+   "birden_baslamiyor": true
+  },
+  {
+   "bolum": 15,
+   "konu": "",
+   "adet": 2,
+   "ilk": 17,
+   "son": 18,
+   "sayfalar": [
+    193,
+    193
+   ],
+   "eksik": [],
+   "birden_baslamiyor": true
+  },
+  {
+   "bolum": 16,
+   "konu": "",
+   "adet": 6,
+   "ilk": 14,
+   "son": 34,
+   "sayfalar": [
+    201,
+    209
+   ],
+   "eksik": [
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32
+   ],
+   "birden_baslamiyor": true
+  },
+  {
+   "bolum": 17,
+   "konu": "",
+   "adet": 7,
+   "ilk": 14,
+   "son": 38,
+   "sayfalar": [
+    217,
+    233
+   ],
+   "eksik": [
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36
+   ],
+   "birden_baslamiyor": true
+  },
+  {
+   "bolum": 18,
+   "konu": "",
+   "adet": 5,
+   "ilk": 16,
+   "son": 34,
+   "sayfalar": [
+    249,
+    257
+   ],
+   "eksik": [
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32
+   ],
+   "birden_baslamiyor": true
+  },
+  {
+   "bolum": 19,
+   "konu": "",
+   "adet": 2,
+   "ilk": 12,
+   "son": 13,
+   "sayfalar": [
+    265,
+    265
+   ],
+   "eksik": [],
+   "birden_baslamiyor": true
+  },
+  {
+   "bolum": 20,
+   "konu": "",
+   "adet": 7,
+   "ilk": 9,
+   "son": 37,
+   "sayfalar": [
+    273,
+    281
+   ],
+   "eksik": [
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34
+   ],
+   "birden_baslamiyor": true
+  },
+  {
+   "bolum": 21,
+   "konu": "",
+   "adet": 4,
+   "ilk": 21,
+   "son": 38,
+   "sayfalar": [
+    297,
+    305
+   ],
+   "eksik": [
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36
+   ],
+   "birden_baslamiyor": true
+  },
+  {
+   "bolum": 22,
+   "konu": "",
+   "adet": 3,
+   "ilk": 16,
+   "son": 18,
+   "sayfalar": [
+    313,
+    313
+   ],
+   "eksik": [],
+   "birden_baslamiyor": true
+  }
+ ],
+ "unresolved_duplicates": []
+}

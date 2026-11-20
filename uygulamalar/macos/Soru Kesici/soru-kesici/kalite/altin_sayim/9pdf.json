@@ -1,0 +1,107 @@
+{
+ "schema_version": "soru-kesici.golden-count/v1",
+ "document": {
+  "id": "soru-kesici:9pdf",
+  "source": "9.pdf",
+  "source_sha256": "40725eeb760323a65962894f586913b285c5082c6aa2a748aa208d6085abbce1",
+  "page_count": 168
+ },
+ "sampling": {
+  "dpi": 300,
+  "max_sayfa": 40,
+  "bas": null,
+  "son": null,
+  "kapsam": "kismi",
+  "ornek_no": [
+   1,
+   25,
+   45,
+   69,
+   89,
+   113,
+   133,
+   157
+  ]
+ },
+ "verifier": "claude-opus-5 çift kör sayım (iki bağımsız sayıcı, çıplak render, mutabakat şartı)",
+ "method": "kor-sayim",
+ "pages": [
+  {
+   "page": 1,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "kapak",
+   "notes": "Kitap kapağı: ORTAÖĞRETİM / Biyoloji 9. Sınıf Ders Kitabı, yazar listesi, MEB amblemi, matbaa bilgisi. Soru yok. | Kitap kapağı: başlık, yazar listesi, MEB amblemi, matbaa bilgisi. Soru yok."
+  },
+  {
+   "page": 25,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "Tamamen düz konu anlatımı (\"Bilimin Doğasını Öğrenmek Neden Önemlidir?\" ve \"Bilimsel Yöntem Basamakları\"). Metin içinde retorik sorular var (\"Aşılar otizme yol açar mı?\" vb.) ama bunlar anlatımın parçası, öğrenciden cevap istenen madde değil. | Tamamen düz konu anlatımı (Bilimin Doğası / Bilimsel Yöntem Basamakları). Metin içinde geçen 'Aşılar otizme yol açar mı?' gibi ifadeler retorik anlatım cümlesi; öğrencinin cevaplaması istenen numaralı/işaretli madde değil, bu yüzden sayılmadı."
+  },
+  {
+   "page": 45,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "\"Biyolojik Sınıflandırma Sistemi\" konu anlatımı + Görsel 1.26 (Van ters lalesi) + ikili adlandırma şeması (Cins adı/Tamamlayıcı ad/Tür adı). Şema \"Örnek\" başlıklı gösterim, sorulmuyor. | Biyolojik Sınıflandırma Sistemi konu anlatımı + Görsel 1.26 ve 'Örnek' başlıklı ikili adlandırma şeması. Şema açıklayıcı gösterim, soru değil."
+  },
+  {
+   "page": 69,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "\"11. Etkinlik — Ulusal Biyolojik Çeşitlilik Veri Tabanı Performans Görevi\" sayfası. 1-6 numaralı maddeler etkinlik/çalışma yönergesi (grup oluşturunuz, adrese giriniz, infografik hazırlayınız, arkadaşlarınızla paylaşınız) olduğu için kural gereği sayılmadı. Noktalı boş satırlar veri kaydı içindir, ayrı soru değildir. Alttaki QR kutusu (Analitik Dereceli Puanlama Anahtarı) sayılmaz. | '11. Etkinlik' performans görevi sayfası. 1-6 numaralı maddelerin tamamı etkinlik/çalışma yönergesi (grup oluşturunuz, siteye giriniz, verileri kaydediniz, infografik hazırlayınız, arkadaşlarınızla paylaşınız) — kural gereği numaralı olsalar bile sayılmaz. 3. maddenin altındaki noktalı satırlar veri kayıt alanı. 4. madde ('önemini yorumlayarak değerlendiriniz') açık uçlu soruya en yakın sınır durum; yine de etkinlik basamağı sayıldığı için 0 verildi. QR kutusu (Analitik Dereceli Puanlama Anahtarı) sayılmaz. | güven: kesin/orta"
+  },
+  {
+   "page": 89,
+   "question_count": 10,
+   "question_numbers": [
+    2,
+    4,
+    6,
+    7,
+    8,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "role": "karma",
+   "notes": "Sayfanın üst yarısı önceki sayfada başlayan etkinliğin 4-7. yönerge maddeleri (sayılmaz, ayrıca önceki sayfada başlamış) + Değerlendirme QR kutuları (sayılmaz). Alt yarıdaki \"Kontrol Noktası\" bulmacasında Soldan Sağa 2,4,6,7,8 (5 madde) ve Yukarıdan Aşağıya 1,2,3,4,5 (5 madde) = 10 ipucu; her ipucu tek başına cevaplanan bir boşluk doldurma maddesi kabul edilip ayrı sayıldı, bulmaca gridi paylaşılan uyaran olarak sayılmadı. Sınır durumu: bulmacanın tamamını tek etkinlik sayan bir okuma 1 (hatta 0) verirdi — bu yüzden güven \"orta\". Numaralar iki listede sıfırlandığı için tekrar ediyor. | Sayfanın üst yarısı önceki sayfada başlayan etkinliğin devamı (4-7 numaralı maddeler: tartışınız, broşür hazırlayınız, paylaşınız) — etkinlik yönergesi, sayılmadı; iki QR kutusu da sayılmadı. Alt yarıdaki 'Kontrol Noktası' bulmacasında Soldan Sağa 5 (2,4,6,7,8) + Yukarıdan Aşağıya 5 (1,2,3,4,5) = 10 ipucu var; her ipucu ayrı cevaplanan boşluk doldurma maddesi olarak sayıldı. Bulmaca gridi paylaşılan uyaran olarak sayılmadı. Sınır durum: bulmacanın bütününü tek soru sayan bir yorum 1 verirdi; numaralar sayfa içinde iki listede tekrarlanıyor. | güven: orta"
+  },
+  {
+   "page": 113,
+   "question_count": 6,
+   "question_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "role": "soru",
+   "notes": "\"Kontrol Noktası\" yapılandırılmış grid. A-M harfli kutucuk tablosu paylaşılan uyaran olduğu için sayılmadı; 1-6 numaralı açık uçlu sorular ayrı ayrı sayıldı. Alttaki \"Puan = (C1/C2)-(C3/C4)\" formülü ve C1-C4 açıklamaları puanlama yönergesi, soru değil. | 'Kontrol Noktası' yapılandırılmış grid. A-M harfli kutucuk tablosu paylaşılan uyaran (sayılmadı). 1-6 numaralı açık uçlu sorular, her biri kendi cevap satırlarıyla ayrı sayıldı. Alttaki 'Puan = (C1/C2)-(C3/C4)' formülü ve C1-C4 açıklamaları puanlama yönergesi, sayılmadı."
+  },
+  {
+   "page": 133,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "Üst kısım hücre zarı konu anlatımı. Alt kısım \"11. Etkinlik — Hücre Zarından Madde Geçişleri\"nin başlangıcı: tek yönerge maddesi (\"1. ... niteliklerine göre inceleyiniz\") ve 1-6 numaralandırılmış görsel. Görseller etkinliğin paylaşılan uyaranı olarak değerlendirildi, asıl cevaplama (sınıflandırma tablosu) sonraki sayfada devam ediyor; bu yüzden 0 sayıldı. Sınır durumu: 1-6 numaralı görselleri ayrı ayrı cevaplanacak madde sayan bir okuma 6 verirdi — güven \"orta\". | Üst kısım hücre zarından madde geçişleri konu anlatımı; alt kısımda '11. Etkinlik' başlıyor. Tek numaralı madde ('1. Aşağıda görselleri verilen ... inceleyiniz') etkinlik uygulama basamağı. 1-6 numaralı görseller paylaşılan uyaran (incelenecek şekiller), soru değil. Etkinliğin cevaplanacak kısmı sonraki sayfaya taşıyor gibi görünüyor (sağ altta devam oku var). Sınır durum: görselleri sınıflandırma istendiği için 6 sayan bir yorum mümkün; kural gereği 0 verildi. | güven: orta"
+  },
+  {
+   "page": 157,
+   "question_count": 2,
+   "question_numbers": [
+    13,
+    14
+   ],
+   "role": "soru",
+   "notes": "\"Tema Ölçme ve Değerlendirme Soruları\". Yönerge + metin + 7 satırlık deney düzeneği tablosu paylaşılan uyaran (13 ve 14. sorular için ortak), sayılmadı. 13. soru tek gövde + A-E seçenekleri (tek cevap/işaretleme isteniyor) = 1 soru; 14. soru açık uçlu = 1 soru. Toplam 2. | Tema Ölçme ve Değerlendirme sayfası. Yönerge kutusu, açıklama metni, enzim reaksiyon şeması ve 7 satırlık deney düzeneği tablosu 13-14. sorular için paylaşılan uyaran (sayılmadı). 13. soru tek gövde + A-E şıkları = 1 soru; 14. soru açık uçlu = 1 soru."
+  }
+ ]
+}

@@ -1,0 +1,40 @@
+{
+ "dosya": "10.sınıf.pdf",
+ "format": "coktan_secmeli",
+ "sayfa": 2,
+ "ornek_no": [
+  1,
+  2
+ ],
+ "soru_sayfa": 2,
+ "toplam_kutu": 6,
+ "sayfa_soru": [
+  3,
+  3
+ ],
+ "anomali_sayisi": 1,
+ "anomaliler": [
+  {
+   "sayfa": 2,
+   "tur": "sutun-tasma",
+   "detay": [
+    0,
+    1654
+   ]
+  }
+ ],
+ "birlestirilen": 0,
+ "yarim_soru": [],
+ "duzen_model": true,
+ "kaynak_sha256": "edf8fffd18c01c213b0d8d5e17cad579f6cf2a80f1bb02636854f60838915927",
+ "ham_aday": 7,
+ "sayfa_ham_aday": [
+  3,
+  4
+ ],
+ "reddedilen_kutu": 0,
+ "incele_kutu": 4,
+ "anomali_turleri": {
+  "sutun-tasma": 1
+ }
+}

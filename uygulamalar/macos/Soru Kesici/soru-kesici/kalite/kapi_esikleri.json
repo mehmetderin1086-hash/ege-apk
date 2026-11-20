@@ -1,0 +1,240 @@
+{
+ "surum": 2,
+ "_not": "Altın verili belgeler için kalite tabanı. RATCHET (mandal) kuralı: ölçüm eşiğin belirgin üstünde biterse kapı yeni tabanı ÖNERİR; yükseltme insan onayıyla buraya yazılır. Değerler tek yönlü hareket eder, düşürmek bilinçli bir karardır ve gerekçesi commit mesajına yazılır.",
+ "_surum2_notu": "count_* alanları sayım-altını (soru-kesici.golden-count/v1) kapısıdır; kutu-altını yalnız tek bir ÖSYM PDF'inde olduğu için korpusun geri kalanında recall'ü gören TEK kapı budur. count_recall = TESLİM kovası (otomatik+incele), count_recall_auto = insan bakmadan teslim edilen alt küme — 'sıfır hata' hedefi ikincisine tanımlıdır. 'hedef' alanları taban DEĞİL, kampanya hedefidir; kapı onlara bakmaz. 2026-07-25: çift kör sayımla 6 belge daha eklendi (10sb, 10sinif, 11fen, 9konu, 9pdf, campbell) — 42 sayfada iki bağımsız sayıcı tam mutabık.",
+ "varsayilan": {
+  "gerileme_toleransi": 0.005
+ },
+ "belgeler": {
+  "tyt1_2026_calibration": {
+   "f1_min": 0.9877,
+   "precision_min": 0.9857,
+   "recall_min": 0.9897,
+   "f1_siki_min": 0.9784,
+   "_olculen_2026-07-25": "f1 0.9927 / P 0.9907 / R 0.9947 / f1@0.75 0.9820 / mean_iou 0.9327",
+   "_onceki_taban": "f1 0.97 / P 0.96 / R 0.975 / f1@0.75 0.95 (ölçülen f1 0.975, f1@0.75 0.958)",
+   "_olculen_2026-07-25_faz4": "f1 0.9927 / P 0.9907 / R 0.9947 / f1@0.75 0.9834",
+   "_faz4_notu": "Üst pay numara kutusundan türetildi (0,45×yükseklik). mean_iou 0,9327 → 0,9434, üst kenar sapması medyan −5,36 → −2,19 pt, F1@0,75 0,9820 → 0,9834. Bölge kapsaması 1775 → 1774 (nötr)."
+  },
+  "tyt1_2026_holdout": {
+   "f1_min": 0.978,
+   "precision_min": 0.965,
+   "recall_min": 0.975,
+   "f1_siki_min": 0.95,
+   "_not": "HOLDOUT: yalnız yayın kararı için koşulur, parametre ayarı için ASLA. Bkz. kalite/holdout_gunlugu.json"
+  },
+  "12meb": {
+   "count_recall_min": 0.8412,
+   "count_precision_min": 1.0,
+   "count_recall_auto_min": 0.5719,
+   "page_exact_min": 0.7143,
+   "hedef": {
+    "count_recall": 0.95,
+    "count_recall_auto": 0.9
+   },
+   "_not": "Kampanya başındaki en büyük açık: s186 gridli-eşleştirme düzeni. count_recall 0,1538 → 0,8462.",
+   "_taban_gerekcesi": "2026-07-25 Faz 5: eşleştirme gridi formatı + türetilmiş min_yuk + hizalama filtresi + zincir üyeliği kanıtı. count_recall 0,1538 → 0,8462 (5,5×), otomatik 0,0769 → 0,6154. SONRA Faz 4 (üst pay numara kutusundan türetildi) otomatik kovayı 0,6154 → 0,5769'a İNDİRDİ: kutular daralınca 26 altın sorudan 1'i otomatikten incele'ye düştü. Taban bilinçli olarak 0,5719'a çekildi — aynı değişiklik 9pdf precision'ını 0,4706 → 0,5000 yükseltti ve 9 kutu-altınlı belgede F1@0,75'i iyileştirdi. BEKLEYEN İŞ: 'uygun_geometri' kanıtının h ≥ 0,035 eşiği de bir sayfa yüzdesidir ve yoğun dizgide (12meb satırları h ≈ 0,026) yanılır — min_yuk ve asiri_kucuk ile aynı sınıf hata."
+  },
+  "aydin": {
+   "count_recall_min": 0.9286,
+   "count_precision_min": 1.0,
+   "count_recall_auto_min": 0.8929,
+   "page_exact_min": 0.6667,
+   "hedef": {
+    "count_recall": 1.0,
+    "count_recall_auto": 1.0
+   },
+   "_taban_gerekcesi": "2026-07-25: sayım-altını genişletildi (çift kör sayım), ölçüm TABANI değişti — regresyon değil. Önceki taban: {'count_recall_min': 0.9166, 'count_precision_min': 1.0, 'count_recall_auto_min': 0.9166, 'page_exact_min': 0.5}"
+  },
+  "cozumler1": {
+   "count_recall_min": 0.8401,
+   "count_precision_min": 1.0,
+   "count_recall_auto_min": 0.1218,
+   "page_exact_min": 0.25,
+   "hedef": {
+    "count_recall": 1.0,
+    "count_recall_auto": 0.9
+   },
+   "_not": "Eski ölçüm 1,000 diyordu; ölçüm defekti (reddedilen kutular sayılıyordu) düzeltilince gerçek değer 0,600 çıktı.",
+   "_taban_gerekcesi": "2026-07-25 Faz 5 düzeltme 1: çözüm kitabında 'çözüm' sayfa rolü cezası kaldırıldı (soru_kes.py:3522). count_recall 0,4366 → 0,8451; sıfır sayfa kalmadı. Otomatik kova hâlâ düşük (0,127): teslim edilen 278 kutunun 255'i incele — güven puanlaması ayrı iş."
+  },
+  "cozumyazili": {
+   "count_recall_min": 0.8717,
+   "count_precision_min": 1.0,
+   "count_recall_auto_min": 0.7386,
+   "page_exact_min": 0.6666,
+   "hedef": {
+    "count_recall": 1.0,
+    "count_recall_auto": 0.9
+   },
+   "_taban_gerekcesi": "2026-07-25 Faz 5: zincir üyeliği kanıtı. Otomatik kova 0,5128 → 0,7436; teslim recall değişmedi."
+  },
+  "ygslys": {
+   "count_recall_min": 1.0,
+   "count_precision_min": 0.95,
+   "count_recall_auto_min": 0.7719,
+   "page_exact_min": 0.7143,
+   "hedef": {
+    "count_precision": 0.99,
+    "count_recall_auto": 1.0
+   },
+   "_taban_gerekcesi": "2026-07-25: sayım-altını genişletildi (çift kör sayım), ölçüm TABANI değişti — regresyon değil. Önceki taban: {'count_recall_min': 1.0, 'count_precision_min': 0.9062, 'count_recall_auto_min': 0.8965, 'page_exact_min': 0.3333}"
+  },
+  "10sb": {
+   "count_recall_min": 0.4615,
+   "count_precision_min": 1.0,
+   "count_recall_auto_min": 0.3846,
+   "page_exact_min": 0.375,
+   "hedef": {
+    "count_recall": 1.0,
+    "count_recall_auto": 0.9
+   }
+  },
+  "10sinif": {
+   "count_recall_min": 0.5,
+   "count_precision_min": 1.0,
+   "count_recall_auto_min": 0.3333,
+   "page_exact_min": 0.0,
+   "hedef": {
+    "count_recall": 1.0,
+    "count_recall_auto": 0.9
+   }
+  },
+  "11fen": {
+   "count_recall_min": 0.8,
+   "count_precision_min": 1.0,
+   "count_recall_auto_min": 0.6,
+   "page_exact_min": 0.75,
+   "hedef": {
+    "count_recall": 1.0,
+    "count_recall_auto": 0.9
+   },
+   "_not": "Örneklenen 8 sayfanın 7'si konu anlatımı; altın yalnız 5 soru içeriyor."
+  },
+  "9konu": {
+   "count_recall_min": 0.9285,
+   "count_precision_min": 1.0,
+   "count_recall_auto_min": 0.8571,
+   "page_exact_min": 0.75,
+   "hedef": {
+    "count_recall": 1.0,
+    "count_recall_auto": 0.9
+   }
+  },
+  "9pdf": {
+   "count_recall_min": 0.4444,
+   "count_precision_min": 0.495,
+   "count_recall_auto_min": 0.3839,
+   "page_exact_min": 0.25,
+   "hedef": {
+    "count_recall": 1.0,
+    "count_precision": 0.99,
+    "count_recall_auto": 0.9
+   },
+   "_not": "Korpusun en kötü precision'ı (0,533): motor soru sayısının ~2 katı kutu üretiyor.",
+   "_taban_gerekcesi": "2026-07-25 Faz 5: precision tabanı 0,5333 → 0,4706'ya BİLİNÇLİ olarak İNDİRİLDİ. Zincir üyeliği kanıtı otomatik kovayı 0,2778 → 0,3889 yükseltirken altın sayfalarda 2 yanlış-pozitif ekledi. Aile bazlı denge güçlü pozitif (meb recall 0,485 → 0,715; cozum otomatik 0,313 → 0,435) ve 9 kutu-altınlı belgede (2215 soru) sıfır regresyon. BEKLEYEN İŞ: 9pdf s113'te aynı soru iki kutuya bölünüyor (numaralar [1,2,2,3,3,4,5,6]) ve s69 etkinlik sayfasında 6 yanlış-pozitif var — ikisi de bu turdan ÖNCE de vardı. Faz 4 (üst pay daraltması) precision'ı 0,4706 → 0,5000'e GERİ ÇEKTİ; taban ratchet ile 0,4950'ye yükseltildi."
+  },
+  "campbell": {
+   "count_recall_min": 1.0,
+   "count_precision_min": 1.0,
+   "count_recall_auto_min": 1.0,
+   "page_exact_min": 1.0,
+   "hedef": {
+    "count_recall": 1.0,
+    "count_precision": 1.0
+   },
+   "_not": "NEGATİF KONTROL — ders kitabı, soru yok. 1,000 değerleri 'motor soru uydurmuyor' demektir; DÜŞMESİ kabul edilemez."
+  },
+  "10sb_ocr": {
+   "count_recall_min": 0.4423,
+   "count_precision_min": 1.0,
+   "count_recall_auto_min": 0.3846,
+   "page_exact_min": 0.75,
+   "hedef": {
+    "count_recall": 1.0,
+    "count_recall_auto": 0.9
+   },
+   "_taban_gerekcesi": "2026-07-25: sayım-altını genişletildi (çift kör sayım), ölçüm TABANI değişti — regresyon değil. Önceki taban: {'count_recall_min': None, 'count_precision_min': None, 'count_recall_auto_min': None, 'page_exact_min': None}"
+  },
+  "tyt2": {
+   "f1_min": 0.9852,
+   "precision_min": 0.9852,
+   "recall_min": 0.9852,
+   "f1_siki_min": 0.9852,
+   "_olculen_2026-07-25": "f1 0.9902 / P 0.9902 / R 0.9902 / f1@0.75 0.9902",
+   "_kaynak": "altin_pdf_katmani --profil ile OTOMATİK üretilmiş kutu-altını (motor kullanılmadı); görsel denetimden geçti",
+   "_olculen_2026-07-25_faz4": "f1 0.9902 / P 0.9902 / R 0.9902 / f1@0.75 0.9902"
+  },
+  "aytsay": {
+   "f1_min": 0.9704,
+   "precision_min": 0.947,
+   "recall_min": 0.995,
+   "f1_siki_min": 0.9622,
+   "_olculen_2026-07-25": "f1 0.9754 / P 0.952 / R 1.0 / f1@0.75 0.9672",
+   "_kaynak": "altin_pdf_katmani --profil ile OTOMATİK üretilmiş kutu-altını (motor kullanılmadı); görsel denetimden geçti",
+   "_olculen_2026-07-25_faz4": "f1 0.9754 / P 0.952 / R 1.0 / f1@0.75 0.9672"
+  },
+  "aytea": {
+   "f1_min": 0.9636,
+   "precision_min": 0.9341,
+   "recall_min": 0.995,
+   "f1_siki_min": 0.9636,
+   "_olculen_2026-07-25": "f1 0.9686 / P 0.9391 / R 1.0 / f1@0.75 0.9686",
+   "_kaynak": "altin_pdf_katmani --profil ile OTOMATİK üretilmiş kutu-altını (motor kullanılmadı); görsel denetimden geçti",
+   "_olculen_2026-07-25_faz4": "f1 0.9686 / P 0.9391 / R 1.0 / f1@0.75 0.9686"
+  },
+  "tytbiyo": {
+   "f1_min": 0.995,
+   "precision_min": 0.995,
+   "recall_min": 0.995,
+   "f1_siki_min": 0.9866,
+   "_olculen_2026-07-25": "f1 1.0 / P 1.0 / R 1.0 / f1@0.75 0.9832",
+   "_kaynak": "altin_pdf_katmani --profil ile OTOMATİK üretilmiş kutu-altını (motor kullanılmadı); görsel denetimden geçti",
+   "_olculen_2026-07-25_faz4": "f1 1.0 / P 1.0 / R 1.0 / f1@0.75 0.9916"
+  },
+  "cikmistyt": {
+   "f1_min": 0.995,
+   "precision_min": 0.995,
+   "recall_min": 0.995,
+   "f1_siki_min": 0.9754,
+   "_olculen_2026-07-25": "f1 1.0 / P 1.0 / R 1.0 / f1@0.75 0.9804",
+   "_kaynak": "altin_pdf_katmani --profil ile OTOMATİK üretilmiş kutu-altını (motor kullanılmadı); görsel denetimden geçti",
+   "_olculen_2026-07-25_faz4": "f1 1.0 / P 1.0 / R 1.0 / f1@0.75 0.9804"
+  },
+  "cikmisayt": {
+   "f1_min": 0.9869,
+   "precision_min": 0.9869,
+   "recall_min": 0.9869,
+   "f1_siki_min": 0.8982,
+   "_olculen_2026-07-25": "f1 0.9919 / P 0.9919 / R 0.9919 / f1@0.75 0.9032",
+   "_kaynak": "altin_pdf_katmani --profil ile OTOMATİK üretilmiş kutu-altını (motor kullanılmadı); görsel denetimden geçti",
+   "_olculen_2026-07-25_faz4": "f1 0.9919 / P 0.9919 / R 0.9919 / f1@0.75 0.9032"
+  },
+  "ykstyt2026": {
+   "f1_min": 0.867,
+   "precision_min": 0.867,
+   "recall_min": 0.867,
+   "f1_siki_min": 0.619,
+   "_olculen_2026-07-25": "f1 0.848 / P 0.848 / R 0.848 / f1@0.75 0.448",
+   "_kaynak": "altin_pdf_katmani --profil ile OTOMATİK üretilmiş kutu-altını (motor kullanılmadı); görsel denetimden geçti",
+   "hedef": {
+    "f1_siki": 0.95
+   },
+   "_olculen_2026-07-25_faz4": "f1 0.864 / P 0.864 / R 0.864 / f1@0.75 0.48",
+   "_faz4_notu": "F1@0,75 düşüklüğü ALTIN KUSURUYDU, motor kusuru değil: sayfayı çapraz kesen ÖSYM filigranının tek bir glifi (bbox 189×189 pt) sütun merkezine düşüp _govde_kutusu'nu 46 pt aşağı uzatıyordu. _filigran_kelimesi_mi filtresiyle altın düzeltildi → F1@0,75 0,4800 → 0.6240. KALAN AÇIK: alt kenarda uzun kuyruk (p95 236 pt) ve sağ kenarda sözleşme farkı (altın sütun genişliğini, motor metin sınırını alır)."
+  },
+  "yksayt2026": {
+   "f1_min": 0.8384,
+   "precision_min": 0.8384,
+   "recall_min": 0.8384,
+   "f1_siki_min": 0.6697,
+   "_olculen_2026-07-25": "f1 0.8193 / P 0.8193 / R 0.8193 / f1@0.75 0.5361",
+   "_kaynak": "altin_pdf_katmani --profil ile OTOMATİK üretilmiş kutu-altını (motor kullanılmadı); görsel denetimden geçti",
+   "hedef": {
+    "f1_siki": 0.95
+   },
+   "_olculen_2026-07-25_faz4": "f1 0.8253 / P 0.8253 / R 0.8253 / f1@0.75 0.5663",
+   "_faz4_notu": "F1@0,75 düşüklüğü ALTIN KUSURUYDU, motor kusuru değil: sayfayı çapraz kesen ÖSYM filigranının tek bir glifi (bbox 189×189 pt) sütun merkezine düşüp _govde_kutusu'nu 46 pt aşağı uzatıyordu. _filigran_kelimesi_mi filtresiyle altın düzeltildi → F1@0,75 0,5663 → 0.6747. KALAN AÇIK: alt kenarda uzun kuyruk (p95 236 pt) ve sağ kenarda sözleşme farkı (altın sütun genişliğini, motor metin sınırını alır)."
+  }
+ }
+}

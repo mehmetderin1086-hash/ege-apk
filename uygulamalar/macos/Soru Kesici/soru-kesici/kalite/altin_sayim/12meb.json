@@ -1,0 +1,101 @@
+{
+ "schema_version": "soru-kesici.golden-count/v1",
+ "document": {
+  "id": "soru-kesici:12meb",
+  "source": "12 meb.pdf",
+  "source_sha256": "c1696fa470494c98c4f2c04039ec18455127e0338c581533fd1fe8167f1f606f",
+  "page_count": 218
+ },
+ "sampling": {
+  "dpi": 300,
+  "max_sayfa": 40,
+  "bas": null,
+  "son": null,
+  "kapsam": "kismi",
+  "ornek_no": [
+   1,
+   61,
+   76,
+   126,
+   136,
+   186,
+   196
+  ]
+ },
+ "verifier": "claude-opus-5 çift kör sayım (iki bağımsız sayıcı, çıplak render, mutabakat şartı; örtüşen sayfalarda önceki altınla birebir doğrulandı)",
+ "method": "kor-sayim",
+ "pages": [
+  {
+   "page": 1,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "kapak",
+   "notes": "Kitap iç kapağı: BİYOLOJİ 12 Ders Kitabı, yazar listesi, MEB amblemi, Devlet Kitapları künyesi. Cevaplanacak hiçbir madde yok. | İç kapak: ORTAÖĞRETİM / BİYOLOJİ 12 Ders Kitabı, yazar listesi, MEB amblemi, DEVLET KİTAPLARI 2022. Hiçbir soru yok."
+  },
+  {
+   "page": 61,
+   "question_count": 4,
+   "question_numbers": null,
+   "role": "soru",
+   "notes": "Tek numaralı soru gövdesi: 42. Chase-Hershey deneyi metni + sütun grafiği (paylaşılan uyaran, sayılmadı). Altında a), b), c), ç) şeklinde dört alt soru var ve her biri AYRI cevaplanıyor: a ve b için noktalı cevap satırları, c ve ç için ayrı kareli grafik kağıdı alanları. Kural gereği ayrı cevaplanan alt sorular ayrı sayıldığından 4 saydım. Üstteki 'Aşağıdaki soruları metin ve grafikten yararlanarak cevaplayınız.' kutusu yönerge, sayılmadı. Numaralar tekrarlanacağı için question_numbers null bırakıldı (görünen tek numara 42). Motor bunu 1 sayarsa anlaşmazlık burada olur. | Üstte 'Aşağıdaki soru"
+  },
+  {
+   "page": 76,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "2.2 FOTOSENTEZ ve 2.2.1 alt başlığı; düz konu anlatımı, Görsel 2.7 şeması ve fotosenteze katkı sağlayan bilim insanlarının çalışmalarının anlatımı. Soru yok. | 2.2 FOTOSENTEZ ve 2.2.1 başlıkları, düz konu anlatımı, Görsel 2.7 şeması ve bilim insanları (van Helmont, De Saussure, Engelmann, Blackman, van Niel, Hill) tanıtım paragrafları. Soru/etkinlik yok."
+  },
+  {
+   "page": 126,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "3.1 Bitkilerin Yapısı ve 3.1.1 alt başlığı; anlatım metni, Görsel 3.2 ve Tablo 3.1 (bitkisel dokuların sınıflandırılması şeması). Tablodaki A/B/C/D harfleri sınıflandırma etiketi, soru değil. Soru yok. | 3.1 BİTKİLERİN YAPISI ve 3.1.1 başlıkları, konu anlatımı, Görsel 3.2 (bitki kısımları) ve Tablo 3.1 bitkisel dokular sınıflandırma şeması. Şemadaki A/B/C/D etiketleri soru değil, sınıflandırma başlıkları."
+  },
+  {
+   "page": 136,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "D. Örtü (Koruyucu) Doku Sistemi anlatımı; Görsel 3.22 ve 3.23 mikroskop fotoğrafları. Metindeki 'a) Epidermis' bir alt başlık, soru şıkkı değil. Soru yok. | 'D. Örtü (Koruyucu) Doku Sistemi' konu anlatımı; Görsel 3.22 ve 3.23 mikroskop fotoğrafları. Metindeki 'a) Epidermis' ve '• Stoma (Gözenek)' alt başlıklar, soru değil."
+  },
+  {
+   "page": 186,
+   "question_count": 22,
+   "question_numbers": [
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41
+   ],
+   "role": "soru",
+   "notes": "Üstte önceki sayfadan devam eden doğru-yanlış tablosunun 7 satırı (20-26), her satır ( ... ) kutucuğuyla ayrı cevaplandığı için 7 ayrı soru sayıldı. Ortadaki 15 kutucuklu harflendirilmiş grid (a Kambiyum ... o Kollenkima) ve üstündeki yönerge kutusu paylaşılan uyaran olduğu için SAYILMADI. Altta 27-41 arası 15 adet 'hangisidir?' boşluk doldurma maddesi her biri ayrı cevaplandığı için tek tek sayıldı. Toplam 7 + 15 = 22. | İki blok: (1) üstteki doğru-yanlış tablosunun 7 satırı (20-26), her satır '( ... )' parantezli ayrı madde → 7 ayrı soru sayıldı; tablo önceki sayfadan devam ediyor ama bu sat"
+  },
+  {
+   "page": 196,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "kapak",
+   "notes": "4. BÖLÜM / 4.1 CANLILAR VE ÇEVRE bölüm açılış (kapak) sayfası: tam sayfa kertenkele fotoğrafı, 'Bu bölümde' kazanım listesi ve 'Anahtar Kavramlar' kutusu. Kazanım listesi ve anahtar kavramlar kural gereği sayılmaz. | Bölüm ayraç/kapak sayfası: '4. BÖLÜM / 4.1 CANLILAR VE ÇEVRE', tam sayfa kertenkele fotoğrafı, 'Bu bölümde' kazanım listesi (2 madde) ve ANAHTAR KAVRAMLAR kutusu. Kazanım listesi ve anahtar kavramlar kural gereği sayılmaz."
+  }
+ ]
+}

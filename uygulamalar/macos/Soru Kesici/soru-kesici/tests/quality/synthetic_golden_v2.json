@@ -1,0 +1,88 @@
+{
+  "schema_version": "soru-kesici.golden/v2",
+  "dataset": {
+    "id": "synthetic-final-cuts-v2",
+    "kind": "synthetic",
+    "description": "Nihai parca, ortak uyaran ve korunacak/yasak bolge fixture'i"
+  },
+  "documents": [
+    {
+      "id": "synthetic:final-cuts-v2",
+      "source": "synthetic-final-cuts-v2.pdf",
+      "source_sha256": "synthetic",
+      "final_output": {
+        "question_count": 2,
+        "png_count": 2,
+        "metadata_count": 2
+      },
+      "pages": [
+        {
+          "page": 1,
+          "width": 1000,
+          "height": 1400,
+          "role": "soru",
+          "shared_stimuli": [
+            {
+              "id": "stim-21-22",
+              "box": [60, 80, 940, 190]
+            }
+          ],
+          "questions": [
+            {
+              "id": "q21",
+              "number": 21,
+              "type": "coktan_secmeli",
+              "parts": [
+                {"page": 1, "box": [60, 80, 940, 190], "kind": "ortak_uyaran"},
+                {"page": 1, "box": [60, 210, 480, 650], "kind": "soru_govdesi"}
+              ],
+              "shared_stimulus_id": "stim-21-22",
+              "required_regions": [
+                {"id": "q21-figure", "box": [120, 350, 420, 540], "kind": "sekil"}
+              ],
+              "forbidden_regions": [
+                {"id": "q22-neighbor", "box": [520, 210, 940, 650], "kind": "komsu_soru"}
+              ],
+              "final_output": {
+                "question_number": 21,
+                "part_count": 2,
+                "metadata": {"subject": "matematik"}
+              }
+            },
+            {
+              "id": "q22",
+              "number": 22,
+              "type": "kisa_cevapli",
+              "parts": [
+                {"page": 1, "box": [60, 80, 940, 190], "kind": "ortak_uyaran"},
+                {"page": 1, "box": [520, 210, 940, 650], "kind": "soru_govdesi"}
+              ],
+              "shared_stimulus_id": "stim-21-22",
+              "required_regions": [
+                {"id": "q22-table", "box": [590, 330, 880, 520], "kind": "tablo"}
+              ],
+              "forbidden_regions": [
+                {"id": "q21-neighbor", "box": [60, 210, 480, 650], "kind": "komsu_soru"}
+              ],
+              "final_output": {
+                "question_number": 22,
+                "part_count": 2,
+                "metadata": {"subject": "matematik"}
+              }
+            }
+          ]
+        },
+        {
+          "page": 2,
+          "width": 1000,
+          "height": 1400,
+          "role": "cozum",
+          "questions": [],
+          "forbidden_regions": [
+            {"id": "solution-page", "box": [50, 50, 950, 1350], "kind": "cozum"}
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+ "schema_version": "soru-kesici.golden-count/v1",
+ "document": {
+  "id": "soru-kesici:campbell",
+  "source": "biyoloji-campbell.pdf",
+  "source_sha256": "6d3522aabb5965f56a74ddfde7f7cf0a20cb8ff723aa4054826965b92e269d1f",
+  "page_count": 1101
+ },
+ "sampling": {
+  "dpi": 300,
+  "max_sayfa": 12,
+  "bas": null,
+  "son": null,
+  "kapsam": "kismi",
+  "ornek_no": [
+   1,
+   183,
+   274,
+   456,
+   547,
+   729,
+   820,
+   1002
+  ]
+ },
+ "verifier": "claude-opus-5 çift kör sayım (iki bağımsız sayıcı, çıplak render, mutabakat şartı)",
+ "method": "kor-sayim",
+ "pages": [
+  {
+   "page": 1,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "Bölüm 1 açılış sayfası: bölüm başlığı, fotoğraf, sol sütunda bölümün ana temalarını listeleyen madde işaretli içerik dökümü (\"CANLILIĞIN BİRÇOK DÜZEYDE KEŞFEDİLMESİ\", \"EVRİM, AYNILIK VE ÇEŞİTLİLİK\", \"BİLİMSEL SÜREÇ\", \"BÖLÜM TEKRARI...\") ve giriş metni. Bu maddeler soru değil, bölüm içerik başlıkları/kazanım özeti; kural gereği sayılmaz. Cevaplanacak hiçbir madde yok. | Bölüm 1 açılış sayfası: bölüm başlığı, fotoğraf, sol sütunda bölümün ana temalarını listeleyen madde işaretli içerik dökümü (CANLILIĞIN BİRÇOK DÜZEYDE KEŞFEDİLMESİ / EVRİM, AYNILIK VE ÇEŞİTLİLİK / BİLİMSEL SÜREÇ / BÖLÜM TEKRARI) ve giriş metni. Madde işaretli satırlar soru değil, bildirim cümlesi biçiminde konu başlıkları — kural gereği içindekiler/kazanım listesi sayılmaz."
+  },
+  {
+   "page": 183,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "Sol sütun ŞEKİL 10.8 (a/b/c alt panelleri: absorbsiyon spektrumu, etkin spektrum, Engelmann deneyi) ve şekil açıklamaları; sağ sütun düz konu anlatımı. (a)/(b)/(c) etiketleri şekil panel etiketi, alt soru değil. Şekil altyazısındaki \"...dikkat ediniz\" ifadesi bir yönerge/anlatım cümlesi, cevaplanacak soru değil. | ŞEKİL 10.8 (a/b/c panelleri) + fotosentez pigmentleri anlatımı. (a)(b)(c) etiketleri şekil panel etiketi, alt soru değil. Metinde geçen 'Klorofil ve diğer pigmentler fotonları absorblayınca tam olarak ne meydana gelmektedir?' cümlesi anlatım içi retorik soru; cevaplanması istenen bir madde değil."
+  },
+  {
+   "page": 274,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "Krossing-over konu anlatımı + ŞEKİL 15.5 diyagramı, (a) ve (b) panel açıklamaları. Panel etiketleri şekil parçası; soru yok. Metindeki \"...nasıl açıklayabiliriz?\" retorik anlatım sorusu, cevaplanması istenen numaralı bir madde değil. | Krossing-over anlatımı + ŞEKİL 15.5 diyagramı. (a) ve (b) etiketleri şekil altyazı panelleri. Metindeki 'ŞEKİL 15.4'te gösterilen çaprazlamanın sonuçlarını nasıl açıklayabiliriz?' anlatımın retorik sorusu, öğrenciden cevap istemiyor."
+  },
+  {
+   "page": 456,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "Tamamen konu anlatımı (diploloitlik, dengeli polimorfizm) + ŞEKİL 23.10 sıtma haritası ve lejandı. Soru yok. Metinde geçen retorik sorular (\"...ne engellemektedir?\") anlatımın parçası. | Diployitlik/dengeli polimorfizm konu anlatımı + ŞEKİL 23.10 harita. Paragraf başındaki retorik soru dışında soru yok."
+  },
+  {
+   "page": 547,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "ŞEKİL 28.2 soyağacı ve ŞEKİL 28.3 Euglena etiketli çizimi + konu anlatımı. Şekil üzerindeki etiketler (Kamçı, Göz beneği, Kloroplast vb.) açıklama, boşluk doldurma sorusu değil. Şekil başlığındaki \"Kingdom Protista sorunu\" ifadesindeki \"sorun\" kelimesi soru değil, konu adı — motorun yanılabileceği tek nokta bu. | ŞEKİL 28.2 soyağacı ve ŞEKİL 28.3 Euglena etiketli çizimi + Protista anlatımı. Şekil üzerindeki kalın etiketler (Kamçı, Göz beneği, Kloroplast vb.) açıklama etiketi; boşluk doldurma sorusu değil. Başlıktaki 'Kingdom Protista sorunu' ifadesi bir soru değil, konu adı — yanıltıcı olabilir diye not düşüyorum."
+  },
+  {
+   "page": 729,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "Bölüm 35 açılış konu anlatımı (bitki büyümesi, meristemler) + ŞEKİL 35.12. Başlıklar ve kalın terimler var, soru yok. | Bitki büyüme/meristem konu anlatımı + ŞEKİL 35.12. Bölüm ve alt bölüm başlıkları cümle biçiminde (ör. 'Meristemler, yeni organlar için ... hücre üretir'), soru değil."
+  },
+  {
+   "page": 820,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "ŞEKİL 39.21 fotoğrafları + sirkadiyen ritim konu anlatımı. Metinde retorik sorular (\"Biyolojik saatler nasıl çalışmaktadır?\", \"Sirkadian ritimler ... mı teşvik edilmektedir?\") paragraf açıcı anlatım cümleleridir; öğrenciden cevap istenen bağımsız madde değildir, sayılmadı. | Sirkadiyen ritim anlatımı + ŞEKİL 39.21 fotoğrafları. 'Biyolojik saatler nasıl çalışmaktadır?' ve 'Sirkadian ritimler tümüyle içteki bir saat tarafından mı teşvik edilmektedir?' anlatımın kendi kendine sorup cevapladığı retorik sorular; öğrenciden yanıt istenmiyor, sayılmadı."
+  },
+  {
+   "page": 1002,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "konu",
+   "notes": "Bu render tek sayfa değil, iki sayfalık açık kitap taraması (sol 1100, sağ 1101 - Bölüm 50 Ekoloji). Dört sütunluk konu anlatımı + ŞEKİL 50.10 klimograf ve ŞEKİL 50.11 güneş radyasyonu şeması. Her iki sayfada da soru yok; toplam 0. | Bu render tek sayfa değil, ÇİFT SAYFA açılımı (basılı sayfa 1100 ve 1101 yan yana, ortada cilt payı görünüyor). Her iki yarısı da abiyotik faktörler/iklim konu anlatımı + ŞEKİL 50.10 ve 50.11; hiçbir yarısında soru yok. Sayfa numarası eşlemesi (PDF s1002 = basılı 1100-1101) motor tarafında karışıklık yaratabilir."
+  }
+ ]
+}

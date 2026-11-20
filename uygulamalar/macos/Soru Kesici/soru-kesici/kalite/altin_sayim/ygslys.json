@@ -1,0 +1,141 @@
+{
+ "schema_version": "soru-kesici.golden-count/v1",
+ "document": {
+  "id": "soru-kesici:ygslys",
+  "source": "ygs-lys biyoloji s.b (1).pdf",
+  "source_sha256": "54a1dd373959923fa439a2db574ef86401236896a26f79342f4330d316f5c3a6",
+  "page_count": 232
+ },
+ "sampling": {
+  "dpi": 300,
+  "max_sayfa": 40,
+  "bas": null,
+  "son": null,
+  "kapsam": "kismi",
+  "ornek_no": [
+   1,
+   11,
+   36,
+   46,
+   76,
+   136,
+   196
+  ]
+ },
+ "verifier": "claude-opus-5 çift kör sayım (iki bağımsız sayıcı, çıplak render, mutabakat şartı; örtüşen sayfalarda önceki altınla birebir doğrulandı)",
+ "method": "kor-sayim",
+ "pages": [
+  {
+   "page": 1,
+   "question_count": 0,
+   "question_numbers": null,
+   "role": "kapak",
+   "notes": "Sol yarı tamamen boş, sağ yarı iç kapak/künye: 'Üniversiteye Hazırlık YGS-LYS BİYOLOJİ Soru Bankası', hazırlayanlar, ISBN, baskı-cilt, dağıtım bilgileri, final yayınları logosu. Soru yok. | Sol yarı tamamen boş, sağ yarı iç kapak/künye: 'Üniversiteye Hazırlık YGS-LYS BİYOLOJİ Soru Bankası', hazırlayanlar, ISBN, baskı ve yayınevi bilgileri. Hiç soru yok."
+  },
+  {
+   "page": 11,
+   "question_count": 10,
+   "question_numbers": [
+    14,
+    15,
+    16,
+    17,
+    18,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "role": "soru",
+   "notes": "Sol kitap sayfası s.22 (CANLILARIN TEMEL BİLEŞENLERİ): 14 (mineral tablosu + X,Y,Z sıralaması), 15 (+/- özellik tablosu), 16, 17, 18 (4 madde işaretli uyaran + tek soru = 1) → 5. Sağ kitap sayfası s.23: 'TEST – 3' başlığı (sayılmadı) altında 1 (kavram haritası), 2, 3, 4 (karbonhidrat metabolizması şeması), 5 → 5. Toplam 10. Tablolar/şemalar tek sorunun uyaranı olduğu için ayrı sayılmadı. | Sol kitap sayfası 22 (CANLILARIN TEMEL BİLEŞENLERİ): sütun1'de 14, 15; sütun2'de 16, 17, 18 = 5. Sağ kitap sayfası 23: üstte 'TEST - 3' kutusu ile numaralandırma sıfırlanıyor; sütun3'te 1, 2, 3; sütun4'te 4,"
+  },
+  {
+   "page": 36,
+   "question_count": 10,
+   "question_numbers": [
+    13,
+    14,
+    15,
+    16,
+    17,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "role": "soru",
+   "notes": "Sol kitap sayfası s.72 (CANLILARIN SINIFLANDIRILMASI VE BİYOLOJİK ÇEŞİTLİLİK): 13 (kurbağa dolaşım şeması), 14, 15, 16 (grafik), 17 (canlı grupları tablosu) → 5. Sağ kitap sayfası s.73: yeni ünite başlığı 'ÇEVRE BİYOLOJİSİ' ve 'TEST – 1' kutusu sayılmadı; 1, 2 (tüp şekli + iki grafik), 3, 4, 5 (iki grafik) → 5. Toplam 10. | Sol kitap sayfası 72 (CANLILARIN SINIFLANDIRILMASI VE BİYOLOJİK ÇEŞİTLİLİK): sütun1'de 13, 14, 15; sütun2'de 16, 17 = 5. Sağ kitap sayfası 73: üstte 'ÇEVRE BİYOLOJİSİ' ünite başlığı bandı (sayılmadı) ve 'TEST - 1' kutusu (sayılmadı), numaralandırma 1'den başlıyor; sütun3'te"
+  },
+  {
+   "page": 46,
+   "question_count": 9,
+   "question_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "role": "soru",
+   "notes": "Sol kitap sayfası s.92 (EKOSİSTEM EKOLOJİSİ VE ÇEVRE SORUNLARI): 'TEST – 2' başlığı sayılmadı; 1, 2 (besin ağı şeması), 3 (gölge tablosu), 4 (enerji piramidi) → 4. Sağ kitap sayfası s.93: 5 (besin ağı), 6 (üç grafik, tek soru), 7, 8 (besin zinciri şeması), 9 (karbon döngüsü şeması) → 5. Toplam 9. 6. sorudaki üç grafik tek sorunun seçenek uyaranı, ayrı sayılmadı. | Sol kitap sayfası 92 (EKOSİSTEM EKOLOJİSİ VE ÇEVRE SORUNLARI): 'TEST - 2' başlık kutusu (sayılmadı), sütun1'de 1, 2; sütun2'de 3, 4 = 4. Sağ kitap sayfası 93: sütun3'te 5, 6, 7; sütun4'te 8, 9 = 5. Toplam 9. Numaralandırma iki sayfa "
+  },
+  {
+   "page": 76,
+   "question_count": 9,
+   "question_numbers": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+   ],
+   "role": "soru",
+   "notes": "Sol kitap sayfası s.152 (MAYOZ VE EŞEYLİ ÜREME): 7 (A-E grafik şıkları tek soru), 8, 9 (krosing over şeması), 10 (üç evre şekli) → 4. Sağ kitap sayfası s.153: 11, 12, 13, 14 (paramesyum şeması), 15 (I-V maddeli, tek cevap isteyen) → 5. Toplam 9. 7. sorunun beş grafiği şık olduğu için ayrı sayılmadı; 15'in I-V maddeleri şık niteliğinde, tek soru. | Sol kitap sayfası 152 (MAYOZ VE EŞEYLİ ÜREME): sütun1'de 7, 8; sütun2'de 9, 10 = 4. Sağ kitap sayfası 153: sütun3'te 11, 12, 13; sütun4'te 14, 15 = 5. Toplam 9. 7'nin A-E şıkları grafik olarak verilmiş, tek soru olarak sayıldı; 9 ve 10'daki krosing o"
+  },
+  {
+   "page": 136,
+   "question_count": 9,
+   "question_numbers": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "role": "soru",
+   "notes": "Sol kitap sayfası s.272 (DOLAŞIM VE VÜCUDUN SAVUNULMASI): 5, 6 (damar grafiği), 7, 8, 9 → 5. Sağ kitap sayfası s.273: 10, 11 (A/B/C üç basınç grafiği tek soru), 12 (dolaşım şeması + A-E eşleştirme tablosu tek soru), 13 → 4. Toplam 9. 12'deki 'Oksijen miktarı / NH3 yoğunluğu' iki sütunlu A-E listesi şık tablosu, ayrı soru değil. | Sol kitap sayfası 272 (DOLAŞIM VE VÜCUDUN SAVUNULMASI): sütun1'de 5, 6; sütun2'de 7, 8, 9 = 5. Sağ kitap sayfası 273: sütun3'te 10, 11; sütun4'te 12, 13 = 4. Toplam 9. 11'deki üç grafik (A, B, C) tek sorunun uyaranı; 12'deki dolaşım şeması ve seçenek tablosu da tek so"
+  },
+  {
+   "page": 196,
+   "question_count": 10,
+   "question_numbers": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+   ],
+   "role": "soru",
+   "notes": "Sol kitap sayfası s.392 (KARMA TEST): 7, 8 (organ sistemleri tablosu), 9, 10, 11, 12 → 6. Sağ kitap sayfası s.393: 13 (kan grupları tablosu), 14 (3 madde işaretli uyaran + tek soru), 15 (uzun kemik şeması), 16 (santrifüj tüpü şeması) → 4. Toplam 10. 13'teki 0/A/B/AB kan tipi tablosu paylaşılan uyaran, satırları ayrı sayılmadı. | Sol kitap sayfası 392 (KARMA TEST): sütun1'de 7, 8, 9; sütun2'de 10, 11, 12 = 6. Sağ kitap sayfası 393: sütun3'te 13, 14; sütun4'te 15, 16 = 4. Toplam 10. 8'deki organ sistemleri tablosu, 13'teki kan grubu tablosu ve 15/16'daki kemik-santrifüj şekilleri ait oldukları s"
+  }
+ ]
+}
