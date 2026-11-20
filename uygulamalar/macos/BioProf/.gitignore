@@ -1,0 +1,5 @@
+# Sanal ortam ve önbellekler: 1,4 GB'ın neredeyse tamamı burada.
+.venv/
+.pytest_cache/
+__pycache__/
+*.pyc

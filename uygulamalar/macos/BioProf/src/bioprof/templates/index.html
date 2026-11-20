@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}BioProf · Kanıta dayalı çalışma alanı{% endblock %}
+{% block body %}
+<div class="app-shell" data-api-prefix="{{ api_prefix | default('/api/v1') }}">
+  <header class="topbar">
+    <div class="brand-block">
+      <div class="brand-mark" aria-hidden="true">
+        <img src="/static/bioprof-icon-256.png" alt="">
+      </div>
+      <div><strong>BioProf</strong><span>kanıt çalışma alanı</span></div>
+    </div>
+    <div class="topbar-center">
+      <label class="sr-only" for="notebook-select">Notebook</label>
+      <select id="notebook-select" aria-label="Etkin notebook"><option value="">Notebook seçin</option></select>
+      <button id="new-notebook-button" class="icon-button" title="Yeni notebook" aria-label="Yeni notebook">＋</button>
+    </div>
+    <div class="status-cluster">
+      <span id="privacy-pill" class="status-pill safe"><i></i> Yerel öncelikli</span>
+      <button id="research-button" class="button subtle">Derin araştırma</button>
+      <button id="settings-button" class="icon-button" aria-label="Sistem durumu" title="Sistem durumu">⚙</button>
+    </div>
+  </header>
+
+  <div class="medical-notice" role="note">
+    <span aria-hidden="true">ⓘ</span> {{ educational_notice }}
+  </div>
+
+  <main class="workspace" id="chat-main">
+    <aside class="pane sources-pane" aria-label="Kaynaklar">
+      <div class="pane-heading">
+        <div><span class="eyebrow">Koleksiyon</span><h2>Kaynaklar</h2></div>
+        <button id="upload-button" class="icon-button" title="Kaynak ekle" aria-label="Kaynak ekle">＋</button>
+      </div>
+      <div class="source-toolbar">
+        <label class="search-box"><span aria-hidden="true">⌕</span><input id="source-filter" type="search" placeholder="Kaynaklarda filtrele"></label>
+        <label class="select-all"><input id="source-select-all" type="checkbox" checked> Tümünü seç</label>
+      </div>
+      <div id="source-list" class="source-list" aria-live="polite">
+        <div class="empty-state compact"><span>⌁</span><p>Kaynaklar burada görünecek.</p></div>
+      </div>
+      <div class="pane-footer">
+        <span id="source-count">0 kaynak</span>
+        <button id="inspect-retrieval" class="text-button">Retrieval izi</button>
+      </div>
+    </aside>
+
+    <section class="pane chat-pane" aria-label="Kaynaklı sohbet">
+      <div class="chat-toolbar">
+        <div class="segmented" role="group" aria-label="Yanıt modu">
+          <button class="mode-button active" data-mode="strict" aria-pressed="true">Sıkı kaynak</button>
+          <button class="mode-button" data-mode="hybrid" aria-pressed="false">Hibrit</button>
+        </div>
+        <div class="model-controls">
+          <select id="conversation-select" aria-label="Sohbet geçmişi"><option value="">Yeni sohbet</option></select>
+          <button id="delete-conversation" class="icon-button" title="Bu sohbeti sil" aria-label="Bu sohbeti sil" hidden>🗑</button>
+          <select id="provider-select" aria-label="Sağlayıcı"><option value="">Yerel sağlayıcı</option></select>
+          <select id="model-select" aria-label="Model"><option value="">Otomatik model</option></select>
+        </div>
+      </div>
+
+      <div id="messages" class="messages" aria-live="polite">
+        <article class="welcome-card">
+          <div class="professor-orb" aria-hidden="true">β</div>
+          <span class="eyebrow">Kaynağa bağlı biyoloji profesörü</span>
+          <h1>Kanıtı görünür tutarak çalışın.</h1>
+          <p>Dosya, makale, ses veya videolarınızı ekleyin. BioProf yalnız seçtiğiniz kaynaklardan yanıtlar; yeterli kanıt yoksa bunu açıkça söyler.</p>
+          <div class="starter-grid">
+            <button class="starter" data-question="Bu kaynakların temel bulgularını karşılaştırmalı özetle."><span>01</span>Temel bulguları karşılaştır</button>
+            <button class="starter" data-question="Kaynaklar arasında çelişen iddiaları ve sınırlılıkları göster."><span>02</span>Çelişkileri incele</button>
+            <button class="starter" data-studio="study_guide"><span>03</span>Çalışma kılavuzu oluştur</button>
+          </div>
+        </article>
+      </div>
+
+      <form id="ask-form" class="composer">
+        <div class="composer-main">
+          <textarea id="question-input" rows="2" maxlength="50000" placeholder="Kaynaklarınıza göre bir soru sorun…" aria-label="Soru"></textarea>
+          <div class="composer-actions">
+            <button type="button" id="mic-button" class="icon-button record" aria-label="Sesli soru" title="Whisper ile sesli soru">◉</button>
+            <label class="speak-toggle" title="Murat ile seslendir"><input id="speak-answer" type="checkbox"><span>Sesli yanıt</span></label>
+            <button type="submit" id="send-button" class="send-button" aria-label="Gönder">Gönder <span>↗</span></button>
+          </div>
+        </div>
+        <div class="composer-meta"><span id="evidence-selection">0 seçili kaynak</span><span>Her iddia için alıntı beklenir</span></div>
+      </form>
+    </section>
+
+    <aside class="pane studio-pane" aria-label="Studio ve sistem">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="studio" role="tab" aria-selected="true">Studio</button>
+        <button class="tab" data-tab="study" role="tab" aria-selected="false">Çalış</button>
+        <button class="tab" data-tab="notes" role="tab" aria-selected="false">Notlar</button>
+        <button class="tab" data-tab="system" role="tab" aria-selected="false">Sistem</button>
+      </div>
+      <section id="studio-tab" class="tab-panel active" role="tabpanel">
+        <div class="studio-intro"><span class="eyebrow">Kaynaklı üretim</span><h2>Bir öğrenme çıktısı oluşturun</h2><p>Her çıktı seçili kanıt bloklarına ve tıklanabilir alıntılara bağlanır.</p></div>
+        <div class="studio-grid">
+          <button class="studio-card featured" data-kind="podcast"><span class="card-icon">🎙</span><div><strong>Podcast</strong><small>Murat ve Emel'in kaynaklı sohbeti · MP3 + altyazı</small></div><b>＋</b></button>
+          <label class="studio-option" for="podcast-length"><span>Podcast süresi</span>
+            <select id="podcast-length">
+              <option value="kisa">Kısa · ~2 dk</option>
+              <option value="orta" selected>Orta · ~3 dk</option>
+              <option value="uzun">Uzun · ~5 dk</option>
+              <option value="15">Bölüm · 15 dk</option>
+              <option value="30">Yarım saat · 30 dk</option>
+              <option value="60">Bir saat · 60 dk</option>
+              <option value="90">Bir buçuk saat · 90 dk</option>
+            </select>
+          </label>
+          <label class="studio-option" for="podcast-style"><span>Podcast tipi</span>
+            <select id="podcast-style">
+              <option value="sohbet" selected>Sohbet · sunucu sorar, uzmanlar açıklar</option>
+              <option value="ders">Ders anlatımı · kesintisiz anlatım blokları</option>
+              <option value="tartisma">Uzman tartışması · iki uzman karşılıklı</option>
+              <option value="tekrar">Hızlı tekrar · sınav öncesi pekiştirme</option>
+              <option value="roportaj">Derinlemesine söyleşi · takip soruları</option>
+            </select>
+          </label>
+          <p class="studio-note" id="podcast-note">30 dakikalık bir bölüm yaklaşık 40 dakikada üretilir; iş arka planda sürer.</p>
+          <button class="studio-card featured" data-kind="audio_lesson"><span class="card-icon">◖))</span><div><strong>Murat sesli ders</strong><small>Kaynaklı, tek anlatıcılı WAV/MP3</small></div><b>＋</b></button>
+          <button class="studio-card featured" data-kind="video_overview"><span class="card-icon">▣</span><div><strong>Video genel bakış</strong><small>Slayt planı, altyazı ve anlatım</small></div><b>＋</b></button>
+          <button class="studio-card" data-kind="summary"><span class="card-icon">≡</span><div><strong>Özet</strong><small>Kanıt maddeleri</small></div><b>＋</b></button>
+          <button class="studio-card" data-kind="study_guide"><span class="card-icon">⌘</span><div><strong>Çalışma kılavuzu</strong><small>Hedefler ve öz denetim</small></div><b>＋</b></button>
+          <button class="studio-card" data-kind="quiz"><span class="card-icon">?</span><div><strong>Quiz</strong><small>Cevap anahtarlı</small></div><b>＋</b></button>
+          <button class="studio-card" data-kind="flashcards"><span class="card-icon">▤</span><div><strong>Flashcard</strong><small>Hızlı tekrar</small></div><b>＋</b></button>
+          <button class="studio-card" data-kind="mind_map"><span class="card-icon">⌬</span><div><strong>Zihin haritası</strong><small>İnteraktif kavram haritası</small></div><b>＋</b></button>
+          <button class="studio-card" data-kind="slides"><span class="card-icon">▭</span><div><strong>Slaytlar</strong><small>Sunum modu + PPTX</small></div><b>＋</b></button>
+          <button class="studio-card" data-kind="glossary"><span class="card-icon">✦</span><div><strong>Sözlük</strong><small>Terim ve tanımlar</small></div><b>＋</b></button>
+          <button class="studio-card" data-kind="ders_plani"><span class="card-icon">✎</span><div><strong>Ders planı</strong><small>MEB günlük plan + DOCX</small></div><b>＋</b></button>
+          <button class="studio-card" data-kind="table"><span class="card-icon">▦</span><div><strong>Veri tablosu</strong><small>Kaynak karşılaştırma</small></div><b>＋</b></button>
+          <button class="studio-card" data-kind="faq"><span class="card-icon">⁈</span><div><strong>FAQ</strong><small>Soru ve yanıtlar</small></div><b>＋</b></button>
+          <button class="studio-card" data-kind="timeline"><span class="card-icon">→</span><div><strong>Zaman çizgisi</strong><small>Tarihli bulgular</small></div><b>＋</b></button>
+        </div>
+        <div class="section-divider"><span>Son çıktılar</span></div>
+        <div id="artifact-list" class="artifact-list"><div class="empty-state compact"><p>Henüz çıktı yok.</p></div></div>
+        <button id="paket-button" class="button subtle" disabled>Öğrenci paketi indir</button>
+      </section>
+      <section id="study-tab" class="tab-panel" role="tabpanel">
+        <div class="studio-intro"><span class="eyebrow">Aralıklı tekrar</span><h2>Kart desteleri</h2><p>Flashcard çıktılarından deste oluşturun; SM-2 zamanlamasıyla çalışın, Anki'ye aktarın.</p></div>
+        <div id="deck-list" class="deste-listesi"><p class="muted">Henüz deste yok.</p></div>
+      </section>
+      <section id="notes-tab" class="tab-panel" role="tabpanel">
+        <div class="notes-toolbar">
+          <select id="note-select" aria-label="Not seç"><option value="">Yeni not…</option></select>
+          <button id="new-note" class="icon-button" title="Yeni not" aria-label="Yeni not">＋</button>
+        </div>
+        <label class="notes-editor"><span>Başlık</span><input id="note-title" maxlength="300" placeholder="Not başlığı"></label>
+        <label class="notes-editor"><span>Notebook notları</span><textarea id="notes-input" placeholder="Hipotezler, çalışma notları, takip soruları…"></textarea></label>
+        <div class="notes-actions">
+          <button id="save-notes" class="button primary">Notu kaydet</button>
+          <button id="delete-note" class="button subtle" hidden>Sil</button>
+        </div>
+      </section>
+      <section id="system-tab" class="tab-panel" role="tabpanel">
+        <div class="system-card"><div><span class="service-dot" id="local-dot"></span><strong>Yerel çekirdek</strong></div><span id="local-port">8766</span></div>
+        <div id="provider-status" class="system-list"></div>
+        <div class="section-divider"><span>İş kuyruğu</span></div>
+        <div id="job-list" class="job-list"><p class="muted">Etkin iş yok.</p></div>
+      </section>
+    </aside>
+  </main>
+</div>
+
+<dialog id="notebook-dialog" class="modal">
+  <form id="notebook-form" method="dialog">
+    <div class="modal-heading"><div><span class="eyebrow">Yeni çalışma alanı</span><h2>Notebook oluştur</h2></div><button class="icon-button" value="cancel" formmethod="dialog" aria-label="Kapat">×</button></div>
+    <label>Ad<input name="name" required maxlength="200" placeholder="Örn. Moleküler biyoloji notları"></label>
+    <label>Açıklama<textarea name="description" maxlength="10000" placeholder="Bu notebook'un amacı"></textarea></label>
+    <label>Gizlilik<select name="privacy_mode"><option value="local_first">Yerel öncelikli</option><option value="local_only">Yalnız yerel</option><option value="cloud_allowed">Buluta izinli</option></select></label>
+    <label class="check-row"><input type="checkbox" name="remote_egress_approved" value="true"><span>Bu notebook için yalnız açıkça seçtiğim uzak sağlayıcılara veri çıkışına izin ver</span></label>
+    <div class="modal-actions"><button type="button" class="button subtle" data-close-dialog>Vazgeç</button><button type="submit" class="button primary">Oluştur</button></div>
+  </form>
+</dialog>
+
+<dialog id="source-dialog" class="modal">
+  <form id="source-form" enctype="multipart/form-data">
+    <div class="modal-heading"><div><span class="eyebrow">İçe aktarma</span><h2>Kaynak ekle</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Kapat">×</button></div>
+    <div class="drop-zone" id="drop-zone"><span>⇧</span><strong>Dosyaları buraya bırakın</strong><small>Belge, görsel, ses, video ve biyoloji formatları</small><input id="source-file" name="file" type="file" required></div>
+    <label>Bilinen lisans (isteğe bağlı)<input name="license" maxlength="500" placeholder="Örn. CC BY 4.0"></label>
+    <div class="modal-actions"><button type="button" class="button subtle" data-close-dialog>Vazgeç</button><button type="submit" class="button primary">İndeksleme işini başlat</button></div>
+  </form>
+</dialog>
+
+<dialog id="research-dialog" class="modal wide">
+  <form id="research-form">
+    <div class="modal-heading"><div><span class="eyebrow">Resmî kaynaklar</span><h2>Derin araştırma</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Kapat">×</button></div>
+    <label>Sorgu<textarea name="query" required placeholder="Gen, mekanizma, hastalık veya klinik çalışma sorgusu"></textarea></label>
+    <label>Kaynak<select name="provider"><option value="pubmed">PubMed</option><option value="pmc">PMC Open Access</option><option value="gene">NCBI Gene</option><option value="protein">NCBI Protein</option><option value="taxonomy">NCBI Taxonomy</option><option value="clinvar">ClinVar</option><option value="clinical_trials">ClinicalTrials.gov</option></select></label>
+    <label class="check-row"><input type="checkbox" name="approve_egress" required><span>Bu notebook için sorgunun seçili resmî servise gönderilmesini onaylıyorum</span></label>
+    <p class="form-note">Yalnız resmî API'ler sorgulanır. Tam metin, açık lisans doğrulanmadan içe alınmaz. Genel uzak erişim ayrıca <code>BIOPROF_ALLOW_REMOTE_EGRESS=true</code> ile açılmalıdır.</p>
+    <div id="research-results" class="research-results" hidden></div>
+    <div class="modal-actions"><button type="button" class="button subtle" data-close-dialog>Vazgeç</button><button type="submit" class="button primary">Araştır</button></div>
+  </form>
+</dialog>
+
+<dialog id="citation-dialog" class="modal wide"><div id="citation-detail"></div><button type="button" class="button primary" data-close-dialog>Kapat</button></dialog>
+{% endblock %}

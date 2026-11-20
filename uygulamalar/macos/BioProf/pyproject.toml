@@ -1,0 +1,136 @@
+[project]
+name = "bioprof"
+version = "0.1.0"
+description = "Yerel-oncelikli, kanita dayali biyoloji ve tip arastirma asistani"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = { text = "MIT" }
+authors = [{ name = "BioProf" }]
+dependencies = [
+  "aiofiles>=24.1.0",
+  "alembic>=1.16.0",
+  "beautifulsoup4>=4.13.0",
+  "biopython>=1.85",
+  "fastapi>=0.116.0",
+  "httpx>=0.28.0",
+  "itsdangerous>=2.2.0",
+  "jinja2>=3.1.6",
+  "numpy>=2.0.0",
+  "openpyxl>=3.1.5",
+  "orjson>=3.10.0",
+  "pillow>=11.0.0",
+  "pint>=0.24.0",
+  "pydantic>=2.11.0",
+  "pydantic-settings>=2.10.0",
+  "pypdf>=5.0.0",
+  "python-docx>=1.2.0",
+  "python-multipart>=0.0.20",
+  "python-pptx>=1.0.0",
+  "pyyaml>=6.0.2",
+  "reportlab>=4.4.0",
+  "rich>=14.0.0",
+  "sqlalchemy>=2.0.40",
+  "sse-starlette>=2.3.0",
+  "sympy>=1.14.0",
+  "typer>=0.16.0",
+  "uvicorn[standard]>=0.35.0",
+]
+
+[project.optional-dependencies]
+rag = [
+  "qdrant-client>=1.15.0",
+]
+documents = [
+  "docling>=2.44.0",
+]
+media = [
+  "av>=15.0.0",
+  "mlx-whisper>=0.4.3; platform_system == 'Darwin' and platform_machine == 'arm64'",
+  "scenedetect>=0.6.6",
+]
+models = [
+  "huggingface-hub>=0.34.0",
+  "sentencepiece>=0.2.0",
+  "sentence-transformers>=5.0.0",
+  "FlagEmbedding>=1.3.5",
+  "mlx-lm>=0.26.0; platform_system == 'Darwin' and platform_machine == 'arm64'",
+  "mlx-vlm>=0.3.0; platform_system == 'Darwin' and platform_machine == 'arm64'",
+]
+training = [
+  "datasets>=4.0.0",
+  "dvc>=3.60.0",
+  "mlflow>=3.2.0",
+  "peft>=0.17.0",
+  "transformers>=4.55.0",
+  "trl>=0.21.0",
+]
+mcp = [
+  "mcp>=1.12.0,<2",
+]
+anki = [
+  "genanki>=0.13.0",
+]
+all = [
+  "qdrant-client>=1.15.0",
+  "docling>=2.44.0",
+  "av>=15.0.0",
+  "mlx-whisper>=0.4.3; platform_system == 'Darwin' and platform_machine == 'arm64'",
+  "scenedetect>=0.6.6",
+  "huggingface-hub>=0.34.0",
+  "sentence-transformers>=5.0.0",
+  "FlagEmbedding>=1.3.5",
+  "mlx-lm>=0.26.0; platform_system == 'Darwin' and platform_machine == 'arm64'",
+  "mlx-vlm>=0.3.0; platform_system == 'Darwin' and platform_machine == 'arm64'",
+  "datasets>=4.0.0",
+  "dvc>=3.60.0",
+  "mlflow>=3.2.0",
+  "peft>=0.17.0",
+  "transformers>=4.55.0",
+  "trl>=0.21.0",
+  "mcp>=1.12.0,<2",
+]
+
+[dependency-groups]
+dev = [
+  "mypy>=1.17.0",
+  "pytest>=8.4.0",
+  "pytest-asyncio>=1.1.0",
+  "pytest-cov>=6.2.0",
+  "respx>=0.22.0",
+  "ruff>=0.12.0",
+]
+
+[project.scripts]
+bioprof = "bioprof.cli:app"
+bioprof-mcp = "bioprof.mcp_server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bioprof"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["B008"]
+
+[tool.ruff.lint.per-file-ignores]
+# Elle derlenmiş kazanım tablosu: satır başına bir kayıt, sarmak okunurluğu bozar.
+"src/bioprof/studio/meb_kazanimlar.py" = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+plugins = ["pydantic.mypy"]
+warn_unused_ignores = true
+disallow_untyped_defs = true

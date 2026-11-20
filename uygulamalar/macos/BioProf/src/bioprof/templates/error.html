@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}BioProf · Hata{% endblock %}
+{% block body %}
+<main class="error-page"><div class="professor-orb">!</div><h1>{{ title | default('Bir sorun oluştu') }}</h1><p>{{ message }}</p><a class="button primary" href="/">Çalışma alanına dön</a></main>
+{% endblock %}

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="tr" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark light">
+    <meta name="description" content="Yerel ve kaynaklı biyoloji-tıp eğitim asistanı">
+    <title>{% block title %}{{ app_name | default('BioProf') }}{% endblock %}</title>
+    <link rel="icon" type="image/png" sizes="256x256" href="/static/bioprof-icon-256.png">
+    <link rel="apple-touch-icon" href="/static/bioprof-icon-256.png">
+    <link rel="stylesheet" href="/static/bioprof.css">
+    <script defer src="/static/vendor/htmx-lite.js"></script>
+    <script defer src="/static/app.js"></script>
+    <script defer src="/static/slides.js"></script>
+    <script defer src="/static/mindmap.js"></script>
+    <script defer src="/static/flashcards.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#chat-main">Ana içeriğe geç</a>
+    {% block body %}{% endblock %}
+    <div id="toast-region" class="toast-region" role="status" aria-live="polite"></div>
+  </body>
+</html>
