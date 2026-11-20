@@ -1,0 +1,8 @@
+.build/
+.swiftpm/
+*.xcodeproj/
+DerivedData/
+xcuserdata/
+telefon-paketi*.json
+*.env
+.DS_Store
