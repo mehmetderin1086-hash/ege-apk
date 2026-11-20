@@ -1,0 +1,793 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		05BE9DDEAD9827F893665ED5 /* QuizCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46F2F2740F067A4951F0B063 /* QuizCore.swift */; };
+		07E063C93744F71300775924 /* FlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0DCA92733ED439C16125397 /* FlowTests.swift */; };
+		0F46445F65605619A6A2DDD6 /* BilgiArenaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A094BF602306B23E50FEDE8F /* BilgiArenaApp.swift */; };
+		0FF144644477A3470FF021DF /* SessionSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2024E44F60C2D10AD410DFFC /* SessionSettingsView.swift */; };
+		141983BA546516D14EFB6135 /* QuestionPoolDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FAFA249BF0AD1E13C07652D /* QuestionPoolDatabase.swift */; };
+		19CA83426343AF0A9B991E78 /* QuestionLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 181E988BA7669DBB8E822B55 /* QuestionLibrary.swift */; };
+		1E817DAF6D599BECF536363C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61860F5A98E28611967ADD41 /* SettingsView.swift */; };
+		28256751EADED5C13EEB63EF /* GeneratedQuestionParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38A6845D4AB9A53CD965E66 /* GeneratedQuestionParser.swift */; };
+		2E53CD04D3EF4A7A24E35A01 /* SettingsVoiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FCA5991118C296FE964AB68 /* SettingsVoiceTests.swift */; };
+		347F43F157E820BB035B80AF /* QuestionActivityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DBC9B301CC58364A1114168 /* QuestionActivityTests.swift */; };
+		3767805BAE5665EEC3C45EC8 /* ActivityQuestionSeeds.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C577CAAC9BC67635737CF4 /* ActivityQuestionSeeds.swift */; };
+		43EB506FBF8067C8990977D6 /* QuestionVoiceAPITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C280165B8CE8F95A63A3A71F /* QuestionVoiceAPITests.swift */; };
+		4611783401BC66EEC6371173 /* QuestionVoiceAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C063DE65E86D361D537B496B /* QuestionVoiceAPI.swift */; };
+		4ABF11373491A6F28D443B52 /* QuestionPoolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE315EB120CDB4EFACC17F6A /* QuestionPoolView.swift */; };
+		4AC0D3407F493D7925014DBA /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBAACCE85FD1ED80D23CF233 /* AIService.swift */; };
+		50981876F2E08BE11EB6899F /* GameAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424AEFCDE5F60FDA01818C93 /* GameAudio.swift */; };
+		523A2476FB0A970C0F7A1954 /* ArenaPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32A8328F8827F292E43913D7 /* ArenaPreferences.swift */; };
+		52EB8ADEDA182E25448538D1 /* RemoteQuizVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ABB071A6C5F7A031335DD81 /* RemoteQuizVoice.swift */; };
+		551C09CB5A3BE9F246B07802 /* Seed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AF2B65465C4408CBD40D2A7 /* Seed.swift */; };
+		57379F5FCF040C44AC126477 /* Learning.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2373560094CE7C88BB3AFC6 /* Learning.swift */; };
+		5BD2D4F98E84A13ACCDDF2BD /* QuestionVisualView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAC05AD9EE7B15ADE7ACCA46 /* QuestionVisualView.swift */; };
+		6B877C5D1FB0647FEA0167E1 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = 48A42840822F8317B30C1B76 /* ThirdPartyNotices.txt */; };
+		75821F9701DE79B6294504A3 /* AcademyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB62B0A737BF1C4DFF642321 /* AcademyView.swift */; };
+		7A289C8FE8B9676AEF37887A /* VoiceAnswerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C5E95F5255D7F0E730B061E /* VoiceAnswerView.swift */; };
+		7BB205B606FDA53DE7DD3CDC /* VoiceAnswer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA65E4ABB763F8E9E9D931D3 /* VoiceAnswer.swift */; };
+		7BB778A49E3041296123977D /* LiveQuizView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92BADEBB50FD97AF558EDA /* LiveQuizView.swift */; };
+		7BD2B36F20283DEA03586410 /* QuestionVoiceSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03BAAD4D3CE4298495560655 /* QuestionVoiceSettings.swift */; };
+		7E04CEC8B70BB2064A43E31D /* QuestionVisualTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC20122B5B15FE68307CEB59 /* QuestionVisualTests.swift */; };
+		81B4FB4B74B2C0D0611CDEFB /* PhoneGatewayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114A4F350A9B063B41DA6E15 /* PhoneGatewayTests.swift */; };
+		8C962CB462AB637F58AD6E30 /* DevelopmentAudit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F6B0D18230638B0BD1C6DC5 /* DevelopmentAudit.swift */; };
+		8E5D67CC45C7BE0B3C6BA328 /* ProxyKit in Frameworks */ = {isa = PBXBuildFile; productRef = FBA11B2E85C3BED565A1501F /* ProxyKit */; };
+		8FF94DD0D4DE286ECD34ED29 /* DailyQuestionPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53FDBE61D919D0B2D5C47CF1 /* DailyQuestionPool.swift */; };
+		90D770988D01BDA173125FF1 /* LiveQuizController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9B3DFC3587E518923694CE /* LiveQuizController.swift */; };
+		9C2436F83F3F6E41AAE405E0 /* QuestionTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E307E16014637910BD776D2 /* QuestionTransfer.swift */; };
+		A05437F7229B6FC2C6000DAD /* RoundSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CEDEB6FF9FE7A3AF6A21B42 /* RoundSettingsTests.swift */; };
+		A45F8357D1C71DA640EE37B1 /* LiveQuizTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D85C6867B07C4336B5B7B9B /* LiveQuizTests.swift */; };
+		A68DFC7161AF0B1AF568F504 /* ModelCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A01D03489C6323E07E8B54E /* ModelCenterView.swift */; };
+		AC80C31212ED6581C6E4CF94 /* QuestionActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CD536B7E776ADDC3464F589 /* QuestionActivityView.swift */; };
+		AF76119068F92EC7CA2DCDC4 /* QuestionVisual.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD34580F2F073CB77500DBC /* QuestionVisual.swift */; };
+		B15F7FA11D7A31F0CD824C55 /* TransferVoiceLessonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35101E06BD9F470C16F20B99 /* TransferVoiceLessonTests.swift */; };
+		B2538448B9DC4BC0237FC215 /* QuestionPoolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53517DD3F45D0E35E19D233C /* QuestionPoolTests.swift */; };
+		B265FC2AFCC3C00C54D0A85D /* GenerationRecoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C25818C2562CE7146A2ED0 /* GenerationRecoveryTests.swift */; };
+		B5B5BC9C1B46848D31FB675B /* PhoneGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 783C4553AAD84FFE394E0211 /* PhoneGateway.swift */; };
+		C07ACAEEB5A17B8DA1735079 /* SeedExpansion.swift in Sources */ = {isa = PBXBuildFile; fileRef = F59B9BBBDFF35EC2D7A32702 /* SeedExpansion.swift */; };
+		C43C8F6A11F1EE4A88DD518B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 535370B45E2F96B8BE2D4323 /* Assets.xcassets */; };
+		C4743FA5D79F34410EC6AA83 /* QuizLivePCMIO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EEE592B4BCCE22DC9C4EDC0 /* QuizLivePCMIO.swift */; };
+		C4D80D962632B5F60CEE4C25 /* QuizTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4EBAD0C2D8E8D69E727DAA9 /* QuizTests.swift */; };
+		CD23DE05B39D244B53EA692F /* GameStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2608E9E43E824F25A8380B8 /* GameStore.swift */; };
+		D4A67FB113720A25EE997ED9 /* LiveQuizVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E37B5302769EC0C45670CB1 /* LiveQuizVoice.swift */; };
+		D505764FE415522A206EA73F /* StudyLesson.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F899434061F562E55F81A42 /* StudyLesson.swift */; };
+		E03344994AF4C6556A867BEF /* ArenaVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865B20EC6F330073D96CF3A6 /* ArenaVisuals.swift */; };
+		F053C370BF737BE64F632946 /* QuestionSpeaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBDFA52CC92F2D5405E4BB7F /* QuestionSpeaker.swift */; };
+		F525F4A8504E28C8EC92B687 /* WhisperKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5B3BB76443B877B70C4B2B1A /* WhisperKit */; };
+		FC9ED0CDE83F82A71B9982B5 /* QuestionActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 483A145775AB9658DA8A1BB9 /* QuestionActivity.swift */; };
+		FF57A60A0432D342F718BBCB /* QuestionTransferView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE655F5E0FFE45A592D2454E /* QuestionTransferView.swift */; };
+		FFB8AD8D5F98EFE65F2787E0 /* VisualQuestionSeeds.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA2B9327F1230F2F95DCBDCC /* VisualQuestionSeeds.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		9739FB8C24274AC3EE632730 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C5DA4B27035936646701621E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D1B520ADEE8EED21AB682482;
+			remoteInfo = BilgiArena;
+		};
+		A4B63FCFF283F83E2F9798B0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C5DA4B27035936646701621E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D1B520ADEE8EED21AB682482;
+			remoteInfo = BilgiArena;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		03BAAD4D3CE4298495560655 /* QuestionVoiceSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionVoiceSettings.swift; sourceTree = "<group>"; };
+		0E307E16014637910BD776D2 /* QuestionTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionTransfer.swift; sourceTree = "<group>"; };
+		0F6B0D18230638B0BD1C6DC5 /* DevelopmentAudit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevelopmentAudit.swift; sourceTree = "<group>"; };
+		114A4F350A9B063B41DA6E15 /* PhoneGatewayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneGatewayTests.swift; sourceTree = "<group>"; };
+		181ACCC8D2B44F05C6074DF6 /* ProxyKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ProxyKit; path = Vendor/ProxyKit; sourceTree = SOURCE_ROOT; };
+		181E988BA7669DBB8E822B55 /* QuestionLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionLibrary.swift; sourceTree = "<group>"; };
+		1CD34580F2F073CB77500DBC /* QuestionVisual.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionVisual.swift; sourceTree = "<group>"; };
+		2024E44F60C2D10AD410DFFC /* SessionSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionSettingsView.swift; sourceTree = "<group>"; };
+		2ABB071A6C5F7A031335DD81 /* RemoteQuizVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteQuizVoice.swift; sourceTree = "<group>"; };
+		2CEDEB6FF9FE7A3AF6A21B42 /* RoundSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundSettingsTests.swift; sourceTree = "<group>"; };
+		32A8328F8827F292E43913D7 /* ArenaPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArenaPreferences.swift; sourceTree = "<group>"; };
+		35101E06BD9F470C16F20B99 /* TransferVoiceLessonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferVoiceLessonTests.swift; sourceTree = "<group>"; };
+		3CD536B7E776ADDC3464F589 /* QuestionActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionActivityView.swift; sourceTree = "<group>"; };
+		424AEFCDE5F60FDA01818C93 /* GameAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameAudio.swift; sourceTree = "<group>"; };
+		46F2F2740F067A4951F0B063 /* QuizCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizCore.swift; sourceTree = "<group>"; };
+		483A145775AB9658DA8A1BB9 /* QuestionActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionActivity.swift; sourceTree = "<group>"; };
+		48A42840822F8317B30C1B76 /* ThirdPartyNotices.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThirdPartyNotices.txt; sourceTree = "<group>"; };
+		4A01D03489C6323E07E8B54E /* ModelCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelCenterView.swift; sourceTree = "<group>"; };
+		50E4859D552DBD03CF39503E /* BilgiArenaUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BilgiArenaUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		53517DD3F45D0E35E19D233C /* QuestionPoolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionPoolTests.swift; sourceTree = "<group>"; };
+		535370B45E2F96B8BE2D4323 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		53FDBE61D919D0B2D5C47CF1 /* DailyQuestionPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyQuestionPool.swift; sourceTree = "<group>"; };
+		5D85C6867B07C4336B5B7B9B /* LiveQuizTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveQuizTests.swift; sourceTree = "<group>"; };
+		61860F5A98E28611967ADD41 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		6C5E95F5255D7F0E730B061E /* VoiceAnswerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceAnswerView.swift; sourceTree = "<group>"; };
+		6DBC9B301CC58364A1114168 /* QuestionActivityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionActivityTests.swift; sourceTree = "<group>"; };
+		6F92BADEBB50FD97AF558EDA /* LiveQuizView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveQuizView.swift; sourceTree = "<group>"; };
+		75405575CD7C29823420BA77 /* BilgiArena.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BilgiArena.entitlements; sourceTree = "<group>"; };
+		783C4553AAD84FFE394E0211 /* PhoneGateway.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneGateway.swift; sourceTree = "<group>"; };
+		7E37B5302769EC0C45670CB1 /* LiveQuizVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveQuizVoice.swift; sourceTree = "<group>"; };
+		7EEE592B4BCCE22DC9C4EDC0 /* QuizLivePCMIO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizLivePCMIO.swift; sourceTree = "<group>"; };
+		7F899434061F562E55F81A42 /* StudyLesson.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyLesson.swift; sourceTree = "<group>"; };
+		7FAFA249BF0AD1E13C07652D /* QuestionPoolDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionPoolDatabase.swift; sourceTree = "<group>"; };
+		7FCA5991118C296FE964AB68 /* SettingsVoiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsVoiceTests.swift; sourceTree = "<group>"; };
+		801DFA2485553F780870A76C /* ArgmaxOSS */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ArgmaxOSS; path = Vendor/ArgmaxOSS; sourceTree = SOURCE_ROOT; };
+		865B20EC6F330073D96CF3A6 /* ArenaVisuals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArenaVisuals.swift; sourceTree = "<group>"; };
+		9AF2B65465C4408CBD40D2A7 /* Seed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Seed.swift; sourceTree = "<group>"; };
+		A094BF602306B23E50FEDE8F /* BilgiArenaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BilgiArenaApp.swift; sourceTree = "<group>"; };
+		A9C25818C2562CE7146A2ED0 /* GenerationRecoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationRecoveryTests.swift; sourceTree = "<group>"; };
+		AA65E4ABB763F8E9E9D931D3 /* VoiceAnswer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceAnswer.swift; sourceTree = "<group>"; };
+		AE315EB120CDB4EFACC17F6A /* QuestionPoolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionPoolView.swift; sourceTree = "<group>"; };
+		B2373560094CE7C88BB3AFC6 /* Learning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Learning.swift; sourceTree = "<group>"; };
+		B2608E9E43E824F25A8380B8 /* GameStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameStore.swift; sourceTree = "<group>"; };
+		B4EBAD0C2D8E8D69E727DAA9 /* QuizTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizTests.swift; sourceTree = "<group>"; };
+		BBAACCE85FD1ED80D23CF233 /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
+		C063DE65E86D361D537B496B /* QuestionVoiceAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionVoiceAPI.swift; sourceTree = "<group>"; };
+		C280165B8CE8F95A63A3A71F /* QuestionVoiceAPITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionVoiceAPITests.swift; sourceTree = "<group>"; };
+		D0C577CAAC9BC67635737CF4 /* ActivityQuestionSeeds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityQuestionSeeds.swift; sourceTree = "<group>"; };
+		D38A6845D4AB9A53CD965E66 /* GeneratedQuestionParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneratedQuestionParser.swift; sourceTree = "<group>"; };
+		DB62B0A737BF1C4DFF642321 /* AcademyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcademyView.swift; sourceTree = "<group>"; };
+		DBDFA52CC92F2D5405E4BB7F /* QuestionSpeaker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionSpeaker.swift; sourceTree = "<group>"; };
+		DC9B3DFC3587E518923694CE /* LiveQuizController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveQuizController.swift; sourceTree = "<group>"; };
+		DE2BB50AC601660A91A0E5FC /* BilgiArenaTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = BilgiArenaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DE655F5E0FFE45A592D2454E /* QuestionTransferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionTransferView.swift; sourceTree = "<group>"; };
+		E0A0781A7990BDAACAA3E9F8 /* BilgiArena.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BilgiArena.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EA2B9327F1230F2F95DCBDCC /* VisualQuestionSeeds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualQuestionSeeds.swift; sourceTree = "<group>"; };
+		EAC05AD9EE7B15ADE7ACCA46 /* QuestionVisualView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionVisualView.swift; sourceTree = "<group>"; };
+		EC20122B5B15FE68307CEB59 /* QuestionVisualTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionVisualTests.swift; sourceTree = "<group>"; };
+		F0DCA92733ED439C16125397 /* FlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowTests.swift; sourceTree = "<group>"; };
+		F59B9BBBDFF35EC2D7A32702 /* SeedExpansion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedExpansion.swift; sourceTree = "<group>"; };
+		FC4049C4AC7E448C52443C68 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8624FAF11049D0E67B71CF5C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8E5D67CC45C7BE0B3C6BA328 /* ProxyKit in Frameworks */,
+				F525F4A8504E28C8EC92B687 /* WhisperKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1752662ABED0B652A814B8ED = {
+			isa = PBXGroup;
+			children = (
+				1A98EC3F5FEB70FE9AD091B8 /* Packages */,
+				C0A3B4FA831776493109AE43 /* Sources */,
+				1B01337835EBAE9E3CB7FA78 /* Tests */,
+				38457BBD86FA98CE3522F583 /* UITests */,
+				F61A503A8EAB50FE47A2461C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1A98EC3F5FEB70FE9AD091B8 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				801DFA2485553F780870A76C /* ArgmaxOSS */,
+				181ACCC8D2B44F05C6074DF6 /* ProxyKit */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		1B01337835EBAE9E3CB7FA78 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				A9C25818C2562CE7146A2ED0 /* GenerationRecoveryTests.swift */,
+				5D85C6867B07C4336B5B7B9B /* LiveQuizTests.swift */,
+				114A4F350A9B063B41DA6E15 /* PhoneGatewayTests.swift */,
+				6DBC9B301CC58364A1114168 /* QuestionActivityTests.swift */,
+				53517DD3F45D0E35E19D233C /* QuestionPoolTests.swift */,
+				EC20122B5B15FE68307CEB59 /* QuestionVisualTests.swift */,
+				C280165B8CE8F95A63A3A71F /* QuestionVoiceAPITests.swift */,
+				B4EBAD0C2D8E8D69E727DAA9 /* QuizTests.swift */,
+				2CEDEB6FF9FE7A3AF6A21B42 /* RoundSettingsTests.swift */,
+				7FCA5991118C296FE964AB68 /* SettingsVoiceTests.swift */,
+				35101E06BD9F470C16F20B99 /* TransferVoiceLessonTests.swift */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		38457BBD86FA98CE3522F583 /* UITests */ = {
+			isa = PBXGroup;
+			children = (
+				F0DCA92733ED439C16125397 /* FlowTests.swift */,
+			);
+			path = UITests;
+			sourceTree = "<group>";
+		};
+		41F04418BB8D17BB7743A0CA /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				48A42840822F8317B30C1B76 /* ThirdPartyNotices.txt */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		C0A3B4FA831776493109AE43 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				DB62B0A737BF1C4DFF642321 /* AcademyView.swift */,
+				D0C577CAAC9BC67635737CF4 /* ActivityQuestionSeeds.swift */,
+				BBAACCE85FD1ED80D23CF233 /* AIService.swift */,
+				32A8328F8827F292E43913D7 /* ArenaPreferences.swift */,
+				865B20EC6F330073D96CF3A6 /* ArenaVisuals.swift */,
+				535370B45E2F96B8BE2D4323 /* Assets.xcassets */,
+				75405575CD7C29823420BA77 /* BilgiArena.entitlements */,
+				A094BF602306B23E50FEDE8F /* BilgiArenaApp.swift */,
+				53FDBE61D919D0B2D5C47CF1 /* DailyQuestionPool.swift */,
+				0F6B0D18230638B0BD1C6DC5 /* DevelopmentAudit.swift */,
+				424AEFCDE5F60FDA01818C93 /* GameAudio.swift */,
+				B2608E9E43E824F25A8380B8 /* GameStore.swift */,
+				D38A6845D4AB9A53CD965E66 /* GeneratedQuestionParser.swift */,
+				FC4049C4AC7E448C52443C68 /* Info.plist */,
+				B2373560094CE7C88BB3AFC6 /* Learning.swift */,
+				DC9B3DFC3587E518923694CE /* LiveQuizController.swift */,
+				6F92BADEBB50FD97AF558EDA /* LiveQuizView.swift */,
+				7E37B5302769EC0C45670CB1 /* LiveQuizVoice.swift */,
+				4A01D03489C6323E07E8B54E /* ModelCenterView.swift */,
+				783C4553AAD84FFE394E0211 /* PhoneGateway.swift */,
+				483A145775AB9658DA8A1BB9 /* QuestionActivity.swift */,
+				3CD536B7E776ADDC3464F589 /* QuestionActivityView.swift */,
+				181E988BA7669DBB8E822B55 /* QuestionLibrary.swift */,
+				7FAFA249BF0AD1E13C07652D /* QuestionPoolDatabase.swift */,
+				AE315EB120CDB4EFACC17F6A /* QuestionPoolView.swift */,
+				DBDFA52CC92F2D5405E4BB7F /* QuestionSpeaker.swift */,
+				0E307E16014637910BD776D2 /* QuestionTransfer.swift */,
+				DE655F5E0FFE45A592D2454E /* QuestionTransferView.swift */,
+				1CD34580F2F073CB77500DBC /* QuestionVisual.swift */,
+				EAC05AD9EE7B15ADE7ACCA46 /* QuestionVisualView.swift */,
+				C063DE65E86D361D537B496B /* QuestionVoiceAPI.swift */,
+				03BAAD4D3CE4298495560655 /* QuestionVoiceSettings.swift */,
+				46F2F2740F067A4951F0B063 /* QuizCore.swift */,
+				7EEE592B4BCCE22DC9C4EDC0 /* QuizLivePCMIO.swift */,
+				2ABB071A6C5F7A031335DD81 /* RemoteQuizVoice.swift */,
+				9AF2B65465C4408CBD40D2A7 /* Seed.swift */,
+				F59B9BBBDFF35EC2D7A32702 /* SeedExpansion.swift */,
+				2024E44F60C2D10AD410DFFC /* SessionSettingsView.swift */,
+				61860F5A98E28611967ADD41 /* SettingsView.swift */,
+				7F899434061F562E55F81A42 /* StudyLesson.swift */,
+				EA2B9327F1230F2F95DCBDCC /* VisualQuestionSeeds.swift */,
+				AA65E4ABB763F8E9E9D931D3 /* VoiceAnswer.swift */,
+				6C5E95F5255D7F0E730B061E /* VoiceAnswerView.swift */,
+				41F04418BB8D17BB7743A0CA /* Resources */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		F61A503A8EAB50FE47A2461C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E0A0781A7990BDAACAA3E9F8 /* BilgiArena.app */,
+				DE2BB50AC601660A91A0E5FC /* BilgiArenaTests.xctest */,
+				50E4859D552DBD03CF39503E /* BilgiArenaUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		14444C698F64CD3EF63BF9E3 /* BilgiArenaTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FA1ABFF784BBEDC49F679304 /* Build configuration list for PBXNativeTarget "BilgiArenaTests" */;
+			buildPhases = (
+				F152263CA60E9E693E119F02 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				403F3E1C92053A268C2CD899 /* PBXTargetDependency */,
+			);
+			name = BilgiArenaTests;
+			packageProductDependencies = (
+			);
+			productName = BilgiArenaTests;
+			productReference = DE2BB50AC601660A91A0E5FC /* BilgiArenaTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		B960BD3D2B2C4BA29B7E7FCE /* BilgiArenaUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DB7BC26576AD1E35B209B5E1 /* Build configuration list for PBXNativeTarget "BilgiArenaUITests" */;
+			buildPhases = (
+				EFD009000EF24233D9C6771A /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D149C2BC6224C00B4646EBC4 /* PBXTargetDependency */,
+			);
+			name = BilgiArenaUITests;
+			packageProductDependencies = (
+			);
+			productName = BilgiArenaUITests;
+			productReference = 50E4859D552DBD03CF39503E /* BilgiArenaUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		D1B520ADEE8EED21AB682482 /* BilgiArena */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 126BEF467C7F0F0B13616855 /* Build configuration list for PBXNativeTarget "BilgiArena" */;
+			buildPhases = (
+				82566049AFDB28597E3C3813 /* Sources */,
+				389CCBD2DF8314AF22DD4066 /* Resources */,
+				8624FAF11049D0E67B71CF5C /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BilgiArena;
+			packageProductDependencies = (
+				FBA11B2E85C3BED565A1501F /* ProxyKit */,
+				5B3BB76443B877B70C4B2B1A /* WhisperKit */,
+			);
+			productName = BilgiArena;
+			productReference = E0A0781A7990BDAACAA3E9F8 /* BilgiArena.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C5DA4B27035936646701621E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					14444C698F64CD3EF63BF9E3 = {
+						DevelopmentTeam = 838FF89FZ8;
+						ProvisioningStyle = Automatic;
+					};
+					B960BD3D2B2C4BA29B7E7FCE = {
+						DevelopmentTeam = 838FF89FZ8;
+						ProvisioningStyle = Automatic;
+						TestTargetID = D1B520ADEE8EED21AB682482;
+					};
+					D1B520ADEE8EED21AB682482 = {
+						DevelopmentTeam = 838FF89FZ8;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 09A88E1FC033198590171768 /* Build configuration list for PBXProject "BilgiArena" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 1752662ABED0B652A814B8ED;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				798C44CD6D26CF834E0F11CC /* XCLocalSwiftPackageReference "Vendor/ArgmaxOSS" */,
+				A1797063AD9222F78A0578FD /* XCLocalSwiftPackageReference "Vendor/ProxyKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = F61A503A8EAB50FE47A2461C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D1B520ADEE8EED21AB682482 /* BilgiArena */,
+				14444C698F64CD3EF63BF9E3 /* BilgiArenaTests */,
+				B960BD3D2B2C4BA29B7E7FCE /* BilgiArenaUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		389CCBD2DF8314AF22DD4066 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C43C8F6A11F1EE4A88DD518B /* Assets.xcassets in Resources */,
+				6B877C5D1FB0647FEA0167E1 /* ThirdPartyNotices.txt in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		82566049AFDB28597E3C3813 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4AC0D3407F493D7925014DBA /* AIService.swift in Sources */,
+				75821F9701DE79B6294504A3 /* AcademyView.swift in Sources */,
+				3767805BAE5665EEC3C45EC8 /* ActivityQuestionSeeds.swift in Sources */,
+				523A2476FB0A970C0F7A1954 /* ArenaPreferences.swift in Sources */,
+				E03344994AF4C6556A867BEF /* ArenaVisuals.swift in Sources */,
+				0F46445F65605619A6A2DDD6 /* BilgiArenaApp.swift in Sources */,
+				8FF94DD0D4DE286ECD34ED29 /* DailyQuestionPool.swift in Sources */,
+				8C962CB462AB637F58AD6E30 /* DevelopmentAudit.swift in Sources */,
+				50981876F2E08BE11EB6899F /* GameAudio.swift in Sources */,
+				CD23DE05B39D244B53EA692F /* GameStore.swift in Sources */,
+				28256751EADED5C13EEB63EF /* GeneratedQuestionParser.swift in Sources */,
+				57379F5FCF040C44AC126477 /* Learning.swift in Sources */,
+				90D770988D01BDA173125FF1 /* LiveQuizController.swift in Sources */,
+				7BB778A49E3041296123977D /* LiveQuizView.swift in Sources */,
+				D4A67FB113720A25EE997ED9 /* LiveQuizVoice.swift in Sources */,
+				A68DFC7161AF0B1AF568F504 /* ModelCenterView.swift in Sources */,
+				B5B5BC9C1B46848D31FB675B /* PhoneGateway.swift in Sources */,
+				FC9ED0CDE83F82A71B9982B5 /* QuestionActivity.swift in Sources */,
+				AC80C31212ED6581C6E4CF94 /* QuestionActivityView.swift in Sources */,
+				19CA83426343AF0A9B991E78 /* QuestionLibrary.swift in Sources */,
+				141983BA546516D14EFB6135 /* QuestionPoolDatabase.swift in Sources */,
+				4ABF11373491A6F28D443B52 /* QuestionPoolView.swift in Sources */,
+				F053C370BF737BE64F632946 /* QuestionSpeaker.swift in Sources */,
+				9C2436F83F3F6E41AAE405E0 /* QuestionTransfer.swift in Sources */,
+				FF57A60A0432D342F718BBCB /* QuestionTransferView.swift in Sources */,
+				AF76119068F92EC7CA2DCDC4 /* QuestionVisual.swift in Sources */,
+				5BD2D4F98E84A13ACCDDF2BD /* QuestionVisualView.swift in Sources */,
+				4611783401BC66EEC6371173 /* QuestionVoiceAPI.swift in Sources */,
+				7BD2B36F20283DEA03586410 /* QuestionVoiceSettings.swift in Sources */,
+				05BE9DDEAD9827F893665ED5 /* QuizCore.swift in Sources */,
+				C4743FA5D79F34410EC6AA83 /* QuizLivePCMIO.swift in Sources */,
+				52EB8ADEDA182E25448538D1 /* RemoteQuizVoice.swift in Sources */,
+				551C09CB5A3BE9F246B07802 /* Seed.swift in Sources */,
+				C07ACAEEB5A17B8DA1735079 /* SeedExpansion.swift in Sources */,
+				0FF144644477A3470FF021DF /* SessionSettingsView.swift in Sources */,
+				1E817DAF6D599BECF536363C /* SettingsView.swift in Sources */,
+				D505764FE415522A206EA73F /* StudyLesson.swift in Sources */,
+				FFB8AD8D5F98EFE65F2787E0 /* VisualQuestionSeeds.swift in Sources */,
+				7BB205B606FDA53DE7DD3CDC /* VoiceAnswer.swift in Sources */,
+				7A289C8FE8B9676AEF37887A /* VoiceAnswerView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EFD009000EF24233D9C6771A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				07E063C93744F71300775924 /* FlowTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F152263CA60E9E693E119F02 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B265FC2AFCC3C00C54D0A85D /* GenerationRecoveryTests.swift in Sources */,
+				A45F8357D1C71DA640EE37B1 /* LiveQuizTests.swift in Sources */,
+				81B4FB4B74B2C0D0611CDEFB /* PhoneGatewayTests.swift in Sources */,
+				347F43F157E820BB035B80AF /* QuestionActivityTests.swift in Sources */,
+				B2538448B9DC4BC0237FC215 /* QuestionPoolTests.swift in Sources */,
+				7E04CEC8B70BB2064A43E31D /* QuestionVisualTests.swift in Sources */,
+				43EB506FBF8067C8990977D6 /* QuestionVoiceAPITests.swift in Sources */,
+				C4D80D962632B5F60CEE4C25 /* QuizTests.swift in Sources */,
+				A05437F7229B6FC2C6000DAD /* RoundSettingsTests.swift in Sources */,
+				2E53CD04D3EF4A7A24E35A01 /* SettingsVoiceTests.swift in Sources */,
+				B15F7FA11D7A31F0CD824C55 /* TransferVoiceLessonTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		403F3E1C92053A268C2CD899 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D1B520ADEE8EED21AB682482 /* BilgiArena */;
+			targetProxy = 9739FB8C24274AC3EE632730 /* PBXContainerItemProxy */;
+		};
+		D149C2BC6224C00B4646EBC4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D1B520ADEE8EED21AB682482 /* BilgiArena */;
+			targetProxy = A4B63FCFF283F83E2F9798B0 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		10B1A77A9D9DC0CF32EEB188 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/BilgiArena.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 12;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Sources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Bilgi Arenası";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.7.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.bilgiarena;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		16AB769D2F8B881673FAF9CF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.BilgiArenaTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BilgiArena.app/BilgiArena";
+			};
+			name = Release;
+		};
+		685387F8B1D22360D021FFEB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 838FF89FZ8;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		774C6A1F45FA246374AB1569 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.BilgiArenaTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BilgiArena.app/BilgiArena";
+			};
+			name = Debug;
+		};
+		89524BDC4C8BF5B04962D4E8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/BilgiArena.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 12;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Sources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Bilgi Arenası";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.7.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.bilgiarena;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C295D2FB021FD22C842E72A8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.BilgiArenaUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = BilgiArena;
+			};
+			name = Release;
+		};
+		DBD82B8AF04B833ECE1D9FA6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.BilgiArenaUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = BilgiArena;
+			};
+			name = Debug;
+		};
+		E9E22BD61E8084C2AAF43B74 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 838FF89FZ8;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		09A88E1FC033198590171768 /* Build configuration list for PBXProject "BilgiArena" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				685387F8B1D22360D021FFEB /* Debug */,
+				E9E22BD61E8084C2AAF43B74 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		126BEF467C7F0F0B13616855 /* Build configuration list for PBXNativeTarget "BilgiArena" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				89524BDC4C8BF5B04962D4E8 /* Debug */,
+				10B1A77A9D9DC0CF32EEB188 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DB7BC26576AD1E35B209B5E1 /* Build configuration list for PBXNativeTarget "BilgiArenaUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DBD82B8AF04B833ECE1D9FA6 /* Debug */,
+				C295D2FB021FD22C842E72A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FA1ABFF784BBEDC49F679304 /* Build configuration list for PBXNativeTarget "BilgiArenaTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				774C6A1F45FA246374AB1569 /* Debug */,
+				16AB769D2F8B881673FAF9CF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		798C44CD6D26CF834E0F11CC /* XCLocalSwiftPackageReference "Vendor/ArgmaxOSS" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Vendor/ArgmaxOSS;
+		};
+		A1797063AD9222F78A0578FD /* XCLocalSwiftPackageReference "Vendor/ProxyKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Vendor/ProxyKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5B3BB76443B877B70C4B2B1A /* WhisperKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WhisperKit;
+		};
+		FBA11B2E85C3BED565A1501F /* ProxyKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ProxyKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = C5DA4B27035936646701621E /* Project object */;
+}
