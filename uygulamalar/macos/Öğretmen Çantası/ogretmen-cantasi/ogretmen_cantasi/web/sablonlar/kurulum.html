@@ -1,0 +1,128 @@
+{% extends "taban.html" %}
+{% set sayfa = 'kurulum' %}
+{% block baslik %}Kurulum — {{ uygulama_adi }}{% endblock %}
+
+{% block icerik %}
+<h1>Kurulum</h1>
+<p class="alt">Öğretim yılı, takvim, şubeler ve ders programı. Bir kez doldurulur, yıl boyu kullanılır.</p>
+
+<div class="kart">
+  <h2>1. Öğretim yılı</h2>
+  <p class="kilavuz">MEB çalışma takvimi yayımlandığında tarihleri buradan düzeltin.</p>
+  <form method="post" action="/kurulum/yil">
+    <div class="serit">
+      <div><label for="ad">Öğretim yılı</label>
+        <input id="ad" name="ad" value="{{ yil.ad if yil else varsayilan[0] }}" required></div>
+      <div><label for="d1b">1. dönem başlangıç</label>
+        <input type="date" id="d1b" name="d1_baslangic" value="{{ (yil.donem1.baslangic if yil else varsayilan[1].baslangic).isoformat() }}" required></div>
+      <div><label for="d1s">1. dönem bitiş</label>
+        <input type="date" id="d1s" name="d1_bitis" value="{{ (yil.donem1.bitis if yil else varsayilan[1].bitis).isoformat() }}" required></div>
+      <div><label for="d2b">2. dönem başlangıç</label>
+        <input type="date" id="d2b" name="d2_baslangic" value="{{ (yil.donem2.baslangic if yil else varsayilan[2].baslangic).isoformat() }}" required></div>
+      <div><label for="d2s">2. dönem bitiş</label>
+        <input type="date" id="d2s" name="d2_bitis" value="{{ (yil.donem2.bitis if yil else varsayilan[2].bitis).isoformat() }}" required></div>
+      <button type="submit">Kaydet</button>
+    </div>
+  </form>
+</div>
+
+<div class="kart">
+  <h2>2. Takvim</h2>
+  <p class="kilavuz">
+    Sabit tarihli resmî tatiller otomatik eklendi. Dinî bayramlar Diyanet takvimine göre
+    yıldan yıla kaydığı için tahmin edilip yazılmadı — arefe tarihini girip ekleyin.
+    Ara tatil, seminer ve gezi günlerini de buradan tanımlarsınız.
+  </p>
+  <form method="post" action="/kurulum/tatil">
+    <div class="serit">
+      <div><label for="tb">Başlangıç</label><input type="date" id="tb" name="baslangic" required></div>
+      <div><label for="ts">Bitiş</label><input type="date" id="ts" name="bitis"></div>
+      <div><label for="ta">Açıklama</label><input id="ta" name="aciklama" placeholder="Ramazan Bayramı / 1. ara tatil" required></div>
+      <div><label for="tt">Tür</label>
+        <select id="tt" name="tur">
+          <option value="resmi_tatil">Resmî tatil</option>
+          <option value="ara_tatil">Ara tatil</option>
+          <option value="yariyil">Yarıyıl tatili</option>
+          <option value="okul_ozel" selected>Okula özgü gün</option>
+          <option value="sinav_haftasi">Sınav haftası</option>
+        </select></div>
+      <button type="submit">Takvime ekle</button>
+    </div>
+  </form>
+
+  {% if tatiller %}
+  <div class="kaydir" style="margin-top:14px; max-height:260px; overflow-y:auto">
+    <table>
+      <tr><th>Tarih</th><th>Tür</th><th>Açıklama</th><th></th></tr>
+      {% for tid, t in tatiller %}
+      <tr>
+        <td>{{ t.tarih.strftime('%d.%m.%Y') }}</td>
+        <td>{{ t.tur }}</td>
+        <td>{{ t.aciklama }}</td>
+        <td><form method="post" action="/kurulum/tatil/{{ tid }}/sil" data-confirm="Bu tatili takvimden silmek istediğinizden emin misiniz?"><button class="kucuk tehlike" type="submit">Sil</button></form></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<div class="kart">
+  <h2>3. Şubeler</h2>
+  <form method="post" action="/kurulum/sube">
+    <div class="serit">
+      <div><label for="sad">Şube adı</label><input id="sad" name="ad" placeholder="9-A" required></div>
+      <div><label for="ssn">Sınıf</label>
+        <select id="ssn" name="sinif">
+          {% for s in [9, 10, 11, 12] %}<option value="{{ s }}">{{ s }}. sınıf</option>{% endfor %}
+        </select></div>
+      <button type="submit">Şube ekle</button>
+    </div>
+  </form>
+  {% if subeler %}
+  <table style="margin-top:14px">
+    <tr><th>Şube</th><th>Sınıf</th><th>Haftalık saat</th><th>Müfredat</th><th></th></tr>
+    {% for s in subeler %}
+    <tr>
+      <td><a href="/sube/{{ s.id }}">{{ s.ad }}</a></td>
+      <td>{{ s.sinif }}</td>
+      <td class="sayi">{{ s.haftalik_ders_saati }}</td>
+      <td>{{ 'Maarif 2024' if s.mufredat_surumu == 'maarif_2024' else '2018 programı' }}</td>
+      <td><form method="post" action="/kurulum/sube/{{ s.id }}/sil" data-confirm="Bu şubeyi ve ona bağlı öğrenci, plan, yoklama ve not kayıtlarını silmek istediğinizden emin misiniz?"><button class="kucuk tehlike" type="submit">Sil</button></form></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+</div>
+
+<div class="kart">
+  <h2>4. Ders programı</h2>
+  <p class="kilavuz">Okulun verdiği dosyayı yükleyin; okunamazsa ya da düzeltmek isterseniz ızgaradan elle işaretleyin.</p>
+  <form method="post" action="/kurulum/program/yukle" enctype="multipart/form-data" class="serit">
+    <div><label for="pd">Program dosyası (Excel / CSV / PDF)</label><input type="file" id="pd" name="dosya" required></div>
+    <button type="submit">Yükle ve oku</button>
+  </form>
+
+  <form method="post" action="/kurulum/program/izgara" style="margin-top:16px">
+    <input type="hidden" name="_revizyon" value="{{ program_revizyonu }}">
+    <input type="hidden" name="yil_id" value="{{ yil.id }}">
+    <div class="kaydir">
+      <table>
+        <tr><th></th>{% for saat in range(1, izgara_saat + 1) %}<th class="orta">{{ saat }}. ders</th>{% endfor %}</tr>
+        {% for gun in range(1, 6) %}
+        <tr>
+          <th>{{ gun_adlari[gun - 1] }}</th>
+          {% for saat in range(1, izgara_saat + 1) %}
+          {% set ns = namespace(deger='') %}
+          {% for h in program %}{% if h.gun == gun and h.ders_saati == saat %}{% set ns.deger = h.sube_adi %}{% endif %}{% endfor %}
+          <td><input name="h_{{ gun }}_{{ saat }}" value="{{ ns.deger }}" style="width:74px" placeholder="—"></td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    <p class="kilavuz">Hücreye şube adını yazın (ör. 9-A). Boş bırakılan saatler o günkü programdan çıkarılır.</p>
+    <button type="submit">Izgarayı kaydet</button>
+  </form>
+</div>
+{% endblock %}

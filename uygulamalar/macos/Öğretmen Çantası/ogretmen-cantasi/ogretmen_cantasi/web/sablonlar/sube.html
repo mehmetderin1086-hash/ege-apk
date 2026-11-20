@@ -1,0 +1,80 @@
+{% extends "taban.html" %}
+{% block baslik %}{{ sube.ad }} — {{ uygulama_adi }}{% endblock %}
+
+{% block icerik %}
+<h1>{{ sube.ad }}</h1>
+<p class="alt">{{ sube.sinif }}. sınıf · haftada {{ sube.haftalik_ders_saati }} saat · {{ ogrenciler | length }} öğrenci</p>
+
+<div class="satir-arasi" style="margin-bottom:18px">
+  <a class="dugme sade" href="/plan/{{ sube.id }}">Yıllık plan</a>
+  <a class="dugme sade" href="/gunluk/{{ sube.id }}">Günlük plan</a>
+  <a class="dugme sade" href="/notlar/{{ sube.id }}">Notlar</a>
+  <a class="dugme sade" href="/yoklama/{{ sube.id }}">Yoklama</a>
+  <a class="dugme sade" href="/sinavlar/{{ sube.id }}">Sınavlar</a>
+  <a class="dugme sade" href="/denemeler/{{ sube.id }}">Denemeler</a>
+</div>
+
+{% if not_dagilimi %}
+<div class="kart">
+  <h2>Not dağılımı</h2>
+  <p class="kilavuz">MEB puan dilimlerine göre; her öğrencinin en güncel puanı (yıl sonu ya da girilen son dönem ortalaması) sayılır. Ayrıntı not defterinde.</p>
+  {{ not_dagilimi | safe }}
+</div>
+{% endif %}
+
+{% if gerceklesme and gerceklesme.gecmis_hafta %}
+<div class="kart">
+  <div class="satir-arasi">
+    <span>Plan gerçekleşmesi: geçmiş <b>{{ gerceklesme.gecmis_hafta }}</b> ders haftasının
+      <b>{{ gerceklesme.gecmis_hafta - gerceklesme.geride_hafta }}</b> tanesi defterde tam.</span>
+    {% if gerceklesme.geride_hafta %}
+      <span class="rozet zayif">{{ gerceklesme.geride_hafta }} hafta geride</span>
+    {% else %}
+      <span class="rozet iyi">plan yolunda ✓</span>
+    {% endif %}
+    <a class="dugme kucuk sade" href="/plan/{{ sube.id }}">Ayrıntı</a>
+  </div>
+</div>
+{% endif %}
+
+<div class="kart">
+  <h2>Öğrenci listesi</h2>
+  <div class="serit" style="margin-bottom:14px">
+    <form method="post" action="/sube/{{ sube.id }}/ogrenci/yukle" enctype="multipart/form-data" class="serit">
+      <div><label for="dosya">e-Okul sınıf listesi (Excel/CSV/PDF)</label><input type="file" id="dosya" name="dosya" required></div>
+      <button type="submit">Yükle</button>
+    </form>
+  </div>
+  <details>
+    <summary class="kilavuz">Elle yapıştırarak ekle</summary>
+    <form method="post" action="/sube/{{ sube.id }}/ogrenci/yapistir" style="margin-top:10px">
+      <textarea name="metin" placeholder="101 Ayşe Yılmaz&#10;102 Mehmet Kaya"></textarea>
+      <button type="submit">Ekle</button>
+    </form>
+  </details>
+
+  {% if ogrenciler %}
+  <table style="margin-top:14px">
+    <tr><th>No</th><th>Adı Soyadı</th><th class="sayi">Gelmedi (saat)</th><th class="sayi">Devam %</th><th>Durum</th><th></th></tr>
+    {% set devam = {} %}
+    {% for d in devamsizlik %}{% if devam.update({d.id: d}) %}{% endif %}{% endfor %}
+    {% for o in ogrenciler %}
+    <tr>
+      <td>{{ o['numara'] }}</td>
+      <td><a href="/ogrenci/{{ o['id'] }}">{{ o['ad_soyad'] }}</a></td>
+      <td class="sayi">{{ devam[o['id']].yok_saat if devam.get(o['id']) else 0 }}</td>
+      <td class="sayi">{{ devam[o['id']].devam_orani if devam.get(o['id']) and devam[o['id']].devam_orani is not none else '—' }}</td>
+      <td>
+        {% set u = devam[o['id']].uyari if devam.get(o['id']) else '' %}
+        {% if u %}<span class="rozet {{ 'zayif' if 'aşıldı' in u else 'orta' }}">{{ u }}</span>{% endif %}
+      </td>
+      <td><form method="post" action="/sube/{{ sube.id }}/ogrenci/{{ o['id'] }}/sil" data-confirm="Bu öğrenciyi aktif sınıf listesinden çıkarmak istediğinizden emin misiniz? Geçmiş kayıtları korunur."><button class="kucuk tehlike" type="submit">Çıkar</button></form></td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p style="margin-top:10px"><a class="dugme sade kucuk" href="/notlar/{{ sube.id }}/indir?tur=devamsizlik">Devamsızlığı Excel'e aktar</a></p>
+  {% else %}
+  <p class="bos">Henüz öğrenci yok.</p>
+  {% endif %}
+</div>
+{% endblock %}

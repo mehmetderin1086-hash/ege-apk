@@ -1,0 +1,95 @@
+{% extends "taban.html" %}
+{% set sayfa = 'bugun' %}
+{% block baslik %}Bugün — {{ uygulama_adi }}{% endblock %}
+
+{% block icerik %}
+<h1>{{ tarih_metni }}</h1>
+<form method="get" action="/" class="satir-arasi" style="margin-bottom:18px">
+  <label class="satirici" for="tarih">Başka bir gün:</label>
+  <input type="date" id="tarih" name="tarih" value="{{ gun.isoformat() }}">
+  <button class="sade kucuk" type="submit">Git</button>
+</form>
+
+{% if tatil %}
+  <div class="mesaj uyari-kutu">Bu gün takvimde tatil: {{ tatil.aciklama }}</div>
+{% endif %}
+
+<div class="kart">
+  <h2>Günün dersleri</h2>
+  {% if bloklar %}
+    {% for blok in bloklar %}
+      <div class="ders">
+        <span class="saat">{{ blok.saatler | join('-') }}. ders</span>
+        <span class="sube">{{ blok.sube_adi }}</span>
+        <span class="konu">
+          {% if blok.plan_satiri and blok.plan_satiri.kazanim_kodlari %}
+            <b>{{ blok.plan_satiri.tema_adi }}</b> —
+            {% for kod in blok.plan_satiri.kazanim_kodlari %}{{ kod }}{% if not loop.last %}, {% endif %}{% endfor %}
+            <br>{{ blok.plan_satiri.kazanim_ifadeleri | join(' · ') }}
+          {% elif blok.plan_satiri %}
+            {{ blok.plan_satiri.aciklama }}
+          {% else %}
+            <span class="kilavuz">Bu hafta için plan satırı yok — yıllık planı üretin.</span>
+          {% endif %}
+        </span>
+        <span class="eylem">
+          <a class="dugme kucuk sade" href="/yoklama/{{ blok.sube_id }}?tarih={{ gun.isoformat() }}&saat={{ blok.saatler[0] }}">
+            Yoklama{% if blok.yoklama_alindi %} ✓{% endif %}
+          </a>
+          <a class="dugme kucuk sade" href="/gunluk/{{ blok.sube_id }}?tarih={{ gun.isoformat() }}&saatler={{ blok.saatler | join(',') }}">Ders planı</a>
+          <a class="dugme kucuk sade" href="/notlar/{{ blok.sube_id }}">Not gir</a>
+        </span>
+        <form method="post" action="/ders-kaydi/{{ blok.sube_id }}" class="satir-arasi defter">
+          <input type="hidden" name="tarih" value="{{ gun.isoformat() }}">
+          <input type="hidden" name="saatler" value="{{ blok.saatler | join(',') }}">
+          {% set on_kodlar = blok.ders_kaydi['kazanim_kodlari'] if blok.ders_kaydi
+             else (blok.plan_satiri.kazanim_kodlari | join(', ') if blok.plan_satiri and blok.plan_satiri.kazanim_kodlari else '') %}
+          <label class="satirici kilavuz" for="dk-{{ blok.sube_id }}">Defter:</label>
+          <input type="text" id="dk-{{ blok.sube_id }}" name="kazanim_kodlari" value="{{ on_kodlar }}"
+                 placeholder="BİY.{{ blok.sinif }}.1.1" style="min-width:200px">
+          <select name="durum">
+            <option value="islendi" {{ 'selected' if not blok.ders_kaydi or blok.ders_kaydi['durum'] == 'islendi' }}>İşlendi</option>
+            <option value="ertelendi" {{ 'selected' if blok.ders_kaydi and blok.ders_kaydi['durum'] == 'ertelendi' }}>Ertelendi</option>
+          </select>
+          <button class="kucuk sade" type="submit">{{ 'Güncelle' if blok.ders_kaydi else 'Deftere işle' }}</button>
+          {% if blok.ders_kaydi %}
+            <span class="rozet">✓ {{ 'işlendi' if blok.ders_kaydi['durum'] == 'islendi' else 'ertelendi' }}</span>
+          {% endif %}
+        </form>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="bos">Bu gün için ders programında kayıt yok. Kurulum ekranından ders programını girebilirsiniz.</p>
+  {% endif %}
+</div>
+
+{% if uyarilar %}
+<div class="kart">
+  <h2>Dikkat</h2>
+  <ul>
+    {% for u in uyarilar %}<li>{{ u }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="kart">
+  <h2>Şubeler</h2>
+  {% if subeler %}
+    <div class="izgara">
+      {% for s in subeler %}
+        <div>
+          <b>{{ s.ad }}</b> <span class="rozet">{{ s.sinif }}. sınıf</span>
+          <span class="rozet">{{ s.haftalik_ders_saati }} saat/hafta</span>
+          <div class="satir-arasi" style="margin-top:6px">
+            <a class="dugme kucuk sade" href="/plan/{{ s.id }}">Yıllık plan</a>
+            <a class="dugme kucuk sade" href="/sinavlar/{{ s.id }}">Sınavlar</a>
+            <a class="dugme kucuk sade" href="/denemeler/{{ s.id }}">Denemeler</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="bos">Henüz şube yok. <a href="/kurulum">Kurulum</a> ekranından ekleyin.</p>
+  {% endif %}
+</div>
+{% endblock %}

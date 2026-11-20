@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token }}">
+<title>{% block baslik %}{{ uygulama_adi }}{% endblock %}</title>
+<link rel="stylesheet" href="/statik/stil.css">
+</head>
+<body>
+<header class="ust">
+  <span class="marka">🧬 {{ uygulama_adi }}</span>
+  <nav>
+    <a href="/" class="{{ 'etkin' if sayfa == 'bugun' }}">Bugün</a>
+    {% for s in subeler %}
+      <a href="/sube/{{ s.id }}" class="{{ 'etkin' if sube and sube.id == s.id }}">{{ s.ad }}</a>
+    {% endfor %}
+    <a href="/sorular" class="{{ 'etkin' if sayfa == 'sorular' }}">Sorular</a>
+    <a href="/takvim" class="{{ 'etkin' if sayfa == 'takvim' }}">Takvim</a>
+    <a href="/materyaller" class="{{ 'etkin' if sayfa == 'materyaller' }}">Materyaller</a>
+    <a href="/yardimci" class="{{ 'etkin' if sayfa == 'yardimci' }}">Yardımcı</a>
+    <a href="/entegrasyonlar" class="{{ 'etkin' if sayfa == 'entegrasyon' }}">Entegrasyonlar</a>
+    <a href="/kurulum" class="{{ 'etkin' if sayfa == 'kurulum' }}">Kurulum</a>
+    <a href="/ayarlar" class="{{ 'etkin' if sayfa == 'ayarlar' }}">Ayarlar</a>
+  </nav>
+  {% if yillar %}
+  <form method="post" action="/ogretim-yili/aktiflestir" class="yil">
+    <select name="yil_id" onchange="this.form.requestSubmit()">
+      {% for y in yillar %}
+      <option value="{{ y.id }}" {{ 'selected' if yil and y.id == yil.id }}>{{ y.ad }}</option>
+      {% endfor %}
+    </select>
+  </form>
+  {% else %}
+  <span class="yil">öğretim yılı tanımlı değil</span>
+  {% endif %}
+</header>
+<main>
+{% if mesaj %}<div class="mesaj">{{ mesaj }}</div>{% endif %}
+{% block icerik %}{% endblock %}
+</main>
+<script>
+(() => {
+  const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  window.ogretmenCsrfToken = token;
+  document.addEventListener('submit', async (olay) => {
+    const form = olay.target;
+    if (!(form instanceof HTMLFormElement) || form.method.toLowerCase() !== 'post') return;
+    olay.preventDefault();
+    if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) return;
+    const dugme = olay.submitter;
+    if (dugme) dugme.disabled = true;
+    try {
+      const yanit = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: {'X-CSRF-Token': token},
+        credentials: 'same-origin',
+        redirect: 'follow'
+      });
+      if (yanit.redirected) {
+        window.location.assign(yanit.url);
+        return;
+      }
+      if (!yanit.ok) {
+        alert(await yanit.text());
+        return;
+      }
+      // Bazı uçlar 303 yerine 200 + tam sayfa HTML döndürür (içe aktarma
+      // önizlemeleri, yoklama çakışma ekranı). Gövdeyi atıp reload etmek
+      // önizlemeyi hiç göstermiyordu; dönen sayfa belgeye yazılır.
+      const tur = yanit.headers.get('content-type') || '';
+      if (tur.includes('text/html')) {
+        const govde = await yanit.text();
+        if (govde.trim()) {
+          document.open();
+          document.write(govde);
+          document.close();
+          return;
+        }
+      }
+      window.location.reload();
+    } catch (hata) {
+      alert('İstek gönderilemedi: ' + hata);
+    } finally {
+      if (dugme) dugme.disabled = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>

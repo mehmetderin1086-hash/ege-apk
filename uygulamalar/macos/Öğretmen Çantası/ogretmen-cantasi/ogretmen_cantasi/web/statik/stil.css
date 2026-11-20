@@ -1,0 +1,200 @@
+/* Öğretmen Çantası arayüz stili.
+   Renkler doğrulanmış referans paletten alındı: tek seri mavi (#2a78d6) ve
+   sabit durum renkleri (iyi/orta/zayıf). Durum rengi hiçbir yerde TEK BAŞINA
+   bilgi taşımaz — yanında her zaman sayı ya da etiket bulunur. */
+
+:root {
+  --yuzey: #fcfcfb;
+  --duzlem: #f9f9f7;
+  --mürekkep: #0b0b0b;
+  --ikincil: #52514e;
+  --soluk: #78776f;
+  --cizgi: #dcdbd4;
+  --vurgu: #2a78d6;
+  --vurgu-soluk: #cde2fb;
+  --iyi: #0ca30c;
+  --orta: #fab219;
+  --zayif: #d03b3b;
+  --iyi-zemin: #e6f6e6;
+  --orta-zemin: #fdf3dd;
+  --zayif-zemin: #fae8e8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --yuzey: #1a1a19;
+    --duzlem: #0d0d0d;
+    --mürekkep: #ffffff;
+    --ikincil: #c3c2b7;
+    --soluk: #9a9990;
+    --cizgi: #3a3a37;
+    --vurgu: #3987e5;
+    --vurgu-soluk: #184f95;
+    --iyi-zemin: #123312;
+    --orta-zemin: #3a2f10;
+    --zayif-zemin: #3a1616;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font: 15px/1.55 -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  color: var(--mürekkep);
+  background: var(--duzlem);
+}
+
+a { color: var(--vurgu); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+header.ust {
+  background: var(--yuzey);
+  border-bottom: 1px solid var(--cizgi);
+  padding: 10px 20px;
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+header.ust .marka { font-weight: 650; font-size: 16px; letter-spacing: -0.01em; }
+header.ust nav { display: flex; gap: 14px; flex-wrap: wrap; }
+header.ust nav a { color: var(--ikincil); font-size: 14px; }
+header.ust nav a.etkin { color: var(--vurgu); font-weight: 600; }
+header.ust .yil { margin-left: auto; color: var(--soluk); font-size: 13px; }
+
+main { max-width: 1180px; margin: 0 auto; padding: 20px; }
+h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.015em; }
+h2 { font-size: 17px; margin: 26px 0 10px; }
+h3 { font-size: 15px; margin: 18px 0 8px; }
+p.alt { color: var(--ikincil); margin: 0 0 18px; }
+
+.kart {
+  background: var(--yuzey);
+  border: 1px solid var(--cizgi);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+.kart > h2:first-child, .kart > h3:first-child { margin-top: 0; }
+
+.serit { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+.serit > * { flex: 0 0 auto; }
+
+.ders {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--cizgi);
+  flex-wrap: wrap;
+}
+.ders:last-child { border-bottom: 0; }
+.ders .saat {
+  min-width: 74px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ikincil);
+  font-size: 13px;
+}
+.ders .sube { font-weight: 650; min-width: 62px; }
+.ders .konu { flex: 1 1 260px; color: var(--ikincil); font-size: 14px; }
+.ders .eylem { display: flex; gap: 8px; }
+/* Ders defteri formu bloğun altında kendi satırında durur. */
+.ders .defter { flex: 1 1 100%; }
+
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { border: 1px solid var(--cizgi); padding: 6px 8px; text-align: left; vertical-align: top; }
+th { background: var(--duzlem); font-weight: 600; font-size: 13px; }
+td.sayi, th.sayi { text-align: right; font-variant-numeric: tabular-nums; }
+td.orta, th.orta { text-align: center; }
+tr.tatil td { background: var(--duzlem); color: var(--ikincil); font-style: italic; }
+.kaydir { overflow-x: auto; }
+
+input, select, textarea, button {
+  font: inherit;
+  color: inherit;
+  background: var(--yuzey);
+  border: 1px solid var(--cizgi);
+  border-radius: 7px;
+  padding: 6px 9px;
+}
+/* Sayı kutularının dolgusu içerik genişliğine ekleniyor; dar verilen bir
+   kutuda "16,5" gibi değerler kırpılıyordu. Asgari genişlik burada garanti
+   altına alınır, satır içi genişlik yalnız bunun üstüne çıkabilir. */
+input[type="number"] {
+  width: 88px;
+  min-width: 74px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  padding: 6px 6px;
+}
+textarea { width: 100%; min-height: 90px; }
+label { display: block; font-size: 13px; color: var(--ikincil); margin-bottom: 3px; }
+label.satirici { display: inline; }
+
+button, .dugme {
+  background: var(--vurgu);
+  color: #fff;
+  border: 0;
+  cursor: pointer;
+  padding: 7px 13px;
+  border-radius: 7px;
+  font-size: 14px;
+}
+button:hover, .dugme:hover { filter: brightness(1.08); text-decoration: none; }
+button.sade, .dugme.sade {
+  background: var(--yuzey);
+  color: var(--vurgu);
+  border: 1px solid var(--cizgi);
+}
+button.tehlike { background: var(--zayif); }
+button.kucuk, .dugme.kucuk { padding: 3px 8px; font-size: 13px; }
+
+.mesaj {
+  background: var(--vurgu-soluk);
+  border: 1px solid var(--vurgu);
+  color: var(--mürekkep);
+  border-radius: 8px;
+  padding: 9px 12px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+.uyari-kutu { border-color: var(--orta); background: var(--orta-zemin); }
+
+.rozet {
+  display: inline-block;
+  font-size: 12px;
+  padding: 1px 7px;
+  border-radius: 20px;
+  border: 1px solid var(--cizgi);
+  color: var(--ikincil);
+}
+.rozet.iyi { background: var(--iyi-zemin); border-color: var(--iyi); }
+.rozet.orta { background: var(--orta-zemin); border-color: var(--orta); }
+.rozet.zayif { background: var(--zayif-zemin); border-color: var(--zayif); }
+
+/* Kazanım ısı haritası: renk tek başına bilgi taşımaz, hücrede yüzde yazılıdır. */
+td.isi { text-align: center; font-variant-numeric: tabular-nums; }
+td.isi.iyi { background: var(--iyi-zemin); }
+td.isi.orta { background: var(--orta-zemin); }
+td.isi.zayif { background: var(--zayif-zemin); }
+td.isi.yok { color: var(--soluk); }
+
+/* Grafikler sunucuda üretilen inline SVG'dir (cikti/grafik.py). */
+
+.kilavuz { color: var(--soluk); font-size: 13px; }
+.bos { color: var(--soluk); font-style: italic; padding: 14px 0; }
+.izgara { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.satir-arasi { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.oneri-metni { white-space: pre-wrap; font: inherit; background: var(--duzlem); padding: 12px; border-radius: 7px; }
+.destek-satiri { border-top: 1px solid var(--cizgi); padding: 12px 0; }
+.destek-satiri:first-of-type { border-top: 0; }
+
+@media print {
+  header.ust, .yazdirma-gizle { display: none; }
+  main { max-width: none; padding: 0; }
+  .kart { border: 0; padding: 0; }
+}

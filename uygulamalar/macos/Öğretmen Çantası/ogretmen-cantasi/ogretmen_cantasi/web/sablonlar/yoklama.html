@@ -1,0 +1,134 @@
+{% extends "taban.html" %}
+{% block baslik %}{{ sube.ad }} yoklama — {{ uygulama_adi }}{% endblock %}
+
+{% block icerik %}
+<h1>Yoklama — {{ sube.ad }}</h1>
+<p class="alt">{{ tarih_metni }} · {{ saat }}. ders</p>
+
+<form method="get" action="/yoklama/{{ sube.id }}" class="serit" style="margin-bottom:16px">
+  <div><label for="t">Tarih</label><input type="date" id="t" name="tarih" value="{{ gun.isoformat() }}"></div>
+  <div><label for="s">Ders saati</label><input type="number" id="s" name="saat" value="{{ saat }}" min="1" max="12"></div>
+  <button class="sade" type="submit">Göster</button>
+</form>
+
+<div class="kart">
+  <h2>Sesle işaretle</h2>
+  {% if ses_durumu.kullanilabilir %}
+    <p class="kilavuz">
+      Kaydı başlatın ve <b>yalnız gelmeyenleri</b> söyleyin: “Ayşe Yılmaz yok, Mehmet Kaya yok, Ali geç geldi”.
+      Kalan herkes var sayılır. İşaretleme aşağıdaki listeye düşer; kaydetmeden önce gözden geçirin.
+    </p>
+    <div class="satir-arasi">
+      <button type="button" id="kayitDugmesi">● Kaydı başlat</button>
+      <span id="sesDurum" class="kilavuz"></span>
+    </div>
+    <p id="dokum" class="kilavuz" style="margin-top:8px"></p>
+  {% else %}
+    <p class="kilavuz">Sesli yoklama kapalı: {{ ses_durumu.aciklama }}. Aşağıdaki listeden tek tıkla işaretleyebilirsiniz.</p>
+  {% endif %}
+</div>
+
+<form method="post" action="/yoklama/{{ sube.id }}">
+  <input type="hidden" name="tarih" value="{{ gun.isoformat() }}">
+  <input type="hidden" name="saat" value="{{ saat }}">
+  <input type="hidden" name="_revizyon" value="{{ revizyon }}">
+  <div class="kart">
+    <h2>Sınıf listesi</h2>
+    {% if ogrenciler %}
+    <table>
+      <tr><th>No</th><th>Adı Soyadı</th>{% for kod, ad in durum_adlari.items() %}<th class="orta">{{ ad }}</th>{% endfor %}</tr>
+      {% for o in ogrenciler %}
+      <tr>
+        <td>{{ o['numara'] }}</td>
+        <td>{{ o['ad_soyad'] }}</td>
+        {% for kod, ad in durum_adlari.items() %}
+        <td class="orta">
+          <input type="radio" name="o_{{ o['id'] }}" value="{{ kod }}"
+                 data-ogrenci="{{ o['id'] }}" data-durum="{{ kod }}"
+                 {{ 'checked' if mevcut.get(o['id'], 'var') == kod }}>
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </table>
+    <div class="satir-arasi" style="margin-top:12px">
+      <button type="submit">Yoklamayı kaydet</button>
+      <button type="button" class="sade" onclick="hepsiVar()">Hepsi var</button>
+    </div>
+    {% else %}
+    <p class="bos">Bu şubede öğrenci yok. <a href="/sube/{{ sube.id }}">Listeyi yükleyin.</a></p>
+    {% endif %}
+  </div>
+</form>
+
+<script>
+function hepsiVar() {
+  document.querySelectorAll('input[data-durum="var"]').forEach(function (r) { r.checked = true; });
+}
+
+(function () {
+  var dugme = document.getElementById('kayitDugmesi');
+  if (!dugme) return;
+  var durumYazi = document.getElementById('sesDurum');
+  var dokumYazi = document.getElementById('dokum');
+  var kaydedici = null, parcalar = [], kayitta = false;
+
+  function isaretle(ogrenciId, durum) {
+    var secici = 'input[data-ogrenci="' + ogrenciId + '"][data-durum="' + durum + '"]';
+    var kutu = document.querySelector(secici);
+    if (kutu) kutu.checked = true;
+  }
+
+  dugme.addEventListener('click', async function () {
+    if (kayitta) {
+      kaydedici.stop();
+      return;
+    }
+    try {
+      var akis = await navigator.mediaDevices.getUserMedia({ audio: true });
+      kaydedici = new MediaRecorder(akis);
+      parcalar = [];
+      kaydedici.ondataavailable = function (e) { parcalar.push(e.data); };
+      kaydedici.onstop = async function () {
+        akis.getTracks().forEach(function (t) { t.stop(); });
+        durumYazi.textContent = 'Çözümleniyor…';
+        var veri = new FormData();
+        veri.append('kayit', new Blob(parcalar, { type: 'audio/webm' }), 'kayit.webm');
+        var yanit = await fetch(window.location.pathname + '/ses', {
+          method: 'POST',
+          body: veri,
+          headers: {'X-CSRF-Token': window.ogretmenCsrfToken || ''}
+        });
+        var sonuc = await yanit.json();
+        if (sonuc.hata) { durumYazi.textContent = sonuc.hata; return; }
+        dokumYazi.textContent = 'Duyulan: ' + (sonuc.dokum || '(boş)');
+        document.querySelectorAll('input[data-durum="var"]').forEach(function (r) { r.checked = true; });
+        sonuc.atamalar.forEach(function (a) { isaretle(a.ogrenci_id, a.durum); });
+        var notlar = [];
+        if (sonuc.belirsizler.length) {
+          notlar.push('Emin olunamayanlar (kontrol edin): ' +
+            sonuc.belirsizler.map(function (b) { return b.ad + ' ← “' + b.duyulan + '”'; }).join(', '));
+          sonuc.belirsizler.forEach(function (b) { isaretle(b.ogrenci_id, b.durum); });
+        }
+        if (sonuc.eslesmeyenler.length) {
+          notlar.push('Eşleşmeyen: ' + sonuc.eslesmeyenler.map(function (e) { return e.duyulan; }).join(', '));
+        }
+        durumYazi.textContent = notlar.join(' · ') || (sonuc.atamalar.length + ' öğrenci işaretlendi.');
+      };
+      kaydedici.start();
+      kayitta = true;
+      dugme.textContent = '■ Kaydı bitir';
+      durumYazi.textContent = 'Kayıtta… gelmeyenleri söyleyin.';
+    } catch (hata) {
+      durumYazi.textContent = 'Mikrofon açılamadı: ' + hata.message;
+    }
+    if (kaydedici) {
+      kaydedici.addEventListener('stop', function () {
+        kayitta = false;
+        dugme.textContent = '● Kaydı başlat';
+      });
+    }
+  });
+})();
+</script>
+{% endblock %}

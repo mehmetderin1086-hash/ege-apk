@@ -1,0 +1,85 @@
+{% extends "taban.html" %}
+{% set sayfa = 'ayarlar' %}
+{% block baslik %}Ayarlar — {{ uygulama_adi }}{% endblock %}
+
+{% block icerik %}
+<h1>Ayarlar</h1>
+
+<div class="kart">
+  <h2>Kimlik ve kurallar</h2>
+  <form method="post" action="/ayarlar">
+    <div class="serit">
+      <div><label for="okul">Okul adı</label>
+        <input id="okul" name="okul_adi" value="{{ ayarlar.okul_adi }}" style="min-width:280px" placeholder="Belgelerin başlığında görünür"></div>
+      <div><label for="ogretmen">Öğretmen adı</label>
+        <input id="ogretmen" name="ogretmen_adi" value="{{ ayarlar.ogretmen_adi }}" style="min-width:220px" placeholder="İmza bloğunda görünür"></div>
+      <div><label for="dakika">Ders süresi (dk)</label>
+        <input type="number" id="dakika" name="ders_dakikasi" value="{{ ayarlar.ders_dakikasi }}" min="20" max="60"></div>
+      <div><label for="yazili">Dönem başına yazılı</label>
+        <input type="number" id="yazili" name="donem_basina_yazili" value="{{ ayarlar.donem_basina_yazili }}" min="1" max="5"></div>
+      <div><label for="perf">Dönem başına performans</label>
+        <input type="number" id="perf" name="donem_basina_performans" value="{{ ayarlar.donem_basina_performans }}" min="0" max="5"></div>
+      <div><label for="gecme">Geçme puanı</label>
+        <input type="number" id="gecme" name="gecme_puani" value="{{ ayarlar.gecme_puani }}" min="0" max="100" step="0.5"></div>
+      <div><label for="devamsizlik" title="Uyarı rozetlerinin eşiği; varsayılan 10 gün MEB Ortaöğretim Kurumları Yönetmeliği'ndeki özürsüz devamsızlık sınırıdır">Devamsızlık sınırı (gün)</label>
+        <input type="number" id="devamsizlik" name="devamsizlik_gun_siniri" value="{{ ayarlar.devamsizlik_gun_siniri }}" min="1" max="60"></div>
+      <button type="submit">Kaydet</button>
+    </div>
+  </form>
+  <p class="kilavuz" style="margin-top:8px">
+    Sınav sayıları yalnız “eksik not” uyarısı için kullanılır; dönem puanı yönetmeliğe göre
+    girilen notların eşit ağırlıklı ortalamasıdır. Geçme puanı yönetmelikte 50; zümre kararıyla
+    farklı bir eşik izleniyorsa buradan değiştirilir ve hem karne hem sınıf özeti onu kullanır.
+  </p>
+</div>
+
+<div class="kart">
+  <h2>Veri ve yedek</h2>
+  <p class="kilavuz">Veritabanı: <code>{{ veri_yolu }}</code></p>
+  <div class="satir-arasi">
+    <form method="post" action="/yedek/al"><button type="submit">Şimdi yedek al</button></form>
+    <a class="dugme sade" href="/yedek/disa-aktar">Tüm yılı dışa aktar (zip)</a>
+  </div>
+  {% if yedekler %}
+  <table style="margin-top:12px">
+    <tr><th>Yedek dosyası</th><th class="sayi">Boyut</th></tr>
+    {% for ad, boyut in yedekler %}
+    <tr><td>{{ ad }}</td><td class="sayi">{{ (boyut / 1024) | round | int }} KB</td></tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+</div>
+
+<div class="kart">
+  <h2>Durum</h2>
+  <table>
+    <tr><th style="width:220px">Yüklü müfredat sürümleri</th>
+      <td>{{ surumler | join(', ') if surumler else 'yok' }}</td></tr>
+    <tr><th>Sesli yoklama</th>
+      <td>
+        {% if ses_durumu.kullanilabilir %}
+          <span class="rozet iyi">Hazır</span>
+        {% else %}
+          <span class="rozet orta">Kapalı</span> {{ ses_durumu.aciklama }}
+        {% endif %}
+      </td></tr>
+  </table>
+  {% if mufredat_kaynaklari %}
+  <h3>Müfredat kaynak künyeleri</h3>
+  <table>
+    <tr><th>Sürüm</th><th>Kaynak</th><th>Sınıflar</th><th>İçerik özeti</th></tr>
+    {% for k in mufredat_kaynaklari %}
+    <tr><td>{{ k.surum }}</td><td>
+      {% if k.resmi_url %}<a href="{{ k.resmi_url }}">{{ k.ad }}</a>{% else %}{{ k.ad }}{% endif %}
+      <div class="kilavuz">Erişim: {{ k.erisim_tarihi }}</div>
+    </td><td>{{ k.siniflar }}</td><td><code>{{ k.icerik_sha256[:12] }}…</code></td></tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+  <p class="kilavuz" style="margin-top:8px">
+    12. sınıf 2026-2027'de 2018 öğretim programına tabi. O programın belgesi
+    <code>veri/kaynak/</code> altına konup <code>scripts/mufredat_cikar.py</code> çalıştırıldığında
+    12. sınıf planları da üretilebilir hâle gelir.
+  </p>
+</div>
+{% endblock %}

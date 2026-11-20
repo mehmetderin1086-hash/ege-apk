@@ -1,0 +1,92 @@
+{% extends "taban.html" %}
+{% set sayfa = 'sorular' %}
+{% block baslik %}Soru havuzu — {{ uygulama_adi }}{% endblock %}
+
+{% block icerik %}
+<h1>Soru havuzu</h1>
+<p class="alt">
+  Sınavlar yalnız açık uçlu sorulardan kurulur. Her sorunun bir kazanım kodu ve bir
+  dereceli puanlama anahtarı (rubrik) olması gerekir — kazanım bazlı başarı analizi buna dayanıyor.
+</p>
+
+{% if not mufredat_var %}
+<div class="mesaj uyari-kutu">
+  {{ sinif }}. sınıf bu öğretim yılında {{ surum }} programına tabi ama o programın
+  müfredat dosyası henüz yüklenmemiş. Kazanım listesi olmadan bu sınıfa soru
+  eklenemez; belge eklendiğinde havuz açılacak. Diğer sınıfların havuzu çalışıyor.
+</div>
+{% endif %}
+
+<div class="kart">
+  <form method="get" action="/sorular" class="serit">
+    <div><label for="sinif">Sınıf</label>
+      <select id="sinif" name="sinif" onchange="this.form.submit()">
+        {% for s in [9, 10, 11, 12] %}<option value="{{ s }}" {{ 'selected' if sinif == s }}>{{ s }}. sınıf</option>{% endfor %}
+      </select></div>
+    <div><label for="kazanim">Kazanım kodu</label><input id="kazanim" name="kazanim" value="{{ kazanim }}" placeholder="BİY.9.1"></div>
+    <div><label for="arama">Metinde ara</label><input id="arama" name="arama" value="{{ arama }}"></div>
+    <button class="sade" type="submit">Süz</button>
+    <a class="dugme sade" href="/sorular?sinif={{ sinif }}&arsiv={{ 'false' if arsiv else 'true' }}">
+      {{ 'Aktif sorular' if arsiv else 'Arşiv' }}
+    </a>
+  </form>
+</div>
+
+<div class="kart">
+  <h2>Soru ekle</h2>
+  <form method="post" action="/sorular/ekle">
+    <div class="serit" style="margin-bottom:10px">
+      <div><label for="esinif">Sınıf</label>
+        <select id="esinif" name="sinif" onchange="window.location='/sorular?sinif=' + this.value">
+          {% for s in [9, 10, 11, 12] %}<option value="{{ s }}" {{ 'selected' if sinif == s }}>{{ s }}. sınıf</option>{% endfor %}
+        </select></div>
+      <div><label for="ekazanim">Kazanım</label>
+        <select id="ekazanim" name="kazanim_kodu" required style="max-width:520px">
+          {% if kazanimlar %}
+            {% for k in kazanimlar %}
+              <option value="{{ k.kod }}">{{ k.kod }} — {{ k.ifade }} ({{ sayilar.get(k.kod, 0) }} soru)</option>
+            {% endfor %}
+          {% else %}
+            <option value="">{{ 'Müfredat dosyası yüklü değil' if not mufredat_var else 'Önce sınıf seçin' }}</option>
+          {% endif %}
+        </select></div>
+      <div><label for="zorluk">Zorluk</label>
+        <select id="zorluk" name="zorluk">
+          <option value="kolay">Kolay</option><option value="orta" selected>Orta</option><option value="zor">Zor</option>
+        </select></div>
+    </div>
+    <label for="metin">Soru metni</label>
+    <textarea id="metin" name="metin" required placeholder="Fotosentez ile kemosentez arasındaki farkları enerji kaynağı bakımından açıklayınız."></textarea>
+    <label for="rubrik" style="margin-top:8px">Dereceli puanlama anahtarı</label>
+    <textarea id="rubrik" name="rubrik" style="min-height:60px" placeholder="Her iki süreci de doğru açıklarsa tam puan; yalnız birini açıklarsa yarı puan."></textarea>
+    <button type="submit" style="margin-top:10px" {{ 'disabled' if not mufredat_var }}>Havuza ekle</button>
+  </form>
+</div>
+
+<div class="kart">
+  <h2>{{ 'Arşiv' if arsiv else 'Havuz' }} ({{ sorular | length }} soru)</h2>
+  {% if sorular %}
+  <table>
+    <tr><th>Kazanım</th><th>Soru</th><th>Rubrik</th><th>Zorluk</th><th></th></tr>
+    {% for s in sorular %}
+    <tr>
+      <td>{{ s['kazanim_kodu'] }}</td>
+      <td>{{ s['metin'] }}</td>
+      <td class="kilavuz">{{ s['rubrik'] or '—' }}</td>
+      <td>{{ s['zorluk'] }}</td>
+      <td>
+        <form method="post" action="/sorular/{{ s['id'] }}/{{ 'geri-al' if arsiv else 'sil' }}" {% if not arsiv %}data-confirm="Bu soru yeni sınavlarda kullanılmayacak şekilde arşivlensin mi? Mevcut sınavlar korunur."{% endif %}>
+          <input type="hidden" name="sinif" value="{{ s['sinif'] }}">
+          <button class="kucuk {{ '' if arsiv else 'tehlike' }}" type="submit">
+            {{ 'Geri al' if arsiv else 'Arşivle' }}
+          </button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="bos">Havuzda soru yok.</p>
+  {% endif %}
+</div>
+{% endblock %}

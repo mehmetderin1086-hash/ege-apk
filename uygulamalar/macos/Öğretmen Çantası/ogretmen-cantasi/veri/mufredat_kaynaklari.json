@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "sources": {
+    "maarif_2024": {
+      "title": "Biyoloji Dersi Öğretim Programı",
+      "publisher": "T.C. Millî Eğitim Bakanlığı",
+      "official_url": "https://mufredat.meb.gov.tr/Dosyalar/202582694327111-biyoloji.pdf",
+      "grades": [9, 10, 11, 12],
+      "note": "Program içeriğinin bulunması, ilgili sınıfta o öğretim yılında yürürlükte olduğu anlamına gelmez; geçerlilik eşlemesi ayrıca doğrulanır."
+    },
+    "mfp_2018": {
+      "title": "Ortaöğretim Biyoloji Dersi Öğretim Programı (2018)",
+      "publisher": "T.C. Millî Eğitim Bakanlığı",
+      "official_url": "",
+      "grades": [9, 10, 11, 12],
+      "note": "Kaynak dosya pakete eklenene kadar bu sürümle plan üretimi kapalıdır."
+    }
+  }
+}

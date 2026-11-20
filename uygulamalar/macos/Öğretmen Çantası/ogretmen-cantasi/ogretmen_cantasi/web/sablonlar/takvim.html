@@ -1,0 +1,53 @@
+{% extends "taban.html" %}
+{% set sayfa = 'takvim' %}
+{% block baslik %}Sınav takvimi — {{ uygulama_adi }}{% endblock %}
+
+{% block icerik %}
+<h1>Sınav takvimi</h1>
+<p class="alt">
+  {{ yil.ad }} yılında tarihi girilmiş resmî değerlendirmeler. Tarih, not
+  defterindeki değerlendirmeden ya da sınav üretme ekranından gelir.
+</p>
+
+{% if uyarilar %}
+<div class="mesaj uyari-kutu">
+  <b>Takvim uyarıları:</b>
+  <ul style="margin:6px 0 0 18px">
+    {% for u in uyarilar %}<li>{{ u }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="kart">
+  {% if girisler %}
+  <table>
+    <tr><th>Tarih</th><th>Şube</th><th>Değerlendirme</th><th>Tür</th><th></th></tr>
+    {% for g in girisler %}
+    <tr>
+      <td>{{ g.tarih }}</td>
+      <td><a href="/sube/{{ g.sube_id }}">{{ g.sube_adi }}</a></td>
+      <td>{{ g.ad }}</td>
+      <td>{{ g.tur }}</td>
+      <td>{% if g.tatil %}<span class="rozet zayif">tatil: {{ g.tatil }}</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="bos">
+    Tarihi girilmiş değerlendirme yok. Not defterinde değerlendirme eklerken
+    ya da sınav üretirken tarih alanını doldurursanız burada görünür.
+  </p>
+  {% endif %}
+</div>
+
+{% if subeler %}
+<div class="kart">
+  <h2>Hızlı geçiş</h2>
+  <div class="satir-arasi">
+    {% for s in subeler %}
+    <a class="dugme kucuk sade" href="/notlar/{{ s.id }}">{{ s.ad }} not defteri</a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

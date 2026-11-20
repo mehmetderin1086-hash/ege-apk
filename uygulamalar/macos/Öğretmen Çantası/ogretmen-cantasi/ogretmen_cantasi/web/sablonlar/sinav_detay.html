@@ -1,0 +1,127 @@
+{% extends "taban.html" %}
+{% block baslik %}{{ sinav.ad }} — {{ uygulama_adi }}{% endblock %}
+
+{% block icerik %}
+<div class="kart yazdirma-gizle">
+  <h2>Sınav Okur bağlantısı</h2>
+  <div class="satir-arasi">
+    <form method="post" action="/entegrasyonlar/sinav/{{ sinav_id }}/gonder">
+      <button type="submit">Sınav Okur'a gönder</button>
+    </form>
+    <form method="post" action="/entegrasyonlar/sinav/{{ sinav_id }}/sonuc-al">
+      <button class="sade" type="submit">Onaylı sonuçları al ve önizle</button>
+    </form>
+    <a class="dugme sade" href="/entegrasyonlar/sinav/{{ sinav_id }}/paket">Sınav paketini indir</a>
+    <form method="post" action="/entegrasyonlar/sinav/{{ sinav_id }}/sonuc-onizle" enctype="multipart/form-data">
+      <input type="file" name="dosya" accept=".zip" required>
+      <button type="submit">Sonuç paketini önizle</button>
+    </form>
+    <form method="post" action="/yardimci/sinav/{{ sinav_id }}/destek-turet">
+      <button class="sade" type="submit">Zayıf kazanımlardan destek taslağı çıkar</button>
+    </form>
+  </div>
+</div>
+<h1>{{ sinav.ad }}</h1>
+<p class="alt">{{ sinav.sube_adi }} · {{ sinav.sorular | length }} açık uçlu soru · toplam {{ sinav.toplam_puan }} puan · {{ sinav.sure_dk }} dakika</p>
+
+<div class="satir-arasi" style="margin-bottom:16px">
+  {% for grup in sinav.gruplar %}
+  <a class="dugme sade" href="/sinav/{{ sinav_id }}/indir?grup={{ grup }}">{{ grup }} grubu kâğıdı (PDF)</a>
+  {% endfor %}
+  <a class="dugme sade" href="/sinav/{{ sinav_id }}/indir?tur=anahtar">Cevap anahtarı + belirtke</a>
+  <a class="dugme sade" href="/sinav/{{ sinav_id }}/indir?tur=analiz">Kazanım analizi (Excel)</a>
+  <a class="dugme sade" href="/sinavlar/{{ sube_id }}">Sınav listesine dön</a>
+</div>
+
+<div class="kart">
+  <h2>Belirtke tablosu</h2>
+  <table>
+    <tr><th>Tema / kazanım</th><th class="sayi">Hedef</th><th class="sayi">Soru</th><th class="sayi">Gerçekleşen</th></tr>
+    {% for b in sinav.belirtke %}
+    <tr>
+      <td>{{ b.ad }}</td>
+      <td class="sayi">%{{ b.hedef_yuzde }}</td>
+      <td class="sayi">{{ b.soru_sayisi }}</td>
+      <td class="sayi">%{{ b.puan }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<form method="post" action="/sinav/{{ sinav_id }}/puanla">
+<input type="hidden" name="_revizyon" value="{{ revizyon }}">
+<div class="kart kaydir">
+  <h2>Puanlama</h2>
+  <p class="kilavuz">Soru bazında puan girin; kazanım analizi bu puanlardan hesaplanır.</p>
+  {% if ogrenciler %}
+  <table>
+    <tr>
+      <th>No</th><th>Adı Soyadı</th>
+      {% for s in sinav.sorular %}
+      <th class="orta">{{ loop.index }}<br><span class="kilavuz">{{ s.kazanim_kodu }}<br>{{ s.puan }}p</span></th>
+      {% endfor %}
+      <th class="sayi">Toplam</th>
+    </tr>
+    {% for o in ogrenciler %}
+    <tr>
+      <td>{{ o['numara'] }}</td>
+      <td>{{ o['ad_soyad'] }}</td>
+      {% for s in sinav.sorular %}
+      <td class="orta">
+        <input type="number" name="p_{{ s.id }}_{{ o['id'] }}" min="0" max="{{ s.puan }}" step="0.5"
+               value="{{ puanlar.get((o['id'], s.id), '') }}" style="width:78px">
+      </td>
+      {% endfor %}
+      <td class="sayi"><b>{{ analiz.ogrenciler.get(o['id'], {}).get('toplam', '—') }}</b></td>
+    </tr>
+    {% endfor %}
+  </table>
+  <button type="submit" style="margin-top:12px">Puanları kaydet</button>
+  {% else %}
+  <p class="bos">Bu şubede öğrenci yok.</p>
+  {% endif %}
+</div>
+</form>
+
+{% if analiz.kazanimlar and analiz.ogrenciler %}
+<div class="kart kaydir">
+  <h2>Kazanım bazlı başarı</h2>
+  <p class="kilavuz">
+    Hücrelerdeki sayı, o öğrencinin ilgili kazanımdan aldığı puanın yüzdesidir.
+    Renk yalnız okumayı kolaylaştırır; bilgiyi sayı taşır. %70 ve üzeri iyi, %50–69 orta, %50 altı zayıf.
+  </p>
+  <table>
+    <tr>
+      <th>Adı Soyadı</th>
+      {% for k in analiz.kazanimlar %}<th class="orta">{{ k }}</th>{% endfor %}
+    </tr>
+    {% for oid, o in analiz.ogrenciler.items() %}
+    <tr>
+      <td>{{ o.ad_soyad }}</td>
+      {% for k in analiz.kazanimlar %}
+      {% set y = o.kazanimlar.get(k) %}
+      <td class="isi {{ 'yok' if y is none else ('iyi' if y >= 70 else ('orta' if y >= 50 else 'zayif')) }}">
+        {{ '—' if y is none else '%' ~ y }}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+    <tr>
+      <th>Sınıf ortalaması</th>
+      {% for k in analiz.kazanimlar %}
+      {% set b = analiz.sinif.get(k) %}
+      <th class="isi {{ 'yok' if not b or b.yuzde is none else ('iyi' if b.yuzde >= 70 else ('orta' if b.yuzde >= 50 else 'zayif')) }}">
+        {{ '—' if not b or b.yuzde is none else '%' ~ b.yuzde }}
+      </th>
+      {% endfor %}
+    </tr>
+  </table>
+  {% if analiz.zayif %}
+  <p style="margin-top:10px">
+    <span class="rozet zayif">Sınıfça zayıf kazanımlar</span>
+    {{ analiz.zayif | join(', ') }} — tekrar planlamayı düşünün.
+  </p>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

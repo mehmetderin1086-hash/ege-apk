@@ -1,0 +1,135 @@
+{% extends "taban.html" %}
+{% block baslik %}{{ ogrenci['ad_soyad'] }} — {{ uygulama_adi }}{% endblock %}
+
+{% block icerik %}
+<h1>{{ ogrenci['ad_soyad'] }}</h1>
+<p class="alt">
+  {{ ogrenci['sube_adi'] }} · {{ ogrenci['sinif'] }}. sınıf
+  {% if ogrenci['numara'] %} · No {{ ogrenci['numara'] }}{% endif %}
+</p>
+
+<div class="satir-arasi" style="margin-bottom:18px">
+  <a class="dugme sade" href="/sube/{{ ogrenci['sube_id'] }}">Şubeye dön</a>
+  <a class="dugme" href="/ogrenci/{{ ogrenci['id'] }}/rapor">Gelişim raporu (PDF)</a>
+</div>
+
+<div class="kart">
+  <h2>Zaman çizelgesi</h2>
+  {% if olaylar %}
+  <table>
+    <tr><th>Tarih</th><th>Tür</th><th>Kayıt</th></tr>
+    {% for o in olaylar[:30] %}
+    <tr><td>{{ o.tarih or 'Tarih girilmedi' }}</td><td>{{ o.tur }}</td><td>{{ o.aciklama }}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="bos">Henüz zaman çizelgesi kaydı yok.</p>{% endif %}
+</div>
+
+<div class="kart">
+  <h2>Notlar</h2>
+  {% if karne %}
+    {% set girilen = [] %}
+    <table>
+      <tr><th>Dönem</th><th>Değerlendirme</th><th class="sayi">Puan</th></tr>
+      {% for donem in (1, 2) %}
+        {% set sonuc = karne.donemler.get(donem) %}
+        {% if sonuc %}
+          {% for puan in sonuc.puanlar if puan.deger is not none and puan.resmi %}
+            {% set _ = girilen.append(1) %}
+            <tr>
+              <td>{{ donem }}. dönem</td>
+              <td>{{ tur_adlari.get(puan.tur, puan.tur) }} — {{ puan.ad }}</td>
+              <td class="sayi">{{ '%g' | format(puan.deger) }}</td>
+            </tr>
+          {% endfor %}
+          {% if sonuc.ortalama is not none %}
+            <tr class="baslik-serit">
+              <td>{{ donem }}. dönem</td><td>Dönem puanı</td>
+              <td class="sayi"><b>{{ '%g' | format(sonuc.ortalama) }}</b></td>
+            </tr>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+    </table>
+    {% if not girilen %}<p class="bos">Henüz girilmiş resmî not yok.</p>{% endif %}
+    {% if karne.yil_sonu is not none %}
+      <p><b>Yıl sonu başarı puanı:</b> {{ '%g' | format(karne.yil_sonu) }}
+        {% if karne.gecti %}<span class="rozet iyi">geçti</span>
+        {% elif karne.gecti is false %}<span class="rozet zayif">kaldı</span>{% endif %}
+      </p>
+    {% endif %}
+    {% if karne.ic_takip_ortalamasi is not none %}
+      <p class="kilavuz">İç takip ortalaması: {{ '%g' | format(karne.ic_takip_ortalamasi) }} (resmî ortalamaya dahil değildir).</p>
+    {% endif %}
+  {% else %}
+    <p class="bos">Not kaydı yok.</p>
+  {% endif %}
+</div>
+
+<div class="kart">
+  <h2>Devamsızlık</h2>
+  {% if devamsizlik and devamsizlik['toplam_ders'] %}
+    <div class="satir-arasi">
+      <span><b>{{ '%g' | format(devamsizlik['yok_gun']) }}</b> gün gelmedi</span>
+      <span><b>{{ devamsizlik['yok_saat'] }}</b> saat gelmedi</span>
+      <span><b>{{ devamsizlik['izinli_saat'] }}</b> saat izinli</span>
+      <span><b>{{ devamsizlik['gec_saat'] }}</b> saat geç</span>
+      {% if devamsizlik['devam_orani'] is not none %}
+        <span>devam oranı <b>%{{ '%g' | format(devamsizlik['devam_orani']) }}</b></span>
+      {% endif %}
+      {% if devamsizlik['uyari'] %}<span class="rozet zayif">{{ devamsizlik['uyari'] }}</span>{% endif %}
+    </div>
+  {% else %}
+    <p class="bos">Yoklama kaydı yok.</p>
+  {% endif %}
+</div>
+
+<div class="kart">
+  <h2>Deneme sınavları</h2>
+  {% if deneme_grafigi and denemeler | length > 1 %}{{ deneme_grafigi | safe }}{% endif %}
+  {% if denemeler %}
+    <table>
+      <tr><th>Deneme</th><th>Tarih</th><th class="sayi">Doğru</th><th class="sayi">Yanlış</th><th class="sayi">Boş</th><th class="sayi">Net</th></tr>
+      {% for d in denemeler %}
+      <tr>
+        <td>{{ d['ad'] }}</td>
+        <td>{{ d['tarih'] or '—' }}</td>
+        <td class="sayi">{{ d['dogru'] }}</td>
+        <td class="sayi">{{ d['yanlis'] }}</td>
+        <td class="sayi">{{ d['bos'] }}</td>
+        <td class="sayi"><b>{{ '%g' | format(d['net']) }}</b></td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="bos">Deneme sonucu yok.</p>
+  {% endif %}
+</div>
+
+<div class="kart">
+  <h2>Kazanım başarısı</h2>
+  <p class="kilavuz">Açık uçlu sınavlardaki puanlardan hesaplanır; her kazanım için en son sınavdaki durum gösterilir.</p>
+  {% if kazanimlar %}
+    <table>
+      <tr><th>Kazanım</th><th>Açıklama</th><th class="sayi">Başarı</th><th>Durum</th><th>Geçmiş</th></tr>
+      {% for k in kazanimlar if k.yuzde is not none %}
+      <tr>
+        <td>{{ k.kod }}</td>
+        <td>{{ k.ifade or '—' }}</td>
+        <td class="sayi">%{{ '%g' | format(k.yuzde) }}</td>
+        <td>
+          {% if k.durum == 'iyi' %}<span class="rozet iyi">iyi</span>
+          {% elif k.durum == 'orta' %}<span class="rozet orta">orta</span>
+          {% else %}<span class="rozet zayif">{{ k.durum }}</span>{% endif %}
+        </td>
+        <td class="kilavuz">
+          {% for g in k.gecmis %}{{ g.sinav }}: %{{ '%g' | format(g.yuzde) }}{% if not loop.last %} → {% endif %}{% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="bos">Puanlanmış sınav yok.</p>
+  {% endif %}
+</div>
+{% endblock %}

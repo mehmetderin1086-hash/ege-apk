@@ -1,0 +1,100 @@
+{% extends "taban.html" %}
+{% block baslik %}{{ sube.ad }} notlar — {{ uygulama_adi }}{% endblock %}
+
+{% block icerik %}
+<h1>Notlar — {{ sube.ad }}</h1>
+<p class="alt">
+  Dönem puanı yazılı, performans ve proje notlarının eşit ağırlıklı ortalamasıdır.
+  İç takip kayıtları (derse katılım, ödev) bu ortalamaya girmez.
+  Dönem başına {{ kurallar.donem_basina_yazili }} yazılı, {{ kurallar.donem_basina_performans }} performans bekleniyor.
+</p>
+
+<div class="kart">
+  <h2>Değerlendirme ekle</h2>
+  <form method="post" action="/notlar/{{ sube.id }}/degerlendirme" class="serit">
+    <div><label for="ad">Adı</label><input id="ad" name="ad" placeholder="1. Yazılı" required></div>
+    <div><label for="tur">Tür</label>
+      <select id="tur" name="tur">
+        {% for kod, ad in tur_adlari.items() %}<option value="{{ kod }}">{{ ad }}</option>{% endfor %}
+      </select></div>
+    <div><label for="donem">Dönem</label>
+      <select id="donem" name="donem"><option value="1">1. dönem</option><option value="2">2. dönem</option></select></div>
+    <div><label for="tarih">Tarih</label><input type="date" id="tarih" name="tarih"></div>
+    <button type="submit">Ekle</button>
+  </form>
+</div>
+
+{% for donem in [1, 2] %}
+{% set ist = istatistik[donem] %}
+{% if ist.ortalama is not none %}
+<div class="kart">
+  <h3>{{ donem }}. dönem — sınıf durumu</h3>
+  <div class="satir-arasi">
+    <span>Ortalama <b>{{ ist.ortalama }}</b></span>
+    <span>En düşük <b>{{ ist.en_dusuk }}</b></span>
+    <span>En yüksek <b>{{ ist.en_yuksek }}</b></span>
+    <span>50 altı: <b>{{ ist.zayif }}</b> öğrenci</span>
+  </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<form method="post" action="/notlar/{{ sube.id }}/kaydet">
+<input type="hidden" name="_revizyon" value="{{ revizyon }}">
+<div class="kart kaydir">
+  <h2>Not çizelgesi</h2>
+  {% if satirlar %}
+  <table>
+    <tr>
+      <th>No</th><th>Adı Soyadı</th>
+      {% for d in degerlendirmeler %}
+      <th class="orta">
+        {{ d.ad }}<br><span class="kilavuz">{{ tur_adlari.get(d.tur, d.tur) }} · {{ d.donem }}. dönem</span>
+      </th>
+      {% endfor %}
+      <th class="sayi">1. dönem</th><th class="sayi">2. dönem</th><th class="sayi">Yıl sonu</th><th>Durum</th>
+    </tr>
+    {% for s in satirlar %}
+    <tr>
+      <td>{{ s.numara }}</td>
+      <td>{{ s.ad_soyad }}</td>
+      {% for d in degerlendirmeler %}
+      <td class="orta">
+        <input type="number" name="n_{{ d.id }}_{{ s.id }}" min="0" max="100" step="0.5"
+               value="{{ s.puanlar.get(d.id, '') }}" style="width:78px">
+      </td>
+      {% endfor %}
+      <td class="sayi">{{ s.donem1 if s.donem1 is not none else '—' }}</td>
+      <td class="sayi">{{ s.donem2 if s.donem2 is not none else '—' }}</td>
+      <td class="sayi"><b>{{ s.yil_sonu if s.yil_sonu is not none else '—' }}</b></td>
+      <td>{% if s.durum %}<span class="rozet {{ 'iyi' if s.durum == 'Geçti' else 'zayif' }}">{{ s.durum }}</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <div class="satir-arasi" style="margin-top:12px">
+    <button type="submit">Notları kaydet</button>
+    <a class="dugme sade" href="/notlar/{{ sube.id }}/indir">Excel'e aktar</a>
+  </div>
+  {% else %}
+  <p class="bos">Bu şubede öğrenci yok.</p>
+  {% endif %}
+</div>
+</form>
+
+{% if degerlendirmeler %}
+<div class="kart">
+  <h3>Değerlendirmeler</h3>
+  <table>
+    <tr><th>Adı</th><th>Tür</th><th>Dönem</th><th>Tarih</th><th>Resmî</th><th></th></tr>
+    {% for d in degerlendirmeler %}
+    <tr>
+      <td>{{ d.ad }}</td><td>{{ tur_adlari.get(d.tur, d.tur) }}</td><td>{{ d.donem }}</td>
+      <td>{{ d.tarih or '—' }}</td>
+      <td>{{ 'Evet' if d.resmi else 'Hayır (iç takip)' }}</td>
+      <td><form method="post" action="/notlar/{{ sube.id }}/degerlendirme/{{ d.id }}/sil" data-confirm="Bu değerlendirmeyi ve girilmiş bütün puanlarını silmek istediğinizden emin misiniz?"><button class="kucuk tehlike" type="submit">Sil</button></form></td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}

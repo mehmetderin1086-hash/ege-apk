@@ -1,0 +1,85 @@
+{% extends "taban.html" %}
+{% set sayfa = 'entegrasyon' %}
+{% block baslik %}Entegrasyonlar — {{ uygulama_adi }}{% endblock %}
+{% block icerik %}
+<h1>Yerel entegrasyonlar</h1>
+<p class="alt">Veriler yalnız bu Mac'teki uygulamalar arasında, önizleme ve öğretmen onayıyla aktarılır.</p>
+
+<div class="izgara">
+{% for b in baglantilar %}
+<div class="kart">
+  <h2>{{ b.ad }}</h2>
+  <p>
+    {% if b.son_durum == 'hazir' %}<span class="rozet iyi">Hazır</span>
+    {% elif not b.etkin %}<span class="rozet">Kapalı</span>
+    {% else %}<span class="rozet orta">{{ b.son_durum }}</span>{% endif %}
+    {% if b.son_hata %}<span class="kilavuz">{{ b.son_hata }}</span>{% endif %}
+  </p>
+  <form method="post" action="/entegrasyonlar/{{ b.saglayici }}/ayar">
+    <label>Yerel adres</label>
+    <input name="adres" value="{{ b.adres }}" style="width:100%">
+    <label class="satirici"><input type="checkbox" name="etkin" value="1" {{ 'checked' if b.etkin }}> Etkin</label>
+    <button class="kucuk" type="submit">Kaydet</button>
+  </form>
+  <form method="post" action="/entegrasyonlar/{{ b.saglayici }}/kontrol" style="margin-top:8px">
+    <button class="sade kucuk" type="submit">Bağlantıyı denetle</button>
+  </form>
+</div>
+{% endfor %}
+</div>
+
+<div class="kart">
+  <h2>Soru Kesici paketi</h2>
+  <form method="post" action="/entegrasyonlar/soru-kesici/al" class="satir-arasi">
+    <div><label>Soru Kesici banka kimlikleri</label>
+      <input name="soru_idleri" placeholder="12, 18, 21" required></div>
+    <button type="submit">Doğrudan al ve önizle</button>
+  </form>
+  <p class="kilavuz">Alternatif olarak Soru Kesici'nin ürettiği ZIP paketini yükleyebilirsiniz.</p>
+  <form method="post" action="/entegrasyonlar/soru-paketi/onizle" enctype="multipart/form-data">
+    <input type="file" name="dosya" accept=".zip" required>
+    <button type="submit">Soruları önizle</button>
+  </form>
+</div>
+
+{% if onizleme %}
+<div class="kart">
+  <h2>Aktarım önizlemesi</h2>
+  <p><b>{{ onizleme.eklenecek | length }}</b> eklenecek ·
+     <b>{{ onizleme.atlanacak | length }}</b> atlanacak ·
+     <b>{{ onizleme.uyarilar | length }}</b> uyarı</p>
+  {% if onizleme.uyarilar %}
+  <div class="mesaj uyari-kutu">{{ onizleme.uyarilar | join(' · ') }}</div>
+  {% endif %}
+  <div class="kaydir">
+    <table>
+      <tr><th>Kayıt</th><th>Sınıf/Öğrenci</th><th>Kazanım/Soru</th><th>Değer</th></tr>
+      {% for k in onizleme.eklenecek %}
+      <tr>
+        <td>{{ k.external_id or k.student_name }}</td>
+        <td>{{ k.grade or k.student_name }}</td>
+        <td>{{ k.outcome_code or k.question_order }}</td>
+        <td>{{ k.text or k.score }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <form method="post" action="{{ '/entegrasyonlar/soru-paketi/uygula' if onizleme.tur == 'sorular' else '/entegrasyonlar/sinav-sonucu/uygula' }}"
+        data-confirm="Önizlenen kayıtlar uygulansın mı?">
+    <input type="hidden" name="paket" value="{{ onizleme_paketi }}">
+    <button type="submit">Önizlemeyi onayla ve uygula</button>
+  </form>
+</div>
+{% endif %}
+
+<div class="kart">
+  <h2>Son aktarımlar</h2>
+  {% if aktarimlar %}
+  <table><tr><th>Zaman</th><th>Sağlayıcı</th><th>Tür</th><th>Durum</th><th>Özet</th></tr>
+  {% for a in aktarimlar %}
+  <tr><td>{{ a.guncelleme }}</td><td>{{ a.saglayici }}</td><td>{{ a.tur }}</td>
+      <td>{{ a.durum }}</td><td class="kilavuz">{{ a.ozet_json }}</td></tr>
+  {% endfor %}</table>
+  {% else %}<p class="bos">Henüz aktarım yapılmadı.</p>{% endif %}
+</div>
+{% endblock %}

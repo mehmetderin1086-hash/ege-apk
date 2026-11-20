@@ -1,0 +1,168 @@
+{% extends "taban.html" %}
+{% block baslik %}{{ sube.ad }} yıllık plan — {{ uygulama_adi }}{% endblock %}
+
+{% block icerik %}
+<h1>{{ sube.ad }} — ünitelendirilmiş yıllık plan</h1>
+<p class="alt">
+  {{ yil.ad if yil }} · {{ sube.sinif }}. sınıf ·
+  {{ 'Türkiye Yüzyılı Maarif Modeli (2024)' if sube.mufredat_surumu == 'maarif_2024' else '2018 öğretim programı' }}
+</p>
+
+{% if not mufredat_var %}
+<div class="mesaj uyari-kutu">
+  Bu şubenin müfredat dosyası ({{ sube.mufredat_surumu }}) henüz yüklenmemiş.
+  12. sınıf 2026-2027'de 2018 programına tabi; o programın belgesi eklendiğinde plan üretilebilecek.
+  Not, yoklama, sınav ve deneme modülleri bu şube için şimdiden çalışıyor.
+</div>
+{% endif %}
+
+<div class="satir-arasi" style="margin-bottom:16px">
+  <form method="post" action="/plan/{{ sube.id }}/uret">
+    <button type="submit" {{ 'disabled' if not mufredat_var }}>{{ 'Planı yeniden üret' if satirlar else 'Planı üret' }}</button>
+  </form>
+  {% if satirlar %}
+  <a class="dugme sade" href="/plan/{{ sube.id }}/indir?bicim=pdf&sablon=meb">PDF (MEB tablosu)</a>
+  <a class="dugme sade" href="/plan/{{ sube.id }}/indir?bicim=pdf&sablon=maarif">PDF (tema tablosu)</a>
+  <a class="dugme sade" href="/plan/{{ sube.id }}/indir?bicim=docx">Word</a>
+  <a class="dugme sade" href="/plan/{{ sube.id }}/indir?bicim=xlsx">Excel</a>
+  <a class="dugme sade" href="/plan/{{ sube.id }}?gorunum={{ 'aylik' if gorunum == 'yillik' else 'yillik' }}">
+    {{ 'Aylık görünüm' if gorunum == 'yillik' else 'Haftalık görünüm' }}</a>
+  {% endif %}
+</div>
+
+{% if kapsam and not kapsam.tam %}
+<div class="mesaj uyari-kutu">
+  Bu takvimle müfredatın tamamı işlenemiyor: {{ kapsam.toplam }} öğrenme çıktısından
+  {{ kapsam.kapsanan }} tanesi plana girdi. Plana giremeyenler:
+  <b>{{ kapsam.eksik | join(', ') }}</b>.
+  Ders programını ya da tatil günlerini kontrol edin.
+</div>
+{% endif %}
+
+{% if ozet %}
+<div class="kart">
+  <div class="satir-arasi">
+    <span><b>{{ ozet.hafta }}</b> hafta</span>
+    <span><b>{{ ozet.ders_saati }}</b> ders saati</span>
+    <span><b>{{ ozet.kazanim }}</b> öğrenme çıktısı</span>
+    <span><b>{{ ozet.tatil_haftasi }}</b> tatil haftası</span>
+  </div>
+</div>
+{% endif %}
+
+{% if plan_gecmisi %}
+<div class="kart">
+  <h2>Plan revizyonları</h2>
+  <table>
+    <tr><th>Revizyon</th><th>Üretim</th><th>Durum</th><th>Satır</th><th>Karar</th></tr>
+    {% for p in plan_gecmisi %}
+    <tr>
+      <td>R{{ p.revizyon }}</td><td>{{ p.olusturma }}</td>
+      <td><span class="rozet {{ 'iyi' if p.durum in ['onaylandi','teslim_edildi'] else 'orta' }}">{{ p.durum }}</span></td>
+      <td>{{ p.satir_sayisi }}</td>
+      <td>
+        <form method="post" action="/plan/{{ sube.id }}/{{ p.id }}/durum" class="satir-arasi">
+          <select name="durum">
+            {% for d in ['taslak','onaylandi','teslim_edildi','revize_edildi'] %}
+            <option value="{{ d }}" {{ 'selected' if p.durum == d }}>{{ d }}</option>
+            {% endfor %}
+          </select>
+          <button class="kucuk" type="submit">Kaydet</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+{% if gerceklesme %}
+<div class="kart">
+  <h2>Gerçekleşme</h2>
+  {% if gerceklesme.geride_hafta %}
+  <div class="mesaj uyari-kutu">
+    Geçmiş {{ gerceklesme.gecmis_hafta }} ders haftasının {{ gerceklesme.geride_hafta }} tanesi
+    defterde tamamlanmamış görünüyor. İşlenmeyen kazanımlar:
+    <b>{{ gerceklesme.islenmemis | join(', ') }}</b>
+  </div>
+  {% elif gerceklesme.gecmis_hafta %}
+  <p class="kilavuz">Geçmiş {{ gerceklesme.gecmis_hafta }} ders haftasının tamamı defterde işlendi olarak kayıtlı.</p>
+  {% else %}
+  <p class="kilavuz">Henüz geçmiş ders haftası yok; kayıtlar Bugün ekranındaki "Deftere işle" ile tutulur.</p>
+  {% endif %}
+  <table>
+    <tr><th class="sayi">Hafta</th><th>Tarih</th><th>Tema</th><th>Planlanan</th><th>Defter</th></tr>
+    {% for h in gerceklesme.haftalar %}
+    <tr>
+      <td class="sayi">{{ h.hafta_no }}</td>
+      <td>{{ h.baslangic }} – {{ h.bitis }}</td>
+      <td>{{ h.tema_adi }}</td>
+      <td>{{ h.planlanan | join(', ') }}</td>
+      <td>
+        {% if h.durum == 'tam' %}<span class="rozet iyi">✓ tam</span>
+        {% elif h.durum == 'kismi' %}<span class="rozet orta">kısmi: {{ h.islenen | join(', ') }}</span>
+        {% elif h.gecmis %}<span class="rozet zayif">işlenmedi</span>
+        {% else %}<span class="kilavuz">—</span>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+{% if not satirlar %}
+  <p class="bos">Plan henüz üretilmedi.</p>
+{% elif gorunum == 'aylik' %}
+  <div class="kart">
+    <h2>Aylık dağılım</h2>
+    <table>
+      <tr><th>Ay</th><th class="sayi">Hafta</th><th class="sayi">Ders saati</th><th>Kazanımlar</th></tr>
+      {% for a in aylar %}
+      <tr>
+        <td>{{ a.ay }}</td>
+        <td class="sayi">{{ a.haftalar }}</td>
+        <td class="sayi">{{ a.ders_saati }}</td>
+        <td>{{ a.kazanimlar | join(', ') or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+{% else %}
+  <div class="kart kaydir">
+    <table>
+      <tr>
+        <th>Ay</th><th>Hafta</th><th class="sayi">Saat</th><th>Tema / Öğrenme çıktısı</th>
+        <th>Süreç bileşenleri</th><th>Yöntem</th><th>Araç-gereç</th><th>Ölçme</th>
+        <th>Diğer derslerle</th><th>Belirli gün ve haftalar</th><th>Açıklama</th>
+      </tr>
+      {% set ns = namespace(onceki='') %}
+      {% for s in satirlar %}
+      <tr class="{{ 'tatil' if s.tur == 'tatil' }}">
+        <td>{% if s.ay != ns.onceki %}{{ s.ay }}{% set ns.onceki = s.ay %}{% endif %}</td>
+        <td>{{ s.baslangic[8:] }}.{{ s.baslangic[5:7] }}–{{ s.bitis[8:] }}.{{ s.bitis[5:7] }}</td>
+        <td class="sayi">{{ s.ders_saati or '—' }}</td>
+        {% if s.tur == 'tatil' %}
+          <td colspan="8">{{ s.aciklama }}</td>
+        {% else %}
+          <td>
+            {% if s.tema_adi %}<b>{{ s.tema_adi }}</b><br>{% endif %}
+            {% for kod in s.kazanim_kodlari %}
+              <b>{{ kod }}</b>
+              {% if kod in s.devam_kodlari %}<span class="kilavuz">(devam)</span>{% else %}{{ s.kazanim_ifadeleri[loop.index0] }}{% endif %}<br>
+            {% endfor %}
+            {% if not s.kazanim_kodlari %}{{ s.aciklama }}{% endif %}
+          </td>
+          <td class="kilavuz">{{ s.yeni_kazanim_bilesenleri() | join(' ') }}</td>
+          <td>{{ s.yontem_teknik | join(', ') }}</td>
+          <td>{{ s.arac_gerec | join(', ') }}</td>
+          <td>{{ s.olcme_degerlendirme | join(', ') }}</td>
+          <td class="kilavuz">{{ s.disiplinler_arasi | join(', ') }}</td>
+          <td class="kilavuz">{{ s.belirli_gunler | join(', ') }}</td>
+          <td class="kilavuz">{{ s.aciklama }}</td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+{% endif %}
+{% endblock %}

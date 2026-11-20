@@ -1,0 +1,70 @@
+{% extends "taban.html" %}
+{% block baslik %}{{ sube.ad }} günlük plan — {{ uygulama_adi }}{% endblock %}
+
+{% block icerik %}
+<h1>Günlük ders planı — {{ sube.ad }}</h1>
+<p class="alt">{{ tarih_metni }}</p>
+
+<form method="get" action="/gunluk/{{ sube.id }}" class="serit yazdirma-gizle" style="margin-bottom:16px">
+  <div><label for="t">Tarih</label><input type="date" id="t" name="tarih" value="{{ gun.isoformat() }}"></div>
+  <div><label for="s">Ders saatleri</label><input id="s" name="saatler" value="{{ saatler }}" style="width:110px"></div>
+  <button class="sade" type="submit">Göster</button>
+  {% if plan %}
+  <a class="dugme sade" href="/gunluk/{{ sube.id }}/indir?tarih={{ gun.isoformat() }}&saatler={{ saatler }}&bicim=pdf">PDF</a>
+  <a class="dugme sade" href="/gunluk/{{ sube.id }}/indir?tarih={{ gun.isoformat() }}&saatler={{ saatler }}&bicim=docx">Word</a>
+  <button class="sade" type="button" onclick="window.print()">Yazdır</button>
+  {% endif %}
+</form>
+
+{% if not plan %}
+  <p class="bos">
+    Bu tarih için yıllık planda kazanım bulunamadı. Tatil haftası olabilir ya da
+    yıllık plan henüz üretilmemiş olabilir — <a href="/plan/{{ sube.id }}">yıllık plana</a> bakın.
+  </p>
+{% else %}
+<div class="kart">
+  <table>
+    <tr><th style="width:150px">Ders</th><td>Biyoloji</td></tr>
+    <tr><th>Sınıf / Şube</th><td>{{ plan.sinif }}. sınıf — {{ plan.sube_adi }}</td></tr>
+    <tr><th>Ders saati</th><td>{{ plan.ders_saatleri | join(', ') }}. ders ({{ plan.toplam_dakika }} dakika)</td></tr>
+    <tr><th>Tema</th><td>{{ plan.tema_no }}. TEMA: {{ plan.tema_adi }}</td></tr>
+  </table>
+</div>
+
+<div class="kart">
+  <h2>Öğrenme çıktıları</h2>
+  <ul>
+    {% for kod in plan.kazanim_kodlari %}
+      <li><b>{{ kod }}</b> {{ plan.kazanim_ifadeleri[loop.index0] }}</li>
+    {% endfor %}
+  </ul>
+  <h3>Süreç bileşenleri</h3>
+  <ul class="kilavuz">{% for b in plan.surec_bilesenleri %}<li>{{ b }}</li>{% endfor %}</ul>
+</div>
+
+<div class="kart">
+  <h2>Ders akışı</h2>
+  <table>
+    {% for b in plan.bolumler %}
+    <tr>
+      <td class="orta" style="width:70px">{{ b.dakika }} dk</td>
+      <th style="width:200px">{{ b.ad }}</th>
+      <td>{{ b.metin or 'Programda bu bölüm için metin yok — kendiniz yazın.' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="kart">
+  <h2>Yöntem, araç ve farklılaştırma</h2>
+  <table>
+    <tr><th style="width:150px">Yöntem-teknik</th><td>{{ plan.yontem_teknik | join(', ') }}</td></tr>
+    <tr><th>Araç-gereç</th><td>{{ plan.arac_gerec | join(', ') }}</td></tr>
+    <tr><th>Beceriler</th><td class="kilavuz">{{ plan.beceriler | join(', ') }}</td></tr>
+    <tr><th>Değerler</th><td class="kilavuz">{{ plan.degerler | join(', ') }}</td></tr>
+    {% if plan.zenginlestirme %}<tr><th>Zenginleştirme</th><td class="kilavuz">{{ plan.zenginlestirme }}</td></tr>{% endif %}
+    {% if plan.destekleme %}<tr><th>Destekleme</th><td class="kilavuz">{{ plan.destekleme }}</td></tr>{% endif %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}

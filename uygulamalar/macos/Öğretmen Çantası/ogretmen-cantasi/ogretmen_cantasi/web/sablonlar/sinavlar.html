@@ -1,0 +1,67 @@
+{% extends "taban.html" %}
+{% block baslik %}{{ sube.ad }} sınavlar — {{ uygulama_adi }}{% endblock %}
+
+{% block icerik %}
+<h1>Sınavlar — {{ sube.ad }}</h1>
+<p class="alt">Havuzda bu sınıf düzeyi için {{ soru_sayisi }} açık uçlu soru var.</p>
+
+<div class="kart">
+  <h2>Yeni sınav üret</h2>
+  {% if temalar %}
+  <form method="post" action="/sinavlar/{{ sube.id }}/uret">
+    <div class="serit" style="margin-bottom:12px">
+      <div><label for="ad">Sınav adı</label><input id="ad" name="ad" value="1. Yazılı Sınav" required></div>
+      <div><label for="tarih">Tarih</label><input type="date" id="tarih" name="tarih"></div>
+      <div><label for="ss">Soru sayısı</label><input type="number" id="ss" name="soru_sayisi" value="8" min="1" max="40"></div>
+      <div><label for="sd">Süre (dk)</label><input type="number" id="sd" name="sure_dk" value="40" min="10" max="120"></div>
+      <div><label class="satirici"><input type="checkbox" name="ab_grubu" checked> A/B grubu üret</label></div>
+    </div>
+    <h3>Kazanım dağılımı</h3>
+    <p class="kilavuz">Her temaya yüzde verin; program soruları buna göre seçer ve belirtke tablosunu üretir.</p>
+    <div class="serit">
+      {% for t in temalar %}
+      <div>
+        <label for="t{{ t.no }}">{{ t.no }}. {{ t.ad }}</label>
+        <input type="number" id="t{{ t.no }}" name="t_BİY.{{ sube.sinif }}.{{ t.no }}"
+               value="{{ 50 }}" min="0" max="100" step="5">
+      </div>
+      {% endfor %}
+      <button type="submit">Sınavı üret</button>
+    </div>
+  </form>
+  {% else %}
+  <p class="bos">Bu şubenin müfredat dosyası yüklü değil; sınav dağılımı tanımlanamıyor.</p>
+  {% endif %}
+</div>
+
+<div class="kart">
+  <h2>Üretilen sınavlar</h2>
+  {% if sinavlar %}
+  <table>
+    <tr><th>Adı</th><th>Tarih</th><th class="sayi">Soru</th><th>Gruplar</th><th></th></tr>
+    {% for s in sinavlar %}
+    <tr>
+      <td><a href="/sinav/{{ s['id'] }}">{{ s['ad'] }}</a></td>
+      <td>{{ s['tarih'] or '—' }}</td>
+      <td class="sayi">{{ s['soru_sayisi'] }}</td>
+      <td>{{ s['gruplar'] }}</td>
+      <td>
+        <div class="satir-arasi">
+          {% for grup in s['gruplar'].split(',') %}
+          <a class="dugme kucuk sade" href="/sinav/{{ s['id'] }}/indir?grup={{ grup }}">{{ grup }} kâğıdı</a>
+          {% endfor %}
+          <a class="dugme kucuk sade" href="/sinav/{{ s['id'] }}/indir?tur=anahtar">Cevap anahtarı</a>
+          <form method="post" action="/sinav/{{ s['id'] }}/sil" data-confirm="Bu sınavı ve girilmiş puanlarını silmek istediğinizden emin misiniz?">
+            <input type="hidden" name="sube_id" value="{{ sube.id }}">
+            <button class="kucuk tehlike" type="submit">Sil</button>
+          </form>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="bos">Henüz sınav üretilmedi.</p>
+  {% endif %}
+</div>
+{% endblock %}

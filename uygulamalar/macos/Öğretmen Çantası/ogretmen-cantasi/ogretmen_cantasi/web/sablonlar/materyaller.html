@@ -1,0 +1,56 @@
+{% extends "taban.html" %}
+{% set sayfa = 'materyaller' %}
+{% block baslik %}Materyaller — {{ uygulama_adi }}{% endblock %}
+
+{% block icerik %}
+<h1>Materyal arşivi</h1>
+<p class="alt">Sunum, video, çalışma yaprağı ve görselleri kazanım koduna bağlayın; gelecek yıl aynı konuya gelince hazır çıksın.</p>
+
+<div class="kart">
+  <form method="get" action="/materyaller" class="serit">
+    <div><label for="kazanim">Kazanım kodu</label><input id="kazanim" name="kazanim" value="{{ kazanim }}" placeholder="BİY.10.1"></div>
+    <div><label for="sinif">Sınıf</label>
+      <select id="sinif" name="sinif">
+        <option value="">Hepsi</option>
+        {% for s in [9, 10, 11, 12] %}<option value="{{ s }}" {{ 'selected' if sinif == s }}>{{ s }}. sınıf</option>{% endfor %}
+      </select></div>
+    <button class="sade" type="submit">Süz</button>
+  </form>
+</div>
+
+<div class="kart">
+  <h2>Materyal ekle</h2>
+  <form method="post" action="/materyaller/ekle" class="serit">
+    <div><label for="baslik">Başlık</label><input id="baslik" name="baslik" required placeholder="Fotosentez animasyonu"></div>
+    <div><label for="ekazanim">Kazanım kodu</label><input id="ekazanim" name="kazanim_kodu" placeholder="BİY.10.1.3"></div>
+    <div><label for="esinif">Sınıf</label>
+      <select id="esinif" name="sinif">
+        <option value="0">—</option>
+        {% for s in [9, 10, 11, 12] %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+      </select></div>
+    <div><label for="url">Bağlantı</label><input id="url" name="url" placeholder="https://…" style="min-width:260px"></div>
+    <div><label for="etiketler">Etiketler</label><input id="etiketler" name="etiketler" placeholder="video, deney"></div>
+    <button type="submit">Ekle</button>
+  </form>
+</div>
+
+<div class="kart">
+  <h2>Arşiv ({{ materyaller | length }})</h2>
+  {% if materyaller %}
+  <table>
+    <tr><th>Kazanım</th><th>Başlık</th><th>Bağlantı</th><th>Etiketler</th><th></th></tr>
+    {% for m in materyaller %}
+    <tr>
+      <td>{{ m['kazanim_kodu'] or '—' }}</td>
+      <td>{{ m['baslik'] }}</td>
+      <td>{% if m['url'] %}<a href="{{ m['url'] }}" target="_blank" rel="noreferrer">aç</a>{% else %}—{% endif %}</td>
+      <td class="kilavuz">{{ m['etiketler'] }}</td>
+      <td><form method="post" action="/materyaller/{{ m['id'] }}/sil" data-confirm="Bu materyal kaydını silmek istediğinizden emin misiniz?"><button class="kucuk tehlike" type="submit">Sil</button></form></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class="bos">Arşivde materyal yok.</p>
+  {% endif %}
+</div>
+{% endblock %}

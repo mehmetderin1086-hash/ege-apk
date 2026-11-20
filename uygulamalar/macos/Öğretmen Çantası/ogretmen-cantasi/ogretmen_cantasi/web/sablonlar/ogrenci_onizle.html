@@ -1,0 +1,32 @@
+{% extends "taban.html" %}
+{% block baslik %}Öğrenci aktarım önizlemesi — {{ uygulama_adi }}{% endblock %}
+{% block icerik %}
+<h1>Öğrenci aktarım önizlemesi</h1>
+<p class="alt">{{ sube.ad }} şubesine yazılacak kayıtları kontrol edin. Henüz veri yazılmadı.</p>
+{% if uyarilar %}<div class="mesaj">{{ uyarilar | join(' ') }}</div>{% endif %}
+{% if uyusmazlik %}
+<div class="kart">
+  <p><b>Şube uyuşmazlığı:</b> dosyada {{ dosya_sube }}, hedefte {{ sube.ad }} yazıyor.</p>
+</div>
+{% endif %}
+<div class="kart kaydir">
+  <table>
+    <tr><th>No</th><th>Adı Soyadı</th><th>İşlem</th></tr>
+    {% for s in satirlar %}
+    <tr><td>{{ s.numara or '—' }}</td><td>{{ s.ad_soyad }}</td><td>{{ s.durum }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+<form method="post" action="/sube/{{ sube.id }}/ogrenci/aktar">
+  <input type="hidden" name="paket" value="{{ paket }}">
+  {% if uyusmazlik %}
+  <label><input type="checkbox" name="sube_onay" value="1" required>
+    Dosyanın farklı şubeye ait olduğunu gördüm; yine de {{ sube.ad }} şubesine aktar.
+  </label>
+  {% endif %}
+  <div class="satir-arasi" style="margin-top:14px">
+    <button type="submit">Aktarımı onayla</button>
+    <a class="dugme sade" href="/sube/{{ sube.id }}">Vazgeç</a>
+  </div>
+</form>
+{% endblock %}

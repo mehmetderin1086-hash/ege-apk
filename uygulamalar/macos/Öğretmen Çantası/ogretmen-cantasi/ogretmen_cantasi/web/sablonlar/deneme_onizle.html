@@ -1,0 +1,35 @@
+{% extends "taban.html" %}
+{% block baslik %}Deneme aktarım önizlemesi — {{ uygulama_adi }}{% endblock %}
+{% block icerik %}
+<h1>Deneme aktarım önizlemesi</h1>
+<p class="alt">Her dosya satırını doğru öğrenciyle eşleştirin. Henüz sonuç yazılmadı.</p>
+{% if uyarilar %}<div class="mesaj">{{ uyarilar | join(' ') }}</div>{% endif %}
+<form method="post" action="/denemeler/{{ sube.id }}/aktar">
+  <input type="hidden" name="paket" value="{{ paket }}">
+  <div class="kart kaydir">
+    <table>
+      <tr><th>Dosyadaki öğrenci</th><th>D</th><th>Y</th><th>B</th><th>Net</th><th>Hedef öğrenci</th></tr>
+      {% for s in satirlar %}
+      <tr>
+        <td>{{ s.numara or '—' }} · {{ s.ad_soyad }}<br><span class="kilavuz">{{ s.durum }}</span></td>
+        <td>{{ s.dogru }}</td><td>{{ s.yanlis }}</td><td>{{ s.bos }}</td><td>{{ s.net }}</td>
+        <td>
+          <select name="eslesme_{{ loop.index0 }}">
+            <option value="">Bu satırı aktarma</option>
+            {% for o in ogrenciler %}
+            <option value="{{ o.id }}" {{ 'selected' if o.id == s.secili }}>
+              {{ o.numara or '—' }} · {{ o.ad_soyad }}
+            </option>
+            {% endfor %}
+          </select>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="satir-arasi">
+    <button type="submit">Eşleşmeleri onayla ve kaydet</button>
+    <a class="dugme sade" href="/denemeler/{{ sube.id }}">Vazgeç</a>
+  </div>
+</form>
+{% endblock %}

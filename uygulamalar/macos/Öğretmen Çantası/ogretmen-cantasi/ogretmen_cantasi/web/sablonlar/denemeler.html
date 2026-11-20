@@ -1,0 +1,91 @@
+{% extends "taban.html" %}
+{% block baslik %}{{ sube.ad }} denemeler — {{ uygulama_adi }}{% endblock %}
+
+{% block icerik %}
+<h1>Deneme takibi — {{ sube.ad }}</h1>
+<p class="alt">YKS biyoloji netleri. Yayınevinin sonuç dosyasını yükleyin ya da elle girin.</p>
+
+<div class="kart">
+  <h2>Sonuç dosyası yükle</h2>
+  <form method="post" action="/denemeler/{{ sube.id }}/yukle" enctype="multipart/form-data" class="serit">
+    <div><label for="ad">Deneme adı</label><input id="ad" name="ad" value="Deneme" required></div>
+    <div><label for="tarih">Tarih</label><input type="date" id="tarih" name="tarih"></div>
+    <div><label for="yayin">Yayınevi</label><input id="yayin" name="yayin"></div>
+    <div><label for="dosya">Dosya</label><input type="file" id="dosya" name="dosya" required></div>
+    <button type="submit">Yükle</button>
+  </form>
+  <p class="kilavuz" style="margin-top:8px">
+    Dosyada biyoloji doğru/yanlış/boş ya da hazır net sütunu aranır; isimler sınıf listesiyle eşleştirilir.
+    Eşleşmeyen isimler uyarı olarak bildirilir.
+  </p>
+</div>
+
+{% if gelisim.denemeler %}
+<div class="kart">
+  <h2>Sınıf ortalaması (net)</h2>
+  {% if gelisim_grafigi %}{{ gelisim_grafigi | safe }}{% endif %}
+  <p class="kilavuz">
+    {% for d in gelisim.denemeler %}{{ d.ad }}: <b>{{ d.ortalama if d.ortalama is not none else '—' }}</b>{% if not loop.last %} · {% endif %}{% endfor %}
+  </p>
+</div>
+
+<div class="kart kaydir">
+  <h2>Öğrenci netleri</h2>
+  <table>
+    <tr>
+      <th>Adı Soyadı</th>
+      {% for d in gelisim.denemeler %}<th class="orta">{{ d.ad }}<br><span class="kilavuz">{{ d.tarih }}</span></th>{% endfor %}
+      <th>Gidiş</th>
+      <th class="sayi">Değişim</th>
+    </tr>
+    {% for oid, o in gelisim.ogrenciler.items() %}
+    <tr>
+      <td>{{ o.ad_soyad }}</td>
+      {% for d in gelisim.denemeler %}
+      <td class="orta">{{ o.netler.get(d.id, '—') }}</td>
+      {% endfor %}
+      <td>{{ kivilcimlar.get(oid, '') | safe }}</td>
+      <td class="sayi">
+        {% set fark = degisimler.get(oid) %}
+        {% if fark is not none %}
+          <span class="rozet {{ 'iyi' if fark > 0 else ('zayif' if fark < 0 else '') }}">
+            {{ '+' if fark > 0 }}{{ fark }}
+          </span>
+        {% else %}—{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% else %}
+<p class="bos">Henüz deneme sonucu yok.</p>
+{% endif %}
+
+<div class="kart">
+  <h2>Elle net girişi</h2>
+  <form method="post" action="/denemeler/{{ sube.id }}/elle">
+    <div class="serit" style="margin-bottom:10px">
+      <div><label for="ead">Deneme adı</label><input id="ead" name="ad" value="Deneme" required></div>
+      <div><label for="etarih">Tarih</label><input type="date" id="etarih" name="tarih"></div>
+      <div><label for="eyayin">Yayınevi</label><input id="eyayin" name="yayin"></div>
+    </div>
+    {% if ogrenciler %}
+    <table>
+      <tr><th>Adı Soyadı</th><th class="orta">Doğru</th><th class="orta">Yanlış</th><th class="orta">Boş</th></tr>
+      {% for o in ogrenciler %}
+      <tr>
+        <td>{{ o['ad_soyad'] }}</td>
+        <td class="orta"><input type="number" name="d_{{ o['id'] }}" min="0" max="30" style="width:76px"></td>
+        <td class="orta"><input type="number" name="y_{{ o['id'] }}" min="0" max="30" style="width:76px"></td>
+        <td class="orta"><input type="number" name="b_{{ o['id'] }}" min="0" max="30" style="width:76px"></td>
+      </tr>
+      {% endfor %}
+    </table>
+    <button type="submit" style="margin-top:10px">Kaydet</button>
+    <p class="kilavuz">Net, dört yanlış bir doğruyu götürecek şekilde otomatik hesaplanır.</p>
+    {% else %}
+    <p class="bos">Bu şubede öğrenci yok.</p>
+    {% endif %}
+  </form>
+</div>
+{% endblock %}

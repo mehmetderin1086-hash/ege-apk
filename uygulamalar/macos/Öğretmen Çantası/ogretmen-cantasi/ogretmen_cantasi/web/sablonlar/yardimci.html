@@ -1,0 +1,69 @@
+{% extends "taban.html" %}
+{% set sayfa = 'yardimci' %}
+{% block baslik %}Kaynaklı yardımcı — {{ uygulama_adi }}{% endblock %}
+{% block icerik %}
+<h1>Kaynaklı öğretmen yardımcısı</h1>
+<p class="alt">Yalnız taslak üretir; kaynak göstermeyen veya öğretmen tarafından onaylanmayan içerik resmî kayıtlara geçmez.</p>
+
+<div class="kart">
+  <h2>Yeni taslak</h2>
+  <form method="post" action="/yardimci/uret">
+    <div class="serit">
+      <div><label>Tür</label><select name="tur">
+        <option value="ders">Ders hazırlığı</option>
+        <option value="soru_rubrik">Soru ve rubrik</option>
+        <option value="telafi">Telafi çalışması</option>
+      </select></div>
+      <div><label>Şube</label><select name="sube_id">
+      {% for s in secenek_subeler %}<option value="{{ s.id }}">{{ s.ad }}</option>{% endfor %}
+      </select></div>
+      <div><label>Kazanım kodu</label><input name="kazanim_kodu" placeholder="BİY.9.1.1" required></div>
+      <div><label>Öğrenci kimliği (isteğe bağlı)</label><input type="number" name="ogrenci_id"></div>
+    </div>
+    <label>Öğretmen notu</label><textarea name="ek_istek" placeholder="Süre, materyal veya sınıf koşulu"></textarea>
+    <button type="submit">Kaynaklı taslak üret</button>
+  </form>
+</div>
+
+{% for o in oneriler %}
+<div class="kart">
+  <div class="satir-arasi"><h2>#{{ o.id }} {{ o.tur }}</h2>
+    <span class="rozet {{ 'iyi' if o.durum == 'onaylandi' else 'orta' if o.durum == 'taslak' else 'zayif' }}">{{ o.durum }}</span>
+    <span class="kilavuz">{{ o.sube_adi }} · {{ o.kazanim_kodu }} · {{ o.model_kimligi }}</span></div>
+  <pre class="oneri-metni">{{ o.ogretmen_duzeltmesi or o.oneri }}</pre>
+  <details><summary>Kaynaklar ({{ o.kaynaklar | length }})</summary>
+  <ul>{% for k in o.kaynaklar %}
+    <li><b>{{ k.title or k.source }}</b> — {{ k.section or k.passage }}
+      {% if k.url %}<a href="{{ k.url }}">resmî kaynak</a>{% endif %}
+      {% if k.excerpt %}<div class="kilavuz">{{ k.excerpt[:400] }}</div>{% endif %}</li>
+  {% endfor %}</ul></details>
+  {% if o.durum == 'taslak' %}
+  <form method="post" action="/yardimci/{{ o.id }}/karar">
+    <label>Düzeltilmiş son metin</label><textarea name="duzeltme">{{ o.oneri }}</textarea>
+    <button name="durum" value="onaylandi" type="submit">Onayla</button>
+    <button class="tehlike" name="durum" value="reddedildi" type="submit">Reddet</button>
+  </form>
+  {% endif %}
+</div>
+{% else %}<p class="bos">Henüz yardımcı taslağı yok.</p>{% endfor %}
+
+<div class="kart">
+  <h2>Öğrenci destek planları</h2>
+  {% if destekler %}
+  {% for d in destekler %}
+  <form method="post" action="/yardimci/destek/{{ d.id }}" class="destek-satiri">
+    <b>{{ d.numara }} {{ d.ad_soyad }}</b> · {{ d.kazanim_kodu }}
+    <div class="kilavuz">{{ d.gerekce }}</div>
+    <textarea name="calisma" placeholder="Öğretmenin onaylayacağı çalışma">{{ d.onerilen_calisma }}</textarea>
+    <input type="date" name="takip_tarihi" value="{{ d.takip_tarihi }}">
+    <select name="durum">
+      {% for durum in ['taslak','onaylandi','tamamlandi','iptal'] %}
+      <option value="{{ durum }}" {{ 'selected' if d.durum == durum }}>{{ durum }}</option>
+      {% endfor %}
+    </select>
+    <button class="kucuk" type="submit">Güncelle</button>
+  </form>
+  {% endfor %}
+  {% else %}<p class="bos">Henüz destek planı yok.</p>{% endif %}
+</div>
+{% endblock %}
