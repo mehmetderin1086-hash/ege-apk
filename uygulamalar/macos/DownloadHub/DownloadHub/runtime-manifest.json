@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "generated_for": "DownloadHub 0.1.0",
+  "policy": {
+    "require_https": true,
+    "require_sha256": true,
+    "maximum_download_bytes": 1073741824,
+    "note": "Fail-closed manifest: a component is downloadable only after enabled is set to true and an official release URL plus its verified 64-character SHA-256 are populated. Empty and placeholder hashes are always rejected."
+  },
+  "platforms": {
+    "darwin-arm64": {
+      "minimum_macos": "13.0",
+      "components": {
+        "aria2c": {
+          "enabled": true,
+          "required": false,
+          "version": "1.37.0",
+          "source_page": "https://github.com/aria2/aria2/releases/tag/release-1.37.0",
+          "url": "https://github.com/aria2/aria2/releases/download/release-1.37.0/aria2-1.37.0.tar.xz",
+          "sha256": "60a420ad7085eb616cb6e2bdf0a7206d68ff3d37fb5a956dc44242eb2f79b66b",
+          "archive": "tar.xz",
+          "install_method": "source-build",
+          "source_dir": "aria2-1.37.0",
+          "binary_path": "aria2-1.37.0/src/aria2c",
+          "configure_args": [
+            "--disable-bittorrent",
+            "--disable-metalink",
+            "--disable-nls",
+            "--without-libxml2",
+            "--without-libexpat",
+            "--without-libssh2",
+            "--without-libnettle",
+            "--without-libgcrypt",
+            "--without-openssl",
+            "--without-gnutls",
+            "--without-sqlite3",
+            "--without-libcares"
+          ],
+          "install_name": "aria2c",
+          "license": "GPL-2.0-or-later",
+          "note": "Official signed-release source asset. The installer verifies the pinned archive SHA-256, compiles an HTTP/HTTPS-only arm64 binary with AppleTLS and system libraries, then records the resulting binary digest. No Homebrew dependency is used."
+        },
+        "ffmpeg": {
+          "enabled": false,
+          "required": false,
+          "version": "PIN_REQUIRED",
+          "source_page": "https://ffmpeg.org/download.html",
+          "url": "",
+          "sha256": "",
+          "archive": "tar.xz",
+          "binary_path": "ffmpeg",
+          "install_name": "ffmpeg",
+          "license": "LGPL-2.1-or-later OR GPL-2.0-or-later",
+          "note": "The Python application has an imageio-ffmpeg fallback. Enable this standalone binary only after recording the exact build configuration and corresponding-source offer."
+        },
+        "deno": {
+          "enabled": true,
+          "required": true,
+          "version": "2.9.3",
+          "source_page": "https://github.com/denoland/deno/releases",
+          "url": "https://github.com/denoland/deno/releases/download/v2.9.3/deno-aarch64-apple-darwin.zip",
+          "sha256": "1b2972f7ceb6df28d9600eab18d423bebb9aa18db02f01d7eb37a5b501482203",
+          "archive": "zip",
+          "binary_path": "deno",
+          "install_name": "deno",
+          "license": "MIT",
+          "note": "Official aarch64-apple-darwin release asset; digest cross-checked against GitHub release metadata."
+        },
+        "yt-dlp": {
+          "enabled": false,
+          "required": false,
+          "version": "PIN_REQUIRED",
+          "source_page": "https://github.com/yt-dlp/yt-dlp/releases",
+          "url": "",
+          "sha256": "",
+          "archive": "raw",
+          "binary_path": "yt-dlp",
+          "install_name": "yt-dlp",
+          "license": "Unlicense",
+          "note": "The locked Python dependency is the default fallback. Enable this component only when packaging a separately pinned standalone executable."
+        }
+      }
+    }
+  }
+}

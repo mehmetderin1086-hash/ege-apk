@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DownloadHub</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <div class="brand-mark" aria-hidden="true">DH</div>
+        <div class="brand-copy">
+          <h1>DownloadHub</h1>
+          <p id="serviceStatus" class="service-status" role="status" aria-live="polite">
+            <span id="statusDot" class="status-dot checking"></span>
+            <span id="statusText">Bağlantı kontrol ediliyor…</span>
+          </p>
+        </div>
+        <button id="refreshStatus" class="icon-button" type="button" aria-label="Bağlantıyı yeniden kontrol et" title="Yenile">↻</button>
+      </header>
+
+      <section id="pairingPanel" class="panel pairing-panel" aria-labelledby="pairingTitle">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Güvenli bağlantı</p>
+            <h2 id="pairingTitle">Eklentiyi eşleştirin</h2>
+          </div>
+          <span class="lock-chip">Yerel</span>
+        </div>
+        <p class="supporting-text">DownloadHub web panelindeki tek kullanımlık kodu girin. Kod ve erişim yalnız bu bilgisayarda saklanır.</p>
+        <label class="field-label" for="pairCode">Eşleştirme kodu</label>
+        <div class="pair-row">
+          <input id="pairCode" type="text" inputmode="text" autocomplete="one-time-code" maxlength="64" placeholder="ABCD-1234" aria-describedby="pairHint">
+          <button id="completePairing" class="primary-button" type="button">Eşleştir</button>
+        </div>
+        <p id="pairHint" class="field-hint">Kodu panelden alın veya aşağıdan yeni kod oluşturun.</p>
+        <button id="startPairing" class="text-button" type="button">Yeni eşleştirme kodu oluştur</button>
+      </section>
+
+      <section id="pairedPanel" class="paired-strip" hidden>
+        <span><span class="paired-check" aria-hidden="true">✓</span> Güvenle eşleştirildi</span>
+        <button id="revokePairing" class="text-button danger" type="button">Bağlantıyı kaldır</button>
+      </section>
+
+      <section class="quick-actions" aria-label="Hızlı işlemler">
+        <button id="inspectPage" class="action-card primary-action" type="button">
+          <span class="action-icon" aria-hidden="true">◎</span>
+          <span>
+            <strong>Bu sayfayı incele</strong>
+            <small>Video, oynatma listesi veya doğrudan dosya</small>
+          </span>
+        </button>
+        <button id="scanPage" class="action-card" type="button">
+          <span class="action-icon" aria-hidden="true">⌕</span>
+          <span>
+            <strong>Sayfa kaynaklarını bul</strong>
+            <small>Resim, video, ses ve bağlantıları tara</small>
+          </span>
+        </button>
+      </section>
+
+      <section id="messageBox" class="message-box" role="status" aria-live="polite" hidden></section>
+
+      <section id="inspectionPanel" class="panel result-panel" aria-labelledby="inspectionTitle" hidden>
+        <div class="panel-heading compact">
+          <div>
+            <p class="eyebrow">İnceleme sonucu</p>
+            <h2 id="inspectionTitle">Kaynak hazır</h2>
+          </div>
+          <button id="enqueueInspected" class="primary-button compact-button" type="button">Kuyruğa ekle</button>
+        </div>
+        <dl id="inspectionDetails" class="inspection-details"></dl>
+      </section>
+
+      <section id="resourcesPanel" class="resources-panel" aria-labelledby="resourcesTitle" hidden>
+        <div class="resources-heading">
+          <div>
+            <p class="eyebrow">Sayfa kaynakları</p>
+            <h2 id="resourcesTitle">Bulunan öğeler</h2>
+          </div>
+          <button id="selectAll" class="text-button" type="button">Tümünü seç</button>
+        </div>
+        <p id="pageSummary" class="page-summary"></p>
+        <div id="resourceGroups"></div>
+        <div class="sticky-actions">
+          <span id="selectionCount">0 kaynak seçildi</span>
+          <button id="enqueueSelected" class="primary-button" type="button" disabled>Kuyruğa ekle</button>
+        </div>
+      </section>
+
+      <footer class="app-footer">
+        <button id="openApp" class="text-button" type="button">Web panelini aç ↗</button>
+        <span>127.0.0.1:8765</span>
+      </footer>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

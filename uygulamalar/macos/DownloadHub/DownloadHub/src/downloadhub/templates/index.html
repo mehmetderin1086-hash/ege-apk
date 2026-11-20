@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="tr" data-theme="system">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#0b1927">
+    <meta name="description" content="DownloadHub — hızlı, güvenli ve yerel indirme yöneticisi">
+    <meta name="csrf-token" content="{{ csrf_token | default('', true) }}">
+    <title>DownloadHub</title>
+    <link rel="stylesheet" href="/static/css/app.css?v={{ version | default('0.1.0', true) }}-ui3">
+    <script src="/static/vendor/htmx.min.js?v={{ version | default('0.1.0', true) }}-ui3" defer></script>
+    <script src="/static/js/app.js?v={{ version | default('0.1.0', true) }}-ui3" type="module"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Ana içeriğe geç</a>
+
+    <noscript>
+      <div class="noscript-banner" role="alert">
+        DownloadHub arayüzünün çalışması için JavaScript'i etkinleştirin.
+      </div>
+    </noscript>
+
+    <div class="app-shell">
+      <div class="sidebar-scrim" data-sidebar-close aria-hidden="true"></div>
+
+      <aside class="sidebar" id="sidebar" aria-label="Ana gezinme">
+        <div class="brand-row">
+          <a class="brand" href="/" aria-label="DownloadHub ana sayfa" hx-boost="true">
+            <span class="brand-mark" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </span>
+            <span class="brand-copy">
+              <strong data-i18n="app.name">DownloadHub</strong>
+              <small data-i18n="app.tagline">Yerel indirme merkezi</small>
+            </span>
+          </a>
+          <button class="icon-button sidebar-close" type="button" data-sidebar-close aria-label="Menüyü kapat">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="İndirme görünümleri">
+          <p class="nav-eyebrow" data-i18n="nav.downloads">İndirmeler</p>
+          <button class="nav-item is-active" type="button" data-filter="active" aria-current="page">
+            <span class="nav-icon nav-icon-active" aria-hidden="true"></span>
+            <span data-i18n="nav.active">Aktif</span>
+            <span class="nav-count" data-count="active">0</span>
+          </button>
+          <button class="nav-item" type="button" data-filter="queued">
+            <span class="nav-icon nav-icon-queue" aria-hidden="true"></span>
+            <span data-i18n="nav.queued">Kuyruk</span>
+            <span class="nav-count" data-count="queued">0</span>
+          </button>
+          <button class="nav-item" type="button" data-filter="scheduled">
+            <span class="nav-icon nav-icon-clock" aria-hidden="true"></span>
+            <span data-i18n="nav.scheduled">Zamanlanmış</span>
+            <span class="nav-count" data-count="scheduled">0</span>
+          </button>
+          <button class="nav-item" type="button" data-filter="completed">
+            <span class="nav-icon nav-icon-check" aria-hidden="true"></span>
+            <span data-i18n="nav.completed">Tamamlanan</span>
+            <span class="nav-count" data-count="completed">0</span>
+          </button>
+          <button class="nav-item" type="button" data-filter="failed">
+            <span class="nav-icon nav-icon-alert" aria-hidden="true"></span>
+            <span data-i18n="nav.failed">Hatalı</span>
+            <span class="nav-count" data-count="failed">0</span>
+          </button>
+          <button class="nav-item" type="button" data-filter="all">
+            <span class="nav-icon nav-icon-all" aria-hidden="true"></span>
+            <span data-i18n="nav.all">Tüm indirmeler</span>
+            <span class="nav-count" data-count="all">0</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-foot">
+          <div class="service-card" aria-live="polite">
+            <span class="service-dot" data-service-dot></span>
+            <span>
+              <strong data-service-label>Servis kontrol ediliyor</strong>
+              <small data-service-detail>Yerel bağlantı</small>
+            </span>
+          </div>
+          <button class="sidebar-action" type="button" data-open-pairing>
+            <span class="sidebar-action-icon" aria-hidden="true">↗</span>
+            <span>
+              <strong>Tarayıcıyı bağla</strong>
+              <small>Chromium eklentisi</small>
+            </span>
+          </button>
+          <button class="sidebar-action" type="button" data-open-settings>
+            <span class="sidebar-action-icon" aria-hidden="true">⚙</span>
+            <span>
+              <strong data-i18n="nav.settings">Ayarlar</strong>
+              <small>Hız, klasör ve sistem</small>
+            </span>
+          </button>
+          <p class="sidebar-version">DownloadHub <span data-app-version>v0.1.0</span></p>
+        </div>
+      </aside>
+
+      <div class="workspace">
+        <header class="topbar">
+          <div class="topbar-leading">
+            <button class="icon-button menu-button" type="button" data-sidebar-open aria-label="Menüyü aç" aria-controls="sidebar" aria-expanded="false">
+              <span class="hamburger" aria-hidden="true"></span>
+            </button>
+            <div>
+              <p class="page-kicker">Bugünün indirmeleri</p>
+              <h1 data-page-title>Aktif indirmeler</h1>
+            </div>
+          </div>
+          <div class="topbar-actions">
+            <label class="search-field" aria-label="İndirmelerde ara">
+              <span class="search-icon" aria-hidden="true"></span>
+              <input type="search" name="q" placeholder="İndirmelerde ara" autocomplete="off" data-job-search>
+              <kbd>⌘ K</kbd>
+            </label>
+            <button class="icon-button" type="button" data-theme-toggle aria-label="Renk temasını değiştir" title="Temayı değiştir">
+              <span class="theme-icon" aria-hidden="true">◐</span>
+            </button>
+            <button class="avatar-button" type="button" data-open-settings aria-label="Ayarları aç">
+              <span aria-hidden="true">DH</span>
+            </button>
+          </div>
+        </header>
+
+        <main id="main-content" class="main-content" tabindex="-1">
+          <section class="capture-card" aria-labelledby="capture-title">
+            <div class="capture-glow" aria-hidden="true"></div>
+            <div class="capture-heading">
+              <div>
+                <span class="section-chip" data-i18n="capture.eyebrow"><span aria-hidden="true">＋</span> Yeni indirme</span>
+                <h2 id="capture-title" data-i18n="capture.title">Bağlantıyı bırak, gerisini biz halledelim.</h2>
+                <p data-i18n="capture.description">Video, oynatma listesi, resim veya doğrudan dosya bağlantısını inceleyin.</p>
+              </div>
+              <div class="capture-badges" aria-label="Desteklenen indirme türleri">
+                <span>Video</span><span>Ses</span><span>Dosya</span><span>Resim</span>
+              </div>
+            </div>
+            <form class="url-form" data-inspect-form novalidate>
+              <label class="url-field" for="download-url">
+                <span class="link-glyph" aria-hidden="true">↗</span>
+                <span class="sr-only">İndirilecek bağlantı</span>
+                <input id="download-url" name="url" type="url" inputmode="url" autocomplete="url" spellcheck="false" required
+                  placeholder="https://youtube.com/watch?v=… veya dosya bağlantısı">
+                <button class="clear-url" type="button" data-clear-url aria-label="Bağlantıyı temizle">×</button>
+              </label>
+              <button class="primary-button inspect-button" type="submit">
+                <span class="button-label" data-i18n="capture.inspect">İncele</span>
+                <span class="button-arrow" aria-hidden="true">→</span>
+                <span class="button-spinner" aria-hidden="true"></span>
+              </button>
+            </form>
+            <div class="capture-options">
+              <label class="switch-row compact-switch">
+                <input type="checkbox" data-use-cookies>
+                <span class="switch" aria-hidden="true"></span>
+                <span data-i18n="capture.cookies">Tarayıcı oturumumu kullan</span>
+              </label>
+              <p data-i18n="capture.privacy"><span aria-hidden="true">⌁</span> Bağlantınız yalnızca bu Mac'te işlenir.</p>
+            </div>
+            <div class="form-message" data-inspect-message role="status" aria-live="polite" hidden></div>
+          </section>
+
+          <section class="inspection-card" data-inspection-panel aria-labelledby="inspection-title" hidden>
+            <div class="inspection-summary">
+              <div class="media-thumb-wrap">
+                <img class="media-thumb" data-inspection-thumb alt="" hidden>
+                <div class="media-thumb-placeholder" data-thumb-placeholder aria-hidden="true">
+                  <span>▶</span>
+                </div>
+                <span class="duration-badge" data-inspection-duration hidden></span>
+              </div>
+              <div class="inspection-copy">
+                <div class="inspection-label-row">
+                  <span class="source-badge" data-source-type>MEDYA</span>
+                  <span class="safe-badge"><span aria-hidden="true">✓</span> İncelendi</span>
+                </div>
+                <h2 id="inspection-title" data-inspection-title>İçerik başlığı</h2>
+                <p class="inspection-meta" data-inspection-meta></p>
+                <div class="warning-list" data-warning-list hidden></div>
+              </div>
+              <button class="icon-button close-inspection" type="button" data-close-inspection aria-label="İnceleme sonucunu kapat">×</button>
+            </div>
+
+            <form class="download-options" data-create-job-form>
+              <div class="option-grid">
+                <label class="field-group">
+                  <span>İndirme profili</span>
+                  <select name="preset" data-preset-select>
+                    <option value="best">En iyi kalite · Otomatik</option>
+                    <option value="mp4">MP4 · En uyumlu</option>
+                    <option value="1080p">Full HD · 1080p</option>
+                    <option value="720p">HD · 720p</option>
+                    <option value="m4a">Yalnız ses · M4A</option>
+                    <option value="mp3">Yalnız ses · MP3 192 kbps</option>
+                    <option value="archive">Arşiv · Kaynak kalitesi</option>
+                  </select>
+                </label>
+                <label class="field-group">
+                  <span>Kategori</span>
+                  <select name="category" data-category-select>
+                    <option value="Videolar">Videolar</option>
+                    <option value="Müzik">Müzik</option>
+                    <option value="Resimler">Resimler</option>
+                    <option value="Belgeler">Belgeler</option>
+                    <option value="Arşivler">Arşivler</option>
+                    <option value="Diğer">Diğer</option>
+                  </select>
+                </label>
+                <label class="field-group" data-format-field>
+                  <span>Ayrıntılı format <small>(isteğe bağlı)</small></span>
+                  <select name="format_id" data-format-select>
+                    <option value="">Profil otomatik seçsin</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="subtitle-section" data-subtitle-section hidden>
+                <div class="option-section-heading">
+                  <div>
+                    <h3>Altyazılar</h3>
+                    <p>İndirilecek dilleri seçin.</p>
+                  </div>
+                </div>
+                <div class="chip-checks" data-subtitle-list></div>
+              </div>
+
+              <section class="playlist-section" data-playlist-section hidden aria-labelledby="playlist-heading">
+                <div class="option-section-heading playlist-heading">
+                  <div>
+                    <h3 id="playlist-heading">Oynatma listesi</h3>
+                    <p><strong data-playlist-selected>0</strong> öğe seçildi</p>
+                  </div>
+                  <div class="playlist-tools">
+                    <label class="mini-search">
+                      <span class="search-icon" aria-hidden="true"></span>
+                      <span class="sr-only">Liste içinde ara</span>
+                      <input type="search" placeholder="Listede ara" data-playlist-search>
+                    </label>
+                    <button class="text-button" type="button" data-select-all>Tümünü seç</button>
+                    <button class="text-button" type="button" data-select-none>Temizle</button>
+                  </div>
+                </div>
+                <div class="playlist-table" role="table" aria-label="Oynatma listesi öğeleri">
+                  <div class="playlist-table-head" role="row">
+                    <span role="columnheader">Seç</span>
+                    <span role="columnheader">İçerik</span>
+                    <span role="columnheader">Süre</span>
+                  </div>
+                  <div class="playlist-viewport" data-playlist-viewport tabindex="0">
+                    <div class="playlist-spacer" data-playlist-spacer aria-hidden="true"></div>
+                    <div class="playlist-window" data-playlist-window role="rowgroup"></div>
+                  </div>
+                </div>
+              </section>
+
+              <details class="advanced-options">
+                <summary>Gelişmiş seçenekler <span aria-hidden="true">⌄</span></summary>
+                <div class="advanced-grid">
+                  <label class="field-group">
+                    <span>Başlangıç zamanı</span>
+                    <input type="datetime-local" name="scheduled_at">
+                  </label>
+                  <label class="field-group">
+                    <span>Görev hız sınırı</span>
+                    <input type="text" name="speed_limit" placeholder="Örn. 2M veya 0">
+                  </label>
+                  <label class="field-group" data-checksum-field>
+                    <span>SHA-256 doğrulaması</span>
+                    <input type="text" name="sha256" minlength="64" maxlength="64" spellcheck="false" placeholder="64 karakterlik özet">
+                  </label>
+                  <div class="toggle-stack">
+                    <label class="switch-row">
+                      <input type="checkbox" name="write_thumbnail">
+                      <span class="switch" aria-hidden="true"></span>
+                      <span>Küçük resmi kaydet</span>
+                    </label>
+                    <label class="switch-row">
+                      <input type="checkbox" name="write_metadata">
+                      <span class="switch" aria-hidden="true"></span>
+                      <span>Bilgi JSON'unu kaydet</span>
+                    </label>
+                  </div>
+                </div>
+              </details>
+
+              <div class="inspection-actions">
+                <div class="output-estimate">
+                  <span data-output-summary>Otomatik format seçimi</span>
+                  <strong data-output-size>Boyut hesaplanıyor</strong>
+                </div>
+                <button class="primary-button create-button" type="submit">
+                  <span class="button-label">Kuyruğa ekle</span>
+                  <span class="button-arrow" aria-hidden="true">↓</span>
+                  <span class="button-spinner" aria-hidden="true"></span>
+                </button>
+              </div>
+              <div class="form-message" data-create-message role="status" aria-live="polite" hidden></div>
+            </form>
+          </section>
+
+          <section class="metrics-grid" aria-label="İndirme özeti">
+            <article class="metric-card metric-speed">
+              <span class="metric-icon" aria-hidden="true">↓</span>
+              <div>
+                <p>Anlık hız</p>
+                <strong data-metric-speed>0 B/sn</strong>
+              </div>
+              <span class="metric-caption">Toplam</span>
+            </article>
+            <article class="metric-card">
+              <span class="metric-icon metric-active-icon" aria-hidden="true">◌</span>
+              <div>
+                <p>Etkin görev</p>
+                <strong data-metric-active>0</strong>
+              </div>
+              <span class="metric-caption">3 sınır</span>
+            </article>
+            <article class="metric-card">
+              <span class="metric-icon metric-queue-icon" aria-hidden="true">≡</span>
+              <div>
+                <p>Kuyrukta</p>
+                <strong data-metric-queued>0</strong>
+              </div>
+              <span class="metric-caption">Bekliyor</span>
+            </article>
+            <article class="metric-card">
+              <span class="metric-icon metric-complete-icon" aria-hidden="true">✓</span>
+              <div>
+                <p>Bugün tamamlandı</p>
+                <strong data-metric-completed>0</strong>
+              </div>
+              <span class="metric-caption">Dosya</span>
+            </article>
+          </section>
+
+          <section class="jobs-section" aria-labelledby="jobs-title">
+            <div class="section-toolbar">
+              <div>
+                <p class="section-eyebrow" data-i18n="jobs.eyebrow">Görev merkezi</p>
+                <h2 id="jobs-title">Aktif indirmeler</h2>
+              </div>
+              <div class="job-toolbar-actions">
+                <div class="bulk-actions" data-bulk-actions hidden>
+                  <span><strong data-selected-count>0</strong> seçili</span>
+                  <button class="small-button" type="button" data-bulk-action="pause">Duraklat</button>
+                  <button class="small-button" type="button" data-bulk-action="resume">Sürdür</button>
+                  <button class="small-button danger-ghost" type="button" data-bulk-action="cancel">İptal</button>
+                </div>
+                <div class="view-toggle" role="group" aria-label="Görev görünümü">
+                  <button type="button" class="is-active" data-view="rows" aria-label="Satır görünümü" aria-pressed="true">☷</button>
+                  <button type="button" data-view="cards" aria-label="Kart görünümü" aria-pressed="false">▦</button>
+                </div>
+                <button class="refresh-button" type="button" data-refresh-jobs aria-label="Görevleri yenile">
+                  <span aria-hidden="true">↻</span><span data-i18n="jobs.refresh">Yenile</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="jobs-list" id="jobs-list" data-jobs-list aria-live="polite" aria-busy="true"></div>
+
+            <div class="empty-state" data-empty-state hidden>
+              <div class="empty-illustration" aria-hidden="true">
+                <span class="empty-arrow">↓</span>
+                <span class="empty-tray"></span>
+              </div>
+              <h3 data-i18n="jobs.empty.title">Burada henüz bir indirme yok</h3>
+              <p data-i18n="jobs.empty.description">Yeni bir bağlantı eklediğinizde ilerlemeyi burada canlı izleyebilirsiniz.</p>
+              <button class="secondary-button" type="button" data-focus-url data-i18n="jobs.empty.action">Bağlantı ekle</button>
+            </div>
+
+            <div class="jobs-pagination" data-jobs-pagination hidden aria-live="polite">
+              <p><strong data-jobs-loaded>0</strong> / <span data-jobs-total>0</span> görev gösteriliyor</p>
+              <button class="secondary-button" type="button" data-load-more aria-controls="jobs-list">
+                <span class="button-label">Daha fazla yükle</span>
+                <span class="button-spinner" aria-hidden="true"></span>
+              </button>
+            </div>
+          </section>
+        </main>
+
+        <nav class="mobile-nav" aria-label="Mobil gezinme">
+          <button class="is-active" type="button" data-filter="active" aria-current="page"><span aria-hidden="true">◌</span><small>Aktif</small></button>
+          <button type="button" data-filter="queued"><span aria-hidden="true">≡</span><small>Kuyruk</small></button>
+          <button class="mobile-add" type="button" data-focus-url aria-label="Yeni bağlantı ekle"><span aria-hidden="true">＋</span></button>
+          <button type="button" data-filter="completed"><span aria-hidden="true">✓</span><small>Bitenler</small></button>
+          <button type="button" data-open-settings><span aria-hidden="true">⚙</span><small>Ayarlar</small></button>
+        </nav>
+      </div>
+    </div>
+
+    <dialog class="modal settings-modal" data-settings-dialog aria-labelledby="settings-title">
+      <div class="modal-shell">
+        <header class="modal-header">
+          <div>
+            <span class="modal-kicker">DownloadHub</span>
+            <h2 id="settings-title" data-i18n="settings.title">Ayarlar</h2>
+          </div>
+          <button class="icon-button" type="button" data-close-dialog aria-label="Ayarları kapat">×</button>
+        </header>
+        <form class="settings-form" data-settings-form>
+          <div class="settings-scroll">
+            <section class="settings-section" aria-labelledby="general-settings">
+              <div class="settings-section-title">
+                <span class="settings-section-icon" aria-hidden="true">⌂</span>
+                <div><h3 id="general-settings" data-i18n="settings.general">Genel</h3><p>Dosyalar ve görünüm</p></div>
+              </div>
+              <div class="settings-fields">
+                <label class="field-group field-wide">
+                  <span>İndirme klasörü</span>
+                  <input type="text" name="download_dir" autocomplete="off">
+                </label>
+                <label class="field-group">
+                  <span>Tema</span>
+                  <select name="theme">
+                    <option value="system">Sistem</option>
+                    <option value="light">Açık</option>
+                    <option value="dark">Koyu</option>
+                  </select>
+                </label>
+                <label class="field-group">
+                  <span>Saat dilimi</span>
+                  <input type="text" name="timezone" value="Europe/Istanbul">
+                </label>
+              </div>
+            </section>
+
+            <section class="settings-section" aria-labelledby="performance-settings">
+              <div class="settings-section-title">
+                <span class="settings-section-icon" aria-hidden="true">↯</span>
+                <div><h3 id="performance-settings" data-i18n="settings.performance">Performans</h3><p>Kuyruk ve bağlantılar</p></div>
+              </div>
+              <div class="settings-fields settings-number-grid">
+                <label class="field-group">
+                  <span>Eşzamanlı görev</span>
+                  <input type="number" name="max_concurrent_jobs" min="1" max="10" inputmode="numeric">
+                </label>
+                <label class="field-group">
+                  <span>Toplam bağlantı</span>
+                  <input type="number" name="max_total_connections" min="1" max="64" inputmode="numeric">
+                </label>
+                <label class="field-group">
+                  <span>Dosya başına parça</span>
+                  <input type="number" name="split_count" min="1" max="16" inputmode="numeric">
+                </label>
+                <label class="field-group">
+                  <span>Global hız sınırı</span>
+                  <input type="text" name="global_speed_limit" placeholder="0, 2M, 800K">
+                </label>
+              </div>
+            </section>
+
+            <section class="settings-section" aria-labelledby="schedule-settings">
+              <div class="settings-section-title">
+                <span class="settings-section-icon" aria-hidden="true">◷</span>
+                <div><h3 id="schedule-settings" data-i18n="settings.schedule">Günlük indirme penceresi</h3><p>Boş bırakırsanız her zaman çalışır</p></div>
+              </div>
+              <div class="settings-fields settings-time-grid">
+                <label class="field-group">
+                  <span>Başlangıç</span>
+                  <input type="time" name="daily_window_start">
+                </label>
+                <label class="field-group">
+                  <span>Bitiş</span>
+                  <input type="time" name="daily_window_end">
+                </label>
+              </div>
+            </section>
+
+            <section class="settings-section" aria-labelledby="browser-settings">
+              <div class="settings-section-title">
+                <span class="settings-section-icon" aria-hidden="true">◎</span>
+                <div><h3 id="browser-settings" data-i18n="settings.browser">Tarayıcı ve güvenlik</h3><p>Oturum gereken içerikler</p></div>
+              </div>
+              <div class="settings-fields">
+                <label class="field-group">
+                  <span>Tarayıcı</span>
+                  <select name="browser_name">
+                    <option value="chrome">Google Chrome</option>
+                    <option value="chromium">Chromium</option>
+                    <option value="brave">Brave</option>
+                    <option value="edge">Microsoft Edge</option>
+                  </select>
+                </label>
+                <label class="field-group">
+                  <span>Profil</span>
+                  <input type="text" name="browser_profile" maxlength="128" placeholder="Default">
+                </label>
+                <label class="switch-row field-wide warning-switch">
+                  <input type="checkbox" name="allow_private_networks">
+                  <span class="switch" aria-hidden="true"></span>
+                  <span><strong>Yerel ağ adreslerine izin ver</strong><small>Yalnız güvendiğiniz ağlarda etkinleştirin.</small></span>
+                </label>
+              </div>
+            </section>
+
+            <section class="settings-section runtime-section" aria-labelledby="runtime-settings">
+              <div class="settings-section-title">
+                <span class="settings-section-icon" aria-hidden="true">⋯</span>
+                <div><h3 id="runtime-settings" data-i18n="settings.runtime">Sistem kontrolü</h3><p>İndirme bileşenleri</p></div>
+              </div>
+              <div class="runtime-list" data-runtime-list>
+                <div class="runtime-placeholder">Bileşenler kontrol ediliyor…</div>
+              </div>
+            </section>
+          </div>
+          <footer class="modal-footer">
+            <div class="form-message inline-message" data-settings-message role="status" aria-live="polite" hidden></div>
+            <button class="secondary-button" type="button" data-close-dialog data-i18n="common.cancel">Vazgeç</button>
+            <button class="primary-button" type="submit">
+              <span class="button-label" data-i18n="settings.save">Ayarları kaydet</span>
+              <span class="button-spinner" aria-hidden="true"></span>
+            </button>
+          </footer>
+        </form>
+      </div>
+    </dialog>
+
+    <dialog class="modal pairing-modal" data-pairing-dialog aria-labelledby="pairing-title">
+      <div class="modal-shell pairing-shell">
+        <header class="modal-header">
+          <div>
+            <span class="modal-kicker">Chromium eklentisi</span>
+            <h2 id="pairing-title">Tarayıcıyı bağlayın</h2>
+          </div>
+          <button class="icon-button" type="button" data-close-dialog aria-label="Eşleştirmeyi kapat">×</button>
+        </header>
+        <div class="pairing-content">
+          <div class="extension-visual" aria-hidden="true">
+            <div class="browser-window"><span></span><span></span><span></span><strong>DH</strong></div>
+            <div class="pairing-line"><i></i><i></i><i></i></div>
+            <div class="hub-tile"><span>↓</span></div>
+          </div>
+          <p>Eklentide <strong>Eşleştir</strong>'i seçin ve aşağıdaki tek kullanımlık kodu girin.</p>
+          <div class="pairing-code" data-pairing-code aria-live="polite" aria-label="Eşleştirme kodu">
+            <span>—</span><span>—</span><span>—</span><span>—</span><span>—</span><span>—</span>
+          </div>
+          <p class="pairing-expiry" data-pairing-expiry>Kod hazırlanıyor…</p>
+          <ol class="pairing-steps">
+            <li><span>1</span> DownloadHub Chromium eklentisini açın.</li>
+            <li><span>2</span> Eşleştirme kodunu boşluksuz girin.</li>
+            <li><span>3</span> Bağlantıları sağ tıkla DownloadHub'a gönderin.</li>
+          </ol>
+          <section class="paired-clients" aria-labelledby="paired-clients-title">
+            <div class="paired-clients-heading">
+              <h3 id="paired-clients-title">Bağlı tarayıcılar</h3>
+              <button class="small-button" type="button" data-refresh-clients>Yenile</button>
+            </div>
+            <div class="paired-clients-list" data-paired-clients aria-live="polite">
+              <p>Bağlantılar yükleniyor…</p>
+            </div>
+          </section>
+          <div class="form-message" data-pairing-message role="status" aria-live="polite" hidden></div>
+        </div>
+        <footer class="modal-footer">
+          <button class="secondary-button" type="button" data-refresh-pairing>Yeni kod üret</button>
+          <button class="primary-button" type="button" data-close-dialog>Tamam</button>
+        </footer>
+      </div>
+    </dialog>
+
+    <dialog class="drawer job-drawer" data-job-dialog aria-labelledby="job-detail-title">
+      <div class="drawer-shell">
+        <header class="drawer-header">
+          <div>
+            <span class="modal-kicker">Görev ayrıntıları</span>
+            <h2 id="job-detail-title" data-detail-title>İndirme</h2>
+          </div>
+          <button class="icon-button" type="button" data-close-dialog aria-label="Ayrıntıları kapat">×</button>
+        </header>
+        <div class="drawer-content" data-job-detail>
+          <div class="detail-skeleton"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog class="modal cancel-modal" data-cancel-dialog aria-labelledby="cancel-title">
+      <div class="modal-shell confirm-shell">
+        <header class="modal-header">
+          <div>
+            <span class="modal-kicker">İndirmeyi iptal et</span>
+            <h2 id="cancel-title">Parçalı dosyalar ne olsun?</h2>
+          </div>
+          <button class="icon-button" type="button" data-close-dialog aria-label="İptal penceresini kapat">×</button>
+        </header>
+        <div class="confirm-content">
+          <p>İndirmeyi daha sonra yeniden başlatmak için parçaları koruyabilir veya Çöp'e taşıyabilirsiniz.</p>
+          <button class="choice-button" type="button" data-cancel-choice="keep">
+            <span aria-hidden="true">Ⅱ</span><span><strong>Parçaları koru</strong><small>Daha sonra devam etmek için</small></span>
+          </button>
+          <button class="choice-button danger-choice" type="button" data-cancel-choice="trash">
+            <span aria-hidden="true">×</span><span><strong>Çöp'e taşı</strong><small>Geçici verileri kaldır</small></span>
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <div class="toast-region" data-toast-region aria-live="polite" aria-atomic="false"></div>
+
+    <template id="job-row-template">
+      <article class="job-row">
+        <label class="job-select">
+          <span class="sr-only">Görevi seç</span>
+          <input type="checkbox" data-job-select>
+        </label>
+        <div class="job-type" aria-hidden="true"><span></span></div>
+        <div class="job-main">
+          <div class="job-title-row">
+            <button class="job-title" type="button" data-job-detail-open></button>
+            <span class="status-pill"></span>
+          </div>
+          <p class="job-source"></p>
+          <div class="progress-line">
+            <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100"><span></span></div>
+            <strong class="progress-percent"></strong>
+          </div>
+          <div class="job-meta">
+            <span class="job-size"></span><i></i><span class="job-speed"></span><i></i><span class="job-eta"></span>
+          </div>
+        </div>
+        <div class="job-actions"></div>
+      </article>
+    </template>
+
+    <template id="toast-template">
+      <div class="toast" role="status">
+        <span class="toast-icon" aria-hidden="true">✓</span>
+        <div><strong></strong><p></p></div>
+        <button type="button" aria-label="Bildirimi kapat">×</button>
+      </div>
+    </template>
+  </body>
+</html>

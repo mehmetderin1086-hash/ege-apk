@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "DownloadHub",
+  "version": "0.1.0",
+  "description": "Sayfa, bağlantı ve medya kaynaklarını yerel DownloadHub indirme kuyruğuna gönderir.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "contextMenus",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8765/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "DownloadHub",
+    "default_popup": "popup.html"
+  }
+}
