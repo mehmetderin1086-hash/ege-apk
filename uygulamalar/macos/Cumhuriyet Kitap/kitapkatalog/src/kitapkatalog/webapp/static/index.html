@@ -1,0 +1,1515 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cumhuriyet Kitap</title>
+<script>
+  // FOUC önleyici: tema tercihi stiller yüklenmeden uygulanır.
+  (function () {
+    var theme = localStorage.getItem("kk-tema");
+    if (theme === "dark" || theme === "light") {
+      document.documentElement.dataset.theme = theme;
+    }
+  })();
+</script>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+<link rel="manifest" href="/static/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14161b" media="(prefers-color-scheme: dark)">
+</head>
+<body>
+<a class="skip-link" href="#ana-icerik">Ana içeriğe geç</a>
+
+<!-- İkon sprite: menüde ve panoda kullanılan çizgi ikonlar (currentColor). -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+<symbol id="i-ev" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 10v10h5v-6h4v6h5V10"/></symbol>
+<symbol id="i-hizli" viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></symbol>
+<symbol id="i-kitap" viewBox="0 0 24 24"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5v-17z"/><path d="M4 19a2.5 2.5 0 0 1 2.5-2.5H20"/></symbol>
+<symbol id="i-liste" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1.4"/><circle cx="3.5" cy="12" r="1.4"/><circle cx="3.5" cy="18" r="1.4"/></symbol>
+<symbol id="i-aktarma" viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></symbol>
+<symbol id="i-mikrofon" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/></symbol>
+<symbol id="i-onay" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9"/></symbol>
+<symbol id="i-odunc" viewBox="0 0 24 24"><path d="M4 7h13l-3-3m3 3l-3 3"/><path d="M20 17H7l3 3m-3-3l3-3"/></symbol>
+<symbol id="i-uye" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.5" cy="9" r="2.4"/><path d="M15.5 20c.3-2.6 1.9-4.6 4-5"/></symbol>
+<symbol id="i-kupa" viewBox="0 0 24 24"><path d="M7 3h10v6a5 5 0 0 1-10 0V3z"/><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3"/><path d="M12 14v3m-3 3h6l-1-3H10l-1 3z"/></symbol>
+<symbol id="i-raf" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></symbol>
+<symbol id="i-yazdir" viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M6 14h12v7H6v-7z"/></symbol>
+<symbol id="i-sayim" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="1.5"/><path d="M9 2.5h6v3H9z"/><path d="M9 12l2 2 4-4"/></symbol>
+<symbol id="i-dusum" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V7"/><path d="M6 7l1 13.5A1.5 1.5 0 0 0 8.5 22h7a1.5 1.5 0 0 0 1.5-1.5L18 7"/></symbol>
+<symbol id="i-rapor" viewBox="0 0 24 24"><path d="M4 21V10M11 21V4M18 21v-7"/><path d="M2 21h20"/></symbol>
+<symbol id="i-disa" viewBox="0 0 24 24"><path d="M12 15V3m0 0l-4 4m4-4l4 4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></symbol>
+<symbol id="i-motor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.4M12 18.6V21M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M3 12h2.4M18.6 12H21M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7"/></symbol>
+<symbol id="i-ayar" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h14M22 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+<symbol id="i-arama" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+<symbol id="i-zil" viewBox="0 0 24 24"><path d="M6 10a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 0 0 4 0"/></symbol>
+<symbol id="i-arti" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-carpi" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+<symbol id="i-uyari" viewBox="0 0 24 24"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v4M12 17.5v.1"/></symbol>
+<symbol id="i-grafik" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10h-10V2z"/><path d="M17 2.5A10 10 0 0 1 21.5 7H12l5-4.5z"/></symbol>
+</defs>
+</svg>
+
+<div class="app">
+  <header class="mobile-header">
+    <button class="btn mobile-menu-button" id="menu-dugme" type="button"
+            aria-controls="ana-menu" aria-expanded="false" aria-label="Ana menüyü aç">
+      <span aria-hidden="true">☰</span> Menü
+    </button>
+    <strong>📚 Cumhuriyet Kitap</strong>
+  </header>
+  <div class="sidebar-overlay" id="menu-overlay" hidden></div>
+  <nav class="sidebar" id="ana-menu" aria-label="Ana gezinme" tabindex="-1">
+    <div class="brand">📚 Cumhuriyet Kitap</div>
+    <div class="brand-okul" id="okul-adi" hidden></div>
+    <a href="#genel" data-page="genel"><svg class="icon" aria-hidden="true"><use href="#i-ev"/></svg> Genel Bakış</a>
+
+    <div class="nav-bolum">Katalog</div>
+    <a href="#hizli" data-page="hizli"><svg class="icon" aria-hidden="true"><use href="#i-hizli"/></svg> Hızlı Kayıt</a>
+    <a href="#kutuphane" data-page="kutuphane"><svg class="icon" aria-hidden="true"><use href="#i-kitap"/></svg> Kütüphane</a>
+    <a href="#listeler" data-page="listeler"><svg class="icon" aria-hidden="true"><use href="#i-liste"/></svg> Okuma Listeleri</a>
+    <a href="#aktarim" data-page="aktarim"><svg class="icon" aria-hidden="true"><use href="#i-aktarma"/></svg> İçe Aktarma</a>
+    <a href="#ses" data-page="ses"><svg class="icon" aria-hidden="true"><use href="#i-mikrofon"/></svg> Sesli Kayıt</a>
+    <a href="#onay" data-page="onay"><svg class="icon" aria-hidden="true"><use href="#i-onay"/></svg> Onay <span id="onay-rozet" class="badge" hidden></span></a>
+
+    <div class="nav-bolum">Dolaşım</div>
+    <a href="#odunc" data-page="odunc"><svg class="icon" aria-hidden="true"><use href="#i-odunc"/></svg> Ödünç <span id="odunc-rozet" class="badge badge-danger" hidden></span></a>
+    <a href="#uyeler" data-page="uyeler"><svg class="icon" aria-hidden="true"><use href="#i-uye"/></svg> Üyeler</a>
+    <a href="#yarisma" data-page="yarisma"><svg class="icon" aria-hidden="true"><use href="#i-kupa"/></svg> Okuma Yarışması</a>
+    <a href="/opac" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-arama"/></svg> Öğrenci Ekranı ↗</a>
+
+    <div class="nav-bolum">Envanter</div>
+    <a href="#harita" data-page="harita"><svg class="icon" aria-hidden="true"><use href="#i-raf"/></svg> Raf Haritası</a>
+    <a href="#yazdir" data-page="yazdir"><svg class="icon" aria-hidden="true"><use href="#i-yazdir"/></svg> Yazdır</a>
+    <a href="#sayim" data-page="sayim"><svg class="icon" aria-hidden="true"><use href="#i-sayim"/></svg> Sayım</a>
+    <a href="#dusum" data-page="dusum"><svg class="icon" aria-hidden="true"><use href="#i-dusum"/></svg> Düşüm</a>
+    <a href="#raporlar" data-page="raporlar"><svg class="icon" aria-hidden="true"><use href="#i-rapor"/></svg> Raporlar</a>
+
+    <div class="nav-bolum">Sistem</div>
+    <a href="#disari" data-page="disari"><svg class="icon" aria-hidden="true"><use href="#i-disa"/></svg> Dışa Aktarım</a>
+    <a href="#motorlar" data-page="motorlar"><svg class="icon" aria-hidden="true"><use href="#i-motor"/></svg> Motorlar</a>
+    <a href="#ayarlar" data-page="ayarlar"><svg class="icon" aria-hidden="true"><use href="#i-ayar"/></svg> Ayarlar</a>
+
+    <div class="sidebar-foot">
+      <button class="btn tema-dugme" id="tema-dugme" title="Tema: sistem/açık/koyu">🌗 Tema</button>
+      <button class="btn" id="bildirim-dugme" type="button" aria-haspopup="dialog"
+              aria-controls="bildirim-cekmece" aria-label="Bildirimler">
+        🔔 Bildirimler <span id="bildirim-rozet" class="badge badge-danger" hidden></span>
+      </button>
+      <div id="is-gosterge" class="job-indicator" role="status" aria-live="polite" hidden>
+        <span class="spinner" aria-hidden="true"></span>
+        <span id="is-gosterge-metin"></span>
+      </div>
+      <div class="app-version" id="uygulama-surumu" role="status" aria-live="polite">Sürüm doğrulanıyor…</div>
+    </div>
+  </nav>
+
+  <main class="content" id="ana-icerik" tabindex="-1">
+
+  <!-- ═══════════════════ GENEL BAKIŞ ═══════════════════ -->
+  <section id="sayfa-genel" class="page" hidden>
+    <h1>Genel Bakış</h1>
+    <div class="hizli-eylem-izgara">
+      <a class="hizli-eylem" href="#odunc"><svg class="icon" aria-hidden="true"><use href="#i-odunc"/></svg><strong>Ödünç Ver</strong></a>
+      <a class="hizli-eylem" href="#hizli"><svg class="icon" aria-hidden="true"><use href="#i-hizli"/></svg><strong>Hızlı Kayıt</strong></a>
+      <a class="hizli-eylem" href="#aktarim"><svg class="icon" aria-hidden="true"><use href="#i-aktarma"/></svg><strong>İçe Aktarma</strong></a>
+      <a class="hizli-eylem" href="#yazdir"><svg class="icon" aria-hidden="true"><use href="#i-yazdir"/></svg><strong>Etiket Bas</strong></a>
+    </div>
+    <div class="stat-row" id="genel-kartlar">
+      <div class="stat-tile">
+        <span class="stat-tile-icon"><svg class="icon" aria-hidden="true"><use href="#i-kitap"/></svg></span>
+        <div class="stat-tile-body"><div class="stat-value" id="st-eser">–</div><div class="stat-label">Eser</div></div>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-tile-icon"><svg class="icon" aria-hidden="true"><use href="#i-raf"/></svg></span>
+        <div class="stat-tile-body"><div class="stat-value" id="st-nusha">–</div><div class="stat-label">Nüsha</div></div>
+      </div>
+      <a class="stat-tile stat-tile-link" href="#odunc">
+        <span class="stat-tile-icon"><svg class="icon" aria-hidden="true"><use href="#i-odunc"/></svg></span>
+        <div class="stat-tile-body"><div class="stat-value" id="st-odunc">–</div><div class="stat-label">Aktif Ödünç</div></div>
+      </a>
+      <a class="stat-tile stat-tile-warn stat-tile-link" href="#odunc">
+        <span class="stat-tile-icon"><svg class="icon" aria-hidden="true"><use href="#i-uyari"/></svg></span>
+        <div class="stat-tile-body"><div class="stat-value" id="st-geciken">–</div><div class="stat-label">Geciken</div></div>
+      </a>
+      <div class="stat-tile">
+        <span class="stat-tile-icon"><svg class="icon" aria-hidden="true"><use href="#i-onay"/></svg></span>
+        <div class="stat-tile-body"><div class="stat-value" id="st-bugun-islem">–</div><div class="stat-label">Bugünkü İşlem</div></div>
+      </div>
+      <a class="stat-tile stat-tile-link" href="#" data-bildirim-ac>
+        <span class="stat-tile-icon"><svg class="icon" aria-hidden="true"><use href="#i-zil"/></svg></span>
+        <div class="stat-tile-body"><div class="stat-value" id="st-bildirim">–</div><div class="stat-label">Okunmamış Bildirim</div></div>
+      </a>
+      <div class="stat-tile">
+        <span class="stat-tile-icon"><svg class="icon" aria-hidden="true"><use href="#i-liste"/></svg></span>
+        <div class="stat-tile-body"><div class="stat-value" id="st-rezervasyon">–</div><div class="stat-label">Bekleyen Rezervasyon</div></div>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-tile-icon"><svg class="icon" aria-hidden="true"><use href="#i-uye"/></svg></span>
+        <div class="stat-tile-body"><div class="stat-value" id="st-okuyan">–</div><div class="stat-label">Bu Ay Okuyan</div></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h2><svg class="icon" aria-hidden="true"><use href="#i-grafik"/></svg> Koleksiyon durumu</h2>
+        <div id="grafik-koleksiyon"></div>
+      </div>
+      <div class="card">
+        <h2>Kategoriye göre</h2>
+        <div id="grafik-kategori"></div>
+      </div>
+      <div class="card">
+        <h2>Aylık ödünç (12 ay)</h2>
+        <div id="grafik-buyume"></div>
+      </div>
+      <div class="card">
+        <h2>⏰ Gecikenler</h2>
+        <ul id="oz-geciken" class="mini-liste"></ul>
+        <p class="hint" id="oz-geciken-bos" hidden>Geciken kitap yok. 🎉</p>
+        <a class="mini-liste-daha" id="oz-geciken-daha" href="#odunc" hidden>Tümünü gör →</a>
+      </div>
+      <div class="card">
+        <h2>Bugün</h2>
+        <ul class="ozet-liste">
+          <li>Verilen: <strong id="oz-bugun-verilen">–</strong> · iade alınan: <strong id="oz-bugun-iade">–</strong></li>
+          <li>Bu ay verilen ödünç: <strong id="oz-bu-ay">–</strong></li>
+          <li>Demirbaştan düşülen: <strong id="oz-dusum">–</strong></li>
+          <li id="oz-sayim-satir">Son sayım: <span id="oz-sayim">henüz yapılmadı</span></li>
+        </ul>
+      </div>
+      <div class="card" id="oz-yarisma-kart" hidden>
+        <h2><svg class="icon" aria-hidden="true"><use href="#i-kupa"/></svg> <span id="oz-yarisma-ad">Okuma Yarışması</span></h2>
+        <ol id="oz-yarisma-liste" class="yarisma-mini"></ol>
+        <a class="mini-liste-daha" href="#yarisma">Yarışmayı gör →</a>
+      </div>
+      <div class="card">
+        <h2>⭐ Son 30 günün popülerleri</h2>
+        <ol id="oz-populer" class="ozet-liste"></ol>
+        <p class="hint" id="oz-populer-bos" hidden>Henüz ödünç verisi yok.</p>
+      </div>
+      <div class="card">
+        <h2>Nasıl başlarım?</h2>
+        <ol class="guide">
+          <li><strong>Hızlı Kayıt</strong>'ta barkod okutarak kitapları ekleyin; demirbaş numaraları otomatik atanır.</li>
+          <li><strong>Üyeler</strong>'e e-Okul sınıf listesini yükleyin.</li>
+          <li><strong>Ödünç</strong>'te barkodla kitap verin/iade alın.</li>
+          <li><strong>Sayım</strong>'la dönem sonunda rafları okutup eksik raporu alın.</li>
+          <li><strong>Raporlar</strong>'dan en çok okuyanları ve popüler kitapları izleyin.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ KÜTÜPHANE ═══════════════════ -->
+  <section id="sayfa-kutuphane" class="page" hidden>
+    <div class="page-head">
+      <h1>Kütüphane</h1>
+      <div class="btn-group">
+        <div class="gorunum-anahtari" role="group" aria-label="Görünüm">
+          <button type="button" class="btn-icon" id="gorunum-tablo" aria-pressed="true" aria-label="Tablo görünümü">
+            <svg class="icon" aria-hidden="true"><use href="#i-liste"/></svg>
+          </button>
+          <button type="button" class="btn-icon" id="gorunum-kart" aria-pressed="false" aria-label="Kart görünümü">
+            <svg class="icon" aria-hidden="true"><use href="#i-raf"/></svg>
+          </button>
+        </div>
+        <button class="btn btn-primary" id="btn-yeni-kitap"><svg class="icon" aria-hidden="true"><use href="#i-arti"/></svg> Yeni Kitap</button>
+      </div>
+    </div>
+    <div class="filter-row">
+      <input type="search" id="ara" aria-label="Kütüphanede ara" placeholder="Başlık, yazar, ISBN ara…" autocomplete="off">
+      <select id="f-kategori" aria-label="Kategori filtresi"><option value="">Kategori (tümü)</option></select>
+      <select id="f-dil" aria-label="Dil filtresi"><option value="">Dil (tümü)</option></select>
+      <select id="f-durum" aria-label="İnceleme durumu filtresi">
+        <option value="">Durum (tümü)</option>
+        <option value="review">İncelemede</option>
+        <option value="completed">Tamamlandı</option>
+      </select>
+      <select id="f-eksik" aria-label="Eksik alan filtresi">
+        <option value="">Eksik alan süzgeci</option>
+        <option value="isbn">ISBN'i eksik</option>
+        <option value="publisher">Yayınevi eksik</option>
+        <option value="publication_date">Basım tarihi eksik</option>
+        <option value="page_count">Sayfa sayısı eksik</option>
+      </select>
+      <select id="f-dolap" aria-label="Dolap filtresi"><option value="">Dolap (tümü)</option></select>
+      <select id="f-musait" aria-label="Müsaitlik filtresi">
+        <option value="">Müsaitlik (tümü)</option>
+        <option value="available">Rafta</option>
+        <option value="unavailable">Tümü ödünçte</option>
+      </select>
+      <input type="number" id="f-yil-min" class="f-yil" placeholder="Yıl ≥" min="0" max="9999" title="Basım yılı en az" aria-label="En erken basım yılı">
+      <input type="number" id="f-yil-max" class="f-yil" placeholder="Yıl ≤" min="0" max="9999" title="Basım yılı en çok" aria-label="En geç basım yılı">
+      <select id="f-sirala" title="Sıralama" aria-label="Kütüphane sıralaması">
+        <option value="relevance">Sıralama: uygunluk</option>
+        <option value="title">Başlık (A→Z)</option>
+        <option value="year">Yıl (yeni→eski)</option>
+        <option value="created">Eklenme (yeni→eski)</option>
+        <option value="popular">Popülerlik</option>
+      </select>
+    </div>
+    <div class="chip-row" id="kitap-filtre-cipleri">
+      <span class="filtre-sonuc-sayisi" id="kitap-sonuc-sayisi"></span>
+      <button type="button" class="chip chip-temizle" id="kitap-filtre-temizle" hidden>Filtreleri temizle ✕</button>
+    </div>
+    <div id="toplu-cubuk" class="bulk-bar" hidden>
+      <span id="toplu-sayi"></span>
+      <button class="btn" data-bulk="approve">Onayla</button>
+      <button class="btn" data-bulk="category">Kategori ata</button>
+      <button class="btn" data-bulk="location">Dolap ata</button>
+      <button class="btn btn-danger" data-bulk="delete">Sil</button>
+    </div>
+    <div class="table-wrap" id="kitap-tablo-sarici">
+      <table class="data-table" id="kitap-tablo">
+        <thead><tr>
+          <th class="col-check"><input type="checkbox" id="tumunu-sec" aria-label="Tümünü seç"></th>
+          <th class="col-thumb">Kapak</th>
+          <th>Başlık</th><th>Yazar</th><th>Yayınevi</th><th>Yıl</th>
+          <th>Kategori</th><th>Adet</th><th>Dolap</th><th>Durum</th><th></th>
+        </tr></thead>
+        <tbody id="kitap-govde"></tbody>
+      </table>
+    </div>
+    <div class="kitap-izgara" id="kitap-izgara" hidden></div>
+    <div class="empty-state" id="kitap-bos" hidden>
+      <p>Henüz kitap yok ya da arama sonuç vermedi.</p>
+      <p>Kitap eklemek için <a href="#aktarim">İçe Aktarma</a> veya <a href="#ses">Sesli Kayıt</a> bölümünü kullanın.</p>
+    </div>
+    <div class="pager">
+      <button class="btn" id="sayfa-geri" aria-label="Önceki sayfa">◀</button>
+      <span id="sayfa-bilgi"></span>
+      <button class="btn" id="sayfa-ileri" aria-label="Sonraki sayfa">▶</button>
+    </div>
+  </section>
+
+  <!-- Kitap detay çekmecesi -->
+  <aside id="detay" class="drawer" hidden role="dialog" aria-modal="true"
+         aria-labelledby="detay-baslik" tabindex="-1">
+    <div class="drawer-head">
+      <h2 id="detay-baslik">Kitap</h2>
+      <button class="btn-icon" id="detay-kapat" aria-label="Kapat"><svg class="icon" aria-hidden="true"><use href="#i-carpi"/></svg></button>
+    </div>
+    <div class="drawer-body">
+      <div class="cover-strip" id="detay-kapaklar"></div>
+      <form id="detay-form" autocomplete="off">
+        <div class="form-grid">
+          <label>ISBN <input name="isbn"></label>
+          <label>Başlık <input name="title" required></label>
+          <label>Alt başlık <input name="subtitle"></label>
+          <label>Yazar(lar) <input name="authors" list="dl-yazar" placeholder="; ile ayırın"></label>
+          <label>Yayınevi <input name="publisher" list="dl-yayinevi"></label>
+          <label>Kategori <input name="category" list="dl-kategori"></label>
+          <label>Basım tarihi <input name="publication_date"></label>
+          <label>Sayfa <input name="page_count" type="number" min="1"></label>
+          <label>Dil <input name="language" list="dl-dil"></label>
+          <label>Dolap (tüm nüshalar) <input name="location" list="dl-dolap" title="Kaydedince baskının TÜM nüshalarına uygulanır; tekil nüsha için alttaki nüsha listesinden düzenleyin"></label>
+          <label class="span-2">Tanıtım <textarea name="blurb" rows="3"></textarea></label>
+        </div>
+        <details class="detay-ileri">
+          <summary>Ayrıntılı alanlar</summary>
+          <div class="form-grid">
+            <label>Orijinal başlık <input name="original_title"></label>
+            <label>Seri <input name="series"></label>
+            <label>Cilt <input name="volume"></label>
+            <label>Basım yeri <input name="publication_place"></label>
+            <label>Baskı ifadesi <input name="edition_statement"></label>
+            <label>Baskı no <input name="printing_number"></label>
+            <label>Matbaa <input name="printer"></label>
+            <label>Cilt tipi <input name="binding"></label>
+            <label>Boyutlar <input name="dimensions"></label>
+            <label>Fiyat <input name="price_amount"></label>
+            <label>Para birimi <input name="currency"></label>
+            <label>Ödüller <input name="awards"></label>
+          </div>
+        </details>
+        <div class="copy-row">
+          <span>Adet:</span>
+          <button type="button" class="btn" id="adet-eksi" aria-label="Adet azalt">−</button>
+          <output id="adet-deger">1</output>
+          <button type="button" class="btn" id="adet-arti" aria-label="Adet artır">+</button>
+        </div>
+        <ul id="detay-nushalar" class="nusha-liste"></ul>
+        <p><a id="detay-etiketler" href="#" target="_blank" rel="noopener">🏷️ Bu kitabın etiketlerini yazdır</a></p>
+        <details id="detay-odunc-kutu">
+          <summary>Ödünç geçmişi</summary>
+          <ul id="detay-odunc" class="hint"></ul>
+          <p class="hint" id="detay-odunc-bos" hidden>Bu kitap hiç ödünç verilmemiş.</p>
+        </details>
+        <details id="detay-rezervasyon-kutu">
+          <summary>Rezervasyonlar <span id="detay-rezervasyon-sayi" class="badge" hidden></span></summary>
+          <ul id="detay-rezervasyon-liste" class="hint"></ul>
+          <p class="hint" id="detay-rezervasyon-bos" hidden>Bekleyen rezervasyon yok.</p>
+          <div class="filter-row">
+            <input type="search" id="detay-siraya-uye" placeholder="Üye no ya da adı girip Enter'a basın" autocomplete="off">
+            <button type="button" class="btn" id="detay-siraya-ekle">Sıraya ekle</button>
+          </div>
+        </details>
+        <details id="detay-listeler-kutu">
+          <summary>Okuma Listeleri</summary>
+          <div class="filter-row">
+            <select id="detay-liste-sec" aria-label="Eklenecek okuma listesi"></select>
+            <button type="button" class="btn" id="detay-listeye-ekle">Listeye ekle</button>
+          </div>
+        </details>
+        <div class="drawer-actions">
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+          <button type="button" class="btn" id="detay-onayla">Onayla ✓</button>
+          <button type="button" class="btn btn-danger" id="detay-sil">Sil</button>
+        </div>
+      </form>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════ OKUMA LİSTELERİ ═══════════════════ -->
+  <section id="sayfa-listeler" class="page" hidden>
+    <div class="page-head">
+      <h1>Okuma Listeleri</h1>
+      <div>
+        <button class="btn" id="liste-sablon">📖 100 Temel Eser şablonunu içe aktar</button>
+        <button class="btn btn-primary" id="liste-yeni">+ Yeni Liste</button>
+      </div>
+    </div>
+
+    <div class="card" id="liste-form-kart" hidden>
+      <h2 id="liste-form-baslik">Yeni Liste</h2>
+      <form id="liste-form" autocomplete="off">
+        <div class="form-grid">
+          <label>Ad <input name="name" required></label>
+          <label class="span-2">Açıklama <textarea name="description" rows="2"></textarea></label>
+          <label class="check-inline"><input type="checkbox" name="is_opac_visible"> Öğrenci ekranında (OPAC) göster</label>
+        </div>
+        <div class="drawer-actions">
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+          <button type="button" class="btn" id="liste-form-vazgec">Vazgeç</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Ad</th><th>Açıklama</th><th>Kitap Sayısı</th><th>OPAC</th><th></th></tr></thead>
+        <tbody id="liste-tablo"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="liste-bos" hidden><p>Henüz okuma listesi yok. Elle ekleyin ya da 100 Temel Eser şablonunu içe aktarın.</p></div>
+  </section>
+
+  <!-- Okuma listesi detay çekmecesi -->
+  <aside id="liste-detay" class="drawer" hidden role="dialog" aria-modal="true"
+         aria-labelledby="ld-ad" tabindex="-1">
+    <div class="drawer-head">
+      <h2 id="ld-ad">Liste</h2>
+      <button class="btn-icon" id="liste-detay-kapat" aria-label="Kapat"><svg class="icon" aria-hidden="true"><use href="#i-carpi"/></svg></button>
+    </div>
+    <div class="drawer-body">
+      <p id="ld-aciklama" class="hint"></p>
+      <label class="check-inline"><input type="checkbox" id="ld-opac-gorunur"> Öğrenci ekranında (OPAC) göster</label>
+
+      <h3>Kitaplar</h3>
+      <div class="filter-row">
+        <input type="search" id="ld-kitap-ara" placeholder="Eklemek için kitap adı yazıp Enter'a basın" autocomplete="off">
+      </div>
+      <ul id="ld-kitaplar" class="nusha-liste"></ul>
+      <div class="empty-state" id="ld-kitaplar-bos" hidden><p>Listede henüz kitap yok.</p></div>
+
+      <h3>Atanmış Üyeler</h3>
+      <div class="filter-row">
+        <input type="search" id="ld-uye-ara" placeholder="Üye no ya da adı girip Enter'a basın" autocomplete="off">
+        <button type="button" class="btn" id="ld-uye-ekle">Ata</button>
+      </div>
+      <ul id="ld-uyeler" class="nusha-liste"></ul>
+      <div class="empty-state" id="ld-uyeler-bos" hidden><p>Henüz atanmış üye yok.</p></div>
+
+      <div class="drawer-actions">
+        <button type="button" class="btn btn-danger" id="liste-sil">Listeyi Sil</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════ İÇE AKTARMA ═══════════════════ -->
+  <section id="sayfa-aktarim" class="page" hidden>
+    <h1>İçe Aktarma</h1>
+    <div class="grid-2">
+      <div class="card">
+        <h2>Toplu aktarım</h2>
+        <p class="hint">Kitap başına 4 yüz: ön, ön iç, arka iç, arka kapak. Dosya adları sıralıysa
+        (ör. <code>kitap1-1.jpg … kitap1-4.jpg</code>) otomatik eşleştirilir. Her kitabı ayrı bir
+        klasöre koyabilir, ya da sayfa sayısı 4'ün katı olan tek bir PDF yükleyebilirsiniz
+        (4 sayfa = 1 kitap, 40 sayfa = 10 kitap). Bir ZIP arşivi de yükleyebilirsiniz; içindeki
+        klasörler ayrı kitap/dolap grupları olarak açılır.</p>
+        <div class="dropzone" id="toplu-birak" tabindex="0" role="button"
+             aria-label="Dosyaları buraya sürükleyin ya da tıklayıp seçin">
+          <p>📂 Dosyaları buraya sürükleyin<br><small>ya da tıklayıp seçin</small></p>
+          <input type="file" id="toplu-dosyalar" multiple accept=".jpg,.jpeg,.png,.webp,.heic,.heif,.tif,.tiff,.bmp,.pdf,.zip" hidden>
+          <input type="file" id="toplu-klasor-secim" webkitdirectory directory multiple hidden>
+        </div>
+        <p><button type="button" class="btn" id="toplu-klasor-ac">📁 Klasör seç</button></p>
+        <div class="dolap-alani">
+          <label for="toplu-dolap">Dolap</label>
+          <input type="text" id="toplu-dolap" list="dolap-listesi" placeholder="ör. Dolap 3"
+                 autocomplete="off" maxlength="120">
+          <span class="onay-satiri">
+            <input type="checkbox" id="toplu-klasor-dolap">
+            <label for="toplu-klasor-dolap">Klasör adını dolap say</label>
+          </span>
+        </div>
+        <p class="hint" id="toplu-dolap-ipucu">Bu partideki bütün kitaplar seçtiğiniz dolaba
+        yerleşir. Kayıtlı olmayan bir ad yazarsanız dolap otomatik oluşturulur. Klasör seçeneği
+        açıkken her kitabın dolabı, dosyalarının bulunduğu klasörün adı olur.</p>
+        <div id="toplu-secim" class="hint" hidden></div>
+        <button class="btn btn-primary" id="toplu-yukle" disabled>Yükle ve İşe Ekle</button>
+      </div>
+      <div class="card">
+        <h2>Tek kitap</h2>
+        <div class="mod-secim" role="radiogroup" aria-label="Tek kitap yükleme biçimi">
+          <span class="onay-satiri">
+            <input type="radio" name="tek-mod" value="belge" id="tek-mod-belge" checked>
+            <label for="tek-mod-belge">Tek dosya (4 içerik)</label>
+          </span>
+          <span class="onay-satiri">
+            <input type="radio" name="tek-mod" value="yuz" id="tek-mod-yuz">
+            <label for="tek-mod-yuz">Dört ayrı dosya</label>
+          </span>
+        </div>
+        <div id="tek-belge-alani">
+          <p class="hint">Toplu aktarımdaki gibi: dört yüzü tek dosyada verin. 4 sayfalık PDF'in
+          sayfaları sırasıyla ön, ön iç, arka iç, arka kapaktır.</p>
+          <label class="face-pick">Dört sayfalık belge
+            <input type="file" id="tek-belge" accept=".pdf,image/*">
+          </label>
+        </div>
+        <div id="tek-yuz-alani" hidden>
+          <p class="hint">Dört yüzü tek tek seçin.</p>
+          <div class="single-faces">
+            <label class="face-pick">Ön kapak <input type="file" data-face="front" accept="image/*,.pdf"></label>
+            <label class="face-pick">Ön iç kapak <input type="file" data-face="front_inside" accept="image/*,.pdf"></label>
+            <label class="face-pick">Arka iç kapak <input type="file" data-face="back_inside" accept="image/*,.pdf"></label>
+            <label class="face-pick">Arka kapak <input type="file" data-face="back" accept="image/*,.pdf"></label>
+          </div>
+        </div>
+        <div class="dolap-alani">
+          <label for="tek-dolap">Dolap</label>
+          <input type="text" id="tek-dolap" list="dolap-listesi" placeholder="ör. Dolap 3"
+                 autocomplete="off" maxlength="120">
+        </div>
+        <span class="onay-satiri">
+          <input type="checkbox" id="tek-on-kontrol">
+          <label for="tek-on-kontrol">Önce kaliteyi kontrol et</label>
+        </span>
+        <button class="btn btn-primary" id="tek-yukle" disabled>Yükle ve İşe Ekle</button>
+      </div>
+    </div>
+    <datalist id="dolap-listesi"></datalist>
+
+    <div class="card" id="aktarim-rapor" hidden>
+      <div class="card-head">
+        <h2>Son aktarım raporu</h2>
+        <button class="btn" id="rapor-kapat">Kapat</button>
+      </div>
+      <div id="rapor-govde"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>İşleme kuyruğu</h2>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="islem-baslat">▶ 5 OCR İşlemeyi Başlat</button>
+          <button class="btn" id="islem-durdur" hidden>■ Durdur</button>
+        </div>
+      </div>
+      <div id="islem-durum" class="process-status" hidden></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Ad</th><th>Dolap</th><th>Durum</th><th>İlerleme</th><th>Tamam</th><th>İnceleme</th><th>Hata</th><th></th></tr></thead>
+          <tbody id="kuyruk-govde"></tbody>
+        </table>
+        <div class="empty-state" id="kuyruk-bos" hidden><p>Kuyrukta iş yok. Yukarıdan kapak yükleyerek başlayın.</p></div>
+      </div>
+      <div id="is-detay" class="job-detail" hidden></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ SESLİ KAYIT ═══════════════════ -->
+  <section id="sayfa-ses" class="page" hidden>
+    <h1>Sesli Kayıt</h1>
+    <div class="grid-2">
+      <div class="card">
+        <h2>Canlı kayıt</h2>
+        <p class="hint">Kitabı elinize alıp konuşun: "<em>Başlık … Yazar … Yayınevi … ISBN …</em>".
+        Kayıt bitince alanlar otomatik ayrıştırılır.</p>
+        <div class="record-zone">
+          <button class="record-btn" id="kayit-btn" aria-label="Kaydı başlat">🎙️</button>
+          <div class="level-meter" aria-hidden="true"><div id="seviye" class="level-fill"></div></div>
+          <output id="kayit-sure">0:00</output>
+        </div>
+        <div id="ses-durum" class="hint" role="status" aria-live="polite"></div>
+        <div id="ses-transkript" class="transcript" hidden></div>
+        <div id="ses-benzer" class="similar-box" hidden></div>
+      </div>
+      <div class="card">
+        <h2>Kitap bilgileri</h2>
+        <form id="ses-form" autocomplete="off">
+          <div class="form-grid">
+            <label>ISBN <input name="isbn"></label>
+            <label>Başlık
+              <div class="field-with-mic">
+                <input name="title">
+                <button type="button" class="btn-icon ses-alan-mikrofon" data-refield="title" aria-label="Başlığı yeniden söyle">🎤</button>
+              </div>
+            </label>
+            <label>Yazar(lar)
+              <div class="field-with-mic">
+                <input name="author" list="dl-yazar" placeholder="; ile ayırın">
+                <button type="button" class="btn-icon ses-alan-mikrofon" data-refield="author" aria-label="Yazarı yeniden söyle">🎤</button>
+              </div>
+            </label>
+            <label>Yayınevi
+              <div class="field-with-mic">
+                <input name="publisher" list="dl-yayinevi">
+                <button type="button" class="btn-icon ses-alan-mikrofon" data-refield="publisher" aria-label="Yayınevini yeniden söyle">🎤</button>
+              </div>
+            </label>
+            <label>Basım yılı <input name="publication_date"></label>
+            <label>Sayfa <input name="page_count" type="number" min="1"></label>
+            <label>Dil <input name="language" list="dl-dil"></label>
+            <label>Kategori <input name="category" list="dl-kategori"></label>
+            <label>Dolap <input name="location" list="dl-dolap" title="Raf değişene dek korunur"></label>
+            <label>Adet <input name="copy_count" type="number" min="1" max="1000" value="1"></label>
+          </div>
+          <div id="ses-uyari" class="warn-box" hidden></div>
+          <div id="ses-oneriler" class="chip-row" hidden></div>
+          <div class="drawer-actions">
+            <button type="submit" class="btn btn-primary" disabled id="ses-kaydet">Kaydet ve Onayla</button>
+            <button type="button" class="btn" hidden id="ses-vazgec">Kaydı Sil ve Vazgeç</button>
+            <label class="check-inline"><input type="checkbox" id="hizli-mod"> Hızlı mod (uygunsa otomatik kaydet)</label>
+          </div>
+        </form>
+        <div class="recent-box">
+          <h3>Son kaydedilenler</h3>
+          <ul id="ses-son" class="recent-list"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h2>Toplu ses dosyası işleme</h2>
+        <div class="btn-group">
+          <label class="check-inline">Dil
+            <select id="ses-toplu-dil">
+              <option value="">Ayar varsayılanı</option>
+              <option value="tr">Türkçe</option>
+              <option value="auto">Otomatik algıla</option>
+              <option value="en">İngilizce</option>
+            </select>
+          </label>
+          <button class="btn" id="ses-toplu-sec">Ses dosyaları ekle…</button>
+          <input type="file" id="ses-toplu-dosyalar" multiple accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.webm" hidden>
+          <button class="btn btn-primary" id="ses-kuyruk-baslat">▶ Kuyruğu İşle</button>
+          <button class="btn" id="ses-kuyruk-durdur" hidden>■ Durdur</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Ad</th><th>Durum</th><th>Faz</th><th>Toplam</th><th>Tamam</th><th>İnceleme</th><th>Hata</th><th></th></tr></thead>
+          <tbody id="ses-kuyruk-govde"></tbody>
+        </table>
+        <div class="empty-state" id="ses-kuyruk-bos" hidden><p>Ses işi yok. Telefonunuzla kaydettiğiniz ses dosyalarını ekleyin.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ ONAY ═══════════════════ -->
+  <section id="sayfa-onay" class="page" hidden>
+    <h1>Onay Merkezi</h1>
+    <div class="tab-row" id="onay-sekmeler" role="tablist" aria-label="Onay türü">
+      <button class="tab active" id="onay-tab-eslesme" data-tab="eslesme" role="tab"
+              aria-selected="true" aria-controls="onay-eslesme" tabindex="0">Eşleştirme Onayı <span id="eslesme-sayi" class="badge" hidden></span></button>
+      <button class="tab" id="onay-tab-bilgi" data-tab="bilgi" role="tab"
+              aria-selected="false" aria-controls="onay-bilgi" tabindex="-1">Kitap Bilgisi İncelemesi <span id="bilgi-sayi" class="badge" hidden></span></button>
+      <button class="tab" id="onay-tab-disoneri" data-tab="disoneri" role="tab"
+              aria-selected="false" aria-controls="onay-disoneri" tabindex="-1">Dış Öneriler <span id="disoneri-sayi" class="badge" hidden></span></button>
+    </div>
+
+    <div id="onay-disoneri" class="tab-panel" role="tabpanel" aria-labelledby="onay-tab-disoneri" hidden>
+      <p class="hint">İnternetten (allowlist'li kaynaklardan) çekilmiş, henüz kabul edilmemiş kitap
+      bilgileri. Hiçbiri otomatik uygulanmaz; "İncelemede doldur" formu yalnız ÖNERİ olarak doldurur,
+      kaydetmek size kalır.</p>
+      <div class="empty-state" id="disoneri-bos" hidden><p>Bekleyen dış öneri yok. 🎉</p></div>
+      <div id="disoneri-liste"></div>
+    </div>
+
+    <div id="onay-eslesme" class="tab-panel" role="tabpanel" aria-labelledby="onay-tab-eslesme">
+      <div class="empty-state" id="eslesme-bos" hidden><p>Bekleyen eşleştirme onayı yok. 🎉</p></div>
+      <div id="eslesme-liste"></div>
+    </div>
+
+    <div id="onay-bilgi" class="tab-panel" role="tabpanel" aria-labelledby="onay-tab-bilgi" hidden>
+      <div class="review-layout">
+        <div class="review-list-pane">
+          <ul id="bilgi-liste" class="review-list"></ul>
+          <div class="empty-state" id="bilgi-bos" hidden><p>İncelenecek kayıt yok. 🎉</p></div>
+          <div class="pager" id="bilgi-sayfalama" hidden>
+            <button class="btn" id="bilgi-sayfa-geri" aria-label="Önceki sayfa">◀</button>
+            <span id="bilgi-sayfa-bilgi"></span>
+            <button class="btn" id="bilgi-sayfa-ileri" aria-label="Sonraki sayfa">▶</button>
+          </div>
+        </div>
+        <div class="review-detail-pane" id="bilgi-detay" hidden>
+          <div class="review-reasons" id="bilgi-sebepler" hidden></div>
+          <div class="cover-strip" id="bilgi-kapaklar"></div>
+          <div id="bilgi-ses" hidden>
+            <button class="btn" id="bilgi-ses-cal">🔊 Sesi Çal</button>
+            <div class="transcript" id="bilgi-transkript"></div>
+          </div>
+          <form id="bilgi-form" autocomplete="off">
+            <div class="form-grid">
+              <label>Başlık <input name="title"></label>
+              <label>Alt başlık <input name="subtitle"></label>
+              <label>ISBN <input name="isbn"><span class="field-alt" id="bilgi-isbn-kanit"></span></label>
+              <label>Yayınevi <input name="publisher" list="dl-yayinevi"></label>
+              <label>Kategori <input name="category" list="dl-kategori"></label>
+              <label>Basım yılı <input name="publication_date"></label>
+              <label>Sayfa <input name="page_count" type="number" min="1"></label>
+              <label>Dil <input name="language" list="dl-dil"></label>
+              <label>Dolap <input name="location" list="dl-dolap"></label>
+              <label class="span-2">Tanıtım <textarea name="blurb" rows="2"></textarea></label>
+            </div>
+            <div class="drawer-actions">
+              <button type="submit" class="btn btn-primary" title="Ctrl+Enter">Kaydet ve Sıradakine Geç</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="card calib-card">
+        <h2>Güven kalibrasyonu</h2>
+        <p class="hint">Onayladığınız her kayıt, OCR güven eşiklerini iyileştiren örnek olur.
+        Yeterli örnek birikince profil üretin; otomatik alan kabulü açılır.</p>
+        <div class="calib-row">
+          <progress id="calib-bar" max="200" value="0"></progress>
+          <span id="calib-metin"></span>
+          <button class="btn" id="calib-uret" disabled>Profili Üret</button>
+        </div>
+      </div>
+      <div class="card" id="bilgi-basarisiz-panel">
+        <h2>Başarısız Öğeler</h2>
+        <p class="hint">İçe aktarma sırasında hata alan kitaplar; kanıtları burada gözden
+        geçirmeden önce tek tek ya da toplu olarak yeniden deneyebilirsiniz.</p>
+        <div class="empty-state" id="bilgi-basarisiz-bos" hidden><p>Hatalı öğe yok. 🎉</p></div>
+        <div id="bilgi-basarisiz-liste"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ HIZLI KAYIT ═══════════════════ -->
+  <section id="sayfa-hizli" class="page" hidden>
+    <h1>Hızlı Kayıt</h1>
+    <div class="card">
+      <p class="hint">Kitabın ISBN barkodunu okutun: kayıtlıysa tek tuşla nüsha eklenir,
+      değilse kısa formla yeni kayıt açılır. Demirbaş numaraları otomatik atanır
+      (<span id="hk-sonraki-kod">…</span> sıradaki numara).</p>
+      <label>Barkod
+        <input id="hk-kod" placeholder="ISBN okutun ya da yazıp Enter'a basın" autocomplete="off">
+      </label>
+      <div id="hk-sonuc" hidden>
+        <p id="hk-sonuc-metin"></p>
+        <div class="btn-group">
+          <button class="btn btn-primary" id="hk-nusha-ekle">＋1 Nüsha Ekle (Enter)</button>
+          <button class="btn" id="hk-vazgec">Vazgeç (Esc)</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="hk-form-kart" hidden>
+      <h2>Yeni Kitap</h2>
+      <div id="hk-benzer" class="hint" hidden></div>
+      <form id="hk-form" autocomplete="off">
+        <div class="form-grid">
+          <label>ISBN <input name="isbn" readonly tabindex="-1"></label>
+          <label>Başlık * <input name="title" required></label>
+          <label>Yazar(lar) <input name="authors" list="dl-yazar" placeholder="; ile ayırın"></label>
+          <label>Yayınevi <input name="publisher" list="dl-yayinevi"></label>
+          <label>Basım yılı <input name="publication_date"></label>
+          <label>Kategori <input name="category" list="dl-kategori"></label>
+          <label>Dolap/Raf <input name="location" list="dl-dolap"></label>
+          <label>Adet <input name="copy_count" type="number" min="1" max="1000" value="1"></label>
+        </div>
+        <details class="detay-ileri">
+          <summary>Edinme bilgisi (opsiyonel)</summary>
+          <div class="form-grid">
+            <label>Yöntem <select name="acquisition_method">
+              <option value="">Belirtilmedi</option>
+              <option value="satin_alma">Satın alma</option>
+              <option value="bagis">Bağış</option>
+              <option value="devir">Devir</option>
+            </select></label>
+            <label>Tarih <input name="acquisition_date" type="date"></label>
+            <label>Fiyat <input name="acquisition_price" placeholder="Örn. 125.50"></label>
+          </div>
+        </details>
+        <div class="drawer-actions">
+          <button type="submit" class="btn btn-primary" title="Ctrl+Enter">Kaydet ve Sıradakine Geç</button>
+          <button type="button" class="btn" id="hk-form-vazgec">Vazgeç</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Bu oturumda girilenler <span id="hk-sayac" class="badge" hidden></span></h2>
+      <table class="data-table">
+        <thead><tr><th>Kitap</th><th>Demirbaş No</th><th>İşlem</th></tr></thead>
+        <tbody id="hk-son-liste"></tbody>
+      </table>
+      <div class="empty-state" id="hk-bos"><p>Henüz kayıt yok. Barkod okutarak başlayın.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ ÖDÜNÇ ═══════════════════ -->
+  <section id="sayfa-odunc" class="page" hidden>
+    <h1>Ödünç İşlemleri</h1>
+    <div class="grid-2">
+      <div class="card">
+        <h2>📤 Ödünç Ver</h2>
+        <input type="search" id="od-uye-ara" aria-label="Ödünç verilecek üyeyi ara" placeholder="Okul numarasını okutun/yazıp Enter'a basın ya da ada göre arayın…" autocomplete="off">
+        <ul id="od-uye-sonuc" class="review-list" hidden></ul>
+        <div id="od-uye-kart" hidden>
+          <p><strong id="od-uye-ad"></strong> <span id="od-uye-detay" class="hint"></span>
+            <button class="btn" id="od-uye-birak" type="button">Üyeyi bırak</button></p>
+          <p id="od-uye-uyari" class="uyari-metin" hidden></p>
+          <ul id="od-uye-aktif" class="hint"></ul>
+        </div>
+        <label>Kitap barkodu / demirbaş no
+          <input id="od-ver-kod" placeholder="ISBN okutun ya da yazıp Enter'a basın" autocomplete="off">
+        </label>
+      </div>
+      <div class="card">
+        <h2>📥 İade Al</h2>
+        <p class="hint">Üye seçmeye gerek yok; kitabın barkodunu okutmanız yeterli.</p>
+        <label>Kitap barkodu / demirbaş no
+          <input id="od-iade-kod" placeholder="ISBN okutun ya da yazıp Enter'a basın" autocomplete="off">
+        </label>
+        <div id="od-iade-sonuc" class="hint" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="card banko-log-card" id="od-son-islemler-kart">
+      <div class="card-head">
+        <div>
+          <h2>Son İşlemler</h2>
+          <p class="hint">Bu uygulama oturumundaki ödünç ve iade denemeleri; en yeni işlem alttadır.</p>
+        </div>
+        <span class="banko-log-count" id="od-son-islem-sayi" aria-hidden="true">0 / 30</span>
+      </div>
+      <ol id="od-son-islemler" class="banko-log" role="log" tabindex="0" aria-live="polite"
+          aria-relevant="additions text" aria-label="Son ödünç ve iade işlemleri"></ol>
+      <div class="empty-state banko-log-empty" id="od-son-islemler-bos">
+        <p>Henüz işlem yok. Üye veya kitap barkodu okuttuğunuzda sonuç burada kalır.</p>
+      </div>
+    </div>
+
+    <div class="tab-row" id="odunc-sekmeler" role="tablist" aria-label="Ödünç kayıt türü">
+      <button class="tab active" id="od-tab-active" data-odtab="active" role="tab"
+              aria-selected="true" aria-controls="od-panel" tabindex="0">Aktif Ödünçler <span id="od-aktif-sayi" class="badge" hidden></span></button>
+      <button class="tab" id="od-tab-overdue" data-odtab="overdue" role="tab"
+              aria-selected="false" aria-controls="od-panel" tabindex="-1">Gecikenler <span id="od-geciken-sayi" class="badge badge-danger" hidden></span></button>
+      <button class="tab" id="od-tab-returned" data-odtab="returned" role="tab"
+              aria-selected="false" aria-controls="od-panel" tabindex="-1">İade Geçmişi</button>
+      <button class="tab" id="od-tab-holds" data-odtab="holds" role="tab"
+              aria-selected="false" aria-controls="od-rezervasyon-panel" tabindex="-1">Rezervasyonlar <span id="od-rezervasyon-sayi" class="badge" hidden></span></button>
+    </div>
+    <div id="od-panel" role="tabpanel" aria-labelledby="od-tab-active" tabindex="0">
+    <div class="filter-row">
+      <input type="search" id="od-liste-ara" aria-label="Ödünç kayıtlarında ara" placeholder="Kitap, üye veya numara ara…" autocomplete="off">
+      <label id="od-grupla-kutu" class="grup-anahtar" hidden><input type="checkbox" id="od-grupla"> Sınıfa göre grupla</label>
+      <button class="btn" id="od-gecikme-yazdir" hidden title="Sınıf başına ayrı sayfa; sınıf öğretmenine teslim formatı">🖨️ Sınıf listesi yazdır</button>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr><th>Kitap</th><th>Üye</th><th>Sınıf</th><th>Veriliş</th><th>Son Gün</th><th>Durum</th><th></th></tr>
+      </thead>
+      <tbody id="od-tablo"></tbody>
+    </table>
+    <div class="empty-state" id="od-bos" hidden><p>Kayıt yok.</p></div>
+    <div class="pager">
+      <button class="btn" id="od-sayfa-geri" aria-label="Önceki sayfa">◀</button>
+      <span id="od-sayfa-bilgi"></span>
+      <button class="btn" id="od-sayfa-ileri" aria-label="Sonraki sayfa">▶</button>
+    </div>
+    </div>
+    <div id="od-rezervasyon-panel" role="tabpanel" aria-labelledby="od-tab-holds" tabindex="0" hidden>
+      <table class="data-table">
+        <thead>
+          <tr><th>Kitap</th><th>Üye</th><th>Durum</th><th>Son Alma</th><th></th></tr>
+        </thead>
+        <tbody id="od-rezervasyon-tablo"></tbody>
+      </table>
+      <div class="empty-state" id="od-rezervasyon-bos" hidden><p>Bekleyen rezervasyon yok.</p></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ RAF HARİTASI ═══════════════════ -->
+  <section id="sayfa-harita" class="page" hidden>
+    <h1>Raf Haritası</h1>
+    <p class="hint">Dolaba tıklayınca kütüphane o dolabın kitaplarıyla açılır. Konum adları nüshalardaki "Dolap" metniyle birebir eşleşir.</p>
+    <div id="hr-izgara" class="harita-izgara"></div>
+    <div id="hr-yerlesmemis-kutu" hidden>
+      <h2>Haritaya yerleşmemiş dolaplar</h2>
+      <div id="hr-yerlesmemis" class="harita-serbest"></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <h2 id="hr-form-baslik">➕ Dolap Ekle</h2>
+        <input type="hidden" id="hr-duzenle-id">
+        <label>Dolap adı
+          <input id="hr-ad" placeholder="Örn. Dolap A" autocomplete="off" list="dl-dolap">
+        </label>
+        <div class="filter-row">
+          <label>Satır <input type="number" id="hr-satir" min="0" placeholder="—"></label>
+          <label>Sütun <input type="number" id="hr-sutun" min="0" placeholder="—"></label>
+          <label>Kapasite <input type="number" id="hr-kapasite" min="1" placeholder="—"></label>
+          <label>Renk <input type="color" id="hr-renk" value="#3453b8"></label>
+        </div>
+        <label>Not <input id="hr-not" autocomplete="off"></label>
+        <div class="filter-row">
+          <button class="btn btn-primary" id="hr-kaydet">Kaydet</button>
+          <button class="btn" id="hr-yeni" type="button">Yeni</button>
+          <button class="btn btn-danger" id="hr-sil" type="button" hidden>Dolabı Sil</button>
+        </div>
+        <p class="hint">Silme yalnız harita kaydını kaldırır; kitapların konum metni korunur.</p>
+      </div>
+      <div class="card">
+        <h2>❓ Haritada Olmayan Konumlar</h2>
+        <p class="hint">Nüshalarda geçen ama dolap kaydı olmayan konumlar. "Dolap yap" aynı adla kayıt açar; "Taşı" nüshaları seçilen dolabın adına aktarır (yazım varyantlarını birleştirir).</p>
+        <div id="hr-eslesmemis"></div>
+        <div class="empty-state" id="hr-eslesmemis-bos" hidden><p>Tüm konumlar haritada. 🎉</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ YAZDIR ═══════════════════ -->
+  <section id="sayfa-yazdir" class="page" hidden>
+    <h1>Yazdır</h1>
+    <p class="hint">Sayfalar yeni sekmede açılır; tarayıcının yazdırma penceresinden (Ctrl/Cmd+P) çıktı alın.</p>
+    <div class="grid-2">
+      <div class="card">
+        <h2>🏷️ Demirbaş Etiketleri</h2>
+        <p class="hint">Kitap sırtına/kapağına yapıştırılacak Code128 barkodlu etiketler (A4, 3 sütun).</p>
+        <label>Kapsam
+          <select id="yz-etiket-kapsam">
+            <option value="all">Tüm katalog</option>
+            <option value="location">Tek dolap</option>
+          </select>
+        </label>
+        <label id="yz-etiket-dolap-kutu" hidden>Dolap
+          <select id="yz-etiket-dolap"></select>
+        </label>
+        <p id="yz-kodsuz-bilgi" class="hint"></p>
+        <div class="filter-row">
+          <button class="btn" id="yz-kod-ver">1) Kod ver</button>
+          <button class="btn btn-primary" id="yz-etiket-bas">2) Etiketleri aç</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>🪪 Üye Kartları</h2>
+        <p class="hint">Okul numarası barkodlu kartlar; ödünç ekranında karta okutarak üye seçilir.</p>
+        <label>Sınıf
+          <select id="yz-kart-sinif"><option value="">Tüm sınıflar</option></select>
+        </label>
+        <button class="btn btn-primary" id="yz-kart-bas">Kartları aç</button>
+      </div>
+      <div class="card">
+        <h2>⏰ Gecikme Listeleri</h2>
+        <p class="hint">Sınıf başına ayrı sayfa; sınıf öğretmenine teslim formatı.</p>
+        <button class="btn btn-primary" id="yz-gecikme-bas">Listeyi aç</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ SAYIM ═══════════════════ -->
+  <section id="sayfa-sayim" class="page" hidden>
+    <h1>Envanter Sayımı</h1>
+
+    <div class="card" id="sy-yeni-kart">
+      <h2>Yeni Sayım Oturumu</h2>
+      <p class="hint">Kitapların ISBN barkodunu okutun; program kayıtlı nüsha sayısıyla
+      karşılaştırıp eksik/fazla raporu üretir. Ödünçteki kitaplar kayıp sayılmaz.
+      Oturum günlerce açık kalabilir.</p>
+      <div class="form-grid">
+        <label>Oturum adı <input id="sy-ad" placeholder="örn. 2026 Dönem Sonu Sayımı"></label>
+        <label>Kapsam (dolap/raf)
+          <input id="sy-kapsam" list="dl-dolap" placeholder="Boş bırakılırsa tüm kütüphane">
+        </label>
+      </div>
+      <button class="btn btn-primary" id="sy-baslat">Sayımı Başlat</button>
+    </div>
+
+    <div id="sy-oturum-liste"></div>
+
+    <div class="card" id="sy-aktif-kart" hidden>
+      <div class="card-head">
+        <h2 id="sy-aktif-baslik"></h2>
+        <div class="btn-group">
+          <button class="btn" id="sy-rapor">Raporu Gör</button>
+          <button class="btn btn-danger" id="sy-kapat">Oturumu Kapat</button>
+        </div>
+      </div>
+      <div class="calib-row">
+        <progress id="sy-ilerleme" max="100" value="0"></progress>
+        <span id="sy-ilerleme-metin"></span>
+      </div>
+      <label>Barkod okutun
+        <input id="sy-kod" placeholder="ISBN veya demirbaş no okutun / yazıp Enter'a basın" autocomplete="off">
+      </label>
+      <p class="hint">Barkodu olmayan kitap için:
+        <input id="sy-elle-ara" placeholder="kitap adıyla ara…" autocomplete="off" style="max-width: 240px;">
+      </p>
+      <ul id="sy-elle-sonuc" class="review-list" hidden></ul>
+      <div id="sy-son-mesaj" role="status" aria-live="polite"></div>
+      <h3>Son okutmalar</h3>
+      <table class="data-table">
+        <thead><tr><th>Kod</th><th>Kitap</th><th>Tür</th><th></th></tr></thead>
+        <tbody id="sy-son-liste"></tbody>
+      </table>
+    </div>
+
+    <div class="card" id="sy-rapor-kart" hidden>
+      <div class="card-head">
+        <h2>Sayım Raporu</h2>
+        <div class="btn-group">
+          <button class="btn btn-danger" id="sy-dusum-aktar" hidden>Kayıpları Düşüme Aktar</button>
+          <button class="btn btn-primary" id="sy-excel">Excel İndir</button>
+          <button class="btn" id="sy-rapor-kapat">Kapat</button>
+        </div>
+      </div>
+      <p id="sy-rapor-ozet"></p>
+      <div id="sy-rapor-icerik"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ ÜYELER ═══════════════════ -->
+  <section id="sayfa-uyeler" class="page" hidden>
+    <div class="page-head">
+      <h1>Üyeler</h1>
+      <button class="btn btn-primary" id="uye-yeni">+ Yeni Üye</button>
+    </div>
+    <div class="filter-row">
+      <input type="search" id="uye-ara" aria-label="Üyelerde ara" placeholder="Ad, soyad veya okul no ara…" autocomplete="off">
+      <select id="uye-sinif" aria-label="Sınıf filtresi"><option value="">Tüm sınıflar</option></select>
+      <select id="uye-tip" aria-label="Üye tipi filtresi">
+        <option value="">Öğrenci + Personel</option>
+        <option value="student">Öğrenci</option>
+        <option value="staff">Personel</option>
+      </select>
+      <select id="uye-durum" aria-label="Üye durumu filtresi">
+        <option value="true">Aktif</option>
+        <option value="false">Pasif</option>
+        <option value="">Tümü</option>
+      </select>
+    </div>
+
+    <div class="card" id="uye-form-kart" hidden>
+      <h2 id="uye-form-baslik">Yeni Üye</h2>
+      <form id="uye-form" autocomplete="off">
+        <div class="form-grid">
+          <label>Üye tipi
+            <select name="member_type">
+              <option value="student">Öğrenci</option>
+              <option value="staff">Personel</option>
+            </select>
+          </label>
+          <label>Okul no <input name="school_number"></label>
+          <label>Ad <input name="first_name" required></label>
+          <label>Soyad <input name="last_name" required></label>
+          <label>Sınıf/Şube <input name="class_name" placeholder="9-A"></label>
+          <label>Not <input name="notes"></label>
+        </div>
+        <div class="drawer-actions">
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+          <button type="button" class="btn" id="uye-form-vazgec">Vazgeç</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="table-wrap" id="uye-tablo-sarici">
+    <table class="data-table">
+      <thead>
+        <tr><th>Okul No</th><th>Ad Soyad</th><th>Sınıf</th><th>Tip</th><th>Durum</th><th></th></tr>
+      </thead>
+      <tbody id="uye-tablo"></tbody>
+    </table>
+    </div>
+    <div class="empty-state" id="uye-bos" hidden><p>Kayıtlı üye yok. e-Okul listesini yükleyin ya da elle ekleyin.</p></div>
+    <div class="pager">
+      <button class="btn" id="uye-sayfa-geri" aria-label="Önceki sayfa">◀</button>
+      <span id="uye-sayfa-bilgi"></span>
+      <button class="btn" id="uye-sayfa-ileri" aria-label="Sonraki sayfa">▶</button>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>e-Okul Listesi Yükle</h2>
+        <p class="hint">e-Okul'dan alınan sınıf listesi (.xlsx). Mevcut numaralar güncellenir,
+        yeniler eklenir; kimse pasife alınmaz.</p>
+        <label for="uye-eokul-dosya">e-Okul Excel dosyası</label>
+        <input type="file" id="uye-eokul-dosya" accept=".xlsx">
+        <button class="btn btn-primary" id="uye-eokul-yukle">İçe Aktar</button>
+        <div id="uye-eokul-sonuc" class="hint"></div>
+      </div>
+      <div class="card">
+        <h2>Yıl Sonu Sınıf Atlatma</h2>
+        <p class="hint">Yeni öğretim yılının tam listesini yükleyin: sınıflar güncellenir,
+        listede olmayan öğrenciler (mezun/nakil) pasife alınır. Önce önizleme gösterilir.</p>
+        <label for="uye-promote-dosya">Yeni öğretim yılı Excel dosyası</label>
+        <input type="file" id="uye-promote-dosya" accept=".xlsx">
+        <button class="btn" id="uye-promote-onizle">Önizle</button>
+        <div id="uye-promote-onizleme" hidden>
+          <p id="uye-promote-ozet"></p>
+          <ul id="uye-promote-detay" class="hint"></ul>
+          <div id="uye-promote-cozum" class="resolution-alert" role="alert" hidden>
+            <strong>İşlem bekleyen öğrenciler</strong>
+            <p>Üzerinde kitap bulunan, yeni listede olmayan öğrenciler veri kaybını
+            önlemek için aktif tutulur. Kitapları Ödünç İşlemleri ekranında iade
+            alın; sonra üyeyi düzenleyip pasifleştirin.</p>
+            <ul id="uye-promote-cozum-liste"></ul>
+          </div>
+          <button class="btn btn-primary" id="uye-promote-uygula">Uygula</button>
+          <button class="btn" id="uye-promote-vazgec">Vazgeç</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Üye özeti çekmecesi -->
+  <aside id="uye-detay" class="drawer" hidden role="dialog" aria-modal="true"
+         aria-labelledby="ud-ad" tabindex="-1">
+    <div class="drawer-head">
+      <h2 id="ud-ad"></h2>
+      <button class="btn-icon" id="uye-detay-kapat" aria-label="Kapat"><svg class="icon" aria-hidden="true"><use href="#i-carpi"/></svg></button>
+    </div>
+    <div class="drawer-body">
+      <p id="ud-kimlik" class="hint"></p>
+      <p id="ud-ceza" class="uyari-metin" hidden></p>
+      <p id="ud-yasak" class="uyari-metin" hidden></p>
+      <div class="drawer-actions">
+        <button type="button" class="btn" id="ud-af-buton" hidden>Af (Cezayı Kaldır)</button>
+      </div>
+      <details id="ud-durum-kutu">
+        <summary>Yasak / Af Geçmişi</summary>
+        <ul id="ud-yasak-liste" class="hint"></ul>
+        <div class="empty-state" id="ud-yasak-bos" hidden><p>Kayıt yok.</p></div>
+        <form id="ud-yasak-form" autocomplete="off">
+          <div class="form-grid">
+            <label>Elle yasak gerekçesi <input name="reason" required></label>
+            <label>Bitiş tarihi (opsiyonel) <input name="end_date" type="date"></label>
+          </div>
+          <div class="drawer-actions">
+            <button type="submit" class="btn btn-danger">Elle Yasakla</button>
+          </div>
+        </form>
+      </details>
+      <div class="stat-row stat-row-3">
+        <div class="stat-tile"><div class="stat-value" id="ud-toplam">–</div><div class="stat-label">Toplam Ödünç</div></div>
+        <div class="stat-tile"><div class="stat-value" id="ud-iade">–</div><div class="stat-label">İade</div></div>
+        <div class="stat-tile stat-tile-warn"><div class="stat-value" id="ud-gec">–</div><div class="stat-label">Geç İade</div></div>
+      </div>
+      <h3>Üzerindeki Kitaplar <span id="ud-aktif-sayi" class="badge" hidden></span></h3>
+      <ul id="ud-aktif" class="hint"></ul>
+      <div class="empty-state" id="ud-aktif-bos" hidden><p>Üzerinde kitap yok.</p></div>
+      <h3>Okuma Geçmişi (son 20)</h3>
+      <ul id="ud-gecmis" class="hint"></ul>
+      <div class="empty-state" id="ud-gecmis-bos" hidden><p>Henüz ödünç geçmişi yok.</p></div>
+      <h3>Okuma Listeleri</h3>
+      <ul id="ud-listeler" class="nusha-liste"></ul>
+      <div class="empty-state" id="ud-listeler-bos" hidden><p>Herhangi bir okuma listesine atanmamış.</p></div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════ OKUMA YARIŞMASI ═══════════════════ -->
+  <section id="sayfa-yarisma" class="page" hidden>
+    <div class="page-head">
+      <h1>Okuma Yarışması</h1>
+      <div class="filter-row">
+        <select id="yrs-secim" aria-label="Yarışma seç"></select>
+        <button class="btn btn-primary" id="yrs-yeni">+ Yeni Yarışma</button>
+      </div>
+    </div>
+
+    <div class="card" id="yrs-form-kart" hidden>
+      <h2>Yeni Yarışma</h2>
+      <form id="yrs-form" autocomplete="off">
+        <div class="form-grid">
+          <label>Ad <input name="name" required></label>
+          <label>Başlangıç <input name="start_date" type="date" required></label>
+          <label>Bitiş <input name="end_date" type="date" required></label>
+          <label>Hedef kitap sayısı <input name="target_books" type="number" min="1" required></label>
+          <label>Kapsam
+            <select name="scope" id="yrs-kapsam">
+              <option value="all">Tüm okul</option>
+              <option value="class">Tek sınıf</option>
+            </select>
+          </label>
+          <label>Sınıf <input name="class_name" id="yrs-sinif" placeholder="9-A" list="dl-yrs-sinif" disabled></label>
+          <datalist id="dl-yrs-sinif"></datalist>
+        </div>
+        <div class="drawer-actions">
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+          <button type="button" class="btn" id="yrs-form-vazgec">Vazgeç</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="yrs-pano" hidden>
+      <div class="card">
+        <div class="page-head">
+          <h2 id="yrs-ad"></h2>
+          <button class="btn" id="yrs-arsivle">Arşivle</button>
+        </div>
+        <p id="yrs-bilgi" class="hint"></p>
+        <div class="stat-row stat-row-3">
+          <div class="stat-tile"><div class="stat-value" id="yrs-hedef">–</div><div class="stat-label">Hedef Kitap</div></div>
+          <div class="stat-tile"><div class="stat-value" id="yrs-kalan-gun">–</div><div class="stat-label">Kalan Gün</div></div>
+          <div class="stat-tile"><div class="stat-value" id="yrs-katilimci">–</div><div class="stat-label">Katılımcı</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Sınıf Ligi</h2>
+        <div id="yrs-lig-grafik"></div>
+      </div>
+      <div class="card">
+        <h2>Sıralama (ilk 10)</h2>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>#</th><th>Ad</th><th>Sınıf</th><th>Okul No</th><th>Kitap</th><th>Hedef</th><th></th></tr></thead>
+            <tbody id="yrs-siralama"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="empty-state" id="yrs-bos" hidden><p>Henüz yarışma yok. Yukarıdan yeni bir yarışma oluşturun.</p></div>
+  </section>
+
+  <!-- Bildirim çekmecesi -->
+  <aside id="bildirim-cekmece" class="drawer" hidden role="dialog" aria-modal="true"
+         aria-labelledby="bildirim-baslik" tabindex="-1">
+    <div class="drawer-head">
+      <h2 id="bildirim-baslik">Bildirimler</h2>
+      <button class="btn-icon" id="bildirim-kapat" aria-label="Kapat"><svg class="icon" aria-hidden="true"><use href="#i-carpi"/></svg></button>
+    </div>
+    <div class="drawer-body">
+      <div class="filter-row">
+        <label class="check-inline"><input type="checkbox" id="bildirim-okunmamis"> Yalnız okunmamışlar</label>
+        <button class="btn" id="bildirim-tumunu-oku">Tümünü okundu işaretle</button>
+      </div>
+      <ul id="bildirim-liste" class="bildirim-liste"></ul>
+      <div class="empty-state" id="bildirim-bos" hidden><p>Bildirim yok. 🎉</p></div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════ DÜŞÜM ═══════════════════ -->
+  <section id="sayfa-dusum" class="page" hidden>
+    <div class="page-head">
+      <h1>Düşüm Defteri</h1>
+      <button class="btn btn-primary" id="du-tutanak">Tutanak İndir (Excel)</button>
+    </div>
+    <p class="hint">Yıpranmış, kayıp ya da güncelliğini yitirmiş kitaplar demirbaştan düşülür;
+    kayıt silinmez, deftere işlenir. Düşülen kitap ödünç verilemez ve sayımda beklenmez.
+    Kitap düşmek için Kütüphane sayfasında kitabın detayını açıp nüsha yanındaki
+    <strong>Düş</strong> düğmesini kullanın ya da sayım raporundaki
+    <strong>Kayıpları Düşüme Aktar</strong> ile toplu işleyin.</p>
+    <table class="data-table">
+      <thead>
+        <tr><th>Tarih</th><th>Demirbaş</th><th>Eser</th><th>Gerekçe</th><th>Açıklama</th><th></th></tr>
+      </thead>
+      <tbody id="du-tablo"></tbody>
+    </table>
+    <div class="empty-state" id="du-bos" hidden><p>Düşüm kaydı yok.</p></div>
+    <div class="pager">
+      <button class="btn" id="du-sayfa-geri" aria-label="Önceki sayfa">◀</button>
+      <span id="du-sayfa-bilgi"></span>
+      <button class="btn" id="du-sayfa-ileri" aria-label="Sonraki sayfa">▶</button>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ RAPORLAR ═══════════════════ -->
+  <section id="sayfa-raporlar" class="page" hidden>
+    <div class="page-head">
+      <h1>Okuma Raporları</h1>
+      <button class="btn btn-primary" id="rp-excel">Excel İndir</button>
+    </div>
+    <div class="filter-row">
+      <label>Başlangıç <input type="date" id="rp-baslangic"></label>
+      <label>Bitiş <input type="date" id="rp-bitis"></label>
+      <button class="btn" id="rp-uygula">Uygula</button>
+      <span class="hint">Boş bırakılırsa tüm zamanlar.</span>
+    </div>
+    <div id="rp-veri-kalitesi" class="resolution-alert" role="status" hidden></div>
+    <div class="grid-2">
+      <div class="card">
+        <h2>🏆 En Çok Okuyanlar</h2>
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Üye</th><th>Sınıf</th><th>Kitap</th></tr></thead>
+          <tbody id="rp-okuyanlar"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h2>🏫 Sınıf Bazında</h2>
+        <table class="data-table">
+          <thead><tr><th>Sınıf</th><th>Ödünç</th><th>Okuyan</th></tr></thead>
+          <tbody id="rp-siniflar"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h2>📕 Popüler Kitaplar</h2>
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Kitap</th><th>Ödünç</th><th>Okur</th></tr></thead>
+          <tbody id="rp-kitaplar"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h2>📅 Aylık Ödünç</h2>
+        <div id="rp-aylik"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ AYARLAR ═══════════════════ -->
+  <section id="sayfa-ayarlar" class="page" hidden>
+    <h1>Ayarlar</h1>
+    <div class="grid-2">
+      <div class="card">
+        <h2>Okul</h2>
+        <form id="ay-form" autocomplete="off">
+          <div class="form-grid">
+            <label class="span-2">Okul adı <input name="school_name" placeholder="örn. Atatürk Anadolu Lisesi"></label>
+          </div>
+          <h2>Ödünç Kuralları</h2>
+          <div class="form-grid">
+            <label>Öğrenci süresi (gün) <input name="loan_period_days" type="number" min="1" max="120"></label>
+            <label>Öğrenci azami kitap <input name="loan_max_books" type="number" min="1" max="20"></label>
+            <label>Personel süresi (gün) <input name="loan_period_days_staff" type="number" min="1" max="365"></label>
+            <label>Personel azami kitap <input name="loan_max_books_staff" type="number" min="1" max="50"></label>
+            <label class="check-inline"><input type="checkbox" name="overdue_block"> Gecikmiş kitabı olan yeni kitap alamasın</label>
+            <label>Geç iade cezası (gün × gecikme; 0 = kapalı)
+              <input name="overdue_penalty_per_day" type="number" min="0" max="10"></label>
+            <label>Azami uzatma sayısı (0 = sınırsız)
+              <input name="loan_max_renewals" type="number" min="0" max="10"></label>
+          </div>
+          <h2>Yedekleme</h2>
+          <div class="form-grid">
+            <label class="span-2">Yedek klasörü <input name="backup_dir" placeholder="Boş: uygulama veri klasörü/yedekler"></label>
+            <label>Saklanacak yedek sayısı <input name="backup_keep" type="number" min="1" max="100"></label>
+          </div>
+          <h2>Sesli Kayıt</h2>
+          <div class="form-grid">
+            <label>Kayıt dili
+              <select name="voice_language">
+                <option value="tr">Türkçe</option>
+                <option value="auto">Otomatik algıla</option>
+                <option value="en">İngilizce</option>
+              </select>
+            </label>
+            <label>İkinci geçiş dili
+              <select name="voice_second_pass_language">
+                <option value="auto">Otomatik algıla</option>
+                <option value="en">İngilizce</option>
+                <option value="de">Almanca</option>
+                <option value="fr">Fransızca</option>
+                <option value="ar">Arapça</option>
+              </select>
+            </label>
+            <label class="check-inline"><input type="checkbox" name="voice_second_pass"> Yabancı sözcükleri ikinci geçişle düzelt</label>
+            <label class="check-inline"><input type="checkbox" name="voice_prompt_bias"> Kataloğa göre istem yönlendirmesi kullan</label>
+            <label class="span-2">Ek istem metni (opsiyonel)
+              <input name="voice_prompt_extra" placeholder="örn. sık geçen yazar/yayınevi adları"></label>
+          </div>
+          <div class="drawer-actions">
+            <button type="submit" class="btn btn-primary">Kaydet</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h2>Sesli Düzeltme Sözlüğü</h2>
+        <p class="hint">Sesli kayıtta yanlış anlaşılan sözcükleri kalıcı düzeltmeye dönüştürür.
+        "Duyulan" metin katlanmış (aksansız/küçük) karşılaştırılır.</p>
+        <form id="ay-sozluk-form" autocomplete="off">
+          <div class="form-grid">
+            <label>Duyulan <input name="heard" required placeholder="örn. dı greyt gatsbi"></label>
+            <label>Kanonik <input name="canonical" required placeholder="örn. The Great Gatsby"></label>
+            <label>Kapsam
+              <select name="field_scope">
+                <option value="any">Her alan</option>
+                <option value="title">Başlık</option>
+                <option value="author">Yazar</option>
+                <option value="publisher">Yayınevi</option>
+              </select>
+            </label>
+          </div>
+          <div class="drawer-actions">
+            <button type="submit" class="btn btn-primary">Ekle</button>
+          </div>
+        </form>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Duyulan</th><th>Kanonik</th><th>Kapsam</th><th></th></tr></thead>
+            <tbody id="ay-sozluk-govde"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="ay-sozluk-bos" hidden><p>Sözlükte kayıt yok.</p></div>
+      </div>
+      <div class="card">
+        <h2>Görünüm</h2>
+        <label for="ay-tema">Tema
+          <select id="ay-tema">
+            <option value="system">Sistemle aynı</option>
+            <option value="light">Açık</option>
+            <option value="dark">Koyu</option>
+          </select>
+        </label>
+        <h2>Demirbaş Serisi</h2>
+        <p class="hint">Sıradaki otomatik numara: <strong id="ay-sonraki-kod">…</strong><br>
+        Numaralar yıl+sıra biçimindedir (örn. 2026-000001) ve hızlı kayıtta otomatik atanır.</p>
+        <h2>Öğrenci Arama Ekranı</h2>
+        <p class="hint">Öğrencilerin kendi başına katalog taraması için:
+        <a href="/opac" target="_blank" rel="noopener">/opac</a> adresini
+        kütüphane bilgisayarında ayrı bir pencerede açık bırakabilirsiniz;
+        oturum gerektirmez ve yönetim işlemlerine erişemez.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ DIŞA AKTARIM ═══════════════════ -->
+  <section id="sayfa-disari" class="page" hidden>
+    <h1>Dışa Aktarım</h1>
+    <div class="grid-2">
+      <div class="card">
+        <h2>Katalog dosyası</h2>
+        <div class="format-row" id="format-sec" role="radiogroup" aria-label="Biçim">
+          <label class="format-pick"><input type="radio" name="format" value="xlsx" checked> <span>Excel<br><small>.xlsx, 9 sayfa</small></span></label>
+          <label class="format-pick"><input type="radio" name="format" value="csv"> <span>CSV<br><small>tablo</small></span></label>
+          <label class="format-pick"><input type="radio" name="format" value="json"> <span>JSON<br><small>yapısal</small></span></label>
+          <label class="format-pick"><input type="radio" name="format" value="jsonl"> <span>JSONL<br><small>satır satır</small></span></label>
+          <label class="format-pick"><input type="radio" name="format" value="markdown"> <span>Markdown<br><small>ZIP paketi</small></span></label>
+        </div>
+        <label class="check-inline"><input type="checkbox" id="disari-tamam" checked> Yalnız tamamlanan kayıtlar</label>
+        <button class="btn btn-primary" id="disari-baslat">Dosyayı Hazırla</button>
+        <div id="disari-durum" class="hint" role="status" aria-live="polite"></div>
+      </div>
+      <div class="card">
+        <h2>Taşınabilir yedek</h2>
+        <p class="hint">Tüm katalog tek <code>.kitaparsiv</code> dosyasında: başka bir bilgisayara
+        taşıyabilir ya da yedek olarak saklayabilirsiniz.</p>
+        <label class="check-inline"><input type="checkbox" id="arsiv-kapak" checked> Kapak görsellerini dahil et</label>
+        <button class="btn btn-primary" id="arsiv-baslat">Yedek Oluştur</button>
+        <div id="arsiv-durum" class="hint" role="status" aria-live="polite"></div>
+      </div>
+      <div class="card">
+        <h2>♻️ Yedekten Geri Yükle</h2>
+        <p class="hint">Bir <code>.kitaparsiv</code> yedeğini geri yükler. Mevcut katalogun
+        otomatik güvenlik yedeği alınır; değişiklik uygulamayı <strong>tamamen kapatıp
+        yeniden açınca</strong> devreye girer.</p>
+        <label for="geri-dosya">Cumhuriyet Kitap yedek dosyası</label>
+        <input type="file" id="geri-dosya" accept=".kitaparsiv">
+        <button class="btn" id="geri-yukle">Yükle ve Doğrula</button>
+        <div id="geri-durum" class="hint" role="status" aria-live="polite"></div>
+        <div id="geri-ozet" hidden>
+          <p id="geri-ozet-metin"></p>
+          <div class="btn-group">
+            <button class="btn btn-primary" id="geri-onayla">Onayla</button>
+          </div>
+        </div>
+        <div id="geri-bekleyen" class="warn-box" hidden>
+          <p>⏳ Geri yükleme onaylandı — uygulamayı kapatıp yeniden açınca uygulanacak.</p>
+          <button class="btn" id="geri-vazgec">Vazgeç</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ MOTORLAR ═══════════════════ -->
+  <section id="sayfa-motorlar" class="page" hidden>
+    <div class="page-head">
+      <h1>Motor Durumu</h1>
+      <button class="btn" id="motor-dogrula">Durumu Doğrula</button>
+    </div>
+    <p class="hint">5 OCR motoru + Qwen3 alan çıkarıcı. Doğrulama model dosyalarının
+    SHA-256 özetlerini denetler; ilk açılışta biraz sürebilir.</p>
+    <div id="motor-durum" class="hint"></div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Motor</th><th>Sürüm</th><th>Aile</th><th>Hazır</th><th>Açıklama</th></tr></thead>
+        <tbody id="motor-govde"></tbody>
+      </table>
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<nav id="alt-nav" aria-label="Alt gezinme">
+  <ul>
+    <li><a href="#genel" data-page="genel"><svg class="icon" aria-hidden="true"><use href="#i-ev"/></svg><span>Genel</span></a></li>
+    <li><a href="#odunc" data-page="odunc"><svg class="icon" aria-hidden="true"><use href="#i-odunc"/></svg><span>Ödünç</span></a></li>
+    <li><a href="#kutuphane" data-page="kutuphane"><svg class="icon" aria-hidden="true"><use href="#i-kitap"/></svg><span>Kütüphane</span></a></li>
+    <li><a href="#uyeler" data-page="uyeler"><svg class="icon" aria-hidden="true"><use href="#i-uye"/></svg><span>Üyeler</span></a></li>
+    <li><button type="button" id="alt-nav-menu" aria-controls="ana-menu" aria-expanded="false" aria-label="Ana menüyü aç">
+      <svg class="icon" aria-hidden="true"><use href="#i-liste"/></svg><span>Menü</span>
+    </button></li>
+  </ul>
+</nav>
+
+<!-- Yeni kitap modalı -->
+<dialog id="modal-yeni">
+  <form id="yeni-form" method="dialog" autocomplete="off">
+    <h2>Yeni Kitap</h2>
+    <div class="form-grid">
+      <label>ISBN <input name="isbn"></label>
+      <label>Başlık <input name="title" required></label>
+      <label>Yazar(lar) <input name="authors" list="dl-yazar" placeholder="; ile ayırın"></label>
+      <label>Yayınevi <input name="publisher" list="dl-yayinevi"></label>
+      <label>Basım tarihi <input name="publication_date"></label>
+      <label>Sayfa <input name="page_count" type="number" min="1"></label>
+      <label>Dil <input name="language" list="dl-dil"></label>
+      <label>Kategori <input name="category" list="dl-kategori"></label>
+      <label>Dolap <input name="location" list="dl-dolap"></label>
+      <label>Adet <input name="copy_count" type="number" min="1" max="1000" value="1"></label>
+      <label>Edinme yöntemi <select name="acquisition_method">
+        <option value="">Belirtilmedi</option>
+        <option value="satin_alma">Satın alma</option>
+        <option value="bagis">Bağış</option>
+        <option value="devir">Devir</option>
+      </select></label>
+      <label>Edinme tarihi <input name="acquisition_date" type="date"></label>
+      <label>Fiyat <input name="acquisition_price" placeholder="Örn. 125.50"></label>
+    </div>
+    <div class="drawer-actions">
+      <button type="submit" class="btn btn-primary">Ekle</button>
+      <button type="button" class="btn" id="yeni-vazgec">Vazgeç</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Toplu değer modalı -->
+<dialog id="modal-deger">
+  <form method="dialog">
+    <h2 id="deger-baslik">Değer</h2>
+    <input id="deger-girdi" list="dl-kategori" autocomplete="off">
+    <div class="drawer-actions">
+      <button class="btn btn-primary" id="deger-tamam" value="ok">Uygula</button>
+      <button class="btn" value="cancel">Vazgeç</button>
+    </div>
+  </form>
+</dialog>
+
+<datalist id="dl-yayinevi"></datalist>
+<datalist id="dl-kategori"></datalist>
+<datalist id="dl-dil"></datalist>
+<datalist id="dl-dolap"></datalist>
+<datalist id="dl-yazar"></datalist>
+
+<div id="toasts" class="toasts" aria-label="Bildirimler" aria-live="polite" aria-relevant="additions"></div>
+
+<script type="module" src="/static/js/main.js"></script>
+</body>
+</html>

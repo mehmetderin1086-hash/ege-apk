@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "runtime_offline": true,
+  "engines": [
+    {
+      "id": "rapidocr_ppocrv6",
+      "required": true,
+      "family": "ppocr-classic",
+      "version": "PP-OCRv6-small+medium",
+      "license": "Apache-2.0",
+      "artifacts": [
+        {"path": "rapidocr/PP-OCRv6_det_small.onnx", "sha256": null},
+        {"path": "rapidocr/PP-OCRv6_rec_small.onnx", "sha256": null},
+        {"path": "rapidocr/PP-OCRv6_det_medium.onnx", "sha256": null},
+        {"path": "rapidocr/PP-OCRv6_rec_medium.onnx", "sha256": null},
+        {"path": "rapidocr/ch_ppocr_mobile_v2.0_cls_mobile.onnx", "sha256": null}
+      ]
+    },
+    {
+      "id": "tesseract",
+      "required": true,
+      "family": "tesseract-lstm",
+      "version": "5.5.2+tessdata_best",
+      "license": "Apache-2.0",
+      "artifacts": [
+        {"path": "tessdata/tur.traineddata", "sha256": null},
+        {"path": "tessdata/eng.traineddata", "sha256": null}
+      ]
+    },
+    {
+      "id": "easyocr",
+      "required": true,
+      "family": "craft-crnn",
+      "version": "1.7.2+latin_g2",
+      "license": "Apache-2.0",
+      "artifacts": [
+        {"path": "easyocr/craft_mlt_25k.pth", "sha256": null},
+        {"path": "easyocr/latin_g2.pth", "sha256": null}
+      ]
+    },
+    {
+      "id": "paddleocr_vl",
+      "required": true,
+      "family": "paddle-vlm",
+      "version": "1.6-1B",
+      "license": "Apache-2.0",
+      "artifacts": [
+        {"path": "paddleocr-vl/model.gguf", "sha256": null},
+        {"path": "paddleocr-vl/mmproj.gguf", "sha256": null}
+      ]
+    },
+    {
+      "id": "surya",
+      "required": true,
+      "family": "surya-vlm",
+      "version": "OCR-2-650M",
+      "license": "Modified-OpenRAIL-M",
+      "artifacts": [
+        {"path": "surya/model.gguf", "sha256": null},
+        {"path": "surya/mmproj.gguf", "sha256": null}
+      ]
+    }
+  ],
+  "extractor": {
+    "id": "qwen3_field_extractor",
+    "version": "Qwen3-4B-Q4_K_M",
+    "license": "Apache-2.0",
+    "artifacts": [
+      {"path": "qwen3/Qwen3-4B-Q4_K_M.gguf", "sha256": null}
+    ]
+  }
+}

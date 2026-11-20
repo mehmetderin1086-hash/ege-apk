@@ -1,0 +1,106 @@
+/* Yazdırma sayfaları: A4, etiket/kart ızgaraları, sınıf listeleri. */
+
+@page { size: A4; margin: 10mm; }
+
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: #000; background: #fff; margin: 0; padding: 12px;
+}
+
+.ekran-cubuk {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; margin-bottom: 14px;
+  background: #f0f2f7; border: 1px solid #cdd3e0; border-radius: 8px;
+}
+.ekran-cubuk button { font-size: 15px; padding: 6px 14px; cursor: pointer; }
+.ipucu { color: #555; font-size: 13px; }
+.uyari {
+  background: #fdf3d7; border: 1px solid #e5cf8a; border-radius: 6px;
+  padding: 8px 12px; font-size: 14px;
+}
+@media print {
+  .ekran-cubuk { display: none; }
+  body { padding: 0; }
+  .uyari { display: none; }
+}
+
+/* ── Demirbaş etiketleri: 3 sütun × ~8 satır (63,5 × 33,9 mm yaklaşık) ── */
+.etiket-sayfa {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 2mm;
+}
+.etiket {
+  border: 1px dashed #999; border-radius: 2mm; padding: 2mm;
+  height: 33mm; overflow: hidden; text-align: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  break-inside: avoid;
+}
+.etiket svg { max-width: 100%; height: auto; }
+.etiket-baslik { font-size: 11px; font-weight: 600; margin-bottom: 1mm; }
+.etiket-konum { font-size: 10px; color: #333; margin-top: 1mm; }
+@media print { .etiket { border-color: #ccc; } }
+
+/* ── Üye kartları: 2 sütun × 4 satır ── */
+.kart-sayfa {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 4mm;
+}
+.kart {
+  border: 1px solid #666; border-radius: 3mm; padding: 4mm;
+  height: 54mm; text-align: center; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  break-inside: avoid;
+}
+.kart svg { max-width: 100%; height: auto; margin-top: 2mm; }
+.kart-okul { font-size: 12px; color: #333; letter-spacing: .04em; text-transform: uppercase; }
+.kart-ad { font-size: 18px; font-weight: 700; margin: 2mm 0 1mm; }
+.kart-sinif { font-size: 14px; color: #333; }
+
+/* ── Gecikme listeleri: sınıf başına ayrı sayfa ── */
+.sinif-blok { break-after: page; }
+.sinif-blok:last-child { break-after: auto; }
+.sinif-blok h2 { margin: 4mm 0 1mm; }
+.sinif-blok table { width: 100%; border-collapse: collapse; margin-top: 3mm; }
+.sinif-blok th, .sinif-blok td {
+  border: 1px solid #999; padding: 2mm 3mm; font-size: 13px; text-align: left;
+}
+.sinif-blok th { background: #eee; }
+.sag { text-align: right; }
+
+/* ── Veli mektupları: üye başına ayrı sayfa ── */
+.mektup { break-after: page; padding: 10mm 6mm; font-size: 14px; line-height: 1.6; }
+.mektup:last-child { break-after: auto; }
+.mektup h2 { text-align: center; margin: 0 0 2mm; letter-spacing: .04em; }
+.mektup-tarih { text-align: right; color: #333; }
+.mektup table { width: 100%; border-collapse: collapse; margin: 4mm 0; }
+.mektup th, .mektup td {
+  border: 1px solid #999; padding: 2mm 3mm; font-size: 13px; text-align: left;
+}
+.mektup th { background: #eee; }
+.mektup-imza { display: flex; justify-content: flex-end; margin-top: 12mm; text-align: center; }
+.mektup-imza .imza-cizgi { border-top: 1px solid #333; margin-top: 10mm; padding: 1mm 12mm 0; }
+
+/* ── Demirbaş defteri + yıl sonu raporu: yatay A4 tablolar ── */
+.defter { padding: 6mm; }
+.defter h2 { text-align: center; margin: 0 0 1mm; }
+.defter h3 { margin: 5mm 0 1mm; }
+.defter table { width: 100%; border-collapse: collapse; margin-top: 2mm; }
+.defter th, .defter td {
+  border: 1px solid #999; padding: 1.5mm 2mm; font-size: 11px; text-align: left;
+}
+.defter th { background: #eee; }
+@page defter-yatay { size: A4 landscape; }
+.defter { page: defter-yatay; }
+
+/* ── Okuma sertifikası: A4 yatay, süslü çerçeve ── */
+@page sertifika-yatay { size: A4 landscape; margin: 0; }
+.sertifika {
+  page: sertifika-yatay; position: relative; min-height: 190mm;
+  display: grid; place-items: center; padding: 14mm; text-align: center;
+}
+.sertifika-cerceve { position: absolute; inset: 6mm; width: calc(100% - 12mm); height: calc(100% - 12mm); }
+.sertifika-icerik { max-width: 200mm; font-size: 16px; line-height: 1.7; }
+.sertifika-okul { text-transform: uppercase; letter-spacing: .12em; color: #555; }
+.sertifika h1 { font-size: 34px; margin: 4mm 0; letter-spacing: .04em; }
+.sertifika-ad { font-size: 26px; font-weight: 700; margin: 6mm 0 3mm; }
+.sertifika-derece { font-size: 20px; margin: 3mm 0; }
+.sertifika-tarih { color: #555; margin-top: 8mm; }

@@ -1,0 +1,22 @@
+[app]
+title = KitapKatalog
+project_dir = @PROJECT_DIR@
+input_file = @INPUT_FILE@
+project_file =
+exec_directory = @EXEC_DIRECTORY@
+icon =
+
+[python]
+python_path = @PYTHON_PATH@
+packages = @BUILD_PACKAGES@
+
+[qt]
+qml_files =
+excluded_qml_plugins = QtQuick,QtQuick3D,QtCharts,QtWebEngine,QtTest,QtSensors
+modules = Core,Gui,Widgets
+plugins = platforms,imageformats
+
+[nuitka]
+macos.permissions =
+mode = standalone
+extra_args = --quiet --noinclude-qt-translations --enable-plugins=anti-bloat --include-package=kitapkatalog --include-package-data=kitapkatalog --include-package=rapidocr --include-package-data=rapidocr --include-package=onnxruntime --include-package=easyocr --include-package-data=easyocr --include-module=zxingcpp --include-package=pillow_heif --include-package-data=pillow_heif --include-package=pypdfium2 --include-package-data=pypdfium2 --include-distribution-metadata=rapidocr --include-distribution-metadata=easyocr --include-distribution-metadata=pillow_heif --include-distribution-metadata=pypdfium2 --include-distribution-metadata=zxing-cpp --nofollow-import-to=tkinter
