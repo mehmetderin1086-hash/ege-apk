@@ -1,0 +1,2 @@
+# Preserve the original upstream library and license formatting.
+Vendor/Lame/** -whitespace linguist-vendored

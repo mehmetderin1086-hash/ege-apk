@@ -1,0 +1,31 @@
+# Bulk download extension v1.2
+
+Goal: persisted queue of up to 1,000 unfinished items; selectable 2/4/6 concurrent client pipelines (default4; preparing + transfer + import), server default4 conversion workers. Do not enqueue 1,000 concurrent network tasks/pollers. Existing library/history migrate without loss.
+
+## Core agent ownership
+Own `Ritim/Core/Models.swift`, `Ritim/Core/DownloadStore.swift`, optional new Core files, own `RitimTests/BulkDownloadTests.swift`. Existing public API stays compatible. Add:
+
+- `PlaylistItem: Codable, Identifiable, Hashable`: `id:String` video ID, `url:String` canonical URL, `title:String`, `artist:String`, `duration:Double?`, `index:Int` source index.
+- `PlaylistPreview: Codable`: `id:String`, `status:String` queued/resolving/completed/failed/cancelled, `title:String`, `items:[PlaylistItem]`, `skipped:Int`, `truncated:Bool`, `error:String?`.
+- Optional fields in DownloadEntry: `batchID:UUID?`, `batchName:String?`, `playlistID:UUID?`, `serverAcknowledged:Bool?`. Keep old history decode compatible. No new required fields without custom decode.
+- `DownloadStore`: @Published `playlistPreview:PlaylistPreview?`, `isResolvingPlaylist:Bool`, `bulkNotice:String?`, `isQueuePaused:Bool` persisted; `keepScreenAwake:Bool` persisted default true. `queueLimit=1000` static; `runningCount:Int`; `pendingCount:Int`; `completedCount:Int`; `failedCount:Int` computed. Queue pause lets CURRENT transfers finish, prevents new starts; UI must say this.
+- `resolvePlaylist(url:String) async` uses async resolver API below and polls; `cancelPlaylistResolution()`; `enqueuePlaylist(items:[PlaylistItem],title:String,format:DownloadFormat)`; `enqueueText(_ text:String,format:DownloadFormat,batchName:String)` accepts multiple newline/whitespace-separated video/direct-media URLs with per-invalid feedback and canonical YouTube URL+format dedupe. If single playlist URL sent to old `start`, show actionable resolve instruction instead of queue as single video.
+- `pauseQueue()`, `resumeQueue()`, `cancelAll()`, `retryFailed()`, `applicationDidBecomeActive()` restart coordinator/ack retries. Keep per-row cancel/retry. Reuse failed rows or dedupe them so retry cannot flood history. Persist batch additions once atomically BEFORE scheduling; report accepted/duplicate/invalid/over-limit counts in bulkNotice. Queue capacity applies unfinished items, completed history may be retained up to sensible bound (never lose pending).
+- Configurable pipeline scheduler pumps on add/finish/fail/cancel/restore/resume, FIFO based array order or timestamp explicitly preserved. Queue paused persists per instance history companion state, avoid tests sharing global flag.
+- Create a local library playlist for enqueued playlist group (use LibraryStore create/find/add existing APIs); add files as each import succeeds. Dedup completed tracks by canonical source URL+format across cleared history via library sourceURL + file extension. Existing completed tracks can be added to requested local playlist without re-download.
+- POST /v1/jobs/{id}/ack ONLY after file validated/copied AND library+download completion committed. Retry unacked completed records on resume; NEVER delete server output before durable local copy. Endpoint guard applies. Do not flood request concurrency for 1000 records. Server ack optional for older version compatibility; tell root details.
+
+## Backend agent ownership
+Own server folder only, tests/docs. Existing API backward compatible. Add protected:
+
+- POST `/v1/playlists/resolve` body {url,limit:1000} =>202 PlaylistPreview. Explicit YouTube playlist HTTPS validation (playlist?list=... or watch?v=...&list=...), no cookies/DRM. Accept stable playlist IDs, reject channels/arbitrary URLs/auto mixes as appropriate with meaningful errors. `--flat-playlist`, cap limit+1 to report truncated. Metadata only, no bulk media download during discovery. max1000 items, dedupe valid video IDs, filter obvious private/deleted/unavailable, track skipped, source order preserved.
+- GET `/v1/playlists/{id}` => PlaylistPreview; DELETE cancels. Resolver bounded concurrency1 and finite duration/output memory, sanitized errors, startup recovery/cancellation/retention. JSON shape above exact. Return items [] in working states.
+- POST `/v1/jobs/{id}/ack` =>200 {status:"acknowledged"}; idempotent, deletes only that completed output, persists acknowledged flag. Startup must NOT mark acknowledged completed jobs failed; /file returns410 when acknowledged. Avoid server disk filling during hundreds of sequential phone imports. Preserve unacknowledged user files/retention behavior. Health/status expose `playlist_limit:1000`, `queue_limit`, version/capabilities helpful.
+- Keep media max_queue12 if client submits at most SIX at once; hundreds queued on phone. Increase terminal history limit to >=2000 records to preserve acknowledgement retry and ensure _usage scans don't grow quadratically. Proof500 discovery/canonical dedupe/truncation/cancel/auth/ack/restart tests. Run tests and a small live playlist extraction + 2 public sample media downloads; no hundreds real media downloads in tests.
+- DO NOT restart live launchd until root coordinates.
+
+## UI agent ownership
+Own Views/DownloadsView.swift and new Views files only + RitimUITests/BulkUITests.swift. Keep old single URL accessibilityIdentifiers/tests compatible. Add mode single/multiple links/playlist, preview playlist (search/select all/clear/select individual, count, skipped/truncated note, MP3/MP4), selected enqueue with library playlist. Lazy views for 1000 rows. Queue summary completed/queued/running/failed, pause/resume (current files finish), retry errors, cancel all confirmation, filters, per-batch progress if practical. Show bulkNotice without disruptive alert (root global error alert already exists). Use @EnvironmentObject downloads. Settings toggle keepScreenAwake labelled current download use; honest help: large queue processing best with app open, iOS suspension may defer preparation, queue remains saved. Stable IDs bulk.mode, bulk.links, playlist.url, playlist.resolve, playlist.enqueue, queue.pause, queue.resume.
+
+## Root ownership
+App lifecycle/idle timer, project generation/version, tests/build/device deployment, README/validation/archive. Agents communicate API changes early. No unrelated playback changes.

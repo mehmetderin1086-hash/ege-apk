@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-10-26T14:41:33Z",
+  "playlists": [
+    {
+      "label": "user_mix",
+      "post_status": 202,
+      "status": "completed",
+      "seconds": 2.07,
+      "title": "Mix - Adele",
+      "count": 25,
+      "skipped": 0,
+      "truncated": true,
+      "error": null
+    },
+    {
+      "label": "upstream_test",
+      "post_status": 202,
+      "status": "completed",
+      "seconds": 1.36,
+      "title": "unlisted playlist",
+      "count": 1,
+      "skipped": 0,
+      "truncated": false,
+      "error": null
+    },
+    {
+      "label": "user_mix_1000",
+      "post_status": 202,
+      "status": "completed",
+      "seconds": 4.31,
+      "title": "Mix - Adele",
+      "count": 66,
+      "skipped": 0,
+      "truncated": false,
+      "error": null,
+      "metadata_only": true,
+      "first_titles": [
+        "Adele - Rolling in the Deep (Official Music Video)",
+        "Adele - Someone Like You (Official Music Video)",
+        "Adele - Easy On Me (Official Lyric Video)"
+      ],
+      "last_index": 66
+    }
+  ],
+  "media": [
+    {
+      "format": "mp3",
+      "status": "completed",
+      "seconds": 6.36,
+      "error": null,
+      "file_status": 200,
+      "bytes": 123000,
+      "mime": "audio/mpeg",
+      "decode_exit": 0,
+      "ack_status": 200,
+      "ack": {
+        "status": "acknowledged"
+      },
+      "after_ack_file_status": 410
+    },
+    {
+      "format": "mp4",
+      "status": "completed",
+      "seconds": 6.31,
+      "error": null,
+      "file_status": 200,
+      "bytes": 24267,
+      "mime": "video/mp4",
+      "decode_exit": 0,
+      "ack_status": 200,
+      "ack": {
+        "status": "acknowledged"
+      },
+      "after_ack_file_status": 410
+    }
+  ]
+}

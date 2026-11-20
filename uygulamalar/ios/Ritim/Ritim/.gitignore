@@ -1,0 +1,21 @@
+.DS_Store
+.build/
+.build-device/
+build/
+DerivedData/
+artifacts/*
+!artifacts/.gitkeep
+*.xcuserstate
+xcuserdata/
+.venv/
+__pycache__/
+.pytest_cache/
+.env
+.local/
+server/data/
+server/.runtime/
+*.zip
+*.secret
+# The bundled Kepçe Python framework needs its Xcode packaging scripts.
+!Vendor/KepceMotor/Python.xcframework/build/
+!Vendor/KepceMotor/Python.xcframework/build/**

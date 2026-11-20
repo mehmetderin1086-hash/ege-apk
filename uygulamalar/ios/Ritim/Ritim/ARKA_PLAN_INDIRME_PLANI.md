@@ -1,0 +1,13 @@
+# YouTube arka plan indirme planı
+
+Amaç: Uygulama ön plandayken çözümlenmiş YouTube akışlarını iOS arka plan URLSession ile aktarabilmek, alınan dosyaları kalıcı olarak korumak ve dönüşümü iOS'un verdiği işlem süresinde güvenle tamamlamak.
+
+1. Mevcut kuyruk kimliğine bağlı, atomik yazılan ve sürümlenmiş bir ara kayıt ekle. Her ses/video bileşeninin seçilmiş formatı, doğrulanmış boyutu, dosya yolu ve sistem görev kimliği kaydedilmeli. Geçici akış bağlantıları günlük veya kaynak arşivine yazılmamalı.
+2. Ön planda çözümlemeden sonra ses ve video bileşenleri için background URLSession indirme görevleri oluştur. Görevleri uygulama kapanmadan önce kayıtla ilişkilendir; arka plan olayları uygulama yeniden başlatıldığında aynı oturum üzerinden karşılanmalı. HTTP sonucu, son adres, dosya boyutu ve medya biçimi doğrulanmadan tamamlandı sayılmamalı.
+3. İndirme tamamlandığında dosyayı delegate dönüşünden önce kalıcı ara dizine taşı. Eksik veya süresi dolmuş akışın yenilenmesini sınırlı yeniden denemeyle ele al. Kullanıcının iptal ettiği, sildiği veya yeniden denediği iş için eski callback yeni işi tamamlamamalı.
+4. MP3 kodlaması ve MP4 birleştirmesi aktarım görevinden ayrılmalı. Tamamlanan kaynakları koruyarak dönüştürmeyi iOS tarafından planlanan BGProcessingTask ile çalıştır; süre dolunca işlemi iptal edip güvenli şekilde daha sonra yeniden dene. Uygulama ön plana gelince bekleyen dönüşümler de sürdürülmeli. iOS'un çalışma zamanı ve görev planlaması garanti değildir.
+5. Açılışta gerçek URLSession görevlerini, ara kayıtları ve kalıcı kütüphaneyi uzlaştır. Aktif işlerin doğrulanmış bileşenlerini silme; yalnız artık herhangi bir işe ait olmayan ara dosyaları temizle. Kütüphaneye ekleme ve kuyruk güncellemesi arasındaki kapanma tekrar dosya veya çalma listesi öğesi oluşturmamalı.
+6. Kuyruk duraklatma, tek iş/tüm işler iptali, yeniden deneme, düşük alan, URL süresi dolması, bağlantı kopması, işlem sonlandırılması ve yeniden açılış için otomatik testler ekle. Ön plan ve arka plan geçiş yarışları, eşzamanlı işler ve aynı sistem callback'inin tekrar teslimi de kapsanmalı.
+7. Gerçek iPhone'da mevcut kullanıcı kütüphanesinden ayrı test verisiyle MP3 ve MP4 başlat, ekranı gerçekten kilitle ve hem ağ aktarımının hem dönüşüm/kütüphane kaydının durumunu gözlemle. Uygulama kullanıcı tarafından uygulama değiştiriciden zorla kapatılırsa iOS arka plan görevlerini iptal edebilir; bu durum ayrı test edilip arayüzde doğru gösterilmeli.
+
+Mevcut uygulama bu planı henüz uygulamıyor: YouTube işleri arka plana girince iptal edilip yeniden sıraya alınıyor. Doğrudan medya bağlantıları mevcut background URLSession kullanıyor. Mevcut CPU-fatal koruması, yeni hat uçtan uca doğrulanana kadar kaldırılmamalı.

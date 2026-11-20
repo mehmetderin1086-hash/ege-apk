@@ -1,0 +1,978 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		012A0DAA45773F99EF2D5B7C /* MediaMetadataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 768851537D81AA48F1AE1E07 /* MediaMetadataTests.swift */; };
+		01B0269BBB8E316D958DC7DD /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3EA63B80083031154648E59 /* LibraryStore.swift */; };
+		02A1CE5032AD4DF608D282EB /* DashboardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A104D7B92E6C631C48828860 /* DashboardUITests.swift */; };
+		062404775F749B65294DED80 /* PythonMotoru.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41D6B3F2F34C05E5221AEE25 /* PythonMotoru.swift */; };
+		06367E67CFD1ECECE2E78924 /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A17CA6788F8E9CCEC9AE4A1 /* PlayerView.swift */; };
+		08A5DE0C840CF8782552A0E4 /* BulkDownloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70E648AD4E51B11A91C2A88 /* BulkDownloadTests.swift */; };
+		08DAC72A66C7B37A5FFA9053 /* DownloadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E88B473FAF3EF00BA88634AB /* DownloadsView.swift */; };
+		0925925CDBD6D40676155C01 /* RitimUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D58FAAF1EDA78F30EE3DF65 /* RitimUITests.swift */; };
+		0E53C4B7F1D84A09C3796076 /* LyricsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BE69E0C1BAA6DE290305649 /* LyricsUITests.swift */; };
+		216C5FC6329FD5EBE8688A3F /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84819DB4D439D371782065B5 /* DashboardView.swift */; };
+		233D623017DF6564F29EF139 /* native-4k-video.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = D4B770946AD35421DEB28524 /* native-4k-video.mp4 */; };
+		2B29F09CDD3BB9772279C68D /* native-audio.m4a in Resources */ = {isa = PBXBuildFile; fileRef = A97E5A0C27137DED44A222D3 /* native-audio.m4a */; };
+		2FEA1391A8912A732041BF76 /* AIAssistantTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 216F43B0350EE35DE4238A4B /* AIAssistantTests.swift */; };
+		356EF115F6B374E0B5885D5F /* PlaybackStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0F0F22337AD99051938351 /* PlaybackStore.swift */; };
+		36093462729F215715454C5A /* AIFeatures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7862D1F31FB35A1A252FAE4B /* AIFeatures.swift */; };
+		36B002906FD34D379C04DC6D /* NativeYouTubeCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 647E8C4A4396D6CC2559323B /* NativeYouTubeCatalog.swift */; };
+		39F8DA1B9D42B0FDC5547F57 /* ThemeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E585C7FDE88273F36AA3D841 /* ThemeTests.swift */; };
+		3A038F5873555C8281EA381D /* PlaylistCovers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 796BB0BD2664A0D10E2B902B /* PlaylistCovers.swift */; };
+		3B04FCE0360ABD816B7BA972 /* RhythmVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D776981213808C1A8469C43 /* RhythmVisuals.swift */; };
+		3C6517F5BC1C67CF16BB58F9 /* AIFeatureViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A547802386012490D233B927 /* AIFeatureViews.swift */; };
+		3D89C18A7E8C329EA6479B18 /* NativeCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D59F39CC4A34BB4B79736458 /* NativeCatalogTests.swift */; };
+		3DD6690FD7E4E07DF80409DA /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4068A9C4C038A6C6FC62F7BA /* RootView.swift */; };
+		3FC0F754F56C6C48E91A7105 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 0D82F46B94D2F7D77C86DEE5 /* README.md */; };
+		4322029DC5EADC04012D5492 /* CLame in Frameworks */ = {isa = PBXBuildFile; productRef = AC0D77790BFF0A168DFFDBF3 /* CLame */; };
+		433A690C6FD475D0A5A677F6 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4F7C97214276130C751EDF5 /* DesignSystem.swift */; };
+		443D93E3A19330D9D36FA281 /* ListeningStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3F883D54F80C449AF0EB2AC /* ListeningStoreTests.swift */; };
+		4D9AB04C3571E2A68A8983A2 /* LyricsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 096D6A54D3FFCB3156FAA7CF /* LyricsTests.swift */; };
+		508DB13E4E97EBDB49CBE806 /* AIExperienceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D658662992A3BEE6725CA6E /* AIExperienceUITests.swift */; };
+		518B4A62F7191FC4E9752E31 /* NativeMediaConverterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9214D46420F3440F79AC53AF /* NativeMediaConverterTests.swift */; };
+		51F4FC74B6844AE2E670AF66 /* HomeShelves.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788150ECCF989225AABBFE6C /* HomeShelves.swift */; };
+		575088B91811DF415F39FCF8 /* YouTubeDiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6F68616D1AF140EB8EC7A5E /* YouTubeDiscoverView.swift */; };
+		5880A0EA5EC606883822F4B8 /* MedyaBilgisi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 245D1E9B41A83D745A298C38 /* MedyaBilgisi.swift */; };
+		594C5FCBE8E1ABB8D00D230E /* RitimApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A4232642428192EBA6616E /* RitimApp.swift */; };
+		5D1A7618FFE1109EDA6398C4 /* yorunge.m4a in Resources */ = {isa = PBXBuildFile; fileRef = B37348AD1A0B8E0579A88878 /* yorunge.m4a */; };
+		5F4604451ACF24DB05F0A822 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1733469DC5720FF360A6632 /* Models.swift */; };
+		6251E0FA787E362D43D09910 /* SecureSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C910238A9E030BC30A8483C /* SecureSettingsTests.swift */; };
+		6A178F603FE775FB48FB8A57 /* DownloadQualityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07A7FAF3BDC8B3AEB2C232C /* DownloadQualityTests.swift */; };
+		6AE9FE6CA7693E6EE5CB5B1A /* AIAssistantFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C777BBE5418BAE9F313F2E /* AIAssistantFlowTests.swift */; };
+		73B23ED6BC4A231738297EAE /* AIAssistantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D989AC64A0B535AC59CE6D7 /* AIAssistantView.swift */; };
+		73C51B25F29D4C03F8704AC8 /* ListeningStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3620DC65F806BB3E5875ED6 /* ListeningStore.swift */; };
+		78B983E71E835EE76FBF6FDB /* AIAssistantStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1D3E28706EDC103B8948CFF /* AIAssistantStore.swift */; };
+		7982A9CE383779E6FD0D3C5D /* LyricsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6708FB763449FB9860DAEE6 /* LyricsView.swift */; };
+		7F24B341A94B7D01D2C6F8AF /* Python.xcframework in Embed Kepce Python */ = {isa = PBXBuildFile; fileRef = 2D09CE69D5630E5CB793EB85 /* Python.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		81107C5B7E5FDCAEF83871FC /* kiyi.m4a in Resources */ = {isa = PBXBuildFile; fileRef = B406340C0CE3EDDFDA19071D /* kiyi.m4a */; };
+		83EE2447D3FE9B6847FA1DB6 /* NativeScratchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F8F9190F69DFE713D7763EE /* NativeScratchTests.swift */; };
+		8D3E256CF8C9A33181500DF8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7426207BA6C7E84E65A81B79 /* Assets.xcassets */; };
+		8DE4C0BE8243665C67487870 /* BulkUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBBDE835469A5401D2529D7A /* BulkUITests.swift */; };
+		937BC87FCF0531085DCD0AAC /* PythonKoprusu.c in Sources */ = {isa = PBXBuildFile; fileRef = FF248F3068805DB1D19AD590 /* PythonKoprusu.c */; };
+		98031F42D753137C21F6CCD6 /* NativeYouTubeDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B160CAC9F04B072E5542DA /* NativeYouTubeDownloader.swift */; };
+		A120D465AA6FC2139026B351 /* AssistantConnectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD07D0DA3D227B28D0B28F04 /* AssistantConnectionView.swift */; };
+		A158AE9E7C792835660E51A3 /* LyricsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8AD9298FECE352C0D6BB7A8 /* LyricsStore.swift */; };
+		A5C0D1C7FC75AE5AEEDAF6CA /* SmartCollections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A1529C69988F6AFDE8983D3 /* SmartCollections.swift */; };
+		A801601A51DB51521D6E1CD8 /* YouTubeReliabilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8222D7C24F83A5F8814B65C3 /* YouTubeReliabilityTests.swift */; };
+		A8E89D6E2A4531CF8FC8EEF8 /* DownloadPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C330CA8A3FB127486DCC7A5 /* DownloadPolicyTests.swift */; };
+		AB00BCD6B31A29E3DB0F6AC3 /* LibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4164FADC3D87CDF72409557 /* LibraryTests.swift */; };
+		ACBE581CEABDA6CEB48B977A /* RichMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FAC077061F0C387EDBAF0D0 /* RichMotion.swift */; };
+		AF4C359E4FC63CDD426D5952 /* NativeYouTubeExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 456188CBEE3316F787A17588 /* NativeYouTubeExtractor.swift */; };
+		B098AEC46FCA5B085BE1F279 /* YouTubeKit in Frameworks */ = {isa = PBXBuildFile; productRef = FD83B7C055785FC38BAEED6E /* YouTubeKit */; };
+		B38042AB509AB0437DC1C6A3 /* OfflinePlaybackUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88C6EA057DC763A9C91B4A5 /* OfflinePlaybackUITests.swift */; };
+		B4543977EE7C1A6B47B81E01 /* AIFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6F2E67E2CF69F00CA81DDA /* AIFeatureTests.swift */; };
+		B6A46B29BFC799B85E1265F2 /* PlaybackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D29E1DEF6243A28F36D3EB /* PlaybackTests.swift */; };
+		B8AC0CEE91007F002B63016C /* PlaybackEnduranceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2753542084E73B2E71C6A1EB /* PlaybackEnduranceUITests.swift */; };
+		BBAA72629BAE3D9B9E29E1E7 /* PlaybackResumeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CC39A7494459191169234CD /* PlaybackResumeUITests.swift */; };
+		C475370424AA89465CC30A3D /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = A551487D45F3D3049FDE7C20 /* LICENSE */; };
+		CB51EBE00CA4FB689C144DA1 /* gece-yolu.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 8E0EE0565F050A87344E14BC /* gece-yolu.m4a */; };
+		CD101AE2833710AB5A7C91E7 /* DirectAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE5B662D735F9FF15076590 /* DirectAIClient.swift */; };
+		CE900D890061D584ADF7A397 /* ThirdPartyNotices.md in Resources */ = {isa = PBXBuildFile; fileRef = 22BE97EA7DDEED5E06C29304 /* ThirdPartyNotices.md */; };
+		D1689494E44D5BDB003E734F /* DownloadStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEF3F365F9794592937A3D3D /* DownloadStore.swift */; };
+		D36F63C98BE9E77ECD99A4BF /* Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = F243CC5FAC67AA07805DEF23 /* Motion.swift */; };
+		DA501019EEAFA4500650FA6E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 12A1F241B91768A95D886F81 /* PrivacyInfo.xcprivacy */; };
+		DFF3F181A70F42CCAD566090 /* ProductionPlaybackStabilityUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59C05F3EB7EC35884FDBBB5F /* ProductionPlaybackStabilityUITests.swift */; };
+		E6DFF1218011A07CAF7FBEF3 /* SmartCollectionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A62BAEB4B6788A1E7A8DDC /* SmartCollectionsTests.swift */; };
+		E722841A7C25806D46A26B23 /* MediaMetadataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 741B2CC60D331F4473A1F3A3 /* MediaMetadataStore.swift */; };
+		EAE2742636EC864C838AE085 /* SmartCollectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CF122C47F9471728E06E371 /* SmartCollectionsView.swift */; };
+		EC2FB89EB9D0B263D22C2CFD /* DownloadFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95B25E884F1B7FC225250C3A /* DownloadFlowTests.swift */; };
+		EDB4F0438904EFE655FCBDE3 /* DownloadQualityUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1F164865131F7E702A6912 /* DownloadQualityUITests.swift */; };
+		EE06B1B9FD5BED9473C1C895 /* NativeDownloadUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E003F8D7E01935B9AFC212B /* NativeDownloadUITests.swift */; };
+		F469CB44E3F8D3A6649DE619 /* COPYING in Resources */ = {isa = PBXBuildFile; fileRef = 931A981F4F9D03FE187381A5 /* COPYING */; };
+		F66D0515E7E5C2C9E7989EEE /* ArtistsAlbumsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81908A510DBECB597AF4AE3C /* ArtistsAlbumsView.swift */; };
+		FBC8B6FFD8E7EDBAAA29C1C9 /* NativeMediaConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A16680809B38CDFAF06F2963 /* NativeMediaConverter.swift */; };
+		FD02495FEE34713A8F4F394D /* Python.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2D09CE69D5630E5CB793EB85 /* Python.xcframework */; };
+		FE10407C5A92D6FF50A0DA9C /* MusicLibraryUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDEB77E44B8DB3A2BD49F734 /* MusicLibraryUITests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BEB2DBA20510ACDF2A5DCDC4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 52C74687A25BDC270E0E1E9B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DC33BC036C6B5AB9DCE50450;
+			remoteInfo = Ritim;
+		};
+		C8281B381711D2AD12D30F64 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 52C74687A25BDC270E0E1E9B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DC33BC036C6B5AB9DCE50450;
+			remoteInfo = Ritim;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		0946B40E72ABD225CE6455F6 /* Embed Kepce Python */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				7F24B341A94B7D01D2C6F8AF /* Python.xcframework in Embed Kepce Python */,
+			);
+			name = "Embed Kepce Python";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		096D6A54D3FFCB3156FAA7CF /* LyricsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsTests.swift; sourceTree = "<group>"; };
+		0D776981213808C1A8469C43 /* RhythmVisuals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RhythmVisuals.swift; sourceTree = "<group>"; };
+		0D82F46B94D2F7D77C86DEE5 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		12A1F241B91768A95D886F81 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		1C910238A9E030BC30A8483C /* SecureSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureSettingsTests.swift; sourceTree = "<group>"; };
+		1D6F2E67E2CF69F00CA81DDA /* AIFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIFeatureTests.swift; sourceTree = "<group>"; };
+		1D989AC64A0B535AC59CE6D7 /* AIAssistantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAssistantView.swift; sourceTree = "<group>"; };
+		20C777BBE5418BAE9F313F2E /* AIAssistantFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAssistantFlowTests.swift; sourceTree = "<group>"; };
+		21607A13EB0623B31E1C2724 /* Ritim-Bridging-Header.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Ritim-Bridging-Header.h"; sourceTree = "<group>"; };
+		216F43B0350EE35DE4238A4B /* AIAssistantTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAssistantTests.swift; sourceTree = "<group>"; };
+		22BE97EA7DDEED5E06C29304 /* ThirdPartyNotices.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ThirdPartyNotices.md; sourceTree = "<group>"; };
+		245D1E9B41A83D745A298C38 /* MedyaBilgisi.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MedyaBilgisi.swift; sourceTree = "<group>"; };
+		2753542084E73B2E71C6A1EB /* PlaybackEnduranceUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackEnduranceUITests.swift; sourceTree = "<group>"; };
+		2C330CA8A3FB127486DCC7A5 /* DownloadPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadPolicyTests.swift; sourceTree = "<group>"; };
+		2CC39A7494459191169234CD /* PlaybackResumeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackResumeUITests.swift; sourceTree = "<group>"; };
+		2D09CE69D5630E5CB793EB85 /* Python.xcframework */ = {isa = PBXFileReference; includeInIndex = 1; name = Python.xcframework; path = Vendor/KepceMotor/Python.xcframework; sourceTree = "<group>"; };
+		31D4791BFED2E8048FD7605D /* RitimTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RitimTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3D58FAAF1EDA78F30EE3DF65 /* RitimUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RitimUITests.swift; sourceTree = "<group>"; };
+		3D658662992A3BEE6725CA6E /* AIExperienceUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIExperienceUITests.swift; sourceTree = "<group>"; };
+		4068A9C4C038A6C6FC62F7BA /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		41D6B3F2F34C05E5221AEE25 /* PythonMotoru.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PythonMotoru.swift; sourceTree = "<group>"; };
+		456188CBEE3316F787A17588 /* NativeYouTubeExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeYouTubeExtractor.swift; sourceTree = "<group>"; };
+		4C9D9B81DA48CB98B18F70CA /* PythonKoprusu.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = PythonKoprusu.h; sourceTree = "<group>"; };
+		4F8F9190F69DFE713D7763EE /* NativeScratchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeScratchTests.swift; sourceTree = "<group>"; };
+		59C05F3EB7EC35884FDBBB5F /* ProductionPlaybackStabilityUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductionPlaybackStabilityUITests.swift; sourceTree = "<group>"; };
+		5A0F0F22337AD99051938351 /* PlaybackStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackStore.swift; sourceTree = "<group>"; };
+		647E8C4A4396D6CC2559323B /* NativeYouTubeCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeYouTubeCatalog.swift; sourceTree = "<group>"; };
+		6C7A3CDB75ED4868344C11F0 /* RitimUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RitimUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		741B2CC60D331F4473A1F3A3 /* MediaMetadataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaMetadataStore.swift; sourceTree = "<group>"; };
+		7426207BA6C7E84E65A81B79 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		768851537D81AA48F1AE1E07 /* MediaMetadataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaMetadataTests.swift; sourceTree = "<group>"; };
+		7862D1F31FB35A1A252FAE4B /* AIFeatures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIFeatures.swift; sourceTree = "<group>"; };
+		788150ECCF989225AABBFE6C /* HomeShelves.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeShelves.swift; sourceTree = "<group>"; };
+		796BB0BD2664A0D10E2B902B /* PlaylistCovers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistCovers.swift; sourceTree = "<group>"; };
+		7CF122C47F9471728E06E371 /* SmartCollectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartCollectionsView.swift; sourceTree = "<group>"; };
+		81908A510DBECB597AF4AE3C /* ArtistsAlbumsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtistsAlbumsView.swift; sourceTree = "<group>"; };
+		8222D7C24F83A5F8814B65C3 /* YouTubeReliabilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeReliabilityTests.swift; sourceTree = "<group>"; };
+		84819DB4D439D371782065B5 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		8E0EE0565F050A87344E14BC /* gece-yolu.m4a */ = {isa = PBXFileReference; path = "gece-yolu.m4a"; sourceTree = "<group>"; };
+		8FAC077061F0C387EDBAF0D0 /* RichMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RichMotion.swift; sourceTree = "<group>"; };
+		9017D1B2E61C5969D7879D50 /* Lame */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Lame; path = Vendor/Lame; sourceTree = SOURCE_ROOT; };
+		9214D46420F3440F79AC53AF /* NativeMediaConverterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeMediaConverterTests.swift; sourceTree = "<group>"; };
+		931A981F4F9D03FE187381A5 /* COPYING */ = {isa = PBXFileReference; path = COPYING; sourceTree = "<group>"; };
+		95B25E884F1B7FC225250C3A /* DownloadFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadFlowTests.swift; sourceTree = "<group>"; };
+		9A1529C69988F6AFDE8983D3 /* SmartCollections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartCollections.swift; sourceTree = "<group>"; };
+		9A17CA6788F8E9CCEC9AE4A1 /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
+		9BE69E0C1BAA6DE290305649 /* LyricsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsUITests.swift; sourceTree = "<group>"; };
+		9E003F8D7E01935B9AFC212B /* NativeDownloadUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeDownloadUITests.swift; sourceTree = "<group>"; };
+		A104D7B92E6C631C48828860 /* DashboardUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardUITests.swift; sourceTree = "<group>"; };
+		A16680809B38CDFAF06F2963 /* NativeMediaConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeMediaConverter.swift; sourceTree = "<group>"; };
+		A3EA63B80083031154648E59 /* LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStore.swift; sourceTree = "<group>"; };
+		A4164FADC3D87CDF72409557 /* LibraryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryTests.swift; sourceTree = "<group>"; };
+		A547802386012490D233B927 /* AIFeatureViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIFeatureViews.swift; sourceTree = "<group>"; };
+		A551487D45F3D3049FDE7C20 /* LICENSE */ = {isa = PBXFileReference; path = LICENSE; sourceTree = "<group>"; };
+		A70E648AD4E51B11A91C2A88 /* BulkDownloadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkDownloadTests.swift; sourceTree = "<group>"; };
+		A97E5A0C27137DED44A222D3 /* native-audio.m4a */ = {isa = PBXFileReference; path = "native-audio.m4a"; sourceTree = "<group>"; };
+		B37348AD1A0B8E0579A88878 /* yorunge.m4a */ = {isa = PBXFileReference; path = yorunge.m4a; sourceTree = "<group>"; };
+		B406340C0CE3EDDFDA19071D /* kiyi.m4a */ = {isa = PBXFileReference; path = kiyi.m4a; sourceTree = "<group>"; };
+		B4F7C97214276130C751EDF5 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		B6F68616D1AF140EB8EC7A5E /* YouTubeDiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeDiscoverView.swift; sourceTree = "<group>"; };
+		B88C6EA057DC763A9C91B4A5 /* OfflinePlaybackUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflinePlaybackUITests.swift; sourceTree = "<group>"; };
+		BDEB77E44B8DB3A2BD49F734 /* MusicLibraryUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicLibraryUITests.swift; sourceTree = "<group>"; };
+		BEF3F365F9794592937A3D3D /* DownloadStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadStore.swift; sourceTree = "<group>"; };
+		CA1F164865131F7E702A6912 /* DownloadQualityUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadQualityUITests.swift; sourceTree = "<group>"; };
+		CCE5B662D735F9FF15076590 /* DirectAIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectAIClient.swift; sourceTree = "<group>"; };
+		CD07D0DA3D227B28D0B28F04 /* AssistantConnectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantConnectionView.swift; sourceTree = "<group>"; };
+		D1D3E28706EDC103B8948CFF /* AIAssistantStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAssistantStore.swift; sourceTree = "<group>"; };
+		D4B770946AD35421DEB28524 /* native-4k-video.mp4 */ = {isa = PBXFileReference; path = "native-4k-video.mp4"; sourceTree = "<group>"; };
+		D59F39CC4A34BB4B79736458 /* NativeCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeCatalogTests.swift; sourceTree = "<group>"; };
+		D5D29E1DEF6243A28F36D3EB /* PlaybackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackTests.swift; sourceTree = "<group>"; };
+		D8AD9298FECE352C0D6BB7A8 /* LyricsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsStore.swift; sourceTree = "<group>"; };
+		DBBDE835469A5401D2529D7A /* BulkUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkUITests.swift; sourceTree = "<group>"; };
+		E1733469DC5720FF360A6632 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		E3620DC65F806BB3E5875ED6 /* ListeningStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningStore.swift; sourceTree = "<group>"; };
+		E585C7FDE88273F36AA3D841 /* ThemeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTests.swift; sourceTree = "<group>"; };
+		E88B473FAF3EF00BA88634AB /* DownloadsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsView.swift; sourceTree = "<group>"; };
+		E9B160CAC9F04B072E5542DA /* NativeYouTubeDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeYouTubeDownloader.swift; sourceTree = "<group>"; };
+		EB64020BD09B313671D8CDE9 /* Ritim.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Ritim.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F07A7FAF3BDC8B3AEB2C232C /* DownloadQualityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadQualityTests.swift; sourceTree = "<group>"; };
+		F1A4232642428192EBA6616E /* RitimApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RitimApp.swift; sourceTree = "<group>"; };
+		F1A62BAEB4B6788A1E7A8DDC /* SmartCollectionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartCollectionsTests.swift; sourceTree = "<group>"; };
+		F243CC5FAC67AA07805DEF23 /* Motion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion.swift; sourceTree = "<group>"; };
+		F3F883D54F80C449AF0EB2AC /* ListeningStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningStoreTests.swift; sourceTree = "<group>"; };
+		F6708FB763449FB9860DAEE6 /* LyricsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsView.swift; sourceTree = "<group>"; };
+		FF248F3068805DB1D19AD590 /* PythonKoprusu.c */ = {isa = PBXFileReference; includeInIndex = 1; path = PythonKoprusu.c; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A3C15C8EB025D279984C8AF6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B098AEC46FCA5B085BE1F279 /* YouTubeKit in Frameworks */,
+				4322029DC5EADC04012D5492 /* CLame in Frameworks */,
+				FD02495FEE34713A8F4F394D /* Python.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		02928D9C2FD628A92BA8E105 /* RitimUITests */ = {
+			isa = PBXGroup;
+			children = (
+				20C777BBE5418BAE9F313F2E /* AIAssistantFlowTests.swift */,
+				DBBDE835469A5401D2529D7A /* BulkUITests.swift */,
+				A104D7B92E6C631C48828860 /* DashboardUITests.swift */,
+				3D658662992A3BEE6725CA6E /* AIExperienceUITests.swift */,
+				95B25E884F1B7FC225250C3A /* DownloadFlowTests.swift */,
+				CA1F164865131F7E702A6912 /* DownloadQualityUITests.swift */,
+				9BE69E0C1BAA6DE290305649 /* LyricsUITests.swift */,
+				BDEB77E44B8DB3A2BD49F734 /* MusicLibraryUITests.swift */,
+				9E003F8D7E01935B9AFC212B /* NativeDownloadUITests.swift */,
+				B88C6EA057DC763A9C91B4A5 /* OfflinePlaybackUITests.swift */,
+				2753542084E73B2E71C6A1EB /* PlaybackEnduranceUITests.swift */,
+				2CC39A7494459191169234CD /* PlaybackResumeUITests.swift */,
+				59C05F3EB7EC35884FDBBB5F /* ProductionPlaybackStabilityUITests.swift */,
+				3D58FAAF1EDA78F30EE3DF65 /* RitimUITests.swift */,
+			);
+			path = RitimUITests;
+			sourceTree = "<group>";
+		};
+		12A0842F76434F0F907ACC50 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				9017D1B2E61C5969D7879D50 /* Lame */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		17F6A8C584870B0D66396C8E /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				D1D3E28706EDC103B8948CFF /* AIAssistantStore.swift */,
+				CCE5B662D735F9FF15076590 /* DirectAIClient.swift */,
+				BEF3F365F9794592937A3D3D /* DownloadStore.swift */,
+				A3EA63B80083031154648E59 /* LibraryStore.swift */,
+				E3620DC65F806BB3E5875ED6 /* ListeningStore.swift */,
+				D8AD9298FECE352C0D6BB7A8 /* LyricsStore.swift */,
+				741B2CC60D331F4473A1F3A3 /* MediaMetadataStore.swift */,
+				E1733469DC5720FF360A6632 /* Models.swift */,
+				A16680809B38CDFAF06F2963 /* NativeMediaConverter.swift */,
+				647E8C4A4396D6CC2559323B /* NativeYouTubeCatalog.swift */,
+				E9B160CAC9F04B072E5542DA /* NativeYouTubeDownloader.swift */,
+				456188CBEE3316F787A17588 /* NativeYouTubeExtractor.swift */,
+				5A0F0F22337AD99051938351 /* PlaybackStore.swift */,
+				9A1529C69988F6AFDE8983D3 /* SmartCollections.swift */,
+				7862D1F31FB35A1A252FAE4B /* AIFeatures.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		323A0FE90FC8EE50F2D4AA3C /* KepceMotor */ = {
+			isa = PBXGroup;
+			children = (
+				41D6B3F2F34C05E5221AEE25 /* PythonMotoru.swift */,
+				245D1E9B41A83D745A298C38 /* MedyaBilgisi.swift */,
+				FF248F3068805DB1D19AD590 /* PythonKoprusu.c */,
+				4C9D9B81DA48CB98B18F70CA /* PythonKoprusu.h */,
+				21607A13EB0623B31E1C2724 /* Ritim-Bridging-Header.h */,
+			);
+			name = KepceMotor;
+			path = Ritim/Core/KepceMotor;
+			sourceTree = "<group>";
+		};
+		387BFDC28AAEB6E0C7103189 /* Lame */ = {
+			isa = PBXGroup;
+			children = (
+				931A981F4F9D03FE187381A5 /* COPYING */,
+				A551487D45F3D3049FDE7C20 /* LICENSE */,
+			);
+			name = Lame;
+			path = Vendor/Lame;
+			sourceTree = "<group>";
+		};
+		6E6071B102BA6309F7541C29 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				1D989AC64A0B535AC59CE6D7 /* AIAssistantView.swift */,
+				81908A510DBECB597AF4AE3C /* ArtistsAlbumsView.swift */,
+				CD07D0DA3D227B28D0B28F04 /* AssistantConnectionView.swift */,
+				84819DB4D439D371782065B5 /* DashboardView.swift */,
+				B4F7C97214276130C751EDF5 /* DesignSystem.swift */,
+				E88B473FAF3EF00BA88634AB /* DownloadsView.swift */,
+				F6708FB763449FB9860DAEE6 /* LyricsView.swift */,
+				9A17CA6788F8E9CCEC9AE4A1 /* PlayerView.swift */,
+				4068A9C4C038A6C6FC62F7BA /* RootView.swift */,
+				7CF122C47F9471728E06E371 /* SmartCollectionsView.swift */,
+				A547802386012490D233B927 /* AIFeatureViews.swift */,
+				B6F68616D1AF140EB8EC7A5E /* YouTubeDiscoverView.swift */,
+				0D776981213808C1A8469C43 /* RhythmVisuals.swift */,
+				788150ECCF989225AABBFE6C /* HomeShelves.swift */,
+				796BB0BD2664A0D10E2B902B /* PlaylistCovers.swift */,
+				8FAC077061F0C387EDBAF0D0 /* RichMotion.swift */,
+				F243CC5FAC67AA07805DEF23 /* Motion.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		8DC80547C6E3CCA3D3ACE90D = {
+			isa = PBXGroup;
+			children = (
+				22BE97EA7DDEED5E06C29304 /* ThirdPartyNotices.md */,
+				387BFDC28AAEB6E0C7103189 /* Lame */,
+				12A0842F76434F0F907ACC50 /* Packages */,
+				B1F77201BC8ED37D82FA38BC /* Ritim */,
+				A6D748BB52264923B513CBDB /* RitimTests */,
+				02928D9C2FD628A92BA8E105 /* RitimUITests */,
+				9D63A650A365E15849F167C4 /* Products */,
+				323A0FE90FC8EE50F2D4AA3C /* KepceMotor */,
+				2D09CE69D5630E5CB793EB85 /* Python.xcframework */,
+			);
+			sourceTree = "<group>";
+		};
+		9D63A650A365E15849F167C4 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EB64020BD09B313671D8CDE9 /* Ritim.app */,
+				31D4791BFED2E8048FD7605D /* RitimTests.xctest */,
+				6C7A3CDB75ED4868344C11F0 /* RitimUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A6D748BB52264923B513CBDB /* RitimTests */ = {
+			isa = PBXGroup;
+			children = (
+				216F43B0350EE35DE4238A4B /* AIAssistantTests.swift */,
+				1D6F2E67E2CF69F00CA81DDA /* AIFeatureTests.swift */,
+				8222D7C24F83A5F8814B65C3 /* YouTubeReliabilityTests.swift */,
+				A70E648AD4E51B11A91C2A88 /* BulkDownloadTests.swift */,
+				2C330CA8A3FB127486DCC7A5 /* DownloadPolicyTests.swift */,
+				F07A7FAF3BDC8B3AEB2C232C /* DownloadQualityTests.swift */,
+				A4164FADC3D87CDF72409557 /* LibraryTests.swift */,
+				F3F883D54F80C449AF0EB2AC /* ListeningStoreTests.swift */,
+				096D6A54D3FFCB3156FAA7CF /* LyricsTests.swift */,
+				768851537D81AA48F1AE1E07 /* MediaMetadataTests.swift */,
+				D59F39CC4A34BB4B79736458 /* NativeCatalogTests.swift */,
+				9214D46420F3440F79AC53AF /* NativeMediaConverterTests.swift */,
+				4F8F9190F69DFE713D7763EE /* NativeScratchTests.swift */,
+				D5D29E1DEF6243A28F36D3EB /* PlaybackTests.swift */,
+				E585C7FDE88273F36AA3D841 /* ThemeTests.swift */,
+				1C910238A9E030BC30A8483C /* SecureSettingsTests.swift */,
+				F1A62BAEB4B6788A1E7A8DDC /* SmartCollectionsTests.swift */,
+				F11CF1860862062B9428B2D4 /* Fixtures */,
+			);
+			path = RitimTests;
+			sourceTree = "<group>";
+		};
+		AEE39FA26AA1693DBE23F28C /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				7426207BA6C7E84E65A81B79 /* Assets.xcassets */,
+				8E0EE0565F050A87344E14BC /* gece-yolu.m4a */,
+				B406340C0CE3EDDFDA19071D /* kiyi.m4a */,
+				12A1F241B91768A95D886F81 /* PrivacyInfo.xcprivacy */,
+				B37348AD1A0B8E0579A88878 /* yorunge.m4a */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		B1F77201BC8ED37D82FA38BC /* Ritim */ = {
+			isa = PBXGroup;
+			children = (
+				F1A4232642428192EBA6616E /* RitimApp.swift */,
+				17F6A8C584870B0D66396C8E /* Core */,
+				AEE39FA26AA1693DBE23F28C /* Resources */,
+				6E6071B102BA6309F7541C29 /* Views */,
+			);
+			path = Ritim;
+			sourceTree = "<group>";
+		};
+		F11CF1860862062B9428B2D4 /* Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				D4B770946AD35421DEB28524 /* native-4k-video.mp4 */,
+				A97E5A0C27137DED44A222D3 /* native-audio.m4a */,
+				0D82F46B94D2F7D77C86DEE5 /* README.md */,
+			);
+			path = Fixtures;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4DEDD4FAAD993640AA437FB1 /* RitimUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FA1904A86DF2041E68E4C6EB /* Build configuration list for PBXNativeTarget "RitimUITests" */;
+			buildPhases = (
+				191530976730D116ABF9170F /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0344CCB53D4C1BC4223C6986 /* PBXTargetDependency */,
+			);
+			name = RitimUITests;
+			productName = RitimUITests;
+			productReference = 6C7A3CDB75ED4868344C11F0 /* RitimUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		BC3C30A057B21E0FD8828A2C /* RitimTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 623E02DBB9FA112C25345A17 /* Build configuration list for PBXNativeTarget "RitimTests" */;
+			buildPhases = (
+				31FB20E3BEFFF4BAFCDE15C0 /* Sources */,
+				F5D7CFBA794A87B01477193D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3DA490B69B60537B26F96949 /* PBXTargetDependency */,
+			);
+			name = RitimTests;
+			productName = RitimTests;
+			productReference = 31D4791BFED2E8048FD7605D /* RitimTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		DC33BC036C6B5AB9DCE50450 /* Ritim */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 76BF3546ADB10A38945D4178 /* Build configuration list for PBXNativeTarget "Ritim" */;
+			buildPhases = (
+				0BDC0D8CD8EA79F6E4399ECB /* Sources */,
+				D0C199E8B3B73550C5EB627E /* Resources */,
+				A3C15C8EB025D279984C8AF6 /* Frameworks */,
+				0946B40E72ABD225CE6455F6 /* Embed Kepce Python */,
+				7E15FC9D15B43B3F20478F78 /* Package Kepce Python */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Ritim;
+			packageProductDependencies = (
+				FD83B7C055785FC38BAEED6E /* YouTubeKit */,
+				AC0D77790BFF0A168DFFDBF3 /* CLame */,
+			);
+			productName = Ritim;
+			productReference = EB64020BD09B313671D8CDE9 /* Ritim.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		52C74687A25BDC270E0E1E9B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2710;
+				TargetAttributes = {
+					4DEDD4FAAD993640AA437FB1 = {
+						DevelopmentTeam = 838FF89FZ8;
+						ProvisioningStyle = Automatic;
+						TestTargetID = DC33BC036C6B5AB9DCE50450;
+					};
+					BC3C30A057B21E0FD8828A2C = {
+						DevelopmentTeam = 838FF89FZ8;
+						ProvisioningStyle = Automatic;
+					};
+					DC33BC036C6B5AB9DCE50450 = {
+						DevelopmentTeam = 838FF89FZ8;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 830AD2FB661A8F0A3764593E /* Build configuration list for PBXProject "Ritim" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 8DC80547C6E3CCA3D3ACE90D;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				609CAE0687C2069B3E5AB521 /* XCRemoteSwiftPackageReference "YouTubeKit" */,
+				C7A9BCF07A5DD15A3C167DDB /* XCLocalSwiftPackageReference "Lame" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 9D63A650A365E15849F167C4 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DC33BC036C6B5AB9DCE50450 /* Ritim */,
+				BC3C30A057B21E0FD8828A2C /* RitimTests */,
+				4DEDD4FAAD993640AA437FB1 /* RitimUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D0C199E8B3B73550C5EB627E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D3E256CF8C9A33181500DF8 /* Assets.xcassets in Resources */,
+				F469CB44E3F8D3A6649DE619 /* COPYING in Resources */,
+				C475370424AA89465CC30A3D /* LICENSE in Resources */,
+				DA501019EEAFA4500650FA6E /* PrivacyInfo.xcprivacy in Resources */,
+				CE900D890061D584ADF7A397 /* ThirdPartyNotices.md in Resources */,
+				CB51EBE00CA4FB689C144DA1 /* gece-yolu.m4a in Resources */,
+				81107C5B7E5FDCAEF83871FC /* kiyi.m4a in Resources */,
+				5D1A7618FFE1109EDA6398C4 /* yorunge.m4a in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F5D7CFBA794A87B01477193D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3FC0F754F56C6C48E91A7105 /* README.md in Resources */,
+				233D623017DF6564F29EF139 /* native-4k-video.mp4 in Resources */,
+				2B29F09CDD3BB9772279C68D /* native-audio.m4a in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		7E15FC9D15B43B3F20478F78 /* Package Kepce Python */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Package Kepce Python";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/zsh;
+			shellScript = "\"$PROJECT_DIR/scripts/kepce-motor-pack.sh\"";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0BDC0D8CD8EA79F6E4399ECB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				78B983E71E835EE76FBF6FDB /* AIAssistantStore.swift in Sources */,
+				73B23ED6BC4A231738297EAE /* AIAssistantView.swift in Sources */,
+				F66D0515E7E5C2C9E7989EEE /* ArtistsAlbumsView.swift in Sources */,
+				A120D465AA6FC2139026B351 /* AssistantConnectionView.swift in Sources */,
+				216C5FC6329FD5EBE8688A3F /* DashboardView.swift in Sources */,
+				433A690C6FD475D0A5A677F6 /* DesignSystem.swift in Sources */,
+				CD101AE2833710AB5A7C91E7 /* DirectAIClient.swift in Sources */,
+				D1689494E44D5BDB003E734F /* DownloadStore.swift in Sources */,
+				08DAC72A66C7B37A5FFA9053 /* DownloadsView.swift in Sources */,
+				01B0269BBB8E316D958DC7DD /* LibraryStore.swift in Sources */,
+				73C51B25F29D4C03F8704AC8 /* ListeningStore.swift in Sources */,
+				A158AE9E7C792835660E51A3 /* LyricsStore.swift in Sources */,
+				7982A9CE383779E6FD0D3C5D /* LyricsView.swift in Sources */,
+				E722841A7C25806D46A26B23 /* MediaMetadataStore.swift in Sources */,
+				5F4604451ACF24DB05F0A822 /* Models.swift in Sources */,
+				FBC8B6FFD8E7EDBAAA29C1C9 /* NativeMediaConverter.swift in Sources */,
+				36B002906FD34D379C04DC6D /* NativeYouTubeCatalog.swift in Sources */,
+				98031F42D753137C21F6CCD6 /* NativeYouTubeDownloader.swift in Sources */,
+				AF4C359E4FC63CDD426D5952 /* NativeYouTubeExtractor.swift in Sources */,
+				356EF115F6B374E0B5885D5F /* PlaybackStore.swift in Sources */,
+				06367E67CFD1ECECE2E78924 /* PlayerView.swift in Sources */,
+				594C5FCBE8E1ABB8D00D230E /* RitimApp.swift in Sources */,
+				3DD6690FD7E4E07DF80409DA /* RootView.swift in Sources */,
+				A5C0D1C7FC75AE5AEEDAF6CA /* SmartCollections.swift in Sources */,
+				36093462729F215715454C5A /* AIFeatures.swift in Sources */,
+				EAE2742636EC864C838AE085 /* SmartCollectionsView.swift in Sources */,
+				3C6517F5BC1C67CF16BB58F9 /* AIFeatureViews.swift in Sources */,
+				575088B91811DF415F39FCF8 /* YouTubeDiscoverView.swift in Sources */,
+				3B04FCE0360ABD816B7BA972 /* RhythmVisuals.swift in Sources */,
+				51F4FC74B6844AE2E670AF66 /* HomeShelves.swift in Sources */,
+				3A038F5873555C8281EA381D /* PlaylistCovers.swift in Sources */,
+				ACBE581CEABDA6CEB48B977A /* RichMotion.swift in Sources */,
+				D36F63C98BE9E77ECD99A4BF /* Motion.swift in Sources */,
+				062404775F749B65294DED80 /* PythonMotoru.swift in Sources */,
+				5880A0EA5EC606883822F4B8 /* MedyaBilgisi.swift in Sources */,
+				937BC87FCF0531085DCD0AAC /* PythonKoprusu.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		191530976730D116ABF9170F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6AE9FE6CA7693E6EE5CB5B1A /* AIAssistantFlowTests.swift in Sources */,
+				8DE4C0BE8243665C67487870 /* BulkUITests.swift in Sources */,
+				02A1CE5032AD4DF608D282EB /* DashboardUITests.swift in Sources */,
+				508DB13E4E97EBDB49CBE806 /* AIExperienceUITests.swift in Sources */,
+				EC2FB89EB9D0B263D22C2CFD /* DownloadFlowTests.swift in Sources */,
+				EDB4F0438904EFE655FCBDE3 /* DownloadQualityUITests.swift in Sources */,
+				0E53C4B7F1D84A09C3796076 /* LyricsUITests.swift in Sources */,
+				FE10407C5A92D6FF50A0DA9C /* MusicLibraryUITests.swift in Sources */,
+				EE06B1B9FD5BED9473C1C895 /* NativeDownloadUITests.swift in Sources */,
+				B38042AB509AB0437DC1C6A3 /* OfflinePlaybackUITests.swift in Sources */,
+				B8AC0CEE91007F002B63016C /* PlaybackEnduranceUITests.swift in Sources */,
+				BBAA72629BAE3D9B9E29E1E7 /* PlaybackResumeUITests.swift in Sources */,
+				DFF3F181A70F42CCAD566090 /* ProductionPlaybackStabilityUITests.swift in Sources */,
+				0925925CDBD6D40676155C01 /* RitimUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		31FB20E3BEFFF4BAFCDE15C0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2FEA1391A8912A732041BF76 /* AIAssistantTests.swift in Sources */,
+				B4543977EE7C1A6B47B81E01 /* AIFeatureTests.swift in Sources */,
+				A801601A51DB51521D6E1CD8 /* YouTubeReliabilityTests.swift in Sources */,
+				08A5DE0C840CF8782552A0E4 /* BulkDownloadTests.swift in Sources */,
+				A8E89D6E2A4531CF8FC8EEF8 /* DownloadPolicyTests.swift in Sources */,
+				6A178F603FE775FB48FB8A57 /* DownloadQualityTests.swift in Sources */,
+				AB00BCD6B31A29E3DB0F6AC3 /* LibraryTests.swift in Sources */,
+				443D93E3A19330D9D36FA281 /* ListeningStoreTests.swift in Sources */,
+				4D9AB04C3571E2A68A8983A2 /* LyricsTests.swift in Sources */,
+				012A0DAA45773F99EF2D5B7C /* MediaMetadataTests.swift in Sources */,
+				3D89C18A7E8C329EA6479B18 /* NativeCatalogTests.swift in Sources */,
+				518B4A62F7191FC4E9752E31 /* NativeMediaConverterTests.swift in Sources */,
+				83EE2447D3FE9B6847FA1DB6 /* NativeScratchTests.swift in Sources */,
+				B6A46B29BFC799B85E1265F2 /* PlaybackTests.swift in Sources */,
+				39F8DA1B9D42B0FDC5547F57 /* ThemeTests.swift in Sources */,
+				6251E0FA787E362D43D09910 /* SecureSettingsTests.swift in Sources */,
+				E6DFF1218011A07CAF7FBEF3 /* SmartCollectionsTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0344CCB53D4C1BC4223C6986 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DC33BC036C6B5AB9DCE50450 /* Ritim */;
+			targetProxy = C8281B381711D2AD12D30F64 /* PBXContainerItemProxy */;
+		};
+		3DA490B69B60537B26F96949 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DC33BC036C6B5AB9DCE50450 /* Ritim */;
+			targetProxy = BEB2DBA20510ACDF2A5DCDC4 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		182979DAFED7BE712078868E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				INFOPLIST_FILE = Ritim/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.ritim;
+				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "Ritim/Core/KepceMotor/Ritim-Bridging-Header.h";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		22441305DBACEA4C7BF0E99B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 12;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 838FF89FZ8;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.10.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		452843D2E0B01D90FABF9015 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.ritim.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Ritim.app/Ritim";
+			};
+			name = Debug;
+		};
+		6423AF3C2B6DF812E27F8CF4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				INFOPLIST_FILE = Ritim/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.ritim;
+				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "Ritim/Core/KepceMotor/Ritim-Bridging-Header.h";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		850716377C4AE5659360DDCD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 12;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 838FF89FZ8;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.10.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		906A2FBCAD19C82FA8C02669 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.ritim.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Ritim;
+			};
+			name = Debug;
+		};
+		BEB103BC0A9282E34521A7F1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.ritim.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Ritim;
+			};
+			name = Release;
+		};
+		E1F0567B38FE2C41B4743726 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mehmetderin.ritim.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Ritim.app/Ritim";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		623E02DBB9FA112C25345A17 /* Build configuration list for PBXNativeTarget "RitimTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				452843D2E0B01D90FABF9015 /* Debug */,
+				E1F0567B38FE2C41B4743726 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		76BF3546ADB10A38945D4178 /* Build configuration list for PBXNativeTarget "Ritim" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6423AF3C2B6DF812E27F8CF4 /* Debug */,
+				182979DAFED7BE712078868E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		830AD2FB661A8F0A3764593E /* Build configuration list for PBXProject "Ritim" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				22441305DBACEA4C7BF0E99B /* Debug */,
+				850716377C4AE5659360DDCD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FA1904A86DF2041E68E4C6EB /* Build configuration list for PBXNativeTarget "RitimUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				906A2FBCAD19C82FA8C02669 /* Debug */,
+				BEB103BC0A9282E34521A7F1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		C7A9BCF07A5DD15A3C167DDB /* XCLocalSwiftPackageReference "Lame" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Vendor/Lame;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		609CAE0687C2069B3E5AB521 /* XCRemoteSwiftPackageReference "YouTubeKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/alexeichhorn/YouTubeKit";
+			requirement = {
+				kind = revision;
+				revision = 89854c93207ad0d2b3d78d6f1aea24595ca66552;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AC0D77790BFF0A168DFFDBF3 /* CLame */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CLame;
+		};
+		FD83B7C055785FC38BAEED6E /* YouTubeKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 609CAE0687C2069B3E5AB521 /* XCRemoteSwiftPackageReference "YouTubeKit" */;
+			productName = YouTubeKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 52C74687A25BDC270E0E1E9B /* Project object */;
+}
