@@ -16,10 +16,10 @@ final lmBiyoloji = <AdvancedFamily>[
   _f10,
   _f11,
   _f12,
-  _gecici(13),
-  _gecici(14),
-  _gecici(15),
-  _gecici(16),
+  _f13,
+  _f14,
+  _f15,
+  _f16,
   _gecici(17),
   _gecici(18),
   _gecici(19),
@@ -1416,7 +1416,7 @@ final _f10 = lmAile(
           '$agirdan Süre sonunda kaç DNA molekülü melezdir (bir zinciri ¹⁵N, '
           'diğer zinciri ¹⁴N içerir)?',
           2 * k,
-          [k, top, top - 2 * k, k * n],
+          [k, top, top - 2 * k, 2 * top, k * n],
           '$ozet Melez molekül sayısı ${2 * k} olur.',
           positive: true,
         );
@@ -1471,7 +1471,7 @@ final _f10 = lmAile(
           '$ikiAsama Son durumda kaç DNA molekülü melezdir (bir zinciri ¹⁵N, '
           'diğer zinciri ¹⁴N içerir)?',
           melez2,
-          [2 * k, top2 - melez2, top2, k << n1],
+          [2 * k, top2 - melez2, top2, k << n1, k, 2 * melez2],
           '$ozet2 Melez molekül sayısı $melez2 olur.',
           positive: true,
         );
@@ -1821,5 +1821,543 @@ final _f12 = lmAile(
     }
   },
   exam: ExamKind.tyt,
+  lesson: 'Biyoloji',
+);
+
+// ───────────────────────── 13. Ozmoz ─────────────────────────
+
+// (kök üreteci, dış ortam daha derişikken doğru, iç ortam daha derişikken
+//  doğru, her iki durumda da yanlış iki yargı)
+final _ozmozDurumlari = <(String Function(String, String), String, String, String, String)>[
+  (
+    (x, y) =>
+        'Yarı geçirgen bir zardan yapılmış kesenin içine %$x sakkaroz '
+        'çözeltisi konuyor ve kese, içinde %$y sakkaroz çözeltisi bulunan bir '
+        'kaba bırakılıyor. Zar suyu geçirip sakkarozu geçirmediğine göre bir '
+        'süre sonra hangisi gözlenir?',
+    'Su keseden kaba geçer; kesenin kütlesi azalır.',
+    'Su kaptan keseye geçer; kesenin kütlesi artar.',
+    'Su keseden kaba geçer; kesenin kütlesi artar.',
+    'Su kaptan keseye geçer; kesenin kütlesi azalır.',
+  ),
+  (
+    (x, y) =>
+        'Hücre öz suyundaki çözünen madde derişimi %$x olan bir bitki hücresi, '
+        'çözünen madde derişimi %$y olan bir çözeltiye konuyor. Çözünen madde '
+        'hücre zarından geçemediğine göre hangisi doğrudur?',
+    'Ortam hücreye göre hipertoniktir; hücre su kaybederek plazmoliz olur.',
+    'Ortam hücreye göre hipotoniktir; hücre su alarak turgor durumuna geçer.',
+    'Ortam hücreye göre hipertoniktir; hücre su alarak turgor durumuna geçer.',
+    'Ortam hücreye göre hipotoniktir; hücre su kaybederek plazmoliz olur.',
+  ),
+  (
+    (x, y) =>
+        'Hücre öz suyundaki çözünen madde derişimi %$x olan soğan zarı '
+        'hücrelerinin üzerine, zardan geçemeyen bir çözünenle hazırlanmış %$y '
+        'derişimli çözelti damlatılıyor. Mikroskopta bir süre sonra hangisi '
+        'gözlenir?',
+    'Hücre zarı çeperden ayrılır; koful küçülür.',
+    'Hücre zarı çepere doğru itilir; koful büyür.',
+    'Hücre zarı çeperden ayrılır; koful büyür.',
+    'Hücre zarı çepere doğru itilir; koful küçülür.',
+  ),
+  (
+    (x, y) =>
+        'Yalnız suyu geçiren bir zarla ikiye ayrılmış U borusunun K koluna '
+        '%$x, L koluna %$y glikoz çözeltisi eşit yükseklikte konuyor. Bir süre '
+        'sonra hangisi gözlenir?',
+    'Su K kolundan L koluna geçer; L kolundaki sıvı yükselir.',
+    'Su L kolundan K koluna geçer; K kolundaki sıvı yükselir.',
+    'Su K kolundan L koluna geçer; K kolundaki sıvı yükselir.',
+    'Su L kolundan K koluna geçer; L kolundaki sıvı yükselir.',
+  ),
+  (
+    (x, y) =>
+        'Plazmoliz olmuş bir bitki hücresinin hücre öz suyundaki çözünen madde '
+        'derişimi %$x olarak ölçülüyor. Bu hücre, zardan geçemeyen bir '
+        'çözünenle hazırlanmış %$y derişimli çözeltiye aktarılıyor. Hücrede '
+        'hangisi gözlenir?',
+    'Hücre su kaybetmeyi sürdürür; plazmoliz artar.',
+    'Hücre su alır ve deplazmoliz olur.',
+    'Hücre su alır; plazmoliz artar.',
+    'Net su geçişi olmaz; hücrenin durumu değişmez.',
+  ),
+  (
+    (x, y) =>
+        'Hücrelerindeki çözünen madde derişimi %$x olan eşit kütleli patates '
+        'dilimleri, %$y derişimli tuz çözeltisinde bir süre bekletiliyor. Tuz '
+        'hücre zarından geçemediğine göre dilimlerde hangisi gözlenir?',
+    'Dilimler su kaybeder; kütleleri azalır ve yumuşarlar.',
+    'Dilimler su alır; kütleleri artar ve sertleşirler.',
+    'Dilimler su kaybeder; kütleleri artar ve sertleşirler.',
+    'Dilimler su alır; kütleleri azalır ve yumuşarlar.',
+  ),
+  (
+    (x, y) =>
+        'Nişastayı geçirmeyen, suyu geçiren bir zardan yapılmış kesede %$x, '
+        'kesenin bırakıldığı kapta %$y nişasta çözeltisi vardır. Buna göre '
+        'hangisi doğrudur?',
+    'Kaptaki çözelti kesedekine göre hipertoniktir; kesenin hacmi küçülür.',
+    'Kaptaki çözelti kesedekine göre hipotoniktir; kesenin hacmi büyür.',
+    'Kaptaki çözelti kesedekine göre hipertoniktir; kesenin hacmi büyür.',
+    'Kaptaki çözelti kesedekine göre hipotoniktir; kesenin hacmi küçülür.',
+  ),
+  (
+    (x, y) =>
+        'Kabuğu sirkede eritilmiş bir yumurtanın zarla çevrili iç kısmındaki '
+        'çözünen madde derişimi %$x kabul ediliyor. Yumurta, zardan geçemeyen '
+        'şekerle hazırlanmış %$y derişimli şuruba konuyor. Bir süre sonra '
+        'hangisi gözlenir?',
+    'Yumurta su kaybeder; hacmi küçülür.',
+    'Yumurta su alır; hacmi büyür.',
+    'Yumurta su kaybeder; hacmi büyür.',
+    'Net su geçişi olmaz; yumurtanın hacmi değişmez.',
+  ),
+];
+
+final _f13 = lmAile(
+  'biy_osmoz',
+  'Ozmozda suyun yönü ve hücrenin durumu',
+  Topic.biology,
+  Difficulty.easy,
+  BloomLevel.anlama,
+  (a, b, c) {
+    final ic = 2 + a; // hücre ya da kese içindeki derişim (%)
+    final dis = b + 1.5; // dış ortamın derişimi (%)
+    final x = '$ic', y = tr(dis);
+    if (c >= 8) {
+      // Üç kap: derişimi dış ortamdan sırasıyla 0, 4 ve 8 birim fazla.
+      final kaplar = [dis, dis + 4, dis + 8];
+      final giris =
+          'Hücre öz suyundaki çözünen madde derişimi %$x olan özdeş üç bitki '
+          'hücresi; K kabındaki %${tr(kaplar[0])}, L kabındaki '
+          '%${tr(kaplar[1])} ve M kabındaki %${tr(kaplar[2])} derişimli '
+          'çözeltilere ayrı ayrı konuyor. Çözünen madde hücre zarından '
+          'geçemediğine göre';
+      if (c == 8) {
+        final sayi = kaplar.where((k) => k > ic).length;
+        const yanit = ['Hiçbirinde', 'Yalnız M', 'L ve M', 'K, L ve M'];
+        return secenekli(
+          '$giris hücreler hangi kaplarda su kaybederek plazmoliz olur?',
+          yanit[sayi],
+          [for (var j = 0; j < 4; j++) yanit[j], 'Yalnız K', 'K ve L'],
+          'Hücre, derişimi kendi öz suyundan (%$x) yüksek olan çözeltilerde '
+          'su kaybeder. Bu koşulu sağlayan kap sayısı $sayi olduğundan yanıt '
+          '“${yanit[sayi]}” olur.',
+        );
+      }
+      final sayi = kaplar.where((k) => k < ic).length;
+      const yanit = ['Hiçbirinde', 'Yalnız K', 'K ve L', 'K, L ve M'];
+      return secenekli(
+        '$giris hücreler hangi kaplarda su alarak şişer?',
+        yanit[sayi],
+        [for (var j = 0; j < 4; j++) yanit[j], 'Yalnız M', 'L ve M'],
+        'Hücre, derişimi kendi öz suyundan (%$x) düşük olan çözeltilerde su '
+        'alır. Bu koşulu sağlayan kap sayısı $sayi olduğundan yanıt '
+        '“${yanit[sayi]}” olur.',
+      );
+    }
+    final (kok, hiper, hipo, y1, y2) = _ozmozDurumlari[c];
+    final disDerisik = dis > ic;
+    return secenekli(
+      kok(x, y),
+      disDerisik ? hiper : hipo,
+      [disDerisik ? hipo : hiper, y1, y2],
+      'Su, çözünen madde derişimi düşük olan taraftan yüksek olan tarafa '
+      'geçer. Karşılaştırılan derişimlerden %$y, %$x değerinden '
+      '${disDerisik ? 'büyük' : 'küçük'} olduğundan su '
+      '${disDerisik ? '%$x derişimli taraftan %$y derişimli tarafa' : '%$y derişimli taraftan %$x derişimli tarafa'} '
+      'geçer.',
+    );
+  },
+  exam: ExamKind.tyt,
+  lesson: 'Biyoloji',
+  shortAnswer: false,
+);
+
+// ───────────────────────── 14. Mikroskopta büyütme ─────────────────────────
+
+bool _ikiBasamakli(double x) => ((x * 100).round() - x * 100).abs() < 1e-6;
+
+final _f14 = lmAile(
+  'biy_mikroskop',
+  'Mikroskopta büyütme, görüntü boyu ve gerçek boy',
+  Topic.biology,
+  Difficulty.medium,
+  BloomLevel.uygulama,
+  (a, b, c) {
+    const objektifler = [4, 10, 20, 40, 100];
+    final ok = const [5, 10, 15, 20][b % 4], ob = objektifler[b ~/ 4];
+    final boy = 5 * (a + 1) + (c >= 5 ? 2 : 0); // gerçek boy (mikrometre)
+    final m = ok * ob;
+    final goruntu = boy * m / 1000; // milimetre
+    Iterable<double> uygun(List<double> adaylar) =>
+        adaylar.where((v) => v > 0 && _ikiBasamakli(v));
+    const birim = '1 mm = 1000 mikrometre';
+    switch (c % 5) {
+      case 0:
+        return ondalikli(
+          'Oküleri $ok×, objektifi $ob× büyütmeli bir ışık mikroskobunda gerçek '
+          'boyu $boy mikrometre olan bir hücre inceleniyor. Hücrenin '
+          'görüntüsünün boyu kaç milimetre olur?',
+          goruntu,
+          uygun([goruntu * 10, boy * (ok + ob) / 1000, goruntu / 10, boy * ob / 1000, goruntu * 100]),
+          'Toplam büyütme $ok · $ob = $m olur. Görüntü boyu $boy · $m = '
+          '${boy * m} mikrometre, yani ${tr(goruntu)} mm bulunur ($birim).',
+          unit: 'mm',
+          positive: true,
+        );
+      case 1:
+        return sayisal(
+          'Oküleri $ok×, objektifi $ob× büyütmeli bir ışık mikroskobunda bir '
+          'hücrenin görüntüsünün boyu ${tr(goruntu)} milimetre olarak '
+          'ölçülüyor. Bu hücrenin gerçek boyu kaç mikrometredir?',
+          boy,
+          [10 * boy, boy * ok, boy * ob, boy ~/ 10, 100 * boy],
+          'Toplam büyütme $ok · $ob = $m olur. Görüntü boyu ${tr(goruntu)} mm '
+          '= ${boy * m} mikrometredir ($birim). Gerçek boy ${boy * m} / $m = '
+          '$boy mikrometre bulunur.',
+          positive: true,
+        );
+      case 2:
+        return sayisal(
+          'Oküleri $ok× büyütmeli bir ışık mikroskobunda gerçek boyu $boy '
+          'mikrometre olan bir hücrenin görüntüsü ${tr(goruntu)} milimetre '
+          'boyunda görülüyor. Kullanılan objektifin büyütmesi kaç kattır?',
+          ob,
+          [...objektifler, m],
+          'Görüntü boyu ${tr(goruntu)} mm = ${boy * m} mikrometredir ($birim). '
+          'Toplam büyütme ${boy * m} / $boy = $m, objektifin büyütmesi '
+          '$m / $ok = $ob olur.',
+          positive: true,
+        );
+      case 3:
+        return sayisal(
+          'Objektifi $ob× büyütmeli bir ışık mikroskobunda gerçek boyu $boy '
+          'mikrometre olan bir hücrenin görüntüsü ${tr(goruntu)} milimetre '
+          'boyunda görülüyor. Kullanılan okülerin büyütmesi kaç kattır?',
+          ok,
+          const [5, 10, 15, 20],
+          'Görüntü boyu ${tr(goruntu)} mm = ${boy * m} mikrometredir ($birim). '
+          'Toplam büyütme ${boy * m} / $boy = $m, okülerin büyütmesi '
+          '$m / $ob = $ok olur.',
+          positive: true,
+        );
+      default:
+        final ob2 = objektifler[(b ~/ 4 + 1) % 5];
+        final yeni = boy * ok * ob2 / 1000;
+        return ondalikli(
+          'Oküleri $ok× büyütmeli bir ışık mikroskobunda $ob× objektifle '
+          'incelenen bir hücrenin görüntüsü ${tr(goruntu)} milimetre boyunda '
+          'görülüyor. Objektif $ob2× olanla değiştirildiğinde aynı hücrenin '
+          'görüntüsünün boyu kaç milimetre olur?',
+          yeni,
+          uygun([goruntu * ob / ob2, goruntu * ob2, goruntu, goruntu * ok, yeni * 10, yeni / 10, yeni * 2]),
+          'Oküler değişmediğinden görüntü boyu objektifin büyütmesiyle doğru '
+          'orantılıdır: ${tr(goruntu)} · $ob2 / $ob = ${tr(yeni)} mm.',
+          unit: 'mm',
+          positive: true,
+        );
+    }
+  },
+  exam: ExamKind.tyt,
+  lesson: 'Biyoloji',
+);
+
+// ───────────────────────── 15. Enerji piramidi ─────────────────────────
+
+const _besinZincirleri = [
+  ['ot', 'çekirge', 'kurbağa', 'yılan', 'şahin'],
+  ['fitoplankton', 'zooplankton', 'hamsi', 'palamut', 'yunus'],
+  ['yaprak', 'tırtıl', 'serçe', 'yılan', 'kartal'],
+  ['su yosunu', 'su piresi', 'küçük balık', 'turna balığı', 'balıkçıl'],
+  ['bitki', 'yaprak biti', 'uğur böceği', 'örümcek', 'kertenkele'],
+];
+
+final _f15 = lmAile(
+  'biy_enerji_piramidi',
+  'Besin zincirinde enerji aktarımı ve biyokütle',
+  Topic.biology,
+  Difficulty.medium,
+  BloomLevel.uygulama,
+  (a, b, c) {
+    final z = _besinZincirleri[b % 5];
+    final v = b ~/ 5;
+    final t = 1 + v; // hedef basamak (0 = üretici)
+    final e0 = 20000 * (a + 2);
+    final giris =
+        'Bir ekosistemde “${z.join(' → ')}” besin zincirinde her beslenme '
+        'basamağındaki enerjinin %10 kadarı bir üst basamağa aktarılmaktadır.';
+    final uretici = 'Zincirin üreticisi olan ${z[0]} basamağında';
+    int enerji(int basamak) => e0 ~/ _us(10, basamak);
+    switch (c) {
+      case 0:
+        return sayisal(
+          '$giris $uretici $e0 kcal enerji bulunduğuna göre ${z[t]} '
+          'popülasyonuna aktarılan enerji kaç kcal olur?',
+          enerji(t),
+          [enerji(t - 1), enerji(t) ~/ 10, e0 * t ~/ 10, enerji(t) * 100, e0 ~/ (10 * t)],
+          'Enerji her basamakta 10 kat azalır. Üreticiden ${z[t]} basamağına '
+          '$t aktarım olduğundan enerji $e0 / 10${_ust(t)} = ${enerji(t)} kcal '
+          'olur.',
+          positive: true,
+        );
+      case 1:
+        return sayisal(
+          '$giris Bu zincirde ${z[t]} popülasyonuna aktarılan enerji '
+          '${enerji(t)} kcal olduğuna göre zincirin üreticisi olan ${z[0]} '
+          'basamağındaki enerji kaç kcal olur?',
+          e0,
+          [e0 ~/ 10, e0 * 10, enerji(t) * 10 * t, enerji(t) * 10, e0 ~/ 100],
+          'Üreticiden ${z[t]} basamağına $t aktarım vardır; her aktarımda '
+          'enerji 10 kat azaldığından üreticideki enerji ${enerji(t)} · '
+          '10${_ust(t)} = $e0 kcal olur.',
+          positive: true,
+        );
+      case 2:
+        final (s, u) = const [(1, 3), (2, 4), (1, 4), (1, 2)][v];
+        return sayisal(
+          '$giris Bu zincirde ${z[s]} popülasyonundaki enerji ${enerji(s)} '
+          'kcal olduğuna göre ${z[u]} popülasyonuna aktarılan enerji kaç kcal '
+          'olur?',
+          enerji(u),
+          [enerji(u) * 10, enerji(u) ~/ 10, enerji(s) ~/ (10 * (u - s)), enerji(s) * (u - s) ~/ 10, enerji(u) * 100],
+          'Bu iki basamak arasında ${u - s} aktarım vardır: ${enerji(s)} / '
+          '10${_ust(u - s)} = ${enerji(u)} kcal.',
+          positive: true,
+        );
+      case 3:
+        return sayisal(
+          '$giris $uretici $e0 kcal enerji bulunduğuna göre bu enerjinin kaç '
+          'kcal kadarı ${z[t]} popülasyonuna ulaşmadan zincirden ayrılır?',
+          e0 - enerji(t),
+          [enerji(t), e0 - enerji(t - 1) + 1, e0 * 9 ~/ 10 + (t == 1 ? 7 : 0), e0 - enerji(t) ~/ 10, e0 - enerji(t) * 10 + (t == 1 ? 3 : 0)],
+          '${z[t]} basamağına ulaşan enerji $e0 / 10${_ust(t)} = ${enerji(t)} '
+          'kcal olur. Ulaşmayan enerji $e0 − ${enerji(t)} = '
+          '${e0 - enerji(t)} kcal bulunur.',
+          positive: true,
+        );
+      case 4:
+        final kg = a + 2;
+        return sayisal(
+          '$giris Biyokütle de aynı oranda aktarıldığına göre ${z[t]} '
+          'popülasyonunun biyokütlesinin $kg kg artması için ${z[0]} '
+          'basamağından en az kaç kg besin tüketilmelidir?',
+          kg * _us(10, t),
+          [kg * 10 * t, kg * _us(10, t + 1), kg * _us(10, t - 1), kg * _us(10, t) ~/ 2, kg * 100 * t],
+          'Her basamakta biyokütlenin %10 kadarı aktarıldığından üreticiden '
+          '${z[t]} basamağına $t aktarım için $kg · 10${_ust(t)} = '
+          '${kg * _us(10, t)} kg besin gerekir.',
+          positive: true,
+        );
+      case 5:
+        final (s, u) = const [(1, 2), (2, 3), (3, 4), (1, 3)][v];
+        return sayisal(
+          '$giris $uretici $e0 kcal enerji bulunduğuna göre ${z[s]} ve '
+          '${z[u]} popülasyonlarına aktarılan enerjilerin toplamı kaç kcal '
+          'olur?',
+          enerji(s) + enerji(u),
+          [enerji(s), 2 * enerji(u), enerji(s - 1) + enerji(u - 1), enerji(s) + enerji(u) ~/ 10, 2 * enerji(s)],
+          '${z[s]} basamağına $e0 / 10${_ust(s)} = ${enerji(s)} kcal, ${z[u]} '
+          'basamağına $e0 / 10${_ust(u)} = ${enerji(u)} kcal aktarılır. Toplam '
+          '${enerji(s) + enerji(u)} kcal olur.',
+          positive: true,
+        );
+      case 6:
+        final (s, u) = const [(1, 2), (2, 3), (3, 4), (1, 3)][v];
+        return sayisal(
+          '$giris $uretici $e0 kcal enerji bulunduğuna göre ${z[s]} '
+          'popülasyonuna aktarılan enerji, ${z[u]} popülasyonuna aktarılan '
+          'enerjiden kaç kcal fazladır?',
+          enerji(s) - enerji(u),
+          [enerji(s), enerji(s) + enerji(u), enerji(u) * 10, enerji(s - 1) - enerji(u - 1), enerji(u)],
+          '${z[s]} basamağına $e0 / 10${_ust(s)} = ${enerji(s)} kcal, ${z[u]} '
+          'basamağına $e0 / 10${_ust(u)} = ${enerji(u)} kcal aktarılır. Fark '
+          '${enerji(s) - enerji(u)} kcal olur.',
+          positive: true,
+        );
+      case 7:
+        final gerek = const [500, 800, 1000, 2000][v];
+        final say = a + 2;
+        final ust = say * gerek * 100;
+        return sayisal(
+          '$giris $uretici $ust kcal enerji bulunmaktadır. Bir ${z[2]} '
+          'bireyinin enerji gereksinimi $gerek kcal olduğuna göre bu enerji '
+          'en çok kaç ${z[2]} bireyinin gereksinimini karşılar?',
+          say,
+          [say * 10, say * 100, say ~/ 10, say * 5, say + 10],
+          'Üreticiden ${z[2]} basamağına 2 aktarım vardır: $ust / 10² = '
+          '${ust ~/ 100} kcal. Birey sayısı ${ust ~/ 100} / $gerek = $say '
+          'olur.',
+          positive: true,
+        );
+      case 8:
+        return sayisal(
+          '$giris Biyokütle de aynı oranda aktarıldığına göre zincirin '
+          'üreticisi olan ${z[0]} basamağındaki $e0 kg biyokütle, ${z[t]} '
+          'basamağında en çok kaç kg biyokütle oluşmasını sağlar?',
+          enerji(t),
+          [enerji(t - 1), enerji(t) ~/ 10, e0 * t ~/ 10, enerji(t) * 100, e0 ~/ (10 * t)],
+          'Biyokütle her basamakta 10 kat azalır. Üreticiden ${z[t]} '
+          'basamağına $t aktarım olduğundan $e0 / 10${_ust(t)} = ${enerji(t)} '
+          'kg biyokütle oluşur.',
+          positive: true,
+        );
+      default:
+        return secenekli(
+          '$giris $uretici $e0 kcal enerji bulunmaktadır. Bu zincirde '
+          '${enerji(t)} kcal enerji hangi canlının popülasyonuna aktarılır?',
+          z[t],
+          [for (var j = 1; j < 5; j++) z[j]],
+          'Üreticideki enerji $e0 kcal, aranan enerji ${enerji(t)} kcal '
+          'olduğundan oran 10${_ust(t)} olur; bu da $t aktarım demektir. '
+          'Üreticiden sonraki $t. basamakta ${z[t]} bulunur.',
+        );
+    }
+  },
+  exam: ExamKind.tyt,
+  lesson: 'Biyoloji',
+);
+
+// ───────────────────────── 16. Popülasyon büyüklüğü ve yoğunluğu ─────────────────────────
+
+const _populasyonlar = [
+  'Bir adadaki tavşan popülasyonunda',
+  'Bir ormandaki geyik popülasyonunda',
+  'Bir göldeki sazan popülasyonunda',
+  'Bir bozkırdaki tarla faresi popülasyonunda',
+  'Bir sulak alandaki ördek popülasyonunda',
+];
+
+final _f16 = lmAile(
+  'biy_populasyon',
+  'Popülasyon büyüklüğü, yoğunluğu ve büyüme hızı',
+  Topic.biology,
+  Difficulty.medium,
+  BloomLevel.uygulama,
+  (a, b, c) {
+    final yuzde = 2 * (a + 3); // başlangıcın %1 kadarı
+    final n0 = 100 * yuzde;
+    final dy = 12 + 2 * (b % 5); // doğum yüzdesi
+    final (oy, gy, ay) = const [(5, 3, 2), (8, 2, 4), (6, 4, 1), (9, 1, 3)][b ~/ 5];
+    final dogum = yuzde * dy, olum = yuzde * oy;
+    final gelen = yuzde * gy, giden = yuzde * ay;
+    final net = dogum + gelen - olum - giden, netY = dy + gy - oy - ay;
+    final son = n0 + net;
+    final alan = (a + 3) * (1 + a % 2); // km²
+    final ortam = sec(_populasyonlar, a + b);
+    final olaylar =
+        'Yıl içinde $dogum birey doğmuş, $olum birey ölmüş, $gelen birey '
+        'dışarıdan göç ederek popülasyona katılmış ve $giden birey göç ederek '
+        'popülasyondan ayrılmıştır.';
+    final tam = '$ortam yılın başında $n0 birey vardır. $olaylar';
+    final denklem =
+        'Değişim = doğum + içe göç − ölüm − dışa göç = $dogum + $gelen − '
+        '$olum − $giden = $net birey olur.';
+    switch (c) {
+      case 0:
+        return sayisal(
+          '$tam Yıl sonunda popülasyonda kaç birey bulunur?',
+          son,
+          [n0 + dogum - olum, n0 + dogum + gelen, n0 - net, n0 + dogum + gelen + olum + giden],
+          '$denklem Yıl sonundaki büyüklük $n0 + $net = $son olur.',
+          positive: true,
+        );
+      case 1:
+        return sayisal(
+          '$tam Popülasyondaki birey sayısı yıl içinde kaç artmıştır?',
+          net,
+          [dogum - olum, dogum + gelen, dogum + gelen + olum + giden, dogum - olum - gelen + giden],
+          denklem,
+          positive: true,
+        );
+      case 2:
+        return sayisal(
+          '$tam Popülasyonun yıllık büyüme hızı, yıl başındaki büyüklüğün '
+          'yüzde kaçıdır?',
+          netY,
+          [dy - oy, dy + gy, dy, netY * 10, dy + gy + oy + ay],
+          '$denklem Büyüme hızı $net / $n0 · 100 = $netY olarak bulunur.',
+          positive: true,
+        );
+      case 3:
+        return sayisal(
+          '$tam Popülasyon $alan km² büyüklüğünde bir alanda yaşadığına göre '
+          'yıl sonundaki popülasyon yoğunluğu km² başına kaç birey olur?',
+          son ~/ alan,
+          [n0 ~/ alan, net ~/ alan, (n0 + dogum - olum) ~/ alan, son ~/ alan * 2],
+          '$denklem Yıl sonunda $n0 + $net = $son birey vardır. Yoğunluk '
+          '$son / $alan = ${son ~/ alan} birey/km² olur.',
+          positive: true,
+        );
+      case 4:
+        return sayisal(
+          '$ortam yılın başında $n0 birey vardır. Yıl içinde $dogum birey '
+          'doğmuş, $gelen birey dışarıdan göç ederek popülasyona katılmış ve '
+          '$giden birey göç ederek popülasyondan ayrılmıştır. Yıl sonunda '
+          '$son birey sayıldığına göre yıl içinde kaç birey ölmüştür?',
+          olum,
+          [olum + giden, n0 + dogum - son, son - n0, olum + gelen, dogum - olum],
+          'Ölüm = yıl başı + doğum + içe göç − dışa göç − yıl sonu = $n0 + '
+          '$dogum + $gelen − $giden − $son = $olum birey olur.',
+          positive: true,
+        );
+      case 5:
+        return sayisal(
+          '$ortam yılın başında $n0 birey vardır. Yıl içinde $dogum birey '
+          'doğmuş, $olum birey ölmüş ve $giden birey göç ederek popülasyondan '
+          'ayrılmıştır. Yıl sonunda $son birey sayıldığına göre yıl içinde '
+          'dışarıdan göç ederek popülasyona kaç birey katılmıştır?',
+          gelen,
+          [son - n0, gelen + giden, son - n0 - dogum + olum, dogum - olum, gelen + olum],
+          'İçe göç = yıl sonu − yıl başı − doğum + ölüm + dışa göç = $son − '
+          '$n0 − $dogum + $olum + $giden = $gelen birey olur.',
+          positive: true,
+        );
+      case 6:
+        return sayisal(
+          '$ortam bir yıl boyunca sayım yapılmıştır. $olaylar Yıl sonunda '
+          '$son birey sayıldığına göre yılın başında popülasyonda kaç birey '
+          'vardı?',
+          n0,
+          [son + net, son - dogum + olum, son - dogum - gelen, n0 + giden],
+          '$denklem Yıl başındaki büyüklük $son − $net = $n0 olur.',
+          positive: true,
+        );
+      case 7:
+        return sayisal(
+          '$tam Popülasyon $alan km² büyüklüğünde bir alanda yaşadığına göre '
+          'popülasyon yoğunluğu yıl içinde km² başına kaç birey artmıştır?',
+          net ~/ alan,
+          [son ~/ alan, n0 ~/ alan, (dogum - olum) ~/ alan, (dogum + gelen) ~/ alan],
+          '$denklem Yoğunluktaki artış $net / $alan = ${net ~/ alan} '
+          'birey/km² olur.',
+          positive: true,
+        );
+      case 8:
+        return sayisal(
+          '$tam Göçler olmasaydı popülasyonun yıllık büyüme hızı, yıl '
+          'başındaki büyüklüğün yüzde kaçı olurdu?',
+          dy - oy,
+          [netY, dy, dy + oy, dy - oy + gy, (dy - oy) * 10],
+          'Göçler olmadığında değişim doğum − ölüm = $dogum − $olum = '
+          '${dogum - olum} birey olur. Büyüme hızı ${dogum - olum} / $n0 · '
+          '100 = ${dy - oy} bulunur.',
+          positive: true,
+        );
+      default:
+        return sayisal(
+          '$tam Yıl sonunda popülasyon yoğunluğu km² başına ${son ~/ alan} '
+          'birey olarak hesaplandığına göre popülasyon kaç km² büyüklüğünde '
+          'bir alanda yaşamaktadır?',
+          alan,
+          [n0 ~/ (son ~/ alan), alan * 2, alan + 1, alan + 3, alan * 10],
+          '$denklem Yıl sonunda $n0 + $net = $son birey vardır. Alan '
+          '$son / ${son ~/ alan} = $alan km² olur.',
+          positive: true,
+        );
+    }
+  },
+  exam: ExamKind.ayt,
   lesson: 'Biyoloji',
 );

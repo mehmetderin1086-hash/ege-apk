@@ -128,13 +128,17 @@ AdvancedItem _kes(
   String aciklama, {
   bool pozitif = false,
 }) {
+  // Tam sayı yanıtlarda komşu tam sayılar, kesirli yanıtlarda önce ters
+  // çevrilmiş kesir denenir.
+  final tam = n % d == 0;
   final havuz = [
     ...adaylar,
     (-n, d),
-    if (n != 0) (d, n),
+    if (n != 0 && !tam) (d, n),
     (n + d, d),
     (n - d, d),
     (n + 2 * d, d),
+    (n - 2 * d, d),
     (n + 3 * d, d),
     (n + 4 * d, d),
     (n + 5 * d, d),
@@ -1166,9 +1170,9 @@ final lmMatIleri = <AdvancedFamily>[
             x,
             1,
             [(t * m - q, p), (deger + q, p), (deger - q, 1), (m - q, p)],
-            'Logaritmanın tanımından ${_pol([p, q])} = ${_kuvvet(t, m)} = '
-            '$deger olur. Buradan ${p}x = ${_n(deger - q)} ve x = ${_n(x)} '
-            'bulunur.',
+            'Logaritmanın tanımından ${_pol([p, q])} = '
+            '${m == 1 ? '' : '${_kuvvet(t, m)} = '}$deger olur. Buradan '
+            '${p}x = ${_n(deger - q)} ve x = ${_n(x)} bulunur.',
           );
         case 3:
           // log_t(x + u) − log_t(x + w) = m.
@@ -1189,7 +1193,8 @@ final lmMatIleri = <AdvancedFamily>[
             '${v == 0 ? '' : 'Denklem ${lg(u)} − ${lg(w)} = $m biçiminde '
                       'yazılır. '}'
             'Bölüm kuralından (${_pol([1, u])})/(${_pol([1, w])}) = '
-            '${_kuvvet(t, m)} = $oran olur. ${_pol([1, u])} = '
+            '${m == 1 ? '' : '${_kuvvet(t, m)} = '}$oran olur. '
+            '${_pol([1, u])} = '
             '${_pol([oran, oran * w])} eşitliğinden x = ${_n(x)} bulunur; bu '
             'değer için logaritması alınan ifadeler pozitiftir.',
           );
@@ -1518,10 +1523,11 @@ final lmMatIleri = <AdvancedFamily>[
               'Yarıçapı $r cm olan bir çemberde, ölçüsü $aci olan merkez '
               'açının gördüğü yayın uzunluğu kaç cm olur? (π = 3 alınız.)',
               yay,
+              // Çap alma, yayın tümleyenini bulma, π'yi unutma, yarıya bölme.
               [
                 2 * yay,
+                6 * r - yay,
                 if (r * p % q == 0) r * p ~/ q,
-                r * yay ~/ 2,
                 if (yay.isEven) yay ~/ 2,
               ],
               '$hesap Yay uzunluğu $r·${_sar(_q(3 * p, q))} = $yay cm '
@@ -1696,6 +1702,8 @@ final lmMatIleri = <AdvancedFamily>[
           final p = 1 + b ~/ 10;
           final pay = [p, m - p * k, -m * k], payda = [1, n - k, -n * k];
           final kok = _pol([1, -k]);
+          final ham = '${_n(p * k + m)}/${_p(k + n)}';
+          final sade = _q(p * k + m, k + n);
           return _kes(
             'lim (x → ${_n(k)}) (${_pol(pay)})/(${_pol(payda)}) $son',
             p * k + m,
@@ -1709,8 +1717,8 @@ final lmMatIleri = <AdvancedFamily>[
             'x = ${_n(k)} için pay ve payda sıfır olur. Pay ($kok)·'
             '(${_pol([p, m])}), payda ($kok)·(${_pol([1, n])}) biçiminde '
             'yazılıp sadeleştirilir: (${_pol([p, m])})/(${_pol([1, n])}) '
-            'ifadesinin x = ${_n(k)} için değeri ${_n(p * k + m)}/'
-            '${_p(k + n)} = ${_q(p * k + m, k + n)} olur.',
+            'ifadesinin x = ${_n(k)} için değeri '
+            '$ham${ham == sade ? '' : ' = $sade'} olur.',
           );
       }
     },
@@ -2023,16 +2031,18 @@ final lmMatIleri = <AdvancedFamily>[
           final alt = b % 5 - 2, ust = alt + 1 + b ~/ 5;
           final f = [3 * p, 2 * v, r], ilkel = [p, v, r, 0];
           final fu = _deg(ilkel, ust), fa = _deg(ilkel, alt);
-          final yamuk = (_deg(f, alt) + _deg(f, ust)) * (ust - alt);
+          final boy = ust - alt, ya = _deg(f, alt), yu = _deg(f, ust);
           return _tam(
             'y = ${_pol(f)} eğrisi, x ekseni, x = ${_n(alt)} ve x = ${_n(ust)} '
             'doğruları ile sınırlanan bölgenin alanı kaç birimkaredir?',
             fu - fa,
+            // Yamuk ya da dikdörtgen sanma, integral almadan fark alma.
             [
-              if (yamuk.isEven) yamuk ~/ 2,
-              _deg(f, ust) - _deg(f, alt),
-              fu + fa,
-              fu,
+              if ((ya + yu) * boy % 2 == 0) (ya + yu) * boy ~/ 2,
+              (yu - ya).abs(),
+              yu * boy,
+              ya * boy,
+              (fu + fa).abs(),
             ],
             'Eğri x ekseninin üstünde kaldığından alan, fonksiyonun '
             'x = ${_n(alt)} ile x = ${_n(ust)} arasındaki belirli '
@@ -2106,8 +2116,9 @@ final lmMatIleri = <AdvancedFamily>[
             ],
             'İlkel fonksiyon F(x) = ${_pol([p, 0, 0, 0])} + mx olur. '
             'F($ust) − F($alt) = $kup + ${boy == 1 ? '' : boy}m = '
-            '${_n(deger)} eşitliğinden ${boy == 1 ? '' : boy}m = '
-            '${_n(deger - kup)} ve m = ${_n(m)} bulunur.',
+            '${_n(deger)} eşitliğinden '
+            '${boy == 1 ? '' : '${boy}m = ${_n(deger - kup)} ve '}'
+            'm = ${_n(m)} bulunur.',
           );
       }
     },
@@ -2152,8 +2163,8 @@ final lmMatIleri = <AdvancedFamily>[
               sigma(1, n, '(${_pol([p, 0, q], 'k')})'),
               toplam,
               [p * k1 * k1 + q * n, p * k2 + q, p * k1 + q * n, p * k2],
-              '$kareler olur; sabit terim $n kez toplanır. Sonuç $p·$k2 + '
-              '$n·${_p(q)} = ${_n(toplam)}.',
+              '$kareler olur; sabit terim $n kez toplanır. Sonuç '
+              '${p == 1 ? '' : '$p·'}$k2 + $n·${_p(q)} = ${_n(toplam)}.',
             );
           }
           final toplam = p * k2 + q * k1;
@@ -2161,8 +2172,8 @@ final lmMatIleri = <AdvancedFamily>[
             sigma(1, n, '(${_pol([p, q, 0], 'k')})'),
             toplam,
             [p * k1 * k1 + q * k1, p * k2 + q * n, p * k2 + q, p * k2],
-            '$kareler ve Σ k = $n·${n + 1}/2 = $k1 olur. Sonuç $p·$k2 + '
-            '${_p(q)}·$k1 = ${_n(toplam)}.',
+            '$kareler ve Σ k = $n·${n + 1}/2 = $k1 olur. Sonuç '
+            '${p == 1 ? '' : '$p·'}$k2 + ${_p(q)}·$k1 = ${_n(toplam)}.',
           );
         case 2:
           final m = 3 + a % 5;

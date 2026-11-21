@@ -293,10 +293,10 @@ final _f04 = lmAile(
     final ivme = const [1.0, 2.0, 2.5, 5.0][b % 4];
     final x = (v0 * v0 - v * v) / (2 * ivme);
     return _s(
-      'Otoyolda $v0 m/s hızla ilerleyen bir otomobil, hız sınırının $v m/s '
-      'olduğu bölgeye yaklaşırken ${tr(ivme)} m/s² büyüklüğünde sabit ivmeyle '
-      'yavaşlıyor. Otomobilin bu bölgeye tam $v m/s hızla girebilmesi için '
-      'sürücü, bölgenin başlangıcından kaç metre önce yavaşlamaya başlamalıdır?',
+      'Otoyolda $v0 m/s hızla ilerleyen bir otomobilin sürücüsü, ilerideki '
+      'araçların yavaşladığını fark edip frene basıyor. Otomobil ${tr(ivme)} m/s² '
+      'büyüklüğünde sabit ivmeyle yavaşlayarak hızını $v m/s değerine '
+      'düşürüyor. Otomobil bu yavaşlama süresince kaç metre yol alır?',
       x,
       [
         (v0 - v) * (v0 - v) / (2 * ivme),
@@ -741,8 +741,8 @@ final _f10 = lmAile(
       return _s(
         'Bir elektrik motoru, yatay zemindeki bir sandığı halat yardımıyla '
         'zemine paralel $kuvvet N büyüklüğünde sabit bir kuvvetle ${tr(x)} m çekiyor. '
-        'Bu çekme işi $t saniye sürdüğüne göre motorun sandık üzerinde yaptığı '
-        'işin ortalama gücü kaç W olur?',
+        'Çekme işlemi $t saniye sürdüğüne göre motorun sandığa aktardığı '
+        'ortalama güç kaç W olur?',
         w / t,
         [w, w * t, kuvvet * t / x, kuvvet / t],
         'Yapılan iş F·x = $kuvvet · ${tr(x)} = ${tr(w)} J olur. Güç, işin süreye '
@@ -757,7 +757,7 @@ final _f10 = lmAile(
       final w = m * 10 * h;
       return _s(
         'Bir vinç, $m kg kütleli bir yükü sabit hızla $h m yükseğe $t saniyede '
-        'çıkarıyor. Vincin yük üzerinde yaptığı işin gücü kaç W olur? '
+        'çıkarıyor. Vincin yüke aktardığı güç kaç W olur? '
         '(g = 10 m/s² alınız.)',
         w / t,
         [m * h / t, w, m * 10 / t, w * t],

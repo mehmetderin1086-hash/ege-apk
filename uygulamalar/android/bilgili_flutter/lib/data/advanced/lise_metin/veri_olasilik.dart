@@ -1,6 +1,9 @@
 // Lise metin aileleri · Veri, sayma ve olasılık alanı: permütasyon,
 // kombinasyon, binom, olasılık, merkezî eğilim ve yayılım ölçüleri, kümeler,
 // önermeler, modüler aritmetik ve finansal matematik (20 aile × 5.000 vaka).
+import 'dart:convert';
+import 'dart:io';
+
 import 'ortak.dart';
 
 // ---------------------------------------------------------------------------
@@ -141,7 +144,7 @@ const _gorevBaglamlari = [
     roller: ['başkan', 'başkan yardımcısı', 'sayman', 'sekreter'],
   ),
   (
-    on: 'oyuncusu bulunan bir voleybol takımında oyuncular arasından',
+    on: 'oyuncusu bulunan bir spor kulübünde oyuncular arasından',
     kisi: 'oyuncu',
     roller: ['kaptan', 'kaptan yardımcısı', 'sözcü', 'malzeme sorumlusu'],
   ),
@@ -181,7 +184,7 @@ const _gorevBaglamlari = [
     ],
   ),
   (
-    on: 'kişilik bir dağcılık ekibinde ekip üyeleri arasından',
+    on: 'üyesi olan bir dağcılık kulübünde üyeler arasından',
     kisi: 'dağcı',
     roller: ['ekip lideri', 'rehber', 'telsiz sorumlusu', 'sağlık sorumlusu'],
   ),
@@ -673,8 +676,8 @@ AdvancedItem _daireselDizilis(int a, int b, int duzen) {
           '$y! = $fy biçimde sıralanır: 6·$fx·$fy = $yanit.';
   }
   return sayisal(
-    '$grup $eylem. Buna göre $kosul koşuluyla kaç farklı $ne '
-    'oluşturulabilir?',
+    '$grup $eylem. Yalnız kişilerin birbirine göre konumları dikkate '
+    'alındığına göre, $kosul koşuluyla kaç farklı $ne oluşturulabilir?',
     yanit,
     yanlis,
     aciklama,
@@ -822,7 +825,7 @@ AdvancedItem _kombinasyon(int a, int b, int c) {
     case 5:
       final birlikte = _komb(n - 2, r - 2);
       kok =
-          '$giris Bu kişilerden $ad1 ile $ad2 aynı anda seçilmeyecektir. Buna '
+          '$giris Bu kişilerden $ad1 ile $ad2 birlikte seçilemeyecektir. Buna '
           'göre $soru';
       yanit = cnr - birlikte;
       yanlis = [_komb(n - 2, r), birlikte, cnr, cnr - _komb(n - 2, r)];
@@ -903,7 +906,7 @@ AdvancedItem _binom(int a, int b, int c) {
       final yanit = cnk * _kuvvet(p, n - k) * _kuvvet(sq, k);
       return _isaretli(
         '${ifade(_ust(n))} ifadesinin açılımında ${_terimYaz(hx, n - k, hy, k)} '
-        'teriminin katsayısı kaçtır?',
+        'çarpanını içeren terimin katsayısı kaçtır?',
         yanit,
         [
           _kuvvet(p, n - k) * _kuvvet(sq, k),
@@ -943,7 +946,7 @@ AdvancedItem _binom(int a, int b, int c) {
       final yanit = cnj * _kuvvet(p, jx) * _kuvvet(sq, n - jx);
       final istenen = jx == 0
           ? 'sabit terim'
-          : '${_terimYaz(hx, jx, hy, 0)} teriminin katsayısı';
+          : '${_terimYaz(hx, jx, hy, 0)} çarpanını içeren terimin katsayısı';
       return _isaretli(
         '${ifade(_ust(n), tek: true)} ifadesinin açılımında $istenen kaçtır?',
         yanit,
@@ -2044,8 +2047,8 @@ AdvancedItem _onerme(int a, int b, int c) {
 
   String dizi(bool u, bool v, bool w) => '${dy(u)} – ${dy(v)} – ${dy(w)}';
   return secenekli(
-    'p ${ad(d[0])}, q ${ad(d[1])} ve r ${ad(d[2])} birer önermedir; p′ ise p '
-    'önermesinin değilini gösterir.\n'
+    'p ${ad(d[0])}, q ${ad(d[1])} ve r ${ad(d[2])} birer önermedir; ′ işareti, '
+    'sonuna yazıldığı önermenin değilini gösterir.\n'
     'I. $yazi1\nII. $yazi2\nIII. $yazi3\n'
     'Bu bileşik önermelerin doğruluk değerleri (D: doğru, Y: yanlış) numara '
     'sırasıyla hangi seçenekte doğru verilmiştir?',
@@ -2911,7 +2914,7 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
         positive: true,
       );
     default:
-      final etiket = 100 * (3 + a), x = 5 + 3 * b;
+      final etiket = 100 * (3 + a), x = 5 + 2 * b; // %5 … %43
       final satis = (3 + a) * (100 - x);
       if (v == 0) {
         return _yuzdeli(
@@ -2919,7 +2922,7 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
           '$satis TL fiyatla satılıyor. Uygulanan indirim oranı yüzde '
           'kaçtır?',
           x,
-          [100 - x, (etiket - satis) * 100 ~/ satis, x + 3, x - 3, x + 6],
+          [100 - x, (etiket - satis) * 100 ~/ satis, x + 2, x - 2, x + 4],
           'İndirim tutarı $etiket − $satis = ${etiket - satis} TL olur. '
           'Oran ${etiket - satis}·100 : $etiket = $x; indirim %$x bulunur.',
         );
@@ -3057,6 +3060,20 @@ AdvancedItem _kurBirim(int a, int b, int c) {
   }
 }
 
+final _dok = <String, StringBuffer>{};
+final _gorulen = <String, Set<int>>{};
+LmUretec _k(String key, LmUretec f) => (a, b, c) {
+  final r = f(a, b, c);
+  final i = a + 25 * b + 500 * c;
+  final s = _gorulen.putIfAbsent(key, () => <int>{});
+  if (s.add(i)) {
+    final buf = _dok.putIfAbsent(key, StringBuffer.new);
+    buf.writeln(jsonEncode({'k': key, 'i': i, 'a': a, 'b': b, 'c': c, 'p': r.prompt, 'd': r.correct, 'y': r.wrong, 'e': r.explanation}));
+    if (s.length == 5000) File('/tmp/claude-0/-home-user-ege-apk/54f53f7e-c937-56a6-96d0-9804e1132d83/scratchpad/vo/dok_$key.jsonl').writeAsStringSync(buf.toString());
+  }
+  return r;
+};
+
 // ---------------------------------------------------------------------------
 // Aile listesi
 // ---------------------------------------------------------------------------
@@ -3068,7 +3085,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.mathematics,
     Difficulty.medium,
     BloomLevel.uygulama,
-    _permutasyon,
+    _k('permutasyon', _permutasyon),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3078,7 +3095,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.mathematics,
     Difficulty.hard,
     BloomLevel.analiz,
-    _tekrarliPermutasyon,
+    _k('tekrarliPermutasyon', _tekrarliPermutasyon),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3088,7 +3105,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.mathematics,
     Difficulty.medium,
     BloomLevel.uygulama,
-    _kombinasyon,
+    _k('kombinasyon', _kombinasyon),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3098,7 +3115,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.mathematics,
     Difficulty.medium,
     BloomLevel.uygulama,
-    _binom,
+    _k('binom', _binom),
     exam: ExamKind.ayt,
     lesson: 'Matematik',
   ),
@@ -3108,7 +3125,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.statistics,
     Difficulty.medium,
     BloomLevel.analiz,
-    _zarPara,
+    _k('zarPara', _zarPara),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3118,7 +3135,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.statistics,
     Difficulty.medium,
     BloomLevel.uygulama,
-    _torba,
+    _k('torba', _torba),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3128,7 +3145,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.statistics,
     Difficulty.hard,
     BloomLevel.analiz,
-    _kosullu,
+    _k('kosullu', _kosullu),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3138,7 +3155,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.statistics,
     Difficulty.medium,
     BloomLevel.uygulama,
-    _ortalama,
+    _k('ortalama', _ortalama),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3148,7 +3165,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.statistics,
     Difficulty.easy,
     BloomLevel.anlama,
-    _medyanMod,
+    _k('medyanMod', _medyanMod),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3158,7 +3175,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.statistics,
     Difficulty.medium,
     BloomLevel.uygulama,
-    _standartSapma,
+    _k('standartSapma', _standartSapma),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3168,7 +3185,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.statistics,
     Difficulty.medium,
     BloomLevel.uygulama,
-    _agirlikli,
+    _k('agirlikli', _agirlikli),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3178,7 +3195,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.mathematics,
     Difficulty.easy,
     BloomLevel.uygulama,
-    _kume,
+    _k('kume', _kume),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3188,7 +3205,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.mathematics,
     Difficulty.medium,
     BloomLevel.uygulama,
-    _onerme,
+    _k('onerme', _onerme),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
     shortAnswer: false,
@@ -3199,7 +3216,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.mathematics,
     Difficulty.medium,
     BloomLevel.uygulama,
-    _moduler,
+    _k('moduler', _moduler),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3209,7 +3226,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.mathematics,
     Difficulty.medium,
     BloomLevel.uygulama,
-    _sayma,
+    _k('sayma', _sayma),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3219,7 +3236,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.statistics,
     Difficulty.easy,
     BloomLevel.anlama,
-    _deneysel,
+    _k('deneysel', _deneysel),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3229,7 +3246,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.economics,
     Difficulty.easy,
     BloomLevel.uygulama,
-    _basitFaiz,
+    _k('basitFaiz', _basitFaiz),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3239,7 +3256,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.economics,
     Difficulty.hard,
     BloomLevel.analiz,
-    _bilesikFaiz,
+    _k('bilesikFaiz', _bilesikFaiz),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3249,7 +3266,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.economics,
     Difficulty.medium,
     BloomLevel.uygulama,
-    _indirimKdv,
+    _k('indirimKdv', _indirimKdv),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),
@@ -3259,7 +3276,7 @@ final lmVeriOlasilik = <AdvancedFamily>[
     Topic.economics,
     Difficulty.easy,
     BloomLevel.uygulama,
-    _kurBirim,
+    _k('kurBirim', _kurBirim),
     exam: ExamKind.tyt,
     lesson: 'Temel Matematik',
   ),

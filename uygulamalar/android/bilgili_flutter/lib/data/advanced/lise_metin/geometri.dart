@@ -137,8 +137,10 @@ String _ifade(List<(int, String)> terimler) {
 }
 
 /// px + qy + r = 0 biçiminde doğru denklemi.
-String _dnk(int p, int q, int r) =>
-    '${_ifade([(p, 'x'), (q, 'y'), (r, '')])} = 0';
+String _dnk(int p, int q, int r) {
+  final z = p < 0 || (p == 0 && q < 0) ? -1 : 1;
+  return '${_ifade([(z * p, 'x'), (z * q, 'y'), (z * r, '')])} = 0';
+}
 
 /// (x − h)² yazımı; h sıfırsa x².
 String _kare(String v, int h) =>
@@ -223,7 +225,7 @@ final lmGeometri = <AdvancedFamily>[
     'Üçgende iç ve dış açılar',
     _mat,
     Difficulty.easy,
-    BloomLevel.uygulama,
+    BloomLevel.anlama,
     (a, b, c) {
       final j = c ~/ 3;
       if (c % 3 == 0) {
@@ -422,8 +424,8 @@ final lmGeometri = <AdvancedFamily>[
     'geo_ozel_ucgen',
     '30-60-90 ve 45-45-90 üçgenleri',
     _mat,
-    Difficulty.medium,
-    BloomLevel.uygulama,
+    Difficulty.hard,
+    BloomLevel.analiz,
     (a, b, c) {
       final j = c ~/ 2, m = 2 + a;
       if (c.isEven) {
@@ -1070,7 +1072,8 @@ final lmGeometri = <AdvancedFamily>[
       final (al, carpan) = _yay[b];
       final r = carpan * (1 + a);
       final y = r * al ~/ 180, s = r * r * al ~/ 360;
-      String yaz(int k) => uc ? '${3 * k}' : '$kπ';
+      String sim(int k) => k == 1 ? 'π' : '$kπ';
+      String yaz(int k) => uc ? '${3 * k}' : sim(k);
       final ek = uc ? ' (π = 3 alınız.)' : '';
       final pi = uc ? '' : 'π ';
       String son(int k) => uc ? ' π = 3 alınırsa ${3 * k} bulunur.' : '';
@@ -1082,7 +1085,7 @@ final lmGeometri = <AdvancedFamily>[
             'olan yayın uzunluğu kaç ${pi}cm olur?$ek',
             deger(y),
             [2 * r, s, 2 * y, r].map(deger),
-            'Yay uzunluğu 2πr·(α / 360) = 2π·$r·$al / 360 = $yπ cm olur.'
+            'Yay uzunluğu 2πr·(α / 360) = 2π·$r·$al / 360 = ${sim(y)} cm olur.'
             '${son(y)}',
             positive: true,
           );
@@ -1092,7 +1095,7 @@ final lmGeometri = <AdvancedFamily>[
             'daire diliminin alanı kaç ${pi}cm² olur?$ek',
             deger(s),
             [r * r, y, 2 * s, s ~/ 2].map(deger),
-            'Dilimin alanı πr²·(α / 360) = π·${r * r}·$al / 360 = $sπ cm² '
+            'Dilimin alanı πr²·(α / 360) = π·${r * r}·$al / 360 = ${sim(s)} cm² '
             'olur.${son(s)}',
             positive: true,
           );
@@ -1140,7 +1143,7 @@ final lmGeometri = <AdvancedFamily>[
     'geo_cember_aci',
     'Çemberde açılar ve kirişler dörtgeni',
     _mat,
-    Difficulty.medium,
+    Difficulty.hard,
     BloomLevel.analiz,
     (a, b, c) {
       final ikinci = c >= 5;
@@ -1280,8 +1283,8 @@ final lmGeometri = <AdvancedFamily>[
     'geo_kiris',
     'Kiriş, teğet parçası ve çemberde kuvvet',
     _mat,
-    Difficulty.medium,
-    BloomLevel.uygulama,
+    Difficulty.hard,
+    BloomLevel.analiz,
     (a, b, c) {
       final ikinci = c >= 5, g = 1 + a;
       final (s, t) = _oran[b];
@@ -1420,7 +1423,7 @@ final lmGeometri = <AdvancedFamily>[
     'geo_prizma',
     'Dikdörtgenler prizması ve küp',
     _mat,
-    Difficulty.medium,
+    Difficulty.easy,
     BloomLevel.uygulama,
     (a, b, c) {
       final ikinci = c >= 5;
@@ -1571,7 +1574,7 @@ final lmGeometri = <AdvancedFamily>[
             ],
             'Koninin hacmi π·${r * r}·$yuk / 3, yarım kürenin hacmi '
             '(2/3)·π·$r³ olur. Toplam π·${r * r}·($yuk + ${2 * r}) / 3 = '
-            '${v}π cm³.',
+            '$vπ cm³.',
             positive: true,
           );
         default:
@@ -1584,7 +1587,7 @@ final lmGeometri = <AdvancedFamily>[
             [r * (4 * r + 2 * h), r * (2 * r + 2 * h), r * (3 * r + h), r * r * h],
             'Dış yüzey; alt taban πr², yanal yüzey 2πrh ve yarım kürenin '
             'yüzeyi 2πr² toplamıdır: π·${r * r} + 2π·$r·$h + 2π·${r * r} = '
-            '${s}π cm².',
+            '$sπ cm².',
             positive: true,
           );
       }
@@ -1597,7 +1600,7 @@ final lmGeometri = <AdvancedFamily>[
     'geo_analitik_nokta',
     'İki nokta arası uzaklık, orta nokta, ağırlık merkezi',
     _mat,
-    Difficulty.medium,
+    Difficulty.easy,
     BloomLevel.uygulama,
     (a, b, c) {
       final j = c ~/ 3, isaret = (a + b).isEven ? 1 : -1;
@@ -1941,7 +1944,7 @@ final lmGeometri = <AdvancedFamily>[
     'Öteleme, yansıma ve vektörlerde toplam ile uzunluk',
     _mat,
     Difficulty.medium,
-    BloomLevel.uygulama,
+    BloomLevel.anlama,
     (a, b, c) {
       final ikinci = c >= 5;
       final x = a < 12 ? a - 12 : a - 11, y = b < 10 ? b - 10 : b - 9;
@@ -1969,16 +1972,17 @@ final lmGeometri = <AdvancedFamily>[
           final (i1, i2) = const [
             (0, 3), (1, 3), (3, 0), (2, 3), (3, 1), (0, 2),
           ][(a + b) % 3 + (ikinci ? 3 : 0)];
-          final p0 = (x, y), p1 = _yansit(i1, p0), p2 = _yansit(i2, p1);
+          final yy = y > 0 ? y + 13 : y - 13;
+          final p0 = (x, yy), p1 = _yansit(i1, p0), p2 = _yansit(i2, p1);
           final ters = _yansit(i1, _yansit(i2, p0));
           return _noktali(
-            'Analitik düzlemde A${_n(x, y)} noktasının önce ${_yansima[i1]} '
+            'Analitik düzlemde A${_n(x, yy)} noktasının önce ${_yansima[i1]} '
             'göre, ardından elde edilen noktanın ${_yansima[i2]} göre '
             'yansıması alınıyor. Son durumda elde edilen noktanın '
             'koordinatları aşağıdakilerden hangisidir?',
             p2,
-            [p1, _yansit(i2, p0), ters, (-x, -y), (y, x), (x, -y), (-x, y)],
-            'A${_n(x, y)} noktasının ${_yansima[i1]} göre yansıması '
+            [p1, _yansit(i2, p0), ters, (-x, -yy), (yy, x), (x, -yy), (-x, yy)],
+            'A${_n(x, yy)} noktasının ${_yansima[i1]} göre yansıması '
             '${_n(p1.$1, p1.$2)}, bu noktanın ${_yansima[i2]} göre yansıması '
             '${_n(p2.$1, p2.$2)} olur.',
           );
