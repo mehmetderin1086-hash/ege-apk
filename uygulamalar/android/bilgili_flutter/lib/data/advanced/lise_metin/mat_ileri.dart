@@ -28,9 +28,6 @@ String _q(int n, int d) => kesir(n, d).replaceAll('-', '−');
 /// Kesir ya da negatif değer işlem içinde paranteze alınır.
 String _sar(String s) => s.contains('/') || s.startsWith('−') ? '($s)' : s;
 
-/// İşlem içinde kesir: `_qp(-3, 2)` → `(−3/2)`, `_qp(4, 2)` → `2`.
-String _qp(int n, int d) => _sar(_q(n, d));
-
 /// Polinom yazımı; katsayılar büyük dereceden küçüğe verilir.
 /// `_pol([1, -3, 0, 2])` → `x³ − 3x² + 2`.
 String _pol(List<int> k, [String v = 'x']) {
@@ -1372,8 +1369,8 @@ final lmMatIleri = <AdvancedFamily>[
                 ],
           'a${_alt(n)} = a${_alt(m)}·r${_ust(e)} olduğundan r${_ust(e)} = '
           '$an/$am = ${_q(an, am)} ve terimler pozitif olduğundan r = $oran '
-          'olur. ${ikinci ? 'a${_alt(k)} = a${_alt(m)}·r = $am·${_sar(oran)}' : 'a${_alt(k)} = a${_alt(n)}·r = $an·${_sar(oran)}'} '
-          '= $ak.',
+          'olur. a${_alt(k)} = a${_alt(ikinci ? m : n)}·r = '
+          '${ikinci ? am : an}·${_sar(oran)} = $ak.',
           pozitif: true,
         );
       }
