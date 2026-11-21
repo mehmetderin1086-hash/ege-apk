@@ -152,11 +152,13 @@ AdvancedItem _say(
 
   final d = dogru.toDouble(), m = d.abs();
   final tam = (d - d.roundToDouble()).abs() < 1e-9;
-  final adim = tam
+  final enKucuk = 1 / _on(basamak);
+  var adim = tam
       ? (m >= 200 ? 10.0 : (m >= 40 ? 5.0 : 1.0))
       : (m >= 20
             ? 1.0
             : (m >= 2 ? 0.5 : (m >= 0.3 ? 0.1 : (m >= 0.03 ? 0.01 : 0.001))));
+  if (adim < enKucuk) adim = enKucuk;
   final esik = 0.5 / _on(basamak);
   final havuz = <num>[
     ...adaylar,
@@ -1636,7 +1638,7 @@ final _f13 = lmAile(
           n[j] * u,
           [top * u ~/ 3, n[1 - j] * u, top * u - n[j] * u, n[2] * u, u],
           'Toplam mol sayısı $top olduğundan $gaz gazının mol kesri '
-          '${n[j]}/$top olur. Kısmi basınç ${top * u}·${n[j]} / $top = '
+          '${kesir(n[j], top)} olur. Kısmi basınç ${top * u}·${n[j]} / $top = '
           '${n[j] * u} mmHg bulunur.',
           positive: true,
         );

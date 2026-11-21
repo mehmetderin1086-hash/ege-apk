@@ -931,7 +931,7 @@ final lmGeometri = <AdvancedFamily>[
             'Köşegen uzunlukları $e cm ve $f cm olan bir eşkenar dörtgenin '
             'alanı kaç cm² olur?',
             e * f ~/ 2,
-            [e * f, 2 * (e + f), e * f ~/ 4, e + f],
+            [e * f, 2 * (e + f), if (e * f % 4 == 0) e * f ~/ 4, e + f],
             'Eşkenar dörtgenin alanı köşegen uzunlukları çarpımının yarısıdır: '
             '$e·$f / 2 = ${e * f ~/ 2} cm².',
             unit: 'cm²',
@@ -943,7 +943,7 @@ final lmGeometri = <AdvancedFamily>[
             'Köşegenleri birbirini dik kesen bir deltoidin köşegen uzunlukları '
             '$e cm ve $g cm olduğuna göre bu deltoidin alanı kaç cm² olur?',
             e * g ~/ 2,
-            [e * g, 2 * (e + g), e * g ~/ 4, e + g],
+            [e * g, 2 * (e + g), if (e * g % 4 == 0) e * g ~/ 4, e + g],
             'Deltoidin alanı köşegen uzunlukları çarpımının yarısıdır: '
             '$e·$g / 2 = ${e * g ~/ 2} cm².',
             unit: 'cm²',
@@ -967,7 +967,7 @@ final lmGeometri = <AdvancedFamily>[
             'ABCD paralelkenarında |AB| = $p cm ve [AB] kenarına ait yükseklik '
             '$h cm olduğuna göre ABCD paralelkenarının alanı kaç cm² olur?',
             p * h,
-            [p * h ~/ 2, 2 * (p + h), p + h],
+            [if ((p * h).isEven) p * h ~/ 2, 2 * (p + h), p + h],
             'Paralelkenarın alanı bir kenar ile o kenara ait yüksekliğin '
             'çarpımıdır: $p·$h = ${p * h} cm².',
             unit: 'cm²',
@@ -1016,7 +1016,12 @@ final lmGeometri = <AdvancedFamily>[
           0 => sayisal(
             '$veri alanı kaç cm² olur?',
             x * uzun,
-            [k * x * x, 2 * x * uzun, x + uzun, x * uzun ~/ 2],
+            [
+              k * x * x,
+              2 * x * uzun,
+              x + uzun,
+              if ((x * uzun).isEven) x * uzun ~/ 2,
+            ],
             '$cozum Alan $x·$uzun = ${x * uzun} cm².',
             unit: 'cm²',
             positive: true,
@@ -1032,7 +1037,12 @@ final lmGeometri = <AdvancedFamily>[
           2 => sayisal(
             '$veri kısa kenarı kaç cm olur?',
             x,
-            [uzun, cevre ~/ 2 ~/ (k + 1), x + m, k * x],
+            [
+              uzun,
+              if ((cevre ~/ 2) % (k + 1) == 0) cevre ~/ 2 ~/ (k + 1),
+              x + m,
+              k * x,
+            ],
             cozum,
             unit: 'cm',
             positive: true,
@@ -1133,7 +1143,7 @@ final lmGeometri = <AdvancedFamily>[
             'Yarıçapı $r cm olan bir dairede, merkez açısının ölçüsü $al° olan '
             'daire diliminin alanı kaç ${pi}cm² olur?$ek',
             deger(s),
-            [r * r, y, 2 * s, s ~/ 2].map(deger),
+            [r * r, y, 2 * s, if (s.isEven) s ~/ 2].map(deger),
             'Dilimin alanı πr²·(α / 360) = π·${r * r}·$al / 360 = ${sim(s)} cm² '
             'olur.${son(s)}',
             positive: true,
@@ -1143,7 +1153,7 @@ final lmGeometri = <AdvancedFamily>[
             'Bir çemberde merkez açısının ölçüsü $al° olan yayın uzunluğu '
             '${yaz(y)} cm olduğuna göre bu çemberin yarıçapı kaç cm olur?$ek',
             r,
-            [2 * r, y, r ~/ 2, 3 * r],
+            [2 * r, y, if (r.isEven) r ~/ 2, 3 * r],
             'Yay uzunluğu 2πr·($al / 360) = ${yaz(y)} eşitliğinden '
             'r = $r cm bulunur.',
             unit: 'cm',
@@ -1155,7 +1165,7 @@ final lmGeometri = <AdvancedFamily>[
             'alanı ${yaz(s)} cm² olduğuna göre bu dairenin yarıçapı kaç cm '
             'olur?$ek',
             r,
-            [2 * r, r ~/ 2, 3 * r, r + carpan],
+            [2 * r, if (r.isEven) r ~/ 2, 3 * r, r + carpan],
             'Dilimin alanı πr²·($al / 360) = ${yaz(s)} eşitliğinden '
             'r² = ${r * r}, r = $r cm bulunur.',
             unit: 'cm',
@@ -1166,7 +1176,7 @@ final lmGeometri = <AdvancedFamily>[
             'Yarıçapı $r cm olan bir çemberde uzunluğu ${yaz(y)} cm olan yayı '
             'gören merkez açının ölçüsü kaç derecedir?$ek',
             al,
-            [al ~/ 2, 2 * al, 360 - al, 180 - al],
+            [if (al.isEven) al ~/ 2, 2 * al, 360 - al, 180 - al],
             'Çemberin çevresi 2πr = ${yaz(2 * r)} cm olur. Yay çevrenin '
             '${kesir(y, 2 * r)} kadarı olduğundan merkez açı '
             '360°·${kesir(y, 2 * r)} = $al°.',
@@ -1437,7 +1447,7 @@ final lmGeometri = <AdvancedFamily>[
             return sayisal(
               '$veri |CD| kaç cm olur?',
               pd - y,
-              [pd, ab, x * ab ~/ y, pb - y],
+              [pd, ab, if (x * ab % y == 0) x * ab ~/ y, pb - y],
               '$cozum |CD| = $pd − $y = ${pd - y} cm.',
               unit: 'cm',
               positive: true,
@@ -1446,7 +1456,7 @@ final lmGeometri = <AdvancedFamily>[
           return sayisal(
             '$veri |PD| kaç cm olur?',
             pd,
-            [pb, x * ab ~/ y, pd - y, y + ab],
+            [pb, if (x * ab % y == 0) x * ab ~/ y, pd - y, y + ab],
             cozum,
             unit: 'cm',
             positive: true,
@@ -1514,7 +1524,7 @@ final lmGeometri = <AdvancedFamily>[
           '$giris $p cm ve $q cm, yüksekliği $h cm olan dikdörtgenler '
               'prizmasının hacmi kaç cm³ olur?',
           v,
-          [alan, alan ~/ 2, v ~/ 2, 4 * (p + q + h)],
+          [alan, alan ~/ 2, if (v.isEven) v ~/ 2, 4 * (p + q + h)],
           'Hacim üç ayrıtın çarpımıdır: $p·$q·$h = $v cm³.',
           unit: 'cm³',
           positive: true,
@@ -1533,7 +1543,12 @@ final lmGeometri = <AdvancedFamily>[
           '$giris $p cm ve $q cm, hacmi $v cm³ olan dikdörtgenler prizmasının '
               'yüksekliği kaç cm olur?',
           h,
-          [v ~/ (p + q), 2 * h, v ~/ (2 * p * q), h + q],
+          [
+            if (v % (p + q) == 0) v ~/ (p + q),
+            2 * h,
+            if (h.isEven) h ~/ 2,
+            h + q,
+          ],
           'Hacim taban alanı ile yüksekliğin çarpımıdır: $p·$q·h = $v, '
               'h = $v / ${p * q} = $h cm.',
           unit: 'cm',
@@ -1561,7 +1576,12 @@ final lmGeometri = <AdvancedFamily>[
             'Taban yarıçapı $r cm, yüksekliği $h cm $silindir hacmi kaç π cm³ '
             'olur?',
             r * r * h,
-            [2 * r * h, r * h * h, 2 * r * r * h, r * r * h ~/ 3],
+            [
+              2 * r * h,
+              r * h * h,
+              2 * r * r * h,
+              if (r * r * h % 3 == 0) r * r * h ~/ 3,
+            ],
             'Silindirin hacmi πr²h = π·$r²·$h = π·${r * r}·$h = '
             '${r * r * h}π cm³.',
             positive: true,
@@ -1606,10 +1626,12 @@ final lmGeometri = <AdvancedFamily>[
             'yüzünden yapıştırılıyor. Oluşan cismin hacmi kaç π cm³ olur?',
             v,
             [
-              r * r * yuk ~/ 3,
-              r * r * (yuk + 4 * r) ~/ 3,
+              // Yalnız koni, yarım küre yerine tam küre, üçe bölmeyi unutma,
+              // yalnız yarım küre.
+              if (r * r * yuk % 3 == 0) r * r * yuk ~/ 3,
+              if (r * r * (yuk + 4 * r) % 3 == 0) r * r * (yuk + 4 * r) ~/ 3,
               r * r * (yuk + 2 * r),
-              2 * r * r * r ~/ 3,
+              if (2 * r * r * r % 3 == 0) 2 * r * r * r ~/ 3,
             ],
             'Koninin hacmi π·${r * r}·$yuk / 3, yarım kürenin hacmi '
             '(2/3)·π·$r³ olur. Toplam π·${r * r}·($yuk + ${2 * r}) / 3 = '
@@ -1804,7 +1826,13 @@ final lmGeometri = <AdvancedFamily>[
             'Analitik düzlemde $denklem doğrusu ile koordinat eksenleri '
             'arasında kalan üçgensel bölgenin alanı kaç birimkaredir?',
             x * y ~/ 2,
-            [x * y, x + y, kc ~/ 2, x * y ~/ 4, kc],
+            [
+              x * y,
+              x + y,
+              if (kc.isEven) kc ~/ 2,
+              if (x * y % 4 == 0) x * y ~/ 4,
+              kc,
+            ],
             'y = 0 için x = $kc / $ka = $x, x = 0 için y = '
             '${ikinci ? '−' : ''}$y bulunur. Dik kenarları $x ve $y birim '
             'olan dik üçgenin alanı $x·$y / 2 = ${x * y ~/ 2} birimkaredir.',
