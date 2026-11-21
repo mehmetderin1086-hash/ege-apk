@@ -365,7 +365,7 @@ class SettingsTab extends StatelessWidget {
                       title: const Text('İlerleme Sıfırlansın mı?',
                           style: TextStyle(color: Colors.white)),
                       content: const Text(
-                        'XP, geçmiş turlar ve tekrar kartların sıfırlanacak. Gömülü 10.400+ soru havuzu korunur.',
+                        'XP, geçmiş turlar ve tekrar kartların sıfırlanacak. Yerleşik akademik soru bankası korunur.',
                         style: TextStyle(color: Colors.white70),
                       ),
                       actions: [

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../data/advanced/catalog.dart';
 import '../models/quiz_models.dart';
+import '../state/question_browser.dart';
 import '../state/arena_controller.dart';
 import '../theme/arena_design.dart';
 import '../widgets/question_renderers.dart';
@@ -15,10 +17,23 @@ class AcademyPoolTab extends StatefulWidget {
 class _AcademyPoolTabState extends State<AcademyPoolTab> {
   int _section = 0; // 0: Havuz, 1: Tekrar, 2: Defterim, 3: Paketler, 4: Profiller
   String _query = '';
+  final _queryController = TextEditingController();
   Topic _filterTopic = Topic.mixed;
   QuestionFormat _filterFormat = QuestionFormat.mixed;
   bool _hideReported = true;
-  int _visibleLimit = 30;
+  PoolCollection _collection = PoolCollection.all;
+  BloomLevel? _bloom;
+  Object? _searchKey;
+  BrowserPageTask? _pageTask;
+  Future<BrowserPage>? _pageFuture;
+  final List<BrowserCursor> _pages = [firstBrowserPage];
+
+  @override
+  void dispose() {
+    _pageTask?.cancel();
+    _queryController.dispose();
+    super.dispose();
+  }
   final Set<String> _expandedQuestionIds = {};
 
   void _showCreateProfileSheet(BuildContext context) {
@@ -201,41 +216,38 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
   }
 
   Widget _buildQuestionPoolBrowser(BuildContext context, ArenaController ctrl, Color accent) {
-    final qLower = _query.trim().toLowerCase();
-    final shown = <Question>[];
-    final all = ctrl.allQuestions;
-    final hasReportedFilter = _hideReported && ctrl.reportedQuestionIds.isNotEmpty;
-    final isFastCountPath =
-        qLower.isEmpty && _filterFormat == QuestionFormat.mixed && !hasReportedFilter;
-
-    int matchCount = 0;
-    if (isFastCountPath) {
-      matchCount = ctrl.countForTopic(_filterTopic);
-      for (var i = 0; i < all.length && shown.length < _visibleLimit; i++) {
-        final q = all[i];
-        if (_filterTopic != Topic.mixed && q.category != _filterTopic) continue;
-        shown.add(q);
-      }
-    } else {
-      for (var i = 0; i < all.length; i++) {
-        final q = all[i];
-        if (hasReportedFilter && ctrl.isReported(q)) continue;
-        if (_filterTopic != Topic.mixed && q.category != _filterTopic) continue;
-        if (!q.matchesFormat(_filterFormat)) continue;
-        if (qLower.isNotEmpty) {
-          final inText = q.text.toLowerCase().contains(qLower) ||
-              q.explanation.toLowerCase().contains(qLower) ||
-              q.options.any((o) => o.toLowerCase().contains(qLower));
-          if (!inText) continue;
-        }
-        matchCount++;
-        if (shown.length < _visibleLimit) {
-          shown.add(q);
-        }
-      }
+    final query = _query.trim().toLowerCase();
+    final hiddenCount = _hideReported ? ctrl.reportedQuestionIds.length : 0;
+    final key = (_collection, _bloom, _filterTopic, _filterFormat, query, _hideReported,
+        ctrl.totalPoolCount, hiddenCount, ctrl);
+    if (_searchKey != key) {
+      _pageTask?.cancel();
+      _pageFuture = null;
+      _pages
+        ..clear()
+        ..add(firstBrowserPage);
+      _searchKey = key;
     }
+    if (_pageFuture == null) {
+      _pageTask = BrowserPageTask(
+        personal: ctrl.personalQuestions, collection: _collection, bloom: _bloom, topic: _filterTopic,
+        format: _filterFormat, query: query, cursor: _pages.last,
+        hidden: _hideReported ? Set.of(ctrl.reportedQuestionIds) : const {},
+      );
+      _pageFuture = _pageTask!.run();
+    }
+    return FutureBuilder<BrowserPage>(
+      future: _pageFuture,
+      builder: (context, snapshot) => _buildBrowserPage(ctrl, accent, snapshot),
+    );
+  }
 
+  Widget _buildBrowserPage(ArenaController ctrl, Color accent, AsyncSnapshot<BrowserPage> snapshot) {
+    final waiting = snapshot.connectionState != ConnectionState.done;
+    final page = waiting ? null : snapshot.data;
+    final shown = page?.items ?? const <Question>[];
     return ListView.builder(
+      key: ValueKey(_pages.length),
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
       itemCount: shown.length + 2,
       itemBuilder: (ctx, index) {
@@ -276,9 +288,9 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
               ),
               const SizedBox(height: 10),
               TextField(
+                controller: _queryController,
                 onChanged: (v) => setState(() {
                   _query = v;
-                  _visibleLimit = 30;
                 }),
                 style: const TextStyle(color: Colors.white, fontSize: 13.5),
                 decoration: InputDecoration(
@@ -295,13 +307,35 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                 ),
               ),
               const SizedBox(height: 10),
+              ArenaScrollPills<PoolCollection>(
+                items: PoolCollection.values,
+                selected: _collection,
+                labelBuilder: (c) => c.label,
+                onSelected: (c) => setState(() {
+                  _collection = c;
+                  if (c == PoolCollection.personal) _bloom = null;
+                }),
+                accent: accent,
+              ),
+              const SizedBox(height: 8),
+              if (_collection != PoolCollection.personal) ...[
+                ArenaScrollPills<BloomLevel?>(
+                  items: [null, ...BloomLevel.values],
+                  selected: _bloom,
+                  labelBuilder: (b) => b?.label ?? 'Tüm Bloom basamakları',
+                  onSelected: (b) => setState(() => _bloom = b),
+                  accent: accent,
+                ),
+                const SizedBox(height: 8),
+              ],
               ArenaScrollPills<Topic>(
-                items: [Topic.mixed, ...Topic.poolCategories],
+                items: [Topic.mixed, ...ctrl.availableTopics],
                 selected: _filterTopic,
-                labelBuilder: (t) => '${t.label} (${ctrl.countForTopic(t)})',
+                labelBuilder: (t) => _collection == PoolCollection.all && _bloom == null &&
+                    _filterFormat == QuestionFormat.mixed && _query.trim().isEmpty
+                    ? '${t.label} (${ctrl.countForTopic(t)})' : t.label,
                 onSelected: (t) => setState(() {
                   _filterTopic = t;
-                  _visibleLimit = 30;
                 }),
                 accent: accent,
               ),
@@ -312,7 +346,6 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                 labelBuilder: (f) => f.label,
                 onSelected: (f) => setState(() {
                   _filterFormat = f;
-                  _visibleLimit = 30;
                 }),
                 accent: accent,
               ),
@@ -321,7 +354,10 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                 children: [
                   Expanded(
                     child: Text(
-                      '$matchCount eşleşen soru',
+                      waiting ? 'Sorular aranıyor…' : snapshot.hasError
+                          ? 'Soru araması tamamlanamadı.'
+                          : shown.isEmpty ? 'Eşleşen soru bulunamadı.'
+                          : 'Sayfa ${_pages.length} · ${shown.length} soru',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -347,14 +383,30 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
         }
 
         if (index == shown.length + 1) {
-          if (shown.length >= matchCount) return const SizedBox(height: 16);
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: OutlinedButton.icon(
-              onPressed: () => setState(() => _visibleLimit += 40),
-              icon: const Icon(Icons.expand_more_rounded),
-              label: Text('Daha Fazla Göster (${matchCount - shown.length} kaldı)'),
-            ),
+          if (waiting) return const LinearProgressIndicator();
+          if (_pages.length == 1 && page?.hasMore != true) return const SizedBox(height: 16);
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton.icon(
+                onPressed: _pages.length < 2 ? null : () => setState(() {
+                  _pages.removeLast();
+                  _pageFuture = null;
+                  _expandedQuestionIds.clear();
+                }),
+                icon: const Icon(Icons.chevron_left),
+                label: const Text('Önceki sayfa'),
+              ),
+              TextButton.icon(
+                onPressed: page?.hasMore != true ? null : () => setState(() {
+                  _pages.add(page!.next);
+                  _pageFuture = null;
+                  _expandedQuestionIds.clear();
+                }),
+                icon: const Icon(Icons.chevron_right),
+                label: const Text('Sonraki sayfa'),
+              ),
+            ],
           );
         }
 
@@ -406,6 +458,10 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                               ),
                             ),
                           ),
+                          if (q.bloom != null) Text(
+                            [if (q.studyLevel != null) q.studyLevel!, q.bloom!.label, q.responseType.label].join(' · '),
+                            style: TextStyle(fontSize: 11, color: accent),
+                          ),
                           Text(
                             q.difficulty.label,
                             style: TextStyle(
@@ -454,6 +510,11 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                   ),
                 ),
                 if (expanded) ...[
+                  if (q.creation != null) ...[
+                    Text(q.creation!.brief, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    for (final criterion in q.creation!.criteria) Text('• $criterion'),
+                    const SizedBox(height: 8),
+                  ],
                   if (q.visual != null)
                     QuestionVisualViewer(visual: q.visual!, accent: q.category.accent),
                   const SizedBox(height: 10),
@@ -491,9 +552,15 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: 6,
                     children: [
+                      TextButton.icon(
+                        onPressed: () => ctrl.startQuestionPractice(q),
+                        icon: const Icon(Icons.play_arrow_rounded, size: 17),
+                        label: const Text('Bu soruyu çöz'),
+                      ),
                       TextButton.icon(
                         onPressed: () => ctrl.toggleReportQuestion(q),
                         icon: Icon(
@@ -693,7 +760,7 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
               ),
               const SizedBox(height: 6),
               Text(
-                'JSON soru paketlerini içe aktarabilir, mükerrer kontrolünden geçirebilir veya tek dokunuşla geri alabilirsin.',
+                'Kişisel soru paketlerini JSON olarak içe veya dışa aktarabilirsin. Yerleşik akademik paketler uygulamayla birlikte gelir.',
                 style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.72)),
               ),
               const SizedBox(height: 12),
@@ -776,8 +843,8 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                         icon: const Icon(Icons.play_arrow_rounded, size: 18),
                         label: const Text('Oyna'),
                       ),
-                      const SizedBox(width: 8),
-                      OutlinedButton.icon(
+                      if (pack.questions is! FamilyQuestions) const SizedBox(width: 8),
+                      if (pack.questions is! FamilyQuestions) OutlinedButton.icon(
                         onPressed: () => ctrl.exportQuestionPack(pack),
                         icon: const Icon(Icons.download_rounded, size: 17),
                         label: const Text('JSON Kaydet'),
@@ -842,7 +909,13 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                     icon: const Icon(Icons.delete_outline_rounded, color: Colors.white54),
                   ),
                   FilledButton(
-                    onPressed: () => ctrl.startStudyProfileRound(p),
+                    onPressed: () {
+                      if (!ctrl.startStudyProfileRound(p)) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Bu çalışma profilindeki ders ve zorlukta soru bulunamadı.'),
+                        ));
+                      }
+                    },
                     style: FilledButton.styleFrom(
                       backgroundColor: Topic.exam.accent,
                       foregroundColor: const Color(0xFF06101F),

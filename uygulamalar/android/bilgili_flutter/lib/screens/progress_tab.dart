@@ -1,3 +1,4 @@
+import '../widgets/question_renderers.dart';
 import 'package:flutter/material.dart';
 import '../models/quiz_models.dart';
 import '../state/arena_controller.dart';
@@ -19,6 +20,38 @@ class ProgressTab extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
       children: [
         ArenaSceneHeader(title: 'İlerleme & Başarımlar', description: 'Seviye yolculuğun, konu ustalığın, rozetlerin ve tur geçmişin', scene: 'duel_stage'),
+        if (controller.creationPortfolio.isNotEmpty)
+          ListTile(
+            leading: const Icon(Icons.edit_note_rounded),
+            title: const Text('Tasarım defterim'),
+            subtitle: Text('${controller.creationPortfolio.length} kayıtlı çalışma'),
+            onTap: () => showModalBottomSheet<void>(
+              context: context, isScrollControlled: true, showDragHandle: true,
+              builder: (context) {
+                final entries = controller.creationPortfolio.entries.toList().reversed.toList();
+                return SafeArea(child: FractionallySizedBox(heightFactor: 0.8,
+                  child: ListView.builder(itemCount: entries.length,
+                    itemBuilder: (context, index) {
+                      final entry = entries[index];
+                      final q = controller.questionById(entry.key);
+                      return ExpansionTile(
+                        title: Text(q?.lesson ?? 'Kayıtlı tasarım'),
+                        subtitle: Text(entry.value, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        childrenPadding: const EdgeInsets.all(16),
+                        children: [
+                          if (q?.creation != null) Text(q!.creation!.brief),
+                          if (q?.visual != null) QuestionVisualViewer(visual: q!.visual!, accent: q.category.accent),
+                          const SizedBox(height: 8),
+                          SelectableText(entry.value),
+                          for (final criterion in q?.creation?.criteria ?? const <String>[])
+                            Align(alignment: Alignment.centerLeft, child: Text('• $criterion')),
+                        ],
+                      );
+                    }),
+                ));
+              },
+            ),
+          ),
         const SizedBox(height: 14),
 
         // Overview Hero

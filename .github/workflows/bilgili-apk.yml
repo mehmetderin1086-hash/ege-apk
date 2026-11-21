@@ -1,0 +1,118 @@
+name: Bilgili APK
+
+# Bilgili'yi sınar, sürüm APK'larını derler ve bir ön sürüm olarak yayımlar.
+on:
+  push:
+    branches: [ccr-07c70646-5qw9pg]
+    paths:
+      - 'uygulamalar/android/bilgili_flutter/**'
+      - '.github/workflows/bilgili-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bilgili-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_SURUMU: 3.47.9
+
+jobs:
+  derle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: uygulamalar/android/bilgili_flutter
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_SURUMU }}
+          channel: stable
+          cache: true
+
+      - name: Bağımlılıklar
+        run: flutter pub get
+
+      - name: Testler
+        run: flutter test --no-pub
+
+      # Depoda özel imza anahtarı yoktur. Derlemeler birbirinin üzerine
+      # kurulabilsin diye üretilen anahtar önbellekte saklanır.
+      - name: İmza anahtarını önbellekten al
+        id: imza
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: bilgili-imza-v1
+
+      - name: İmza anahtarı üret
+        if: steps.imza.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.android
+          keytool -genkeypair -keystore ~/.android/debug.keystore \
+            -storepass android -keypass android -alias androiddebugkey \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: APK derle
+        run: flutter build apk --release --split-per-abi --no-pub
+
+      - name: Dosyaları adlandır
+        id: paket
+        run: |
+          set -euo pipefail
+          SURUM="$(grep -E '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)"
+          KOD="$(grep -E '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f2)"
+          CIKTI="$RUNNER_TEMP/apk"
+          mkdir -p "$CIKTI"
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk "$CIKTI/Bilgili-${SURUM}-arm64.apk"
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk "$CIKTI/Bilgili-${SURUM}-armv7.apk"
+          (cd "$CIKTI" && sha256sum *.apk | tee SHA256SUMS.txt && ls -l)
+          keytool -list -v -keystore ~/.android/debug.keystore -storepass android 2>/dev/null \
+            | grep -E 'SHA256:' | head -1 || true
+          echo "surum=$SURUM" >> "$GITHUB_OUTPUT"
+          echo "kod=$KOD" >> "$GITHUB_OUTPUT"
+          echo "cikti=$CIKTI" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bilgili-${{ steps.paket.outputs.surum }}-apk
+          path: ${{ steps.paket.outputs.cikti }}
+          if-no-files-found: error
+
+      - name: Ön sürüm olarak yayımla
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SURUM: ${{ steps.paket.outputs.surum }}
+          KOD: ${{ steps.paket.outputs.kod }}
+          CIKTI: ${{ steps.paket.outputs.cikti }}
+        run: |
+          set -euo pipefail
+          ETIKET="bilgili-v${SURUM}"
+          {
+            echo "Bilgili ${SURUM} (sürüm kodu ${KOD}). Lise düzeyinde 1.000.000 metin sorusu eklendi; bankada toplam 2.270.439 soru var."
+            echo
+            echo "Çoğu telefon için \`Bilgili-${SURUM}-arm64.apk\` dosyasını indirin. \`armv7\` dosyası eski 32 bit telefonlar içindir."
+            echo
+            echo "Bu derleme, önceki Bilgili APK'larından farklı bir anahtarla imzalandı. Telefonda eski sürüm kuruluysa önce Ayarlar bölümünden tam yedek alın, eski uygulamayı kaldırın, bu APK'yı kurup yedeği geri yükleyin."
+            echo
+            echo '```'
+            cat "$CIKTI/SHA256SUMS.txt"
+            echo '```'
+          } > "$RUNNER_TEMP/notlar.md"
+          gh release delete "$ETIKET" --yes --cleanup-tag || true
+          gh release create "$ETIKET" --target "$GITHUB_SHA" --prerelease \
+            --title "Bilgili ${SURUM}" --notes-file "$RUNNER_TEMP/notlar.md" \
+            "$CIKTI"/*.apk "$CIKTI/SHA256SUMS.txt"

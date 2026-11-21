@@ -187,6 +187,13 @@ class _HomePlayTabState extends State<HomePlayTab> {
     );
   }
 
+  void _launchFilteredRound(bool started) {
+    if (started) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Bu seçimle eşleşen soru yok. Konuyu, soru türünü veya zorluk düzeyini değiştir.'),
+    ));
+  }
+
   void _openQuestionBankSheet(BuildContext context) {
     final ctrl = widget.controller;
     final accent = ctrl.currentWallpaper.primary;
@@ -228,7 +235,7 @@ class _HomePlayTabState extends State<HomePlayTab> {
                 ],
               ),
               Text(
-                '18.000+ görsel (grafik, tablo, şema) ve 32.000+ etkileşimli (dinleme, sıralama, eşleştirme, telaffuz) soru dahil 170.000+ soruluk hazır paketlerden dilediğini seçip hemen çözebilirsin.',
+                'Lise, üniversite veya Bloom basamağına göre bir akademik paket seç. Konu ve etkinlik paketleri de çevrimdışı kullanılabilir.',
                 style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.72)),
               ),
               const SizedBox(height: 12),
@@ -305,6 +312,7 @@ class _HomePlayTabState extends State<HomePlayTab> {
     final wp = ctrl.currentWallpaper;
     final accent = wp.primary;
     final setup = ctrl.setup;
+    final topics = [Topic.mixed, ...ctrl.availableTopics, Topic.custom];
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
@@ -491,7 +499,7 @@ class _HomePlayTabState extends State<HomePlayTab> {
                 children: [
                   Expanded(
                     child: FilledButton.icon(
-                      onPressed: () => ctrl.startConfiguredRound(),
+                      onPressed: () => _launchFilteredRound(ctrl.startConfiguredRound()),
                       style: FilledButton.styleFrom(
                         backgroundColor: accent,
                         foregroundColor: const Color(0xFF06101F),
@@ -530,7 +538,7 @@ class _HomePlayTabState extends State<HomePlayTab> {
                 icon: Icons.mic_rounded,
                 imageAsset: 'assets/images/card_voice_quiz.jpg',
                 accent: const Color(0xFF4CE0D2),
-                onTap: ctrl.startLiveVoiceQuiz,
+                onTap: () => _launchFilteredRound(ctrl.startLiveVoiceQuiz()),
               ),
             ),
             const SizedBox(width: 10),
@@ -702,7 +710,7 @@ class _HomePlayTabState extends State<HomePlayTab> {
                     ),
                     const SizedBox(height: 2),
                     const Text(
-                      '+50.000 görsel & etkinlik · 170.000+ toplam soru ve 12 hazır paket',
+                      'Lise ve üniversite · Bloom’un altı basamağı',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 11, color: Colors.white70),
@@ -858,7 +866,7 @@ class _HomePlayTabState extends State<HomePlayTab> {
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: Topic.values.length,
+          itemCount: topics.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             mainAxisSpacing: 9,
@@ -866,7 +874,7 @@ class _HomePlayTabState extends State<HomePlayTab> {
             childAspectRatio: 1.62,
           ),
           itemBuilder: (context, index) {
-            final topic = Topic.values[index];
+            final topic = topics[index];
             final selected = setup.topic == topic;
             return Semantics(selected: selected, button: true, child: ArenaPressDepth(child: InkWell(
               onTap: () => ctrl.updateSetup(setup.copyWith(topic: topic)),
