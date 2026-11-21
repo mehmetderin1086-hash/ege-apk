@@ -8,11 +8,41 @@ const _ustRakam = '⁰¹²³⁴⁵⁶⁷⁸⁹';
 
 /// Bu dosyada kullanılan atom kütleleri (g/mol); her kökte ayrıca yazılır.
 const _atomKutlesi = <String, num>{
-  'H': 1, 'He': 4, 'Li': 7, 'C': 12, 'N': 14, 'O': 16, 'F': 19, 'Ne': 20,
-  'Na': 23, 'Mg': 24, 'Al': 27, 'Si': 28, 'P': 31, 'S': 32, 'Cl': 35.5,
-  'Ar': 40, 'K': 39, 'Ca': 40, 'Ti': 48, 'Cr': 52, 'Mn': 55, 'Fe': 56,
-  'Ni': 59, 'Cu': 64, 'Zn': 65, 'Br': 80, 'Kr': 84, 'Sr': 88, 'Ag': 108,
-  'Sn': 119, 'I': 127, 'Xe': 131, 'Ba': 137, 'Au': 197, 'Pb': 207,
+  'H': 1,
+  'He': 4,
+  'Li': 7,
+  'C': 12,
+  'N': 14,
+  'O': 16,
+  'F': 19,
+  'Ne': 20,
+  'Na': 23,
+  'Mg': 24,
+  'Al': 27,
+  'Si': 28,
+  'P': 31,
+  'S': 32,
+  'Cl': 35.5,
+  'Ar': 40,
+  'K': 39,
+  'Ca': 40,
+  'Ti': 48,
+  'Cr': 52,
+  'Mn': 55,
+  'Fe': 56,
+  'Ni': 59,
+  'Cu': 64,
+  'Zn': 65,
+  'Br': 80,
+  'Kr': 84,
+  'Sr': 88,
+  'Ag': 108,
+  'Sn': 119,
+  'I': 127,
+  'Xe': 131,
+  'Ba': 137,
+  'Au': 197,
+  'Pb': 207,
 };
 
 final _atomOnbellek = <String, Map<String, int>>{};
@@ -209,20 +239,62 @@ AdvancedItem _oranli(
   aciklama,
 );
 
-
 // ---------------------------------------------------------------------------
 // 1. Atomun temel tanecikleri
 // ---------------------------------------------------------------------------
 
 // Gerçekte var olan tek atomlu iyonlar: (atom numarası, yük). X ile gösterilir.
 const _iyonlar = [
-  (3, 1), (4, 2), (7, -3), (8, -2), (9, -1), (11, 1), (12, 2), (13, 3),
-  (15, -3), (16, -2), (17, -1), (19, 1), (20, 2), (21, 3), (22, 4), (23, 3),
-  (24, 3), (25, 2), (26, 2), (26, 3), (27, 2), (28, 2), (29, 1), (29, 2),
-  (30, 2), (31, 3), (32, 4), (33, -3), (34, -2), (35, -1), (37, 1), (38, 2),
-  (39, 3), (40, 4), (44, 3), (45, 3), (46, 2), (47, 1), (48, 2), (49, 3),
-  (50, 2), (50, 4), (51, 3), (52, -2), (53, -1), (55, 1), (56, 2), (57, 3),
-  (58, 3), (27, 3),
+  (3, 1),
+  (4, 2),
+  (7, -3),
+  (8, -2),
+  (9, -1),
+  (11, 1),
+  (12, 2),
+  (13, 3),
+  (15, -3),
+  (16, -2),
+  (17, -1),
+  (19, 1),
+  (20, 2),
+  (21, 3),
+  (22, 4),
+  (23, 3),
+  (24, 3),
+  (25, 2),
+  (26, 2),
+  (26, 3),
+  (27, 2),
+  (28, 2),
+  (29, 1),
+  (29, 2),
+  (30, 2),
+  (31, 3),
+  (32, 4),
+  (33, -3),
+  (34, -2),
+  (35, -1),
+  (37, 1),
+  (38, 2),
+  (39, 3),
+  (40, 4),
+  (44, 3),
+  (45, 3),
+  (46, 2),
+  (47, 1),
+  (48, 2),
+  (49, 3),
+  (50, 2),
+  (50, 4),
+  (51, 3),
+  (52, -2),
+  (53, -1),
+  (55, 1),
+  (56, 2),
+  (57, 3),
+  (58, 3),
+  (27, 3),
 ];
 
 final _f01 = lmAile(
@@ -248,7 +320,7 @@ final _f01 = lmAile(
       case 0:
         return soru(
           'Kütle numarası $kn olan $x iyonunun çekirdeğinde $n nötron '
-          'bulunmaktadır. Bu iyonun elektron sayısı kaçtır?',
+              'bulunmaktadır. Bu iyonun elektron sayısı kaçtır?',
           e,
           [z, z + q, kn - q, n],
           'Proton sayısı $kn − $n = $z olur. $eYazi',
@@ -256,7 +328,7 @@ final _f01 = lmAile(
       case 1:
         return soru(
           '$x iyonunda $e elektron ve $n nötron bulunmaktadır. X atomunun '
-          'kütle numarası kaçtır?',
+              'kütle numarası kaçtır?',
           kn,
           [e + n, e - q + n, z, kn + q + q],
           '$zYazi Kütle numarası $z + $n = $kn bulunur.',
@@ -264,7 +336,7 @@ final _f01 = lmAile(
       case 2:
         return soru(
           'Kütle numarası $kn olan $x iyonunda $e elektron bulunmaktadır. X '
-          'atomunun çekirdeğindeki nötron sayısı kaçtır?',
+              'atomunun çekirdeğindeki nötron sayısı kaçtır?',
           n,
           [kn - e, kn - e + q, z, e],
           '$zYazi Nötron sayısı $kn − $z = $n bulunur.',
@@ -272,59 +344,59 @@ final _f01 = lmAile(
       case 3:
         return soru(
           'Atom numarası $z, kütle numarası $kn olan X atomundan oluşan $x '
-          'iyonunda proton, nötron ve elektron sayılarının toplamı kaçtır?',
+              'iyonunda proton, nötron ve elektron sayılarının toplamı kaçtır?',
           hepsi,
           [kn + z, kn + z + q, kn + n, z + e],
           'Proton sayısı $z, nötron sayısı $kn − $z = $n, elektron sayısı '
-          '$eIslem olur. Toplam $z + $n + $e = $hepsi bulunur.',
+              '$eIslem olur. Toplam $z + $n + $e = $hepsi bulunur.',
         );
       case 4:
         return _say(
           'Kütle numarası $kn olan bir X iyonunda $n nötron ve $e elektron '
-          'bulunmaktadır. Bu iyonun yükü kaçtır?',
+              'bulunmaktadır. Bu iyonun yükü kaçtır?',
           q,
           [-q, q + 1, q - 1, q + 2, q - 2],
           'Proton sayısı $kn − $n = $z olur. Yük, proton sayısı ile elektron '
-          'sayısının farkıdır: $z − $e = ${_isaretli(q)}.',
+              'sayısının farkıdır: $z − $e = ${_isaretli(q)}.',
           arti: false,
           isaret: true,
         );
       case 5:
         return soru(
           '$x iyonunda proton, nötron ve elektron sayılarının toplamı $hepsi, '
-          'nötron sayısı ise $n olarak verilmiştir. X elementinin atom '
-          'numarası kaçtır?',
+              'nötron sayısı ise $n olarak verilmiştir. X elementinin atom '
+              'numarası kaçtır?',
           z,
           [e, (hepsi - n) ~/ 2, z + q.abs() + 1, hepsi - n, z - q.abs() - 1],
           'Proton sayısı p ise elektron sayısı ${q > 0 ? 'p − $q' : 'p + ${-q}'} '
-          'olur. p + $n + ${q > 0 ? 'p − $q' : 'p + ${-q}'} = $hepsi '
-          'eşitliğinden p = $z bulunur.',
+              'olur. p + $n + ${q > 0 ? 'p − $q' : 'p + ${-q}'} = $hepsi '
+              'eşitliğinden p = $z bulunur.',
         );
       case 6:
         return soru(
           'Kütle numarası $kn olan $x iyonunda proton, nötron ve elektron '
-          'sayılarının toplamı $hepsi olarak verilmiştir. X elementinin atom '
-          'numarası kaçtır?',
+              'sayılarının toplamı $hepsi olarak verilmiştir. X elementinin atom '
+              'numarası kaçtır?',
           z,
           [e, e - q, n, z + 1, z - 1],
           'Proton ve nötron sayılarının toplamı $kn olduğundan elektron sayısı '
-          '$hepsi − $kn = $e olur. $zYazi',
+              '$hepsi − $kn = $e olur. $zYazi',
         );
       case 7:
         final f = n - z;
         return soru(
           'Kütle numarası $kn olan $x iyonunun çekirdeğindeki nötron sayısı '
-          'proton sayısı${f == 0 ? 'na eşittir' : 'ndan $f fazladır'}. Bu '
-          'iyonun elektron sayısı kaçtır?',
+              'proton sayısı${f == 0 ? 'na eşittir' : 'ndan $f fazladır'}. Bu '
+              'iyonun elektron sayısı kaçtır?',
           e,
           [z, z + q, n, n - q, kn - q],
           'Proton sayısı p ise ${f == 0 ? 'p + p' : 'p + (p + $f)'} = $kn '
-          'eşitliğinden p = $z olur. $eYazi',
+              'eşitliğinden p = $z olur. $eYazi',
         );
       case 8:
         return soru(
           '$x iyonunda $e elektron ve $n nötron bulunmaktadır. Bu iyondaki '
-          'proton, nötron ve elektron sayılarının toplamı kaçtır?',
+              'proton, nötron ve elektron sayılarının toplamı kaçtır?',
           hepsi,
           [2 * e + n, hepsi - 2 * q, e + n, kn],
           '$zYazi Toplam $z + $n + $e = $hepsi bulunur.',
@@ -332,12 +404,12 @@ final _f01 = lmAile(
       default:
         return soru(
           'Kütle numarası $kn olan $x iyonunun çekirdeğinde $n nötron '
-          'bulunmaktadır. Bu iyondaki proton sayısı ile elektron sayısının '
-          'toplamı kaçtır?',
+              'bulunmaktadır. Bu iyondaki proton sayısı ile elektron sayısının '
+              'toplamı kaçtır?',
           z + e,
           [2 * z, z + z + q, kn + e, e, z],
           'Proton sayısı $kn − $n = $z olur. $eYazi Toplam $z + $e = '
-          '${z + e} olur.',
+              '${z + e} olur.',
         );
     }
   },
@@ -368,34 +440,39 @@ final _f02 = lmAile(
       case 0:
         return _say(
           '$giris $m1 ve $m2 olarak verilmiştir. Kütle numarası $m1 olan '
-          'izotopun doğadaki bolluğu %$p olduğuna göre X elementinin ortalama '
-          'atom kütlesi kaçtır?',
+              'izotopun doğadaki bolluğu %$p olduğuna göre X elementinin ortalama '
+              'atom kütlesi kaçtır?',
           ort,
-          [(m1 + m2) / 2, m1 + fark * p / 100, m1 + fark * r / 200, m2 - fark * p / 200],
+          [
+            (m1 + m2) / 2,
+            m1 + fark * p / 100,
+            m1 + fark * r / 200,
+            m2 - fark * p / 200,
+          ],
           'Ortalama atom kütlesi ($m1·$p + $m2·$r) / 100 = ${_t(ort)} olur.',
         );
       case 1:
         return _say(
           '$giris $m1 ve $m2 olarak verilmiştir. Elementin ortalama atom kütlesi '
-          '${_t(ort)} olduğuna göre kütle numarası $m2 olan izotopun doğadaki '
-          'bolluk yüzdesi kaçtır?',
+              '${_t(ort)} olduğuna göre kütle numarası $m2 olan izotopun doğadaki '
+              'bolluk yüzdesi kaçtır?',
           r,
           [p, 50, r / 2, 100 - r / 2],
           on: '%',
           'Ağır izotopun kesri x olsun: $m1·(1 − x) + $m2·x = ${_t(ort)} '
-          'eşitliğinden x = ${_t(ort - m1)} / $fark = ${_t(r / 100)} bulunur; '
-          'bolluk %$r olur.',
+              'eşitliğinden x = ${_t(ort - m1)} / $fark = ${_t(r / 100)} bulunur; '
+              'bolluk %$r olur.',
         );
       default:
         return sayisal(
           'Doğada yalnızca iki izotopu bulunan X elementinin ortalama atom '
-          'kütlesi ${_t(ort)} olarak hesaplanmıştır. Kütle numarası $m1 olan '
-          'izotopun doğadaki bolluğu %$p olduğuna göre diğer izotopun kütle '
-          'numarası kaçtır?',
+              'kütlesi ${_t(ort)} olarak hesaplanmıştır. Kütle numarası $m1 olan '
+              'izotopun doğadaki bolluğu %$p olduğuna göre diğer izotopun kütle '
+              'numarası kaçtır?',
           m2,
           [m2 + 1, m2 - 1, m1 + 2 * fark, m2 + 2],
           'Diğer izotopun bolluğu %$r olur. $m1·$p + m·$r = ${_t(ort)}·100 '
-          'eşitliğinden m = ${_t(ort * 100 - m1 * p)} / $r = $m2 bulunur.',
+              'eşitliğinden m = ${_t(ort * 100 - m1 * p)} / $r = $m2 bulunur.',
           positive: true,
         );
     }
@@ -410,14 +487,44 @@ final _f02 = lmAile(
 
 // (baş kuantum sayısı, tür, orbital sayısı) — Z ≤ 38 için dolma sırası.
 const _altKabuk = [
-  (1, 's', 1), (2, 's', 1), (2, 'p', 3), (3, 's', 1), (3, 'p', 3),
-  (4, 's', 1), (3, 'd', 5), (4, 'p', 3), (5, 's', 1),
+  (1, 's', 1),
+  (2, 's', 1),
+  (2, 'p', 3),
+  (3, 's', 1),
+  (3, 'p', 3),
+  (4, 's', 1),
+  (3, 'd', 5),
+  (4, 'p', 3),
+  (5, 's', 1),
 ];
 
 // B, C, …, Ca; Sc; Ga, …, Sr. Dizilimi kural dışı olan element yoktur.
 const _dizilimZ = [
-  5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-  31, 32, 33, 34, 35, 36, 37, 38,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20,
+  21,
+  31,
+  32,
+  33,
+  34,
+  35,
+  36,
+  37,
+  38,
 ];
 
 class _Dizilim {
@@ -466,31 +573,42 @@ final _f03 = lmAile(
     final n = z + z * z ~/ 140 + alt;
     switch (b ~/ 5) {
       case 0:
-        veri = 'Kütle numarası ${z + n} olan nötr X atomunun çekirdeğinde $n '
+        veri =
+            'Kütle numarası ${z + n} olan nötr X atomunun çekirdeğinde $n '
             'nötron bulunmaktadır.';
         bulus = 'Atom numarası ${z + n} − $n = $z olur.';
       case 1:
         final f = n - z + 1;
-        veri = 'Nötr X atomunun kütle numarası ${2 * z + f} olup nötron sayısı '
+        veri =
+            'Nötr X atomunun kütle numarası ${2 * z + f} olup nötron sayısı '
             'proton sayısından $f fazladır.';
-        bulus = 'Proton sayısı p ise p + (p + $f) = ${2 * z + f} eşitliğinden '
+        bulus =
+            'Proton sayısı p ise p + (p + $f) = ${2 * z + f} eşitliğinden '
             'atom numarası $z olur.';
       case 2:
         final zy = z + 2;
-        veri = 'X atomu, atom numarası $zy ve kütle numarası ${zy + n} olan Y '
+        veri =
+            'X atomu, atom numarası $zy ve kütle numarası ${zy + n} olan Y '
             'atomu ile izotondur (nötron sayıları eşittir). X atomunun kütle '
             'numarası ${z + n} olarak verilmiştir.';
-        bulus = 'Nötron sayısı ${zy + n} − $zy = $n olduğundan X için atom '
+        bulus =
+            'Nötron sayısı ${zy + n} − $zy = $n olduğundan X için atom '
             'numarası ${z + n} − $n = $z olur.';
       default:
-        veri = 'Nötr X atomunda proton, nötron ve elektron sayılarının toplamı '
+        veri =
+            'Nötr X atomunda proton, nötron ve elektron sayılarının toplamı '
             '${2 * z + n}, nötron sayısı ise $n olarak verilmiştir.';
-        bulus = 'Proton ve elektron sayıları eşit olduğundan atom numarası '
+        bulus =
+            'Proton ve elektron sayıları eşit olduğundan atom numarası '
             '(${2 * z + n} − $n) / 2 = $z olur.';
     }
     final dizi = '$bulus Temel hâl dizilimi: ${d.yazim}.';
-    AdvancedItem tamSayi(String soru, int yanit, List<int> yanlis, String son) =>
-        sayisal('$veri $soru', yanit, yanlis, '$dizi $son', positive: true);
+    AdvancedItem tamSayi(
+      String soru,
+      int yanit,
+      List<int> yanlis,
+      String son,
+    ) => sayisal('$veri $soru', yanit, yanlis, '$dizi $son', positive: true);
     switch (c) {
       case 0:
         return tamSayi(
@@ -503,7 +621,7 @@ final _f03 = lmAile(
       case 1:
         return tamSayi(
           'Buna göre X elementinin periyodik sistemdeki grup numarası '
-          '(IUPAC, 1–18 arası) kaçtır?',
+              '(IUPAC, 1–18 arası) kaçtır?',
           d.grup,
           [d.degerlik, d.grup + 1, d.grup - 1, d.periyot, d.degerlik + 8],
           'Değerlik elektron sayısı ${d.degerlik} olduğundan element '
@@ -526,7 +644,7 @@ final _f03 = lmAile(
       case 4:
         return tamSayi(
           'Buna göre temel hâldeki X atomunda elektron bulunduran orbital '
-          'sayısı kaçtır?',
+              'sayısı kaçtır?',
           d.dolu,
           [d.tamDolu, d.yazim.split(' ').length, d.dolu + 1, d.dolu - 1],
           'En az bir elektron taşıyan orbital sayısı ${d.dolu} olur.',
@@ -534,7 +652,7 @@ final _f03 = lmAile(
       case 5:
         return tamSayi(
           'Buna göre temel hâldeki X atomunun s orbitallerinde toplam kaç '
-          'elektron bulunur?',
+              'elektron bulunur?',
           d.s,
           [d.p, d.s + 2, d.s - 2, d.s + 1, d.periyot],
           's orbitallerindeki elektronların toplamı ${d.s} olur.',
@@ -542,7 +660,7 @@ final _f03 = lmAile(
       case 6:
         return tamSayi(
           'Buna göre temel hâldeki X atomunun p orbitallerinde toplam kaç '
-          'elektron bulunur?',
+              'elektron bulunur?',
           d.p,
           [d.s, d.p + 6, d.p - 6, d.degerlik, d.p + 1],
           'p orbitallerindeki elektronların toplamı ${d.p} olur.',
@@ -550,7 +668,7 @@ final _f03 = lmAile(
       case 7:
         return tamSayi(
           'Buna göre X ile aynı grupta ve bir sonraki periyotta yer alan '
-          'elementin atom numarası kaçtır?',
+              'elementin atom numarası kaçtır?',
           d.alt,
           [z + 8, z + 18, z + 10, z + 2, z + 32],
           'Element ${d.periyot}. periyot ${d.grup}. gruptadır. Bir alt periyotta '
@@ -560,25 +678,24 @@ final _f03 = lmAile(
       case 8:
         return tamSayi(
           'Buna göre temel hâldeki X atomunun katman elektron diziliminde, en '
-          'dış katmandan bir önceki katmanda kaç elektron bulunur?',
+              'dış katmandan bir önceki katmanda kaç elektron bulunur?',
           d.onceki,
           [d.degerlik, 8, 18, 2, d.katman[d.periyot - 1]],
           'Katman dizilimi ${d.katmanYazim} olduğundan aranan sayı '
               '${d.onceki} olur.',
         );
       default:
-        final sira = [for (final (n, tur, _) in _altKabuk) '$n$tur', '4d', '5p'];
+        final sira = [
+          for (final (n, tur, _) in _altKabuk) '$n$tur',
+          '4d',
+          '5p',
+        ];
         final yer = sira.indexOf(d.son);
         return secenekli(
           '$veri Buna göre temel hâl elektron dizilimi yazılırken X atomunun '
-          'en son elektronu hangi orbital türüne yerleşir?',
+              'en son elektronu hangi orbital türüne yerleşir?',
           d.son,
-          [
-            sira[yer - 1],
-            sira[yer + 1],
-            sira[yer - 2],
-            sira[yer + 2],
-          ],
+          [sira[yer - 1], sira[yer + 1], sira[yer - 2], sira[yer + 2]],
           '$dizi En son elektron ${d.son} orbitaline yerleşir.',
         );
     }
@@ -592,15 +709,30 @@ final _f03 = lmAile(
 // ---------------------------------------------------------------------------
 
 const _molekuller = [
-  ('H₂O', 'su'), ('CO₂', 'karbon dioksit'), ('NH₃', 'amonyak'),
-  ('CH₄', 'metan'), ('O₂', 'oksijen gazı'), ('N₂', 'azot gazı'),
-  ('SO₂', 'kükürt dioksit'), ('SO₃', 'kükürt trioksit'), ('C₂H₆', 'etan'),
-  ('C₃H₈', 'propan'), ('C₂H₄', 'eten'), ('C₂H₂', 'asetilen'),
-  ('C₆H₁₂O₆', 'glikoz'), ('C₂H₅OH', 'etanol'), ('HCl', 'hidrojen klorür'),
-  ('NO₂', 'azot dioksit'), ('CO', 'karbon monoksit'),
-  ('H₂S', 'hidrojen sülfür'), ('H₂SO₄', 'sülfürik asit'),
-  ('HNO₃', 'nitrik asit'), ('CH₃OH', 'metanol'), ('C₄H₁₀', 'bütan'),
-  ('N₂O₅', 'diazot pentaoksit'), ('C₆H₆', 'benzen'),
+  ('H₂O', 'su'),
+  ('CO₂', 'karbon dioksit'),
+  ('NH₃', 'amonyak'),
+  ('CH₄', 'metan'),
+  ('O₂', 'oksijen gazı'),
+  ('N₂', 'azot gazı'),
+  ('SO₂', 'kükürt dioksit'),
+  ('SO₃', 'kükürt trioksit'),
+  ('C₂H₆', 'etan'),
+  ('C₃H₈', 'propan'),
+  ('C₂H₄', 'eten'),
+  ('C₂H₂', 'asetilen'),
+  ('C₆H₁₂O₆', 'glikoz'),
+  ('C₂H₅OH', 'etanol'),
+  ('HCl', 'hidrojen klorür'),
+  ('NO₂', 'azot dioksit'),
+  ('CO', 'karbon monoksit'),
+  ('H₂S', 'hidrojen sülfür'),
+  ('H₂SO₄', 'sülfürik asit'),
+  ('HNO₃', 'nitrik asit'),
+  ('CH₃OH', 'metanol'),
+  ('C₄H₁₀', 'bütan'),
+  ('N₂O₅', 'diazot pentaoksit'),
+  ('C₆H₆', 'benzen'),
   ('CH₃COOH', 'asetik asit'),
 ];
 
@@ -644,33 +776,33 @@ final _f04 = lmAile(
       case 2:
         return _say(
           'Kütlesi ${_t(m)} gram olan $madde örneğinde toplam kaç mol atom '
-          'bulunur? ($kut)',
+              'bulunur? ($kut)',
           n * atom,
           [n, n * atomlar.length, m / yalin, n * atom * 2, n * (atom + 1)],
           '$mkYazi Örnek ${_t(m)} / ${_t(mk)} = ${_t(n)} moldür. Bir molekülde '
-          '$atom atom bulunduğundan toplam ${_t(n)}·$atom = ${_t(n * atom)} '
-          'mol atom vardır.',
+              '$atom atom bulunduğundan toplam ${_t(n)}·$atom = ${_t(n * atom)} '
+              'mol atom vardır.',
           birim: 'mol',
         );
       case 3:
         return _say(
           '${_bilimsel(6.02 * t, 22)} tane molekül içeren $madde örneği kaç '
-          'gramdır? ($kut; Avogadro sayısı N_A = 6,02·10²³)',
+              'gramdır? ($kut; Avogadro sayısı N_A = 6,02·10²³)',
           m,
           [n * yalin, m * atom, m / atom, n * 10 + mk, mk],
           'Mol sayısı ${_bilimsel(6.02 * t, 22)} / 6,02·10²³ = ${_t(n)} olur. '
-          '$mkYazi m = ${_t(n)}·${_t(mk)} = ${_t(m)} gram bulunur.',
+              '$mkYazi m = ${_t(n)}·${_t(mk)} = ${_t(m)} gram bulunur.',
           birim: 'g',
         );
       default:
         return _say(
           'Toplam ${_t(n * atom)} mol atom içeren $madde örneği kaç gramdır? '
-          '($kut)',
+              '($kut)',
           m,
           [n * atom * mk, n * atom * yalin, m / atom, n * yalin],
           'Bir molekülde $atom atom bulunduğundan örnek ${_t(n * atom)} / $atom '
-          '= ${_t(n)} moldür. $mkYazi m = ${_t(n)}·${_t(mk)} = ${_t(m)} gram '
-          'bulunur.',
+              '= ${_t(n)} moldür. $mkYazi m = ${_t(n)}·${_t(mk)} = ${_t(m)} gram '
+              'bulunur.',
           birim: 'g',
         );
     }
@@ -685,18 +817,30 @@ final _f04 = lmAile(
 
 // (bileşik, ad, sorulan element): kütlece yüzdesi en çok iki ondalıklıdır.
 const _yuzdeCiftleri = [
-  ('CaCO₃', 'kalsiyum karbonat', 'Ca'), ('CaCO₃', 'kalsiyum karbonat', 'O'),
-  ('SO₃', 'kükürt trioksit', 'S'), ('CH₄', 'metan', 'C'),
-  ('NaOH', 'sodyum hidroksit', 'Na'), ('MgO', 'magnezyum oksit', 'Mg'),
-  ('Fe₂O₃', 'demir(III) oksit', 'Fe'), ('CuO', 'bakır(II) oksit', 'Cu'),
-  ('C₂H₆', 'etan', 'C'), ('NH₄NO₃', 'amonyum nitrat', 'N'),
-  ('CuSO₄', 'bakır(II) sülfat', 'Cu'), ('CuSO₄', 'bakır(II) sülfat', 'S'),
-  ('C₃H₄', 'propin', 'C'), ('CaBr₂', 'kalsiyum bromür', 'Br'),
-  ('KHCO₃', 'potasyum bikarbonat', 'K'), ('C₆H₁₂O₆', 'glikoz', 'C'),
-  ('HF', 'hidrojen florür', 'F'), ('Fe₂(SO₄)₃', 'demir(III) sülfat', 'Fe'),
-  ('Fe₂(SO₄)₃', 'demir(III) sülfat', 'S'), ('C₇H₁₆', 'heptan', 'C'),
-  ('TiO₂', 'titanyum dioksit', 'Ti'), ('Cu₂S', 'bakır(I) sülfür', 'Cu'),
-  ('CaC₂', 'kalsiyum karbür', 'Ca'), ('CH₃OH', 'metanol', 'O'),
+  ('CaCO₃', 'kalsiyum karbonat', 'Ca'),
+  ('CaCO₃', 'kalsiyum karbonat', 'O'),
+  ('SO₃', 'kükürt trioksit', 'S'),
+  ('CH₄', 'metan', 'C'),
+  ('NaOH', 'sodyum hidroksit', 'Na'),
+  ('MgO', 'magnezyum oksit', 'Mg'),
+  ('Fe₂O₃', 'demir(III) oksit', 'Fe'),
+  ('CuO', 'bakır(II) oksit', 'Cu'),
+  ('C₂H₆', 'etan', 'C'),
+  ('NH₄NO₃', 'amonyum nitrat', 'N'),
+  ('CuSO₄', 'bakır(II) sülfat', 'Cu'),
+  ('CuSO₄', 'bakır(II) sülfat', 'S'),
+  ('C₃H₄', 'propin', 'C'),
+  ('CaBr₂', 'kalsiyum bromür', 'Br'),
+  ('KHCO₃', 'potasyum bikarbonat', 'K'),
+  ('C₆H₁₂O₆', 'glikoz', 'C'),
+  ('HF', 'hidrojen florür', 'F'),
+  ('Fe₂(SO₄)₃', 'demir(III) sülfat', 'Fe'),
+  ('Fe₂(SO₄)₃', 'demir(III) sülfat', 'S'),
+  ('C₇H₁₆', 'heptan', 'C'),
+  ('TiO₂', 'titanyum dioksit', 'Ti'),
+  ('Cu₂S', 'bakır(I) sülfür', 'Cu'),
+  ('CaC₂', 'kalsiyum karbür', 'Ca'),
+  ('CH₃OH', 'metanol', 'O'),
   ('Mg₃N₂', 'magnezyum nitrür', 'Mg'),
 ];
 
@@ -726,28 +870,28 @@ final _f05 = lmAile(
       case 0:
         return _say(
           '${_t(m)} gram $madde bileşiğinde kaç gram $el elementi bulunur? '
-          '($kut)',
+              '($kut)',
           g,
           [m - g, m * ak / mk, m * adet / atomSay, g / 2, (m - g) / 2],
           '$molYazi ${_t(m)} gram bileşikte ${_t(m)}·${_t(pay)} / ${_t(mk)} = '
-          '${_t(g)} gram $el bulunur.',
+              '${_t(g)} gram $el bulunur.',
           birim: 'g',
         );
       case 1:
         return _say(
           '${_t(g)} gram $el elementi içeren $madde örneğinin kütlesi kaç '
-          'gramdır? ($kut)',
+              'gramdır? ($kut)',
           m,
           [g * kalan / pay, g * mk / ak, g + kalan, g * atomSay / adet, m - g],
           '$molYazi Örneğin kütlesi ${_t(g)}·${_t(mk)} / ${_t(pay)} = ${_t(m)} '
-          'gram olur.',
+              'gram olur.',
           birim: 'g',
         );
       case 2:
         return _say(
           'Bir $madde örneğinin ${_t(m)} gramında ${_t(g)} gram $el elementi '
-          'bulunduğu belirlenmiştir. Buna göre bileşikteki $el elementinin '
-          'kütlece yüzdesi kaçtır?',
+              'bulunduğu belirlenmiştir. Buna göre bileşikteki $el elementinin '
+              'kütlece yüzdesi kaçtır?',
           yuzde,
           [100 - yuzde, 100 * ak / mk, 100 * adet / atomSay, yuzde / 2],
           on: '%',
@@ -756,24 +900,24 @@ final _f05 = lmAile(
       case 3:
         return _say(
           '${_t(n)} mol $madde bileşiğinde kaç gram $el elementi bulunur? '
-          '($kut)',
+              '($kut)',
           g,
           [n * ak, n * mk, n * kalan, g / (adet + 1), n * adet],
           '$molYazi ${_t(n)} mol bileşikte ${_t(n)}·${_t(pay)} = ${_t(g)} gram '
-          '$el bulunur.',
+              '$el bulunur.',
           birim: 'g',
         );
       default:
         return _say(
           'Formülü $f olan bileşiğin ${_t(m)} gramlık örneğinde ${_t(g)} gram '
-          '$el elementi bulunmaktadır. Buna göre $el elementinin atom kütlesi '
-          'kaçtır? (${_kut([f], haric: el)})',
+              '$el elementi bulunmaktadır. Buna göre $el elementinin atom kütlesi '
+              'kaçtır? (${_kut([f], haric: el)})',
           ak,
           [pay, kalan, ak * 2, mk, kalan * g / (m - g) * 2],
           'Bir mol bileşikte diğer atomların kütlesi ${_t(kalan)} gramdır. '
-          '$el atom kütlesi x ise ${adet == 1 ? 'x' : '$adet·x'} / '
-          '${_t(kalan)} = ${_t(g)} / ${_t(m - g)} eşitliğinden x = ${_t(ak)} '
-          'bulunur.',
+              '$el atom kütlesi x ise ${adet == 1 ? 'x' : '$adet·x'} / '
+              '${_t(kalan)} = ${_t(g)} / ${_t(m - g)} eşitliğinden x = ${_t(ak)} '
+              'bulunur.',
         );
     }
   },
@@ -788,17 +932,60 @@ final _f05 = lmAile(
 // İki elementli bileşiklerin kaba formülleri; aynı element çiftinde oranlar
 // birbirinden farklıdır.
 const _kabaFormuller = [
-  'Fe₂O₃', 'Fe₃O₄', 'FeO', 'Al₂O₃', 'SO₂', 'SO₃', 'CO₂', 'CO', 'CH₄', 'CH₃',
-  'CH₂', 'C₃H₈', 'N₂O', 'NO', 'N₂O₃', 'NO₂', 'N₂O₅', 'Cu₂O', 'CuO', 'MgO',
-  'Na₂O', 'P₂O₅', 'Mg₃N₂', 'Al₄C₃', 'FeS₂',
+  'Fe₂O₃',
+  'Fe₃O₄',
+  'FeO',
+  'Al₂O₃',
+  'SO₂',
+  'SO₃',
+  'CO₂',
+  'CO',
+  'CH₄',
+  'CH₃',
+  'CH₂',
+  'C₃H₈',
+  'N₂O',
+  'NO',
+  'N₂O₃',
+  'NO₂',
+  'N₂O₅',
+  'Cu₂O',
+  'CuO',
+  'MgO',
+  'Na₂O',
+  'P₂O₅',
+  'Mg₃N₂',
+  'Al₄C₃',
+  'FeS₂',
 ];
 
 // Molekül formülü kaba formülünün en az iki katı olan bileşikler.
 const _molekulFormulleri = [
-  'C₂H₆', 'C₂H₄', 'C₃H₆', 'C₄H₈', 'C₂H₂', 'C₆H₆', 'C₄H₁₀', 'C₆H₁₂O₆',
-  'C₂H₄O₂', 'C₃H₆O₃', 'H₂O₂', 'N₂O₄', 'N₂H₄', 'P₄O₁₀', 'C₆H₁₄', 'C₈H₁₈',
-  'C₂H₆O₂', 'C₄H₈O₂', 'C₆H₁₂', 'C₅H₁₀', 'C₄H₆', 'C₂H₂O₄', 'C₁₀H₂₂',
-  'C₅H₁₀O₅', 'Na₂O₂',
+  'C₂H₆',
+  'C₂H₄',
+  'C₃H₆',
+  'C₄H₈',
+  'C₂H₂',
+  'C₆H₆',
+  'C₄H₁₀',
+  'C₆H₁₂O₆',
+  'C₂H₄O₂',
+  'C₃H₆O₃',
+  'H₂O₂',
+  'N₂O₄',
+  'N₂H₄',
+  'P₄O₁₀',
+  'C₆H₁₄',
+  'C₈H₁₈',
+  'C₂H₆O₂',
+  'C₄H₈O₂',
+  'C₆H₁₂',
+  'C₅H₁₀',
+  'C₄H₆',
+  'C₂H₂O₄',
+  'C₁₀H₂₂',
+  'C₅H₁₀O₅',
+  'Na₂O₂',
 ];
 
 String _formul(List<String> el, List<int> adet) => [
@@ -826,27 +1013,35 @@ final _f06 = lmAile(
       final m1 = n1 * k1, m2 = n2 * k2;
       final kut = _kut([_kabaFormuller[a]]);
       const soru = 'Bu bileşiğin kaba (basit) formülü nedir?';
-      final giris = 'Yalnızca ${el[0]} ve ${el[1]} elementlerinden oluşan bir '
+      final giris =
+          'Yalnızca ${el[0]} ve ${el[1]} elementlerinden oluşan bir '
           'bileşiğin';
       final kok = switch (c) {
-        0 => '$giris bir örneğinde ${_t(m1)} gram ${el[0]} ve ${_t(m2)} gram '
-            '${el[1]} bulunmaktadır. $soru ($kut)',
-        1 => '$giris ${_t(m1 + m2)} gramlık örneğinde ${_t(m1)} gram ${el[0]} '
-            'bulunmaktadır. $soru ($kut)',
-        2 => '${_t(m1)} gram ${el[0]} elementi ile ${_t(m2)} gram ${el[1]} '
-            'elementi artansız birleşerek tek bir bileşik oluşturuyor. $soru '
-            '($kut)',
-        3 => '$giris ${_t(m1 + m2)} gramlık örneğinde ${_t(m2)} gram ${el[1]} '
-            'bulunmaktadır. $soru ($kut)',
-        _ => '$giris bir örneğinde ${_t(n1)} mol ${el[0]} atomu ve ${_t(m2)} '
-            'gram ${el[1]} bulunmaktadır. $soru ($kut)',
+        0 =>
+          '$giris bir örneğinde ${_t(m1)} gram ${el[0]} ve ${_t(m2)} gram '
+              '${el[1]} bulunmaktadır. $soru ($kut)',
+        1 =>
+          '$giris ${_t(m1 + m2)} gramlık örneğinde ${_t(m1)} gram ${el[0]} '
+              'bulunmaktadır. $soru ($kut)',
+        2 =>
+          '${_t(m1)} gram ${el[0]} elementi ile ${_t(m2)} gram ${el[1]} '
+              'elementi artansız birleşerek tek bir bileşik oluşturuyor. $soru '
+              '($kut)',
+        3 =>
+          '$giris ${_t(m1 + m2)} gramlık örneğinde ${_t(m2)} gram ${el[1]} '
+              'bulunmaktadır. $soru ($kut)',
+        _ =>
+          '$giris bir örneğinde ${_t(n1)} mol ${el[0]} atomu ve ${_t(m2)} '
+              'gram ${el[1]} bulunmaktadır. $soru ($kut)',
       };
       // Kütle oranını mol oranı sanma hatası.
       final p1 = (adet[0] * k1).round(), p2 = (adet[1] * k2).round();
       final g = p1.gcd(p2);
       final on = switch (c) {
-        1 => '${el[1]} kütlesi ${_t(m1 + m2)} − ${_t(m1)} = ${_t(m2)} gramdır. ',
-        3 => '${el[0]} kütlesi ${_t(m1 + m2)} − ${_t(m2)} = ${_t(m1)} gramdır. ',
+        1 =>
+          '${el[1]} kütlesi ${_t(m1 + m2)} − ${_t(m1)} = ${_t(m2)} gramdır. ',
+        3 =>
+          '${el[0]} kütlesi ${_t(m1 + m2)} − ${_t(m2)} = ${_t(m1)} gramdır. ',
         _ => '',
       };
       final ilk = c == 4
@@ -880,23 +1075,33 @@ final _f06 = lmAile(
     final yanlis = [
       kaba,
       _formul(el, [for (final x in kabaAdet) x * (kat + 1)]),
-      _formul(el, [for (final x in kabaAdet) x * (kat > 2 ? kat - 1 : kat + 2)]),
+      _formul(el, [
+        for (final x in kabaAdet) x * (kat > 2 ? kat - 1 : kat + 2),
+      ]),
       _formul(el, [adet[1], adet[0], ...adet.sublist(2)]),
       _formul(el, [adet[0], adet[1] + 2, ...adet.sublist(2)]),
     ];
     final elYazi = 'Yalnızca ${_sirala(el)} elementlerinden oluşan';
     const soru = 'Bu bileşiğin molekül formülü nedir?';
-    final katYazi = 'Kaba formül kütlesi ${_t(kabaMk)} olduğundan ${_t(mk)} / '
+    final katYazi =
+        'Kaba formül kütlesi ${_t(kabaMk)} olduğundan ${_t(mk)} / '
         '${_t(kabaMk)} = $kat; molekül formülü $f olur.';
     switch (c) {
       case 5:
       case 8:
         final n = t / 20, m = mk * t / 20;
-        final giris = 'Kaba formülü $kaba olan bir bileşiğin ${_t(n)} molü '
+        final giris =
+            'Kaba formülü $kaba olan bir bileşiğin ${_t(n)} molü '
             '${_t(m)} gramdır.';
-        final mkYazi = 'Mol kütlesi ${_t(m)} / ${_t(n)} = ${_t(mk)} g/mol olur.';
+        final mkYazi =
+            'Mol kütlesi ${_t(m)} / ${_t(n)} = ${_t(mk)} g/mol olur.';
         if (c == 5) {
-          return secenekli('$giris $soru ($kut)', f, yanlis, '$mkYazi $katYazi');
+          return secenekli(
+            '$giris $soru ($kut)',
+            f,
+            yanlis,
+            '$mkYazi $katYazi',
+          );
         }
         final toplam = adet.fold(0, (x, y) => x + y);
         return sayisal(
@@ -914,12 +1119,10 @@ final _f06 = lmAile(
         ]);
         return secenekli(
           '$elYazi bir bileşiğin ${_t(n)} molünde $veri bulunmaktadır. $soru '
-          '($kut)',
+              '($kut)',
           f,
           yanlis,
-          'Bir moldeki atom sayıları: ${[
-            for (var j = 0; j < el.length; j++) '${el[j]} için ${_t(n * adet[j] * _atomKutlesi[el[j]]!)} / (${_t(n)}·${_t(_atomKutlesi[el[j]]!)}) = ${adet[j]}',
-          ].join(', ')}. Molekül formülü $f olur.',
+          'Bir moldeki atom sayıları: ${[for (var j = 0; j < el.length; j++) '${el[j]} için ${_t(n * adet[j] * _atomKutlesi[el[j]]!)} / (${_t(n)}·${_t(_atomKutlesi[el[j]]!)}) = ${adet[j]}'].join(', ')}. Molekül formülü $f olur.',
         );
       case 7:
         final n = t / 20;
@@ -931,9 +1134,7 @@ final _f06 = lmAile(
           '$elYazi bir bileşiğin ${_t(n)} molünde $veri bulunmaktadır. $soru',
           f,
           yanlis,
-          'Bir moldeki atom sayıları: ${[
-            for (var j = 0; j < el.length; j++) '${el[j]} için ${_t(n * adet[j])} / ${_t(n)} = ${adet[j]}',
-          ].join(', ')}. Molekül formülü $f olur.',
+          'Bir moldeki atom sayıları: ${[for (var j = 0; j < el.length; j++) '${el[j]} için ${_t(n * adet[j])} / ${_t(n)} = ${adet[j]}'].join(', ')}. Molekül formülü $f olur.',
         );
       default:
         final s = t / 50;
@@ -943,13 +1144,11 @@ final _f06 = lmAile(
         ]);
         return secenekli(
           '$elYazi ve mol kütlesi ${_t(mk)} g/mol olan bir bileşiğin bir '
-          'örneğinde $veri bulunmaktadır. $soru ($kut)',
+              'örneğinde $veri bulunmaktadır. $soru ($kut)',
           f,
           yanlis,
-          'Mol sayıları: ${[
-            for (var j = 0; j < el.length; j++) '${el[j]} ${_t(s * adet[j])}',
-          ].join(', ')}. En küçük tam sayı oranı kaba formülü $kaba verir. '
-          '$katYazi',
+          'Mol sayıları: ${[for (var j = 0; j < el.length; j++) '${el[j]} ${_t(s * adet[j])}'].join(', ')}. En küçük tam sayı oranı kaba formülü $kaba verir. '
+              '$katYazi',
         );
     }
   },
@@ -1024,11 +1223,11 @@ final _f07 = lmAile(
               : '$veri oluştuğunda aynı anda kaç mol ${tur[j]} oluşur?');
     return _say(
       '$sol → $sag tepkimesi en küçük tam sayılarla denkleştiriliyor. Buna '
-      'göre $soru',
+          'göre $soru',
       yanit,
       [n, n * k[i] / k[j], n * k[j], n / k[i], yanit / 2, yanit * 2],
       'Denk tepkime: $denk. Mol oranı ${tur[i]} : ${tur[j]} = ${k[i]} : ${k[j]} '
-      'olduğundan ${_t(n)}·${k[j]} / ${k[i]} = ${_t(yanit)} mol bulunur.',
+          'olduğundan ${_t(n)}·${k[j]} / ${k[i]} = ${_t(yanit)} mol bulunur.',
       birim: 'mol',
     );
   },
@@ -1088,52 +1287,52 @@ final _f08 = lmAile(
       case 0:
         return _say(
           '$giris ${_t(ga)} gram $fa tamamen tepkimeye girdiğinde kaç gram $fb '
-          'oluşur? (${_kut([fa, fb])})',
+              'oluşur? (${_kut([fa, fb])})',
           gb,
           [na * mb, ga * kb / ka, gb * ka / kb, nb, ga * mb / ma * ka / kb],
           '${_t(ga)} / ${_t(ma)} = ${_t(na)} mol $fa harcanır. $oran '
-          '${_t(nb)} mol $fb oluşur; kütlesi ${_t(nb)}·${_t(mb)} = ${_t(gb)} '
-          'gramdır.',
+              '${_t(nb)} mol $fb oluşur; kütlesi ${_t(nb)}·${_t(mb)} = ${_t(gb)} '
+              'gramdır.',
           birim: 'g',
         );
       case 1:
         return _say(
           '$giris ${_t(ga)} gram $fa tamamen tepkimeye girdiğinde normal '
-          'koşullarda kaç litre $fb gazı oluşur? (${_kut([fa])}; $nk)',
+              'koşullarda kaç litre $fb gazı oluşur? (${_kut([fa])}; $nk)',
           v,
           [na * 22.4, v * ka / kb, na * kb * 22.4, nb, gb],
           '${_t(ga)} / ${_t(ma)} = ${_t(na)} mol $fa harcanır. $oran '
-          '${_t(nb)} mol $fb oluşur; hacmi ${_t(nb)}·22,4 = ${_t(v)} L olur.',
+              '${_t(nb)} mol $fb oluşur; hacmi ${_t(nb)}·22,4 = ${_t(v)} L olur.',
           birim: 'L',
         );
       case 2:
         return _say(
           '$giris normal koşullarda ${_t(v)} litre $fb gazı elde etmek için kaç '
-          'gram $fa harcanmalıdır? (${_kut([fa])}; $nk)',
+              'gram $fa harcanmalıdır? (${_kut([fa])}; $nk)',
           ga,
           [nb * ma, nb * kb / ka * ma, na, v * ma / 22.4 * kb / ka, ga * 2],
           '${_t(v)} / 22,4 = ${_t(nb)} mol $fb oluşur. $oran ${_t(na)} mol $fa '
-          'harcanır; kütlesi ${_t(na)}·${_t(ma)} = ${_t(ga)} gramdır.',
+              'harcanır; kütlesi ${_t(na)}·${_t(ma)} = ${_t(ga)} gramdır.',
           birim: 'g',
         );
       case 3:
         return _say(
           '$giris ${_t(gb)} gram $fb oluşması için kaç gram $fa tepkimeye '
-          'girmelidir? (${_kut([fa, fb])})',
+              'girmelidir? (${_kut([fa, fb])})',
           ga,
           [nb * ma, gb * ka / kb, ga * kb / ka, na, gb * ma / mb * kb / ka],
           '${_t(gb)} / ${_t(mb)} = ${_t(nb)} mol $fb oluşur. $oran ${_t(na)} '
-          'mol $fa harcanır; kütlesi ${_t(na)}·${_t(ma)} = ${_t(ga)} gramdır.',
+              'mol $fa harcanır; kütlesi ${_t(na)}·${_t(ma)} = ${_t(ga)} gramdır.',
           birim: 'g',
         );
       default:
         return _say(
           '$giris normal koşullarda ${_t(v)} litre $fb gazı oluştuğunda kaç mol '
-          '$fa harcanmış olur? ($nk)',
+              '$fa harcanmış olur? ($nk)',
           na,
           [nb, nb * kb / ka, v * ka / kb, nb / 2, nb * 2, na * 2],
           '${_t(v)} / 22,4 = ${_t(nb)} mol $fb oluşur. $oran ${_t(nb)}·$ka / $kb '
-          '= ${_t(na)} mol $fa harcanır.',
+              '= ${_t(na)} mol $fa harcanır.',
           birim: 'mol',
         );
     }
@@ -1186,7 +1385,8 @@ final _f09 = lmAile(
     final x = (1 + b % 10) / 10; // tepkime ilerlemesi (mol)
     final artan = (1 + (b + 3 * (c ~/ 5)) % 8) / 10; // artan madde (mol)
     final aSinir = b < 10;
-    final na = ka * x + (aSinir ? 0 : artan), nb = kb * x + (aSinir ? artan : 0);
+    final na = ka * x + (aSinir ? 0 : artan),
+        nb = kb * x + (aSinir ? artan : 0);
     final ma = _mk(fa), mb = _mk(fb), mc = _mk(fc);
     final fs = aSinir ? fa : fb, fe = aSinir ? fb : fa; // sınırlayıcı, artan
     final ks = aSinir ? ka : kb, ke = aSinir ? kb : ka;
@@ -1208,7 +1408,7 @@ final _f09 = lmAile(
       case 0:
         return _say(
           '$giris $molVeri tam verimle tepkimeye sokuluyor. En çok kaç mol $fc '
-          'oluşur?',
+              'oluşur?',
           nc,
           [yanlisUrun, na + nb, ns, ne, nc / 2, nc * 2],
           '$karar Oluşan $fc miktarı ${_t(ns)}·$kc / $ks = ${_t(nc)} mol olur.',
@@ -1217,27 +1417,27 @@ final _f09 = lmAile(
       case 1:
         return _say(
           '$giris $molVeri tam verimle tepkimeye sokuluyor. Tepkime sonunda '
-          'artan maddeden kaç mol kalır?',
+              'artan maddeden kaç mol kalır?',
           artan,
           [(na - nb).abs(), ne - x, ne, ns, artan + x, ke * x],
           '$karar Artan $fe miktarı ${_t(ne)} − ${_t(ke * x)} = ${_t(artan)} '
-          'mol olur.',
+              'mol olur.',
           birim: 'mol',
         );
       case 2:
         return _say(
           '$giris $kutleVeri tam verimle tepkimeye sokuluyor. En çok kaç gram '
-          '$fc oluşur? (${_kut([fa, fb, fc])})',
+              '$fc oluşur? (${_kut([fa, fb, fc])})',
           nc * mc,
           [na * ma + nb * mb, yanlisUrun * mc, ns * mc, nc * mc / 2, nc],
           '$cevir $karar Oluşan $fc miktarı ${_t(nc)} mol, kütlesi '
-          '${_t(nc)}·${_t(mc)} = ${_t(nc * mc)} gram olur.',
+              '${_t(nc)}·${_t(mc)} = ${_t(nc * mc)} gram olur.',
           birim: 'g',
         );
       case 3:
         return _say(
           '$giris $kutleVeri tam verimle tepkimeye sokuluyor. Tepkime sonunda '
-          'artan maddenin kütlesi kaç gramdır? (${_kut([fa, fb])})',
+              'artan maddenin kütlesi kaç gramdır? (${_kut([fa, fb])})',
           artan * me,
           [
             (na * ma - nb * mb).abs(),
@@ -1248,18 +1448,18 @@ final _f09 = lmAile(
             ke * x * me,
           ],
           '$cevir $karar Artan $fe miktarı ${_t(ne)} − ${_t(ke * x)} = '
-          '${_t(artan)} mol, kütlesi ${_t(artan)}·${_t(me)} = '
-          '${_t(artan * me)} gram olur.',
+              '${_t(artan)} mol, kütlesi ${_t(artan)}·${_t(me)} = '
+              '${_t(artan * me)} gram olur.',
           birim: 'g',
         );
       default:
         return _say(
           '$giris $molVeri tam verimle tepkimeye sokuluyor. En çok kaç gram $fc '
-          'oluşur? (${_kut([fc])})',
+              'oluşur? (${_kut([fc])})',
           nc * mc,
           [yanlisUrun * mc, ns * mc, (na + nb) * mc, nc, nc * mc / 2],
           '$karar Oluşan $fc miktarı ${_t(nc)} mol, kütlesi ${_t(nc)}·${_t(mc)} '
-          '= ${_t(nc * mc)} gram olur.',
+              '= ${_t(nc * mc)} gram olur.',
           birim: 'g',
         );
     }
@@ -1311,7 +1511,16 @@ final _f10 = lmAile(
     final (denk, fa, ka, fb, kb) = _verimTepkimeleri[a];
     final ma = _mk(fa), mb = _mk(fb);
     final t = b + 1;
-    final p = const [80, 60, 50, 90, 70, 40, 30, 20][(a + b + 4 * (c ~/ 5)) % 8];
+    final p = const [
+      80,
+      60,
+      50,
+      90,
+      70,
+      40,
+      30,
+      20,
+    ][(a + b + 4 * (c ~/ 5)) % 8];
     final na = ka * t / 10, nb = kb * t / 10;
     final ga = na * ma, teorik = nb * mb, gercek = teorik * p / 100;
     final kut = _kut([fa, fb]);
@@ -1322,8 +1531,8 @@ final _f10 = lmAile(
       case 0:
         return _say(
           '$denk tepkimesine göre ${_t(ga)} gram $fa tepkimeye sokulduğunda '
-          '${_t(gercek)} gram $fb elde ediliyor. Tepkimenin yüzde verimi '
-          'kaçtır? ($kut)',
+              '${_t(gercek)} gram $fb elde ediliyor. Tepkimenin yüzde verimi '
+              'kaçtır? ($kut)',
           p,
           [100 - p, if (gercek < ga) 100 * gercek / ga, p / 2, p + 10, p - 10],
           on: '%',
@@ -1332,46 +1541,46 @@ final _f10 = lmAile(
       case 1:
         return _say(
           '$denk tepkimesine göre ${_t(ga)} gram $fa %$p verimle tepkimeye '
-          'girdiğinde kaç gram $fb elde edilir? ($kut)',
+              'girdiğinde kaç gram $fb elde edilir? ($kut)',
           gercek,
           [teorik, teorik * (100 - p) / 100, ga * p / 100, na * mb * p / 100],
           '$teorikYazi Verim %$p olduğundan ${_t(teorik)}·$p / 100 = '
-          '${_t(gercek)} gram $fb elde edilir.',
+              '${_t(gercek)} gram $fb elde edilir.',
           birim: 'g',
         );
       case 2:
         return _say(
           'Kütlece %$p saflıktaki ${_t(ga)} gram $fa örneği $denk tepkimesine '
-          'göre tamamen tepkimeye giriyor; safsızlıklar tepkimeye katılmıyor. '
-          'Kaç gram $fb oluşur? ($kut)',
+              'göre tamamen tepkimeye giriyor; safsızlıklar tepkimeye katılmıyor. '
+              'Kaç gram $fb oluşur? ($kut)',
           gercek,
           [teorik, teorik * (100 - p) / 100, ga * p / 100, na * mb * p / 100],
           'Örnekteki saf $fa kütlesi ${_t(ga)}·$p / 100 = ${_t(ga * p / 100)} '
-          'gram, yani ${_t(na * p / 100, 3)} moldür. Oluşan $fb '
-          '${_t(nb * p / 100, 3)} mol olup kütlesi ${_t(gercek)} gramdır.',
+              'gram, yani ${_t(na * p / 100, 3)} moldür. Oluşan $fb '
+              '${_t(nb * p / 100, 3)} mol olup kütlesi ${_t(gercek)} gramdır.',
           birim: 'g',
         );
       case 3:
         return _say(
           'Saf olmayan ${_t(ga)} gramlık bir $fa örneği $denk tepkimesine göre '
-          'tepkimeye sokulduğunda ${_t(gercek)} gram $fb oluşuyor; safsızlıklar '
-          'tepkimeye katılmıyor. Örnekteki $fa kütlece yüzde kaçtır? ($kut)',
+              'tepkimeye sokulduğunda ${_t(gercek)} gram $fb oluşuyor; safsızlıklar '
+              'tepkimeye katılmıyor. Örnekteki $fa kütlece yüzde kaçtır? ($kut)',
           p,
           [100 - p, if (gercek < ga) 100 * gercek / ga, p / 2, p + 10, p - 10],
           on: '%',
           '${_t(gercek)} gram $fb ${_t(nb * p / 100, 3)} moldür; bunun için '
-          '${_t(na * p / 100, 3)} mol, yani ${_t(ga * p / 100)} gram saf $fa '
-          'gerekir. Saflık ${_t(ga * p / 100)} / ${_t(ga)}·100 = %$p olur.',
+              '${_t(na * p / 100, 3)} mol, yani ${_t(ga * p / 100)} gram saf $fa '
+              'gerekir. Saflık ${_t(ga * p / 100)} / ${_t(ga)}·100 = %$p olur.',
         );
       default:
         return _say(
           '$denk tepkimesi %$p verimle gerçekleşmektedir. ${_t(gercek)} gram '
-          '$fb elde etmek için kaç gram $fa kullanılmalıdır? ($kut)',
+              '$fb elde etmek için kaç gram $fa kullanılmalıdır? ($kut)',
           ga,
           [ga * p / 100, ga * p / 100 * p / 100, teorik, gercek, ga * 2],
           'Tam verimle oluşması gereken $fb kütlesi ${_t(gercek)}·100 / $p = '
-          '${_t(teorik)} gram, yani ${_t(nb)} moldür. Gereken $fa ${_t(na)} mol '
-          'olup kütlesi ${_t(na)}·${_t(ma)} = ${_t(ga)} gramdır.',
+              '${_t(teorik)} gram, yani ${_t(nb)} moldür. Gereken $fa ${_t(na)} mol '
+              'olup kütlesi ${_t(na)}·${_t(ma)} = ${_t(ga)} gramdır.',
           birim: 'g',
         );
     }
@@ -1385,17 +1594,50 @@ final _f10 = lmAile(
 // ---------------------------------------------------------------------------
 
 const _oranCiftleri = [
-  (1, 2), (2, 1), (1, 3), (3, 1), (2, 3), (3, 2), (1, 4), (4, 1), (3, 4),
-  (4, 3), (1, 5), (5, 1), (2, 5), (5, 2), (3, 5), (5, 3), (4, 5), (5, 4),
-  (1, 6), (6, 1),
+  (1, 2),
+  (2, 1),
+  (1, 3),
+  (3, 1),
+  (2, 3),
+  (3, 2),
+  (1, 4),
+  (4, 1),
+  (3, 4),
+  (4, 3),
+  (1, 5),
+  (5, 1),
+  (2, 5),
+  (5, 2),
+  (3, 5),
+  (5, 3),
+  (4, 5),
+  (5, 4),
+  (1, 6),
+  (6, 1),
 ];
 
 // Kelvin karşılıkları basit oran veren Celsius sıcaklık çiftleri.
 const _sicaklikCiftleri = [
-  (27, 127), (27, 327), (127, 27), (127, 327), (327, 27), (327, 127),
-  (0, 273), (273, 0), (-73, 27), (27, -73), (-73, 127), (127, -73),
-  (227, 27), (27, 227), (227, 127), (127, 227), (-23, 227), (227, -23),
-  (-23, 27), (27, 477),
+  (27, 127),
+  (27, 327),
+  (127, 27),
+  (127, 327),
+  (327, 27),
+  (327, 127),
+  (0, 273),
+  (273, 0),
+  (-73, 27),
+  (27, -73),
+  (-73, 127),
+  (127, -73),
+  (227, 27),
+  (27, 227),
+  (227, 127),
+  (127, 227),
+  (-23, 227),
+  (227, -23),
+  (-23, 27),
+  (27, 477),
 ];
 
 const _besOran = [(1, 2), (2, 1), (1, 3), (3, 2), (2, 3)];
@@ -1412,20 +1654,21 @@ final _f11 = lmAile(
     final k1 = c1 + 273, k2 = c2 + 273;
     final g = k1.gcd(k2);
     final r1 = k1 ~/ g, r2 = k2 ~/ g;
-    final kelvin = 'T₁ = ${_t(c1)} + 273 = $k1 K, T₂ = ${_t(c2)} + 273 = $k2 K.';
+    final kelvin =
+        'T₁ = ${_t(c1)} + 273 = $k1 K, T₂ = ${_t(c2)} + 273 = $k2 K.';
     switch (c) {
       case 0:
         final p1 = n1 / 2, p2 = n2 / 2;
         final v1 = n2 * (a + 1) / 2, v2 = n1 * (a + 1) / 2;
         return _say(
           'Sabit sıcaklıkta, sürtünmesiz pistonlu bir kapta bulunan ideal gazın '
-          'basıncı ${_t(p1)} atm iken hacmi ${_t(v1)} L olarak ölçülüyor. Piston '
-          'hareket ettirilerek gazın basıncı ${_t(p2)} atm yapıldığında hacmi '
-          'kaç litre olur?',
+              'basıncı ${_t(p1)} atm iken hacmi ${_t(v1)} L olarak ölçülüyor. Piston '
+              'hareket ettirilerek gazın basıncı ${_t(p2)} atm yapıldığında hacmi '
+              'kaç litre olur?',
           v2,
           [v1 * p2 / p1, v1, v2 / 2, v2 * 2, v1 + v2],
           'Boyle yasasına göre P₁V₁ = P₂V₂ olur: ${_t(p1)}·${_t(v1)} = '
-          '${_t(p2)}·V₂ eşitliğinden V₂ = ${_t(v2)} L bulunur.',
+              '${_t(p2)}·V₂ eşitliğinden V₂ = ${_t(v2)} L bulunur.',
           birim: 'L',
         );
       case 4:
@@ -1433,24 +1676,24 @@ final _f11 = lmAile(
         final v1 = n2 * (a + 1) / 2, v2 = n1 * (a + 1) / 2;
         return _say(
           'Sabit sıcaklıkta ${_t(p1)} atm basınç altında ${_t(v1)} L hacim '
-          'kaplayan ideal gazın hacmi ${_t(v2)} L yapılıyor. Gazın son basıncı '
-          'kaç atm olur?',
+              'kaplayan ideal gazın hacmi ${_t(v2)} L yapılıyor. Gazın son basıncı '
+              'kaç atm olur?',
           p2,
           [p1 * v2 / v1, p1, p2 * 2, p2 / 2, p1 + p2],
           'Boyle yasasına göre P₁V₁ = P₂V₂ olur: ${_t(p1)}·${_t(v1)} = '
-          'P₂·${_t(v2)} eşitliğinden P₂ = ${_t(p2)} atm bulunur.',
+              'P₂·${_t(v2)} eşitliğinden P₂ = ${_t(p2)} atm bulunur.',
         );
       case 8:
         final p1 = n1 * 190, p2 = n2 * 190;
         final v1 = n2 * (a + 1) * 20, v2 = n1 * (a + 1) * 20;
         return sayisal(
           'Sabit sıcaklıkta $p1 mmHg basınç altında $v1 mL hacim kaplayan bir '
-          'miktar ideal gazın basıncı $p2 mmHg değerine getiriliyor. Gazın son '
-          'hacmi kaç mL olur?',
+              'miktar ideal gazın basıncı $p2 mmHg değerine getiriliyor. Gazın son '
+              'hacmi kaç mL olur?',
           v2,
           [v1 * n2 ~/ n1, v1, v2 * 2, v2 ~/ 2, v1 + v2],
           'Boyle yasasına göre P₁V₁ = P₂V₂ olur: $p1·$v1 = $p2·V₂ eşitliğinden '
-          'V₂ = $v2 mL bulunur.',
+              'V₂ = $v2 mL bulunur.',
           unit: 'mL',
           positive: true,
         );
@@ -1458,25 +1701,25 @@ final _f11 = lmAile(
         final v1 = r1 * (a + 1) / 2, v2 = r2 * (a + 1) / 2;
         return _say(
           'Sabit basınçta, sürtünmesiz pistonlu bir kapta bulunan ideal gazın '
-          'sıcaklığı ${_t(c1)} °C iken hacmi ${_t(v1)} L olarak ölçülüyor. Gazın '
-          'sıcaklığı ${_t(c2)} °C yapıldığında hacmi kaç litre olur?',
+              'sıcaklığı ${_t(c1)} °C iken hacmi ${_t(v1)} L olarak ölçülüyor. Gazın '
+              'sıcaklığı ${_t(c2)} °C yapıldığında hacmi kaç litre olur?',
           v2,
           [if (c1 != 0) v1 * c2 / c1, v1 * r1 / r2, v1, v2 * 2, v2 / 2],
           '$kelvin Charles yasasına göre V₁ / T₁ = V₂ / T₂ olur: V₂ = '
-          '${_t(v1)}·$k2 / $k1 = ${_t(v2)} L bulunur.',
+              '${_t(v1)}·$k2 / $k1 = ${_t(v2)} L bulunur.',
           birim: 'L',
         );
       case 5:
         final v1 = r1 * (a + 1) / 2, v2 = r2 * (a + 1) / 2;
         return _say(
           'Sabit basınçta ${_t(c1)} °C sıcaklıkta ${_t(v1)} L hacim kaplayan '
-          'ideal gazın sıcaklığı, hacmi ${_t(v2)} L oluncaya kadar '
-          'değiştiriliyor. Gazın son sıcaklığı kaç °C olur?',
+              'ideal gazın sıcaklığı, hacmi ${_t(v2)} L oluncaya kadar '
+              'değiştiriliyor. Gazın son sıcaklığı kaç °C olur?',
           c2,
           [k2, c1 * r2 / r1, k2 + 273, c2 + 100, c2 - 100, c1 + 273],
           'T₁ = ${_t(c1)} + 273 = $k1 K olur. V₁ / T₁ = V₂ / T₂ eşitliğinden '
-          'T₂ = $k1·${_t(v2)} / ${_t(v1)} = $k2 K, yani $k2 − 273 = ${_t(c2)} '
-          '°C bulunur.',
+              'T₂ = $k1·${_t(v2)} / ${_t(v1)} = $k2 K, yani $k2 − 273 = ${_t(c2)} '
+              '°C bulunur.',
           birim: '°C',
           arti: false,
         );
@@ -1484,11 +1727,11 @@ final _f11 = lmAile(
         final v1 = r1 * (a + 1) * 10, v2 = r2 * (a + 1) * 10;
         return sayisal(
           'Sabit basınçta $k1 K sıcaklıkta $v1 mL hacim kaplayan ideal gazın '
-          'sıcaklığı $k2 K değerine getiriliyor. Gazın son hacmi kaç mL olur?',
+              'sıcaklığı $k2 K değerine getiriliyor. Gazın son hacmi kaç mL olur?',
           v2,
           [v1 * r1 ~/ r2, v1, v2 * 2, v2 ~/ 2, v1 + v2],
           'Charles yasasına göre V₁ / T₁ = V₂ / T₂ olur: V₂ = $v1·$k2 / $k1 = '
-          '$v2 mL bulunur.',
+              '$v2 mL bulunur.',
           unit: 'mL',
           positive: true,
         );
@@ -1496,23 +1739,23 @@ final _f11 = lmAile(
         final p1 = r1 * (a + 1) / 10, p2 = r2 * (a + 1) / 10;
         return _say(
           'Sabit hacimli kapalı bir çelik kapta bulunan ideal gazın sıcaklığı '
-          '${_t(c1)} °C iken basıncı ${_t(p1)} atm olarak ölçülüyor. Gazın '
-          'sıcaklığı ${_t(c2)} °C yapıldığında basıncı kaç atm olur?',
+              '${_t(c1)} °C iken basıncı ${_t(p1)} atm olarak ölçülüyor. Gazın '
+              'sıcaklığı ${_t(c2)} °C yapıldığında basıncı kaç atm olur?',
           p2,
           [if (c1 != 0) p1 * c2 / c1, p1 * r1 / r2, p1, p2 * 2, p2 / 2],
           '$kelvin Gay-Lussac yasasına göre P₁ / T₁ = P₂ / T₂ olur: P₂ = '
-          '${_t(p1)}·$k2 / $k1 = ${_t(p2)} atm bulunur.',
+              '${_t(p1)}·$k2 / $k1 = ${_t(p2)} atm bulunur.',
         );
       case 6:
         final p1 = r1 * (a + 1) * 20, p2 = r2 * (a + 1) * 20;
         return _say(
           'Sabit hacimli kapalı bir kapta ${_t(c1)} °C sıcaklıkta $p1 mmHg '
-          'basınç yapan ideal gazın sıcaklığı, basıncı $p2 mmHg oluncaya kadar '
-          'değiştiriliyor. Gazın son sıcaklığı kaç °C olur?',
+              'basınç yapan ideal gazın sıcaklığı, basıncı $p2 mmHg oluncaya kadar '
+              'değiştiriliyor. Gazın son sıcaklığı kaç °C olur?',
           c2,
           [k2, c1 * r2 / r1, k2 + 273, c2 + 100, c2 - 100, c1 + 273],
           'T₁ = ${_t(c1)} + 273 = $k1 K olur. P₁ / T₁ = P₂ / T₂ eşitliğinden '
-          'T₂ = $k1·$p2 / $p1 = $k2 K, yani $k2 − 273 = ${_t(c2)} °C bulunur.',
+              'T₂ = $k1·$p2 / $p1 = $k2 K, yani $k2 − 273 = ${_t(c2)} °C bulunur.',
           birim: '°C',
           arti: false,
         );
@@ -1527,12 +1770,17 @@ final _f11 = lmAile(
           final v1 = y * r1 * s / 2, v2 = x * r2 * s / 2;
           return _say(
             '${_t(c1)} °C sıcaklıkta ve ${_t(p1)} atm basınçta ${_t(v1)} L hacim '
-            'kaplayan bir miktar ideal gaz, ${_t(c2)} °C sıcaklığa ve ${_t(p2)} '
-            'atm basınca getiriliyor. Gazın son hacmi kaç litre olur?',
+                'kaplayan bir miktar ideal gaz, ${_t(c2)} °C sıcaklığa ve ${_t(p2)} '
+                'atm basınca getiriliyor. Gazın son hacmi kaç litre olur?',
             v2,
-            [v1 * p2 / p1 * k2 / k1, v1 * p1 / p2 * k1 / k2, v1 * k2 / k1, v1 * p1 / p2],
+            [
+              v1 * p2 / p1 * k2 / k1,
+              v1 * p1 / p2 * k1 / k2,
+              v1 * k2 / k1,
+              v1 * p1 / p2,
+            ],
             '$kelvin P₁V₁ / T₁ = P₂V₂ / T₂ eşitliğinden V₂ = '
-            '${_t(p1)}·${_t(v1)}·$k2 / ($k1·${_t(p2)}) = ${_t(v2)} L bulunur.',
+                '${_t(p1)}·${_t(v1)}·$k2 / ($k1·${_t(p2)}) = ${_t(v2)} L bulunur.',
             birim: 'L',
           );
         }
@@ -1540,12 +1788,17 @@ final _f11 = lmAile(
         final p1 = y * r1 * s / 10, p2 = x * r2 * s / 10;
         return _say(
           '${_t(c1)} °C sıcaklıkta ${_t(v1)} L hacim kaplayan ideal gazın '
-          'basıncı ${_t(p1)} atm olarak ölçülüyor. Gaz ${_t(c2)} °C sıcaklığa '
-          'getirilip hacmi ${_t(v2)} L yapıldığında basıncı kaç atm olur?',
+              'basıncı ${_t(p1)} atm olarak ölçülüyor. Gaz ${_t(c2)} °C sıcaklığa '
+              'getirilip hacmi ${_t(v2)} L yapıldığında basıncı kaç atm olur?',
           p2,
-          [p1 * v2 / v1 * k2 / k1, p1 * v1 / v2 * k1 / k2, p1 * k2 / k1, p1 * v1 / v2],
+          [
+            p1 * v2 / v1 * k2 / k1,
+            p1 * v1 / v2 * k1 / k2,
+            p1 * k2 / k1,
+            p1 * v1 / v2,
+          ],
           '$kelvin P₁V₁ / T₁ = P₂V₂ / T₂ eşitliğinden P₂ = '
-          '${_t(p1)}·${_t(v1)}·$k2 / ($k1·${_t(v2)}) = ${_t(p2)} atm bulunur.',
+              '${_t(p1)}·${_t(v1)}·$k2 / ($k1·${_t(v2)}) = ${_t(p2)} atm bulunur.',
         );
     }
   },
@@ -1559,12 +1812,26 @@ final _f11 = lmAile(
 
 // Mol kütleleri birbirinden farklı, oda sıcaklığında gaz olan maddeler.
 const _gazlar = [
-  ('H₂', 'hidrojen'), ('He', 'helyum'), ('CH₄', 'metan'), ('NH₃', 'amonyak'),
-  ('Ne', 'neon'), ('C₂H₂', 'asetilen'), ('N₂', 'azot'), ('C₂H₆', 'etan'),
-  ('O₂', 'oksijen'), ('H₂S', 'hidrojen sülfür'), ('F₂', 'flor'),
-  ('Ar', 'argon'), ('C₃H₆', 'propen'), ('CO₂', 'karbon dioksit'),
-  ('O₃', 'ozon'), ('SO₂', 'kükürt dioksit'), ('Cl₂', 'klor'),
-  ('HBr', 'hidrojen bromür'), ('Kr', 'kripton'), ('Xe', 'ksenon'),
+  ('H₂', 'hidrojen'),
+  ('He', 'helyum'),
+  ('CH₄', 'metan'),
+  ('NH₃', 'amonyak'),
+  ('Ne', 'neon'),
+  ('C₂H₂', 'asetilen'),
+  ('N₂', 'azot'),
+  ('C₂H₆', 'etan'),
+  ('O₂', 'oksijen'),
+  ('H₂S', 'hidrojen sülfür'),
+  ('F₂', 'flor'),
+  ('Ar', 'argon'),
+  ('C₃H₆', 'propen'),
+  ('CO₂', 'karbon dioksit'),
+  ('O₃', 'ozon'),
+  ('SO₂', 'kükürt dioksit'),
+  ('Cl₂', 'klor'),
+  ('HBr', 'hidrojen bromür'),
+  ('Kr', 'kripton'),
+  ('Xe', 'ksenon'),
 ];
 
 const _rYazi = 'R = 0,082 L·atm/(mol·K)';
@@ -1588,21 +1855,21 @@ final _f12 = lmAile(
       if (c == 4) {
         return _say(
           '$tc °C sıcaklıkta ve ${_t(p)} atm basınçta $ad ($f) gazının '
-          'yoğunluğu kaç g/L olur? (${_kut([f])}; $_rYazi)',
+              'yoğunluğu kaç g/L olur? (${_kut([f])}; $_rYazi)',
           d,
           [p * mk / (0.082 * tc), d * 2, d / 2, mk / 22.4, p * mk],
           '$kelvin d = P·M / (R·T) = ${_t(p)}·${_t(mk)} / (0,082·$tk) = '
-          '${_t(d)} g/L bulunur.',
+              '${_t(d)} g/L bulunur.',
           birim: 'g/L',
         );
       }
       return _say(
         '$tc °C sıcaklıkta ve ${_t(p)} atm basınçta yoğunluğu ${_t(d)} g/L olan '
-        'ideal gazın mol kütlesi kaç g/mol olur? ($_rYazi)',
+            'ideal gazın mol kütlesi kaç g/mol olur? ($_rYazi)',
         mk,
         [d * 0.082 * tc / p, d * 22.4, mk * 2, mk / 2, d * tk / p],
         '$kelvin M = d·R·T / P = ${_t(d)}·0,082·$tk / ${_t(p)} = ${_t(mk)} '
-        'g/mol bulunur.',
+            'g/mol bulunur.',
         birim: 'g/mol',
       );
     }
@@ -1615,30 +1882,30 @@ final _f12 = lmAile(
       case 0:
         return _say(
           '${_t(n)} mol ideal gaz $tc °C sıcaklıkta ${_t(p)} atm basınç '
-          'yapmaktadır. Gazın hacmi kaç litredir? ($_rYazi)',
+              'yapmaktadır. Gazın hacmi kaç litredir? ($_rYazi)',
           v,
           [n * 0.082 * tc / p, n * rt * p, v / 2, v * 2, n * 22.4],
           '$kelvin V = n·R·T / P = ${_t(n)}·0,082·$tk / ${_t(p)} = ${_t(v)} L '
-          'bulunur.',
+              'bulunur.',
           birim: 'L',
         );
       case 1:
         return _say(
           '${_t(v)} L hacimli kapalı bir kapta $tc °C sıcaklıkta ${_t(n)} mol '
-          'ideal gaz bulunmaktadır. Gazın basıncı kaç atm olur? ($_rYazi)',
+              'ideal gaz bulunmaktadır. Gazın basıncı kaç atm olur? ($_rYazi)',
           p,
           [n * 0.082 * tc / v, v / (n * rt), p * 2, p / 2, n * 22.4 / v],
           '$kelvin P = n·R·T / V = ${_t(n)}·0,082·$tk / ${_t(v)} = ${_t(p)} '
-          'atm bulunur.',
+              'atm bulunur.',
         );
       case 2:
         return _say(
           '$tc °C sıcaklıkta ${_t(v)} L hacimli kapalı bir kapta ${_t(p)} atm '
-          'basınç yapan ideal gaz kaç moldür? ($_rYazi)',
+              'basınç yapan ideal gaz kaç moldür? ($_rYazi)',
           n,
           [p * v / (0.082 * tc), v / 22.4, n * 2, n / 2, p * v],
           '$kelvin n = P·V / (R·T) = ${_t(p)}·${_t(v)} / (0,082·$tk) = '
-          '${_t(n)} mol bulunur.',
+              '${_t(n)} mol bulunur.',
           birim: 'mol',
         );
       default:
@@ -1646,11 +1913,11 @@ final _f12 = lmAile(
         final mk = _mk(f);
         return _say(
           '$tc °C sıcaklıkta ${_t(v)} L hacimli kapalı bir kapta ${_t(p)} atm '
-          'basınç yapan $ad ($f) gazı kaç gramdır? (${_kut([f])}; $_rYazi)',
+              'basınç yapan $ad ($f) gazı kaç gramdır? (${_kut([f])}; $_rYazi)',
           n * mk,
           [n, p * v / (0.082 * tc) * mk, v / 22.4 * mk, n * mk / 2, n * mk * 2],
           '$kelvin n = P·V / (R·T) = ${_t(p)}·${_t(v)} / (0,082·$tk) = '
-          '${_t(n)} mol olur. Kütle ${_t(n)}·${_t(mk)} = ${_t(n * mk)} gramdır.',
+              '${_t(n)} mol olur. Kütle ${_t(n)}·${_t(mk)} = ${_t(n * mk)} gramdır.',
           birim: 'g',
         );
     }
@@ -1665,7 +1932,10 @@ final _f12 = lmAile(
 
 // (hafif gaz, ağır gaz, hız oranı = √(M_ağır / M_hafif))
 const _grahamCiftleri = [
-  ('He', 'CH₄', 2), ('H₂', 'O₂', 4), ('CH₄', 'SO₂', 2), ('He', 'SO₂', 4),
+  ('He', 'CH₄', 2),
+  ('H₂', 'O₂', 4),
+  ('CH₄', 'SO₂', 2),
+  ('He', 'SO₂', 4),
   ('O₂', 'HI', 2),
 ];
 
@@ -1686,13 +1956,13 @@ final _f13 = lmAile(
         final gaz = const ['He', 'Ne', 'Ar'][j];
         return sayisal(
           'Kapalı bir kapta ${n[0]} mol He, ${n[1]} mol Ne ve ${n[2]} mol Ar '
-          'gazlarından oluşan karışımın toplam basıncı ${top * u} mmHg olarak '
-          'ölçülüyor. Buna göre $gaz gazının kısmi basıncı kaç mmHg olur?',
+              'gazlarından oluşan karışımın toplam basıncı ${top * u} mmHg olarak '
+              'ölçülüyor. Buna göre $gaz gazının kısmi basıncı kaç mmHg olur?',
           n[j] * u,
           [top * u ~/ 3, n[1 - j] * u, top * u - n[j] * u, n[2] * u, u],
           'Toplam mol sayısı $top olduğundan $gaz gazının mol kesri '
-          '${kesir(n[j], top)} olur. Kısmi basınç ${top * u}·${n[j]} / $top = '
-          '${n[j] * u} mmHg bulunur.',
+              '${kesir(n[j], top)} olur. Kısmi basınç ${top * u}·${n[j]} / $top = '
+              '${n[j] * u} mmHg bulunur.',
           positive: true,
         );
       case 1:
@@ -1702,14 +1972,14 @@ final _f13 = lmAile(
           final m1 = 4 * n1, m2 = 16 * n2;
           return _say(
             'Kapalı bir kapta $m1 gram He ve $m2 gram CH₄ gazları '
-            'bulunmaktadır. Karışımın toplam basıncı ${_t(pt)} atm olduğuna '
-            'göre CH₄ gazının kısmi basıncı kaç atm olur? '
-            '(${_kut(['He', 'CH₄'])})',
+                'bulunmaktadır. Karışımın toplam basıncı ${_t(pt)} atm olduğuna '
+                'göre CH₄ gazının kısmi basıncı kaç atm olur? '
+                '(${_kut(['He', 'CH₄'])})',
             p2,
             [pt * m2 / (m1 + m2), pt - p2, pt / 2, pt * n2 / (n1 + 2 * n2)],
             'He: $m1 / 4 = $n1 mol, CH₄: $m2 / 16 = $n2 mol. CH₄ gazının mol '
-            'kesri $n2/$top olduğundan kısmi basıncı ${_t(pt)}·$n2 / $top = '
-            '${_t(p2)} atm bulunur.',
+                'kesri $n2/$top olduğundan kısmi basıncı ${_t(pt)}·$n2 / $top = '
+                '${_t(p2)} atm bulunur.',
           );
         }
         // Mol sayıları onda bir adımlarla; her (a, b) ayrı bir çift verir.
@@ -1717,14 +1987,19 @@ final _f13 = lmAile(
         final g1 = 2 * h1 / 10, g2 = 32 * h2 / 10;
         return kesirli(
           'Kapalı bir kapta ${_t(g1)} gram H₂ ve ${_t(g2)} gram O₂ gazları '
-          'bulunmaktadır. Buna göre karışımdaki O₂ gazının mol kesri kaçtır? '
-          '(${_kut(['H₂', 'O₂'])})',
+              'bulunmaktadır. Buna göre karışımdaki O₂ gazının mol kesri kaçtır? '
+              '(${_kut(['H₂', 'O₂'])})',
           h2,
           h1 + h2,
-          [(h1, h1 + h2), (16 * h2, h1 + 16 * h2), (h2, h1 + 2 * h2), (h2, 2 * h1 + h2)],
+          [
+            (h1, h1 + h2),
+            (16 * h2, h1 + 16 * h2),
+            (h2, h1 + 2 * h2),
+            (h2, 2 * h1 + h2),
+          ],
           'H₂: ${_t(g1)} / 2 = ${_t(h1 / 10)} mol, O₂: ${_t(g2)} / 32 = '
-          '${_t(h2 / 10)} mol. O₂ gazının mol kesri ${_t(h2 / 10)} / '
-          '${_t((h1 + h2) / 10)} = ${kesir(h2, h1 + h2)} olur.',
+              '${_t(h2 / 10)} mol. O₂ gazının mol kesri ${_t(h2 / 10)} / '
+              '${_t((h1 + h2) / 10)} = ${kesir(h2, h1 + h2)} olur.',
         );
       case 2:
         final v1 = 1 + a % 5, v2 = 1 + a ~/ 5, top = v1 + v2;
@@ -1742,7 +2017,7 @@ final _f13 = lmAile(
             son,
             [(p1 + p2) / 2, p1 + p2, v1 * p, v2 * q, (p1 * v2 + p2 * v1) / top],
             'Toplam hacim $top L olur. P = (${_t(p1)}·$v1 + ${_t(p2)}·$v2) / '
-            '$top = ${_t(son)} atm bulunur.',
+                '$top = ${_t(son)} atm bulunur.',
           );
         }
         return _say(
@@ -1750,7 +2025,7 @@ final _f13 = lmAile(
           v2 * q,
           [son, p2 / 2, v1 * p, p2 * v1 / top, p2],
           'Ne gazı $v2 L hacimden $top L hacme yayılır. Kısmi basıncı '
-          '${_t(p2)}·$v2 / $top = ${_t(v2 * q)} atm bulunur.',
+              '${_t(p2)}·$v2 / $top = ${_t(v2 * q)} atm bulunur.',
         );
       default:
         final (hafif, agir, oran) = _grahamCiftleri[a % 5];
@@ -1765,23 +2040,23 @@ final _f13 = lmAile(
           if (!ikinci) {
             return sayisal(
               '$giris $hafif gazı borunun diğer ucuna $k saniyede ulaşıyor. '
-              'Aynı koşullarda $agir gazı aynı yolu kaç saniyede alır? ($kut)',
+                  'Aynı koşullarda $agir gazı aynı yolu kaç saniyede alır? ($kut)',
               oran * k,
               [k * ma ~/ mh, k * oran * oran, k + oran, k * (oran + 1)],
               '$hiz Süre hızla ters orantılı olduğundan $agir gazı yolu '
-              '$k·$oran = ${oran * k} saniyede alır.',
+                  '$k·$oran = ${oran * k} saniyede alır.',
               unit: 's',
               positive: true,
             );
           }
           return sayisal(
             '$giris $agir gazı borunun diğer ucuna ${oran * k} saniyede '
-            'ulaşıyor. Aynı koşullarda $hafif gazı aynı yolu kaç saniyede alır? '
-            '($kut)',
+                'ulaşıyor. Aynı koşullarda $hafif gazı aynı yolu kaç saniyede alır? '
+                '($kut)',
             k,
             [oran * oran * k, oran * k * mh ~/ ma, oran * k - oran, 2 * k],
             '$hiz Süre hızla ters orantılı olduğundan $hafif gazı yolu '
-            '${oran * k} / $oran = $k saniyede alır.',
+                '${oran * k} / $oran = $k saniyede alır.',
             unit: 's',
             positive: true,
           );
@@ -1791,8 +2066,8 @@ final _f13 = lmAile(
         final yanit = ikinci ? k : oran * k;
         return sayisal(
           'Aynı sıcaklıktaki $hafif ve $agir gazları, $boy cm uzunluğundaki '
-          'cam borunun iki ucundan aynı anda gönderiliyor. Gazlar, $uc gazının '
-          'gönderildiği uçtan kaç cm uzakta karşılaşır? ($kut)',
+              'cam borunun iki ucundan aynı anda gönderiliyor. Gazlar, $uc gazının '
+              'gönderildiği uçtan kaç cm uzakta karşılaşır? ($kut)',
           yanit,
           [
             boy ~/ 2,
@@ -1802,7 +2077,7 @@ final _f13 = lmAile(
             yanit + oran,
           ],
           '$hiz Aynı sürede alınan yollar $oran : 1 oranındadır. $uc gazı '
-          '$boy·${ikinci ? 1 : oran} / ${oran + 1} = $yanit cm yol alır.',
+              '$boy·${ikinci ? 1 : oran} / ${oran + 1} = $yanit cm yol alır.',
           unit: 'cm',
           positive: true,
         );
@@ -1818,18 +2093,30 @@ final _f13 = lmAile(
 
 // Suda çok çözünen maddeler.
 const _cozunenler = [
-  ('NaOH', 'sodyum hidroksit'), ('KOH', 'potasyum hidroksit'),
-  ('NaCl', 'sodyum klorür'), ('KNO₃', 'potasyum nitrat'),
-  ('C₆H₁₂O₆', 'glikoz'), ('CaCl₂', 'kalsiyum klorür'),
-  ('NaNO₃', 'sodyum nitrat'), ('MgSO₄', 'magnezyum sülfat'),
-  ('NH₄Cl', 'amonyum klorür'), ('KBr', 'potasyum bromür'),
-  ('AgNO₃', 'gümüş nitrat'), ('CaBr₂', 'kalsiyum bromür'),
-  ('C₁₂H₂₂O₁₁', 'sakkaroz'), ('NH₄NO₃', 'amonyum nitrat'),
-  ('KI', 'potasyum iyodür'), ('MgCl₂', 'magnezyum klorür'),
-  ('NaBr', 'sodyum bromür'), ('Ca(NO₃)₂', 'kalsiyum nitrat'),
-  ('Al(NO₃)₃', 'alüminyum nitrat'), ('NaI', 'sodyum iyodür'),
-  ('HNO₃', 'nitrik asit'), ('H₂SO₄', 'sülfürik asit'),
-  ('KCl', 'potasyum klorür'), ('ZnSO₄', 'çinko sülfat'),
+  ('NaOH', 'sodyum hidroksit'),
+  ('KOH', 'potasyum hidroksit'),
+  ('NaCl', 'sodyum klorür'),
+  ('KNO₃', 'potasyum nitrat'),
+  ('C₆H₁₂O₆', 'glikoz'),
+  ('CaCl₂', 'kalsiyum klorür'),
+  ('NaNO₃', 'sodyum nitrat'),
+  ('MgSO₄', 'magnezyum sülfat'),
+  ('NH₄Cl', 'amonyum klorür'),
+  ('KBr', 'potasyum bromür'),
+  ('AgNO₃', 'gümüş nitrat'),
+  ('CaBr₂', 'kalsiyum bromür'),
+  ('C₁₂H₂₂O₁₁', 'sakkaroz'),
+  ('NH₄NO₃', 'amonyum nitrat'),
+  ('KI', 'potasyum iyodür'),
+  ('MgCl₂', 'magnezyum klorür'),
+  ('NaBr', 'sodyum bromür'),
+  ('Ca(NO₃)₂', 'kalsiyum nitrat'),
+  ('Al(NO₃)₃', 'alüminyum nitrat'),
+  ('NaI', 'sodyum iyodür'),
+  ('HNO₃', 'nitrik asit'),
+  ('H₂SO₄', 'sülfürik asit'),
+  ('KCl', 'potasyum klorür'),
+  ('ZnSO₄', 'çinko sülfat'),
   ('Mg(NO₃)₂', 'magnezyum nitrat'),
 ];
 
@@ -1854,23 +2141,23 @@ final _f14 = lmAile(
         if (c % 5 == 0) {
           return _say(
             'Kütlesi ${_t(m)} gram olan $madde saf suda çözülerek $hacim mL '
-            'çözelti hazırlanıyor. Çözeltinin molar derişimi kaç mol/L olur? '
-            '($kut)',
+                'çözelti hazırlanıyor. Çözeltinin molar derişimi kaç mol/L olur? '
+                '($kut)',
             der,
             [n, m * 1000 / hacim / 100, n * hacim / 1000, der * 2, der / 2],
             'n = ${_t(m)} / ${_t(mk)} = ${_t(n)} mol ve V = ${_t(hacim / 1000)} '
-            'L olur. Derişim ${_t(n)} / ${_t(hacim / 1000)} = ${_t(der)} mol/L '
-            'bulunur.',
+                'L olur. Derişim ${_t(n)} / ${_t(hacim / 1000)} = ${_t(der)} mol/L '
+                'bulunur.',
             birim: 'mol/L',
           );
         }
         return _say(
           'Derişimi ${_t(der)} mol/L olan $hacim mL $madde çözeltisi hazırlamak '
-          'için kaç gram $f gerekir? ($kut)',
+              'için kaç gram $f gerekir? ($kut)',
           m,
           [der * mk, m * 2, m / 2, n, m * 10],
           'n = ${_t(der)}·${_t(hacim / 1000)} = ${_t(n)} mol olur. Kütle '
-          '${_t(n)}·${_t(mk)} = ${_t(m)} gram bulunur.',
+              '${_t(n)}·${_t(mk)} = ${_t(m)} gram bulunur.',
           birim: 'g',
         );
       case 3:
@@ -1882,8 +2169,8 @@ final _f14 = lmAile(
         if (w == 0) {
           return _say(
             'Kütlesi ${_t(kg)} kg olan bir içme suyu örneğinde ${_t(mg)} mg '
-            '$iyon iyonu bulunmaktadır. Bu iyonun sudaki derişimi kaç ppm '
-            'olur?',
+                '$iyon iyonu bulunmaktadır. Bu iyonun sudaki derişimi kaç ppm '
+                'olur?',
             ppm,
             [mg * kg, mg, ppm * 10, ppm / 10, mg / (kg * 10)],
             '$tanim Derişim ${_t(mg)} / ${_t(kg)} = $ppm ppm bulunur.',
@@ -1891,8 +2178,8 @@ final _f14 = lmAile(
         }
         return _say(
           'Bir içme suyu örneğinde $iyon iyonu derişimi $ppm ppm olarak '
-          'ölçülmüştür. Bu suyun ${_t(kg)} kg kütleli örneğinde kaç mg $iyon '
-          'iyonu bulunur?',
+              'ölçülmüştür. Bu suyun ${_t(kg)} kg kütleli örneğinde kaç mg $iyon '
+              'iyonu bulunur?',
           mg,
           [ppm / kg, ppm, mg * 10, mg / 10, ppm * kg * kg],
           '$tanim Örnekte $ppm·${_t(kg)} = ${_t(mg)} mg iyon bulunur.',
@@ -1905,18 +2192,18 @@ final _f14 = lmAile(
           if (w == 0) {
             return _say(
               '${_t(ms)} gram $madde, ${_t(su)} gram saf suda tamamen '
-              'çözünüyor. Oluşan çözelti kütlece yüzde kaçlıktır?',
+                  'çözünüyor. Oluşan çözelti kütlece yüzde kaçlıktır?',
               p,
               [100 * ms / su, 100 - p, p / 2, p * 2],
               on: '%',
               'Çözelti kütlesi ${_t(ms)} + ${_t(su)} = $top gramdır. Kütlece '
-              'yüzde ${_t(ms)} / $top·100 = %$p olur.',
+                  'yüzde ${_t(ms)} / $top·100 = %$p olur.',
             );
           }
           return _say(
             'Kütlesi $top gram olan bir $madde çözeltisinde ${_t(ms)} gram '
-            'çözünen madde bulunmaktadır. Çözeltinin kütlece yüzde derişimi '
-            'kaçtır?',
+                'çözünen madde bulunmaktadır. Çözeltinin kütlece yüzde derişimi '
+                'kaçtır?',
             p,
             [100 * ms / su, 100 * ms / (top + ms), 100 - p, p / 2],
             on: '%',
@@ -1926,17 +2213,17 @@ final _f14 = lmAile(
         if (w == 0) {
           return _say(
             'Kütlece %$p oranında $madde içeren $top gram çözeltide kaç gram '
-            'su bulunur?',
+                'su bulunur?',
             su,
             [ms, top * 100 / (100 + p), top - p, su / 2],
             'Çözünen kütlesi $top·$p / 100 = ${_t(ms)} gramdır. Su kütlesi '
-            '$top − ${_t(ms)} = ${_t(su)} gram olur.',
+                '$top − ${_t(ms)} = ${_t(su)} gram olur.',
             birim: 'g',
           );
         }
         return _say(
           'Kütlece %$p oranında $madde içeren $top gram çözelti hazırlamak '
-          'için kaç gram çözünen madde tartılmalıdır?',
+              'için kaç gram çözünen madde tartılmalıdır?',
           ms,
           [su, top * p / (100 + p), top / p, ms * 2],
           'Çözünen kütlesi $top·$p / 100 = ${_t(ms)} gram olur.',
@@ -1954,26 +2241,54 @@ final _f14 = lmAile(
 
 // (ilk hacim payı, son hacim payı): aralarında asal, ikincisi en çok 8.
 const _hacimOranlari = [
-  (1, 2), (1, 3), (2, 3), (1, 4), (3, 4), (1, 5), (2, 5), (3, 5), (4, 5),
-  (1, 6), (5, 6), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (1, 8),
-  (3, 8), (5, 8),
+  (1, 2),
+  (1, 3),
+  (2, 3),
+  (1, 4),
+  (3, 4),
+  (1, 5),
+  (2, 5),
+  (3, 5),
+  (4, 5),
+  (1, 6),
+  (5, 6),
+  (1, 7),
+  (2, 7),
+  (3, 7),
+  (4, 7),
+  (5, 7),
+  (6, 7),
+  (1, 8),
+  (3, 8),
+  (5, 8),
 ];
 
 // (tuz, sorulan iyon, formül başına iyon sayısı)
 const _tuzIyonlari = [
-  ('CaCl₂', 'Cl⁻', 2), ('Al₂(SO₄)₃', 'SO₄²⁻', 3), ('Na₃PO₄', 'Na⁺', 3),
-  ('Mg(NO₃)₂', 'NO₃⁻', 2), ('K₂SO₄', 'K⁺', 2), ('AlCl₃', 'Cl⁻', 3),
-  ('Fe₂(SO₄)₃', 'Fe³⁺', 2), ('Na₂CO₃', 'Na⁺', 2), ('Al(NO₃)₃', 'NO₃⁻', 3),
+  ('CaCl₂', 'Cl⁻', 2),
+  ('Al₂(SO₄)₃', 'SO₄²⁻', 3),
+  ('Na₃PO₄', 'Na⁺', 3),
+  ('Mg(NO₃)₂', 'NO₃⁻', 2),
+  ('K₂SO₄', 'K⁺', 2),
+  ('AlCl₃', 'Cl⁻', 3),
+  ('Fe₂(SO₄)₃', 'Fe³⁺', 2),
+  ('Na₂CO₃', 'Na⁺', 2),
+  ('Al(NO₃)₃', 'NO₃⁻', 3),
   ('(NH₄)₂SO₄', 'NH₄⁺', 2),
 ];
 
 // (1. tuz, iyon sayısı, 2. tuz, iyon sayısı, ortak iyon)
 const _ortakIyonlular = [
-  ('NaCl', 1, 'CaCl₂', 2, 'Cl⁻'), ('KNO₃', 1, 'Ca(NO₃)₂', 2, 'NO₃⁻'),
-  ('Na₂SO₄', 1, 'Al₂(SO₄)₃', 3, 'SO₄²⁻'), ('NaCl', 1, 'AlCl₃', 3, 'Cl⁻'),
-  ('KCl', 1, 'MgCl₂', 2, 'Cl⁻'), ('NaNO₃', 1, 'Al(NO₃)₃', 3, 'NO₃⁻'),
-  ('Na₂SO₄', 2, 'NaCl', 1, 'Na⁺'), ('K₂SO₄', 2, 'KNO₃', 1, 'K⁺'),
-  ('Na₃PO₄', 3, 'NaCl', 1, 'Na⁺'), ('MgCl₂', 2, 'AlCl₃', 3, 'Cl⁻'),
+  ('NaCl', 1, 'CaCl₂', 2, 'Cl⁻'),
+  ('KNO₃', 1, 'Ca(NO₃)₂', 2, 'NO₃⁻'),
+  ('Na₂SO₄', 1, 'Al₂(SO₄)₃', 3, 'SO₄²⁻'),
+  ('NaCl', 1, 'AlCl₃', 3, 'Cl⁻'),
+  ('KCl', 1, 'MgCl₂', 2, 'Cl⁻'),
+  ('NaNO₃', 1, 'Al(NO₃)₃', 3, 'NO₃⁻'),
+  ('Na₂SO₄', 2, 'NaCl', 1, 'Na⁺'),
+  ('K₂SO₄', 2, 'KNO₃', 1, 'K⁺'),
+  ('Na₃PO₄', 3, 'NaCl', 1, 'Na⁺'),
+  ('MgCl₂', 2, 'AlCl₃', 3, 'Cl⁻'),
 ];
 
 final _f15 = lmAile(
@@ -1996,21 +2311,21 @@ final _f15 = lmAile(
         if (c % 5 == 0) {
           return _say(
             '${_t(d1)} mol/L derişimli $v1 mL $x çözeltisine $v2 mL saf su '
-            'ekleniyor. Yeni çözeltinin derişimi kaç mol/L olur?',
+                'ekleniyor. Yeni çözeltinin derişimi kaç mol/L olur?',
             d2,
             [d1 * v1 / v2, d1 * v2 / vt, d1 / 2, d1 * vt / v1, d2 / 2],
             'Son hacim $v1 + $v2 = $vt mL olur. M₁V₁ = M₂V₂ eşitliğinden M₂ = '
-            '${_t(d1)}·$v1 / $vt = ${_t(d2)} mol/L bulunur.',
+                '${_t(d1)}·$v1 / $vt = ${_t(d2)} mol/L bulunur.',
             birim: 'mol/L',
           );
         }
         return sayisal(
           '${_t(d1)} mol/L derişimli $v1 mL $x çözeltisinin derişimini '
-          '${_t(d2)} mol/L değerine düşürmek için kaç mL saf su eklenmelidir?',
+              '${_t(d2)} mol/L değerine düşürmek için kaç mL saf su eklenmelidir?',
           v2,
           [vt, v1, vt + v1, v2 * 2, v2 ~/ 2],
           'M₁V₁ = M₂V₂ eşitliğinden son hacim ${_t(d1)}·$v1 / ${_t(d2)} = $vt '
-          'mL olmalıdır. Eklenecek su $vt − $v1 = $v2 mL bulunur.',
+              'mL olmalıdır. Eklenecek su $vt − $v1 = $v2 mL bulunur.',
           unit: 'mL',
           positive: true,
         );
@@ -2019,12 +2334,12 @@ final _f15 = lmAile(
         final d1 = r2 * p, d2 = r2 * q, son = r1 * p + (r2 - r1) * q;
         return _say(
           '${_t(d1)} mol/L derişimli $v1 mL $x çözeltisi ile ${_t(d2)} mol/L '
-          'derişimli $v2 mL $x çözeltisi karıştırılıyor. Karışımın derişimi '
-          'kaç mol/L olur?',
+              'derişimli $v2 mL $x çözeltisi karıştırılıyor. Karışımın derişimi '
+              'kaç mol/L olur?',
           son,
           [(d1 + d2) / 2, d1 + d2, (d1 * v2 + d2 * v1) / vt, (d1 - d2).abs()],
           'Son derişim (${_t(d1)}·$v1 + ${_t(d2)}·$v2) / $vt = ${_t(son)} '
-          'mol/L bulunur.',
+              'mol/L bulunur.',
           birim: 'mol/L',
         );
       case 3:
@@ -2033,13 +2348,13 @@ final _f15 = lmAile(
         final d1 = r2 * c0, d2 = r1 * c0;
         return _say(
           '${_t(d1)} mol/L derişimli $v1 mL $tuz çözeltisi saf su ile $vt mL '
-          'hacme tamamlanıyor. Son çözeltideki $iyon iyonu derişimi kaç mol/L '
-          'olur? (Tuzun suda tamamen iyonlaştığı kabul edilecektir.)',
+              'hacme tamamlanıyor. Son çözeltideki $iyon iyonu derişimi kaç mol/L '
+              'olur? (Tuzun suda tamamen iyonlaştığı kabul edilecektir.)',
           k * d2,
           [d2, k * d1, d2 / k, d1, k * d2 * 2],
           'Seyreltilen çözeltinin derişimi ${_t(d1)}·$v1 / $vt = ${_t(d2)} '
-          'mol/L olur. Bir formül birimi $k tane $iyon iyonu verdiğinden iyon '
-          'derişimi $k·${_t(d2)} = ${_t(k * d2)} mol/L bulunur.',
+              'mol/L olur. Bir formül birimi $k tane $iyon iyonu verdiğinden iyon '
+              'derişimi $k·${_t(d2)} = ${_t(k * d2)} mol/L bulunur.',
           birim: 'mol/L',
         );
       default:
@@ -2049,9 +2364,9 @@ final _f15 = lmAile(
         final son = k1 * r1 * p + k2 * (r2 - r1) * q;
         return _say(
           '${_t(d1)} mol/L derişimli $v1 mL $t1 çözeltisi ile ${_t(d2)} mol/L '
-          'derişimli $v2 mL $t2 çözeltisi karıştırılıyor. Karışımdaki $iyon '
-          'iyonu derişimi kaç mol/L olur? (Tuzların suda tamamen iyonlaştığı '
-          'kabul edilecektir.)',
+              'derişimli $v2 mL $t2 çözeltisi karıştırılıyor. Karışımdaki $iyon '
+              'iyonu derişimi kaç mol/L olur? (Tuzların suda tamamen iyonlaştığı '
+              'kabul edilecektir.)',
           son,
           [
             r1 * p + (r2 - r1) * q,
@@ -2061,7 +2376,7 @@ final _f15 = lmAile(
             son / 2,
           ],
           '$iyon derişimi ($k1·${_t(d1)}·$v1 + $k2·${_t(d2)}·$v2) / $vt = '
-          '${_t(son)} mol/L bulunur.',
+              '${_t(son)} mol/L bulunur.',
           birim: 'mol/L',
         );
     }
@@ -2076,18 +2391,30 @@ final _f15 = lmAile(
 
 // (formül, ad, suda bir formül biriminin verdiği tanecik sayısı)
 const _koligatifler = [
-  ('C₆H₁₂O₆', 'glikoz', 1), ('C₁₂H₂₂O₁₁', 'sakkaroz', 1),
-  ('CO(NH₂)₂', 'üre', 1), ('C₂H₆O₂', 'etilen glikol', 1),
-  ('C₃H₈O₃', 'gliserin', 1), ('NaOH', 'sodyum hidroksit', 2),
-  ('KOH', 'potasyum hidroksit', 2), ('KNO₃', 'potasyum nitrat', 2),
-  ('NaNO₃', 'sodyum nitrat', 2), ('KBr', 'potasyum bromür', 2),
-  ('NaBr', 'sodyum bromür', 2), ('KI', 'potasyum iyodür', 2),
-  ('MgSO₄', 'magnezyum sülfat', 2), ('NH₄NO₃', 'amonyum nitrat', 2),
-  ('LiOH', 'lityum hidroksit', 2), ('AgNO₃', 'gümüş nitrat', 2),
-  ('CaCl₂', 'kalsiyum klorür', 3), ('MgCl₂', 'magnezyum klorür', 3),
-  ('K₂CO₃', 'potasyum karbonat', 3), ('Ca(NO₃)₂', 'kalsiyum nitrat', 3),
-  ('Mg(NO₃)₂', 'magnezyum nitrat', 3), ('CaBr₂', 'kalsiyum bromür', 3),
-  ('Na₂CO₃', 'sodyum karbonat', 3), ('Al(NO₃)₃', 'alüminyum nitrat', 4),
+  ('C₆H₁₂O₆', 'glikoz', 1),
+  ('C₁₂H₂₂O₁₁', 'sakkaroz', 1),
+  ('CO(NH₂)₂', 'üre', 1),
+  ('C₂H₆O₂', 'etilen glikol', 1),
+  ('C₃H₈O₃', 'gliserin', 1),
+  ('NaOH', 'sodyum hidroksit', 2),
+  ('KOH', 'potasyum hidroksit', 2),
+  ('KNO₃', 'potasyum nitrat', 2),
+  ('NaNO₃', 'sodyum nitrat', 2),
+  ('KBr', 'potasyum bromür', 2),
+  ('NaBr', 'sodyum bromür', 2),
+  ('KI', 'potasyum iyodür', 2),
+  ('MgSO₄', 'magnezyum sülfat', 2),
+  ('NH₄NO₃', 'amonyum nitrat', 2),
+  ('LiOH', 'lityum hidroksit', 2),
+  ('AgNO₃', 'gümüş nitrat', 2),
+  ('CaCl₂', 'kalsiyum klorür', 3),
+  ('MgCl₂', 'magnezyum klorür', 3),
+  ('K₂CO₃', 'potasyum karbonat', 3),
+  ('Ca(NO₃)₂', 'kalsiyum nitrat', 3),
+  ('Mg(NO₃)₂', 'magnezyum nitrat', 3),
+  ('CaBr₂', 'kalsiyum bromür', 3),
+  ('Na₂CO₃', 'sodyum karbonat', 3),
+  ('Al(NO₃)₃', 'alüminyum nitrat', 4),
   ('K₃PO₄', 'potasyum fosfat', 4),
 ];
 
@@ -2125,65 +2452,72 @@ final _f16 = lmAile(
     final noktaYazi = donma
         ? '$olay başlama sıcaklığı 0 − ${_t(dt)} = ${_t(nokta)} °C'
         : '$olay başlama sıcaklığı 100 + ${_t(dt)} = ${_t(nokta)} °C';
-    final geri = 'ΔT = ${_t(dt)} °C olduğundan tanecik molalitesi ${_t(dt)} / '
+    final geri =
+        'ΔT = ${_t(dt)} °C olduğundan tanecik molalitesi ${_t(dt)} / '
         '${_t(sabit)} = ${_t(k / 2)} m olur.';
     switch (c % 5) {
       case 0:
         return _say(
           '${_t(ms)} gram $madde, $su gram saf suda çözülüyor. Çözeltinin 1 atm '
-          'basınçtaki $olay başlama sıcaklığı kaç °C olur? ($kut; $sabitYazi; '
-          '$iyonYazi)',
+              'basınçtaki $olay başlama sıcaklığı kaç °C olur? ($kut; $sabitYazi; '
+              '$iyonYazi)',
           nokta,
           donma
               ? [-dt / i, dt, -dt * 2, -sabit * n * i, -dt / 2, -dt - 1]
               : [100 + dt / i, 100 - dt, 100 + dt * 2, 100 + sabit * n * i, dt],
           'n = ${_t(ms)} / ${_t(mk)} = ${_t(n)} mol. $tanecik $dtYazi; '
-          '$noktaYazi bulunur.',
+              '$noktaYazi bulunur.',
           birim: '°C',
           arti: false,
         );
       case 1:
         return _say(
           'Bir miktar $madde, $su gram saf suda çözüldüğünde çözeltinin 1 atm '
-          'basınçtaki $olay başlama sıcaklığı ${_t(nokta)} °C oluyor. Çözünen '
-          'madde kaç gramdır? ($kut; $sabitYazi; $iyonYazi)',
+              'basınçtaki $olay başlama sıcaklığı ${_t(nokta)} °C oluyor. Çözünen '
+              'madde kaç gramdır? ($kut; $sabitYazi; $iyonYazi)',
           ms,
           [ms * i, k / 2 * mk, ms * 2, ms / 2, n, ms / i],
           '$geri $su gram suda ${_t(k / 2)}·${_t(kg)} = ${_t(n * i)} mol '
-          'tanecik, yani ${_t(n)} mol madde bulunur. Kütle ${_t(n)}·${_t(mk)} '
-          '= ${_t(ms)} gramdır.',
+              'tanecik, yani ${_t(n)} mol madde bulunur. Kütle ${_t(n)}·${_t(mk)} '
+              '= ${_t(ms)} gramdır.',
           birim: 'g',
         );
       case 2:
         return _say(
           '${_t(ms)} gram $madde kaç gram saf suda çözülürse çözeltinin 1 atm '
-          'basınçtaki $olay başlama sıcaklığı ${_t(nokta)} °C olur? ($kut; '
-          '$sabitYazi; $iyonYazi)',
+              'basınçtaki $olay başlama sıcaklığı ${_t(nokta)} °C olur? ($kut; '
+              '$sabitYazi; $iyonYazi)',
           su,
           [su / i, su * i, su * 2, su / 2, su + 100],
           '$geri n = ${_t(ms)} / ${_t(mk)} = ${_t(n)} mol madde ${_t(n * i)} '
-          'mol tanecik verir. Su kütlesi ${_t(n * i)} / ${_t(k / 2)} = '
-          '${_t(kg)} kg, yani $su gramdır.',
+              'mol tanecik verir. Su kütlesi ${_t(n * i)} / ${_t(k / 2)} = '
+              '${_t(kg)} kg, yani $su gramdır.',
           birim: 'g',
         );
       case 3:
         return _say(
           '$su gram saf su ile hazırlanan $madde çözeltisinin 1 atm basınçtaki '
-          '$olay başlama sıcaklığı ${_t(nokta)} °C olarak ölçülüyor. Çözeltide '
-          'kaç mol $f çözünmüştür? ($sabitYazi; $iyonYazi)',
+              '$olay başlama sıcaklığı ${_t(nokta)} °C olarak ölçülüyor. Çözeltide '
+              'kaç mol $f çözünmüştür? ($sabitYazi; $iyonYazi)',
           n,
           [n * i, k / 2, k / 2 / i, n * 2, n / 2],
           '$geri $su gram suda ${_t(k / 2)}·${_t(kg)} = ${_t(n * i)} mol '
-          'tanecik bulunur; çözünen madde ${_t(n * i)} / $i = ${_t(n)} moldür.',
+              'tanecik bulunur; çözünen madde ${_t(n * i)} / $i = ${_t(n)} moldür.',
           birim: 'mol',
         );
       default:
         return _say(
           '${_t(n)} mol $madde, $su gram saf suda çözülüyor. Çözeltinin '
-          '${donma ? 'donma noktası saf suya göre kaç °C alçalır' : 'kaynama noktası saf suya göre kaç °C yükselir'}? '
-          '($sabitYazi; $iyonYazi)',
+              '${donma ? 'donma noktası saf suya göre kaç °C alçalır' : 'kaynama noktası saf suya göre kaç °C yükselir'}? '
+              '($sabitYazi; $iyonYazi)',
           dt,
-          [dt / i, sabit * n * i, dt * 2, dt / 2, (donma ? 0.52 : 1.86) * k / 2],
+          [
+            dt / i,
+            sabit * n * i,
+            dt * 2,
+            dt / 2,
+            (donma ? 0.52 : 1.86) * k / 2,
+          ],
           '$tanecik $dtYazi bulunur.',
           birim: '°C',
         );
@@ -2199,13 +2533,32 @@ final _f16 = lmAile(
 
 // Standart oluşum entalpileri (kJ/mol); (k) katı, (s) sıvı, (g) gaz.
 const _olusum = <String, int>{
-  'CO₂(g)': -394, 'H₂O(s)': -286, 'H₂O(g)': -242, 'CH₄(g)': -75,
-  'C₂H₆(g)': -85, 'C₃H₈(g)': -104, 'C₄H₁₀(g)': -126, 'C₂H₄(g)': 52,
-  'C₂H₂(g)': 227, 'CH₃OH(s)': -239, 'C₂H₅OH(s)': -278, 'CO(g)': -110,
-  'NH₃(g)': -46, 'NO(g)': 90, 'NO₂(g)': 34, 'SO₂(g)': -297, 'SO₃(g)': -396,
-  'H₂S(g)': -21, 'HCl(g)': -92, 'CaO(k)': -635, 'CaCO₃(k)': -1207,
-  'Fe₂O₃(k)': -824, 'Al₂O₃(k)': -1676, 'MgO(k)': -602,
-  'C₆H₁₂O₆(k)': -1273, 'C₆H₆(s)': 49,
+  'CO₂(g)': -394,
+  'H₂O(s)': -286,
+  'H₂O(g)': -242,
+  'CH₄(g)': -75,
+  'C₂H₆(g)': -85,
+  'C₃H₈(g)': -104,
+  'C₄H₁₀(g)': -126,
+  'C₂H₄(g)': 52,
+  'C₂H₂(g)': 227,
+  'CH₃OH(s)': -239,
+  'C₂H₅OH(s)': -278,
+  'CO(g)': -110,
+  'NH₃(g)': -46,
+  'NO(g)': 90,
+  'NO₂(g)': 34,
+  'SO₂(g)': -297,
+  'SO₃(g)': -396,
+  'H₂S(g)': -21,
+  'HCl(g)': -92,
+  'CaO(k)': -635,
+  'CaCO₃(k)': -1207,
+  'Fe₂O₃(k)': -824,
+  'Al₂O₃(k)': -1676,
+  'MgO(k)': -602,
+  'C₆H₁₂O₆(k)': -1273,
+  'C₆H₆(s)': 49,
 };
 
 // (girenler, ürünler, miktarı verilen bileşik). Tümü ekzotermiktir.
@@ -2241,7 +2594,10 @@ const _termoTepkimeler = [
 // sonuçlar, çözüm yolu)
 const _hessTakimlari = [
   (
-    ['C(k) + O₂(g) → CO₂(g), ΔH = −394 kJ', 'CO(g) + ½O₂(g) → CO₂(g), ΔH = −283 kJ'],
+    [
+      'C(k) + O₂(g) → CO₂(g), ΔH = −394 kJ',
+      'CO(g) + ½O₂(g) → CO₂(g), ΔH = −283 kJ',
+    ],
     'C(k) + ½O₂(g) → CO(g)',
     'CO(g)',
     -111,
@@ -2249,7 +2605,10 @@ const _hessTakimlari = [
     'I. tepkime aynen alınır, II. tepkime ters çevrilir: ΔH = −394 + 283 = −111 kJ.',
   ),
   (
-    ['S(k) + O₂(g) → SO₂(g), ΔH = −297 kJ', '2SO₂(g) + O₂(g) → 2SO₃(g), ΔH = −198 kJ'],
+    [
+      'S(k) + O₂(g) → SO₂(g), ΔH = −297 kJ',
+      '2SO₂(g) + O₂(g) → 2SO₃(g), ΔH = −198 kJ',
+    ],
     'S(k) + 3/2 O₂(g) → SO₃(g)',
     'SO₃(g)',
     -396,
@@ -2315,7 +2674,8 @@ final _f17 = lmAile(
       final liste = [
         for (var j = 0; j < bilinen.length; j++) '${rakam[j]}. ${bilinen[j]}',
       ].join('\n');
-      final giris = 'Aşağıdaki tepkimelerin entalpileri bilinmektedir:\n$liste\n'
+      final giris =
+          'Aşağıdaki tepkimelerin entalpileri bilinmektedir:\n$liste\n'
           'Buna göre $hedef tepkimesi';
       if (w == 0) {
         return _say(
@@ -2323,13 +2683,13 @@ final _f17 = lmAile(
           q,
           [yanlis[0] * n, yanlis[1] * n, q / 2, q * 2, -dh],
           '$yol ${_t(n)} mol $urun için ${_t(n)}·${-dh} = ${_t(q)} kJ ısı '
-          'açığa çıkar.',
+              'açığa çıkar.',
           birim: 'kJ',
         );
       }
       return _say(
         '$giris gerçekleşirken ${_t(q)} kJ ısı açığa çıktığına göre kaç mol '
-        '$urun oluşmuştur?',
+            '$urun oluşmuştur?',
         n,
         [q / yanlis[0], q / yanlis[1], n * 2, n / 2, n + 1],
         '$yol Oluşan $urun miktarı ${_t(q)} / ${-dh} = ${_t(n)} mol olur.',
@@ -2344,22 +2704,28 @@ final _f17 = lmAile(
       if (w == 0) {
         return _say(
           'Kalorimetre kabındaki $m gram suyun sıcaklığı $t1 °C değerinden '
-          '$t2 °C değerine çıkıyor. Suyun aldığı ısı kaç kJ olur? ($sabit)',
+              '$t2 °C değerine çıkıyor. Suyun aldığı ısı kaç kJ olur? ($sabit)',
           q,
-          [m * 4.2 * t2 / 1000, m * 4.2 * t1 / 1000, m * dt / 1000, q * 2, q / 2],
+          [
+            m * 4.2 * t2 / 1000,
+            m * 4.2 * t1 / 1000,
+            m * dt / 1000,
+            q * 2,
+            q / 2,
+          ],
           'ΔT = $t2 − $t1 = $dt °C olur. Q = m·c·ΔT = $m·4,2·$dt = '
-          '${_t(q * 1000)} J = ${_t(q)} kJ bulunur.',
+              '${_t(q * 1000)} J = ${_t(q)} kJ bulunur.',
           birim: 'kJ',
         );
       }
       return sayisal(
         'Kalorimetre kabındaki $t1 °C sıcaklıktaki $m gram suya ${_t(q)} kJ '
-        'ısı veriliyor. Isı kaybı olmadığına göre suyun son sıcaklığı kaç °C '
-        'olur? ($sabit)',
+            'ısı veriliyor. Isı kaybı olmadığına göre suyun son sıcaklığı kaç °C '
+            'olur? ($sabit)',
         t2,
         [dt, t2 + t1, t1 + 2 * dt, t2 - 5, t2 + 5],
         'ΔT = Q / (m·c) = ${_t(q * 1000)} / ($m·4,2) = $dt °C olur. Son '
-        'sıcaklık $t1 + $dt = $t2 °C bulunur.',
+            'sıcaklık $t1 + $dt = $t2 °C bulunur.',
         unit: '°C',
         positive: true,
       );
@@ -2400,50 +2766,51 @@ final _f17 = lmAile(
     final gramli = w == 1;
     final miktar = gramli ? '${_t(m)} gram $x' : '${_t(n)} mol $x';
     final kut = gramli ? ' (${_kut([x])})' : '';
-    final molYazi =
-        gramli ? '${_t(m)} / ${_t(mk)} = ${_t(n)} mol $x tepkimede yer alır. ' : '';
+    final molYazi = gramli
+        ? '${_t(m)} / ${_t(mk)} = ${_t(n)} mol $x tepkimede yer alır. '
+        : '';
     final dhYazi = 'ΔH = ΣΔH°f(ürünler) − ΣΔH°f(girenler) = $dh kJ olur.'
         .replaceFirst('-', '−');
     switch (c % 5) {
       case 0:
         return _say(
           '$denk tepkimesindeki bileşiklerin standart oluşum entalpileri '
-          '(kJ/mol): ${liste(true)}. Buna göre $miktar $fiil açığa çıkan ısı '
-          'kaç kJ olur?$kut',
+              '(kJ/mol): ${liste(true)}. Buna göre $miktar $fiil açığa çıkan ısı '
+              'kaç kJ olur?$kut',
           q,
           [-dh * n, yalin.abs() * n / kx, yalin.abs() * n, q / 2, q * 2, -dh],
           '$dhYazi $molYazi${kx == 1 ? '' : 'Bu değer $kx mol $x içindir. '}'
-          'Açığa çıkan ısı ${-dh}·${_t(n)}${kx == 1 ? '' : ' / $kx'} = '
-          '${_t(q)} kJ bulunur.',
+              'Açığa çıkan ısı ${-dh}·${_t(n)}${kx == 1 ? '' : ' / $kx'} = '
+              '${_t(q)} kJ bulunur.',
           birim: 'kJ',
         );
       case 3:
         return _say(
           '$denk tepkimesindeki bileşiklerin standart oluşum entalpileri '
-          '(kJ/mol): ${liste(true)}. Tepkimede ${_t(q)} kJ ısı açığa çıktığına '
-          'göre kaç ${gramli ? 'gram' : 'mol'} $x '
-          '${xUrun ? 'oluşmuştur' : 'harcanmıştır'}?$kut',
+              '(kJ/mol): ${liste(true)}. Tepkimede ${_t(q)} kJ ısı açığa çıktığına '
+              'göre kaç ${gramli ? 'gram' : 'mol'} $x '
+              '${xUrun ? 'oluşmuştur' : 'harcanmıştır'}?$kut',
           gramli ? m : n,
           gramli
               ? [m / kx, m * 2, m / 2, n, q / yalin.abs() * mk, m * kx]
               : [n / kx, n * 2, n / 2, q / yalin.abs(), n * kx, n + 1],
           '$dhYazi ${-dh} kJ ısı $kx mol $x için açığa çıkar; ${_t(q)} kJ için '
-          '${_t(q)}·$kx / ${-dh} = ${_t(n)} mol $x gerekir.'
-          '${gramli ? ' Kütlesi ${_t(n)}·${_t(mk)} = ${_t(m)} gramdır.' : ''}',
+              '${_t(q)}·$kx / ${-dh} = ${_t(n)} mol $x gerekir.'
+              '${gramli ? ' Kütlesi ${_t(n)}·${_t(mk)} = ${_t(m)} gramdır.' : ''}',
           birim: gramli ? 'g' : 'mol',
         );
       default:
         final diger = liste(false);
         return _say(
           '$denk tepkimesinde $miktar $fiil ${_t(q)} kJ ısı açığa çıkıyor. '
-          '${diger.isEmpty ? 'Elementlerin standart oluşum entalpisi sıfır kabul edildiğine' : 'Diğer bileşiklerin standart oluşum entalpileri (kJ/mol): $diger. Buna'} '
-          'göre $x bileşiğinin standart oluşum entalpisi kaç kJ/mol olur?$kut',
+              '${diger.isEmpty ? 'Elementlerin standart oluşum entalpisi sıfır kabul edildiğine' : 'Diğer bileşiklerin standart oluşum entalpileri (kJ/mol): $diger. Buna'} '
+              'göre $x bileşiğinin standart oluşum entalpisi kaç kJ/mol olur?$kut',
           hx,
           [-hx, dh / kx, hx * kx, hx + dh, (digerleri - dh).abs(), hx - 100],
           '$molYazi${_t(n)} mol için ${_t(q)} kJ açığa çıktığından tepkime '
-          'entalpisi (denklemdeki $kx mol $x için) ΔH = ${_t(dh)} kJ olur. ΔH = ΣΔH°f(ürünler) − '
-          'ΣΔH°f(girenler) eşitliğinde $x için x yazılırsa x = ${_t(hx)} '
-          'kJ/mol bulunur.',
+              'entalpisi (denklemdeki $kx mol $x için) ΔH = ${_t(dh)} kJ olur. ΔH = ΣΔH°f(ürünler) − '
+              'ΣΔH°f(girenler) eşitliğinde $x için x yazılırsa x = ${_t(hx)} '
+              'kJ/mol bulunur.',
           arti: false,
           isaret: true,
         );
@@ -2481,8 +2848,10 @@ const _dengeler = [
 ];
 
 const _tersDengeler = [
-  '2NH₃(g) ⇌ N₂(g) + 3H₂(g)', '2HI(g) ⇌ H₂(g) + I₂(g)',
-  '2SO₃(g) ⇌ 2SO₂(g) + O₂(g)', '2NO₂(g) ⇌ N₂O₄(g)',
+  '2NH₃(g) ⇌ N₂(g) + 3H₂(g)',
+  '2HI(g) ⇌ H₂(g) + I₂(g)',
+  '2SO₃(g) ⇌ 2SO₂(g) + O₂(g)',
+  '2NO₂(g) ⇌ N₂O₄(g)',
   'PCl₃(g) + Cl₂(g) ⇌ PCl₅(g)',
 ];
 
@@ -2501,9 +2870,26 @@ final _f18 = lmAile(
             : const [(1, 1), (2, 1), (1, 2), (2, 2), (3, 1)])[a % 5];
         final (pn, pd) = const [(2, 1), (3, 1), (4, 1), (5, 1), (1, 2)][a ~/ 5];
         final (qn, qd) = const [
-          (2, 1), (3, 1), (4, 1), (5, 1), (1, 2), (1, 3), (1, 4), (1, 5),
-          (3, 2), (5, 2), (2, 3), (3, 4), (4, 3), (5, 3), (5, 4), (2, 5),
-          (3, 5), (4, 5), (6, 1), (1, 6),
+          (2, 1),
+          (3, 1),
+          (4, 1),
+          (5, 1),
+          (1, 2),
+          (1, 3),
+          (1, 4),
+          (1, 5),
+          (3, 2),
+          (5, 2),
+          (2, 3),
+          (3, 4),
+          (4, 3),
+          (5, 3),
+          (5, 4),
+          (2, 5),
+          (3, 5),
+          (4, 5),
+          (6, 1),
+          (1, 6),
         ][b];
         final pay = _kuvvet(pn, m) * _kuvvet(qn, n);
         final payda = _kuvvet(pd, m) * _kuvvet(qd, n);
@@ -2518,8 +2904,8 @@ final _f18 = lmAile(
                   '${_hizBagintisi(m, n)}. ';
         return kesirli(
           '$giris Sabit sıcaklıkta X derişimi ${kesir(pn, pd)} katına, Y '
-          'derişimi ${kesir(qn, qd)} katına getirilirse tepkime hızı ilk hızın '
-          'kaç katı olur?',
+              'derişimi ${kesir(qn, qd)} katına getirilirse tepkime hızı ilk hızın '
+              'kaç katı olur?',
           pay,
           payda,
           [
@@ -2530,8 +2916,8 @@ final _f18 = lmAile(
             (_kuvvet(qn, n), _kuvvet(qd, n)),
           ],
           '${bag}Hız, X için $m. ve Y için $n. derecedendir: '
-          '(${kesir(pn, pd)})${_ust(m)}·(${kesir(qn, qd)})${_ust(n)} = '
-          '${kesir(pay, payda)} olur.',
+              '(${kesir(pn, pd)})${_ust(m)}·(${kesir(qn, qd)})${_ust(n)} = '
+              '${kesir(pay, payda)} olur.',
         );
       case 1:
         final (m, n) = const [(1, 1), (2, 1), (1, 2), (2, 2), (2, 0)][a % 5];
@@ -2540,31 +2926,32 @@ final _f18 = lmAile(
         final hiz = ki * _kuvvet(xi, m) * _kuvvet(yi, n) / 1000;
         final x = xi / 10, y = yi / 10;
         final bagi = _hizBagintisi(m, n);
-        final islem = '[X]${m == 1 ? '' : _ust(m)} = '
+        final islem =
+            '[X]${m == 1 ? '' : _ust(m)} = '
             '${_t(_kuvvet(xi, m) / _on(m), 4)}'
             '${n == 0 ? '' : ', [Y]${n == 1 ? '' : _ust(n)} = ${_t(_kuvvet(yi, n) / _on(n), 4)}'}';
         if (w == 0) {
           return _say(
             'X(g) + Y(g) → Z(g) tepkimesinin hız bağıntısı $bagi biçimindedir '
-            've belirli bir sıcaklıkta k = ${_t(k)} olarak verilmiştir. [X] = '
-            '${_t(x)} mol/L ve [Y] = ${_t(y)} mol/L olduğu anda tepkime hızı '
-            'kaç mol/(L·s) olur?',
+                've belirli bir sıcaklıkta k = ${_t(k)} olarak verilmiştir. [X] = '
+                '${_t(x)} mol/L ve [Y] = ${_t(y)} mol/L olduğu anda tepkime hızı '
+                'kaç mol/(L·s) olur?',
             hiz,
             [k * x * y, k * x, hiz * 10, hiz / 10, k * (x + y), hiz * 2],
             '$islem olur. Hız ${_t(k)} ile bu değerlerin çarpımıdır: '
-            '${_t(hiz, 3)} mol/(L·s).',
+                '${_t(hiz, 3)} mol/(L·s).',
             basamak: 3,
           );
         }
         return _say(
           'X(g) + Y(g) → Z(g) tepkimesinin hız bağıntısı $bagi biçimindedir. '
-          'Belirli bir sıcaklıkta [X] = ${_t(x)} mol/L ve [Y] = ${_t(y)} mol/L '
-          'olduğu anda tepkime hızı ${_t(hiz, 3)} mol/(L·s) olarak ölçülüyor. '
-          'Buna göre hız sabiti k sayısal olarak kaçtır?',
+              'Belirli bir sıcaklıkta [X] = ${_t(x)} mol/L ve [Y] = ${_t(y)} mol/L '
+              'olduğu anda tepkime hızı ${_t(hiz, 3)} mol/(L·s) olarak ölçülüyor. '
+              'Buna göre hız sabiti k sayısal olarak kaçtır?',
           k,
           [hiz / (x * y), hiz / x, k * 10, k / 10, hiz * x * y, k * 2],
           '$islem olur. k, hızın bu değerlerin çarpımına bölümüdür: k = '
-          '${_t(k)}.',
+              '${_t(k)}.',
         );
       case 2:
         final (m, n) = const [(1, 1), (2, 1), (1, 2), (2, 2), (0, 1)][a % 5];
@@ -2593,18 +2980,18 @@ final _f18 = lmAile(
             k,
             [h1 / 0.01, h1 / 0.1, h1 / 0.001, h1 / 0.0001, h1, k * 2],
             '$derece 1. deneyden k = ${_t(h1, 3)} / '
-            '${_t(1 / _on(m + n), 4)} = ${_t(k)} bulunur.',
+                '${_t(1 / _on(m + n), 4)} = ${_t(k)} bulunur.',
           );
         }
         final h4 = h1 * _kuvvet(5, m + n);
         return _say(
           '${deneyler}Buna göre [X] = 0,5 mol/L ve [Y] = 0,5 mol/L olduğunda '
-          'tepkime hızı kaç mol/(L·s) olur?',
+              'tepkime hızı kaç mol/(L·s) olur?',
           h4,
           [h1 * 5, h1 * 25, h1 * 125, h1 * 625, h1 * 10],
           '$derece 1. deneye göre her iki derişim 5 katına çıktığından hız '
-          '5${_ust(m + n)} = ${_kuvvet(5, m + n)} katına çıkar: '
-          '${_t(h1, 3)}·${_kuvvet(5, m + n)} = ${_t(h4, 3)} mol/(L·s).',
+              '5${_ust(m + n)} = ${_kuvvet(5, m + n)} katına çıkar: '
+              '${_t(h1, 3)}·${_kuvvet(5, m + n)} = ${_t(h4, 3)} mol/(L·s).',
           basamak: 3,
         );
       case 3:
@@ -2637,29 +3024,31 @@ final _f18 = lmAile(
         ]);
         String terim((String, int) t) =>
             '[${t.$1}]${t.$2 == 1 ? '' : _ust(t.$2)}';
-        final bagi = 'Kc = ${urun.map(terim).join('·')} / '
+        final bagi =
+            'Kc = ${urun.map(terim).join('·')} / '
             '${giren.length == 1 ? terim(giren.first) : '(${giren.map(terim).join('·')})'}';
-        final giris = '$denk tepkimesi belirli bir sıcaklıkta dengeye '
+        final giris =
+            '$denk tepkimesi belirli bir sıcaklıkta dengeye '
             'ulaştığında derişimler $veri olarak ölçülüyor.';
         if (w == 0) {
           return _oranli(
             '$giris Bu sıcaklıkta tepkimenin derişimler cinsinden denge sabiti '
-            '(Kc) kaçtır?',
+                '(Kc) kaçtır?',
             pay,
             payda,
             [(payda, pay), (yalinPay, yalinPayda), (yalinPay * 10, yalinPayda)],
             '$bagi bağıntısında değerler yerine yazılırsa Kc = '
-            '${_oran(pay, payda)} bulunur.',
+                '${_oran(pay, payda)} bulunur.',
           );
         }
         return _oranli(
           '$giris Aynı sıcaklıkta ${_tersDengeler[a % 5]} tepkimesinin '
-          'derişimler cinsinden denge sabiti kaçtır?',
+              'derişimler cinsinden denge sabiti kaçtır?',
           payda,
           pay,
           [(pay, payda), (yalinPayda, yalinPay), (yalinPayda, yalinPay * 10)],
           'Verilen tepkime için $bagi = ${_oran(pay, payda)} olur. Ters '
-          'tepkimenin denge sabiti bunun tersidir: ${_oran(payda, pay)}.',
+              'tepkimenin denge sabiti bunun tersidir: ${_oran(payda, pay)}.',
         );
       default:
         final v = w + 1; // kap hacmi (L)
@@ -2671,49 +3060,61 @@ final _f18 = lmAile(
           case 0:
             return _oranli(
               '$kap ${_t(kalan + yv)} mol PCl₅ gazı konuluyor. Sabit sıcaklıkta '
-              'PCl₅(g) ⇌ PCl₃(g) + Cl₂(g) dengesi kurulduğunda kapta ${_t(yv)} '
-              'mol PCl₃ bulunuyor. Buna göre denge sabiti (Kc) kaçtır?',
+                  'PCl₅(g) ⇌ PCl₃(g) + Cl₂(g) dengesi kurulduğunda kapta ${_t(yv)} '
+                  'mol PCl₃ bulunuyor. Buna göre denge sabiti (Kc) kaçtır?',
               yi * yi,
               10 * v * ri,
-              [(yi * yi, 10 * ri * (3 - v)), (yi, ri), (yi * yi, 10 * v * (ri + yi))],
+              [
+                (yi * yi, 10 * ri * (3 - v)),
+                (yi, ri),
+                (yi * yi, 10 * v * (ri + yi)),
+              ],
               'Dengede ${_t(yv)} mol PCl₃, ${_t(yv)} mol Cl₂ ve ${_t(kalan)} '
-              'mol PCl₅ bulunur. Derişimler mol sayılarının $v litreye '
-              'bölümüdür; Kc = [PCl₃]·[Cl₂] / [PCl₅] = '
-              '${_oran(yi * yi, 10 * v * ri)} olur.',
+                  'mol PCl₅ bulunur. Derişimler mol sayılarının $v litreye '
+                  'bölümüdür; Kc = [PCl₃]·[Cl₂] / [PCl₅] = '
+                  '${_oran(yi * yi, 10 * v * ri)} olur.',
             );
           case 1:
             return _oranli(
               '$kap ${_t(kalan + yv)} mol N₂O₄ gazı konuluyor. Sabit '
-              'sıcaklıkta N₂O₄(g) ⇌ 2NO₂(g) dengesi kurulduğunda kapta '
-              '${_t(2 * yv)} mol NO₂ bulunuyor. Buna göre denge sabiti (Kc) '
-              'kaçtır?',
+                  'sıcaklıkta N₂O₄(g) ⇌ 2NO₂(g) dengesi kurulduğunda kapta '
+                  '${_t(2 * yv)} mol NO₂ bulunuyor. Buna göre denge sabiti (Kc) '
+                  'kaçtır?',
               4 * yi * yi,
               10 * v * ri,
-              [(4 * yi * yi, 10 * ri * (3 - v)), (2 * yi, ri), (yi * yi, 10 * v * ri)],
+              [
+                (4 * yi * yi, 10 * ri * (3 - v)),
+                (2 * yi, ri),
+                (yi * yi, 10 * v * ri),
+              ],
               '${_t(2 * yv)} mol NO₂ oluşurken ${_t(yv)} mol N₂O₄ harcanır; '
-              'dengede ${_t(kalan)} mol N₂O₄ kalır. Derişimler mol sayılarının '
-              '$v litreye bölümüdür; Kc = [NO₂]² / [N₂O₄] = '
-              '${_oran(4 * yi * yi, 10 * v * ri)} olur.',
+                  'dengede ${_t(kalan)} mol N₂O₄ kalır. Derişimler mol sayılarının '
+                  '$v litreye bölümüdür; Kc = [NO₂]² / [N₂O₄] = '
+                  '${_oran(4 * yi * yi, 10 * v * ri)} olur.',
             );
           case 2:
             return _oranli(
               '$kap ${_t(kalan + yv)} mol H₂ ve ${_t(kalan + yv)} mol I₂ '
-              'gazları konuluyor. Sabit sıcaklıkta H₂(g) + I₂(g) ⇌ 2HI(g) '
-              'dengesi kurulduğunda kapta ${_t(2 * yv)} mol HI bulunuyor. Buna '
-              'göre denge sabiti (Kc) kaçtır?',
+                  'gazları konuluyor. Sabit sıcaklıkta H₂(g) + I₂(g) ⇌ 2HI(g) '
+                  'dengesi kurulduğunda kapta ${_t(2 * yv)} mol HI bulunuyor. Buna '
+                  'göre denge sabiti (Kc) kaçtır?',
               4 * yi * yi,
               ri * ri,
-              [(yi * yi, ri * ri), (2 * yi, ri), (4 * yi * yi, (ri + yi) * (ri + yi))],
+              [
+                (yi * yi, ri * ri),
+                (2 * yi, ri),
+                (4 * yi * yi, (ri + yi) * (ri + yi)),
+              ],
               '${_t(2 * yv)} mol HI oluşurken ${_t(yv)} mol H₂ ve ${_t(yv)} mol '
-              'I₂ harcanır; dengede her birinden ${_t(kalan)} mol kalır. Hacim '
-              'sadeleşir; Kc = [HI]² / ([H₂]·[I₂]) = ${_t(2 * yv)}² / '
-              '${_t(kalan)}² = ${_oran(4 * yi * yi, ri * ri)} olur.',
+                  'I₂ harcanır; dengede her birinden ${_t(kalan)} mol kalır. Hacim '
+                  'sadeleşir; Kc = [HI]² / ([H₂]·[I₂]) = ${_t(2 * yv)}² / '
+                  '${_t(kalan)}² = ${_oran(4 * yi * yi, ri * ri)} olur.',
             );
           case 3:
             return _oranli(
               '$kap ${_t(kalan + 2 * yv)} mol SO₃ gazı konuluyor. Sabit '
-              'sıcaklıkta 2SO₃(g) ⇌ 2SO₂(g) + O₂(g) dengesi kurulduğunda kapta '
-              '${_t(yv)} mol O₂ bulunuyor. Buna göre denge sabiti (Kc) kaçtır?',
+                  'sıcaklıkta 2SO₃(g) ⇌ 2SO₂(g) + O₂(g) dengesi kurulduğunda kapta '
+                  '${_t(yv)} mol O₂ bulunuyor. Buna göre denge sabiti (Kc) kaçtır?',
               4 * yi * yi * yi,
               10 * v * ri * ri,
               [
@@ -2722,24 +3123,24 @@ final _f18 = lmAile(
                 (2 * yi * yi, 10 * v * ri),
               ],
               '${_t(yv)} mol O₂ oluşurken ${_t(2 * yv)} mol SO₂ oluşur ve '
-              '${_t(2 * yv)} mol SO₃ harcanır; dengede ${_t(kalan)} mol SO₃ '
-              'kalır. Derişimler mol sayılarının $v litreye bölümüdür; Kc = '
-              '[SO₂]²·[O₂] / [SO₃]² = ${_oran(4 * yi * yi * yi, 10 * v * ri * ri)} '
-              'olur.',
+                  '${_t(2 * yv)} mol SO₃ harcanır; dengede ${_t(kalan)} mol SO₃ '
+                  'kalır. Derişimler mol sayılarının $v litreye bölümüdür; Kc = '
+                  '[SO₂]²·[O₂] / [SO₃]² = ${_oran(4 * yi * yi * yi, 10 * v * ri * ri)} '
+                  'olur.',
             );
           default:
             return _oranli(
               '$kap ${_t(kalan + yv)} mol CO ve ${_t(kalan + yv)} mol H₂O '
-              'gazları konuluyor. Sabit sıcaklıkta CO(g) + H₂O(g) ⇌ CO₂(g) + '
-              'H₂(g) dengesi kurulduğunda kapta ${_t(yv)} mol CO₂ bulunuyor. '
-              'Buna göre denge sabiti (Kc) kaçtır?',
+                  'gazları konuluyor. Sabit sıcaklıkta CO(g) + H₂O(g) ⇌ CO₂(g) + '
+                  'H₂(g) dengesi kurulduğunda kapta ${_t(yv)} mol CO₂ bulunuyor. '
+                  'Buna göre denge sabiti (Kc) kaçtır?',
               yi * yi,
               ri * ri,
               [(yi, ri), (yi * yi, (ri + yi) * (ri + yi)), (ri * ri, yi * yi)],
               'Dengede ${_t(yv)} mol CO₂ ve ${_t(yv)} mol H₂ oluşur; CO ve '
-              'H₂O gazlarından ${_t(kalan)} mol kalır. Hacim sadeleşir; Kc = '
-              '[CO₂]·[H₂] / ([CO]·[H₂O]) = ${_t(yv)}² / ${_t(kalan)}² = '
-              '${_oran(yi * yi, ri * ri)} olur.',
+                  'H₂O gazlarından ${_t(kalan)} mol kalır. Hacim sadeleşir; Kc = '
+                  '[CO₂]·[H₂] / ([CO]·[H₂O]) = ${_t(yv)}² / ${_t(kalan)}² = '
+                  '${_oran(yi * yi, ri * ri)} olur.',
             );
         }
     }
@@ -2754,23 +3155,53 @@ final _f18 = lmAile(
 
 // (formül, asit mi, formül başına H⁺ ya da OH⁻ sayısı); iki ayrı takım.
 const _kuvvetliler = [
-  ('HCl', true, 1), ('NaOH', false, 1), ('H₂SO₄', true, 2),
-  ('Ba(OH)₂', false, 2), ('HNO₃', true, 1), ('HBr', true, 1),
-  ('KOH', false, 1), ('HI', true, 1), ('Sr(OH)₂', false, 2),
+  ('HCl', true, 1),
+  ('NaOH', false, 1),
+  ('H₂SO₄', true, 2),
+  ('Ba(OH)₂', false, 2),
+  ('HNO₃', true, 1),
+  ('HBr', true, 1),
+  ('KOH', false, 1),
+  ('HI', true, 1),
+  ('Sr(OH)₂', false, 2),
   ('LiOH', false, 1),
 ];
 
 // (asit, H⁺ sayısı, baz, OH⁻ sayısı)
 const _notrCiftleri = [
-  ('HCl', 1, 'NaOH', 1), ('H₂SO₄', 2, 'NaOH', 1), ('HNO₃', 1, 'Ba(OH)₂', 2),
-  ('H₂SO₄', 2, 'KOH', 1), ('HCl', 1, 'Ba(OH)₂', 2), ('HNO₃', 1, 'KOH', 1),
-  ('H₂SO₄', 2, 'LiOH', 1), ('HBr', 1, 'Ba(OH)₂', 2), ('HCl', 1, 'KOH', 1),
+  ('HCl', 1, 'NaOH', 1),
+  ('H₂SO₄', 2, 'NaOH', 1),
+  ('HNO₃', 1, 'Ba(OH)₂', 2),
+  ('H₂SO₄', 2, 'KOH', 1),
+  ('HCl', 1, 'Ba(OH)₂', 2),
+  ('HNO₃', 1, 'KOH', 1),
+  ('H₂SO₄', 2, 'LiOH', 1),
+  ('HBr', 1, 'Ba(OH)₂', 2),
+  ('HCl', 1, 'KOH', 1),
   ('HBr', 1, 'NaOH', 1),
 ];
 
 const _litreler = [
-  0.02, 0.04, 0.05, 0.1, 0.2, 0.25, 0.4, 0.5, 0.8, 1, 2, 2.5, 4, 5, 8, 10,
-  20, 25, 40, 50,
+  0.02,
+  0.04,
+  0.05,
+  0.1,
+  0.2,
+  0.25,
+  0.4,
+  0.5,
+  0.8,
+  1,
+  2,
+  2.5,
+  4,
+  5,
+  8,
+  10,
+  20,
+  25,
+  40,
+  50,
 ];
 
 final _f19 = lmAile(
@@ -2792,20 +3223,28 @@ final _f19 = lmAile(
         final iyon = asit ? 'H⁺' : 'OH⁻';
         return sayisal(
           'Hacmi $hacim olan sulu çözeltide $n mol $f çözünmüştür. $f suda '
-          'tamamen iyonlaştığına göre 25 °C sıcaklıkta çözeltinin pH değeri '
-          'kaçtır?',
+              'tamamen iyonlaştığına göre 25 °C sıcaklıkta çözeltinin pH değeri '
+              'kaçtır?',
           ph,
           [14 - ph, ph + 1, ph - 1, 7],
           '${nu == 1 ? '' : 'Bir formül birimi $nu tane $iyon verir. '}[$iyon] '
-          '= ${nu == 1 ? '' : '$nu·'}$n / ${_t(v)} = 10${_ust(-k)} mol/L olur. '
-          '${asit ? 'pH = $k bulunur.' : 'pOH = $k olduğundan pH = 14 − $k = $ph bulunur.'}',
+              '= ${nu == 1 ? '' : '$nu·'}$n / ${_t(v)} = 10${_ust(-k)} mol/L olur. '
+              '${asit ? 'pH = $k bulunur.' : 'pOH = $k olduğundan pH = 14 − $k = $ph bulunur.'}',
           positive: true,
         );
       case 1:
         final (f, asit, _) = _kuvvetliler[a % 5 + 5 * w];
         final (k, j) = const [
-          (1, 1), (1, 2), (2, 1), (2, 2), (3, 1), (3, 2), (4, 1), (4, 2),
-          (1, 3), (2, 3),
+          (1, 1),
+          (1, 2),
+          (2, 1),
+          (2, 2),
+          (3, 1),
+          (3, 2),
+          (4, 1),
+          (4, 2),
+          (1, 3),
+          (2, 3),
         ][a ~/ 5 * 2 + b % 2];
         final v = const [10, 20, 25, 40, 50, 100, 200, 250, 400, 500][b ~/ 2];
         final kat = _kuvvet(10, j);
@@ -2815,7 +3254,13 @@ final _f19 = lmAile(
           'eklenerek hacmi $kat katına çıkarılıyor. Son çözeltinin pH değeri '
           'kaçtır?',
           son,
-          [asit ? ilk - j : (ilk + j <= 14 ? ilk + j : 14 - son), ilk, asit ? son + 1 : son - 1, 7, 14 - son],
+          [
+            asit ? ilk - j : (ilk + j <= 14 ? ilk + j : 14 - son),
+            ilk,
+            asit ? son + 1 : son - 1,
+            7,
+            14 - son,
+          ],
           asit
               ? 'Hacim $kat katına çıkınca [H⁺] 10${_ust(-k)} değerinden '
                     '10${_ust(-k - j)} mol/L değerine düşer; pH = $son olur.'
@@ -2831,45 +3276,63 @@ final _f19 = lmAile(
         final v1 = nb * 4 * jj * carpan, v2 = na * 5 * i * carpan;
         return sayisal(
           '${_t(d1)} mol/L derişimli $v1 mL $asit çözeltisini tamamen '
-          'nötrleştirmek için ${_t(d2)} mol/L derişimli $baz çözeltisinden kaç '
-          'mL gerekir?',
+              'nötrleştirmek için ${_t(d2)} mol/L derişimli $baz çözeltisinden kaç '
+              'mL gerekir?',
           v2,
           [v2 * nb ~/ na, v2 * nb, v1, v2 * 2, v2 ~/ 2, v2 + v1],
           'n(H⁺) = $na·${_t(d1)}·$v1 = ${_t(na * d1 * v1)} mmol olur. Nötralleşmede '
-          'n(H⁺) = n(OH⁻) olduğundan $nb·${_t(d2)}·V = ${_t(na * d1 * v1)} '
-          'eşitliğinden V = $v2 mL bulunur.',
+              'n(H⁺) = n(OH⁻) olduğundan $nb·${_t(d2)}·V = ${_t(na * d1 * v1)} '
+              'eşitliğinden V = $v2 mL bulunur.',
           unit: 'mL',
           positive: true,
         );
       case 3:
         final (asit, baz) = const [
-          ('HCl', 'NaOH'), ('HNO₃', 'KOH'), ('HBr', 'NaOH'), ('HCl', 'KOH'),
+          ('HCl', 'NaOH'),
+          ('HNO₃', 'KOH'),
+          ('HBr', 'NaOH'),
+          ('HCl', 'KOH'),
           ('HNO₃', 'NaOH'),
         ][a % 5];
         final k = w + 1;
         final az = (1 + a ~/ 5) / 10, cok = az + 2 / _on(k);
         final asitFazla = b.isEven;
-        final v = const [50, 100, 150, 200, 250, 300, 400, 500, 750, 1000][b ~/ 2];
+        final v = const [
+          50,
+          100,
+          150,
+          200,
+          250,
+          300,
+          400,
+          500,
+          750,
+          1000,
+        ][b ~/ 2];
         final ca = asitFazla ? cok : az, cb = asitFazla ? az : cok;
         final ph = asitFazla ? k : 14 - k;
         final fazla = asitFazla ? 'H⁺' : 'OH⁻';
         final artan = 2 / _on(k) * v / 1000;
         return sayisal(
           '${_t(ca)} mol/L derişimli $v mL $asit çözeltisi ile ${_t(cb)} mol/L '
-          'derişimli $v mL $baz çözeltisi karıştırılıyor. 25 °C sıcaklıkta '
-          'karışımın pH değeri kaçtır?',
+              'derişimli $v mL $baz çözeltisi karıştırılıyor. 25 °C sıcaklıkta '
+              'karışımın pH değeri kaçtır?',
           ph,
           [14 - ph, 7, ph + 1, ph - 1],
           'n(H⁺) = ${_t(ca * v / 1000, 4)} mol, n(OH⁻) = '
-          '${_t(cb * v / 1000, 4)} mol olur; ${_t(artan, 4)} mol $fazla artar. '
-          'Toplam hacim ${_t(2 * v / 1000)} L olduğundan [$fazla] = '
-          '10${_ust(-k)} mol/L, ${asitFazla ? 'pH = $k' : 'pOH = $k ve pH = 14 − $k = $ph'} '
-          'bulunur.',
+              '${_t(cb * v / 1000, 4)} mol olur; ${_t(artan, 4)} mol $fazla artar. '
+              'Toplam hacim ${_t(2 * v / 1000)} L olduğundan [$fazla] = '
+              '10${_ust(-k)} mol/L, ${asitFazla ? 'pH = $k' : 'pOH = $k ve pH = 14 − $k = $ph'} '
+              'bulunur.',
           positive: true,
         );
       default:
         final (baz, nb) = const [
-          ('NaOH', 1), ('KOH', 1), ('Ca(OH)₂', 2), ('LiOH', 1), ('Sr(OH)₂', 2),
+          ('NaOH', 1),
+          ('KOH', 1),
+          ('Ca(OH)₂', 2),
+          ('LiOH', 1),
+          ('Sr(OH)₂', 2),
         ][a % 5];
         final (asit, na) = w == 0 ? ('HCl', 1) : ('H₂SO₄', 2);
         final i = 1 + a ~/ 5;
@@ -2878,13 +3341,13 @@ final _f19 = lmAile(
         final mk = _mk(baz), m = bMol * mk;
         return sayisal(
           '${_t(m)} gram $baz bazını tamamen nötrleştirmek için ${_t(d)} mol/L '
-          'derişimli $asit çözeltisinden kaç mL gerekir? (${_kut([baz])})',
+              'derişimli $asit çözeltisinden kaç mL gerekir? (${_kut([baz])})',
           v,
           [v * na, v * nb ~/ na, v ~/ 2, v * 2, v + 100, v * nb],
           '${_t(m)} / ${_t(mk)} = ${_t(bMol, 3)} mol $baz ${_t(hMol)} mol OH⁻ '
-          'verir. Gereken asit ${_t(hMol)} / $na = ${_t(hMol / na, 3)} moldür; '
-          'hacmi ${_t(hMol / na, 3)} / ${_t(d)} = ${_t(v / 1000)} L = $v mL '
-          'olur.',
+              'verir. Gereken asit ${_t(hMol)} / $na = ${_t(hMol / na, 3)} moldür; '
+              'hacmi ${_t(hMol / na, 3)} / ${_t(d)} = ${_t(v / 1000)} L = $v mL '
+              'olur.',
           unit: 'mL',
           positive: true,
         );
@@ -2900,60 +3363,122 @@ final _f19 = lmAile(
 
 // (tanecik, sorulan atom, yükseltgenme basamağı): −4 … +4 arası.
 const _basamakA = [
-  ('NH₃', 'N', -3), ('CH₄', 'C', -4), ('H₂S', 'S', -2), ('H₂O₂', 'O', -1),
-  ('CaH₂', 'H', -1), ('N₂H₄', 'N', -2), ('OF₂', 'O', 2), ('CO', 'C', 2),
-  ('CO₂', 'C', 4), ('SO₂', 'S', 4), ('NO', 'N', 2), ('N₂O', 'N', 1),
-  ('NO₂', 'N', 4), ('N₂O₃', 'N', 3), ('HNO₂', 'N', 3), ('HClO', 'Cl', 1),
-  ('HClO₂', 'Cl', 3), ('MnO₂', 'Mn', 4), ('Fe₂O₃', 'Fe', 3),
-  ('Cu₂O', 'Cu', 1), ('SO₃²⁻', 'S', 4), ('NO₂⁻', 'N', 3), ('CO₃²⁻', 'C', 4),
-  ('C₂O₄²⁻', 'C', 3), ('NH₄⁺', 'N', -3),
+  ('NH₃', 'N', -3),
+  ('CH₄', 'C', -4),
+  ('H₂S', 'S', -2),
+  ('H₂O₂', 'O', -1),
+  ('CaH₂', 'H', -1),
+  ('N₂H₄', 'N', -2),
+  ('OF₂', 'O', 2),
+  ('CO', 'C', 2),
+  ('CO₂', 'C', 4),
+  ('SO₂', 'S', 4),
+  ('NO', 'N', 2),
+  ('N₂O', 'N', 1),
+  ('NO₂', 'N', 4),
+  ('N₂O₃', 'N', 3),
+  ('HNO₂', 'N', 3),
+  ('HClO', 'Cl', 1),
+  ('HClO₂', 'Cl', 3),
+  ('MnO₂', 'Mn', 4),
+  ('Fe₂O₃', 'Fe', 3),
+  ('Cu₂O', 'Cu', 1),
+  ('SO₃²⁻', 'S', 4),
+  ('NO₂⁻', 'N', 3),
+  ('CO₃²⁻', 'C', 4),
+  ('C₂O₄²⁻', 'C', 3),
+  ('NH₄⁺', 'N', -3),
 ];
 
 // (tanecik, sorulan atom, yükseltgenme basamağı): +5 … +7 arası.
 const _basamakB = [
-  ('KMnO₄', 'Mn', 7), ('K₂Cr₂O₇', 'Cr', 6), ('H₂SO₄', 'S', 6),
-  ('HNO₃', 'N', 5), ('HClO₄', 'Cl', 7), ('H₃PO₄', 'P', 5),
-  ('KClO₃', 'Cl', 5), ('Na₂SO₄', 'S', 6), ('SO₃', 'S', 6), ('N₂O₅', 'N', 5),
-  ('CrO₄²⁻', 'Cr', 6), ('MnO₄⁻', 'Mn', 7), ('NO₃⁻', 'N', 5),
-  ('SO₄²⁻', 'S', 6), ('PO₄³⁻', 'P', 5), ('Cr₂O₇²⁻', 'Cr', 6),
-  ('ClO₄⁻', 'Cl', 7), ('ClO₃⁻', 'Cl', 5), ('K₂MnO₄', 'Mn', 6),
+  ('KMnO₄', 'Mn', 7),
+  ('K₂Cr₂O₇', 'Cr', 6),
+  ('H₂SO₄', 'S', 6),
+  ('HNO₃', 'N', 5),
+  ('HClO₄', 'Cl', 7),
+  ('H₃PO₄', 'P', 5),
+  ('KClO₃', 'Cl', 5),
+  ('Na₂SO₄', 'S', 6),
+  ('SO₃', 'S', 6),
+  ('N₂O₅', 'N', 5),
+  ('CrO₄²⁻', 'Cr', 6),
+  ('MnO₄⁻', 'Mn', 7),
+  ('NO₃⁻', 'N', 5),
+  ('SO₄²⁻', 'S', 6),
+  ('PO₄³⁻', 'P', 5),
+  ('Cr₂O₇²⁻', 'Cr', 6),
+  ('ClO₄⁻', 'Cl', 7),
+  ('ClO₃⁻', 'Cl', 5),
+  ('K₂MnO₄', 'Mn', 6),
   ('P₄O₁₀', 'P', 5),
 ];
 
 // (metal, iyonu, standart indirgenme potansiyeli × 100 V); artan sırada.
 const _yariHucreler = [
-  ('Li', 'Li⁺', -304), ('K', 'K⁺', -293), ('Ca', 'Ca²⁺', -287),
-  ('Na', 'Na⁺', -271), ('Mg', 'Mg²⁺', -237), ('Al', 'Al³⁺', -166),
-  ('Mn', 'Mn²⁺', -118), ('Zn', 'Zn²⁺', -76), ('Cr', 'Cr³⁺', -74),
-  ('Fe', 'Fe²⁺', -44), ('Cd', 'Cd²⁺', -40), ('Co', 'Co²⁺', -28),
-  ('Ni', 'Ni²⁺', -25), ('Sn', 'Sn²⁺', -14), ('Pb', 'Pb²⁺', -13),
-  ('Cu', 'Cu²⁺', 34), ('Ag', 'Ag⁺', 80), ('Hg', 'Hg²⁺', 85),
+  ('Li', 'Li⁺', -304),
+  ('K', 'K⁺', -293),
+  ('Ca', 'Ca²⁺', -287),
+  ('Na', 'Na⁺', -271),
+  ('Mg', 'Mg²⁺', -237),
+  ('Al', 'Al³⁺', -166),
+  ('Mn', 'Mn²⁺', -118),
+  ('Zn', 'Zn²⁺', -76),
+  ('Cr', 'Cr³⁺', -74),
+  ('Fe', 'Fe²⁺', -44),
+  ('Cd', 'Cd²⁺', -40),
+  ('Co', 'Co²⁺', -28),
+  ('Ni', 'Ni²⁺', -25),
+  ('Sn', 'Sn²⁺', -14),
+  ('Pb', 'Pb²⁺', -13),
+  ('Cu', 'Cu²⁺', 34),
+  ('Ag', 'Ag⁺', 80),
+  ('Hg', 'Hg²⁺', 85),
   ('Au', 'Au³⁺', 150),
 ];
 
 // (ilk tanecik, son tanecik, atom, ilk basamak, son basamak, tanecikteki
 // atom sayısı)
 const _donusumler = [
-  ('MnO₄⁻', 'Mn²⁺', 'Mn', 7, 2, 1), ('MnO₄⁻', 'MnO₂', 'Mn', 7, 4, 1),
-  ('Cr₂O₇²⁻', 'Cr³⁺', 'Cr', 6, 3, 2), ('NO₃⁻', 'NO', 'N', 5, 2, 1),
-  ('IO₃⁻', 'I₂', 'I', 5, 0, 1), ('NO₃⁻', 'NH₄⁺', 'N', 5, -3, 1),
-  ('SO₄²⁻', 'SO₂', 'S', 6, 4, 1), ('ClO₃⁻', 'Cl⁻', 'Cl', 5, -1, 1),
-  ('Al', 'Al³⁺', 'Al', 0, 3, 1), ('N₂', 'NH₃', 'N', 0, -3, 2),
-  ('Sn²⁺', 'Sn⁴⁺', 'Sn', 2, 4, 1), ('H₂O₂', 'O₂', 'O', -1, 0, 2),
-  ('H₂O₂', 'H₂O', 'O', -1, -2, 2), ('C₂O₄²⁻', 'CO₂', 'C', 3, 4, 2),
-  ('SO₃²⁻', 'SO₄²⁻', 'S', 4, 6, 1), ('H₂S', 'S', 'S', -2, 0, 1),
-  ('H₂S', 'SO₂', 'S', -2, 4, 1), ('NH₃', 'NO', 'N', -3, 2, 1),
-  ('MnO₂', 'Mn²⁺', 'Mn', 4, 2, 1), ('ClO⁻', 'Cl⁻', 'Cl', 1, -1, 1),
-  ('NO₂⁻', 'NO₃⁻', 'N', 3, 5, 1), ('Cr³⁺', 'CrO₄²⁻', 'Cr', 3, 6, 1),
-  ('PbO₂', 'Pb²⁺', 'Pb', 4, 2, 1), ('SO₂', 'SO₄²⁻', 'S', 4, 6, 1),
+  ('MnO₄⁻', 'Mn²⁺', 'Mn', 7, 2, 1),
+  ('MnO₄⁻', 'MnO₂', 'Mn', 7, 4, 1),
+  ('Cr₂O₇²⁻', 'Cr³⁺', 'Cr', 6, 3, 2),
+  ('NO₃⁻', 'NO', 'N', 5, 2, 1),
+  ('IO₃⁻', 'I₂', 'I', 5, 0, 1),
+  ('NO₃⁻', 'NH₄⁺', 'N', 5, -3, 1),
+  ('SO₄²⁻', 'SO₂', 'S', 6, 4, 1),
+  ('ClO₃⁻', 'Cl⁻', 'Cl', 5, -1, 1),
+  ('Al', 'Al³⁺', 'Al', 0, 3, 1),
+  ('N₂', 'NH₃', 'N', 0, -3, 2),
+  ('Sn²⁺', 'Sn⁴⁺', 'Sn', 2, 4, 1),
+  ('H₂O₂', 'O₂', 'O', -1, 0, 2),
+  ('H₂O₂', 'H₂O', 'O', -1, -2, 2),
+  ('C₂O₄²⁻', 'CO₂', 'C', 3, 4, 2),
+  ('SO₃²⁻', 'SO₄²⁻', 'S', 4, 6, 1),
+  ('H₂S', 'S', 'S', -2, 0, 1),
+  ('H₂S', 'SO₂', 'S', -2, 4, 1),
+  ('NH₃', 'NO', 'N', -3, 2, 1),
+  ('MnO₂', 'Mn²⁺', 'Mn', 4, 2, 1),
+  ('ClO⁻', 'Cl⁻', 'Cl', 1, -1, 1),
+  ('NO₂⁻', 'NO₃⁻', 'N', 3, 5, 1),
+  ('Cr³⁺', 'CrO₄²⁻', 'Cr', 3, 6, 1),
+  ('PbO₂', 'Pb²⁺', 'Pb', 4, 2, 1),
+  ('SO₂', 'SO₄²⁻', 'S', 4, 6, 1),
   ('CH₄', 'CO₂', 'C', -4, 4, 1),
 ];
 
 // (metal, iyonu, iyon yükü); iki ayrı takım.
 const _kaplananlar = [
-  ('Ag', 'Ag⁺', 1), ('Cu', 'Cu²⁺', 2), ('Al', 'Al³⁺', 3), ('Zn', 'Zn²⁺', 2),
-  ('Fe', 'Fe²⁺', 2), ('Ni', 'Ni²⁺', 2), ('Mg', 'Mg²⁺', 2), ('Na', 'Na⁺', 1),
-  ('Ca', 'Ca²⁺', 2), ('Cr', 'Cr³⁺', 3),
+  ('Ag', 'Ag⁺', 1),
+  ('Cu', 'Cu²⁺', 2),
+  ('Al', 'Al³⁺', 3),
+  ('Zn', 'Zn²⁺', 2),
+  ('Fe', 'Fe²⁺', 2),
+  ('Ni', 'Ni²⁺', 2),
+  ('Mg', 'Mg²⁺', 2),
+  ('Na', 'Na⁺', 1),
+  ('Ca', 'Ca²⁺', 2),
+  ('Cr', 'Cr³⁺', 3),
 ];
 
 // (olay, gaz, 1 mol gaz için gereken elektron molü)
@@ -2993,19 +3518,22 @@ final _f20 = lmAile(
             'yüküne eşittir: $f1 içinde $e1 ${_isaretli(s1)}, $f2 içinde $e2 '
             '${_isaretli(s2)} değerini alır.';
         if (c == 0) {
-          return _say(
-            '$t1 ile ${t2}nın toplamı kaçtır?',
-            s1 + s2,
-            [s2 - s1, s2, s1.abs() + s2, s1 + s2 + 1, s1 + s2 - 1, s1 + s2 + 2],
-            '$bilgi Toplam ${_par(s1)} + $s2 = ${s1 + s2} olur.',
-          );
+          return _say('$t1 ile ${t2}nın toplamı kaçtır?', s1 + s2, [
+            s2 - s1,
+            s2,
+            s1.abs() + s2,
+            s1 + s2 + 1,
+            s1 + s2 - 1,
+            s1 + s2 + 2,
+          ], '$bilgi Toplam ${_par(s1)} + $s2 = ${s1 + s2} olur.');
         }
-        return _say(
-          '$t2, ${t1}ndan kaç fazladır?',
-          s2 - s1,
-          [s1 + s2, s2, (s2 - s1.abs()).abs(), s2 - s1 + 1, s2 - s1 - 1],
-          '$bilgi Fark $s2 − ${_par(s1)} = ${s2 - s1} olur.',
-        );
+        return _say('$t2, ${t1}ndan kaç fazladır?', s2 - s1, [
+          s1 + s2,
+          s2,
+          (s2 - s1.abs()).abs(),
+          s2 - s1 + 1,
+          s2 - s1 - 1,
+        ], '$bilgi Fark $s2 − ${_par(s1)} = ${s2 - s1} olur.');
       case 1:
         final sira = a * 20 + b;
         final cift = kombinasyon(_yariHucreler, 2, sira % 171, spread: false);
@@ -3024,9 +3552,9 @@ final _f20 = lmAile(
             final son = '$ic/$mc için ${_isaretli(ec)} V';
             return _say(
               'Standart indirgenme potansiyelleri '
-              '${once ? '$ilk, $son' : '$son, $ilk'} olarak verilmiştir. Bu iki '
-              'yarı hücreden oluşturulan galvanik pilin standart potansiyeli '
-              'kaç V olur?',
+                  '${once ? '$ilk, $son' : '$son, $ilk'} olarak verilmiştir. Bu iki '
+                  'yarı hücreden oluşturulan galvanik pilin standart potansiyeli '
+                  'kaç V olur?',
               pil,
               [(ec + ea).abs(), ec.abs(), ea.abs(), pil / 2, pil * 2],
               '$karar $hesap bulunur.',
@@ -3037,26 +3565,26 @@ final _f20 = lmAile(
             final son = '$mc/$ic için ${_isaretli(-ec)} V';
             return _say(
               'Standart yükseltgenme potansiyelleri '
-              '${once ? '$ilk, $son' : '$son, $ilk'} olarak verilmiştir. Bu iki '
-              'yarı hücreden oluşturulan galvanik pilin standart potansiyeli '
-              'kaç V olur?',
+                  '${once ? '$ilk, $son' : '$son, $ilk'} olarak verilmiştir. Bu iki '
+                  'yarı hücreden oluşturulan galvanik pilin standart potansiyeli '
+                  'kaç V olur?',
               pil,
               [(ec + ea).abs(), ec.abs(), ea.abs(), pil / 2, pil * 2],
               'Yükseltgenme potansiyeli büyük olan $ma anot, küçük olan $mc '
-              'katot olur. E°pil = E°yük(anot) − E°yük(katot) = ${_t(-ea)} − '
-              '${_par(-ec)} = ${_t(pil)} V bulunur.',
+                  'katot olur. E°pil = E°yük(anot) − E°yük(katot) = ${_t(-ea)} − '
+                  '${_par(-ec)} = ${_t(pil)} V bulunur.',
               birim: 'V',
             );
           default:
             return _say(
               'Anodu $ma, katodu $mc olan galvanik pilin standart potansiyeli '
-              '${_t(pil)} V olarak ölçülüyor. $ic/$mc yarı hücresinin standart '
-              'indirgenme potansiyeli ${_isaretli(ec)} V olduğuna göre $ia/$ma '
-              'yarı hücresinin standart indirgenme potansiyeli kaç V olur?',
+                  '${_t(pil)} V olarak ölçülüyor. $ic/$mc yarı hücresinin standart '
+                  'indirgenme potansiyeli ${_isaretli(ec)} V olduğuna göre $ia/$ma '
+                  'yarı hücresinin standart indirgenme potansiyeli kaç V olur?',
               ea,
               [-ea, ec + pil, -(ec + pil), pil, -pil, ea - 1],
               'E°pil = E°katot − E°anot eşitliğinden E°anot = ${_t(ec)} − '
-              '${_t(pil)} = ${_t(ea)} V bulunur.',
+                  '${_t(pil)} = ${_t(ea)} V bulunur.',
               birim: 'V',
               arti: false,
               isaret: true,
@@ -3069,15 +3597,22 @@ final _f20 = lmAile(
         final alir = s1 > s2;
         return _say(
           'Bir tepkimede ${_t(n)} mol $ilk taneciğinin tamamı $son taneciğine '
-          'dönüşüyor. Bu dönüşümde $ilk tarafından '
-          '${alir ? 'alınan' : 'verilen'} elektron kaç moldür?',
+              'dönüşüyor. Bu dönüşümde $ilk tarafından '
+              '${alir ? 'alınan' : 'verilen'} elektron kaç moldür?',
           e * n,
-          [n * (e + 1), if (e > 1) n * (e - 1), n * e * 2, n * e / 2, n, n * (e + 2)],
+          [
+            n * (e + 1),
+            if (e > 1) n * (e - 1),
+            n * e * 2,
+            n * e / 2,
+            n,
+            n * (e + 2),
+          ],
           '$el atomunun yükseltgenme basamağı ${_isaretli(s1)} değerinden '
-          '${_isaretli(s2)} değerine ${alir ? 'iner' : 'çıkar'}; atom başına '
-          '$fark elektron ${alir ? 'alınır' : 'verilir'}. '
-          '${adet == 1 ? '' : 'Bir $ilk taneciğinde $adet tane $el atomu bulunduğundan tanecik başına $e elektron aktarılır. '}'
-          '${_t(n)} mol için ${_t(n)}·$e = ${_t(e * n)} mol elektron bulunur.',
+              '${_isaretli(s2)} değerine ${alir ? 'iner' : 'çıkar'}; atom başına '
+              '$fark elektron ${alir ? 'alınır' : 'verilir'}. '
+              '${adet == 1 ? '' : 'Bir $ilk taneciğinde $adet tane $el atomu bulunduğundan tanecik başına $e elektron aktarılır. '}'
+              '${_t(n)} mol için ${_t(n)}·$e = ${_t(e * n)} mol elektron bulunur.',
           birim: 'mol',
         );
       case 3:
@@ -3088,22 +3623,23 @@ final _f20 = lmAile(
         final ne = k / 20, v = 22.4 * ne / ze;
         return _say(
           '$olay $gaz gazı açığa çıkmaktadır. Hücreden ${_t(akim)} amperlik '
-          'akım $sure saniye boyunca geçirildiğinde normal koşullarda kaç '
-          'litre $gaz gazı elde edilir? ($_faraday; normal koşullarda 1 mol '
-          'gaz 22,4 L hacim kaplar)',
+              'akım $sure saniye boyunca geçirildiğinde normal koşullarda kaç '
+              'litre $gaz gazı elde edilir? ($_faraday; normal koşullarda 1 mol '
+              'gaz 22,4 L hacim kaplar)',
           v,
           [22.4 * ne, v * 2, v / 2, ne / ze, 22.4 * ne * ze],
           'Q = ${_t(akim)}·$sure = ${4825 * k} C, n(e⁻) = ${4825 * k} / 96500 '
-          '= ${_t(ne)} mol olur. 1 mol $gaz için $ze mol elektron gerektiğinden '
-          '${_t(ne)} / $ze = ${_t(ne / ze, 4)} mol gaz oluşur; hacmi '
-          '${_t(v)} L bulunur.',
+              '= ${_t(ne)} mol olur. 1 mol $gaz için $ze mol elektron gerektiğinden '
+              '${_t(ne)} / $ze = ${_t(ne / ze, 4)} mol gaz oluşur; hacmi '
+              '${_t(v)} L bulunur.',
           birim: 'L',
         );
       case 8:
         final ciftler = [
           for (var i = 0; i < 6; i++)
             for (var j = 0; j < 6; j++)
-              if (i != j) (const [0, 1, 2, 3, 5, 9][i], const [0, 1, 2, 3, 5, 9][j]),
+              if (i != j)
+                (const [0, 1, 2, 3, 5, 9][i], const [0, 1, 2, 3, 5, 9][j]),
         ];
         final (i1, i2) = ciftler[a];
         final (m1, y1, z1) = _kaplananlar[i1];
@@ -3113,23 +3649,25 @@ final _f20 = lmAile(
         final g1 = ne / z1 * k1, g2 = ne / z2 * k2;
         return _say(
           'Seri bağlı iki elektroliz hücresinden birincisinde $y1 iyonları $m1 '
-          'metaline, ikincisinde $y2 iyonları $m2 metaline indirgenmektedir. '
-          'Devreden bir süre akım geçirildiğinde birinci hücrenin katodunda '
-          '${_t(g1)} gram $m1 toplandığına göre ikinci hücrenin katodunda kaç '
-          'gram $m2 toplanır? ($m1: ${_t(k1)}, $m2: ${_t(k2)})',
+              'metaline, ikincisinde $y2 iyonları $m2 metaline indirgenmektedir. '
+              'Devreden bir süre akım geçirildiğinde birinci hücrenin katodunda '
+              '${_t(g1)} gram $m1 toplandığına göre ikinci hücrenin katodunda kaç '
+              'gram $m2 toplanır? ($m1: ${_t(k1)}, $m2: ${_t(k2)})',
           g2,
           [g1 * k2 / k1, g1, g2 * z2 / z1, g1 * z1 / z2, g2 * 2, g2 / 2],
           'Birinci hücrede ${_t(g1)} / ${_t(k1)} = ${_t(ne / z1)} mol $m1 için '
-          '${_t(ne / z1)}·$z1 = ${_t(ne)} mol elektron geçer. Seri bağlı '
-          'hücrelerden aynı yük geçtiğinden ikinci hücrede ${_t(ne)} / $z2 = '
-          '${_t(ne / z2)} mol $m2, yani ${_t(g2)} gram metal toplanır.',
+              '${_t(ne / z1)}·$z1 = ${_t(ne)} mol elektron geçer. Seri bağlı '
+              'hücrelerden aynı yük geçtiğinden ikinci hücrede ${_t(ne)} / $z2 = '
+              '${_t(ne / z2)} mol $m2, yani ${_t(g2)} gram metal toplanır.',
           birim: 'g',
         );
       default:
         // Katotta metal toplanması: c = 2, 7 (akım ve süre), c = 4, 9 (yük).
-        final (metal, iyon, z) = _kaplananlar[a % 5 + (c == 7 || c == 9 ? 5 : 0)];
+        final (metal, iyon, z) =
+            _kaplananlar[a % 5 + (c == 7 || c == 9 ? 5 : 0)];
         final ak = _atomKutlesi[metal]!;
-        final giris = '$iyon iyonlarının katotta $metal metaline indirgendiği '
+        final giris =
+            '$iyon iyonlarının katotta $metal metaline indirgendiği '
             'bir elektroliz hücresinden';
         if (c == 2 || c == 7) {
           final akim = _akimlar[a ~/ 5];
@@ -3143,25 +3681,25 @@ final _f20 = lmAile(
           if (c == 2) {
             return _say(
               '$giris ${_t(akim)} amperlik akım $sure saniye boyunca '
-              'geçiriliyor. Katotta kaç gram $metal toplanır? ($metal: '
-              '${_t(ak)}; $_faraday)',
+                  'geçiriliyor. Katotta kaç gram $metal toplanır? ($metal: '
+                  '${_t(ak)}; $_faraday)',
               m,
               [m * z, mol * z, m * 2, m / 2, m / z, m + ak / 100],
               'Q = ${_t(akim)}·$sure = $yuk C, n(e⁻) = $yuk / 96500 = '
-              '${_t(mol * z)} mol olur. 1 mol $metal için $z mol elektron '
-              'gerektiğinden ${_t(mol)} mol, yani ${_t(m)} gram $metal '
-              'toplanır.',
+                  '${_t(mol * z)} mol olur. 1 mol $metal için $z mol elektron '
+                  'gerektiğinden ${_t(mol)} mol, yani ${_t(m)} gram $metal '
+                  'toplanır.',
               birim: 'g',
             );
           }
           return sayisal(
             '$giris ${_t(akim)} amperlik akım geçiriliyor. Katotta ${_t(m)} '
-            'gram $metal toplanması için akım kaç saniye geçirilmelidir? '
-            '($metal: ${_t(ak)}; $_faraday)',
+                'gram $metal toplanması için akım kaç saniye geçirilmelidir? '
+                '($metal: ${_t(ak)}; $_faraday)',
             sure,
             [sure ~/ z, sure * z, sure * 2, sure ~/ 2, sure + 100],
             '$yol Q = ${_t(mol * z)}·96500 = $yuk C olur. t = Q / I = $yuk / '
-            '${_t(akim)} = $sure saniye bulunur.',
+                '${_t(akim)} = $sure saniye bulunur.',
             unit: 's',
             positive: true,
           );
@@ -3172,27 +3710,27 @@ final _f20 = lmAile(
         if (c == 4) {
           return sayisal(
             '$giris akım geçiriliyor. Katotta ${_t(m)} gram $metal toplanması '
-            'için devreden kaç coulomb yük geçmelidir? ($metal: ${_t(ak)}; '
-            '$_faraday)',
+                'için devreden kaç coulomb yük geçmelidir? ($metal: ${_t(ak)}; '
+                '$_faraday)',
             yuk,
             [965 * k, 965 * k * (z + 1), yuk * 2, yuk ~/ 2, 96500 * z],
             '${_t(m)} gram $metal ${_t(mol)} moldür ve ${_t(mol)}·$z = '
-            '${_t(mol * z)} mol elektron gerektirir. Q = ${_t(mol * z)}·96500 '
-            '= $yuk C bulunur.',
+                '${_t(mol * z)} mol elektron gerektirir. Q = ${_t(mol * z)}·96500 '
+                '= $yuk C bulunur.',
             unit: 'C',
             positive: true,
           );
         }
         return _say(
           'Bir X metalinin erimiş tuzunun elektrolizinde devreden $yuk coulomb '
-          'yük geçtiğinde katotta ${_t(m)} gram X metali toplanıyor. X '
-          'metalinin atom kütlesi ${_t(ak)} olduğuna göre tuzdaki X iyonunun '
-          'yükü kaçtır? ($_faraday)',
+              'yük geçtiğinde katotta ${_t(m)} gram X metali toplanıyor. X '
+              'metalinin atom kütlesi ${_t(ak)} olduğuna göre tuzdaki X iyonunun '
+              'yükü kaçtır? ($_faraday)',
           z,
           [z + 1, z - 1, z + 2, z + 3],
           'n(e⁻) = $yuk / 96500 = ${_t(mol * z)} mol, n(X) = ${_t(m)} / '
-          '${_t(ak)} = ${_t(mol)} mol olur. Atom başına ${_t(mol * z)} / '
-          '${_t(mol)} = $z elektron alındığından iyonun yükü +$z bulunur.',
+              '${_t(ak)} = ${_t(mol)} mol olur. Atom başına ${_t(mol * z)} / '
+              '${_t(mol)} = $z elektron alındığından iyonun yükü +$z bulunur.',
           isaret: true,
         );
     }
@@ -3202,6 +3740,24 @@ final _f20 = lmAile(
 );
 
 final lmKimya = <AdvancedFamily>[
-  _f01, _f02, _f03, _f04, _f05, _f06, _f07, _f08, _f09, _f10, _f11, _f12,
-  _f13, _f14, _f15, _f16, _f17, _f18, _f19, _f20,
+  _f01,
+  _f02,
+  _f03,
+  _f04,
+  _f05,
+  _f06,
+  _f07,
+  _f08,
+  _f09,
+  _f10,
+  _f11,
+  _f12,
+  _f13,
+  _f14,
+  _f15,
+  _f16,
+  _f17,
+  _f18,
+  _f19,
+  _f20,
 ];
