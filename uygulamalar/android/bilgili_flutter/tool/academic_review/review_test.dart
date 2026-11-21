@@ -219,7 +219,7 @@ void main() {
         'samples': sampleRows,
       });
     }
-    expect(count, 1270439);
+    expect(count, 2270439);
     expect(signatures.length, count);
     expect(blooms.keys.toSet(), BloomLevel.values.map((b) => b.label).toSet());
     expect(

@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'applied.dart';
 import 'common.dart';
+import 'lise_metin.dart';
 import 'math.dart';
 import 'physics.dart';
 import 'plates.dart';
@@ -32,6 +33,7 @@ class AdvancedCatalog {
     ...appliedFamilies,
     ...plateFamilies,
     ...renewedFamilies,
+    ...liseMetinFamilies,
   ]);
   static final _byKey = {for (final f in families) f.key: f};
   static final all = FamilyQuestions(families);

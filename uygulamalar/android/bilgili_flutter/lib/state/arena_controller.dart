@@ -318,6 +318,8 @@ class ArenaController extends ChangeNotifier {
       add(level.name, '${level.label} · Akademik Soru Bankası',
           AdvancedCatalog.select(level: level));
     }
+    add('lise_metin', 'Lise · Metin Soru Bankası',
+        AdvancedCatalog.select(level: StudyLevel.lise, format: QuestionFormat.text));
     for (final bloom in BloomLevel.values) {
       add('bloom_${bloom.name}', 'Bloom · ${bloom.label}', AdvancedCatalog.select(bloom: bloom));
     }

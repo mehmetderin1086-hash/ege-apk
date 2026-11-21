@@ -40,6 +40,8 @@ class AdvancedFamily {
   final CreationTask Function(AdvancedItem, int)? creation;
   final MultiSelectTask Function(AdvancedItem, int)? multiSelect;
 
+  /// Sorunun kaynak etiketi; verilmezse akademik bankanın etiketi kullanılır.
+  final String? sourceLabel;
 
   const AdvancedFamily({
     required this.key,
@@ -57,6 +59,7 @@ class AdvancedFamily {
     this.multiSelect,
     this.exam,
     this.lesson,
+    this.sourceLabel,
   });
 
   ResponseType responseAt(int index) {
@@ -151,7 +154,7 @@ class AdvancedFamily {
       exam: exam,
       lesson: lesson ?? title,
       visual: item.visual,
-      sourceModel: 'GPT-6.2 Astra · Akademik Banka',
+      sourceModel: sourceLabel ?? 'GPT-6.2 Astra · Akademik Banka',
     );
   }
 }
