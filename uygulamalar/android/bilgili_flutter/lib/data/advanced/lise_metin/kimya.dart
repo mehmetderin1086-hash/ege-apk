@@ -2140,8 +2140,268 @@ final _f16 = lmAile(
   lesson: 'Kimya',
 );
 
+// ---------------------------------------------------------------------------
+// 17. Tepkime entalpisi: oluşum entalpileri, Hess yasası, kalorimetri
+// ---------------------------------------------------------------------------
+
+// Standart oluşum entalpileri (kJ/mol); (k) katı, (s) sıvı, (g) gaz.
+const _olusum = <String, int>{
+  'CO₂(g)': -394, 'H₂O(s)': -286, 'H₂O(g)': -242, 'CH₄(g)': -75,
+  'C₂H₆(g)': -85, 'C₃H₈(g)': -104, 'C₄H₁₀(g)': -126, 'C₂H₄(g)': 52,
+  'C₂H₂(g)': 227, 'CH₃OH(s)': -239, 'C₂H₅OH(s)': -278, 'CO(g)': -110,
+  'NH₃(g)': -46, 'NO(g)': 90, 'NO₂(g)': 34, 'SO₂(g)': -297, 'SO₃(g)': -396,
+  'H₂S(g)': -21, 'HCl(g)': -92, 'CaO(k)': -635, 'CaCO₃(k)': -1207,
+  'Fe₂O₃(k)': -824, 'Al₂O₃(k)': -1676, 'MgO(k)': -602,
+  'C₆H₁₂O₆(k)': -1273, 'C₆H₆(s)': 49,
+};
+
+// (girenler, ürünler, miktarı verilen bileşik). Tümü ekzotermiktir.
+const _termoTepkimeler = [
+  ('CH₄(g) + 2O₂(g)', 'CO₂(g) + 2H₂O(s)', 'CH₄(g)'),
+  ('2C₂H₆(g) + 7O₂(g)', '4CO₂(g) + 6H₂O(s)', 'C₂H₆(g)'),
+  ('C₃H₈(g) + 5O₂(g)', '3CO₂(g) + 4H₂O(s)', 'C₃H₈(g)'),
+  ('C₂H₄(g) + 3O₂(g)', '2CO₂(g) + 2H₂O(s)', 'C₂H₄(g)'),
+  ('2C₂H₂(g) + 5O₂(g)', '4CO₂(g) + 2H₂O(s)', 'C₂H₂(g)'),
+  ('C₂H₅OH(s) + 3O₂(g)', '2CO₂(g) + 3H₂O(s)', 'C₂H₅OH(s)'),
+  ('2CH₃OH(s) + 3O₂(g)', '2CO₂(g) + 4H₂O(s)', 'CH₃OH(s)'),
+  ('2CO(g) + O₂(g)', '2CO₂(g)', 'CO(g)'),
+  ('2SO₂(g) + O₂(g)', '2SO₃(g)', 'SO₂(g)'),
+  ('2H₂S(g) + 3O₂(g)', '2SO₂(g) + 2H₂O(s)', 'H₂S(g)'),
+  ('4NH₃(g) + 5O₂(g)', '4NO(g) + 6H₂O(g)', 'NH₃(g)'),
+  ('2NO(g) + O₂(g)', '2NO₂(g)', 'NO(g)'),
+  ('Fe₂O₃(k) + 3CO(g)', '2Fe(k) + 3CO₂(g)', 'Fe₂O₃(k)'),
+  ('2Al(k) + Fe₂O₃(k)', 'Al₂O₃(k) + 2Fe(k)', 'Fe₂O₃(k)'),
+  ('C₆H₁₂O₆(k) + 6O₂(g)', '6CO₂(g) + 6H₂O(s)', 'C₆H₁₂O₆(k)'),
+  ('CO(g) + H₂O(g)', 'CO₂(g) + H₂(g)', 'CO(g)'),
+  ('C₂H₄(g) + H₂(g)', 'C₂H₆(g)', 'C₂H₄(g)'),
+  ('C₂H₂(g) + 2H₂(g)', 'C₂H₆(g)', 'C₂H₂(g)'),
+  ('N₂(g) + 3H₂(g)', '2NH₃(g)', 'NH₃(g)'),
+  ('2C₄H₁₀(g) + 13O₂(g)', '8CO₂(g) + 10H₂O(s)', 'C₄H₁₀(g)'),
+  ('2C₆H₆(s) + 15O₂(g)', '12CO₂(g) + 6H₂O(s)', 'C₆H₆(s)'),
+  ('CaO(k) + CO₂(g)', 'CaCO₃(k)', 'CaO(k)'),
+  ('H₂(g) + Cl₂(g)', '2HCl(g)', 'HCl(g)'),
+  ('2Mg(k) + CO₂(g)', '2MgO(k) + C(k)', 'CO₂(g)'),
+  ('CO(g) + 2H₂(g)', 'CH₃OH(s)', 'CO(g)'),
+];
+
+// (bilinen tepkimeler, hedef tepkime, ürün, hedefin entalpisi, tipik yanlış
+// sonuçlar, çözüm yolu)
+const _hessTakimlari = [
+  (
+    ['C(k) + O₂(g) → CO₂(g), ΔH = −394 kJ', 'CO(g) + ½O₂(g) → CO₂(g), ΔH = −283 kJ'],
+    'C(k) + ½O₂(g) → CO(g)',
+    'CO(g)',
+    -111,
+    [677, 394],
+    'I. tepkime aynen alınır, II. tepkime ters çevrilir: ΔH = −394 + 283 = −111 kJ.',
+  ),
+  (
+    ['S(k) + O₂(g) → SO₂(g), ΔH = −297 kJ', '2SO₂(g) + O₂(g) → 2SO₃(g), ΔH = −198 kJ'],
+    'S(k) + 3/2 O₂(g) → SO₃(g)',
+    'SO₃(g)',
+    -396,
+    [495, 99],
+    'I. tepkime aynen alınır, II. tepkime ikiye bölünür: ΔH = −297 − 99 = −396 kJ.',
+  ),
+  (
+    ['H₂(g) + ½O₂(g) → H₂O(g), ΔH = −242 kJ', 'H₂O(s) → H₂O(g), ΔH = +44 kJ'],
+    'H₂(g) + ½O₂(g) → H₂O(s)',
+    'H₂O(s)',
+    -286,
+    [198, 242],
+    'I. tepkime aynen alınır, II. tepkime ters çevrilir: ΔH = −242 − 44 = −286 kJ.',
+  ),
+  (
+    [
+      'C₂H₄(g) + 3O₂(g) → 2CO₂(g) + 2H₂O(s), ΔH = −1411 kJ',
+      'C₂H₆(g) + 7/2 O₂(g) → 2CO₂(g) + 3H₂O(s), ΔH = −1560 kJ',
+      'H₂(g) + ½O₂(g) → H₂O(s), ΔH = −286 kJ',
+    ],
+    'C₂H₄(g) + H₂(g) → C₂H₆(g)',
+    'C₂H₆(g)',
+    -137,
+    [3257, 435],
+    'I. ve III. tepkimeler aynen alınır, II. tepkime ters çevrilir: ΔH = −1411 − 286 + 1560 = −137 kJ.',
+  ),
+  (
+    [
+      'C(k) + O₂(g) → CO₂(g), ΔH = −394 kJ',
+      'H₂(g) + ½O₂(g) → H₂O(s), ΔH = −286 kJ',
+      'CH₄(g) + 2O₂(g) → CO₂(g) + 2H₂O(s), ΔH = −891 kJ',
+    ],
+    'C(k) + 2H₂(g) → CH₄(g)',
+    'CH₄(g)',
+    -75,
+    [211, 1571],
+    'I. tepkime aynen, II. tepkime 2 ile çarpılarak alınır, III. tepkime ters çevrilir: ΔH = −394 − 572 + 891 = −75 kJ.',
+  ),
+];
+
+final _katsayiDeseni = RegExp(r'^(\d*)(.+)$');
+
+/// “2CO(g) + O₂(g)” → [(2, 'CO(g)'), (1, 'O₂(g)')]
+List<(int, String)> _terimler(String s) => [
+  for (final t in s.split(' + '))
+    if (_katsayiDeseni.firstMatch(t) case final m?)
+      (m.group(1)!.isEmpty ? 1 : int.parse(m.group(1)!), m.group(2)!),
+];
+
+final _f17 = lmAile(
+  'kim_termokimya',
+  'Tepkime entalpisi, Hess yasası ve kalorimetri',
+  Topic.chemistry,
+  Difficulty.hard,
+  BloomLevel.analiz,
+  (a, b, c) {
+    final w = c ~/ 5;
+    if (c % 5 == 1) {
+      final (bilinen, hedef, urun, dh, yanlis, yol) = _hessTakimlari[a % 5];
+      final n = (1 + b + 20 * (a ~/ 5)) / 10;
+      final q = -dh * n;
+      const rakam = ['I', 'II', 'III'];
+      final liste = [
+        for (var j = 0; j < bilinen.length; j++) '${rakam[j]}. ${bilinen[j]}',
+      ].join('\n');
+      final giris = 'Aşağıdaki tepkimelerin entalpileri bilinmektedir:\n$liste\n'
+          'Buna göre $hedef tepkimesi';
+      if (w == 0) {
+        return _say(
+          '$giris ile ${_t(n)} mol $urun oluşurken açığa çıkan ısı kaç kJ olur?',
+          q,
+          [yanlis[0] * n, yanlis[1] * n, q / 2, q * 2, -dh],
+          '$yol ${_t(n)} mol $urun için ${_t(n)}·${-dh} = ${_t(q)} kJ ısı '
+          'açığa çıkar.',
+          birim: 'kJ',
+        );
+      }
+      return _say(
+        '$giris gerçekleşirken ${_t(q)} kJ ısı açığa çıktığına göre kaç mol '
+        '$urun oluşmuştur?',
+        n,
+        [q / yanlis[0], q / yanlis[1], n * 2, n / 2, n + 1],
+        '$yol Oluşan $urun miktarı ${_t(q)} / ${-dh} = ${_t(n)} mol olur.',
+        birim: 'mol',
+      );
+    }
+    if (c % 5 == 2) {
+      final m = 50 * (a + 2), dt = 3 + b;
+      final t1 = 18 + b % 4, t2 = t1 + dt;
+      final q = m * 4.2 * dt / 1000;
+      const sabit = 'Su için c = 4,2 J/(g·°C)';
+      if (w == 0) {
+        return _say(
+          'Kalorimetre kabındaki $m gram suyun sıcaklığı $t1 °C değerinden '
+          '$t2 °C değerine çıkıyor. Suyun aldığı ısı kaç kJ olur? ($sabit)',
+          q,
+          [m * 4.2 * t2 / 1000, m * 4.2 * t1 / 1000, m * dt / 1000, q * 2, q / 2],
+          'ΔT = $t2 − $t1 = $dt °C olur. Q = m·c·ΔT = $m·4,2·$dt = '
+          '${_t(q * 1000)} J = ${_t(q)} kJ bulunur.',
+          birim: 'kJ',
+        );
+      }
+      return sayisal(
+        'Kalorimetre kabındaki $t1 °C sıcaklıktaki $m gram suya ${_t(q)} kJ '
+        'ısı veriliyor. Isı kaybı olmadığına göre suyun son sıcaklığı kaç °C '
+        'olur? ($sabit)',
+        t2,
+        [dt, t2 + t1, t1 + 2 * dt, t2 - 5, t2 + 5],
+        'ΔT = Q / (m·c) = ${_t(q * 1000)} / ($m·4,2) = $dt °C olur. Son '
+        'sıcaklık $t1 + $dt = $t2 °C bulunur.',
+        unit: '°C',
+        positive: true,
+      );
+    }
+    final (girenYazi, urunYazi, x) = _termoTepkimeler[a];
+    final giren = _terimler(girenYazi), urun = _terimler(urunYazi);
+    var dh = 0, yalin = 0, kx = 0, digerleri = 0;
+    var xUrun = false;
+    for (final (k, f) in urun) {
+      dh += k * (_olusum[f] ?? 0);
+      yalin += _olusum[f] ?? 0;
+      if (f == x) {
+        kx = k;
+        xUrun = true;
+      } else {
+        digerleri += k * (_olusum[f] ?? 0);
+      }
+    }
+    for (final (k, f) in giren) {
+      dh -= k * (_olusum[f] ?? 0);
+      yalin -= _olusum[f] ?? 0;
+      if (f == x) {
+        kx = k;
+      } else {
+        digerleri -= k * (_olusum[f] ?? 0);
+      }
+    }
+    final denk = '$girenYazi → $urunYazi';
+    final n = (b + 1) / 10, q = -dh * n / kx;
+    final mk = _mk(x), m = n * mk;
+    final hx = _olusum[x]!;
+    String liste(bool xDahil) => [
+      for (final (_, f) in [...giren, ...urun])
+        if (_olusum.containsKey(f) && (xDahil || f != x))
+          '$f: ${_isaretli(_olusum[f]!)}',
+    ].join(', ');
+    final fiil = xUrun ? 'oluştuğunda' : 'harcandığında';
+    final gramli = w == 1;
+    final miktar = gramli ? '${_t(m)} gram $x' : '${_t(n)} mol $x';
+    final kut = gramli ? ' (${_kut([x])})' : '';
+    final molYazi =
+        gramli ? '${_t(m)} / ${_t(mk)} = ${_t(n)} mol $x tepkimede yer alır. ' : '';
+    final dhYazi = 'ΔH = ΣΔH°f(ürünler) − ΣΔH°f(girenler) = $dh kJ olur.'
+        .replaceFirst('-', '−');
+    switch (c % 5) {
+      case 0:
+        return _say(
+          '$denk tepkimesindeki bileşiklerin standart oluşum entalpileri '
+          '(kJ/mol): ${liste(true)}. Buna göre $miktar $fiil açığa çıkan ısı '
+          'kaç kJ olur?$kut',
+          q,
+          [-dh * n, yalin.abs() * n / kx, yalin.abs() * n, q / 2, q * 2, -dh],
+          '$dhYazi $molYazi${kx == 1 ? '' : 'Bu değer $kx mol $x içindir. '}'
+          'Açığa çıkan ısı ${-dh}·${_t(n)}${kx == 1 ? '' : ' / $kx'} = '
+          '${_t(q)} kJ bulunur.',
+          birim: 'kJ',
+        );
+      case 3:
+        return _say(
+          '$denk tepkimesindeki bileşiklerin standart oluşum entalpileri '
+          '(kJ/mol): ${liste(true)}. Tepkimede ${_t(q)} kJ ısı açığa çıktığına '
+          'göre kaç ${gramli ? 'gram' : 'mol'} $x '
+          '${xUrun ? 'oluşmuştur' : 'harcanmıştır'}?$kut',
+          gramli ? m : n,
+          gramli
+              ? [m / kx, m * 2, m / 2, n, q / yalin.abs() * mk, m * kx]
+              : [n / kx, n * 2, n / 2, q / yalin.abs(), n * kx, n + 1],
+          '$dhYazi ${-dh} kJ ısı $kx mol $x için açığa çıkar; ${_t(q)} kJ için '
+          '${_t(q)}·$kx / ${-dh} = ${_t(n)} mol $x gerekir.'
+          '${gramli ? ' Kütlesi ${_t(n)}·${_t(mk)} = ${_t(m)} gramdır.' : ''}',
+          birim: gramli ? 'g' : 'mol',
+        );
+      default:
+        final diger = liste(false);
+        return _say(
+          '$denk tepkimesinde $miktar $fiil ${_t(q)} kJ ısı açığa çıkıyor. '
+          '${diger.isEmpty ? 'Elementlerin standart oluşum entalpisi sıfır kabul edildiğine' : 'Diğer bileşiklerin standart oluşum entalpileri (kJ/mol): $diger. Buna'} '
+          'göre $x bileşiğinin standart oluşum entalpisi kaç kJ/mol olur?$kut',
+          hx,
+          [-hx, dh / kx, hx * kx, hx + dh, (digerleri - dh).abs(), hx - 100],
+          '$molYazi${_t(n)} mol için ${_t(q)} kJ açığa çıktığından tepkime '
+          'entalpisi ΔH = ${_t(dh)} kJ olur. ΔH = ΣΔH°f(ürünler) − '
+          'ΣΔH°f(girenler) eşitliğinde $x için x yazılırsa x = ${_t(hx)} '
+          'kJ/mol bulunur.',
+          arti: false,
+          isaret: true,
+        );
+    }
+  },
+  exam: ExamKind.ayt,
+  lesson: 'Kimya',
+);
+
 final lmKimya = <AdvancedFamily>[
   _f01, _f02, _f03, _f04, _f05, _f06, _f07, _f08, _f09, _f10, _f11, _f12,
-  _f13, _f14, _f15, _f16,
-  for (var n = 17; n <= 20; n++) _gecici(n),
+  _f13, _f14, _f15, _f16, _f17,
+  for (var n = 18; n <= 20; n++) _gecici(n),
 ];
