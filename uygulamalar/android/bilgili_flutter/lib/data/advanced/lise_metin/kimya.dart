@@ -570,8 +570,8 @@ final _f03 = lmAile(
         final sira = [for (final (n, tur, _) in _altKabuk) '$n$tur', '4d', '5p'];
         final yer = sira.indexOf(d.son);
         return secenekli(
-          '$veri Buna göre temel hâldeki X atomunun elektron dizilimi hangi '
-          'orbital türüyle sona erer?',
+          '$veri Buna göre temel hâl elektron dizilimi yazılırken X atomunun '
+          'en son elektronu hangi orbital türüne yerleşir?',
           d.son,
           [
             sira[yer - 1],
@@ -579,7 +579,7 @@ final _f03 = lmAile(
             sira[yer - 2],
             sira[yer + 2],
           ],
-          '$dizi Dizilimin son terimi ${d.son} orbitalidir.',
+          '$dizi En son elektron ${d.son} orbitaline yerleşir.',
         );
     }
   },
@@ -1563,7 +1563,7 @@ const _gazlar = [
   ('Ne', 'neon'), ('C₂H₂', 'asetilen'), ('N₂', 'azot'), ('C₂H₆', 'etan'),
   ('O₂', 'oksijen'), ('H₂S', 'hidrojen sülfür'), ('F₂', 'flor'),
   ('Ar', 'argon'), ('C₃H₆', 'propen'), ('CO₂', 'karbon dioksit'),
-  ('C₄H₁₀', 'bütan'), ('SO₂', 'kükürt dioksit'), ('Cl₂', 'klor'),
+  ('O₃', 'ozon'), ('SO₂', 'kükürt dioksit'), ('Cl₂', 'klor'),
   ('HBr', 'hidrojen bromür'), ('Kr', 'kripton'), ('Xe', 'ksenon'),
 ];
 
@@ -3201,15 +3201,7 @@ final _f20 = lmAile(
   lesson: 'Kimya',
 );
 
-AdvancedFamily _dondur(AdvancedFamily f) => AdvancedFamily(
-  key: f.key, title: f.title, topic: f.topic, level: f.level, count: f.count,
-  difficulty: f.difficulty, bloom: f.bloom,
-  build: (i) => f.build((i + 4162) % 5000),
-  exam: f.exam, lesson: f.lesson, shortAnswer: f.shortAnswer,
-  sourceLabel: f.sourceLabel,
-);
-
 final lmKimya = <AdvancedFamily>[
-  for (final f in [_f01, _f02, _f03, _f04, _f05, _f06, _f07, _f08, _f09, _f10, _f11, _f12,
-  _f13, _f14, _f15, _f16, _f17, _f18, _f19, _f20]) _dondur(f),
+  _f01, _f02, _f03, _f04, _f05, _f06, _f07, _f08, _f09, _f10, _f11, _f12,
+  _f13, _f14, _f15, _f16, _f17, _f18, _f19, _f20,
 ];
