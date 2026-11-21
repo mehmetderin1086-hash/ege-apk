@@ -11,6 +11,7 @@ const _atomKutlesi = <String, num>{
   'H': 1,
   'He': 4,
   'Li': 7,
+  'B': 11,
   'C': 12,
   'N': 14,
   'O': 16,
@@ -243,59 +244,110 @@ AdvancedItem _oranli(
 // 1. Atomun temel tanecikleri
 // ---------------------------------------------------------------------------
 
-// Gerçekte var olan tek atomlu iyonlar: (atom numarası, yük). X ile gösterilir.
-const _iyonlar = [
-  (3, 1),
-  (4, 2),
-  (7, -3),
-  (8, -2),
-  (9, -1),
-  (11, 1),
-  (12, 2),
-  (13, 3),
-  (15, -3),
-  (16, -2),
-  (17, -1),
-  (19, 1),
-  (20, 2),
-  (21, 3),
-  (22, 4),
-  (23, 3),
-  (24, 3),
-  (25, 2),
-  (26, 2),
-  (26, 3),
-  (27, 2),
-  (28, 2),
-  (29, 1),
-  (29, 2),
-  (30, 2),
-  (31, 3),
-  (32, 4),
-  (33, -3),
-  (34, -2),
-  (35, -1),
-  (37, 1),
-  (38, 2),
-  (39, 3),
-  (40, 4),
-  (44, 3),
-  (45, 3),
-  (46, 2),
-  (47, 1),
-  (48, 2),
-  (49, 3),
-  (50, 2),
-  (50, 4),
-  (51, 3),
-  (52, -2),
-  (53, -1),
-  (55, 1),
-  (56, 2),
-  (57, 3),
-  (58, 3),
-  (27, 3),
+// Yaygın tek atomlu iyonlar ve soy gazlar, doğada bulunan izotoplarının kütle
+// numaralarıyla: (atom numarası, yük, kütle numaraları). Yükü 0 olanlar soy
+// gaz atomlarıdır. Her grup aynı soy gaz düzenindeki izoelektronik türlerdir.
+const _izoelektronikGruplar = [
+  [
+    (2, 0, [3, 4]),
+    (3, 1, [6, 7]),
+    (4, 2, [9]),
+  ],
+  [
+    (7, -3, [14, 15]),
+    (8, -2, [16, 17, 18]),
+    (9, -1, [19]),
+    (10, 0, [20, 21, 22]),
+    (11, 1, [23]),
+    (12, 2, [24, 25, 26]),
+    (13, 3, [27]),
+  ],
+  [
+    (15, -3, [31]),
+    (16, -2, [32, 33, 34, 36]),
+    (17, -1, [35, 37]),
+    (18, 0, [36, 38, 40]),
+    (19, 1, [39, 41]),
+    (20, 2, [40, 42, 43, 44, 46, 48]),
+    (21, 3, [45]),
+    (22, 4, [46, 47, 48, 49, 50]),
+  ],
+  [
+    (33, -3, [75]),
+    (34, -2, [74, 76, 77, 78, 80, 82]),
+    (35, -1, [79, 81]),
+    (36, 0, [78, 80, 82, 83, 84, 86]),
+    (37, 1, [85, 87]),
+    (38, 2, [84, 86, 87, 88]),
+    (39, 3, [89]),
+    (40, 4, [90, 91, 92, 94, 96]),
+  ],
+  [
+    (52, -2, [120, 122, 123, 124, 125, 126, 128, 130]),
+    (53, -1, [127]),
+    (54, 0, [124, 126, 128, 129, 130, 131, 132, 134, 136]),
+    (55, 1, [133]),
+    (56, 2, [130, 132, 134, 135, 136, 137, 138]),
+    (57, 3, [139]),
+    (58, 4, [136, 138, 140, 142]),
+  ],
 ];
+
+const _kalayIzotoplari = [112, 114, 115, 116, 117, 118, 119, 120, 122, 124];
+
+// Soy gaz düzeninde olmayan yaygın iyonlar ve doğal izotopları.
+const _digerIyonlar = [
+  (24, 3, [50, 52, 53, 54]),
+  (25, 2, [55]),
+  (26, 2, [54, 56, 57, 58]),
+  (26, 3, [54, 56, 57, 58]),
+  (27, 2, [59]),
+  (28, 2, [58, 60, 61, 62, 64]),
+  (29, 1, [63, 65]),
+  (29, 2, [63, 65]),
+  (30, 2, [64, 66, 67, 68, 70]),
+  (31, 3, [69, 71]),
+  (47, 1, [107, 109]),
+  (48, 2, [106, 108, 110, 111, 112, 113, 114, 116]),
+  (49, 3, [113, 115]),
+  (50, 2, _kalayIzotoplari),
+  (50, 4, _kalayIzotoplari),
+  (51, 3, [121, 123]),
+  (80, 2, [196, 198, 199, 200, 201, 202, 204]),
+  (82, 2, [204, 206, 207, 208]),
+];
+
+/// Tek iyon soruları: (atom numarası, yük, kütle numarası).
+final _tekIyonlar = <(int, int, int)>[
+  for (final g in _izoelektronikGruplar)
+    for (final (z, q, kn) in g)
+      if (q != 0)
+        for (final a in kn) (z, q, a),
+  for (final (z, q, kn) in _digerIyonlar)
+    for (final a in kn) (z, q, a),
+];
+
+/// İzoelektronik çiftler: (1. tür atom no, yük, kütle no; 2. tür atom no,
+/// yük). Kütle numarası verilen tür, sorunun kuruluşuna göre X ya da Y olur.
+final _izoCiftleri = <(int, int, int, int, int)>[
+  for (final g in _izoelektronikGruplar)
+    for (final (z1, q1, kn) in g)
+      for (final a in kn)
+        for (final (z2, q2, _) in g)
+          if (z2 != z1) (z1, q1, a, z2, q2),
+];
+
+/// “X²⁺ iyonu” ya da yüksüz soy gaz için “X atomu”.
+String _tanecik(String harf, int q) =>
+    q == 0 ? '$harf atomu' : '$harf${_yuk(q)} iyonu';
+
+/// z − q işlemi: “20 − 2 = 18”, “17 + 1 = 18”; q = 0 ise yalnız sonuç.
+String _cikar(int z, int q) =>
+    q == 0 ? '$z' : (q > 0 ? '$z − $q = ${z - q}' : '$z + ${-q} = ${z - q}');
+
+/// e + q işlemi: “18 + 2 = 20”, “18 − 1 = 17”; q = 0 ise yalnız sonuç.
+String _ekle(int e, int q) =>
+    q == 0 ? '$e' : (q > 0 ? '$e + $q = ${e + q}' : '$e − ${-q} = ${e + q}');
 
 final _f01 = lmAile(
   'kim_atom',
@@ -304,9 +356,99 @@ final _f01 = lmAile(
   Difficulty.easy,
   BloomLevel.anlama,
   (a, b, c) {
-    final (z, q) = _iyonlar[a + 25 * (c ~/ 5)];
-    final n = z + z * z ~/ 170 + b % 10;
-    final kn = z + n, e = z - q, hepsi = kn + e;
+    final sira = a + 25 * b + 500 * c;
+    final tekSayi = 10 * _tekIyonlar.length;
+    AdvancedItem soru(String kok, int yanit, List<int> yanlis, String cozum) =>
+        sayisal(kok, yanit, yanlis, cozum, positive: true);
+    if (sira >= tekSayi) {
+      // İzoelektronik türlerle kurulan sorular.
+      final j = sira - tekSayi;
+      final tur = j % 6, adet = (lmAileBoyu - tekSayi + 5) ~/ 6;
+      if (_izoCiftleri.length < adet) {
+        throw StateError('İzoelektronik çift sayısı yetersiz');
+      }
+      final (z1, q1, a1, z2, q2) =
+          _izoCiftleri[j ~/ 6 * _izoCiftleri.length ~/ adet];
+      if (tur < 4) {
+        // X türünün kütle numarası ya da nötron sayısı, Y türünün atom
+        // numarası verilir.
+        final zx = z1, q = q1, kn = a1, zy = z2, r = q2;
+        final e = zy - r, n = kn - zx, hepsi = zx + n + e;
+        final x = _tanecik('X', q), y = _tanecik('Y', r);
+        final yol =
+            '${y}nun elektron sayısı ${_cikar(zy, r)} olur. ${x}nda da $e '
+            'elektron bulunduğundan X elementinin atom numarası '
+            '${_ekle(e, q)} bulunur.';
+        final iliski = 'atom numarası $zy olan $y ile izoelektroniktir';
+        switch (tur) {
+          case 0:
+            return soru(
+              'Kütle numarası $kn olan $x, $iliski. Buna göre X atomunun '
+                  'çekirdeğindeki nötron sayısı kaçtır?',
+              n,
+              [kn - zy, kn - e, kn - (e - q), kn - zy - r, n + 1, n - 1],
+              '$yol Nötron sayısı $kn − $zx = $n olur.',
+            );
+          case 1:
+            return soru(
+              'Çekirdeğinde $n nötron bulunan $x, $iliski. Buna göre X '
+                  'atomunun kütle numarası kaçtır?',
+              kn,
+              [zy + n, e + n, e - q + n, zy + r + n, kn + 1, kn - 1],
+              '$yol Kütle numarası $zx + $n = $kn olur.',
+            );
+          case 2:
+            return soru(
+              'Kütle numarası $kn olan $x, $iliski. Buna göre ${x}ndaki '
+                  'proton, nötron ve elektron sayılarının toplamı kaçtır?',
+              hepsi,
+              [kn + zx, kn + zy, kn, kn + e + q.abs() + 1, n + e],
+              '$yol Nötron sayısı $kn − $zx = $n olduğundan toplam $zx + $n + '
+                  '$e = $hepsi bulunur.',
+            );
+          default:
+            return soru(
+              'Çekirdeğinde $n nötron bulunan $x, $iliski. Buna göre '
+                  '${x}ndaki proton, nötron ve elektron sayılarının toplamı '
+                  'kaçtır?',
+              hepsi,
+              [2 * zx + n, zy + n + e, 2 * e + n, e + n, zx + n],
+              '$yol Toplam $zx + $n + $e = $hepsi bulunur.',
+            );
+        }
+      }
+      // Y türünün kütle numarası ve nötron sayısı verilir.
+      final zy = z1, r = q1, ky = a1, zx = z2, q = q2;
+      final ny = ky - zy, e = zy - r;
+      final x = _tanecik('X', q), y = _tanecik('Y', r);
+      final giris =
+          'Kütle numarası $ky olan ${y}nun çekirdeğinde $ny nötron '
+          'bulunmaktadır.';
+      final yol =
+          'Y elementinin atom numarası $ky − $ny = $zy, ${y}nun elektron '
+          'sayısı ${_cikar(zy, r)} olur. ${x}nda da $e elektron bulunduğundan '
+          'X elementinin atom numarası ${_ekle(e, q)} bulunur.';
+      if (tur == 4) {
+        return soru(
+          '$giris $x, bu ${r == 0 ? 'atom' : 'iyon'} ile izoelektronik '
+              'olduğuna göre X elementinin atom numarası kaçtır?',
+          zx,
+          [zy, e, e - q, zy + q, ky - zx, zx + 1],
+          yol,
+        );
+      }
+      return soru(
+        '$giris Bu ${r == 0 ? 'atom' : 'iyon'} ile izoelektronik olan '
+            '${x}ndaki proton sayısı ile elektron sayısının toplamı kaçtır?',
+        zx + e,
+        [2 * e, 2 * zx, zy + e, zx + zy, 2 * zy],
+        '$yol Proton ve elektron sayılarının toplamı $zx + $e = ${zx + e} '
+            'olur.',
+      );
+    }
+    final (z, q, kn) = _tekIyonlar[sira ~/ 10];
+    final n = kn - z;
+    final e = z - q, hepsi = kn + e;
     final x = 'X${_yuk(q)}';
     final yuk = _yukYazi(q);
     final eIslem = q > 0 ? '$z − $q = $e' : '$z + ${-q} = $e';
@@ -314,9 +456,7 @@ final _f01 = lmAile(
     final eYazi =
         'İyonun yükü $yuk olduğundan elektron sayısı $eIslem bulunur.';
     final zYazi = 'İyonun yükü $yuk olduğundan proton sayısı $zIslem olur.';
-    AdvancedItem soru(String kok, int yanit, List<int> yanlis, String cozum) =>
-        sayisal(kok, yanit, yanlis, cozum, positive: true);
-    switch (c % 5 + 5 * (b ~/ 10)) {
+    switch (sira % 10) {
       case 0:
         return soru(
           'Kütle numarası $kn olan $x iyonunun çekirdeğinde $n nötron '
@@ -429,14 +569,18 @@ final _f02 = lmAile(
   BloomLevel.uygulama,
   (a, b, c) {
     final m1 = 10 + 3 * a; // hafif izotopun kütle numarası
-    final fark = 1 + c ~/ 3;
+    // Doğada iki izotopu bulunan elementlerde kütle numarası farkı 1 ya da 2.
+    final fark = 1 + c ~/ 5;
     final m2 = m1 + fark;
     final p = 8 + 4 * b, r = 100 - p; // hafif ve ağır izotop yüzdeleri
     final ort = m1 + fark * r / 100;
     const giris =
         'Doğada yalnızca iki izotopu bulunan X elementinin izotoplarının '
         'kütle numaraları';
-    switch (c % 3) {
+    const giris2 =
+        'Doğada yalnızca iki izotopu bulunan X elementinin ortalama atom '
+        'kütlesi';
+    switch (c % 5) {
       case 0:
         return _say(
           '$giris $m1 ve $m2 olarak verilmiştir. Kütle numarası $m1 olan '
@@ -463,16 +607,38 @@ final _f02 = lmAile(
               'eşitliğinden x = ${_t(ort - m1)} / $fark = ${_t(r / 100)} bulunur; '
               'bolluk %$r olur.',
         );
-      default:
+      case 2:
         return sayisal(
-          'Doğada yalnızca iki izotopu bulunan X elementinin ortalama atom '
-              'kütlesi ${_t(ort)} olarak hesaplanmıştır. Kütle numarası $m1 olan '
+          '$giris2 ${_t(ort)} olarak hesaplanmıştır. Kütle numarası $m1 olan '
               'izotopun doğadaki bolluğu %$p olduğuna göre diğer izotopun kütle '
               'numarası kaçtır?',
           m2,
-          [m2 + 1, m2 - 1, m1 + 2 * fark, m2 + 2],
+          [m2 + 1, m1 - 1, m2 + 2, m2 + 3],
           'Diğer izotopun bolluğu %$r olur. $m1·$p + m·$r = ${_t(ort)}·100 '
               'eşitliğinden m = ${_t(ort * 100 - m1 * p)} / $r = $m2 bulunur.',
+          positive: true,
+        );
+      case 3:
+        return _say(
+          '$giris $m1 ve $m2 olarak verilmiştir. Elementin ortalama atom kütlesi '
+              '${_t(ort)} olduğuna göre kütle numarası $m1 olan izotopun doğadaki '
+              'bolluk yüzdesi kaçtır?',
+          p,
+          [r, 50, p / 2, 100 - p / 2],
+          on: '%',
+          'Hafif izotopun kesri y olsun: $m1·y + $m2·(1 − y) = ${_t(ort)} '
+              'eşitliğinden y = ${_t(m2 - ort)} / $fark = ${_t(p / 100)} bulunur; '
+              'bolluk %$p olur.',
+        );
+      default:
+        return sayisal(
+          '$giris2 ${_t(ort)} olarak hesaplanmıştır. Kütle numarası $m2 olan '
+              'izotopun doğadaki bolluğu %$r olduğuna göre diğer izotopun kütle '
+              'numarası kaçtır?',
+          m1,
+          [m1 - 1, m2 + 1, m1 - 2, m1 - 3],
+          'Diğer izotopun bolluğu %$p olur. m·$p + $m2·$r = ${_t(ort)}·100 '
+              'eşitliğinden m = ${_t(ort * 100 - m2 * r)} / $p = $m1 bulunur.',
           positive: true,
         );
     }
@@ -498,33 +664,46 @@ const _altKabuk = [
   (5, 's', 1),
 ];
 
-// B, C, …, Ca; Sc; Ga, …, Sr. Dizilimi kural dışı olan element yoktur.
-const _dizilimZ = [
-  5,
-  6,
-  7,
-  8,
-  9,
-  10,
-  11,
-  12,
-  13,
-  14,
-  15,
-  16,
-  17,
-  18,
-  19,
-  20,
-  21,
-  31,
-  32,
-  33,
-  34,
-  35,
-  36,
-  37,
-  38,
+// Dizilimi sorulan elementler: (atom numarası, doğada bulunan izotoplarının
+// kütle numaraları, yaygın tek atomlu iyonunun yükü; iyonu yoksa 0). Temel hâl
+// dizilimleri Aufbau sırasına uyar; Cr ve Cu gibi kural dışı elementler yoktur.
+const _dizilimElementleri = [
+  (5, [10, 11], 0),
+  (6, [12, 13], 0),
+  (7, [14, 15], -3),
+  (8, [16, 17, 18], -2),
+  (9, [19], -1),
+  (10, [20, 21, 22], 0),
+  (11, [23], 1),
+  (12, [24, 25, 26], 2),
+  (13, [27], 3),
+  (14, [28, 29, 30], 0),
+  (15, [31], -3),
+  (16, [32, 33, 34, 36], -2),
+  (17, [35, 37], -1),
+  (18, [36, 38, 40], 0),
+  (19, [39, 41], 1),
+  (20, [40, 42, 43, 44, 46, 48], 2),
+  (21, [45], 3),
+  (22, [46, 47, 48, 49, 50], 4),
+  (23, [51], 0),
+  (25, [55], 2),
+  (31, [69, 71], 3),
+  (32, [70, 72, 73, 74, 76], 0),
+  (33, [75], -3),
+  (34, [74, 76, 77, 78, 80, 82], -2),
+  (35, [79, 81], -1),
+  (36, [78, 80, 82, 83, 84, 86], 0),
+  (37, [85, 87], 1),
+  (38, [84, 86, 87, 88], 2),
+];
+
+/// Atom numarasını buldurmanın yolları: (atom no, kütle no, iyon yükü, biçim).
+/// Biçim 0–4 nötr atom, 5–8 iyon verisi kullanır.
+final _dizilimVerileri = <(int, int, int, int)>[
+  for (final (z, kn, q) in _dizilimElementleri)
+    for (final a in kn)
+      for (var f = 0; f < (q == 0 ? 5 : 9); f++) (z, a, q, f),
 ];
 
 class _Dizilim {
@@ -567,40 +746,73 @@ final _f03 = lmAile(
   Difficulty.medium,
   BloomLevel.anlama,
   (a, b, c) {
-    final d = _Dizilim(_dizilimZ[a]);
-    final z = d.z, alt = b % 5;
+    final k = a + 25 * b;
+    final (z, kn, q, bicim) =
+        _dizilimVerileri[k * _dizilimVerileri.length ~/ 500];
+    final d = _Dizilim(z);
+    final n = kn - z, f = n - z, hepsi = 2 * z + n;
+    final e = z - q, iyonHepsi = kn + e;
+    final x = 'X${_yuk(q)}';
+    final fazla = f == 0 ? 'na eşittir' : 'ndan $f fazladır';
+    final iyonYolu =
+        'İyonun yükü ${_yukYazi(q)} olduğundan atom numarası ${_ekle(e, q)} '
+        'olur.';
     final String veri, bulus;
-    final n = z + z * z ~/ 140 + alt;
-    switch (b ~/ 5) {
+    switch (bicim) {
       case 0:
         veri =
-            'Kütle numarası ${z + n} olan nötr X atomunun çekirdeğinde $n '
-            'nötron bulunmaktadır.';
-        bulus = 'Atom numarası ${z + n} − $n = $z olur.';
+            'Kütle numarası $kn olan nötr X atomunun çekirdeğinde $n nötron '
+            'bulunmaktadır.';
+        bulus = 'Atom numarası $kn − $n = $z olur.';
       case 1:
-        final f = n - z + 1;
         veri =
-            'Nötr X atomunun kütle numarası ${2 * z + f} olup nötron sayısı '
-            'proton sayısından $f fazladır.';
+            'Nötr X atomunun kütle numarası $kn olup nötron sayısı proton '
+            'sayısı$fazla.';
         bulus =
-            'Proton sayısı p ise p + (p + $f) = ${2 * z + f} eşitliğinden '
-            'atom numarası $z olur.';
+            'Proton sayısı p ise ${f == 0 ? 'p + p' : 'p + (p + $f)'} = $kn '
+            'eşitliğinden atom numarası $z olur.';
       case 2:
-        final zy = z + 2;
-        veri =
-            'X atomu, atom numarası $zy ve kütle numarası ${zy + n} olan Y '
-            'atomu ile izotondur (nötron sayıları eşittir). X atomunun kütle '
-            'numarası ${z + n} olarak verilmiştir.';
-        bulus =
-            'Nötron sayısı ${zy + n} − $zy = $n olduğundan X için atom '
-            'numarası ${z + n} − $n = $z olur.';
-      default:
         veri =
             'Nötr X atomunda proton, nötron ve elektron sayılarının toplamı '
-            '${2 * z + n}, nötron sayısı ise $n olarak verilmiştir.';
+            '$hepsi, nötron sayısı ise $n olarak verilmiştir.';
         bulus =
             'Proton ve elektron sayıları eşit olduğundan atom numarası '
-            '(${2 * z + n} − $n) / 2 = $z olur.';
+            '($hepsi − $n) / 2 = $z olur.';
+      case 3:
+        veri =
+            'Kütle numarası $kn olan nötr X atomunda proton, nötron ve elektron '
+            'sayılarının toplamı $hepsi olarak verilmiştir.';
+        bulus =
+            'Proton ve nötron sayılarının toplamı $kn olduğundan elektron '
+            'sayısı $hepsi − $kn = $z olur; nötr atomda bu, atom numarasına '
+            'eşittir.';
+      case 4:
+        veri =
+            'Nötr X atomunun çekirdeğinde $n nötron bulunmaktadır ve nötron '
+            'sayısı proton sayısı$fazla.';
+        bulus = f == 0
+            ? 'Proton sayısı nötron sayısına eşit olduğundan atom numarası $z '
+                  'olur.'
+            : 'Atom numarası $n − $f = $z olur.';
+      case 5:
+        veri = '$x iyonunda $e elektron ve $n nötron bulunmaktadır.';
+        bulus = iyonYolu;
+      case 6:
+        veri = 'Kütle numarası $kn olan $x iyonunda $e elektron bulunmaktadır.';
+        bulus = iyonYolu;
+      case 7:
+        veri =
+            'Kütle numarası $kn olan $x iyonunda proton, nötron ve elektron '
+            'sayılarının toplamı $iyonHepsi olarak verilmiştir.';
+        bulus = 'Elektron sayısı $iyonHepsi − $kn = $e olur. $iyonYolu';
+      default:
+        final pe = q > 0 ? 'p − $q' : 'p + ${-q}';
+        veri =
+            '$x iyonunda proton, nötron ve elektron sayılarının toplamı '
+            '$iyonHepsi, nötron sayısı ise $n olarak verilmiştir.';
+        bulus =
+            'Proton sayısı p ise elektron sayısı $pe olur. p + $n + ($pe) = '
+            '$iyonHepsi eşitliğinden atom numarası $z bulunur.';
     }
     final dizi = '$bulus Temel hâl dizilimi: ${d.yazim}.';
     AdvancedItem tamSayi(
@@ -692,15 +904,17 @@ final _f03 = lmAile(
         ];
         final yer = sira.indexOf(d.son);
         return secenekli(
-          '$veri Buna göre temel hâl elektron dizilimi yazılırken X atomunun '
-              'en son elektronu hangi orbital türüne yerleşir?',
+          '$veri Buna göre X atomunun temel hâl elektron dizilimi Aufbau '
+              'ilkesine göre yazıldığında son elektron hangi orbitale '
+              'yerleşir?',
           d.son,
           [sira[yer - 1], sira[yer + 1], sira[yer - 2], sira[yer + 2]],
-          '$dizi En son elektron ${d.son} orbitaline yerleşir.',
+          '$dizi Dizilim Aufbau sırasıyla yazıldığında son elektron ${d.son} '
+              'orbitaline yerleşir.',
         );
     }
   },
-  exam: ExamKind.tyt,
+  exam: ExamKind.ayt,
   lesson: 'Kimya',
 );
 
@@ -908,16 +1122,20 @@ final _f05 = lmAile(
           birim: 'g',
         );
       default:
+        // Bileşik adı verilmez; aksi hâlde yanıt bilinen bir sabit olurdu.
+        final elMol = adet * t / 10;
         return _say(
-          'Formülü $f olan bileşiğin ${_t(m)} gramlık örneğinde ${_t(g)} gram '
-              '$el elementi bulunmaktadır. Buna göre $el elementinin atom kütlesi '
-              'kaçtır? (${_kut([f], haric: el)})',
-          ak,
-          [pay, kalan, ak * 2, mk, kalan * g / (m - g) * 2],
-          'Bir mol bileşikte diğer atomların kütlesi ${_t(kalan)} gramdır. '
-              '$el atom kütlesi x ise ${adet == 1 ? 'x' : '$adet·x'} / '
-              '${_t(kalan)} = ${_t(g)} / ${_t(m - g)} eşitliğinden x = ${_t(ak)} '
-              'bulunur.',
+          'Formülünde ${adet == 1 ? 'bir' : '$adet'} tane $el atomu bulunan bir '
+              'bileşiğin ${_t(m)} gramlık örneğinde ${_t(g)} gram $el elementi '
+              'bulunmaktadır. Buna göre bileşiğin mol kütlesi kaç g/mol olur? '
+              '($el: ${_t(ak)})',
+          mk,
+          [mk / adet, mk * adet, pay, kalan, mk * 2, mk / 2],
+          '${_t(g)} gram $el ${_t(g)} / ${_t(ak)} = ${_t(elMol)} mol $el '
+              'atomudur. ${adet == 1 ? 'Formülde bir $el atomu bulunduğundan örnek de' : 'Bir molekülde (formül biriminde) $adet $el atomu bulunduğundan örnek ${_t(elMol)} / $adet ='} '
+              '${_t(n)} mol bileşiktir. Mol kütlesi ${_t(m)} / ${_t(n)} = '
+              '${_t(mk)} g/mol olur.',
+          birim: 'g/mol',
         );
     }
   },
@@ -985,7 +1203,7 @@ const _molekulFormulleri = [
   'C₂H₂O₄',
   'C₁₀H₂₂',
   'C₅H₁₀O₅',
-  'Na₂O₂',
+  'C₈H₈',
 ];
 
 String _formul(List<String> el, List<int> adet) => [
@@ -1810,28 +2028,31 @@ final _f11 = lmAile(
 // 12. İdeal gaz denklemi ve gaz yoğunluğu
 // ---------------------------------------------------------------------------
 
-// Mol kütleleri birbirinden farklı, oda sıcaklığında gaz olan maddeler.
+// Mol kütleleri birbirinden farklı, sorulardaki koşullarda (27–527 °C, en çok
+// 16,4 atm) açıkça gaz kalan ve bu sıcaklıklarda bozunmayan maddeler. SO₂,
+// Cl₂ gibi 27 °C'de birkaç atmosferde sıvılaşabilen gazlar ile ısıda bozunan
+// O₃ ve C₂H₂ alınmamıştır.
 const _gazlar = [
   ('H₂', 'hidrojen'),
   ('He', 'helyum'),
   ('CH₄', 'metan'),
   ('NH₃', 'amonyak'),
   ('Ne', 'neon'),
-  ('C₂H₂', 'asetilen'),
   ('N₂', 'azot'),
   ('C₂H₆', 'etan'),
   ('O₂', 'oksijen'),
   ('H₂S', 'hidrojen sülfür'),
   ('F₂', 'flor'),
   ('Ar', 'argon'),
-  ('C₃H₆', 'propen'),
   ('CO₂', 'karbon dioksit'),
-  ('O₃', 'ozon'),
-  ('SO₂', 'kükürt dioksit'),
-  ('Cl₂', 'klor'),
+  ('BF₃', 'bor triflorür'),
+  ('NF₃', 'azot triflorür'),
   ('HBr', 'hidrojen bromür'),
   ('Kr', 'kripton'),
+  ('CF₄', 'karbon tetraflorür'),
+  ('SiF₄', 'silisyum tetraflorür'),
   ('Xe', 'ksenon'),
+  ('SF₆', 'kükürt hekzaflorür'),
 ];
 
 const _rYazi = 'R = 0,082 L·atm/(mol·K)';
@@ -2061,25 +2282,28 @@ final _f13 = lmAile(
             positive: true,
           );
         }
-        final boy = (oran + 1) * k;
+        // Boru boyu 30–200 cm arasında kalır; bir ondalık basamak kullanılır.
+        final l = 100 + 3 * (b + 20 * (a ~/ 5));
+        final boy = (oran + 1) * l / 10;
         final uc = ikinci ? agir : hafif;
-        final yanit = ikinci ? k : oran * k;
-        return sayisal(
-          'Aynı sıcaklıktaki $hafif ve $agir gazları, $boy cm uzunluğundaki '
-              'cam borunun iki ucundan aynı anda gönderiliyor. Gazlar, $uc gazının '
-              'gönderildiği uçtan kaç cm uzakta karşılaşır? ($kut)',
+        final yanit = (ikinci ? 1 : oran) * l / 10;
+        return _say(
+          'Aynı sıcaklıktaki $hafif ve $agir gazları, ${_t(boy)} cm '
+              'uzunluğundaki cam borunun iki ucundan aynı anda gönderiliyor. '
+              'Gazlar, $uc gazının gönderildiği uçtan kaç cm uzakta karşılaşır? '
+              '($kut)',
           yanit,
           [
-            boy ~/ 2,
+            boy / 2,
             boy - yanit,
-            ikinci ? boy * mh ~/ (mh + ma) : boy * ma ~/ (mh + ma),
-            boy ~/ oran,
+            ikinci ? boy * mh / (mh + ma) : boy * ma / (mh + ma),
+            boy / oran,
             yanit + oran,
           ],
           '$hiz Aynı sürede alınan yollar $oran : 1 oranındadır. $uc gazı '
-              '$boy·${ikinci ? 1 : oran} / ${oran + 1} = $yanit cm yol alır.',
-          unit: 'cm',
-          positive: true,
+              '${_t(boy)}·${ikinci ? 1 : oran} / ${oran + 1} = ${_t(yanit)} cm '
+              'yol alır.',
+          birim: 'cm',
         );
     }
   },
@@ -2302,7 +2526,9 @@ final _f15 = lmAile(
     final v = const [20, 25, 40, 50, 100][a % 5];
     final w = c ~/ 5, s = 1 + a ~/ 5, s2 = 1 + (a ~/ 5 + 2) % 5;
     final v1 = r1 * v, v2 = (r2 - r1) * v, vt = r2 * v;
-    final x = const ['NaCl', 'KNO₃', 'HCl', 'NaOH', 'C₆H₁₂O₆'][(a + b) % 5];
+    // Derişim 4 mol/L değerine çıkabildiğinden yalnız suda çok çözünen
+    // maddeler kullanılır.
+    final x = const ['NaCl', 'NaNO₃', 'HCl', 'NaOH', 'KOH'][(a + b) % 5];
     switch (c % 5) {
       case 0:
       case 1:
@@ -2389,10 +2615,12 @@ final _f15 = lmAile(
 // 16. Donma noktası alçalması ve kaynama noktası yükselmesi
 // ---------------------------------------------------------------------------
 
-// (formül, ad, suda bir formül biriminin verdiği tanecik sayısı)
+// (formül, ad, suda bir formül biriminin verdiği tanecik sayısı). Tanecik
+// molalitesi 5 m değerine çıkabildiğinden iyonlaşmayan maddeler suda çok
+// çözünen ya da suyla karışan maddelerden seçilmiştir.
 const _koligatifler = [
-  ('C₆H₁₂O₆', 'glikoz', 1),
-  ('C₁₂H₂₂O₁₁', 'sakkaroz', 1),
+  ('C₆H₁₂O₆', 'fruktoz', 1),
+  ('C₃H₈O₂', 'propilen glikol', 1),
   ('CO(NH₂)₂', 'üre', 1),
   ('C₂H₆O₂', 'etilen glikol', 1),
   ('C₃H₈O₃', 'gliserin', 1),
@@ -2632,7 +2860,7 @@ const _hessTakimlari = [
     'C₂H₄(g) + H₂(g) → C₂H₆(g)',
     'C₂H₆(g)',
     -137,
-    [3257, 435],
+    [149, 435],
     'I. ve III. tepkimeler aynen alınır, II. tepkime ters çevrilir: ΔH = −1411 − 286 + 1560 = −137 kJ.',
   ),
   (
@@ -2644,7 +2872,7 @@ const _hessTakimlari = [
     'C(k) + 2H₂(g) → CH₄(g)',
     'CH₄(g)',
     -75,
-    [211, 1571],
+    [211, 713],
     'I. tepkime aynen, II. tepkime 2 ile çarpılarak alınır, III. tepkime ters çevrilir: ΔH = −394 − 572 + 891 = −75 kJ.',
   ),
 ];
@@ -2847,6 +3075,57 @@ const _dengeler = [
   ('PCl₅(g) ⇌ PCl₃(g) + Cl₂(g)', [('PCl₅', 1)], [('PCl₃', 1), ('Cl₂', 1)]),
 ];
 
+// Hızı belirleyen (yavaş) basamağı verilen iki basamaklı tepkimeler: (net
+// tepkime, yavaş basamak, hızlı basamak, X derecesi, Y derecesi, net
+// tepkimedeki X ve Y katsayıları).
+const _mekanizmalar = [
+  (
+    'X(g) + 2Y(g) → XY₂(g)',
+    'X(g) + Y(g) → XY(g)',
+    'XY(g) + Y(g) → XY₂(g)',
+    1,
+    1,
+    1,
+    2,
+  ),
+  (
+    '2X(g) + 2Y(g) → X₂Y₂(g)',
+    '2X(g) + Y(g) → X₂Y(g)',
+    'X₂Y(g) + Y(g) → X₂Y₂(g)',
+    2,
+    1,
+    2,
+    2,
+  ),
+  (
+    '2X(g) + 2Y(g) → X₂Y₂(g)',
+    'X(g) + 2Y(g) → XY₂(g)',
+    'XY₂(g) + X(g) → X₂Y₂(g)',
+    1,
+    2,
+    2,
+    2,
+  ),
+  (
+    '2X(g) + Y(g) → X₂Y(g)',
+    '2X(g) → X₂(g)',
+    'X₂(g) + Y(g) → X₂Y(g)',
+    2,
+    0,
+    2,
+    1,
+  ),
+  (
+    'X(g) + 2Y(g) → XY₂(g)',
+    '2Y(g) → Y₂(g)',
+    'Y₂(g) + X(g) → XY₂(g)',
+    0,
+    2,
+    1,
+    2,
+  ),
+];
+
 const _tersDengeler = [
   '2NH₃(g) ⇌ N₂(g) + 3H₂(g)',
   '2HI(g) ⇌ H₂(g) + I₂(g)',
@@ -2865,9 +3144,17 @@ final _f18 = lmAile(
     final w = c ~/ 5;
     switch (c % 5) {
       case 0:
-        final (m, n) = (w == 0
-            ? const [(1, 1), (2, 1), (1, 2), (2, 2), (0, 1)]
-            : const [(1, 1), (2, 1), (1, 2), (2, 2), (3, 1)])[a % 5];
+        // w = 0: hız bağıntısı verilir; w = 1: iki basamaklı mekanizmanın
+        // yavaş basamağı verilir (en çok üç tanecikli basamaklar).
+        final (net, yavas, hizli, m, n, mo, no) = w == 0
+            ? const [
+                ('', '', '', 1, 1, 0, 0),
+                ('', '', '', 2, 1, 0, 0),
+                ('', '', '', 1, 2, 0, 0),
+                ('', '', '', 2, 2, 0, 0),
+                ('', '', '', 0, 1, 0, 0),
+              ][a % 5]
+            : _mekanizmalar[a % 5];
         final (pn, pd) = const [(2, 1), (3, 1), (4, 1), (5, 1), (1, 2)][a ~/ 5];
         final (qn, qd) = const [
           (2, 1),
@@ -2896,12 +3183,12 @@ final _f18 = lmAile(
         final giris = w == 0
             ? 'X(g) + Y(g) → Z(g) tepkimesinin hız bağıntısı '
                   '${_hizBagintisi(m, n)} biçimindedir.'
-            : '${_katsayili(m, 'X(g)')} + ${_katsayili(n, 'Y(g)')} → Z(g) '
-                  'tepkimesi tek basamakta gerçekleşmektedir.';
+            : '$net tepkimesi iki basamakta gerçekleşmektedir. 1. basamak '
+                  '(yavaş): $yavas; 2. basamak (hızlı): $hizli.';
         final bag = w == 0
             ? ''
-            : 'Tek basamaklı tepkimede dereceler katsayılara eşittir: '
-                  '${_hizBagintisi(m, n)}. ';
+            : 'Hızı yavaş basamak belirler; dereceler yavaş basamaktaki '
+                  'katsayılara eşittir: ${_hizBagintisi(m, n)}. ';
         return kesirli(
           '$giris Sabit sıcaklıkta X derişimi ${kesir(pn, pd)} katına, Y '
               'derişimi ${kesir(qn, qd)} katına getirilirse tepkime hızı ilk hızın '
@@ -2909,6 +3196,12 @@ final _f18 = lmAile(
           pay,
           payda,
           [
+            // Mekanizmada dereceleri net tepkimeden alma hatası.
+            if (w == 1)
+              (
+                _kuvvet(pn, mo) * _kuvvet(qn, no),
+                _kuvvet(pd, mo) * _kuvvet(qd, no),
+              ),
             (pn * qn, pd * qd),
             (_kuvvet(pn, n) * _kuvvet(qn, m), _kuvvet(pd, n) * _kuvvet(qd, m)),
             (pn * m * qd + qn * n * pd, pd * qd),
@@ -3093,22 +3386,26 @@ final _f18 = lmAile(
                   '${_oran(4 * yi * yi, 10 * v * ri)} olur.',
             );
           case 2:
+            // Hacim sadeleşir; w = 1 iken I₂ fazla alınır, böylece hesap da
+            // değişir.
+            final ri2 = v * ri, kalan2 = ri2 / 10;
             return _oranli(
-              '$kap ${_t(kalan + yv)} mol H₂ ve ${_t(kalan + yv)} mol I₂ '
+              '$kap ${_t(kalan + yv)} mol H₂ ve ${_t(kalan2 + yv)} mol I₂ '
                   'gazları konuluyor. Sabit sıcaklıkta H₂(g) + I₂(g) ⇌ 2HI(g) '
                   'dengesi kurulduğunda kapta ${_t(2 * yv)} mol HI bulunuyor. Buna '
                   'göre denge sabiti (Kc) kaçtır?',
               4 * yi * yi,
-              ri * ri,
+              ri * ri2,
               [
-                (yi * yi, ri * ri),
-                (2 * yi, ri),
-                (4 * yi * yi, (ri + yi) * (ri + yi)),
+                (yi * yi, ri * ri2),
+                (4 * yi * yi, (ri + yi) * (ri2 + yi)),
+                (ri * ri2, 4 * yi * yi),
               ],
               '${_t(2 * yv)} mol HI oluşurken ${_t(yv)} mol H₂ ve ${_t(yv)} mol '
-                  'I₂ harcanır; dengede her birinden ${_t(kalan)} mol kalır. Hacim '
-                  'sadeleşir; Kc = [HI]² / ([H₂]·[I₂]) = ${_t(2 * yv)}² / '
-                  '${_t(kalan)}² = ${_oran(4 * yi * yi, ri * ri)} olur.',
+                  'I₂ harcanır; dengede ${v == 1 ? 'her birinden ${_t(kalan)} mol' : '${_t(kalan)} mol H₂ ve ${_t(kalan2)} mol I₂'} '
+                  'kalır. Hacim sadeleşir; Kc = [HI]² / ([H₂]·[I₂]) = '
+                  '${_t(2 * yv)}² / (${_t(kalan)}·${_t(kalan2)}) = '
+                  '${_oran(4 * yi * yi, ri * ri2)} olur.',
             );
           case 3:
             return _oranli(
@@ -3129,18 +3426,24 @@ final _f18 = lmAile(
                   'olur.',
             );
           default:
+            final ri2 = v * ri, kalan2 = ri2 / 10;
             return _oranli(
-              '$kap ${_t(kalan + yv)} mol CO ve ${_t(kalan + yv)} mol H₂O '
+              '$kap ${_t(kalan + yv)} mol CO ve ${_t(kalan2 + yv)} mol H₂O '
                   'gazları konuluyor. Sabit sıcaklıkta CO(g) + H₂O(g) ⇌ CO₂(g) + '
                   'H₂(g) dengesi kurulduğunda kapta ${_t(yv)} mol CO₂ bulunuyor. '
                   'Buna göre denge sabiti (Kc) kaçtır?',
               yi * yi,
-              ri * ri,
-              [(yi, ri), (yi * yi, (ri + yi) * (ri + yi)), (ri * ri, yi * yi)],
-              'Dengede ${_t(yv)} mol CO₂ ve ${_t(yv)} mol H₂ oluşur; CO ve '
-                  'H₂O gazlarından ${_t(kalan)} mol kalır. Hacim sadeleşir; Kc = '
-                  '[CO₂]·[H₂] / ([CO]·[H₂O]) = ${_t(yv)}² / ${_t(kalan)}² = '
-                  '${_oran(yi * yi, ri * ri)} olur.',
+              ri * ri2,
+              [
+                (yi, ri),
+                (yi * yi, (ri + yi) * (ri2 + yi)),
+                (ri * ri2, yi * yi),
+              ],
+              'Dengede ${_t(yv)} mol CO₂ ve ${_t(yv)} mol H₂ oluşur; '
+                  '${v == 1 ? 'CO ve H₂O gazlarından ${_t(kalan)} mol' : '${_t(kalan)} mol CO ve ${_t(kalan2)} mol H₂O'} '
+                  'kalır. Hacim sadeleşir; Kc = [CO₂]·[H₂] / ([CO]·[H₂O]) = '
+                  '${_t(yv)}² / (${_t(kalan)}·${_t(kalan2)}) = '
+                  '${_oran(yi * yi, ri * ri2)} olur.',
             );
         }
     }
