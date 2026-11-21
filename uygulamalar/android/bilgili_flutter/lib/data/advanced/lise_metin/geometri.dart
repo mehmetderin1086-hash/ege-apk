@@ -727,7 +727,12 @@ final lmGeometri = <AdvancedFamily>[
           '$giris |AB| = $ab cm, |AC| = $ac cm ve |BC| = $bc cm olduğuna göre '
           '|BD| kaç cm olur?',
           bd,
-          [dc, bc ~/ 2, ab ~/ 2],
+          // D'yi orta nokta sanma, oranı |BC| üzerine m/n olarak kurma.
+          [
+            dc,
+            if (bc.isEven) bc ~/ 2,
+            if (bc * m % n == 0) bc * m ~/ n,
+          ],
           'Açıortay teoremine göre |BD| / |DC| = |AB| / |AC| = $ab/$ac = '
           '$m/$n olur. |BD| = $bc·$m / ${m + n} = $bd cm.',
           unit: 'cm',
@@ -735,7 +740,9 @@ final lmGeometri = <AdvancedFamily>[
         );
       }
       if (c % 3 == 1) {
-        final p = 2 + a, q = 3 + b;
+        // |AD| = |BE| olursa yanıt verilen kenarortaya eşit çıkar; q bu
+        // değeri atlar (a sabitken b → q bire birdir).
+        final p = 2 + a, q = 3 + b >= p ? 4 + b : 3 + b;
         final (ad, yanit, yanlis) = switch (j) {
           0 => ('|AG| + |GE|', 2 * p + q, [p + 2 * q, p + q, 2 * p + 2 * q]),
           1 => ('|GD| + |BG|', p + 2 * q, [2 * p + q, p + q, 2 * p + 2 * q]),
@@ -842,7 +849,14 @@ final lmGeometri = <AdvancedFamily>[
           'birbirine eşittir. Buna göre eşit olan iç açılardan her biri kaç '
           'derecedir?',
           180 - y,
-          [y, 180 - y + 360 ~/ m, ic ~/ n],
+          // Dış açıyı yanıt sanma, iç açılar toplamını n·180° ya da
+          // (n − 1)·180° alma, çokgeni düzgün sanma.
+          [
+            y,
+            if (360 % m == 0) 180 - y + 360 ~/ m,
+            if (180 % m == 0) 180 - y + 180 ~/ m,
+            if (ic % n == 0) ic ~/ n,
+          ],
           'İç açılar toplamı ($n − 2)·180° = $ic° olur. Kalan $m açının '
           'toplamı $ic° − $ver° = ${ic - ver}°, her biri ${ic - ver}° / $m = '
           '${180 - y}°.',
@@ -860,7 +874,11 @@ final lmGeometri = <AdvancedFamily>[
         return _aci(
           '$veri Buna göre eşit olan dış açılardan her biri kaç derecedir?',
           y,
-          [180 - y, e ~/ k, 360 ~/ (k + m)],
+          [
+            180 - y,
+            if (e % k == 0) e ~/ k,
+            if (360 % (k + m) == 0) 360 ~/ (k + m),
+          ],
           cozum,
         );
       }
@@ -868,7 +886,11 @@ final lmGeometri = <AdvancedFamily>[
         '$veri Buna göre eşit olan dış açılara komşu iç açılardan her biri '
         'kaç derecedir?',
         180 - y,
-        [y, 180 - e ~/ k, 180 - 360 ~/ (k + m)],
+        [
+          y,
+          if (e % k == 0) 180 - e ~/ k,
+          if (360 % (k + m) == 0) 180 - 360 ~/ (k + m),
+        ],
         '$cozum Komşu iç açı 180° − $y° = ${180 - y}°.',
       );
     },
@@ -900,7 +922,9 @@ final lmGeometri = <AdvancedFamily>[
           positive: true,
         );
       }
-      final e = 2 * (3 + a), f = 5 + b;
+      // f, e değerini atlar: köşegenleri eşit "eşkenar dörtgen" kare olur ve
+      // diğer köşegen sorusunda yanıt verilen köşegene eşit çıkar.
+      final e = 2 * (3 + a), f = 5 + b >= e ? 6 + b : 5 + b;
       switch (j) {
         case 0:
           return sayisal(
@@ -931,7 +955,7 @@ final lmGeometri = <AdvancedFamily>[
             'Alanı $s cm² olan bir eşkenar dörtgenin köşegenlerinden biri '
             '$e cm olduğuna göre diğer köşegeni kaç cm olur?',
             f,
-            [2 * f, s ~/ e, f + e],
+            [2 * f, if (f.isEven) f ~/ 2, f + e],
             'Alan köşegenler çarpımının yarısıdır: $e·k / 2 = $s. Buradan '
             'k = ${2 * s} / $e = $f cm.',
             unit: 'cm',

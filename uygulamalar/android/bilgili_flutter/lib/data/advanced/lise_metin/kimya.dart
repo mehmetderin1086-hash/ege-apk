@@ -1604,7 +1604,297 @@ final _f12 = lmAile(
   lesson: 'Kimya',
 );
 
+// ---------------------------------------------------------------------------
+// 13. Kısmi basınç, mol kesri ve Graham difüzyon yasası
+// ---------------------------------------------------------------------------
+
+// (hafif gaz, ağır gaz, hız oranı = √(M_ağır / M_hafif))
+const _grahamCiftleri = [
+  ('He', 'CH₄', 2), ('H₂', 'O₂', 4), ('CH₄', 'SO₂', 2), ('He', 'SO₂', 4),
+  ('O₂', 'HI', 2),
+];
+
+final _f13 = lmAile(
+  'kim_kismi_basinc',
+  'Kısmi basınç, mol kesri ve Graham difüzyon yasası',
+  Topic.chemistry,
+  Difficulty.medium,
+  BloomLevel.uygulama,
+  (a, b, c) {
+    final ikinci = c >= 5;
+    switch (c % 5) {
+      case 0:
+        final n = [1 + a % 5, 1 + a ~/ 5, 1 + b % 4];
+        final top = n[0] + n[1] + n[2];
+        final u = 20 * (1 + b ~/ 4);
+        final j = ikinci ? 1 : 0;
+        final gaz = const ['He', 'Ne', 'Ar'][j];
+        return sayisal(
+          'Kapalı bir kapta ${n[0]} mol He, ${n[1]} mol Ne ve ${n[2]} mol Ar '
+          'gazlarından oluşan karışımın toplam basıncı ${top * u} mmHg olarak '
+          'ölçülüyor. Buna göre $gaz gazının kısmi basıncı kaç mmHg olur?',
+          n[j] * u,
+          [top * u ~/ 3, n[1 - j] * u, top * u - n[j] * u, n[2] * u, u],
+          'Toplam mol sayısı $top olduğundan $gaz gazının mol kesri '
+          '${n[j]}/$top olur. Kısmi basınç ${top * u}·${n[j]} / $top = '
+          '${n[j] * u} mmHg bulunur.',
+          positive: true,
+        );
+      case 1:
+        final n1 = 1 + a % 5, n2 = 1 + a ~/ 5, top = n1 + n2;
+        if (!ikinci) {
+          final pt = top * (b + 1) / 20, p2 = n2 * (b + 1) / 20;
+          final m1 = 4 * n1, m2 = 16 * n2;
+          return _say(
+            'Kapalı bir kapta $m1 gram He ve $m2 gram CH₄ gazları '
+            'bulunmaktadır. Karışımın toplam basıncı ${_t(pt)} atm olduğuna '
+            'göre CH₄ gazının kısmi basıncı kaç atm olur? '
+            '(${_kut(['He', 'CH₄'])})',
+            p2,
+            [pt * m2 / (m1 + m2), pt - p2, pt / 2, pt * n2 / (n1 + 2 * n2)],
+            'He: $m1 / 4 = $n1 mol, CH₄: $m2 / 16 = $n2 mol. CH₄ gazının mol '
+            'kesri $n2/$top olduğundan kısmi basıncı ${_t(pt)}·$n2 / $top = '
+            '${_t(p2)} atm bulunur.',
+          );
+        }
+        // Mol sayıları onda bir adımlarla; her (a, b) ayrı bir çift verir.
+        final h1 = 1 + a % 5 + 5 * (b % 4), h2 = 1 + a ~/ 5 + 5 * (b ~/ 4);
+        final g1 = 2 * h1 / 10, g2 = 32 * h2 / 10;
+        return kesirli(
+          'Kapalı bir kapta ${_t(g1)} gram H₂ ve ${_t(g2)} gram O₂ gazları '
+          'bulunmaktadır. Buna göre karışımdaki O₂ gazının mol kesri kaçtır? '
+          '(${_kut(['H₂', 'O₂'])})',
+          h2,
+          h1 + h2,
+          [(h1, h1 + h2), (16 * h2, h1 + 16 * h2), (h2, h1 + 2 * h2), (h2, 2 * h1 + h2)],
+          'H₂: ${_t(g1)} / 2 = ${_t(h1 / 10)} mol, O₂: ${_t(g2)} / 32 = '
+          '${_t(h2 / 10)} mol. O₂ gazının mol kesri ${_t(h2 / 10)} / '
+          '${_t((h1 + h2) / 10)} = ${kesir(h2, h1 + h2)} olur.',
+        );
+      case 2:
+        final v1 = 1 + a % 5, v2 = 1 + a ~/ 5, top = v1 + v2;
+        final p = (1 + b % 4) / 10, q = (1 + b ~/ 4) / 10 + 0.05;
+        final p1 = top * p, p2 = top * q;
+        final son = v1 * p + v2 * q;
+        final giris =
+            'Sabit sıcaklıkta, $v1 L hacimli kapta ${_t(p1)} atm basınçta He '
+            'gazı, $v2 L hacimli kapta ${_t(p2)} atm basınçta Ne gazı '
+            'bulunmaktadır. Kaplar arasındaki musluk açılarak gazların '
+            'karışması sağlanıyor.';
+        if (!ikinci) {
+          return _say(
+            '$giris Son durumda toplam basınç kaç atm olur?',
+            son,
+            [(p1 + p2) / 2, p1 + p2, v1 * p, v2 * q, (p1 * v2 + p2 * v1) / top],
+            'Toplam hacim $top L olur. P = (${_t(p1)}·$v1 + ${_t(p2)}·$v2) / '
+            '$top = ${_t(son)} atm bulunur.',
+          );
+        }
+        return _say(
+          '$giris Son durumda Ne gazının kısmi basıncı kaç atm olur?',
+          v2 * q,
+          [son, p2 / 2, v1 * p, p2 * v1 / top, p2],
+          'Ne gazı $v2 L hacimden $top L hacme yayılır. Kısmi basıncı '
+          '${_t(p2)}·$v2 / $top = ${_t(v2 * q)} atm bulunur.',
+        );
+      default:
+        final (hafif, agir, oran) = _grahamCiftleri[a % 5];
+        final k = 5 + b + 20 * (a ~/ 5);
+        final mh = _mk(hafif), ma = _mk(agir);
+        final kut = _kut([hafif, agir]);
+        final hiz =
+            'Graham yasasına göre hız oranı √(${_t(ma)} / ${_t(mh)}) = $oran '
+            'olur; $hafif gazı $oran kat hızlı yayılır.';
+        if (c % 5 == 3) {
+          final giris = 'Aynı sıcaklık ve basınçta, özdeş cam borularda';
+          if (!ikinci) {
+            return sayisal(
+              '$giris $hafif gazı borunun diğer ucuna $k saniyede ulaşıyor. '
+              'Aynı koşullarda $agir gazı aynı yolu kaç saniyede alır? ($kut)',
+              oran * k,
+              [k * ma ~/ mh, k * oran * oran, k + oran, k * (oran + 1)],
+              '$hiz Süre hızla ters orantılı olduğundan $agir gazı yolu '
+              '$k·$oran = ${oran * k} saniyede alır.',
+              unit: 's',
+              positive: true,
+            );
+          }
+          return sayisal(
+            '$giris $agir gazı borunun diğer ucuna ${oran * k} saniyede '
+            'ulaşıyor. Aynı koşullarda $hafif gazı aynı yolu kaç saniyede alır? '
+            '($kut)',
+            k,
+            [oran * oran * k, oran * k * mh ~/ ma, oran * k - oran, 2 * k],
+            '$hiz Süre hızla ters orantılı olduğundan $hafif gazı yolu '
+            '${oran * k} / $oran = $k saniyede alır.',
+            unit: 's',
+            positive: true,
+          );
+        }
+        final boy = (oran + 1) * k;
+        final uc = ikinci ? agir : hafif;
+        final yanit = ikinci ? k : oran * k;
+        return sayisal(
+          'Aynı sıcaklıktaki $hafif ve $agir gazları, $boy cm uzunluğundaki '
+          'cam borunun iki ucundan aynı anda gönderiliyor. Gazlar, $uc gazının '
+          'gönderildiği uçtan kaç cm uzakta karşılaşır? ($kut)',
+          yanit,
+          [
+            boy ~/ 2,
+            boy - yanit,
+            ikinci ? boy * mh ~/ (mh + ma) : boy * ma ~/ (mh + ma),
+            boy ~/ oran,
+            yanit + oran,
+          ],
+          '$hiz Aynı sürede alınan yollar $oran : 1 oranındadır. $uc gazı '
+          '$boy·${ikinci ? 1 : oran} / ${oran + 1} = $yanit cm yol alır.',
+          unit: 'cm',
+          positive: true,
+        );
+    }
+  },
+  exam: ExamKind.ayt,
+  lesson: 'Kimya',
+);
+
+// ---------------------------------------------------------------------------
+// 14. Molarite, kütlece yüzde derişim ve ppm
+// ---------------------------------------------------------------------------
+
+// Suda çok çözünen maddeler.
+const _cozunenler = [
+  ('NaOH', 'sodyum hidroksit'), ('KOH', 'potasyum hidroksit'),
+  ('NaCl', 'sodyum klorür'), ('KNO₃', 'potasyum nitrat'),
+  ('C₆H₁₂O₆', 'glikoz'), ('CaCl₂', 'kalsiyum klorür'),
+  ('NaNO₃', 'sodyum nitrat'), ('MgSO₄', 'magnezyum sülfat'),
+  ('NH₄Cl', 'amonyum klorür'), ('KBr', 'potasyum bromür'),
+  ('AgNO₃', 'gümüş nitrat'), ('CaBr₂', 'kalsiyum bromür'),
+  ('C₁₂H₂₂O₁₁', 'sakkaroz'), ('NH₄NO₃', 'amonyum nitrat'),
+  ('KI', 'potasyum iyodür'), ('MgCl₂', 'magnezyum klorür'),
+  ('NaBr', 'sodyum bromür'), ('Ca(NO₃)₂', 'kalsiyum nitrat'),
+  ('Al(NO₃)₃', 'alüminyum nitrat'), ('NaI', 'sodyum iyodür'),
+  ('HNO₃', 'nitrik asit'), ('H₂SO₄', 'sülfürik asit'),
+  ('KCl', 'potasyum klorür'), ('ZnSO₄', 'çinko sülfat'),
+  ('Mg(NO₃)₂', 'magnezyum nitrat'),
+];
+
+final _f14 = lmAile(
+  'kim_derisim',
+  'Molarite, kütlece yüzde derişim ve ppm',
+  Topic.chemistry,
+  Difficulty.medium,
+  BloomLevel.uygulama,
+  (a, b, c) {
+    final (f, ad) = _cozunenler[a];
+    final mk = _mk(f);
+    final madde = '$ad ($f)';
+    final w = c ~/ 5;
+    switch (c % 5) {
+      case 0:
+      case 1:
+        final hacim = const [200, 250, 400, 500, 1000, 2000][(a + 3 * w) % 6];
+        final n = (b + 1) / 50, m = n * mk;
+        final der = n * 1000 / hacim;
+        final kut = _kut([f]);
+        if (c % 5 == 0) {
+          return _say(
+            'Kütlesi ${_t(m)} gram olan $madde saf suda çözülerek $hacim mL '
+            'çözelti hazırlanıyor. Çözeltinin molar derişimi kaç mol/L olur? '
+            '($kut)',
+            der,
+            [n, m * 1000 / hacim / 100, n * hacim / 1000, der * 2, der / 2],
+            'n = ${_t(m)} / ${_t(mk)} = ${_t(n)} mol ve V = ${_t(hacim / 1000)} '
+            'L olur. Derişim ${_t(n)} / ${_t(hacim / 1000)} = ${_t(der)} mol/L '
+            'bulunur.',
+            birim: 'mol/L',
+          );
+        }
+        return _say(
+          'Derişimi ${_t(der)} mol/L olan $hacim mL $madde çözeltisi hazırlamak '
+          'için kaç gram $f gerekir? ($kut)',
+          m,
+          [der * mk, m * 2, m / 2, n, m * 10],
+          'n = ${_t(der)}·${_t(hacim / 1000)} = ${_t(n)} mol olur. Kütle '
+          '${_t(n)}·${_t(mk)} = ${_t(m)} gram bulunur.',
+          birim: 'g',
+        );
+      case 3:
+        final iyon = const ['Ca²⁺', 'Mg²⁺', 'Na⁺', 'Cl⁻', 'NO₃⁻'][a % 5];
+        final kg = const [0.5, 2, 2.5, 4, 5][a ~/ 5];
+        final ppm = 2 * (b + 1), mg = ppm * kg;
+        const tanim =
+            'ppm, 1 kg çözeltideki çözünenin miligram cinsinden kütlesidir.';
+        if (w == 0) {
+          return _say(
+            'Kütlesi ${_t(kg)} kg olan bir içme suyu örneğinde ${_t(mg)} mg '
+            '$iyon iyonu bulunmaktadır. Bu iyonun sudaki derişimi kaç ppm '
+            'olur?',
+            ppm,
+            [mg * kg, mg, ppm * 10, ppm / 10, mg / (kg * 10)],
+            '$tanim Derişim ${_t(mg)} / ${_t(kg)} = $ppm ppm bulunur.',
+          );
+        }
+        return _say(
+          'Bir içme suyu örneğinde $iyon iyonu derişimi $ppm ppm olarak '
+          'ölçülmüştür. Bu suyun ${_t(kg)} kg kütleli örneğinde kaç mg $iyon '
+          'iyonu bulunur?',
+          mg,
+          [ppm / kg, ppm, mg * 10, mg / 10, ppm * kg * kg],
+          '$tanim Örnekte $ppm·${_t(kg)} = ${_t(mg)} mg iyon bulunur.',
+          birim: 'mg',
+        );
+      default:
+        final top = 40 * (a + 2), p = 2 + b;
+        final ms = top * p / 100, su = top - ms;
+        if (c % 5 == 2) {
+          if (w == 0) {
+            return _say(
+              '${_t(ms)} gram $madde, ${_t(su)} gram saf suda tamamen '
+              'çözünüyor. Oluşan çözelti kütlece yüzde kaçlıktır?',
+              p,
+              [100 * ms / su, 100 - p, p / 2, p * 2],
+              on: '%',
+              'Çözelti kütlesi ${_t(ms)} + ${_t(su)} = $top gramdır. Kütlece '
+              'yüzde ${_t(ms)} / $top·100 = %$p olur.',
+            );
+          }
+          return _say(
+            'Kütlesi $top gram olan bir $madde çözeltisinde ${_t(ms)} gram '
+            'çözünen madde bulunmaktadır. Çözeltinin kütlece yüzde derişimi '
+            'kaçtır?',
+            p,
+            [100 * ms / su, 100 * ms / (top + ms), 100 - p, p / 2],
+            on: '%',
+            'Kütlece yüzde ${_t(ms)} / $top·100 = %$p olur.',
+          );
+        }
+        if (w == 0) {
+          return _say(
+            'Kütlece %$p oranında $madde içeren $top gram çözeltide kaç gram '
+            'su bulunur?',
+            su,
+            [ms, top * 100 / (100 + p), top - p, su / 2],
+            'Çözünen kütlesi $top·$p / 100 = ${_t(ms)} gramdır. Su kütlesi '
+            '$top − ${_t(ms)} = ${_t(su)} gram olur.',
+            birim: 'g',
+          );
+        }
+        return _say(
+          'Kütlece %$p oranında $madde içeren $top gram çözelti hazırlamak '
+          'için kaç gram çözünen madde tartılmalıdır?',
+          ms,
+          [su, top * p / (100 + p), top / p, ms * 2],
+          'Çözünen kütlesi $top·$p / 100 = ${_t(ms)} gram olur.',
+          birim: 'g',
+        );
+    }
+  },
+  exam: ExamKind.tyt,
+  lesson: 'Kimya',
+);
+
 final lmKimya = <AdvancedFamily>[
   _f01, _f02, _f03, _f04, _f05, _f06, _f07, _f08, _f09, _f10, _f11, _f12,
-  for (var n = 13; n <= 20; n++) _gecici(n),
+  _f13, _f14,
+  for (var n = 15; n <= 20; n++) _gecici(n),
 ];
