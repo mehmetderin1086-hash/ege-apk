@@ -1617,7 +1617,7 @@ const _gzFiiller = [
   ('take', 'took', 'taked', 'a taxi home'),
   ('write', 'wrote', 'writed', 'a long email'),
   ('eat', 'ate', 'eated', 'fish for dinner'),
-  ('drink', 'drank', 'drinked', 'two cups of tea'),
+  ('drink', 'drank', 'drinked', 'green tea'),
   ('make', 'made', 'maked', 'a chocolate cake'),
   ('give', 'gave', 'gived', 'a short speech'),
   ('find', 'found', 'finded', 'a wallet in the street'),
@@ -1889,22 +1889,598 @@ final _presentPerfect = lmSirali(
   lesson: 'İngilizce',
 );
 
-// GECICI_BASLANGIC
-AdvancedFamily _gecici(int n) => lmSirali(
-  'tmp_$n',
-  'Geçici yer tutucu aile $n',
+// ──────────────── 15 · will / be going to ve koşul cümleleri ─────────────────
+
+// (if öznesi, yalın hâl, geniş zaman biçimi, ikinci hâl, if tümleci,
+//  ana cümle öznesi, yalın hâl, ikinci hâl, ana cümle tümleci)
+const _kosullar = [
+  ('it', 'rain', 'rains', 'rained', 'tomorrow', 'we', 'stay', 'stayed', 'at home'),
+  ('you', 'study', 'study', 'studied', 'harder', 'you', 'pass', 'passed', 'the exam'),
+  ('she', 'miss', 'misses', 'missed', 'the bus', 'she', 'need', 'needed', 'a taxi'),
+  ('we', 'leave', 'leave', 'left', 'now', 'we', 'catch', 'caught', 'the early train'),
+  ('he', 'save', 'saves', 'saved', 'enough money', 'he', 'buy', 'bought', 'a new bike'),
+  ('they', 'invite', 'invite', 'invited', 'us', 'we', 'go', 'went', 'to the party'),
+  ('I', 'find', 'find', 'found', 'your keys', 'I', 'call', 'called', 'you'),
+  ('the weather', 'get', 'gets', 'got', 'better', 'we', 'have', 'had', 'a picnic'),
+  ('you', 'eat', 'eat', 'ate', 'too much cake', 'you', 'feel', 'felt', 'sick'),
+  ('my brother', 'get', 'gets', 'got', 'the job', 'he', 'move', 'moved', 'to Ankara'),
+  ('we', 'win', 'win', 'won', 'the match', 'we', 'celebrate', 'celebrated', 'all night'),
+  ('you', 'ask', 'ask', 'asked', 'the teacher', 'she', 'explain', 'explained', 'it again'),
+  ('I', 'see', 'see', 'saw', 'Ali', 'I', 'give', 'gave', 'him your message'),
+  ('she', 'take', 'takes', 'took', 'a taxi', 'she', 'arrive', 'arrived', 'on time'),
+  ('they', 'sell', 'sell', 'sold', 'their car', 'they', 'use', 'used', 'public transport'),
+  ('you', 'drink', 'drink', 'drank', 'coffee at night', 'you', 'sleep', 'slept', 'badly'),
+  ('he', 'tell', 'tells', 'told', 'the truth', 'everyone', 'forgive', 'forgave', 'him'),
+  ('we', 'take', 'take', 'took', 'the motorway', 'we', 'get', 'got', 'there faster'),
+  ('I', 'have', 'have', 'had', 'some free time', 'I', 'visit', 'visited', 'my grandparents'),
+  ('the shop', 'close', 'closes', 'closed', 'early', 'we', 'buy', 'bought', 'bread somewhere else'),
+  ('you', 'forget', 'forget', 'forgot', 'your umbrella', 'you', 'get', 'got', 'wet'),
+  ('she', 'practise', 'practises', 'practised', 'every day', 'she', 'improve', 'improved', 'quickly'),
+  ('it', 'snow', 'snows', 'snowed', 'at the weekend', 'the children', 'build', 'built', 'a snowman'),
+  ('you', 'lend', 'lend', 'lent', 'me your notes', 'I', 'copy', 'copied', 'them tonight'),
+];
+
+const _anlik = 'anlık karar ya da teklif';
+const _soz = 'söz verme';
+const _plan = 'önceden yapılmış plan';
+const _kanit = 'kanıta dayalı tahmin';
+
+const _gelecekGerekce = {
+  _anlik: '“will” konuşma anında verilen kararı ya da teklifi bildirir',
+  _soz: '“will” söz vermeyi bildirir',
+  _plan: '“be going to” önceden yapılmış planı bildirir',
+  _kanit: '“be going to” eldeki kanıta dayalı tahmini bildirir',
+};
+
+// Söz verme ile anlık karar birbirine yakın olduğundan bu iki etiket
+// birbirinin çeldiricisi yapılmaz.
+const _gelecekYanlis = {
+  _anlik: [_plan, _kanit],
+  _soz: [_plan, _kanit],
+  _plan: [_kanit, _anlik, _soz],
+  _kanit: [_plan, _anlik, _soz],
+};
+
+// (cümle, kullanım amacı)
+const _gelecekler = [
+  ('A: The phone is ringing. B: OK, I\'ll answer it.', _anlik),
+  ('A: This bag is very heavy. B: Wait, I\'ll carry it for you.', _anlik),
+  ('A: It\'s cold in here. B: You\'re right, I\'ll close the window.', _anlik),
+  ('A: We\'ve run out of bread. B: Really? I\'ll buy some on my way home.', _anlik),
+  ('A: I\'m thirsty. B: Sit down, I\'ll get you a glass of water.', _anlik),
+  ('A: There\'s someone at the door. B: I\'ll open it.', _anlik),
+  ('I promise I\'ll call you as soon as I arrive.', _soz),
+  ('I won\'t tell anyone your secret. I promise.', _soz),
+  ('I promise I\'ll pay you back on Friday.', _soz),
+  ('I\'ll never be late again, I promise.', _soz),
+  ('We\'re going to visit my aunt in Izmir next week; we\'ve already bought the tickets.', _plan),
+  ('I\'ve decided to change my job. I\'m going to look for a new one in spring.', _plan),
+  ('She has saved enough money, so she\'s going to buy a laptop on Saturday.', _plan),
+  ('They\'re going to paint the house next month; they\'ve already chosen the colour.', _plan),
+  ('I\'m going to study medicine; I made up my mind last year.', _plan),
+  ('Look at those dark clouds! It\'s going to rain.', _kanit),
+  ('Be careful! That glass is going to fall off the table.', _kanit),
+  ('He\'s driving too fast on the ice. He\'s going to crash.', _kanit),
+  ('The team is losing by four goals with two minutes left. They\'re going to lose the match.', _kanit),
+  ('She\'s carrying too many plates. She\'s going to drop them.', _kanit),
+];
+
+final _gelecekSerpik = _serpistir(_gelecekler, 4);
+
+final _futureConditional = lmSirali(
+  'ing_future_conditional',
+  'will / be going to ve koşul cümleleri (Type 1–2)',
+  Topic.language,
+  Difficulty.medium,
+  BloomLevel.uygulama,
+  (i) {
+    if (i % 5 == 0) {
+      final x = _yayili(_gelecekSerpik, i ~/ 5, 1000);
+      final etiket = [for (final e in x) e.$2];
+      return _sirali(
+        '${_uc([for (final e in x) e.$1])}\nNumaralanmış cümlelerde “will” ya '
+        'da “be going to” yapısının kullanım amacı sırasıyla hangi seçenekte '
+        'doğru verilmiştir?',
+        etiket,
+        [for (final e in etiket) _gelecekYanlis[e]!],
+        '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${_gelecekGerekce[etiket[p]]}'].join('; ')}.',
+        i,
+        karistir: true,
+      );
+    }
+    // Koşul cümleleri: 24 çiftten üçlü seçki (2.024) × iki boşluk düzeni.
+    final j = i - i ~/ 5 - 1;
+    const toplam = 2024;
+    final ci = j % toplam, k = j ~/ toplam;
+    final u = kombinasyon(_kosullar, 3, ci, spread: false);
+    final d = ucluDizilimler[j % 6];
+    final cumle = <String>[], dogru = <String>[], gerekce = <String>[];
+    final yanlis = <List<String>>[];
+    for (var p = 0; p < 3; p++) {
+      final e = u[d[p]];
+      final bicim = (k + ci + p * (1 + ci ~/ 7)) % 4;
+      switch (bicim) {
+        case 0:
+          cumle.add('If ${e.$1} ${e.$3} ${e.$5}, ${e.$6} ___ (${e.$7}) ${e.$9}.');
+          dogru.add('will ${e.$7}');
+          yanlis.add(['would ${e.$7}', e.$8, 'will ${e.$8}']);
+          gerekce.add(
+            'if cümlesi geniş zamanda, ana cümle “will” ile kurulur (will ${e.$7})',
+          );
+        case 1:
+          cumle.add('If ${e.$1} ___ (${e.$2}) ${e.$5}, ${e.$6} will ${e.$7} ${e.$9}.');
+          dogru.add(e.$3);
+          yanlis.add([
+            'will ${e.$2}',
+            e.$4,
+            'would ${e.$2}',
+            if (e.$2 != e.$3) e.$2,
+          ]);
+          gerekce.add(
+            'ana cümlede “will” var, if cümlesi geniş zamanda olur (${e.$3})',
+          );
+        case 2:
+          cumle.add('If ${e.$1} ${e.$4} ${e.$5}, ${e.$6} ___ (${e.$7}) ${e.$9}.');
+          dogru.add('would ${e.$7}');
+          yanlis.add(['will ${e.$7}', 'would ${e.$8}', e.$7]);
+          gerekce.add(
+            'if cümlesinde ikinci hâl var, ana cümle “would” ile kurulur (would ${e.$7})',
+          );
+        default:
+          cumle.add('If ${e.$1} ___ (${e.$2}) ${e.$5}, ${e.$6} would ${e.$7} ${e.$9}.');
+          dogru.add(e.$4);
+          yanlis.add([e.$3, 'would ${e.$2}', 'will ${e.$2}']);
+          gerekce.add(
+            'ana cümlede “would” var, if cümlesinde ikinci hâl kullanılır (${e.$4})',
+          );
+      }
+    }
+    return _sirali(
+      '${_uc(cumle)}\nNumaralanmış koşul cümlelerinde boş bırakılan yerlere '
+      'sırasıyla hangileri getirilmelidir?',
+      dogru,
+      yanlis,
+      '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${gerekce[p]}'].join('; ')}.',
+      i,
+    );
+  },
+  lesson: 'İngilizce',
+);
+
+// ───────────────────────────────── 16 · Modals ───────────────────────────────
+
+const _modalGerekce = {
+  'can': 'şimdiki yeteneği bildirir',
+  'can\'t': 'şimdi yapılamayanı bildirir',
+  'could': 'geçmişteki yeteneği bildirir',
+  'couldn\'t': 'geçmişte yapılamayanı bildirir',
+  'must': 'kuralı ya da güçlü zorunluluğu bildirir',
+  'mustn\'t': 'yasağı bildirir',
+  'should': 'tavsiye bildirir',
+  'shouldn\'t': 'yapılmaması yönünde tavsiye bildirir',
+  'has to': 'üçüncü tekil kişide zorunluluğu bildirir',
+  'have to': 'zorunluluğu bildirir',
+  'doesn\'t have to': 'üçüncü tekil kişide zorunluluk olmadığını bildirir',
+  'don\'t have to': 'zorunluluk olmadığını bildirir',
+};
+
+// (cümle, doğru söz, o cümlede kesin yanlış olan sözler)
+const _modallar = [
+  ('Elif is a great musician; she ___ play the piano and the violin.', 'can', ['mustn\'t', 'couldn\'t', 'doesn\'t have to']),
+  ('I took lessons last summer, so now I ___ swim very well.', 'can', ['mustn\'t', 'couldn\'t', 'don\'t have to']),
+  ('My grandfather is ninety, but he ___ still walk five kilometres a day.', 'can', ['mustn\'t', 'couldn\'t', 'shouldn\'t']),
+  ('Dolphins are very intelligent; they ___ learn many tricks.', 'can', ['mustn\'t', 'couldn\'t', 'don\'t have to']),
+  ('Penguins are birds, but they ___ fly.', 'can\'t', ['mustn\'t', 'shouldn\'t', 'couldn\'t']),
+  ('Please speak up. I ___ hear you at the back.', 'can\'t', ['mustn\'t', 'shouldn\'t', 'don\'t have to']),
+  ('I am sorry, I ___ come to your party tomorrow; I will be in Ankara.', 'can\'t', ['mustn\'t', 'shouldn\'t', 'don\'t have to']),
+  ('When my grandmother was young, she ___ run very fast.', 'could', ['can', 'must', 'should']),
+  ('Mozart ___ play the piano when he was a small child.', 'could', ['can', 'has to', 'should']),
+  ('I ___ read when I was only four years old.', 'could', ['can', 'must', 'should']),
+  ('Twenty years ago, people ___ reach the island only by boat.', 'could', ['can', 'must', 'should']),
+  ('The exam was so difficult that I ___ answer the last question.', 'couldn\'t', ['can\'t', 'mustn\'t', 'shouldn\'t']),
+  ('It was very dark, so we ___ see the path.', 'couldn\'t', ['can\'t', 'mustn\'t', 'don\'t have to']),
+  ('When I was a baby, I ___ walk or talk.', 'couldn\'t', ['can\'t', 'mustn\'t', 'shouldn\'t']),
+  ('The sign says “Stop”. All drivers ___ stop here.', 'must', ['mustn\'t', 'can\'t', 'don\'t have to']),
+  ('It is a very important meeting. You ___ be on time.', 'must', ['mustn\'t', 'can\'t', 'don\'t have to']),
+  ('Passengers ___ show their tickets before they get on the plane; it is the rule.', 'must', ['mustn\'t', 'can\'t', 'don\'t have to']),
+  ('You ___ wear a seat belt in a car; it is the law.', 'must', ['mustn\'t', 'can\'t', 'don\'t have to']),
+  ('This is a hospital. You ___ make noise here.', 'mustn\'t', ['must', 'don\'t have to', 'could']),
+  ('The traffic light is red. You ___ cross the road now.', 'mustn\'t', ['must', 'don\'t have to', 'could']),
+  ('You ___ use your phone during the exam; it is strictly forbidden.', 'mustn\'t', ['must', 'don\'t have to', 'should']),
+  ('Students ___ run in the corridors; it is against the school rules.', 'mustn\'t', ['must', 'don\'t have to', 'should']),
+  ('You ___ touch that wire. It is very dangerous.', 'mustn\'t', ['must', 'don\'t have to', 'should']),
+  ('You look very tired. I think you ___ go to bed early tonight.', 'should', ['shouldn\'t', 'mustn\'t', 'couldn\'t']),
+  ('If you have a toothache, you ___ see a dentist.', 'should', ['shouldn\'t', 'mustn\'t', 'couldn\'t']),
+  ('That film is wonderful. I think you ___ watch it.', 'should', ['shouldn\'t', 'mustn\'t', 'can\'t']),
+  ('You have an exam tomorrow, so you ___ revise your notes tonight.', 'should', ['shouldn\'t', 'mustn\'t', 'couldn\'t']),
+  ('You ___ eat so much fast food; it is bad for your health.', 'shouldn\'t', ['should', 'must', 'have to']),
+  ('It is very late. The children ___ be awake at this hour.', 'shouldn\'t', ['should', 'must', 'have to']),
+  ('You ___ believe everything you read on the internet.', 'shouldn\'t', ['should', 'must', 'have to']),
+  ('My father is a pilot. It is the airline\'s rule, so he ___ wear a uniform at work.', 'has to', ['have to', 'mustn\'t', 'doesn\'t have to']),
+  ('In Turkey, drivers ___ drive on the right side of the road.', 'have to', ['has to', 'mustn\'t', 'don\'t have to']),
+  ('My sister starts work at six, so she ___ get up very early.', 'has to', ['have to', 'mustn\'t', 'doesn\'t have to']),
+  ('It is compulsory at our school: we ___ wear a uniform.', 'have to', ['has to', 'mustn\'t', 'don\'t have to']),
+  ('A night nurse ___ work while other people are sleeping.', 'has to', ['have to', 'mustn\'t', 'shouldn\'t']),
+  ('Tomorrow is a holiday, so we ___ get up early.', 'don\'t have to', ['mustn\'t', 'doesn\'t have to', 'have to']),
+  ('You ___ bring any food to the picnic; we already have plenty.', 'don\'t have to', ['mustn\'t', 'must', 'doesn\'t have to']),
+  ('The museum is free on Sundays, so visitors ___ pay.', 'don\'t have to', ['mustn\'t', 'must', 'doesn\'t have to']),
+  ('My brother works from home, so he ___ wear a suit.', 'doesn\'t have to', ['mustn\'t', 'don\'t have to', 'has to']),
+  ('It is Saturday, so Ayşe ___ go to school today.', 'doesn\'t have to', ['mustn\'t', 'don\'t have to', 'has to']),
+];
+
+final _modalSerpik = _serpistir(_modallar, 10);
+
+final _modals = lmSirali(
+  'ing_modals',
+  'Modals: can, could, must, should, have to (bağlamda)',
+  Topic.language,
+  Difficulty.medium,
+  BloomLevel.analiz,
+  (i) {
+    final x = _dizili(_modalSerpik, i);
+    return _sirali(
+      '${_uc([for (final e in x) e.$1])}\nNumaralanmış cümlelerde boş '
+      'bırakılan yerlere anlam ve dil bilgisi bakımından uygun düşen sözler '
+      'sırasıyla hangi seçenekte verilmiştir?',
+      [for (final e in x) e.$2],
+      [for (final e in x) e.$3],
+      '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede “${x[p].$2}” ${_modalGerekce[x[p].$2]}'].join('; ')}.',
+      i,
+    );
+  },
+  lesson: 'İngilizce',
+);
+
+// ───────────────────── 17 · Comparatives and superlatives ────────────────────
+
+// (yalın, karşılaştırma, üstünlük, yanlış karşılaştırma, yanlış üstünlük,
+//  karşılaştırma cümlesi, üstünlük cümlesi)
+const _sifatlar = [
+  ('tall', 'taller', 'the tallest', 'more tall', 'the most tall', 'My brother is ___ (tall) than my father.', 'The giraffe is ___ (tall) animal in the world.'),
+  ('big', 'bigger', 'the biggest', 'biger', 'the bigest', 'An elephant is ___ (big) than a horse.', 'Russia is ___ (big) country in the world.'),
+  ('hot', 'hotter', 'the hottest', 'hoter', 'the hotest', 'July is usually ___ (hot) than May in Turkey.', 'The Sahara is one of ___ (hot) places on Earth.'),
+  ('easy', 'easier', 'the easiest', 'easyer', 'the easyest', 'This puzzle is ___ (easy) than the last one.', 'The first question was ___ (easy) one in the whole test.'),
+  ('happy', 'happier', 'the happiest', 'happyer', 'the happyest', 'She looks ___ (happy) than she did yesterday.', 'It was ___ (happy) day of my life.'),
+  ('good', 'better', 'the best', 'gooder', 'the goodest', 'Your idea is ___ (good) than mine.', 'This is ___ (good) restaurant in town.'),
+  ('bad', 'worse', 'the worst', 'badder', 'the baddest', 'The weather today is ___ (bad) than it was yesterday.', 'That was ___ (bad) film I have ever seen.'),
+  ('expensive', 'more expensive', 'the most expensive', 'expensiver', 'the expensivest', 'A plane ticket is ___ (expensive) than a bus ticket.', 'This is ___ (expensive) hotel in the city.'),
+  ('beautiful', 'more beautiful', 'the most beautiful', 'beautifuller', 'the beautifullest', 'The garden is ___ (beautiful) in spring than in winter.', 'It is ___ (beautiful) beach on the island.'),
+  ('interesting', 'more interesting', 'the most interesting', 'interestinger', 'the interestingest', 'I think history is ___ (interesting) than geography.', 'It is ___ (interesting) book I have ever read.'),
+  ('difficult', 'more difficult', 'the most difficult', 'difficulter', 'the difficultest', 'For many people, Chinese is ___ (difficult) to learn than Spanish.', 'The last question was ___ (difficult) one in the exam.'),
+  ('small', 'smaller', 'the smallest', 'more small', 'the most small', 'A mouse is ___ (small) than a cat.', 'Mercury is ___ (small) planet in the solar system.'),
+  ('fast', 'faster', 'the fastest', 'more fast', 'the most fast', 'A train is ___ (fast) than a bicycle.', 'The cheetah is ___ (fast) land animal in the world.'),
+  ('long', 'longer', 'the longest', 'more long', 'the most long', 'The Nile is ___ (long) than the Thames.', 'The Kızılırmak is ___ (long) river in Turkey.'),
+  ('cold', 'colder', 'the coldest', 'more cold', 'the most cold', 'Winters in Erzurum are ___ (cold) than winters in Antalya.', 'Antarctica is ___ (cold) continent on Earth.'),
+  ('heavy', 'heavier', 'the heaviest', 'heavyer', 'the heavyest', 'A lorry is ___ (heavy) than a car.', 'The blue whale is ___ (heavy) animal on Earth.'),
+  ('thin', 'thinner', 'the thinnest', 'thiner', 'the thinest', 'This laptop is ___ (thin) than my old one.', 'It is ___ (thin) phone in the shop.'),
+  ('large', 'larger', 'the largest', 'more large', 'the most large', 'Istanbul is ___ (large) than Bursa.', 'The Pacific is ___ (large) ocean in the world.'),
+  ('busy', 'busier', 'the busiest', 'busyer', 'the busyest', 'The city centre is ___ (busy) than our village.', 'Friday is ___ (busy) day of the week at the market.'),
+  ('cheap', 'cheaper', 'the cheapest', 'more cheap', 'the most cheap', 'Travelling by bus is ___ (cheap) than travelling by plane.', 'This is ___ (cheap) shirt in the shop.'),
+  ('comfortable', 'more comfortable', 'the most comfortable', 'comfortabler', 'the comfortablest', 'An armchair is ___ (comfortable) than a wooden stool.', 'This is ___ (comfortable) bed in the hotel.'),
+  ('dangerous', 'more dangerous', 'the most dangerous', 'dangerouser', 'the dangerousest', 'Driving in fog is ___ (dangerous) than driving in sunshine.', 'It is ___ (dangerous) road in the region.'),
+  ('young', 'younger', 'the youngest', 'more young', 'the most young', 'My sister is three years ___ (young) than me.', 'Ali is ___ (young) player in the team.'),
+  ('old', 'older', 'the oldest', 'more old', 'the most old', 'This castle is much ___ (old) than the bridge.', 'It is ___ (old) building in our town.'),
+  ('funny', 'funnier', 'the funniest', 'funnyer', 'the funnyest', 'This comedy is ___ (funny) than the one we saw last week.', 'He is ___ (funny) person in our class.'),
+  ('popular', 'more popular', 'the most popular', 'popularer', 'the popularest', 'Football is ___ (popular) than golf in Turkey.', 'It is ___ (popular) song of the year.'),
+  ('short', 'shorter', 'the shortest', 'more short', 'the most short', 'February is ___ (short) than March.', 'February is ___ (short) month of the year.'),
+  ('noisy', 'noisier', 'the noisiest', 'noisyer', 'the noisyest', 'The street is ___ (noisy) during the day than at night.', 'It is ___ (noisy) classroom in the school.'),
+  ('important', 'more important', 'the most important', 'importanter', 'the importantest', 'For me, health is ___ (important) than money.', 'It was ___ (important) decision of his career.'),
+  ('sad', 'sadder', 'the saddest', 'sader', 'the sadest', 'The ending of the book is ___ (sad) than the beginning.', 'It was ___ (sad) scene in the film.'),
+];
+
+// (cümle, doğru biçim, yanlış biçimler, üstünlük mü)
+final _sifatMaddeleri = _serpistir([
+  for (final s in _sifatlar) ...[
+    (s.$6, s.$2, [s.$4, s.$3, s.$1], false),
+    (s.$7, s.$3, [s.$5, s.$2, s.$1], true),
+  ],
+], 2);
+
+final _comparative = lmSirali(
+  'ing_comparative',
+  'Comparatives and superlatives: sıfatların biçimleri',
+  Topic.language,
+  Difficulty.easy,
+  BloomLevel.uygulama,
+  (i) {
+    final x = _dizili(_sifatMaddeleri, i);
+    return _sirali(
+      '${_uc([for (final e in x) e.$1])}\nNumaralanmış cümlelerde ayraç '
+      'içinde verilen sıfatların uygun biçimleri sırasıyla hangi seçenekte '
+      'doğru verilmiştir?',
+      [for (final e in x) e.$2],
+      [for (final e in x) e.$3],
+      '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${x[p].$4 ? 'bir kümenin en üstünü anlatıldığı için üstünlük biçimi (superlative)' : 'iki şey karşılaştırıldığı için karşılaştırma biçimi (comparative)'} gelir: ${x[p].$2}'].join('; ')}.',
+      i,
+    );
+  },
+  lesson: 'İngilizce',
+);
+
+// ─────────────────── 18 · Prepositions of time and place ─────────────────────
+
+const _edatHavuzu = ['in', 'on', 'at'];
+
+// (cümle, doğru edat, kullanım nedeni)
+const _edatlar = [
+  ('The film starts ___ 8 o\'clock.', 'at', 'saat'),
+  ('We usually have lunch ___ noon.', 'at', 'günün belirli anı'),
+  ('The streets are very quiet ___ night.', 'at', 'kalıplaşmış kullanım (at night)'),
+  ('The fireworks began ___ midnight.', 'at', 'günün belirli anı'),
+  ('She is waiting for us ___ the bus stop.', 'at', 'belirli bir nokta'),
+  ('There is someone ___ the door.', 'at', 'belirli bir nokta'),
+  ('Turn left ___ the traffic lights.', 'at', 'belirli bir nokta'),
+  ('My father isn\'t ___ home right now.', 'at', 'kalıplaşmış kullanım (at home)'),
+  ('Let\'s meet ___ lunchtime.', 'at', 'günün belirli anı'),
+  ('Our plane arrived ___ the airport two hours late.', 'at', 'belirli bir nokta (arrive at)'),
+  ('The lesson finishes ___ half past three.', 'at', 'saat'),
+  ('I can\'t talk now; I am very busy ___ the moment.', 'at', 'kalıplaşmış kullanım (at the moment)'),
+  ('The farmers start work ___ sunrise.', 'at', 'günün belirli anı'),
+  ('He lives ___ 24 Baker Street.', 'at', 'kapı numarası verilen adres'),
+  ('Both runners crossed the line ___ the same time.', 'at', 'kalıplaşmış kullanım (at the same time)'),
+  ('We have a maths exam ___ Monday.', 'on', 'gün adı'),
+  ('My birthday is ___ 5 May.', 'on', 'tarih'),
+  ('There is a beautiful picture ___ the wall.', 'on', 'yüzey'),
+  ('The cat is sleeping ___ the sofa.', 'on', 'yüzey'),
+  ('Our flat is ___ the third floor.', 'on', 'bina katı'),
+  ('The dictionaries are ___ the top shelf.', 'on', 'yüzey'),
+  ('We always visit our grandparents ___ New Year\'s Day.', 'on', 'özel gün'),
+  ('The answer is ___ page 45.', 'on', 'sayfa'),
+  ('The children sat ___ the floor and played a game.', 'on', 'yüzey'),
+  ('I usually go swimming ___ Friday mornings.', 'on', 'gün adı'),
+  ('We had a picnic ___ the first day of the holiday.', 'on', 'belirli bir gün'),
+  ('The Republic of Turkey was proclaimed ___ 29 October 1923.', 'on', 'tarih'),
+  ('Dinner is ___ the table; come and eat.', 'on', 'yüzey'),
+  ('The price is written ___ the label.', 'on', 'yüzey'),
+  ('What do you usually do ___ weekdays?', 'on', 'günler'),
+  ('My sister was born ___ 2015.', 'in', 'yıl'),
+  ('The trees lose their leaves ___ autumn.', 'in', 'mevsim'),
+  ('School starts ___ September.', 'in', 'ay'),
+  ('I usually drink tea ___ the morning.', 'in', 'günün bölümü'),
+  ('The keys are ___ my pocket.', 'in', 'bir şeyin içi'),
+  ('The milk is ___ the fridge.', 'in', 'bir şeyin içi'),
+  ('My cousin lives ___ London.', 'in', 'şehir'),
+  ('Atatürk was born ___ 1881.', 'in', 'yıl'),
+  ('The children are playing ___ the garden.', 'in', 'sınırları belli alan'),
+  ('We often go for a walk ___ the evening.', 'in', 'günün bölümü'),
+  ('The internet became popular ___ the 1990s.', 'in', 'on yıllık dönem'),
+  ('There are thousands of fish ___ this lake.', 'in', 'bir şeyin içi'),
+  ('It often snows here ___ winter.', 'in', 'mevsim'),
+  ('She keeps her old letters ___ a wooden box.', 'in', 'bir şeyin içi'),
+  ('They spent two weeks ___ Italy last summer.', 'in', 'ülke'),
+];
+
+final _edatSerpik = _serpistir(_edatlar, 3);
+
+final _preposition = lmSirali(
+  'ing_preposition',
+  'Prepositions of time and place: in, on, at',
   Topic.language,
   Difficulty.easy,
   BloomLevel.hatirlama,
-  (i) => sayisal(
-    'Geçici $n numaralı ailede $i sayısının bir fazlası kaçtır?',
-    i + 1,
-    const [],
-    'Bir eklenir: ${i + 1}.',
-  ),
+  (i) {
+    final x = _dizili(_edatSerpik, i);
+    final etiket = [for (final e in x) e.$2];
+    final liste = _uc([for (final e in x) e.$1]);
+    final aciklama =
+        '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede “${x[p].$2}”: ${x[p].$3}'].join('; ')}.';
+    if (i.isOdd) {
+      final hedef = etiket[i ~/ 2 % 3];
+      return _hangileri(
+        '$liste\nNumaralanmış cümlelerin hangilerinde boş bırakılan yere '
+        '“$hedef” getirilmelidir?',
+        _maske(etiket, hedef),
+        aciklama,
+        i,
+      );
+    }
+    return _sirali(
+      '$liste\nNumaralanmış cümlelerde boş bırakılan yerlere “in, on, at” '
+      'edatlarından hangileri sırasıyla getirilmelidir?',
+      etiket,
+      [for (var p = 0; p < 3; p++) _digerleri(_edatHavuzu, etiket[p], i + p)],
+      aciklama,
+      i,
+      karistir: true,
+    );
+  },
   lesson: 'İngilizce',
 );
-// GECICI_BITIS
+
+// ────────────────────────────── 19 · Passive voice ───────────────────────────
+
+// (özne, fiilin yalın hâli, yardımcı fiil, üçüncü hâl,
+//  üçüncü hâlden farklıysa ikinci hâl, cümlenin devamı)
+const _edilgenler = <(String, String, String, String, String?, String)>[
+  ('Rice', 'grow', 'is', 'grown', 'grew', 'in many Asian countries.'),
+  ('English', 'speak', 'is', 'spoken', 'spoke', 'in Australia.'),
+  ('Thousands of cars', 'produce', 'are', 'produced', null, 'in this factory every year.'),
+  ('The streets', 'sweep', 'are', 'swept', null, 'every morning.'),
+  ('Cheese', 'make', 'is', 'made', null, 'from milk.'),
+  ('The mail', 'deliver', 'is', 'delivered', null, 'at nine o\'clock every day.'),
+  ('These toys', 'make', 'are', 'made', null, 'of wood.'),
+  ('Breakfast', 'serve', 'is', 'served', null, 'between seven and ten.'),
+  ('The windows', 'wash', 'are', 'washed', null, 'once a month.'),
+  ('Coffee', 'grow', 'is', 'grown', 'grew', 'in Brazil.'),
+  ('This magazine', 'publish', 'is', 'published', null, 'every month.'),
+  ('Many accidents', 'cause', 'are', 'caused', null, 'by careless driving.'),
+  ('The gates', 'lock', 'are', 'locked', null, 'at ten o\'clock every night.'),
+  ('Olive oil', 'produce', 'is', 'produced', null, 'in the Aegean region.'),
+  ('The classrooms', 'paint', 'are', 'painted', null, 'every summer.'),
+  ('Fresh bread', 'bake', 'is', 'baked', null, 'here every morning.'),
+  ('Tickets', 'sell', 'are', 'sold', null, 'at the entrance.'),
+  ('I', 'pay', 'am', 'paid', null, 'at the end of every month.'),
+  ('Spanish', 'speak', 'is', 'spoken', 'spoke', 'in most of South America.'),
+  ('These carpets', 'weave', 'are', 'woven', 'wove', 'by hand.'),
+  ('The new words', 'write', 'are', 'written', 'wrote', 'on the board every lesson.'),
+  ('Paper', 'make', 'is', 'made', null, 'from wood.'),
+  ('This bridge', 'build', 'was', 'built', null, 'in 1973.'),
+  ('The telephone', 'invent', 'was', 'invented', null, 'by Alexander Graham Bell.'),
+  ('These photos', 'take', 'were', 'taken', 'took', 'during our holiday last year.'),
+  ('The letter', 'write', 'was', 'written', 'wrote', 'two weeks ago.'),
+  ('Two windows', 'break', 'were', 'broken', 'broke', 'in the storm last night.'),
+  ('The first modern Olympic Games', 'hold', 'were', 'held', null, 'in Athens in 1896.'),
+  ('My bike', 'steal', 'was', 'stolen', 'stole', 'yesterday.'),
+  ('The Eiffel Tower', 'finish', 'was', 'finished', null, 'in 1889.'),
+  ('We', 'invite', 'were', 'invited', null, 'to the wedding last month.'),
+  ('The match', 'postpone', 'was', 'postponed', null, 'because of heavy rain yesterday.'),
+  ('Those houses', 'design', 'were', 'designed', null, 'by a famous architect in the 1950s.'),
+  ('The winners', 'announce', 'were', 'announced', null, 'at the end of the ceremony last night.'),
+  ('This novel', 'translate', 'was', 'translated', null, 'into Turkish in 2005.'),
+  ('The cake', 'eat', 'was', 'eaten', 'ate', 'before the guests arrived.'),
+  ('All the tickets', 'sell', 'were', 'sold', null, 'within an hour yesterday.'),
+  ('I', 'give', 'was', 'given', 'gave', 'a wonderful present on my last birthday.'),
+  ('The thieves', 'catch', 'were', 'caught', null, 'by the police last night.'),
+  ('Penicillin', 'discover', 'was', 'discovered', null, 'by Alexander Fleming in 1928.'),
+  ('The Mona Lisa', 'paint', 'was', 'painted', null, 'by Leonardo da Vinci.'),
+  ('The injured passengers', 'take', 'were', 'taken', 'took', 'to hospital immediately after the crash.'),
+  ('The old library', 'destroy', 'was', 'destroyed', null, 'by a fire in 1998.'),
+  ('The keys', 'find', 'were', 'found', null, 'under the sofa this morning.'),
+  ('The new class president', 'choose', 'was', 'chosen', 'chose', 'last Friday.'),
+  ('The dishes', 'do', 'were', 'done', 'did', 'by my brother last night.'),
+  ('This song', 'sing', 'was', 'sung', 'sang', 'at the opening ceremony last year.'),
+  ('The lost child', 'see', 'was', 'seen', 'saw', 'near the park an hour ago.'),
+  ('The exam results', 'send', 'were', 'sent', null, 'to the students last week.'),
+];
+
+const _tersBe = {'am': 'is', 'is': 'are', 'are': 'is', 'was': 'were', 'were': 'was'};
+
+final _edilgenSerpik = _serpistir(_edilgenler, 2);
+
+/// Edilgen yapının üç tipik hatası: sayıca uyumsuz yardımcı fiil, fiilin
+/// yalın hâli, üçüncü hâl yerine ikinci hâl (yoksa çifte hata).
+List<String> _edilgenYanlis((String, String, String, String, String?, String) e) => [
+  '${_tersBe[e.$3]} ${e.$4}',
+  '${e.$3} ${e.$2}',
+  e.$5 != null ? '${e.$3} ${e.$5}' : '${_tersBe[e.$3]} ${e.$2}',
+];
+
+final _passive = lmSirali(
+  'ing_passive',
+  'Passive voice: am/is/are/was/were + past participle',
+  Topic.language,
+  Difficulty.medium,
+  BloomLevel.uygulama,
+  (i) {
+    final x = _dizili(_edilgenSerpik, i);
+    if (i.isOdd) {
+      final alt = i ~/ 2;
+      final yanlisSorulur = alt.isOdd;
+      final hedef = 1 + alt ~/ 2 % 7;
+      bool dogruMu(int p) => ((hedef >> p) & 1 == 1) != yanlisSorulur;
+      final yapi = [
+        for (var p = 0; p < 3; p++)
+          dogruMu(p)
+              ? '${x[p].$3} ${x[p].$4}'
+              : _edilgenYanlis(x[p])[(alt ~/ 14 + p) % 3],
+      ];
+      return _hangileri(
+        '${_uc([for (var p = 0; p < 3; p++) '${x[p].$1} ${yapi[p]} ${x[p].$6}'])}\n'
+        'Numaralanmış edilgen (passive) cümlelerden hangileri dil bilgisi '
+        'yönünden ${yanlisSorulur ? 'yanlıştır' : 'doğrudur'}?',
+        hedef,
+        '${[for (var p = 0; p < 3; p++) dogruMu(p) ? '${_rakam[p]}. cümle doğrudur (${yapi[p]})' : '${_rakam[p]}. cümlede “${yapi[p]}” yanlıştır, doğrusu “${x[p].$3} ${x[p].$4}” biçimidir'].join('; ')}.',
+        i,
+      );
+    }
+    return _sirali(
+      '${_uc([for (final e in x) '${e.$1} ___ (${e.$2}) ${e.$6}'])}\n'
+      'Numaralanmış cümleler edilgen (passive) yapıda kurulacaktır. Boş '
+      'bırakılan yerlere sırasıyla hangileri getirilmelidir?',
+      [for (final e in x) '${e.$3} ${e.$4}'],
+      [for (final e in x) _edilgenYanlis(e)],
+      '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede özne “${x[p].$1}” ile “${x[p].$3}” kullanılır, fiil üçüncü hâlini alır (${x[p].$2} → ${x[p].$4})'].join('; ')}.',
+      i,
+    );
+  },
+  lesson: 'İngilizce',
+);
+
+// ───────────────────────── 20 · Articles and quantifiers ─────────────────────
+
+const _nAn = 'ünlü sesle başlayan sözcükten önce “an” gelir';
+const _nA = 'ünsüz sesle başlayan sözcükten önce “a” gelir';
+const _nAnOkunus = 'okunuşu ünlü sesle başlayan sözcükten önce “an” gelir';
+const _nAOkunus = 'okunuşu ünsüz sesle başlayan sözcükten önce “a” gelir';
+const _nAnyOlumsuz = 'olumsuz cümlede “any” kullanılır';
+const _nAnySoru = 'soru cümlesinde “any” kullanılır';
+const _nSome = 'olumlu cümlede “some” kullanılır';
+const _nSomeSayilamaz = 'sayılamayan adla olumlu cümlede “some” kullanılır';
+const _nMuch = 'sayılamayan adla “much” kullanılır';
+const _nMany = 'sayılabilen çoğul adla “many” kullanılır';
+const _nAFew = 'sayılabilen çoğul adla “a few” kullanılır';
+const _nALittle = 'sayılamayan adla “a little” kullanılır';
+
+// (cümle, doğru söz, o cümlede kesin yanlış olan sözler, neden)
+const _miktarlar = [
+  ('She is eating ___ apple.', 'an', ['a', 'much', 'many'], _nAn),
+  ('My uncle is ___ engineer.', 'an', ['a', 'much', 'many'], _nAn),
+  ('We waited for ___ hour.', 'an', ['a', 'much', 'many'], _nAnOkunus),
+  ('He wants to study at ___ university in Ankara.', 'a', ['an', 'much', 'many'], _nAOkunus),
+  ('There is ___ bank next to the post office.', 'a', ['an', 'much', 'many'], _nA),
+  ('She bought ___ umbrella because it was raining.', 'an', ['a', 'much', 'many'], _nAn),
+  ('My father drives ___ European car.', 'a', ['an', 'much', 'many'], _nAOkunus),
+  ('That was ___ honest answer.', 'an', ['a', 'much', 'many'], _nAnOkunus),
+  ('He works as ___ nurse in a big hospital.', 'a', ['an', 'much', 'many'], _nA),
+  ('There isn\'t ___ milk in the fridge.', 'any', ['some', 'many', 'a few'], _nAnyOlumsuz),
+  ('Are there ___ eggs in the basket?', 'any', ['much', 'a little', 'an'], _nAnySoru),
+  ('I would like ___ water, please.', 'some', ['any', 'many', 'a few'], _nSomeSayilamaz),
+  ('We don\'t have ___ homework today.', 'any', ['some', 'many', 'a few'], _nAnyOlumsuz),
+  ('There are ___ biscuits on the plate; help yourself.', 'some', ['any', 'much', 'a little'], _nSome),
+  ('She didn\'t buy ___ bread yesterday.', 'any', ['some', 'many', 'a few'], _nAnyOlumsuz),
+  ('I need ___ information about the course.', 'some', ['an', 'many', 'a few'], _nSomeSayilamaz),
+  ('He gave me ___ good advice.', 'some', ['a', 'many', 'a few'], _nSomeSayilamaz),
+  ('There aren\'t ___ chairs in the room.', 'any', ['some', 'much', 'a little'], _nAnyOlumsuz),
+  ('Is there ___ sugar in my tea?', 'any', ['many', 'a few', 'an'], _nAnySoru),
+  ('I bought ___ new furniture last week.', 'some', ['a', 'many', 'a few'], _nSomeSayilamaz),
+  ('How ___ students are there in your class?', 'many', ['much', 'any', 'a little'], _nMany),
+  ('How ___ money do you need?', 'much', ['many', 'any', 'a few'], _nMuch),
+  ('We don\'t have ___ time; the train leaves in five minutes.', 'much', ['many', 'a few', 'an'], _nMuch),
+  ('There aren\'t ___ cars on the road at this hour.', 'many', ['much', 'a little', 'an'], _nMany),
+  ('How ___ sugar do you take in your coffee?', 'much', ['many', 'any', 'a few'], _nMuch),
+  ('How ___ brothers and sisters do you have?', 'many', ['much', 'any', 'a little'], _nMany),
+  ('I didn\'t eat ___ rice at lunch.', 'much', ['many', 'a few', 'an'], _nMuch),
+  ('How ___ languages can she speak?', 'many', ['much', 'any', 'a little'], _nMany),
+  ('There isn\'t ___ traffic in our village.', 'much', ['many', 'a few', 'an'], _nMuch),
+  ('She doesn\'t read ___ books in summer.', 'many', ['much', 'a little', 'an'], _nMany),
+  ('How ___ water should we drink every day?', 'much', ['many', 'any', 'a few'], _nMuch),
+  ('How ___ days are there in a week?', 'many', ['much', 'any', 'a little'], _nMany),
+  ('I have ___ friends in Izmir, so I never feel lonely there.', 'a few', ['a little', 'much', 'any'], _nAFew),
+  ('Could I have ___ milk in my coffee, please?', 'a little', ['a few', 'many', 'an'], _nALittle),
+  ('There are ___ apples left; take one.', 'a few', ['a little', 'much', 'any'], _nAFew),
+  ('We still have ___ time before the film starts; let\'s have a coffee.', 'a little', ['a few', 'many', 'any'], _nALittle),
+  ('She speaks ___ French, but not very well.', 'a little', ['a few', 'many', 'an'], _nALittle),
+  ('He asked me ___ questions about my hometown.', 'a few', ['a little', 'much', 'any'], _nAFew),
+  ('Add ___ salt to the soup; it tastes plain.', 'a little', ['a few', 'many', 'an'], _nALittle),
+  ('There are ___ shops near here, so we can buy bread easily.', 'a few', ['a little', 'much', 'any'], _nAFew),
+  ('I only need ___ minutes to finish this.', 'a few', ['a little', 'much', 'any'], _nAFew),
+  ('There is ___ juice in the bottle; you can drink it.', 'a little', ['a few', 'many', 'an'], _nALittle),
+  ('We invited ___ people to dinner, just four or five.', 'a few', ['a little', 'much', 'any'], _nAFew),
+  ('Put ___ butter on the bread.', 'a little', ['a few', 'many', 'an'], _nALittle),
+];
+
+final _miktarSerpik = _serpistir(_miktarlar, 4);
+
+final _quantifier = lmSirali(
+  'ing_quantifier',
+  'Articles and quantifiers: a/an, some/any, much/many',
+  Topic.language,
+  Difficulty.medium,
+  BloomLevel.uygulama,
+  (i) {
+    final x = _dizili(_miktarSerpik, i);
+    return _sirali(
+      '${_uc([for (final e in x) e.$1])}\nNumaralanmış cümlelerdeki boşluklara '
+      'uygun düşen tanımlık ya da miktar sözleri sırasıyla hangi seçenekte '
+      'verilmiştir?',
+      [for (final e in x) e.$2],
+      [for (final e in x) e.$3],
+      '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${x[p].$4} (${x[p].$2})'].join('; ')}.',
+      i,
+    );
+  },
+  lesson: 'İngilizce',
+);
 
 final lmDil = <AdvancedFamily>[
   _sesOlayi,
@@ -1921,5 +2497,10 @@ final lmDil = <AdvancedFamily>[
   _presentContinuous,
   _simplePast,
   _presentPerfect,
-  for (var n = 15; n <= 20; n++) _gecici(n),
+  _futureConditional,
+  _modals,
+  _comparative,
+  _preposition,
+  _passive,
+  _quantifier,
 ];

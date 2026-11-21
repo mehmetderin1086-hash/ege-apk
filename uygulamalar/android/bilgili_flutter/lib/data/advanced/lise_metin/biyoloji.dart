@@ -20,26 +20,11 @@ final lmBiyoloji = <AdvancedFamily>[
   _f14,
   _f15,
   _f16,
-  _gecici(17),
-  _gecici(18),
-  _gecici(19),
-  _gecici(20),
+  _f17,
+  _f18,
+  _f19,
+  _f20,
 ];
-
-AdvancedFamily _gecici(int k) => lmAile(
-  'biy_gecici_$k',
-  'Geçici aile $k',
-  Topic.biology,
-  Difficulty.easy,
-  BloomLevel.uygulama,
-  (a, b, c) => sayisal(
-    'Geçici soru $k: ${a + 1} ile ${b + 30} ve ${c + 100} sayılarının toplamı kaçtır?',
-    a + b + c + 131,
-    const [],
-    'Geçici açıklama metni.',
-  ),
-  lesson: 'Biyoloji',
-);
 
 // ───────────────────────── Ortak yardımcılar ─────────────────────────
 
@@ -2084,7 +2069,7 @@ final _f15 = lmAile(
     final z = _besinZincirleri[b % 5];
     final v = b ~/ 5;
     final t = 1 + v; // hedef basamak (0 = üretici)
-    final e0 = 20000 * (a + 2);
+    final e0 = 200000 * (a + 2);
     final giris =
         'Bir ekosistemde “${z.join(' → ')}” besin zincirinde her beslenme '
         'basamağındaki enerjinin %10 kadarı bir üst basamağa aktarılmaktadır.';
@@ -2121,7 +2106,7 @@ final _f15 = lmAile(
           'kcal olduğuna göre ${z[u]} popülasyonuna aktarılan enerji kaç kcal '
           'olur?',
           enerji(u),
-          [enerji(u) * 10, enerji(u) ~/ 10, enerji(s) ~/ (10 * (u - s)), enerji(s) * (u - s) ~/ 10, enerji(u) * 100],
+          [enerji(u) * 10, enerji(u) * 100, enerji(s) ~/ 10, enerji(s) * 9 ~/ 10, enerji(u) ~/ 10],
           'Bu iki basamak arasında ${u - s} aktarım vardır: ${enerji(s)} / '
           '10${_ust(u - s)} = ${enerji(u)} kcal.',
           positive: true,
@@ -2131,9 +2116,9 @@ final _f15 = lmAile(
           '$giris $uretici $e0 kcal enerji bulunduğuna göre bu enerjinin kaç '
           'kcal kadarı ${z[t]} popülasyonuna ulaşmadan zincirden ayrılır?',
           e0 - enerji(t),
-          [enerji(t), e0 - enerji(t - 1) + 1, e0 * 9 ~/ 10 + (t == 1 ? 7 : 0), e0 - enerji(t) ~/ 10, e0 - enerji(t) * 10 + (t == 1 ? 3 : 0)],
-          '${z[t]} basamağına ulaşan enerji $e0 / 10${_ust(t)} = ${enerji(t)} '
-          'kcal olur. Ulaşmayan enerji $e0 − ${enerji(t)} = '
+          [enerji(t), e0 * 9 ~/ 10, e0 - enerji(t) ~/ 10, e0 * (10 - t) ~/ 10, e0 * 99 ~/ 100, e0 * 8 ~/ 10],
+          'Sorulan basamağa (${z[t]}) ulaşan enerji $e0 / 10${_ust(t)} = '
+          '${enerji(t)} kcal olur. Ulaşmayan enerji $e0 − ${enerji(t)} = '
           '${e0 - enerji(t)} kcal bulunur.',
           positive: true,
         );
@@ -2158,8 +2143,9 @@ final _f15 = lmAile(
           'olur?',
           enerji(s) + enerji(u),
           [enerji(s), 2 * enerji(u), enerji(s - 1) + enerji(u - 1), enerji(s) + enerji(u) ~/ 10, 2 * enerji(s)],
-          '${z[s]} basamağına $e0 / 10${_ust(s)} = ${enerji(s)} kcal, ${z[u]} '
-          'basamağına $e0 / 10${_ust(u)} = ${enerji(u)} kcal aktarılır. Toplam '
+          'Aktarılan enerji ${z[s]} basamağı için $e0 / 10${_ust(s)} = '
+          '${enerji(s)} kcal, ${z[u]} basamağı için $e0 / 10${_ust(u)} = '
+          '${enerji(u)} kcal olur. Toplam '
           '${enerji(s) + enerji(u)} kcal olur.',
           positive: true,
         );
@@ -2171,8 +2157,9 @@ final _f15 = lmAile(
           'enerjiden kaç kcal fazladır?',
           enerji(s) - enerji(u),
           [enerji(s), enerji(s) + enerji(u), enerji(u) * 10, enerji(s - 1) - enerji(u - 1), enerji(u)],
-          '${z[s]} basamağına $e0 / 10${_ust(s)} = ${enerji(s)} kcal, ${z[u]} '
-          'basamağına $e0 / 10${_ust(u)} = ${enerji(u)} kcal aktarılır. Fark '
+          'Aktarılan enerji ${z[s]} basamağı için $e0 / 10${_ust(s)} = '
+          '${enerji(s)} kcal, ${z[u]} basamağı için $e0 / 10${_ust(u)} = '
+          '${enerji(u)} kcal olur. Fark '
           '${enerji(s) - enerji(u)} kcal olur.',
           positive: true,
         );
@@ -2359,5 +2346,596 @@ final _f16 = lmAile(
     }
   },
   exam: ExamKind.ayt,
+  lesson: 'Biyoloji',
+);
+
+// ───────────────────────── 17. Kalp debisi ve solunum hacmi ─────────────────────────
+
+final _f17 = lmAile(
+  'biy_dolasim_solunum',
+  'Kalp debisi ve dakikadaki solunum hacmi',
+  Topic.biology,
+  Difficulty.easy,
+  BloomLevel.uygulama,
+  (a, b, c) {
+    final nabiz = 56 + 2 * a, atim = 50 + 5 * b; // atım/dk, mL
+    final debi = nabiz * atim / 1000; // L/dk
+    final soluk = 10 + a, hacim = 400 + 50 * b; // soluk/dk, mL
+    final hava = soluk * hacim / 1000; // L/dk
+    Iterable<double> uygun(List<double> adaylar) =>
+        adaylar.where((v) => v > 0 && _ikiBasamakli(v));
+    const debiTanim =
+        'Kalp debisi, kalbin bir dakikada pompaladığı kan miktarıdır: nabız · '
+        'atım hacmi.';
+    const havaTanim =
+        'Dakikadaki solunum hacmi = soluk sayısı · bir solukta alınan hava.';
+    switch (c) {
+      case 0:
+        return ondalikli(
+          'Bir kişinin nabzı dakikada $nabiz atım, kalbinin bir kasılmada '
+          'pompaladığı kan miktarı (atım hacmi) $atim mL olarak ölçülüyor. Bu '
+          'kişinin kalp debisi dakikada kaç litredir?',
+          debi,
+          uygun([debi * 10, debi / 10, (nabiz + atim) / 10, debi * 2, debi / 2, debi * 100]),
+          '$debiTanim $nabiz · $atim = ${nabiz * atim} mL, yani ${tr(debi)} L '
+          'olur.',
+          unit: 'L',
+          positive: true,
+        );
+      case 1:
+        return sayisal(
+          'Bir kişinin kalp debisi dakikada ${tr(debi)} litre, nabzı dakikada '
+          '$nabiz atım olarak ölçülüyor. Bu kişinin kalbinin bir kasılmada '
+          'pompaladığı kan miktarı (atım hacmi) kaç mL olur?',
+          atim,
+          [atim * 10, atim + 10, atim - 10, atim * 2, atim + 20],
+          '$debiTanim Atım hacmi ${nabiz * atim} mL / $nabiz = $atim mL '
+          'bulunur (${tr(debi)} L = ${nabiz * atim} mL).',
+          positive: true,
+        );
+      case 2:
+        return sayisal(
+          'Bir kişinin kalp debisi dakikada ${tr(debi)} litre, kalbinin bir '
+          'kasılmada pompaladığı kan miktarı (atım hacmi) $atim mL olarak '
+          'ölçülüyor. Bu kişinin nabzı dakikada kaç atımdır?',
+          nabiz,
+          [nabiz + 10, nabiz - 10, nabiz + 20, nabiz * 2, nabiz - 20],
+          '$debiTanim Nabız ${nabiz * atim} mL / $atim mL = $nabiz atım '
+          'bulunur (${tr(debi)} L = ${nabiz * atim} mL).',
+          positive: true,
+        );
+      case 3:
+        return ondalikli(
+          'Egzersiz yapan bir sporcu dakikada $soluk kez soluk alıp veriyor ve '
+          'her solukta akciğerlerine $hacim mL hava alıyor. Bu sporcunun '
+          'akciğerlerine bir dakikada giren hava kaç litredir?',
+          hava,
+          uygun([hava * 10, hava / 10, (soluk + hacim) / 100, hava * 2, hava / 2, hava * 100]),
+          '$havaTanim $soluk · $hacim = ${soluk * hacim} mL, yani ${tr(hava)} '
+          'L olur.',
+          unit: 'L',
+          positive: true,
+        );
+      case 4:
+        return sayisal(
+          'Egzersiz yapan bir sporcunun akciğerlerine bir dakikada '
+          '${tr(hava)} litre hava giriyor. Sporcu dakikada $soluk kez soluk '
+          'alıp verdiğine göre her solukta akciğerlerine kaç mL hava alır?',
+          hacim,
+          [hacim + 50, hacim - 50, hacim * 2, hacim + 100, hacim ~/ 2],
+          '$havaTanim Bir solukta alınan hava ${soluk * hacim} mL / $soluk = '
+          '$hacim mL bulunur (${tr(hava)} L = ${soluk * hacim} mL).',
+          positive: true,
+        );
+      case 5:
+        return sayisal(
+          'Egzersiz yapan bir sporcunun akciğerlerine bir dakikada '
+          '${tr(hava)} litre hava giriyor. Sporcu her solukta $hacim mL hava '
+          'aldığına göre dakikada kaç kez soluk alıp verir?',
+          soluk,
+          [soluk + 2, soluk - 2, soluk * 2, soluk + 4, soluk + 6],
+          '$havaTanim Soluk sayısı ${soluk * hacim} mL / $hacim mL = $soluk '
+          'bulunur (${tr(hava)} L = ${soluk * hacim} mL).',
+          positive: true,
+        );
+      case 6:
+        final nabiz2 = nabiz + 50, atim2 = atim + 25;
+        final debi2 = nabiz2 * atim2 / 1000;
+        return ondalikli(
+          'Bir kişinin dinlenirken nabzı dakikada $nabiz atım, atım hacmi '
+          '$atim mL; koşarken nabzı dakikada $nabiz2 atım, atım hacmi $atim2 '
+          'mL olarak ölçülüyor. Bu kişinin kalp debisi koşarken dinlenme '
+          'durumuna göre dakikada kaç litre artmıştır?',
+          debi2 - debi,
+          uygun([debi2, debi, 50 * 25 / 1000, (debi2 - debi) * 10, debi2 + debi]),
+          '$debiTanim Dinlenirken $nabiz · $atim = ${nabiz * atim} mL, '
+          'koşarken $nabiz2 · $atim2 = ${nabiz2 * atim2} mL olur. Artış '
+          '${nabiz2 * atim2 - nabiz * atim} mL, yani ${tr(debi2 - debi)} L '
+          'bulunur.',
+          unit: 'L',
+          positive: true,
+        );
+      case 7:
+        return ondalikli(
+          'Bir kişinin nabzı dakikada $nabiz atım, kalbinin bir kasılmada '
+          'pompaladığı kan miktarı (atım hacmi) $atim mL olarak ölçülüyor. '
+          'Nabız ve atım hacmi değişmediğine göre bu kişinin kalbi bir saatte '
+          'kaç litre kan pompalar?',
+          debi * 60,
+          uygun([debi, debi * 6, debi * 600, debi * 30, debi * 3600 / 100]),
+          '$debiTanim $nabiz · $atim = ${nabiz * atim} mL, yani ${tr(debi)} L '
+          'olur. Bir saatte ${tr(debi)} · 60 = ${tr(debi * 60)} L kan '
+          'pompalanır.',
+          unit: 'L',
+          positive: true,
+        );
+      case 8:
+        return ondalikli(
+          'Egzersiz yapan bir sporcu dakikada $soluk kez soluk alıp veriyor ve '
+          'her solukta akciğerlerine $hacim mL hava alıyor. Bu sporcunun '
+          'akciğerlerine 5 dakikada giren hava kaç litredir?',
+          hava * 5,
+          uygun([hava, hava * 50, hava * 10, hava * 2.5, hava / 2]),
+          '$havaTanim Bir dakikada $soluk · $hacim = ${soluk * hacim} mL, yani '
+          '${tr(hava)} L hava girer. Beş dakikada ${tr(hava)} · 5 = '
+          '${tr(hava * 5)} L olur.',
+          unit: 'L',
+          positive: true,
+        );
+      default:
+        final soluk2 = soluk + 12, hacim2 = hacim + 500;
+        final hava2 = soluk2 * hacim2 / 1000;
+        return ondalikli(
+          'Bir sporcu hafif tempoda dakikada $soluk kez soluk alıp veriyor ve '
+          'her solukta $hacim mL hava alıyor. Tempo artınca dakikada $soluk2 '
+          'kez soluk alıp veriyor ve her solukta $hacim2 mL hava alıyor. '
+          'Sporcunun akciğerlerine bir dakikada giren hava kaç litre '
+          'artmıştır?',
+          hava2 - hava,
+          uygun([hava2, hava, 12 * 500 / 1000, (hava2 - hava) * 10, hava2 + hava]),
+          '$havaTanim İlk durumda $soluk · $hacim = ${soluk * hacim} mL, '
+          'ikinci durumda $soluk2 · $hacim2 = ${soluk2 * hacim2} mL olur. '
+          'Artış ${soluk2 * hacim2 - soluk * hacim} mL, yani '
+          '${tr(hava2 - hava)} L bulunur.',
+          unit: 'L',
+          positive: true,
+        );
+    }
+  },
+  exam: ExamKind.ayt,
+  lesson: 'Biyoloji',
+);
+
+// ───────────────────────── 18. Fotosentez, solunum ve fermantasyon ─────────────────────────
+
+final _f18 = lmAile(
+  'biy_fotosentez_solunum',
+  'Fotosentez, solunum ve fermantasyonda madde miktarı',
+  Topic.biology,
+  Difficulty.medium,
+  BloomLevel.analiz,
+  (a, b, c) {
+    final m = b + 1; // oksijenli solunumda (ya da ilk yolda) kullanılan glikoz
+    final n = a + b + 3; // toplam glikoz
+    final k = n - m; // kalan glikoz
+    const denklem =
+        'Fotosentezin net denklemi 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂, oksijenli '
+        'solunumun net denklemi C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O biçimindedir.';
+    final maya =
+        'Bir maya kültüründe $n molekül glikozun $m tanesi oksijenli '
+        'solunumla, kalanı etil alkol fermantasyonuyla parçalanıyor.';
+    const mayaBilgi =
+        'Oksijenli solunumda 1 glikoz için 6 O₂ tüketilir, 6 CO₂ ve 6 H₂O '
+        'oluşur; etil alkol fermantasyonunda 1 glikozdan 2 etil alkol ve 2 CO₂ '
+        'oluşur.';
+    switch (c) {
+      case 0:
+        return sayisal(
+          '$denklem Bir bitki hücresi belirli bir sürede fotosentezle $n '
+          'molekül glikoz üretiyor ve oksijenli solunumda $m molekül glikoz '
+          'harcıyor. Bu sürede hücrenin ortama verdiği net O₂ molekülü sayısı '
+          'kaçtır?',
+          6 * k,
+          [6 * n, 6 * m, k, 6 * (n + m), 12 * k],
+          'Fotosentezde 6 · $n = ${6 * n} O₂ üretilir, solunumda 6 · $m = '
+          '${6 * m} O₂ tüketilir. Net çıkış ${6 * n} − ${6 * m} = ${6 * k} '
+          'olur.',
+          positive: true,
+        );
+      case 1:
+        return sayisal(
+          '$maya Bu olaylar sonunda açığa çıkan toplam CO₂ molekülü sayısı '
+          'kaçtır?',
+          6 * m + 2 * k,
+          [6 * n, 2 * n, 6 * m, 2 * m + 6 * k, 6 * m + k],
+          '$mayaBilgi Toplam CO₂: 6 · $m + 2 · $k = ${6 * m + 2 * k}.',
+          positive: true,
+        );
+      case 2:
+        return sayisal(
+          '$maya Bu olaylar sonunda oluşan etil alkol molekülü sayısı kaçtır?',
+          2 * k,
+          [k, 2 * n, 2 * m, 6 * k, 3 * k],
+          'Fermantasyona giren glikoz sayısı $n − $m = $k olur. Her glikozdan '
+          '2 etil alkol oluştuğundan 2 · $k = ${2 * k} molekül etil alkol '
+          'oluşur.',
+          positive: true,
+        );
+      case 3:
+        return sayisal(
+          'Yoğun çalışan bir kas dokusunda $n molekül glikozun $m tanesi '
+          'oksijenli solunumla, kalanı laktik asit fermantasyonuyla '
+          'parçalanıyor. Bu olaylar sonunda açığa çıkan toplam CO₂ molekülü '
+          'sayısı kaçtır?',
+          6 * m,
+          [6 * m + 2 * k, 6 * n, 2 * k, 6 * k, 6 * m + k],
+          'Oksijenli solunumda 1 glikozdan 6 CO₂ oluşur; laktik asit '
+          'fermantasyonunda CO₂ oluşmaz (1 glikozdan 2 laktik asit oluşur). '
+          'Toplam CO₂: 6 · $m = ${6 * m}.',
+          positive: true,
+        );
+      case 4:
+        return sayisal(
+          '$denklem Bir bitki hücresi belirli bir sürede fotosentezde '
+          '${6 * n} molekül CO₂ kullanıyor ve oksijenli solunumda ${6 * m} '
+          'molekül O₂ tüketiyor. Bu sürede hücrede biriken net glikoz molekülü '
+          'sayısı kaçtır?',
+          k,
+          [n, 6 * k, n + m, m, 2 * k],
+          'Fotosentezde ${6 * n} / 6 = $n glikoz üretilir, solunumda '
+          '${6 * m} / 6 = $m glikoz harcanır. Net birikim $n − $m = $k olur.',
+          positive: true,
+        );
+      case 5:
+        return sayisal(
+          'Bir maya kültüründe $n molekül glikozun bir bölümü oksijenli '
+          'solunumla, kalanı etil alkol fermantasyonuyla parçalanıyor ve '
+          'toplam ${6 * m + 2 * k} molekül CO₂ açığa çıkıyor. Oksijenli '
+          'solunumla parçalanan glikoz molekülü sayısı kaçtır?',
+          m,
+          [k, (6 * m + 2 * k) ~/ 6, n - (6 * m + 2 * k) ~/ 6, 2 * m, m + 1, m + 2],
+          '$mayaBilgi Oksijenli solunuma giren glikoz x ise 6x + 2 · ($n − x) '
+          '= ${6 * m + 2 * k} olur; 4x = ${4 * m} ve x = $m bulunur.',
+          positive: true,
+        );
+      case 6:
+        return sayisal(
+          'Bir maya kültüründe $n molekül glikozun bir bölümü etil alkol '
+          'fermantasyonuyla parçalanıyor ve ${2 * k} molekül etil alkol '
+          'oluşuyor. Kalan glikozun tamamı oksijenli solunumla parçalandığına '
+          'göre tüketilen O₂ molekülü sayısı kaçtır?',
+          6 * m,
+          [6 * n, 6 * k, 6 * m + 2 * k, m, 12 * m],
+          'Fermantasyona giren glikoz ${2 * k} / 2 = $k, oksijenli solunuma '
+          'giren glikoz $n − $k = $m olur. Tüketilen O₂: 6 · $m = ${6 * m}.',
+          positive: true,
+        );
+      case 7:
+        return sayisal(
+          '$maya Bu olaylar sonunda oluşan CO₂ ve H₂O moleküllerinin toplam '
+          'sayısı kaçtır?',
+          12 * m + 2 * k,
+          [6 * m + 2 * k, 12 * n, 12 * m + 4 * k, 12 * m, 6 * n],
+          '$mayaBilgi CO₂: 6 · $m + 2 · $k = ${6 * m + 2 * k}; H₂O: 6 · $m = '
+          '${6 * m}. Toplam ${12 * m + 2 * k} olur.',
+          positive: true,
+        );
+      case 8:
+        return sayisal(
+          'Bir hamur örneğinde $n molekül glikozun $m tanesi mayalar '
+          'tarafından etil alkol fermantasyonuyla, kalanı bakteriler '
+          'tarafından laktik asit fermantasyonuyla parçalanıyor. Bu olaylar '
+          'sonunda oluşan etil alkol, laktik asit ve CO₂ moleküllerinin toplam '
+          'sayısı kaçtır?',
+          2 * n + 2 * m,
+          [2 * n, 4 * n, 2 * n + 2 * k, 2 * m + k, 3 * n],
+          'Etil alkol fermantasyonunda 1 glikozdan 2 etil alkol ve 2 CO₂, '
+          'laktik asit fermantasyonunda 1 glikozdan 2 laktik asit oluşur. '
+          'Toplam: 4 · $m + 2 · $k = ${2 * n + 2 * m}.',
+          positive: true,
+        );
+      default:
+        return kesirli(
+          '$denklem Bir bitki hücresi belirli bir sürede fotosentezle $n '
+          'molekül glikoz üretiyor ve oksijenli solunumda $m molekül glikoz '
+          'harcıyor. Fotosentezde üretilen O₂ molekülü sayısı, solunumda '
+          'tüketilen O₂ molekülü sayısının kaç katıdır?',
+          n,
+          m,
+          [(m, n), (6 * n, 1), (k, m), (n, 6 * m), (6 * n, m), (n + m, m)],
+          'Fotosentezde 6 · $n = ${6 * n} O₂ üretilir, solunumda 6 · $m = '
+          '${6 * m} O₂ tüketilir. Oran ${6 * n} / ${6 * m} = ${kesir(n, m)} '
+          'olur.',
+        );
+    }
+  },
+  exam: ExamKind.ayt,
+  lesson: 'Biyoloji',
+);
+
+// ───────────────────────── 19. Glikoliz ve fermantasyonda ATP ─────────────────────────
+
+final _f19 = lmAile(
+  'biy_atp',
+  'Glikoliz ve fermantasyonda ATP hesabı',
+  Topic.biology,
+  Difficulty.medium,
+  BloomLevel.uygulama,
+  (a, b, c) {
+    final x = a + 2, y = b + 2; // maya ve kas hücrelerinin parçaladığı glikoz
+    final deney =
+        'Bir deneyde maya hücreleri etil alkol fermantasyonuyla $x molekül, '
+        'oksijensiz kalan kas hücreleri laktik asit fermantasyonuyla $y '
+        'molekül glikoz parçalıyor.';
+    const atp =
+        'Her glikoz için glikolizde 2 ATP harcanır ve 4 ATP üretilir; net '
+        'kazanç 2 ATP olur.';
+    const urun =
+        'Etil alkol fermantasyonunda 1 glikozdan 2 etil alkol ve 2 CO₂, laktik '
+        'asit fermantasyonunda 1 glikozdan 2 laktik asit oluşur.';
+    switch (c) {
+      case 0:
+        return sayisal(
+          '$deney Bu iki olayda hücrelerin toplam net ATP kazancı kaç '
+          'moleküldür?',
+          2 * (x + y),
+          [4 * (x + y), x + y, 2 * x, 2 * x + 4 * y, 6 * (x + y)],
+          '$atp Toplam net kazanç 2 · ($x + $y) = ${2 * (x + y)} ATP bulunur.',
+          positive: true,
+        );
+      case 1:
+        return sayisal(
+          '$deney Bu iki olayda substrat düzeyinde fosforilasyonla üretilen '
+          'toplam ATP kaç moleküldür?',
+          4 * (x + y),
+          [2 * (x + y), x + y, 4 * x + 2 * y, 6 * (x + y), 4 * x],
+          '$atp Üretilen toplam ATP 4 · ($x + $y) = ${4 * (x + y)} olur.',
+          positive: true,
+        );
+      case 2:
+        return sayisal(
+          '$deney Maya hücrelerinin glikozu etkinleştirmek için harcadığı ATP '
+          'ile kas hücrelerinin ürettiği toplam ATP sayılarının toplamı '
+          'kaçtır?',
+          2 * x + 4 * y,
+          [4 * x + 2 * y, 2 * (x + y), 4 * (x + y), 2 * x + 2 * y + 2, x + 2 * y],
+          '$atp Mayalar 2 · $x = ${2 * x} ATP harcar, kas hücreleri 4 · $y = '
+          '${4 * y} ATP üretir. Toplam ${2 * x + 4 * y} olur.',
+          positive: true,
+        );
+      case 3:
+        return sayisal(
+          '$deney Bu iki olayda açığa çıkan toplam CO₂ molekülü sayısı '
+          'kaçtır?',
+          2 * x,
+          [2 * (x + y), 2 * y, x, 6 * x, x + y],
+          '$urun Yalnız maya hücreleri CO₂ oluşturur: 2 · $x = ${2 * x}.',
+          positive: true,
+        );
+      case 4:
+        return sayisal(
+          '$deney Maya hücrelerinin oluşturduğu etil alkol ve CO₂ molekülleri '
+          'ile kas hücrelerinin oluşturduğu laktik asit moleküllerinin toplam '
+          'sayısı kaçtır?',
+          4 * x + 2 * y,
+          [2 * (x + y), 4 * (x + y), 2 * x + 4 * y, 2 * x + y, 3 * (x + y)],
+          '$urun Mayalarda 2 · $x + 2 · $x = ${4 * x}, kas hücrelerinde '
+          '2 · $y = ${2 * y} molekül oluşur. Toplam ${4 * x + 2 * y} bulunur.',
+          positive: true,
+        );
+      case 5:
+        return sayisal(
+          'Bir deneyde maya hücreleri etil alkol fermantasyonu, oksijensiz '
+          'kalan kas hücreleri laktik asit fermantasyonu yapıyor. İki hücre '
+          'grubunun toplam net ATP kazancı ${2 * (x + y)} molekül, maya '
+          'hücrelerinin açığa çıkardığı CO₂ ${2 * x} molekül olarak '
+          'ölçülüyor. Kas hücrelerinin parçaladığı glikoz molekülü sayısı '
+          'kaçtır?',
+          y,
+          [x + y, 2 * y, x, y + 1, y + 2, y + x + 1],
+          '$atp Toplam glikoz ${2 * (x + y)} / 2 = ${x + y} olur. Mayalar '
+          '${2 * x} / 2 = $x glikoz parçalamıştır; kas hücrelerine '
+          '${x + y} − $x = $y glikoz kalır.',
+          positive: true,
+        );
+      case 6:
+        return sayisal(
+          'Bir deneyde maya hücrelerinin etil alkol fermantasyonuyla ${2 * x} '
+          'molekül etil alkol, oksijensiz kalan kas hücrelerinin laktik asit '
+          'fermantasyonuyla ${2 * y} molekül laktik asit oluşturduğu '
+          'belirleniyor. Bu iki olayda substrat düzeyinde fosforilasyonla '
+          'üretilen toplam ATP kaç moleküldür?',
+          4 * (x + y),
+          [2 * (x + y), x + y, 8 * (x + y), 4 * x + 2 * y, 6 * (x + y)],
+          'Parçalanan glikoz sayısı ${2 * x} / 2 + ${2 * y} / 2 = ${x + y} '
+          'olur. $atp Üretilen toplam ATP 4 · ${x + y} = ${4 * (x + y)} '
+          'bulunur.',
+          positive: true,
+        );
+      case 7:
+        return sayisal(
+          'Bir deneyde maya hücreleri etil alkol fermantasyonuyla $x molekül '
+          'glikoz parçalıyor; oksijensiz kalan kas hücreleri de laktik asit '
+          'fermantasyonu yapıyor. İki olayda substrat düzeyinde '
+          'fosforilasyonla toplam ${4 * (x + y)} molekül ATP üretildiğine '
+          'göre kas hücrelerinde oluşan laktik asit molekülü sayısı kaçtır?',
+          2 * y,
+          [y, 2 * (x + y), 4 * y, x + y, 2 * x],
+          '$atp Toplam glikoz ${4 * (x + y)} / 4 = ${x + y}, kas hücrelerinin '
+          'parçaladığı glikoz ${x + y} − $x = $y olur. Her glikozdan 2 laktik '
+          'asit oluştuğundan 2 · $y = ${2 * y} bulunur.',
+          positive: true,
+        );
+      case 8:
+        return sayisal(
+          '$deney Bu iki olayın glikoliz evresinde oluşan toplam pirüvat '
+          '(pirüvik asit) molekülü sayısı kaçtır?',
+          2 * (x + y),
+          [x + y, 4 * (x + y), 2 * x, 3 * (x + y), 2 * y],
+          'Glikolizde 6 karbonlu 1 glikozdan 3 karbonlu 2 pirüvat oluşur. '
+          'Toplam pirüvat 2 · ($x + $y) = ${2 * (x + y)} olur.',
+          positive: true,
+        );
+      default:
+        return sayisal(
+          '$deney Maya hücrelerinin net ATP kazancı ile oluşturduğu CO₂ '
+          'molekülü sayısının toplamına, kas hücrelerinin net ATP kazancı '
+          'eklenirse hangi sayı bulunur?',
+          4 * x + 2 * y,
+          [2 * (x + y), 4 * (x + y), 6 * x + 2 * y, 2 * x + 4 * y, 4 * x + 4 * y],
+          '$atp $urun Mayalarda 2 · $x ATP ve 2 · $x CO₂, kas hücrelerinde '
+          '2 · $y ATP vardır: ${2 * x} + ${2 * x} + ${2 * y} = '
+          '${4 * x + 2 * y}.',
+          positive: true,
+        );
+    }
+  },
+  exam: ExamKind.ayt,
+  lesson: 'Biyoloji',
+);
+
+// ───────────────────────── 20. Besinlerin enerji değeri ─────────────────────────
+
+final _f20 = lmAile(
+  'biy_besin_enerji',
+  'Besinlerin enerji değeri ve günlük enerji payı',
+  Topic.biology,
+  Difficulty.easy,
+  BloomLevel.uygulama,
+  (a, b, c) {
+    final kh = 10 * (a + 6), yag = b + 5; // gram
+    final pro = 5 * (1 + (a + 2 * b) % 6);
+    final toplam = 4 * kh + 4 * pro + 9 * yag;
+    final gunluk = (a + b).isEven ? 2000 : 2500;
+    const deger =
+        'Karbonhidrat ve protein gram başına 4 kcal, yağ gram başına 9 kcal '
+        'enerji verir.';
+    final ogun =
+        '$deger Bir öğrenci bir öğünde $kh g karbonhidrat, $pro g protein ve '
+        '$yag g yağ tüketiyor.';
+    final hesap =
+        'Enerji 4 · $kh + 4 · $pro + 9 · $yag = ${4 * kh} + ${4 * pro} + '
+        '${9 * yag} = $toplam kcal olur.';
+    switch (c) {
+      case 0:
+        return sayisal(
+          '$ogun Öğrencinin bu öğünden aldığı enerji kaç kcal olur?',
+          toplam,
+          [4 * (kh + pro + yag), 9 * kh + 4 * pro + 4 * yag, 4 * kh + 9 * pro + 9 * yag, 4 * kh + 9 * yag],
+          hesap,
+          positive: true,
+        );
+      case 1:
+        return sayisal(
+          '$deger Bir öğrencinin bir öğünde tükettiği besinlerde $kh g '
+          'karbonhidrat ve $pro g protein vardır. Öğünün toplam enerjisi '
+          '$toplam kcal olduğuna göre öğündeki yağ miktarı kaç gramdır?',
+          yag,
+          [9 * yag ~/ 4, 9 * yag, yag + 4, yag + 9, yag + 5, yag + 2],
+          'Karbonhidrat ve proteinden gelen enerji 4 · ($kh + $pro) = '
+          '${4 * (kh + pro)} kcal olur. Yağdan gelen enerji $toplam − '
+          '${4 * (kh + pro)} = ${9 * yag} kcal, yağ miktarı ${9 * yag} / 9 = '
+          '$yag g bulunur.',
+          positive: true,
+        );
+      case 2:
+        return ondalikli(
+          '$ogun Günlük enerji gereksinimi $gunluk kcal olan bu öğrencinin '
+          'öğünden aldığı enerji, günlük gereksiniminin yüzde kaçıdır?',
+          toplam * 100 / gunluk,
+          [4 * (kh + pro + yag) * 100 / gunluk, 100 - toplam * 100 / gunluk, (4 * kh + 4 * pro) * 100 / gunluk, 9 * yag * 100 / gunluk]
+              .where(_ikiBasamakli),
+          '$hesap Günlük gereksinime oranı $toplam / $gunluk · 100 = '
+          '${tr(toplam * 100 / gunluk)} bulunur.',
+          positive: true,
+        );
+      case 3:
+        final k = 10 + 2 * a, p = 4 + (a + b) % 8, y = b + 2;
+        final gram = const [50, 150, 200, 250][(a + b) % 4];
+        final yuz = 4 * k + 4 * p + 9 * y;
+        return ondalikli(
+          '$deger Bir besinin 100 gramında $k g karbonhidrat, $p g protein ve '
+          '$y g yağ vardır. Bu besinden $gram g yiyen bir kişi kaç kcal enerji '
+          'alır?',
+          yuz * gram / 100,
+          [yuz.toDouble(), 4.0 * (k + p + y) * gram / 100, yuz * gram / 1000, yuz * 100 / gram]
+              .where(_ikiBasamakli),
+          'Besinin 100 gramı 4 · $k + 4 · $p + 9 · $y = $yuz kcal enerji '
+          'verir. $gram g için $yuz · $gram / 100 = ${tr(yuz * gram / 100)} '
+          'kcal bulunur.',
+          positive: true,
+        );
+      case 4:
+        return sayisal(
+          '$ogun Bu öğünde karbonhidrat ve proteinden gelen toplam enerji, '
+          'yağdan gelen enerjiden kaç kcal fazladır?',
+          4 * (kh + pro) - 9 * yag,
+          [toplam, 4 * kh - 9 * yag, 4 * (kh + pro) - 4 * yag, 9 * (kh + pro) - 4 * yag],
+          'Karbonhidrat ve proteinden 4 · ($kh + $pro) = ${4 * (kh + pro)} '
+          'kcal, yağdan 9 · $yag = ${9 * yag} kcal gelir. Fark '
+          '${4 * (kh + pro) - 9 * yag} kcal olur.',
+          positive: true,
+        );
+      case 5:
+        return sayisal(
+          '$deger Bir öğrencinin bir öğünde tükettiği besinlerde $pro g '
+          'protein ve $yag g yağ vardır. Öğünün toplam enerjisi $toplam kcal '
+          'olduğuna göre öğündeki karbonhidrat miktarı kaç gramdır?',
+          kh,
+          [kh + 10, kh - 10, 4 * kh ~/ 9, kh + 20, 4 * kh],
+          'Protein ve yağdan gelen enerji 4 · $pro + 9 · $yag = '
+          '${4 * pro + 9 * yag} kcal olur. Karbonhidrattan gelen enerji '
+          '$toplam − ${4 * pro + 9 * yag} = ${4 * kh} kcal, miktarı '
+          '${4 * kh} / 4 = $kh g bulunur.',
+          positive: true,
+        );
+      case 6:
+        return sayisal(
+          '$ogun Günlük enerji gereksinimi $gunluk kcal olan bu öğrenci, '
+          'gereksinimini tam karşılamak için günün kalanında kaç kcal daha '
+          'enerji almalıdır?',
+          gunluk - toplam,
+          [gunluk - 4 * (kh + pro + yag), toplam, gunluk - 4 * kh - 9 * yag, gunluk - toplam + 100],
+          '$hesap Kalan gereksinim $gunluk − $toplam = ${gunluk - toplam} kcal '
+          'bulunur.',
+          positive: true,
+        );
+      case 7:
+        return ondalikli(
+          '$ogun Öğrenci aynı enerjiyi yalnız proteinden alsaydı kaç gram '
+          'protein tüketmesi gerekirdi?',
+          toplam / 4,
+          [toplam / 9, (kh + pro + yag).toDouble(), toplam / 2, toplam.toDouble()]
+              .where(_ikiBasamakli),
+          '$hesap Protein gram başına 4 kcal verdiğinden $toplam / 4 = '
+          '${tr(toplam / 4)} g protein gerekir.',
+          unit: 'g',
+          positive: true,
+        );
+      case 8:
+        return sayisal(
+          '$deger Bir sporcu antrenmandan önce $kh g karbonhidrat içeren bir '
+          'içecek, antrenmandan sonra $yag g yağ içeren bir atıştırmalık '
+          'tüketiyor. Karbonhidrattan alınan enerji, yağdan alınan enerjiden '
+          'kaç kcal fazladır?',
+          4 * kh - 9 * yag,
+          [4 * kh + 9 * yag, 9 * kh - 4 * yag, 4 * (kh - yag), kh - yag],
+          'Karbonhidrattan 4 · $kh = ${4 * kh} kcal, yağdan 9 · $yag = '
+          '${9 * yag} kcal alınır. Fark ${4 * kh - 9 * yag} kcal olur.',
+          positive: true,
+        );
+      default:
+        return sayisal(
+          '$ogun Öğündeki yağın tamamı yerine aynı kütlede karbonhidrat '
+          'tüketilseydi öğünün enerjisi kaç kcal olurdu?',
+          toplam - 5 * yag,
+          [toplam, toplam + 5 * yag, toplam - 9 * yag, toplam - 4 * yag],
+          '$hesap Yağ yerine karbonhidrat alındığında her gram için 9 − 4 = '
+          '5 kcal eksilir: $toplam − 5 · $yag = ${toplam - 5 * yag} kcal.',
+          positive: true,
+        );
+    }
+  },
+  exam: ExamKind.tyt,
   lesson: 'Biyoloji',
 );

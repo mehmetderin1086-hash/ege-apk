@@ -1038,9 +1038,9 @@ final lmFizikElektrik = <AdvancedFamily>[
       return ondalikli(
         'Havadaki dalga boyu $l0 nm olan tek renkli ışığın saydam bir sıvı '
         'içindeki dalga boyu $l1 nm olarak ölçülüyor. Bu sıvının yüzeyinden '
-        '$y cm derinlikteki bir balık, yüzeyin $h cm yukarısında duran bir '
-        'böceğe yüzeye dik doğrultuda bakıyor. Balık böceği kendisinden kaç '
-        'cm uzakta görür? (Havanın kırılma indisi 1 alınız.)',
+        '$y cm derinlikteki bir balık, yüzeyin $h cm yukarısındaki bir dalda '
+        'duran böceğe yüzeye dik doğrultuda bakıyor. Balık böceği kendisinden '
+        'kaç cm uzakta görür? (Havanın kırılma indisi 1 alınız.)',
         y + gor,
         [y + h * alt / ust, gor, (y + h).toDouble(), (y + h) * ust / alt],
         'Sıvının kırılma indisi n = $l0 / $l1 = $indis olur. Sıvının içinden '
