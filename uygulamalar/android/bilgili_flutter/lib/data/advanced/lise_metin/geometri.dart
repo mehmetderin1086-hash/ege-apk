@@ -1194,7 +1194,9 @@ final lmGeometri = <AdvancedFamily>[
             '$veri $x°, A noktasını içermeyen BC yayının ölçüsü $y° olduğuna '
             'göre ABC açısının ölçüsü kaç derecedir?',
             kalan ~/ 2,
-            [kalan, (x + y) ~/ 2, x + y],
+            // Çevre açı 180°'den küçüktür; yayı açı sanma, yanlış yayın
+            // yarısını alma.
+            [kalan, (x + y) ~/ 2, x ~/ 2, y ~/ 2, x + y],
             '$cozum ABC çevre açısı bu yayı gördüğünden ölçüsü $kalan° / 2 = '
             '${kalan ~/ 2}°.',
           );
