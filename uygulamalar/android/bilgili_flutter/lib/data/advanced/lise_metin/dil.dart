@@ -868,8 +868,8 @@ const _yazimlar = [
   ('her şey', 'herşey'),
   ('bir şey', 'birşey'),
   ('pek çok', 'pekçok'),
-  ('ya da', 'yada'),
-  ('sarımsak', 'sarmısak'),
+  ('metot', 'metod'),
+  ('koreografi', 'kareografi'),
   ('mahcup', 'mahçup'),
   ('unvan', 'ünvan'),
   ('penguen', 'penguin'),
@@ -1244,18 +1244,23 @@ const _temsilciler = [
   ('Cenap Şahabettin', _servet, <String>[]),
   ('Halit Ziya Uşaklıgil', _servet, <String>[]),
   ('Mehmet Rauf', _servet, <String>[]),
-  ('Ahmet Haşim', _fecr, <String>[]),
+  // Ahmet Haşim kimi ders kitaplarında Millî Edebiyat döneminde, o dönemin
+  // anlayışı dışında kalan şairler arasında anılır.
+  ('Ahmet Haşim', _fecr, [_milli]),
   ('Emin Bülent Serdaroğlu', _fecr, <String>[]),
   ('Tahsin Nahit', _fecr, <String>[]),
   ('Ömer Seyfettin', _milli, <String>[]),
   ('Ziya Gökalp', _milli, <String>[]),
   ('Ali Canip Yöntem', _milli, [_fecr]),
-  ('Mehmet Emin Yurdakul', _milli, <String>[]),
-  ('Faruk Nafiz Çamlıbel', _hece, [_milli]),
-  ('Orhan Seyfi Orhon', _hece, [_milli]),
-  ('Enis Behiç Koryürek', _hece, [_milli]),
-  ('Halit Fahri Ozansoy', _hece, [_milli]),
-  ('Yusuf Ziya Ortaç', _hece, [_milli]),
+  // İlk şiirleri Servetifünun yıllarında yayımlandığı için o dönemde de anılır.
+  ('Mehmet Emin Yurdakul', _milli, [_servet]),
+  // Beş Hececiler Millî Edebiyat döneminin içindedir; Halit Fahri gibi kimi
+  // üyeler önce Fecriati'ye katılmıştır.
+  ('Faruk Nafiz Çamlıbel', _hece, [_milli, _fecr]),
+  ('Orhan Seyfi Orhon', _hece, [_milli, _fecr]),
+  ('Enis Behiç Koryürek', _hece, [_milli, _fecr]),
+  ('Halit Fahri Ozansoy', _hece, [_milli, _fecr]),
+  ('Yusuf Ziya Ortaç', _hece, [_milli, _fecr]),
   ('Ziya Osman Saba', _mesale, <String>[]),
   ('Yaşar Nabi Nayır', _mesale, <String>[]),
   ('Sabri Esat Siyavuşgil', _mesale, <String>[]),
@@ -1287,36 +1292,41 @@ const _ilkler = [
   ('İlk köy romanı', 'Karabibik', 'Nabizade Nazım'),
   ('İlk psikolojik roman', 'Eylül', 'Mehmet Rauf'),
   ('İlk çeviri roman', 'Telemak', 'Yusuf Kâmil Paşa çevirisi'),
-  ('Batılı anlamda ilk hikâye örnekleri', 'Küçük Şeyler', 'Samipaşazade Sezai'),
+  ('Batılı anlamda ilk modern hikâyeler', 'Küçük Şeyler', 'Samipaşazade Sezai'),
   ('İlk yerli tiyatro eseri', 'Şair Evlenmesi', 'Şinasi'),
-  ('Sahnelenen ilk tiyatro eseri', 'Vatan yahut Silistre', 'Namık Kemal'),
+  ('Batı edebiyatından ilk şiir çevirileri', 'Tercüme-i Manzume', 'Şinasi'),
   ('İlk kafiyesiz şiir', 'Validem', 'Abdülhak Hamit Tarhan'),
   ('İlk pastoral şiir', 'Sahra', 'Abdülhak Hamit Tarhan'),
   ('İlk mensur şiir örnekleri', 'Mensur Şiirler', 'Halit Ziya Uşaklıgil'),
-  ('Çocuklar için yazılmış ilk şiir kitabı', 'Şermin', 'Tevfik Fikret'),
   ('İlk antoloji', 'Harabat', 'Ziya Paşa'),
   ('İlk eleştiri eseri', 'Tahrib-i Harabat', 'Namık Kemal'),
   ('İlk edebiyat tarihi', 'Tarih-i Edebiyat-ı Osmaniye', 'Abdülhalim Memduh'),
   ('İlk makale', 'Tercüman-ı Ahval Mukaddimesi', 'Şinasi'),
-  ('İlk özel gazete', 'Tercüman-ı Ahval', 'Şinasi ve Agâh Efendi'),
+  ('Türklerin çıkardığı ilk özel gazete', 'Tercüman-ı Ahval', 'Şinasi ve Agâh Efendi'),
   ('İlk resmî gazete', 'Takvim-i Vekayi', '1831'),
   ('İlk yarı resmî gazete', 'Ceride-i Havadis', '1840'),
   ('İlk dergi', 'Vakayi-i Tıbbiye', '1849'),
   ('İlk mizah dergisi', 'Diyojen', 'Teodor Kasap'),
-  ('Türkçenin ilk yazılı belgeleri', 'Orhun Yazıtları', 'Göktürkler'),
+  ('Türkçenin bilinen ilk yazılı belgeleri', 'Orhun Yazıtları', 'Göktürkler'),
   ('Türk dilinin bilinen ilk sözlüğü', 'Divanü Lügati\'t-Türk', 'Kâşgarlı Mahmud'),
   ('Türk edebiyatının ilk mesnevisi', 'Kutadgu Bilig', 'Yusuf Has Hacib'),
+  ('Hikmet türünün ilk örnekleri', 'Divan-ı Hikmet', 'Ahmet Yesevi'),
   ('İlk şairler tezkiresi', 'Mecalisü\'n-Nefais', 'Ali Şir Nevai'),
   ('Anı türünün ilk örneği', 'Babürname', 'Babür Şah'),
   ('Gezi yazısı türünün ilk örneği', 'Mir\'atü\'l-Memalik', 'Seydi Ali Reis'),
-  ('İlk bibliyografya', 'Keşfü\'z-Zünun', 'Kâtip Çelebi'),
+  ('İlk şehrengiz', 'Şehrengiz-i Edirne', 'Mesihi'),
 ];
 
 // Bir ilkin yanıtıyla karıştırılması tartışmaya açık olduğu için o ilkin
 // konumuna çeldirici olarak yazılmayan eserler.
 const _ilkDisi = {
   'İlk makale': ['Tercüman-ı Ahval'],
-  'İlk özel gazete': ['Tercüman-ı Ahval Mukaddimesi'],
+  // Ceride-i Havadis bir yabancının özel girişimi olduğu için kimi kaynaklarda
+  // “ilk özel gazete” diye de geçer.
+  'Türklerin çıkardığı ilk özel gazete': [
+    'Tercüman-ı Ahval Mukaddimesi',
+    'Ceride-i Havadis',
+  ],
   'İlk realist roman': ['Karabibik'],
 };
 

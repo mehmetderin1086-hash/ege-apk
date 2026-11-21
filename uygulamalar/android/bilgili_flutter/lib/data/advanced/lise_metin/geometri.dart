@@ -1090,7 +1090,8 @@ final lmGeometri = <AdvancedFamily>[
               'köşegen uzunluğu kaç cm olur?',
           (g, kk),
           [(p + q, 1), (g, 2 * s * t), (g, t * t - s * s)],
-          'Uzun kenar ${p + q} − $p = $q cm olur. $pisagor: k² = $p² + $q² = '
+          'Yarı çevre ${p + q} cm olduğundan uzun kenar ${p + q} − $p = $q cm '
+              'olur. $pisagor: k² = $p² + $q² = '
               '${p * p + q * q}, k = ${_kok(g, kk)} cm.',
         ),
         _ => _koklu(
@@ -1118,7 +1119,9 @@ final lmGeometri = <AdvancedFamily>[
     BloomLevel.uygulama,
     (a, b, c) {
       final j = c ~/ 2, uc = c.isOdd;
-      final (al, carpan) = _yay[b];
+      // π = 3 alındığında 60°'lik yayın uzunluğu yarıçapa eşit çıkar ve yanıt
+      // verilen sayıyı tekrarlar; bu vakalarda tabloda olmayan 36° kullanılır.
+      final (al, carpan) = uc && _yay[b].$1 == 60 ? (36, 10) : _yay[b];
       final r = carpan * (1 + a);
       final y = r * al ~/ 180, s = r * r * al ~/ 360;
       String sim(int k) => k == 1 ? 'π' : '$kπ';
@@ -1224,7 +1227,6 @@ final lmGeometri = <AdvancedFamily>[
             [kalan, (x + y) ~/ 2, x + y],
             '$cozum ABC çevre açısı bu yayı gördüğünden ölçüsü $kalan° / 2 = '
             '${kalan ~/ 2}°.',
-            ust: 360,
           );
         case 1:
           final u = 25 + 2 * a, v = 30 + 3 * b, t = 180 - u - v;

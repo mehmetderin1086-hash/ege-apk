@@ -1371,7 +1371,11 @@ const _mucadeleOlgu = <(String, String)>[
     'Birinci İnönü Muharebesi',
   ),
   ('Yeni Türk devletinin ilk anayasasıdır.', '1921 Anayasası'),
-  ('Sovyet Rusya ile imzalanmıştır.', 'Moskova Antlaşması'),
+  // Kars Antlaşması'na Sovyet Rusya da katıldığından bilgi ikili antlaşmayı belirtir.
+  (
+    'TBMM Hükûmeti ile Sovyet Rusya arasında ikili olarak imzalanmıştır.',
+    'Moskova Antlaşması',
+  ),
   (
     "Batum'un Gürcistan'a bırakılmasıyla Misakımillî'den ilk kez ödün verilmiştir.",
     'Moskova Antlaşması',

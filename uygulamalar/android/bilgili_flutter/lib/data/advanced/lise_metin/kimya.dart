@@ -1895,8 +1895,253 @@ final _f14 = lmAile(
   lesson: 'Kimya',
 );
 
+// ---------------------------------------------------------------------------
+// 15. Seyreltme, çözeltileri karıştırma ve iyon derişimi
+// ---------------------------------------------------------------------------
+
+// (ilk hacim payı, son hacim payı): aralarında asal, ikincisi en çok 8.
+const _hacimOranlari = [
+  (1, 2), (1, 3), (2, 3), (1, 4), (3, 4), (1, 5), (2, 5), (3, 5), (4, 5),
+  (1, 6), (5, 6), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (1, 8),
+  (3, 8), (5, 8),
+];
+
+// (tuz, sorulan iyon, formül başına iyon sayısı)
+const _tuzIyonlari = [
+  ('CaCl₂', 'Cl⁻', 2), ('Al₂(SO₄)₃', 'SO₄²⁻', 3), ('Na₃PO₄', 'Na⁺', 3),
+  ('Mg(NO₃)₂', 'NO₃⁻', 2), ('K₂SO₄', 'K⁺', 2), ('AlCl₃', 'Cl⁻', 3),
+  ('Fe₂(SO₄)₃', 'Fe³⁺', 2), ('Na₂CO₃', 'Na⁺', 2), ('Al(NO₃)₃', 'NO₃⁻', 3),
+  ('(NH₄)₂SO₄', 'NH₄⁺', 2),
+];
+
+// (1. tuz, iyon sayısı, 2. tuz, iyon sayısı, ortak iyon)
+const _ortakIyonlular = [
+  ('NaCl', 1, 'CaCl₂', 2, 'Cl⁻'), ('KNO₃', 1, 'Ca(NO₃)₂', 2, 'NO₃⁻'),
+  ('Na₂SO₄', 1, 'Al₂(SO₄)₃', 3, 'SO₄²⁻'), ('NaCl', 1, 'AlCl₃', 3, 'Cl⁻'),
+  ('KCl', 1, 'MgCl₂', 2, 'Cl⁻'), ('NaNO₃', 1, 'Al(NO₃)₃', 3, 'NO₃⁻'),
+  ('Na₂SO₄', 2, 'NaCl', 1, 'Na⁺'), ('K₂SO₄', 2, 'KNO₃', 1, 'K⁺'),
+  ('Na₃PO₄', 3, 'NaCl', 1, 'Na⁺'), ('MgCl₂', 2, 'AlCl₃', 3, 'Cl⁻'),
+];
+
+final _f15 = lmAile(
+  'kim_seyreltme',
+  'Seyreltme, çözelti karıştırma ve iyon derişimi',
+  Topic.chemistry,
+  Difficulty.medium,
+  BloomLevel.uygulama,
+  (a, b, c) {
+    final (r1, r2) = _hacimOranlari[b];
+    final v = const [20, 25, 40, 50, 100][a % 5];
+    final w = c ~/ 5, s = 1 + a ~/ 5, s2 = 1 + (a ~/ 5 + 2) % 5;
+    final v1 = r1 * v, v2 = (r2 - r1) * v, vt = r2 * v;
+    final x = const ['NaCl', 'KNO₃', 'HCl', 'NaOH', 'C₆H₁₂O₆'][(a + b) % 5];
+    switch (c % 5) {
+      case 0:
+      case 1:
+        final c0 = (w == 0 ? 10 : 3) * s / 100;
+        final d1 = r2 * c0, d2 = r1 * c0;
+        if (c % 5 == 0) {
+          return _say(
+            '${_t(d1)} mol/L derişimli $v1 mL $x çözeltisine $v2 mL saf su '
+            'ekleniyor. Yeni çözeltinin derişimi kaç mol/L olur?',
+            d2,
+            [d1 * v1 / v2, d1 * v2 / vt, d1 / 2, d1 * vt / v1, d2 / 2],
+            'Son hacim $v1 + $v2 = $vt mL olur. M₁V₁ = M₂V₂ eşitliğinden M₂ = '
+            '${_t(d1)}·$v1 / $vt = ${_t(d2)} mol/L bulunur.',
+            birim: 'mol/L',
+          );
+        }
+        return sayisal(
+          '${_t(d1)} mol/L derişimli $v1 mL $x çözeltisinin derişimini '
+          '${_t(d2)} mol/L değerine düşürmek için kaç mL saf su eklenmelidir?',
+          v2,
+          [vt, v1, vt + v1, v2 * 2, v2 ~/ 2],
+          'M₁V₁ = M₂V₂ eşitliğinden son hacim ${_t(d1)}·$v1 / ${_t(d2)} = $vt '
+          'mL olmalıdır. Eklenecek su $vt − $v1 = $v2 mL bulunur.',
+          unit: 'mL',
+          positive: true,
+        );
+      case 2:
+        final p = (w == 0 ? 10 : 3) * s / 100, q = (w == 0 ? 10 : 3) * s2 / 100;
+        final d1 = r2 * p, d2 = r2 * q, son = r1 * p + (r2 - r1) * q;
+        return _say(
+          '${_t(d1)} mol/L derişimli $v1 mL $x çözeltisi ile ${_t(d2)} mol/L '
+          'derişimli $v2 mL $x çözeltisi karıştırılıyor. Karışımın derişimi '
+          'kaç mol/L olur?',
+          son,
+          [(d1 + d2) / 2, d1 + d2, (d1 * v2 + d2 * v1) / vt, (d1 - d2).abs()],
+          'Son derişim (${_t(d1)}·$v1 + ${_t(d2)}·$v2) / $vt = ${_t(son)} '
+          'mol/L bulunur.',
+          birim: 'mol/L',
+        );
+      case 3:
+        final (tuz, iyon, k) = _tuzIyonlari[a % 5 + 5 * w];
+        final c0 = s / 100;
+        final d1 = r2 * c0, d2 = r1 * c0;
+        return _say(
+          '${_t(d1)} mol/L derişimli $v1 mL $tuz çözeltisi saf su ile $vt mL '
+          'hacme tamamlanıyor. Son çözeltideki $iyon iyonu derişimi kaç mol/L '
+          'olur? (Tuzun suda tamamen iyonlaştığı kabul edilecektir.)',
+          k * d2,
+          [d2, k * d1, d2 / k, d1, k * d2 * 2],
+          'Seyreltilen çözeltinin derişimi ${_t(d1)}·$v1 / $vt = ${_t(d2)} '
+          'mol/L olur. Bir formül birimi $k tane $iyon iyonu verdiğinden iyon '
+          'derişimi $k·${_t(d2)} = ${_t(k * d2)} mol/L bulunur.',
+          birim: 'mol/L',
+        );
+      default:
+        final (t1, k1, t2, k2, iyon) = _ortakIyonlular[a % 5 + 5 * w];
+        final p = s / 100, q = s2 / 100;
+        final d1 = r2 * p, d2 = r2 * q;
+        final son = k1 * r1 * p + k2 * (r2 - r1) * q;
+        return _say(
+          '${_t(d1)} mol/L derişimli $v1 mL $t1 çözeltisi ile ${_t(d2)} mol/L '
+          'derişimli $v2 mL $t2 çözeltisi karıştırılıyor. Karışımdaki $iyon '
+          'iyonu derişimi kaç mol/L olur? (Tuzların suda tamamen iyonlaştığı '
+          'kabul edilecektir.)',
+          son,
+          [
+            r1 * p + (r2 - r1) * q,
+            k1 * d1 + k2 * d2,
+            (k1 * d1 + k2 * d2) / 2,
+            k2 * r1 * p + k1 * (r2 - r1) * q,
+            son / 2,
+          ],
+          '$iyon derişimi ($k1·${_t(d1)}·$v1 + $k2·${_t(d2)}·$v2) / $vt = '
+          '${_t(son)} mol/L bulunur.',
+          birim: 'mol/L',
+        );
+    }
+  },
+  exam: ExamKind.ayt,
+  lesson: 'Kimya',
+);
+
+// ---------------------------------------------------------------------------
+// 16. Donma noktası alçalması ve kaynama noktası yükselmesi
+// ---------------------------------------------------------------------------
+
+// (formül, ad, suda bir formül biriminin verdiği tanecik sayısı)
+const _koligatifler = [
+  ('C₆H₁₂O₆', 'glikoz', 1), ('C₁₂H₂₂O₁₁', 'sakkaroz', 1),
+  ('CO(NH₂)₂', 'üre', 1), ('C₂H₆O₂', 'etilen glikol', 1),
+  ('C₃H₈O₃', 'gliserin', 1), ('NaOH', 'sodyum hidroksit', 2),
+  ('KOH', 'potasyum hidroksit', 2), ('KNO₃', 'potasyum nitrat', 2),
+  ('NaNO₃', 'sodyum nitrat', 2), ('KBr', 'potasyum bromür', 2),
+  ('NaBr', 'sodyum bromür', 2), ('KI', 'potasyum iyodür', 2),
+  ('MgSO₄', 'magnezyum sülfat', 2), ('NH₄NO₃', 'amonyum nitrat', 2),
+  ('LiOH', 'lityum hidroksit', 2), ('AgNO₃', 'gümüş nitrat', 2),
+  ('CaCl₂', 'kalsiyum klorür', 3), ('MgCl₂', 'magnezyum klorür', 3),
+  ('K₂CO₃', 'potasyum karbonat', 3), ('Ca(NO₃)₂', 'kalsiyum nitrat', 3),
+  ('Mg(NO₃)₂', 'magnezyum nitrat', 3), ('CaBr₂', 'kalsiyum bromür', 3),
+  ('Na₂CO₃', 'sodyum karbonat', 3), ('Al(NO₃)₃', 'alüminyum nitrat', 4),
+  ('K₃PO₄', 'potasyum fosfat', 4),
+];
+
+final _f16 = lmAile(
+  'kim_koligatif',
+  'Donma noktası alçalması ve kaynama noktası yükselmesi',
+  Topic.chemistry,
+  Difficulty.hard,
+  BloomLevel.analiz,
+  (a, b, c) {
+    final (f, ad, i) = _koligatifler[a];
+    final mk = _mk(f);
+    final k = 1 + b % 10; // tanecik molalitesi 0,5·k
+    final donma = b < 10;
+    final s = c < 5 ? 2 : 4;
+    final su = 100 * i * s, kg = su / 1000;
+    final n = k * s / 20, ms = n * mk;
+    final sabit = donma ? 1.86 : 0.52;
+    final dt = sabit * k / 2;
+    final nokta = donma ? -dt : 100 + dt;
+    final olay = donma ? 'donmaya' : 'kaynamaya';
+    final sabitYazi = donma
+        ? 'su için Kd = 1,86 °C/m'
+        : 'su için Kk = 0,52 °C/m; saf su 100 °C sıcaklıkta kaynar';
+    final iyonYazi = i == 1
+        ? 'madde suda iyonlaşmadan çözünür'
+        : 'madde suda tamamen iyonlaşır';
+    final madde = '$ad ($f)';
+    final kut = _kut([f]);
+    final tanecik = i == 1
+        ? 'Tanecik molalitesi ${_t(n)} / ${_t(kg)} = ${_t(k / 2)} m olur.'
+        : 'Bir formül birimi $i tanecik verdiğinden tanecik molalitesi '
+              '$i·${_t(n)} / ${_t(kg)} = ${_t(k / 2)} m olur.';
+    final dtYazi = 'ΔT = ${_t(sabit)}·${_t(k / 2)} = ${_t(dt)} °C';
+    final noktaYazi = donma
+        ? '$olay başlama sıcaklığı 0 − ${_t(dt)} = ${_t(nokta)} °C'
+        : '$olay başlama sıcaklığı 100 + ${_t(dt)} = ${_t(nokta)} °C';
+    final geri = 'ΔT = ${_t(dt)} °C olduğundan tanecik molalitesi ${_t(dt)} / '
+        '${_t(sabit)} = ${_t(k / 2)} m olur.';
+    switch (c % 5) {
+      case 0:
+        return _say(
+          '${_t(ms)} gram $madde, $su gram saf suda çözülüyor. Çözeltinin 1 atm '
+          'basınçtaki $olay başlama sıcaklığı kaç °C olur? ($kut; $sabitYazi; '
+          '$iyonYazi)',
+          nokta,
+          donma
+              ? [-dt / i, dt, -dt * 2, -sabit * n * i, -dt / 2, -dt - 1]
+              : [100 + dt / i, 100 - dt, 100 + dt * 2, 100 + sabit * n * i, dt],
+          'n = ${_t(ms)} / ${_t(mk)} = ${_t(n)} mol. $tanecik $dtYazi; '
+          '$noktaYazi bulunur.',
+          birim: '°C',
+          arti: false,
+        );
+      case 1:
+        return _say(
+          'Bir miktar $madde, $su gram saf suda çözüldüğünde çözeltinin 1 atm '
+          'basınçtaki $olay başlama sıcaklığı ${_t(nokta)} °C oluyor. Çözünen '
+          'madde kaç gramdır? ($kut; $sabitYazi; $iyonYazi)',
+          ms,
+          [ms * i, k / 2 * mk, ms * 2, ms / 2, n, ms / i],
+          '$geri $su gram suda ${_t(k / 2)}·${_t(kg)} = ${_t(n * i)} mol '
+          'tanecik, yani ${_t(n)} mol madde bulunur. Kütle ${_t(n)}·${_t(mk)} '
+          '= ${_t(ms)} gramdır.',
+          birim: 'g',
+        );
+      case 2:
+        return _say(
+          '${_t(ms)} gram $madde kaç gram saf suda çözülürse çözeltinin 1 atm '
+          'basınçtaki $olay başlama sıcaklığı ${_t(nokta)} °C olur? ($kut; '
+          '$sabitYazi; $iyonYazi)',
+          su,
+          [su / i, su * i, su * 2, su / 2, su + 100],
+          '$geri n = ${_t(ms)} / ${_t(mk)} = ${_t(n)} mol madde ${_t(n * i)} '
+          'mol tanecik verir. Su kütlesi ${_t(n * i)} / ${_t(k / 2)} = '
+          '${_t(kg)} kg, yani $su gramdır.',
+          birim: 'g',
+        );
+      case 3:
+        return _say(
+          '$su gram saf su ile hazırlanan $madde çözeltisinin 1 atm basınçtaki '
+          '$olay başlama sıcaklığı ${_t(nokta)} °C olarak ölçülüyor. Çözeltide '
+          'kaç mol $f çözünmüştür? ($sabitYazi; $iyonYazi)',
+          n,
+          [n * i, k / 2, k / 2 / i, n * 2, n / 2],
+          '$geri $su gram suda ${_t(k / 2)}·${_t(kg)} = ${_t(n * i)} mol '
+          'tanecik bulunur; çözünen madde ${_t(n * i)} / $i = ${_t(n)} moldür.',
+          birim: 'mol',
+        );
+      default:
+        return _say(
+          '${_t(n)} mol $madde, $su gram saf suda çözülüyor. Çözeltinin '
+          '${donma ? 'donma noktası saf suya göre kaç °C alçalır' : 'kaynama noktası saf suya göre kaç °C yükselir'}? '
+          '($sabitYazi; $iyonYazi)',
+          dt,
+          [dt / i, sabit * n * i, dt * 2, dt / 2, (donma ? 0.52 : 1.86) * k / 2],
+          '$tanecik $dtYazi bulunur.',
+          birim: '°C',
+        );
+    }
+  },
+  exam: ExamKind.ayt,
+  lesson: 'Kimya',
+);
+
 final lmKimya = <AdvancedFamily>[
   _f01, _f02, _f03, _f04, _f05, _f06, _f07, _f08, _f09, _f10, _f11, _f12,
-  _f13, _f14,
-  for (var n = 15; n <= 20; n++) _gecici(n),
+  _f13, _f14, _f15, _f16,
+  for (var n = 17; n <= 20; n++) _gecici(n),
 ];
