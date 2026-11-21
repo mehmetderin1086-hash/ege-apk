@@ -253,8 +253,9 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
   );
 }
 
+// Çiftler, 8 m ile 1092 m arasındaki her yükselti farkı için anlamlı kalır.
 const _egimYer = [
-  ('bir köy', 'bir yayla'),
+  ('bir köy', 'bir mesire alanı'),
   ('bir göl kıyısı', 'bir seyir terası'),
   ('bir vadi tabanı', 'bir sırt'),
   ('bir kasaba', 'bir tepe'),
@@ -274,8 +275,11 @@ AdvancedItem _egim(int a, int b, int c) {
       'Yükseltisi $h1 m olan ${yer.$1} ile yükseltisi $h2 m olan ${yer.$2} arasındaki yatay '
       'uzaklık $uzaklik olarak ölçülmüştür. Bu iki yer arasındaki ortalama eğim yüzde (%) kaçtır?',
       '%$p',
-      ['%${p * 10}', '‰$p', '%${tr(p / 10)}'],
-      'Yükselti farkı $h2 − $h1 = $fark m, yatay uzaklık $yatay m olduğundan '
+      // Değerce birbirinden farklı üç hata: birimi binde sanma (‰p = %p/10),
+      // 1000 ile çarpma (%10p) ve 100 ile çarpmayı unutma (%p/100).
+      ['‰$p', '%${p * 10}', '%${tr(p / 100)}'],
+      'Yükselti farkı $h2 − $h1 = $fark m, yatay uzaklık '
+      '${k.isOdd ? '$uzaklik = $yatay m' : '$yatay m'} olduğundan '
       'eğim = $fark / $yatay × 100 = %$p olur.',
     );
   }
@@ -295,86 +299,94 @@ AdvancedItem _egim(int a, int b, int c) {
   return secenekli(
     '$giris ortalama eğimi binde (‰) kaçtır?',
     '‰$q',
-    ['%$q', '‰${q * 10}', '‰${tr(q / 10)}'],
+    // Değerce birbirinden farklı üç hata: birimi yüzde sanma (%q = ‰10q),
+    // 100 ile çarpma (‰q/10) ve 1000 ile çarpmayı unutma (‰q/1000).
+    ['%$q', '‰${tr(q / 10)}', '‰${tr(q / 1000, 3)}'],
     'Yükselti farkı $h2 − $h1 = $fark m, yatay uzaklık $km km = ${km * 1000} m olduğundan '
     'eğim = $fark / ${km * 1000} × 1000 = ‰$q olur.',
   );
 }
 
+// Yükseltisi 600–2500 m arasında değişen yerler için geçerli adlar.
 const _yuksekYer = [
   'bir dağ istasyonunda',
   'bir yaylada',
-  'bir kayak merkezinde',
+  'bir dağ köyünde',
   'bir dağ geçidinde',
-  'bir zirve kampında',
+  'bir dağ evinde',
 ];
 
 AdvancedItem _sicaklik(int a, int b, int c) {
   final bicim = c % 3, q = c ~/ 3;
   const kural = 'Sıcaklığın her 200 metrede 1 °C değiştiği kabul edilmektedir.';
-  AdvancedItem soru(String kok, double dogru, List<double> yanlis, String aciklama) =>
+  // Sıcaklıklar onda bir °C olarak tam sayıyla tutulur. Yükseltiler 100 m
+  // adımlıdır ve gerçekçi aralıkta kalır: istasyon en çok 2300 m, deniz
+  // seviyesiyle karşılaştırılan yer en çok 2500 m, yayla en çok 2800 m.
+  String say(int onda) => _n(onda / 10);
+  String yaz(int onda) => _derece(onda / 10);
+  // Yükselti farkının (m) yol açtığı sıcaklık farkı, onda bir °C.
+  int fark(int metre) => metre ~/ 20;
+  AdvancedItem soru(String kok, int dogru, List<int> yanlis, String aciklama) =>
       secenekli(
         kok,
-        _derece(dogru),
-        [...yanlis, dogru + 1, dogru - 1, dogru + 2, dogru - 2].map(_derece),
+        yaz(dogru),
+        [...yanlis, dogru + 10, dogru - 10, dogru + 20, dogru - 20].map(yaz),
         aciklama,
       );
   if (bicim == 0) {
-    final deniz = 12 + a + (q ~/ 2) / 2; // deniz seviyesi sıcaklığı
-    final h = 200 * (3 + b) + 100 * (q % 2);
-    final d = h / 200;
-    final t = deniz - d;
+    final deniz = 120 + 10 * a + const [0, 5, 2, 7][q]; // 12 … 36,7 °C
+    final h = 100 * (6 + b); // 600 … 2500 m
+    final d = fark(h), t = deniz - d;
     return soru(
-      'Deniz seviyesinde sıcaklığın ${_derece(deniz)} ölçüldüğü bir anda, aynı bölgede $h m '
+      'Deniz seviyesinde sıcaklığın ${yaz(deniz)} ölçüldüğü bir anda, aynı bölgede $h m '
       'yükseltideki ${sec(_yuksekYer, a + b)} sıcaklığın kaç °C olması beklenir? $kural',
       t,
-      [deniz + d, deniz - 2 * d, deniz - d / 2],
-      'Yükselti farkı $h m olduğundan sıcaklık $h / 200 = ${_n(d)} °C azalır: '
-      '${_n(deniz)} − ${_n(d)} = ${_derece(t)}.',
+      // Ters yönde işlem, 100 m'de 1 °C sanma, 400 m'de 1 °C sanma (ya da ikisi birden).
+      [deniz + d, deniz - 2 * d, h % 200 == 0 ? deniz - d ~/ 2 : deniz + 2 * d],
+      'Yükselti farkı $h m olduğundan sıcaklık $h / 200 = ${say(d)} °C azalır: '
+      '${say(deniz)} − ${say(d)} = ${yaz(t)}.',
     );
   }
   if (bicim == 1) {
-    final deniz = 12 + a + (q == 2 ? 0.5 : 0.0);
-    final h = 200 * (2 + b) + (q == 1 ? 100 : 0);
-    final d = h / 200;
-    final t = deniz - d; // istasyonda ölçülen
+    final deniz = 120 + 10 * a + const [0, 5, 2][q];
+    final h = 100 * (4 + b); // 400 … 2300 m
+    final d = fark(h), t = deniz - d; // t: istasyonda ölçülen, en az 0,5 °C
     return soru(
-      'Yükseltisi $h m olan bir meteoroloji istasyonunda sıcaklık ${_derece(t)} olarak '
+      'Yükseltisi $h m olan bir meteoroloji istasyonunda sıcaklık ${yaz(t)} olarak '
       'ölçülmüştür. $kural Buna göre istasyonun deniz seviyesine indirgenmiş sıcaklığı kaç °C olur?',
       deniz,
-      [t - d, t + 2 * d, t + d / 2],
-      'İndirgemede yükseltinin etkisi kaldırılır: $h / 200 = ${_n(d)} °C eklenir. '
-      '${_n(t)} + ${_n(d)} = ${_derece(deniz)}.',
+      [t - d, t + 2 * d, h % 200 == 0 ? t + d ~/ 2 : t - 2 * d],
+      'İndirgemede yükseltinin etkisi kaldırılır: $h / 200 = ${say(d)} °C eklenir. '
+      '${say(t)} + ${say(d)} = ${yaz(deniz)}.',
     );
   }
-  // İki nokta arasında.
-  final alt = const [400, 600, 900][q];
-  final ek = q == 2 ? 100 : 0;
-  final ust = alt + 200 * (1 + b) + ek;
-  final d = (ust - alt) / 200;
+  // İki nokta arasında: köy 300, 500 ya da 700 m; yayla 900 … 2800 m.
+  final alt = const [300, 500, 700][q];
+  final ust = 900 + 100 * b;
+  final m = ust - alt, d = fark(m);
   if (q == 1) {
-    final tUst = -10.0 + a;
+    final tUst = -100 + 10 * a; // −10 … 14 °C
     final tAlt = tUst + d;
     return soru(
-      'Bir dağın yamacında $ust m yükseltideki yaylada sıcaklık ${_derece(tUst)} iken aynı anda '
+      'Bir dağın yamacında $ust m yükseltideki yaylada sıcaklık ${yaz(tUst)} iken aynı anda '
       '$alt m yükseltideki köyde sıcaklığın kaç °C olması beklenir? $kural',
       tAlt,
-      [tUst - d, tUst + 2 * d, tUst + d / 2],
-      'Yükselti farkı $ust − $alt = ${ust - alt} m olduğundan sıcaklık farkı '
-      '${ust - alt} / 200 = ${_n(d)} °C olur. Alçaktaki köy daha sıcaktır: '
-      '${_n(tUst)} + ${_n(d)} = ${_derece(tAlt)}.',
+      [tUst - d, tUst + 2 * d, m % 200 == 0 ? tUst + d ~/ 2 : tUst - 2 * d],
+      'Yükselti farkı $ust − $alt = $m m olduğundan sıcaklık farkı '
+      '$m / 200 = ${say(d)} °C olur. Alçaktaki köy daha sıcaktır: '
+      '${say(tUst)} + ${say(d)} = ${yaz(tAlt)}.',
     );
   }
-  final tAlt = 8.0 + a + (q == 2 ? 0.5 : 0.0);
+  final tAlt = 80 + 10 * a + (q == 2 ? 5 : 0); // 8 … 32,5 °C
   final tUst = tAlt - d;
   return soru(
-    'Bir dağın yamacında $alt m yükseltideki köyde sıcaklık ${_derece(tAlt)} iken aynı anda '
+    'Bir dağın yamacında $alt m yükseltideki köyde sıcaklık ${yaz(tAlt)} iken aynı anda '
     '$ust m yükseltideki yaylada sıcaklığın kaç °C olması beklenir? $kural',
     tUst,
-    [tAlt + d, tAlt - 2 * d, tAlt - d / 2],
-    'Yükselti farkı $ust − $alt = ${ust - alt} m olduğundan sıcaklık farkı '
-    '${ust - alt} / 200 = ${_n(d)} °C olur. Yüksekteki yayla daha soğuktur: '
-    '${_n(tAlt)} − ${_n(d)} = ${_derece(tUst)}.',
+    [tAlt + d, tAlt - 2 * d, m % 200 == 0 ? tAlt - d ~/ 2 : tAlt + 2 * d],
+    'Yükselti farkı $ust − $alt = $m m olduğundan sıcaklık farkı '
+    '$m / 200 = ${say(d)} °C olur. Yüksekteki yayla daha soğuktur: '
+    '${say(tAlt)} − ${say(d)} = ${yaz(tUst)}.',
   );
 }
 
@@ -539,7 +551,6 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
         '‰${hiz + olumOrani}',
         '%$hiz',
         '‰$olumOrani',
-        '‰${hiz * 10}',
         '‰${hiz + 2 * olumOrani}',
       ],
       'Doğal artış $dogum − $olum = ${dogum - olum} kişidir. '
@@ -909,7 +920,8 @@ const _kronoloji = <(int, String)>[
   (1792, 'Yaş Antlaşması'),
   (1808, "Sened-i İttifak'ın imzalanması"),
   (1826, "Yeniçeri Ocağı'nın kaldırılması"),
-  (1829, 'Edirne Antlaşması'),
+  // Yıl verilmeden 1713 tarihli Edirne Antlaşması'ndan ayırt edilsin diye niteleme eklendi.
+  (1829, "Yunanistan'ın bağımsızlığının tanındığı Edirne Antlaşması"),
   (1833, 'Hünkâr İskelesi Antlaşması'),
   (1838, 'Balta Limanı Ticaret Antlaşması'),
   (1839, "Tanzimat Fermanı'nın ilan edilmesi"),
@@ -1415,10 +1427,9 @@ AdvancedItem _mucadele(int i) => _ucluOlgu(
 
 // ─────────────────────────── 20 · Kurum ve kavramlar ────────────────────────
 
+// Yalnız Türk-İslam devletleri ile Osmanlı Devleti'ne ait kurum ve kavramlar;
+// İslamiyet öncesi Türk devletlerine ait olanlar (kut, kurultay, töre) alınmaz.
 const _kavramlar = <(String, String)>[
-  ('Kut', 'Eski Türklerde hükümdara yönetme yetkisinin Tanrı tarafından verildiği inancı'),
-  ('Kurultay', 'Eski Türk devletlerinde devlet işlerinin görüşüldüğü meclis'),
-  ('Töre', 'Eski Türklerde toplum ve devlet hayatını düzenleyen yazısız hukuk kuralları'),
   (
     'İkta',
     'Büyük Selçuklu Devleti\'nde toprak gelirlerinin hizmet karşılığında komutan ve '
@@ -1470,6 +1481,12 @@ const _kavramlar = <(String, String)>[
   ),
   ('Kaptanıderya', 'Osmanlı donanmasının başkomutanı'),
   ('Beylerbeyi', "Osmanlı Devleti'nde eyaletlerin en üst yöneticisi"),
+  ('Sancak beyi', "Osmanlı Devleti'nde sancakların en üst yöneticisi"),
+  (
+    'Lala',
+    'Osmanlı Devleti\'nde sancağa gönderilen şehzadeleri devlet yönetimi konusunda '
+        'yetiştiren deneyimli devlet adamı',
+  ),
   ('Kadı', 'Osmanlı Devleti\'nde kazalarda yargı ve belediye işlerine bakan görevli'),
   ('Subaşı', "Osmanlı Devleti'nde şehirlerin güvenliğini sağlayan görevli"),
   ('Muhtesip', 'Çarşı ve pazarlarda fiyatları, ölçü ve tartıyı denetleyen görevli'),
@@ -1516,6 +1533,7 @@ const _kavramlar = <(String, String)>[
   ('Darüşşifa', 'Türk-İslam devletlerinde hastaların tedavi edildiği sağlık kurumu'),
   ('Bedesten', 'Değerli malların alınıp satıldığı kapalı çarşı'),
   ('Sıbyan mektebi', "Osmanlı Devleti'nde ilköğretim düzeyinde eğitim veren mahalle okulu"),
+  ('Müderris', 'Medreselerde ders veren öğretim görevlisi'),
   ('Ferman', 'Padişahın herhangi bir konudaki yazılı emri'),
   ('Tuğra', 'Padişahın belgelerde kullanılan özel imza işareti'),
   (
@@ -1545,8 +1563,8 @@ AdvancedItem _kavram(int i) {
   final diger = [...ucluDizilimler.sublist(kay), ...ucluDizilimler.sublist(1, kay)];
   return secenekli(
     '${_liste([for (final e in x) e.$2])}'
-    'Türk-İslam ve Osmanlı devlet teşkilatına ait bu tanımların karşılığı olan kavramlar '
-    'sırasıyla hangi seçenekte doğru verilmiştir?',
+    'Türk-İslam devletleri ile Osmanlı Devleti\'ndeki kurum ve kavramlara ait bu tanımların '
+    'karşılıkları sırasıyla hangi seçenekte doğru verilmiştir?',
     v.join(' – '),
     [for (final p in diger) [for (final j in p) v[j]].join(' – ')],
     'Birinci tanım ${v[0]}, ikinci tanım ${v[1]}, üçüncü tanım ${v[2]} kavramını açıklar.',

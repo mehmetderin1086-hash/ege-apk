@@ -544,16 +544,31 @@ final lmGeometri = <AdvancedFamily>[
     (a, b, c) {
       final j = c ~/ 2;
       if (c.isEven) {
-        final q = 22 + a, r = 2 + b, p = 2 + j;
-        final t = p * q, u = p * r;
+        // sin C = sn/sd seçilir: |AC| = sd·m, h_a = sn·m, |BC| = sd·n ve
+        // h_b = sn·n. m > n olduğundan kenar oranı 1 ile 8/3 arasında kalır
+        // ve yanıt verilen sayılardan hiçbirine eşit olmaz. Yüksekliğin ayağı
+        // kenarın uzantısına düşebildiği için "kenara ait yükseklik" denir.
+        final (sn, sd) = const [(1, 2), (2, 3), (3, 4), (3, 5), (4, 5)][j];
+        final n = 12 + a, m = n + 1 + b;
+        final t = sd * n, u = sd * m, r = sn * m, q = sn * n;
         return sayisal(
-          'ABC üçgeninde |BC| = $t cm ve A köşesinden [BC] kenarına inen '
-          'yükseklik $r cm olarak veriliyor. |AC| = $u cm olduğuna göre B '
-          'köşesinden [AC] kenarına inen yükseklik kaç cm olur?',
+          'ABC üçgeninde |BC| = $t cm ve [BC] kenarına ait yükseklik $r cm '
+          'olarak veriliyor. |AC| = $u cm olduğuna göre [AC] kenarına ait '
+          'yükseklik kaç cm olur?',
           q,
-          [2 * q, (t * r) ~/ 2, u - r, r],
-          'Üçgenin alanı iki ayrı taban ve yükseklik ile yazılır: $t·$r / 2 = '
-          '$u·h / 2. Buradan h = ${t * r} / $u = $q cm bulunur.',
+          // Tek tarafta ikiye bölmeyi unutma (iki yönde), çarpım yerine toplam
+          // eşitliği kurma, yükseklikleri eşit sanma, alanı yanıt sanma.
+          [
+            2 * q,
+            if (q.isEven) q ~/ 2,
+            t + r - u,
+            r,
+            if ((t * r).isEven) t * r ~/ 2,
+            u - r,
+          ],
+          'Üçgenin alanı iki ayrı kenar ve o kenara ait yükseklik ile '
+          'yazılır: $t·$r / 2 = $u·h / 2. Buradan h = ${t * r} / $u = $q cm '
+          'bulunur.',
           unit: 'cm',
           positive: true,
         );

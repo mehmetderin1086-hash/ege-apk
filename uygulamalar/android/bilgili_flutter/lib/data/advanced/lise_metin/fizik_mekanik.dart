@@ -8,12 +8,10 @@ import 'ortak.dart';
 const _tyt = ExamKind.tyt, _ayt = ExamKind.ayt;
 const _fizik = 'Fizik';
 
-/// İki ondalığa sığmayan çeldiriciyi okunur bir değere yuvarlar.
-num _yuvarla(num x) {
-  final y = (x * 100).roundToDouble() / 100;
-  if ((x - y).abs() < 1e-7) return y;
-  return x.abs() >= 10 ? x.roundToDouble() : (x * 10).roundToDouble() / 10;
-}
+/// Çeldiriciyi iki ondalığa yuvarlar. Tam sayıya ya da tek ondalığa
+/// yuvarlamak, hatalı yoldan bulunan yakın bir değeri (40,25 gibi) anahtarla
+/// aynı yazıma (40) düşürüp ayırt ediciliği yok ederdi.
+num _yuvarla(num x) => (x * 100).roundToDouble() / 100;
 
 String _yaz(num x, String unit, bool yuzde) =>
     yuzde ? '%${tr(x)}' : birimli(tr(x), unit);
@@ -137,8 +135,12 @@ final _f02 = lmAile(
         unit: 's',
       );
     }
-    final vt = 6 + a % 5, va = 1 + a ~/ 5; // tekne 6 … 10, akıntı 1 … 5 m/s
+    final va = 1 + a ~/ 5; // akıntı 1 … 5 m/s
     final ileri = b.isEven;
+    // Akıntıya karşı giderken kıyıya göre hız akıntı hızına eşit çıkmasın
+    // (vt = 2·va); yoksa yolu akıntı hızına bölen öğrenci de doğruyu bulur.
+    final vt0 = 6 + a % 5; // tekne 6 … 10 m/s
+    final vt = !ileri && vt0 == 2 * va ? 11 : vt0;
     final hiz = ileri ? vt + va : vt - va;
     final t = 10 * (b ~/ 2 + 1) + 100 * k; // 10 … 300 s
     final d = hiz * t;
@@ -230,7 +232,10 @@ final _f04 = lmAile(
     if (c % 3 == 0) {
       final (v0, ivme) = _frenCifti[a];
       final fren = v0 * v0 / (2 * ivme); // 12,5 … 125 m
-      final pay = b + 1 + 20 * k; // 1 … 80 m
+      // Kalan uzaklık fren mesafesine eşit olmasın; aksi hâlde çıkarmayı
+      // unutan öğrenci de doğru yanıtı bulur.
+      final pay0 = b + 1 + 20 * k; // 1 … 80 m
+      final pay = pay0 >= fren ? pay0 + 1 : pay0; // 1 … 81 m, fren mesafesi atlanır
       final engel = fren + pay;
       return _s(
         'Düz bir yolda $v0 m/s hızla ilerleyen bir otomobilin sürücüsü, '
@@ -247,8 +252,11 @@ final _f04 = lmAile(
     }
     if (c % 3 == 1) {
       final x1 = 8 * (a + 2); // 16 … 208 m
-      final a1 = const [1.0, 1.5, 2.0, 2.5, 3.0][b % 5];
       final a2 = const [4, 5, 8, 10][b ~/ 5];
+      final a10 = const [1.0, 1.5, 2.0, 2.5, 3.0][b % 5];
+      // a2 = 2·a1 iken fren mesafesi iki yolun farkına eşit çıkar; farkı soran
+      // biçimde bu çiftler yerine yalnız burada kullanılan 3,5 m/s² alınır.
+      final a1 = k == 2 && a2 == 2 * a10 ? 3.5 : a10;
       final kare = (2 * a1 * x1).round(); // v²
       final x2 = a1 * x1 / a2;
       final giris =
@@ -323,10 +331,13 @@ final _f05 = lmAile(
   (a, b, c) {
     final k = c ~/ 3;
     if (c % 3 == 0) {
-      final t = 1 + b % 5; // 1 … 5 s
-      final kalan = 1 + a + 25 * (b ~/ 5) + 100 * k; // 1 … 400 m
-      final dusme = 5 * t * t;
-      final h = dusme + kalan; // 6 … 525 m
+      // t = 2 s alınmaz: o anda g·t ile ½·g·t² aynı sayıyı verir.
+      final t = const [1, 3, 4, 5, 6][b % 5];
+      final dusme = 5 * t * t; // 5 … 180 m
+      // Kalan yükseklik düşülen yola eşit olmasın (çıkarmayı unutan ayrılsın).
+      final kalan0 = 1 + a + 25 * (b ~/ 5) + 100 * k; // 1 … 400 m
+      final kalan = kalan0 == dusme ? 401 : kalan0;
+      final h = dusme + kalan; // 6 … 581 m
       return _s(
         'Yerden $h m yükseklikte havada asılı duran bir helikopterden bir paket '
         'serbest bırakılıyor. Paket, bırakıldıktan $t saniye sonra yerden kaç '
@@ -339,7 +350,7 @@ final _f05 = lmAile(
       );
     }
     if (c % 3 == 1) {
-      final t = 1 + b % 5; // 1 … 5 s
+      final t = const [1, 3, 4, 5, 6][b % 5]; // 2 s yok: 5·t² = 10·t olurdu
       final alt = 2 + a + 25 * (b ~/ 5) + 100 * k; // 2 … 301 m
       final dusme = 5 * t * t;
       final ust = alt + dusme;
@@ -354,11 +365,16 @@ final _f05 = lmAile(
         unit: 'm/s',
       );
     }
-    final t = 3 + b % 5; // K cisminin düşme süresi: 3 … 7 s
     final gec = 1 + (b ~/ 5) % 2; // 1 ya da 2 s
-    final kalan = 1 + a + 25 * (b ~/ 10) + 50 * k; // 1 … 150 m
-    final hk = 5 * t * t; // 45 … 245 m
+    // L cisminin düşme süresi 2 s olmasın: o zaman g·t ile ½·g·t² ve
+    // gecikmeyi düşme süresi sanmak (t = 2·gec) doğru yanıtı verirdi.
+    final t0 = 3 + b % 5; // K cisminin düşme süresi: 3 … 7 s
+    final t = t0 - gec == 2 ? 8 : t0;
+    final hk = 5 * t * t; // 45 … 320 m
     final dusme = 5 * (t - gec) * (t - gec);
+    // L cisminin kalan yüksekliği düştüğü yola eşit olmasın.
+    final kalan0 = 1 + a + 25 * (b ~/ 10) + 50 * k; // 1 … 150 m
+    final kalan = kalan0 == dusme ? 151 : kalan0;
     final hl = dusme + kalan;
     return _s(
       'K cismi yerden $hk m yükseklikten serbest bırakılıyor. K cismi '
@@ -419,10 +435,12 @@ final _f06 = lmAile(
         unit: 'm',
       );
     }
-    final v = 2 + a; // 2 … 26 m/s
     final n = b + 1;
     final t = 0.2 * n; // 0,2 … 4 s
-    final v0 = v + 2 * n; // 4 … 66 m/s
+    // Yüksekliği soran biçimde v = 2n olmasın: o zaman v₀·t, v₀²/(2g) değerine
+    // eşit çıkar ve yer çekimini yok sayan öğrenci de doğruyu bulur.
+    final v = k == 2 && 2 + a == 2 * n ? 27 : 2 + a; // 2 … 27 m/s
+    final v0 = v + 2 * n; // 4 … 67 m/s
     final giris =
         'Yerden düşey yukarı doğru fırlatılan bir cismin hızı, fırlatıldıktan '
         '${tr(t)} saniye sonra yukarı yönde $v m/s oluyor.';
@@ -475,9 +493,12 @@ final _f07 = lmAile(
       final t = 1 + b % 5; // 1 … 5 s
       final h = 5 * t * t; // 5 … 125 m
       final v1 = 4 + a; // 4 … 28 m/s
-      final fark = 1 + b ~/ 5 + 4 * k; // 1 … 16 m/s
-      final v2 = v1 + fark;
       final zit = k.isEven;
+      // Aynı yönde atışta hız farkı K topunun hızına eşit olmasın; yoksa
+      // aradaki uzaklık K topunun menziline eşit çıkar.
+      final fark0 = 1 + b ~/ 5 + 4 * k; // 1 … 16 m/s
+      final fark = !zit && fark0 == v1 ? 17 : fark0;
+      final v2 = v1 + fark;
       final ara = zit ? (v1 + v2) * t : fark * t;
       return _s(
         'Yerden $h m yükseklikteki bir kulenin tepesinden K ve L topları aynı '
@@ -496,9 +517,11 @@ final _f07 = lmAile(
     }
     if (c % 3 == 1) {
       final v0 = 4 + a; // 4 … 28 m/s
-      final t = 1 + b % 4; // 1 … 4 s
-      final kalan = 1 + b ~/ 4 + 5 * k; // 1 … 15 m
+      final t = const [1, 3, 4, 5][b % 4]; // 2 s yok: 5·t² = 10·t olurdu
       final dusme = 5 * t * t;
+      // Çarpma yüksekliği düşülen yola eşit olmasın.
+      final kalan0 = 1 + b ~/ 4 + 5 * k; // 1 … 15 m
+      final kalan = kalan0 == dusme ? 16 : kalan0;
       final h = dusme + kalan;
       final d = v0 * t;
       return _s(
@@ -512,10 +535,13 @@ final _f07 = lmAile(
         unit: 'm',
       );
     }
-    final v0 = 3 + a; // 3 … 27 m/s
-    final n = b + 2;
-    final t = 0.2 * n; // 0,4 … 4,2 s
-    final h = 0.2 * n * n; // 0,8 … 88,2 m
+    // Uçuş süresi 2 s olmasın (n = 10): o zaman h = ½·g·t² ile g·t aynı çıkar.
+    final n = b + 2 == 10 ? 22 : b + 2;
+    final t = 0.2 * n; // 0,4 … 4,4 s
+    final h = 0.2 * n * n; // 0,8 … 96,8 m
+    // Atılma hızını soran biçimde yere çarpmadaki düşey hız (g·t = 2n) atılma
+    // hızına eşit olmasın; yoksa düşey hızı yanıt sanan öğrenci doğruyu bulur.
+    final v0 = k == 2 && 3 + a == 2 * n ? 28 : 3 + a; // 3 … 28 m/s
     final x = v0 * t;
     final sure =
         'h = ½·g·t² bağıntısından t² = ${tr(h)} / 5 = ${tr(t * t)}, t = ${tr(t)} s olur.';
@@ -587,7 +613,9 @@ final _f08 = lmAile(
       );
     }
     final m1 = 2 + a; // K: 2 … 26 kg
-    final m2 = 1 + b; // L: 1 … 20 kg
+    // Kütleler eşit olmasın: eşit kütlede L cisminin kütlesiyle hesaplayan ya
+    // da kuvveti ikiye bölen öğrenci de doğruyu bulur.
+    final m2 = 1 + b >= m1 ? 2 + b : 1 + b; // L: 1 … 21 kg, m1 atlanır
     final ivme = 2 + k; // 2 … 4 m/s²
     final kuvvet = (m1 + m2) * ivme, ip = m1 * ivme;
     const giris =
@@ -624,11 +652,13 @@ final _f08 = lmAile(
 );
 
 // 9 · Eğik düzlemde ivme ve kuvvet.
-const _egim = <(int, double, double)>[(30, 0.5, 0), (37, 0.6, 0.8), (53, 0.8, 0.6)];
+// (açı, sin, cos). cos 30° iki ondalıkla kesin yazılamadığı için tabloda yoktur;
+// 30° yalnız sinüsün yettiği biçimlerde kullanılır.
+const _egim = <(int, double, double?)>[(30, 0.5, null), (37, 0.6, 0.8), (53, 0.8, 0.6)];
 
-String _trig(int i, {bool cos = false}) {
+String _trig(int i) {
   final (aci, s, k) = _egim[i];
-  return cos || i > 0
+  return k != null
       ? 'sin $aci° = ${tr(s)}; cos $aci° = ${tr(k)}; g = 10 m/s² alınız.'
       : 'sin $aci° = ${tr(s)}; g = 10 m/s² alınız.';
 }
@@ -644,14 +674,18 @@ final _f09 = lmAile(
     if (c % 3 == 1) {
       final m = 2 + a; // 2 … 26 kg
       final i = 1 + b % 2; // 37° ya da 53°
-      final (aci, sin, cos) = _egim[i];
+      final (aci, sin, cosOrNull) = _egim[i];
+      final cos = cosOrNull!;
       final mu = 0.05 * (1 + b ~/ 2); // 0,05 … 0,5
       final tepki = m * 10 * cos, paralel = m * 10 * sin;
       final f = mu * tepki;
+      // Yukarı çekme biçiminde cisim aşağı kaymıyor; o biçimde yalnız konum
+      // söylenir.
+      final konum = k == 2 ? 'üzerindeki' : 'üzerinde aşağı doğru kaymakta olan';
       final giris =
-          'Eğim açısı $aci° olan bir eğik düzlem üzerinde aşağı doğru kaymakta '
-          'olan $m kg kütleli bir cisim ile düzlem arasındaki kinetik sürtünme '
-          'katsayısı ${tr(mu)} olarak veriliyor.';
+          'Eğim açısı $aci° olan bir eğik düzlem $konum $m kg kütleli bir cisim '
+          'ile düzlem arasındaki kinetik sürtünme katsayısı ${tr(mu)} olarak '
+          'veriliyor.';
       final cozum =
           'Yüzeyin tepki kuvveti m·g·cos θ = $m · 10 · ${tr(cos)} = ${tr(tepki)} N, '
           'sürtünme kuvveti ${tr(mu)} · ${tr(tepki)} = ${tr(f)} N olur.';
@@ -689,8 +723,11 @@ final _f09 = lmAile(
     final m = 5 * (a + 1); // 5 … 125 kg
     final i = b % 3;
     final (aci, sin, _) = _egim[i];
-    final n = 1 + b ~/ 3 + 7 * k;
-    final ivme = n / 5; // 0,2 … 5,6 m/s²
+    final n0 = 1 + b ~/ 3 + 7 * k;
+    // İvmeyi soran biçimde ivme g·sin θ değerine eşit olmasın (30° için
+    // n = 25); yoksa F kuvvetini yok sayan öğrenci de doğruyu bulur.
+    final n = c % 3 == 0 && n0 == (50 * sin).round() ? 29 : n0;
+    final ivme = n / 5; // 0,2 … 5,8 m/s²
     final paralel = (m * 10 * sin).round();
     final kuvvet = paralel + (a + 1) * n;
     if (c % 3 == 0) {
@@ -766,17 +803,19 @@ final _f10 = lmAile(
         unit: 'W',
       );
     }
+    final yukKutle = 30 * (a + 2); // 60 … 780 kg
     final h = 1 + b ~/ 5 + 4 * k; // 1 … 12 m
-    final verim = const [20, 25, 40, 50, 80][b % 5];
-    final yararli = m * 10 * h;
+    // %50 yok: o değerde verim ile kayıp oranı (100 − verim) aynı çıkar.
+    final verim = const [25, 40, 60, 75, 80][b % 5];
+    final yararli = yukKutle * 10 * h;
     final harcanan = yararli * 100 ~/ verim;
     return _s(
-      'Bir elektrik motoru, $harcanan J elektrik enerjisi harcayarak $m kg '
+      'Bir elektrik motoru, $harcanan J elektrik enerjisi harcayarak $yukKutle kg '
       'kütleli bir yükü sabit hızla $h m yükseğe çıkarıyor. Bu motorun verimi '
       'yüzde kaçtır? (g = 10 m/s² alınız.)',
       verim,
       [100 - verim, verim / 10, verim / 2, 100 - verim / 2],
-      'Yararlı iş m·g·h = $m · 10 · $h = $yararli J olur. Verim '
+      'Yararlı iş m·g·h = $yukKutle · 10 · $h = $yararli J olur. Verim '
       '$yararli / $harcanan = ${tr(verim / 100)}, yani %$verim bulunur.',
       yuzde: true,
     );
@@ -813,9 +852,11 @@ final _f11 = lmAile(
       );
     }
     if (c % 3 == 1) {
-      final alt = 1 + a; // 1 … 25 m
       final n = b + 1;
       final fark = n * n / 5; // 0,2 … 80 m
+      // Kinetik enerjiyi soran biçimde son yükseklik alçalma miktarına eşit
+      // olmasın; yoksa m·g·h bağıntısına yerden yüksekliği koyan da doğruyu bulur.
+      final alt = k == 1 && 1 + a == fark ? 26 : 1 + a; // 1 … 26 m
       final ust = alt + fark;
       final v = 2 * n; // 2 … 40 m/s
       const pist = 'Sürtünmesiz bir kayak pistinin yerden';
@@ -865,8 +906,9 @@ final _f11 = lmAile(
     final h = 2 + b / 2; // 2 … 11,5 m
     final v = 2 * (k + 1); // 2, 4, 6 m/s
     final pe = (m * 10 * h).round(), ke = m * v * v ~/ 2;
+    final kisi = m <= 40 ? 'bir çocuk' : 'bir genç';
     return _s(
-      'Kütlesi $m kg olan bir çocuk, yerden ${tr(h)} m yükseklikteki bir su '
+      'Kütlesi $m kg olan $kisi, yerden ${tr(h)} m yükseklikteki bir su '
       'kaydırağının tepesinden durgun hâlden kaymaya başlıyor ve kaydırağın '
       'yer düzeyindeki ucuna $v m/s hızla ulaşıyor. Kayma sırasında sürtünme '
       'nedeniyle ısıya dönüşen enerji kaç J olur? (g = 10 m/s² alınız.)',
@@ -954,7 +996,9 @@ final _f12 = lmAile(
 );
 
 // 13 · İtme ve momentum, esnek olmayan çarpışma.
-const _oran = [0.5, 1.0, 1.5, 2.0, 3.0];
+// Kütle oranı m₂/m₁. 1 yoktur: eşit kütlelerde ortak hız v/2 olur ve "hız
+// yarıya iner" ya da kütleleri karıştıran öğrenci de doğruyu bulur.
+const _oran = [0.5, 2.5, 1.5, 2.0, 3.0];
 
 final _f13 = lmAile(
   'fm_momentum',
@@ -986,13 +1030,13 @@ final _f13 = lmAile(
     }
     final m1 = 2 * (a + 1); // 2 … 50 kg
     final oran = _oran[b % 5];
-    final m2 = (m1 * oran).round(); // 1 … 150 kg
+    final m2 = (m1 * oran).round(); // 1 … 150 kg (m₂ ≠ m₁)
     if (c % 3 == 1) {
       final ortak = (1 + b ~/ 5 + 4 * k) / 5; // 0,2 … 2,4 m/s
       final v1 = (1 + oran) * ortak; // 0,3 … 9,6 m/s
       return _s(
         'Sürtünmesiz yatay bir rayda ${tr(v1)} m/s hızla ilerleyen $m1 kg '
-        'kütleli bir yük arabası, önünde durmakta olan $m2 kg kütleli başka bir '
+        'kütleli bir araba, önünde durmakta olan $m2 kg kütleli başka bir '
         'arabaya çarpıp ona kenetleniyor. Kenetlenen arabaların çarpışmadan '
         'hemen sonraki ortak hızı kaç m/s olur?',
         ortak,
@@ -1127,7 +1171,8 @@ final _f15 = lmAile(
     if (c % 3 == 1) {
       final kuvvet = 40 * (a + 1); // 40 … 1000 N
       final r = const [2.5, 4.0, 5.0, 8.0][b % 4]; // boy / yükseklik
-      final verim = const [50, 60, 75, 80, 90][b ~/ 4];
+      // %50 yok: o değerde verim ile kayıp oranı (100 − verim) aynı çıkar.
+      final verim = const [70, 60, 75, 80, 90][b ~/ 4];
       final h = k + 2; // 2 … 4 m
       final boy = r * h; // 5 … 32 m
       final yuk = (kuvvet * r * verim / 100).round();
@@ -1167,7 +1212,11 @@ final _f15 = lmAile(
 );
 
 // 16 · Özkütle ve karışımların özkütlesi.
-const _karisim = [(1, 1), (1, 2), (2, 1), (1, 3), (3, 1)];
+// Karışımdaki iki niceliğin oranı p : q. 1 : 1 yoktur: eşit miktarlarda doğru
+// yanıt basit ortalamaya eşit çıkar ve ağırlıklandırmayı unutan öğrenci
+// ayrılmaz. 2 : 3 de yoktur: o oranda harmonik ortalama anahtara çok yakın
+// düşer.
+const _karisim = [(3, 2), (1, 2), (2, 1), (1, 3), (3, 1)];
 
 final _f16 = lmAile(
   'fm_ozkutle',
@@ -1321,9 +1370,12 @@ final _f18 = lmAile(
     final k = c ~/ 3;
     if (c % 3 == 0) {
       final hacim = 100 * (a + 1); // 100 … 2500 cm³
-      final dc = 2 + b / 2; // 2 … 11,5 g/cm³
       final ds = const [0.8, 1.0, 1.2, 1.5][k];
-      final m = (a + 1) * dc / 10; // 0,2 … 28,75 kg
+      // Metalin özkütlesi sıvınınkinin iki katı olmasın: o zaman ip gerilmesi
+      // kaldırma kuvvetine eşit çıkar ve ara sonucu yanıt sanan da doğruyu bulur.
+      final dc0 = 2 + b / 2; // 2 … 11,5 g/cm³
+      final dc = dc0 == 2 * ds ? 12.0 : dc0;
+      final m = (a + 1) * dc / 10; // 0,2 … 30 kg
       final agirlik = (a + 1) * dc, fk = (a + 1) * ds;
       return _s(
         'Kütlesi ${tr(m)} kg, hacmi $hacim cm³ olan bir metal parçası bir ipe '
@@ -1340,9 +1392,10 @@ final _f18 = lmAile(
       );
     }
     if (c % 3 == 1) {
-      final oran = const [0.25, 0.4, 0.5, 0.6, 0.75][b % 5];
+      // 0,5 yok: yarısı batan takozda batan ve dışarıdaki hacimler eşit olur.
+      final oran = const [0.25, 0.4, 0.8, 0.6, 0.75][b % 5];
       final ds = const [0.8, 1.0, 1.2][k];
-      final dc = oran * ds; // 0,2 … 0,9 g/cm³
+      final dc = oran * ds; // 0,2 … 0,96 g/cm³
       final hacim = 20 * (a + 1) + 500 * (b ~/ 5); // 20 … 2000 cm³
       final batan = hacim * oran, disari = hacim - batan;
       final ust = (b ~/ 5).isOdd;
@@ -1401,7 +1454,10 @@ final _f19 = lmAile(
       final m = 100 * (a + 1); // 100 … 2500 g
       final c100 = const [40, 90, 210, 420][k]; // öz ısı · 100
       final t1 = 10 + 5 * (b % 4); // 10 … 25 °C
-      final fark = 5 * (1 + b ~/ 4); // 5 … 25 °C
+      // Sıcaklık artışı ilk sıcaklığa eşit olmasın; yoksa ΔT yerine ilk
+      // sıcaklığı kullanan öğrenci de doğruyu bulur.
+      final fark0 = 5 * (1 + b ~/ 4); // 5 … 25 °C
+      final fark = fark0 == t1 ? 30 : fark0;
       final t2 = t1 + fark;
       final q = (a + 1) * c100 * fark;
       final oz = c100 / 100;

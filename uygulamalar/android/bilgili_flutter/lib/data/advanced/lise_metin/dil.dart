@@ -69,7 +69,9 @@ List<String> _digerleri(
 /// Sıralı üçlü yanıt. [yanlis] her konum için kesin yanlış adayları taşır;
 /// çeldiriciler bir ya da iki konumu bu adaylarla değiştirerek kurulur.
 /// [karistir] doğruysa doğru etiketlerin, en az bir konumu kesin yanlış olan
-/// dizilimleri de çeldirici adayıdır.
+/// dizilimleri de çeldirici adayıdır. [tekrarsiz] doğruysa aynı etiketi iki
+/// konumda taşıyan adaylar atılır (her konumun yanıtı ayrı bir eserse böyle
+/// bir seçenek kendi kendini eler).
 AdvancedItem _sirali(
   String kok,
   List<String> dogru,
@@ -77,6 +79,7 @@ AdvancedItem _sirali(
   String aciklama,
   int i, {
   bool karistir = false,
+  bool tekrarsiz = false,
   bool Function(int konum, String etiket)? kesinYanlis,
 }) {
   String yaz(List<String> v) => v.join(' – ');
@@ -85,7 +88,7 @@ AdvancedItem _sirali(
     for (var p = 0; p < 3; p++)
       secim.containsKey(p) ? yanlis[p][secim[p]! % yanlis[p].length] : dogru[p],
   ];
-  final dizilimler = <String>[];
+  final dizilimler = <List<String>>[];
   if (karistir) {
     for (var r = 1; r < 6; r++) {
       final d = ucluDizilimler[1 + (i + r) % 5];
@@ -94,24 +97,32 @@ AdvancedItem _sirali(
       for (var p = 0; p < 3; p++) {
         if (v[p] != dogru[p] && yanlisMi(p, v[p])) birYanlis = true;
       }
-      if (birYanlis) dizilimler.add(yaz(v));
+      if (birYanlis) dizilimler.add(v);
     }
   }
   final tekli = [
-    for (var r = 0; r < 3; r++) yaz(degis({(i + r) % 3: i ~/ 3 + r})),
+    for (var r = 0; r < 3; r++) degis({(i + r) % 3: i ~/ 3 + r}),
   ];
-  final adaylar = <String>[
+  final adaylar = <List<String>>[
     if (dizilimler.isNotEmpty) dizilimler[0],
     tekli[0],
     if (dizilimler.length > 1 && i.isOdd) dizilimler[1],
     tekli[1],
     tekli[2],
     for (var r = 0; r < 3; r++)
-      yaz(degis({(i + r) % 3: i ~/ 7 + r, (i + r + 1) % 3: i ~/ 11 + r + 1})),
-    for (var r = 0; r < 3; r++) yaz(degis({(i + r) % 3: i ~/ 3 + r + 1})),
-    for (var r = 0; r < 3; r++) yaz(degis({(i + r) % 3: i ~/ 3 + r + 2})),
+      degis({(i + r) % 3: i ~/ 7 + r, (i + r + 1) % 3: i ~/ 11 + r + 1}),
+    for (var r = 0; r < 3; r++) degis({(i + r) % 3: i ~/ 3 + r + 1}),
+    for (var r = 0; r < 3; r++) degis({(i + r) % 3: i ~/ 3 + r + 2}),
   ];
-  return secenekli(kok, yaz(dogru), adaylar, aciklama);
+  return secenekli(
+    kok,
+    yaz(dogru),
+    [
+      for (final v in adaylar)
+        if (!tekrarsiz || v.toSet().length == v.length) yaz(v),
+    ],
+    aciklama,
+  );
 }
 
 const _kumeAdi = {
@@ -291,8 +302,8 @@ const _ogeOzneler = [
   ('Mert', 'Mert'),
   ('Ablam', 'ablam'),
   ('Komşumuzun kızı', 'komşumuzun kızı'),
-  ('Emekli öğretmen', 'emekli öğretmen'),
-  ('Genç kadın', 'genç kadın'),
+  ('Okulun müdürü', 'okulun müdürü'),
+  ('Annem', 'annem'),
   ('Yaşlı adam', 'yaşlı adam'),
   ('Elif\'in dayısı', 'Elif\'in dayısı'),
   ('Küçük kardeşim', 'küçük kardeşim'),
@@ -412,7 +423,7 @@ const _sozcukTurleri = [
   ('Öğrenciler sınıfa “sessizce” girdi.', 'zarf', 'girme eylemini durum yönünden belirtir'),
   ('Kardeşim bu dönem “çok” çalıştı.', 'zarf', 'eylemi miktar yönünden belirtir'),
   ('Otobüs durağa “geç” geldi.', 'zarf', 'eylemin zamanını belirtir'),
-  ('Arkadaşım merdivenlerden “aşağı” indi.', 'zarf', 'eylemin yönünü belirtir'),
+  ('Asansör az önce “aşağı” indi.', 'zarf', 'eylemin yönünü belirtir'),
   ('Babam işten “erken” döndü.', 'zarf', 'eylemin zamanını belirtir'),
   ('“Ben” bu konuyu daha önce araştırdım.', 'zamir', 'konuşan kişinin yerini tutar'),
   ('“Bunu” masanın üzerine bırakabilirsin.', 'zamir', 'bir nesnenin yerini işaret yoluyla tutar'),
@@ -476,11 +487,7 @@ final _sozcukTuru = lmSirali(
         for (var p = 0; p < 3; p++)
           _digerleri(_turHavuzu, etiket[p], i + p, _turKarisan[etiket[p]]!),
       ],
-      [
-        for (var p = 0; p < 3; p++)
-          '${_rakam[p]}. cümlede ${x[p].$2}: ${x[p].$3}',
-      ].join('; ') +
-          '.',
+      '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${x[p].$2}: ${x[p].$3}'].join('; ')}.',
       i,
       karistir: true,
     );
@@ -530,7 +537,7 @@ const _cekimTablosu = [
   (7, [0, 1, 3, 4], ['anlayayım', 'anlayasın', 'anlayalım', 'anlayasınız']),
   (7, [0, 1, 3, 4], ['oturayım', 'oturasın', 'oturalım', 'oturasınız']),
   (8, [1, 2, 4, 5], ['söyle', 'söylesin', 'söyleyin', 'söylesinler']),
-  (8, [1, 2, 4, 5], ['taşı', 'taşısın', 'taşıyın', 'taşısınlar']),
+  (8, [1, 2, 4, 5], ['dinlen', 'dinlensin', 'dinlenin', 'dinlensinler']),
 ];
 
 // (çekimli fiil, kip, kişi)
@@ -548,8 +555,15 @@ const _kipKarisan = {
   'geniş zaman': ['şimdiki zaman'],
   'gereklilik kipi': ['emir kipi'],
   'dilek-şart kipi': ['istek kipi'],
-  'istek kipi': ['emir kipi', 'dilek-şart kipi'],
-  'emir kipi': ['istek kipi', 'gereklilik kipi'],
+  'istek kipi': ['dilek-şart kipi', 'gereklilik kipi'],
+  'emir kipi': ['gereklilik kipi', 'geniş zaman'],
+};
+
+// Kimi kaynaklar “-alım, -ayım” biçimlerini emir kipinde saydığı için istek
+// ile emir kipleri birbirinin çeldiricisi yapılmaz.
+const _kipDisi = {
+  'istek kipi': ['emir kipi'],
+  'emir kipi': ['istek kipi'],
 };
 
 final _fiilCekimi = lmSirali(
@@ -588,7 +602,15 @@ final _fiilCekimi = lmSirali(
       kip,
       [
         for (var p = 0; p < 3; p++)
-          _digerleri(_kipHavuzu, kip[p], i + p, _kipKarisan[kip[p]]!),
+          _digerleri(
+            [
+              for (final k in _kipHavuzu)
+                if (!(_kipDisi[kip[p]] ?? const <String>[]).contains(k)) k,
+            ],
+            kip[p],
+            i + p,
+            _kipKarisan[kip[p]]!,
+          ),
       ],
       aciklama,
       i,
@@ -805,8 +827,7 @@ final _cumleTuru = lmSirali(
             : 'yüklem (“${e.$2}”) yargının gerçekleştiğini bildirir, olumlu cümle',
     };
     return _sirali(
-      '$liste\nNumaralanmış cümlelerin $soru türleri sırasıyla hangi seçenekte '
-      'doğru verilmiştir?',
+      '$liste\nNumaralanmış cümleler $soru sırasıyla nasıl adlandırılır?',
       etiket,
       [
         for (var p = 0; p < 3; p++) [adlar[deger(x[p]) ? 0 : 1]],
@@ -944,16 +965,23 @@ const _sanatGerekce = {
   _istiare: 'yalnız kendisine benzetilen söylenmiş, benzeyen anılmamıştır',
 };
 
-// Her intakta kişileştirme de bulunduğundan intak örneğinde “teşhis” kesin
-// yanlış sayılmaz; çeldiricilerde bu konuma teşhis yazılmaz.
 const _sanatKarisan = {
   _tesbih: [_istiare, _mubalaga],
-  _teshis: [_intak, _istiare],
+  _teshis: [_intak, _tesbih],
   _intak: [_istiare, _tekrir],
   _mubalaga: [_tesbih, _tezat],
   _tezat: [_tekrir, _mubalaga],
   _tekrir: [_tezat, _mubalaga],
-  _istiare: [_tesbih, _teshis],
+  _istiare: [_tesbih, _mubalaga],
+};
+
+// Her intakta kişileştirme de bulunur; kişileştirme ile eğretileme de
+// birbirine yakındır. Bu nedenle aşağıdaki etiketler ilgili örneklerde kesin
+// yanlış sayılmaz ve o konuma çeldirici olarak yazılmaz.
+const _sanatDisi = {
+  _intak: [_teshis],
+  _istiare: [_teshis],
+  _teshis: [_istiare],
 };
 
 // (örnek cümle, söz sanatı)
@@ -972,7 +1000,7 @@ const _sanatlar = [
   ('Papatyalar, sabah güneşine gülümsüyordu.', _teshis),
   ('Ay, pencereden içeri merakla bakıyordu.', _teshis),
   ('Sonbahar gelince yapraklar ağaçlarla vedalaştı.', _teshis),
-  ('Karınca, ağustos böceğine “Yazın çalışsaydın kışın aç kalmazdın.” dedi.', _intak),
+  ('Karınca, ağustos böceğine “Biraz da sen çalışsan olmaz mı?” dedi.', _intak),
   ('Dere, kıyısındaki söğüde “Benimle denize gelir misin?” diye sordu.', _intak),
   ('Yaşlı çınar, altında oynayan çocuklara “Gölgem hepinize yeter.” diye seslendi.', _intak),
   ('Kırlangıç, yavrularına “Artık uçma vakti geldi.” dedi.', _intak),
@@ -998,12 +1026,12 @@ const _sanatlar = [
   ('Yağmur yağıyordu; ince ince, durmadan yağmur yağıyordu.', _tekrir),
   ('Sustum, sustukça sustum; söyleyecek söz kalmadı.', _tekrir),
   ('Köyüm, yeşil köyüm, uzaktaki köyüm hep aklımda.', _tekrir),
-  ('Akşam, yine akşam, hep aynı akşam.', _tekrir),
+  ('Deniz, yine deniz, her yanımız deniz.', _tekrir),
   ('Çalıştı, çalıştı, hiç durmadan çalıştı.', _tekrir),
   ('Takımın aslanları sahaya alkışlarla çıktı.', _istiare),
   ('Gökyüzündeki inciler bu gece pırıl pırıldı.', _istiare),
   ('Annem, kuzusunu her sabah okul kapısına kadar götürür.', _istiare),
-  ('Havuzun en hızlı balığı, yarışı yine birinci bitirdi.', _istiare),
+  ('Millî takımın en hızlı balığı, yüz metre serbestte altın madalya kazandı.', _istiare),
   ('Sınıfımızın bülbülü, törende iki şarkı söyledi.', _istiare),
   ('Gecenin gümüş tepsisi dağların üstünde yükseldi.', _istiare),
   ('Mahallenin tilkisi, pazarlıkta yine herkesi ikna etti.', _istiare),
@@ -1028,12 +1056,10 @@ final _sozSanati = lmSirali(
       [
         for (var p = 0; p < 3; p++)
           _digerleri(
-            etiket[p] == _intak
-                ? [
-                  for (final s in _sanatHavuzu)
-                    if (s != _teshis) s,
-                ]
-                : _sanatHavuzu,
+            [
+              for (final s in _sanatHavuzu)
+                if (!(_sanatDisi[etiket[p]] ?? const <String>[]).contains(s)) s,
+            ],
             etiket[p],
             i + p,
             _sanatKarisan[etiket[p]]!,
@@ -1223,7 +1249,7 @@ const _temsilciler = [
   ('Tahsin Nahit', _fecr, <String>[]),
   ('Ömer Seyfettin', _milli, <String>[]),
   ('Ziya Gökalp', _milli, <String>[]),
-  ('Ali Canip Yöntem', _milli, <String>[]),
+  ('Ali Canip Yöntem', _milli, [_fecr]),
   ('Mehmet Emin Yurdakul', _milli, <String>[]),
   ('Faruk Nafiz Çamlıbel', _hece, [_milli]),
   ('Orhan Seyfi Orhon', _hece, [_milli]),
@@ -1286,6 +1312,14 @@ const _ilkler = [
   ('İlk bibliyografya', 'Keşfü\'z-Zünun', 'Kâtip Çelebi'),
 ];
 
+// Bir ilkin yanıtıyla karıştırılması tartışmaya açık olduğu için o ilkin
+// konumuna çeldirici olarak yazılmayan eserler.
+const _ilkDisi = {
+  'İlk makale': ['Tercüman-ı Ahval'],
+  'İlk özel gazete': ['Tercüman-ı Ahval Mukaddimesi'],
+  'İlk realist roman': ['Karabibik'],
+};
+
 final _ilkSiralari = _serpistir(
   List<int>.generate(_ilkler.length, (k) => k),
   6,
@@ -1309,16 +1343,26 @@ final _donem = lmSirali(
       final sira = _yayili(_ilkSiralari, j, 2500);
       final x = [for (final t in sira) _ilkler[t]];
       final dogru = [for (final e in x) e.$2];
+      List<String> disi(int p) => _ilkDisi[x[p].$1] ?? const <String>[];
       return _sirali(
         '${_uc([for (final e in x) e.$1])}\nTürk edebiyatındaki bu ilklerin '
         'karşılığı olan eser ya da yayınlar sırasıyla hangi seçenekte doğru '
         'verilmiştir?',
         dogru,
-        [for (final t in sira) _yakinIlkler[t].sublist(0, 6)],
+        [
+          // Öteki iki ilkin yanıtı olan eserler bu konuma yazılmaz; yoksa
+          // aynı eser bir seçenekte iki kez geçer.
+          for (var p = 0; p < 3; p++)
+            [
+              for (final s in _yakinIlkler[sira[p]])
+                if (!dogru.contains(s) && !disi(p).contains(s)) s,
+            ].sublist(0, 6),
+        ],
         '${[for (final e in x) '${e.$1}: ${e.$2} (${e.$3})'].join('; ')}.',
         i,
         karistir: true,
-        kesinYanlis: (p, s) => s != dogru[p],
+        tekrarsiz: true,
+        kesinYanlis: (p, s) => s != dogru[p] && !disi(p).contains(s),
       );
     }
     final x = _yayili(_temsilciSerpik, j, 2500);
@@ -1571,11 +1615,14 @@ final _presentContinuous = lmSirali(
             'eki alırken ${f.$1} → ${f.$2} biçiminde yazılır.';
       default:
         cumle = '${ip.$1}___ ${o.$2} ___ (${f.$1}) ${f.$4}${ip.$2}?';
-        dogru = '${_buyuk(be)} / ${f.$2}';
+        // İlk boşluk “At the moment, …” gibi bir girişten sonra geliyorsa
+        // yardımcı fiil küçük harfle yazılır.
+        String bas(String s) => ip.$3 ? _buyuk(s) : s;
+        dogru = '${bas(be)} / ${f.$2}';
         yanlis = [
-          '${_buyuk(yanlisBe)} / ${f.$2}',
-          '${_buyuk(be)} / ${f.$3}',
-          '${be == 'is' ? 'Does' : 'Do'} / ${f.$2}',
+          '${bas(yanlisBe)} / ${f.$2}',
+          '${bas(be)} / ${f.$3}',
+          '${bas(be == 'is' ? 'does' : 'do')} / ${f.$2}',
         ];
         aciklama =
             'Soru, özneye uygun yardımcı fiilin (“${o.$2}” için “$be”) başa '
@@ -1755,7 +1802,7 @@ const _ppZamanlar = [
   ('a long time', false),
   ('2015', true),
   ('six months', false),
-  ('childhood', true),
+  ('last spring', true),
   ('ages', false),
   ('last winter', true),
   ('ten years', false),
@@ -1955,7 +2002,7 @@ const _gelecekler = [
   ('I\'ll never be late again, I promise.', _soz),
   ('We\'re going to visit my aunt in Izmir next week; we\'ve already bought the tickets.', _plan),
   ('I\'ve decided to change my job. I\'m going to look for a new one in spring.', _plan),
-  ('She has saved enough money, so she\'s going to buy a laptop on Saturday.', _plan),
+  ('I\'ve saved enough money and chosen the model; I\'m going to buy a laptop on Saturday.', _plan),
   ('They\'re going to paint the house next month; they\'ve already chosen the colour.', _plan),
   ('I\'m going to study medicine; I made up my mind last year.', _plan),
   ('Look at those dark clouds! It\'s going to rain.', _kanit),
@@ -2005,7 +2052,7 @@ final _futureConditional = lmSirali(
           dogru.add('will ${e.$7}');
           yanlis.add(['would ${e.$7}', e.$8, 'will ${e.$8}']);
           gerekce.add(
-            'if cümlesi geniş zamanda, ana cümle “will” ile kurulur (will ${e.$7})',
+            'if cümlesi geniş zamandadır (Type 1), ana cümle “will” ile kurulur (will ${e.$7})',
           );
         case 1:
           cumle.add('If ${e.$1} ___ (${e.$2}) ${e.$5}, ${e.$6} will ${e.$7} ${e.$9}.');
@@ -2017,26 +2064,29 @@ final _futureConditional = lmSirali(
             if (e.$2 != e.$3) e.$2,
           ]);
           gerekce.add(
-            'ana cümlede “will” var, if cümlesi geniş zamanda olur (${e.$3})',
+            'ana cümlede “will” vardır (Type 1), if cümlesi geniş zamanda olur (${e.$3})',
           );
         case 2:
           cumle.add('If ${e.$1} ${e.$4} ${e.$5}, ${e.$6} ___ (${e.$7}) ${e.$9}.');
           dogru.add('would ${e.$7}');
           yanlis.add(['will ${e.$7}', 'would ${e.$8}', e.$7]);
           gerekce.add(
-            'if cümlesinde ikinci hâl var, ana cümle “would” ile kurulur (would ${e.$7})',
+            'if cümlesinde ikinci hâl vardır (Type 2), ana cümle “would” ile kurulur (would ${e.$7})',
           );
         default:
           cumle.add('If ${e.$1} ___ (${e.$2}) ${e.$5}, ${e.$6} would ${e.$7} ${e.$9}.');
           dogru.add(e.$4);
           yanlis.add([e.$3, 'would ${e.$2}', 'will ${e.$2}']);
           gerekce.add(
-            'ana cümlede “would” var, if cümlesinde ikinci hâl kullanılır (${e.$4})',
+            'ana cümlede “would” vardır (Type 2), if cümlesinde ikinci hâl kullanılır (${e.$4})',
           );
       }
     }
     return _sirali(
-      '${_uc(cumle)}\nNumaralanmış koşul cümlelerinde boş bırakılan yerlere '
+      // Kalıp kısıtı olmadan “If she missed the bus, she will need a taxi.”
+      // gibi karma (gerçek geçmiş koşullu) cümleler de savunulabilir.
+      '${_uc(cumle)}\nNumaralanmış cümlelerin her biri “Type 1” ya da “Type 2” '
+      'koşul cümlesi kalıbına göre kurulacaktır. Boş bırakılan yerlere '
       'sırasıyla hangileri getirilmelidir?',
       dogru,
       yanlis,
@@ -2051,7 +2101,7 @@ final _futureConditional = lmSirali(
 
 const _modalGerekce = {
   'can': 'şimdiki yeteneği bildirir',
-  'can\'t': 'şimdi yapılamayanı bildirir',
+  'can\'t': 'yapılamayanı bildirir',
   'could': 'geçmişteki yeteneği bildirir',
   'couldn\'t': 'geçmişte yapılamayanı bildirir',
   'must': 'kuralı ya da güçlü zorunluluğu bildirir',
@@ -2319,7 +2369,7 @@ const _edilgenler = <(String, String, String, String, String?, String)>[
   ('These photos', 'take', 'were', 'taken', 'took', 'during our holiday last year.'),
   ('The letter', 'write', 'was', 'written', 'wrote', 'two weeks ago.'),
   ('Two windows', 'break', 'were', 'broken', 'broke', 'in the storm last night.'),
-  ('The first modern Olympic Games', 'hold', 'were', 'held', null, 'in Athens in 1896.'),
+  ('The meetings', 'hold', 'were', 'held', null, 'in the main hall last week.'),
   ('My bike', 'steal', 'was', 'stolen', 'stole', 'yesterday.'),
   ('The Eiffel Tower', 'finish', 'was', 'finished', null, 'in 1889.'),
   ('We', 'invite', 'were', 'invited', null, 'to the wedding last month.'),

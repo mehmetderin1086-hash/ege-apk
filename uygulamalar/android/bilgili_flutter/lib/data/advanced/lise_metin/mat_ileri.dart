@@ -78,6 +78,18 @@ int _sifirsiz(int i, int alt) {
   return x >= 0 ? x + 1 : x;
 }
 
+/// Sıfırı atlayan tam sayı aralığı: `_sifirsizAralik(-2, 3)` → −2, −1, 1, 2, 3.
+List<int> _sifirsizAralik(int bas, int son) => [
+  for (var x = bas; x <= son; x++)
+    if (x != 0) x,
+];
+
+/// [adaylar] içinden [uygun] koşulunu sağlayanların [i] numaralısı. Tipik bir
+/// yanlış yolun da doğru yanıtı verdiği yozlaşmış değerleri ayıklamak için
+/// kullanılır; sıra korunduğundan farklı [i] farklı değer verir.
+T _uygun<T>(Iterable<T> adaylar, int i, bool Function(T) uygun) =>
+    adaylar.where(uygun).elementAt(i);
+
 int _us(int taban, int kuvvet) {
   var r = 1;
   for (var i = 0; i < kuvvet; i++) {
@@ -255,9 +267,10 @@ const _ustelCift = [
   (5, 2, 4), (7, 1, 2), (7, 1, 3), (7, 2, 3), (6, 1, 2),
 ];
 
-/// (taban, m): log_t(…) = m denklemleri.
+/// (taban, m): log_t(…) = m denklemleri. (2, 2) yoktur: 2² = 2·2 olduğundan
+/// üs almak yerine çarpan da aynı sonucu bulurdu.
 const _logDenklemTaban = [
-  (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7),
+  (10, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7),
   (3, 2), (3, 3), (3, 4),
   (4, 2), (4, 3),
   (5, 2), (5, 3),
@@ -277,8 +290,10 @@ const _ustelToplam = [
 ];
 
 /// (ortak çarpan, sıra): geometrik dizide n. terim, ilk terim ve toplam.
+/// (2, 3) yoktur: 2² = 2·2 olduğundan r^(n − 1) yerine r·(n − 1) alan da aynı
+/// terimi bulurdu.
 const _geoOranSira = [
-  (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9),
+  (2, 10), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9),
   (3, 3), (3, 4), (3, 5), (3, 6),
   (4, 3), (4, 4), (4, 5),
   (5, 3), (5, 4),
@@ -434,9 +449,10 @@ const _ucgenRadyan = [
   (1, 15), (1, 18), (7, 36),
 ];
 
-/// (p, q): pπ/q radyanlık merkez açılar.
+/// (p, q): pπ/q radyanlık merkez açılar. π/3 yoktur: π = 3 alındığında yay
+/// uzunluğu yarıçapa eşit çıkar ve yanıt kökte verilen sayı olur.
 const _yayAcilari = [
-  (1, 6), (1, 4), (1, 3), (1, 2), (2, 3), (3, 4), (5, 6), (1, 1), (7, 6),
+  (1, 6), (1, 4), (17, 12), (1, 2), (2, 3), (3, 4), (5, 6), (1, 1), (7, 6),
   (5, 4), (4, 3), (3, 2), (5, 3), (7, 4), (11, 6), (1, 12), (5, 12),
   (7, 12), (11, 12), (13, 12),
 ];
@@ -462,8 +478,18 @@ final lmMatIleri = <AdvancedFamily>[
     (a, b, c) {
       final f = [const [2, 3, -2, 4, -3][a % 5], const [-3, -1, 1, 2, 4][a ~/ 5]];
       final g = [1, const [-2, -1, 1, 2, 3][b % 5], const [-1, 1, 2, 3][b ~/ 5]];
-      final k = const [-2, -1, 1, 2, 3][c ~/ 2];
       final fog = c.isEven;
+      // Bileşke sırasını karıştıran, değerleri çarpan ya da toplayan, iç
+      // değerde duran yolların da doğru yanıtı verdiği noktalar atlanır.
+      final k = _uygun(const [-2, -1, 1, 2, 3, -3, 4, -4, 5], c ~/ 2, (x) {
+        final fx = _deg(f, x), gx = _deg(g, x);
+        final fg = _deg(f, gx), gf = _deg(g, fx);
+        final yanit = fog ? fg : gf;
+        return fg != gf &&
+            yanit != fx * gx &&
+            yanit != fx + gx &&
+            yanit != (fog ? gx : fx);
+      });
       final fk = _deg(f, k), gk = _deg(g, k);
       final fgk = _deg(f, gk), gfk = _deg(g, fk);
       final kok =
@@ -502,7 +528,8 @@ final lmMatIleri = <AdvancedFamily>[
       if (c.isEven) {
         final p = const [2, 3, 4, 5, 7][a % 5];
         final q = _sifirsiz(5 * (a ~/ 5) + v, 12);
-        final t = _sifirsiz(b, 9);
+        // f(t) = t olan sabit noktada f⁻¹(k) = f(k) = k olur; bu değer atlanır.
+        final t = _uygun(_sifirsizAralik(-9, 12), b, (x) => p * x + q != x);
         final k = p * t + q;
         return _kes(
           'Gerçek sayılarda tanımlı f(x) = ${_pol([p, q])} fonksiyonunun tersi '
@@ -514,10 +541,13 @@ final lmMatIleri = <AdvancedFamily>[
           '${_n(k)} eşitliğinden ${p}t = ${_n(k - q)} ve t = ${_n(t)} bulunur.',
         );
       }
+      // p = d olsaydı f kendi tersine eşit olur, f⁻¹(k) yerine f(k) hesaplayan
+      // da doğru yanıtı bulurdu; tablolar ortak değer taşımaz. Aynı nedenle
+      // sabit noktayı (f(k) = k) veren u = p + j − d değeri atlanır.
       final p = const [2, 3, 4, 5, -2][a % 5];
-      final d = const [1, 2, 3, -1, -2][a ~/ 5];
+      final d = const [1, -1, -3, -4, 6][a ~/ 5];
       final j = const [-2, -1, 1, 2, 3][v];
-      final u = _sifirsiz(b, 10);
+      final u = _uygun(_sifirsizAralik(-10, 11), b, (x) => x != p + j - d);
       final q = j * u - p * d, k = p + j, t = d + u;
       String pay(String h) => q == 0 ? _pol([p, 0], h) : '(${_pol([p, q], h)})';
       return _kes(
@@ -547,7 +577,9 @@ final lmMatIleri = <AdvancedFamily>[
     (a, b, c) {
       final v = c ~/ 3;
       if (c % 3 == 2) {
-        final p = 2 + a % 5, q = 2 + a ~/ 5, r = 1 + b % 5, s = 2 + b ~/ 5;
+        // r ≥ 2 ve s ≥ 3 iken üsleri çarpmak yerine toplayan yol (p + q + r + s)
+        // hiçbir zaman doğru dereceyi vermez.
+        final p = 2 + a % 5, q = 2 + a ~/ 5, r = 2 + b % 5, s = 3 + b ~/ 5;
         final f1 = List.filled(p + 1, 0)
           ..[0] = 1
           ..[p - 1] = 2;
@@ -585,11 +617,20 @@ final lmMatIleri = <AdvancedFamily>[
           ),
         };
       }
-      final u = _sifirsiz(a, 12), w = _sifirsiz(b, 9);
-      final sag = [1, u, w];
+      final w = _sifirsiz(b, 9);
       if (c % 3 == 0) {
         final m = const [1, 2, 3, -2][v];
         final x0 = 1 + m;
+        // x yerine 1, m ya da 1 − m yazan yolların da aynı toplamı verdiği,
+        // toplamın sabit terime eşit çıktığı katsayılar atlanır.
+        final u = _uygun(_sifirsizAralik(-12, 17), a, (x) {
+          final y = _deg([1, x, w], x0);
+          return y != _deg([1, x, w], 1) &&
+              y != _deg([1, x, w], m) &&
+              y != _deg([1, x, w], 1 - m) &&
+              y != w;
+        });
+        final sag = [1, u, w];
         return _tam(
           'P(${_pol([1, -m])}) = ${_pol(sag)} olduğuna göre P(x) polinomunun '
           'katsayılar toplamı kaçtır?',
@@ -602,6 +643,13 @@ final lmMatIleri = <AdvancedFamily>[
       }
       final (kat, kay) = const [(2, -4), (3, 3), (2, 6)][v];
       final x0 = -kay ~/ kat;
+      // Verilen ifadenin sabit terimini yanıt sanan ya da x yerine −x₀, 1 yazan
+      // yolların da doğru sonucu verdiği katsayılar atlanır.
+      final u = _uygun(_sifirsizAralik(-12, 17), a, (x) {
+        final y = _deg([1, x, w], x0);
+        return y != w && y != _deg([1, x, w], -x0) && y != _deg([1, x, w], 1);
+      });
+      final sag = [1, u, w];
       return _tam(
         'P(${_pol([kat, kay])}) = ${_pol(sag)} olduğuna göre P(x) polinomunun '
         'sabit terimi kaçtır?',
@@ -624,12 +672,14 @@ final lmMatIleri = <AdvancedFamily>[
       final w = _sifirsiz(b, 9);
       if (c.isEven) {
         final k = const [2, -1, 3, -2, 1][c ~/ 2];
-        final pol = [
-          1,
-          const [-3, -2, 1, 2, 4][a % 5],
-          const [-4, -1, 2, 3, 5][a ~/ 5],
-          w,
-        ];
+        final c2 = const [-3, -2, 1, 2, 4][a % 5];
+        // x = −k yazan (işaret hatası) ya da sabit terimi kalan sanan yolların
+        // da doğru kalanı verdiği katsayılar atlanır.
+        final c1 = _uygun(const [-4, -1, 2, 3, 5, -5, 6, -2, 7, -6], a ~/ 5, (x) {
+          final y = _deg([1, c2, x, 0], k);
+          return y != 0 && y != _deg([1, c2, x, 0], -k);
+        });
+        final pol = [1, c2, c1, w];
         final kalan = _deg(pol, k);
         return _tam(
           'P(x) = ${_pol(pol)} polinomunun ${_pol([1, -k])} ile bölümünden '
@@ -641,8 +691,19 @@ final lmMatIleri = <AdvancedFamily>[
         );
       }
       final (m, k) = const [(2, 1), (3, -1), (-1, 3), (-2, -2), (1, 2)][c ~/ 2];
-      final pol = [1, _sifirsiz(a, 12), w];
-      final x0 = k + m, kalan = _deg(pol, x0);
+      final x0 = k + m;
+      // Ötelemeyi atlayan (P(k)), ters uygulayan (P(k − m)) ya da P(m) alan
+      // yolların da doğru kalanı verdiği, kalanın sabit terime eşit çıktığı
+      // katsayılar atlanır.
+      final u = _uygun(_sifirsizAralik(-12, 17), a, (x) {
+        final y = _deg([1, x, 0], x0);
+        return y != 0 &&
+            y != _deg([1, x, 0], k) &&
+            y != _deg([1, x, 0], k - m) &&
+            y != _deg([1, x, 0], m);
+      });
+      final pol = [1, u, w];
+      final kalan = _deg(pol, x0);
       return _tam(
         'P(x) = ${_pol(pol)} polinomu veriliyor. P(${_pol([1, m])}) '
         'polinomunun ${_pol([1, -k])} ile bölümünden kalan kaçtır?',
@@ -664,10 +725,22 @@ final lmMatIleri = <AdvancedFamily>[
     (a, b, c) {
       final e = c % 5, bas = 1 + c ~/ 5;
       final kb = _sifirsiz(a, 12);
-      var kc = _sifirsiz(b, 14);
       // Kökler gerçek kalsın: diskriminant pozitif değilse sabit terim
-      // negatif bir değere taşınır.
-      if (kc > 0 && kb * kb <= 4 * bas * kc) kc = -(14 + kc);
+      // negatif bir değere taşınır. Ters çevrilmiş oranın (1/x₁ + 1/x₂) ya da
+      // toplam ile çarpımı karıştıran yolun (x₁²·x₂ + x₁·x₂²) da doğru yanıtı
+      // verdiği sabit terimler atlanır.
+      final kc = _uygun(
+        [
+          for (final x in _sifirsizAralik(-14, 8))
+            x > 0 && kb * kb <= 4 * bas * x ? -(14 + x) : x,
+        ],
+        b,
+        (x) => switch (e) {
+          1 => x.abs() != kb.abs(),
+          3 => -kb * x != (x - kb) * bas && -kb * x != (kb + x) * bas,
+          _ => true,
+        },
+      );
       final top = _q(-kb, bas), carp = _q(kc, bas);
       final giris =
           'Kökler toplamı x₁ + x₂ = $top, kökler çarpımı x₁·x₂ = $carp olur.';
@@ -735,7 +808,12 @@ final lmMatIleri = <AdvancedFamily>[
     BloomLevel.analiz,
     (a, b, c) {
       final v = c ~/ 3;
-      final kb = _sifirsiz(a, 12), b2 = kb * kb;
+      // Δ > 0 sorusunda b = ±1 iken 4·a·c yerine a·c alan yol da aynı tam
+      // sayıyı verir; bu katsayılar atlanır.
+      final kb = c % 3 == 2 && v == 0
+          ? _uygun(_sifirsizAralik(-12, 15), a, (x) => x.abs() != 1)
+          : _sifirsiz(a, 12);
+      final b2 = kb * kb;
       if (c % 3 == 0) {
         final bas = const [1, 2, 3, -1][v];
         final kc = _sifirsiz(b, 9);
@@ -839,7 +917,9 @@ final lmMatIleri = <AdvancedFamily>[
         [-4, -3, 4, 5, -5],
       ][c ~/ 5][a % 5];
       final bas = const [1, 2, -1, -2, 3][a ~/ 5];
-      final k = _sifirsiz(b, 9);
+      // Tepe noktasının apsisi ile ordinatı eşit olursa birini soran soruda
+      // ötekini bulan da doğru yanıta ulaşır; k = r atlanır.
+      final k = _uygun(_sifirsizAralik(-9, 12), b, (x) => x != r);
       final kb = -2 * bas * r, kc = bas * r * r + k;
       final pol = [bas, kb, kc];
       final apsis =
@@ -903,10 +983,24 @@ final lmMatIleri = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.analiz,
     (a, b, c) {
-      final g = b + 2; // kökler arası uzaklık
-      final p = a - 12 - g ~/ 2, q = p + g;
       final dahil = c.isOdd;
       final t = c ~/ 2;
+      final sayiSorusu = t == 0 || t == 2;
+      // Kökler arası uzaklık. Toplam sorularında arada tam iki tam sayı kalan
+      // açık aralık (uzaklık 3) atlanır: o durumda toplam, kökler toplamına
+      // eşit olur.
+      final g = !sayiSorusu && !dahil && b >= 1 ? b + 3 : b + 2;
+      // Toplam sorularında toplamın 0 çıktığı simetrik aralık ile toplamın
+      // tam sayı adedine ya da kökler çarpımına eşit olduğu aralıklar atlanır.
+      final p = sayiSorusu
+          ? a - 12 - g ~/ 2
+          : _uygun([for (var x = -12; x <= 18; x++) x - g ~/ 2], a, (x) {
+              final y = x + g;
+              final adet = dahil ? g + 1 : g - 1;
+              final toplam = (x + y) * adet ~/ 2;
+              return toplam != 0 && toplam != adet && toplam != x * y;
+            });
+      final q = p + g;
       final top = p + q, carp = p * q;
       final ilk = dahil ? p : p + 1, son = dahil ? q : q - 1;
       final adet = son - ilk + 1;
@@ -1262,6 +1356,13 @@ final lmMatIleri = <AdvancedFamily>[
           );
         case 2:
           final n = const [10, 12, 15, 20, 9][i5];
+          // Toplamın 0 ya da son terime eşit çıktığı ilk terimler atlanır:
+          // ikiye bölmeyi unutan ya da son terimi yazan da doğru yanıtı
+          // bulurdu.
+          final ilk = _uygun(_sifirsizAralik(-12, 17), a, (x) {
+            final son = x + (n - 1) * d, t = n * (x + son) ~/ 2;
+            return t != 0 && t != son;
+          });
           final an = ilk + (n - 1) * d;
           final toplam = n * (ilk + an) ~/ 2;
           return _tam(
@@ -1293,7 +1394,12 @@ final lmMatIleri = <AdvancedFamily>[
           );
         default:
           final n = const [8, 10, 12, 15, 20][i5];
-          final q = ilk, a1 = d + q, an = d * n + q;
+          // Toplamın 0 ya da son terime eşit çıktığı sabitler atlanır.
+          final q = _uygun(_sifirsizAralik(-12, 17), a, (x) {
+            final son = d * n + x, t = n * (d + x + son) ~/ 2;
+            return t != 0 && t != son;
+          });
+          final a1 = d + q, an = d * n + q;
           final toplam = n * (a1 + an) ~/ 2;
           return _tam(
             'Genel terimi ${_pol([d, q], 'n')} olan aritmetik dizinin ilk $n '
@@ -1477,9 +1583,16 @@ final lmMatIleri = <AdvancedFamily>[
       final v = c ~/ 5;
       switch (c % 5) {
         case 0:
-          final aci = 10 + 2 * a;
           final (p, q) = _ucgenRadyan[b];
-          final r = 180 * p ~/ q, ucuncu = 180 - aci - r;
+          final r = 180 * p ~/ q;
+          // Verilen iki açının toplamı 90° olursa üçüncü açı da 90° olur ve
+          // iki açıyı toplayıp bırakan da doğru yanıtı bulur; bu açı atlanır.
+          final aci = _uygun(
+            [for (var x = 10; x <= 60; x += 2) x],
+            a,
+            (x) => x + r != 90,
+          );
+          final ucuncu = 180 - aci - r;
           final bas =
               'Bir üçgenin iki iç açısının ölçüleri $aci° ve ${_pili(p, q)} '
               'radyandır.';
@@ -1611,9 +1724,15 @@ final lmMatIleri = <AdvancedFamily>[
       switch (c % 5) {
         case 0:
           final k = const [-2, -1, 1, 2, 3][a % 5];
-          final u = const [-4, -3, 2, 5, 6][a ~/ 5];
           final p = const [1, 2, 3, -1][b ~/ 5];
           final w = const [-5, -2, 1, 4, 7][b % 5];
+          // x = −k yazan (işaret hatası) ya da sabit terimi limit sanan
+          // yolların da doğru değeri verdiği katsayılar atlanır.
+          final u = _uygun(const [-4, -3, 2, 5, 6, -7, 7, -6, 8], a ~/ 5, (x) {
+            final govde = v == 0 ? [p, x, 0] : [1, p, x, 0];
+            final y = _deg(govde, k);
+            return y != 0 && y != _deg(govde, -k);
+          });
           final pol = v == 0 ? [p, u, w] : [1, p, u, w];
           final deger = _deg(pol, k);
           return _tam(
@@ -1642,12 +1761,21 @@ final lmMatIleri = <AdvancedFamily>[
             '${_q(p * k + m, n)} olur.',
           );
         case 2:
+          // p ≠ q olduğundan oranı ters çeviren (q/p) aynı değeri bulamaz.
+          // x'li terimlerin ya da sabit terimlerin oranı p/q değerine eşit
+          // olursa yanlış katsayıları oranlayan da doğru yanıtı bulur; bu
+          // katsayılar atlanır, sabit terimin işareti çevrilir.
           final p = const [2, 3, 5, 7, 9][a % 5];
-          final u = const [-4, -1, 3, 6, 8][a ~/ 5];
-          final q = const [2, 3, 4, 5][b ~/ 5];
+          final q = const [4, 6, 8, 10][b ~/ 5];
           final s = const [-5, -2, 1, 4, 7][b % 5];
+          final u = _uygun(
+            const [-4, -1, 3, 6, 8, -7, 10],
+            a ~/ 5,
+            (x) => x * q != p * s,
+          );
           final w = const [3, -1, 4, -5, 7][(a + b) % 5];
-          final t = const [-2, 5, 1, -3, 6][(a ~/ 5 + b) % 5];
+          final t0 = const [-2, 5, 1, -3, 6][(a ~/ 5 + b) % 5];
+          final t = w * q == p * t0 ? -t0 : t0;
           final ifade = v == 0
               ? '(${_pol([p, u, w])})/(${_pol([q, s, t])})'
               : '(${_polArtan([w, u, p])})/(${_polArtan([t, s, q])})';
@@ -1661,11 +1789,15 @@ final lmMatIleri = <AdvancedFamily>[
             '${_q(p, q) == '$p/$q' ? '' : ' = ${_q(p, q)}'}.',
           );
         case 3:
+          // q ≥ 3 olduğundan baş katsayıları çarpmak yerine toplayan (p + q)
+          // aynı değeri bulamaz. Sabit terimlerin oranı limite eşit olursa
+          // paydadaki sabitin işareti çevrilir.
           final p = 1 + a % 5, u = const [-3, -1, 2, 4, 5][a ~/ 5];
-          final q = const [2, 3, 4, 6][b ~/ 5];
+          final q = const [3, 4, 5, 6][b ~/ 5];
           final r = const [2, 3, 5, 7, 9][b % 5];
           final e = const [1, -2, 3, -1, 2][(a + b) % 5];
-          final w = const [3, -4, 1, 5, -2][(a ~/ 5 + b ~/ 5) % 5];
+          final w0 = const [3, -4, 1, 5, -2][(a ~/ 5 + b ~/ 5) % 5];
+          final w = u * e * r == p * q * w0 ? -w0 : w0;
           final carpim = '(${_pol([p, u])})·(${_pol([q, e])})';
           final kare = _pol([r, 0, w]);
           final acilim =
@@ -1733,13 +1865,29 @@ final lmMatIleri = <AdvancedFamily>[
       switch (c % 5) {
         case 0:
           final p = const [1, 2, -1, 3, -2][a % 5];
-          final q = const [-4, -2, 1, 3, 5][a ~/ 5];
           final r = const [-7, -3, 2, 6, 9][b % 5];
           final k = const [-2, -1, 1, 2][b ~/ 5];
-          final s = const [4, -6, 1, -3, 8][(a + b) % 5];
-          final pol = v == 0 ? [p, q, r, s] : [1, p, q, r, s];
+          List<int> kur(int q, int s) =>
+              v == 0 ? [p, q, r, s] : [1, p, q, r, s];
+          List<int> turevi(List<int> f) => [
+            for (var j = 0; j < f.length - 1; j++) f[j] * (f.length - 1 - j),
+          ];
+          // Üsle çarpmayı unutan ya da x = −k yazan yolların da doğru değeri
+          // verdiği katsayılar atlanır.
+          final q = _uygun(const [-4, -2, 1, 3, 5, -5, 2, 6], a ~/ 5, (x) {
+            final f = kur(x, 0), y = _deg(turevi(f), k);
+            return y != _deg(f.sublist(0, f.length - 1), k) &&
+                y != _deg(turevi(f), -k);
+          });
+          // f(k) = f′(k) olursa türev almadan da doğru yanıt bulunur; o
+          // durumda sabit terimin işareti çevrilir.
+          final s0 = const [4, -6, 1, -3, 8][(a + b) % 5];
+          final s = _deg(kur(q, s0), k) == _deg(turevi(kur(q, s0)), k)
+              ? -s0
+              : s0;
+          final pol = kur(q, s);
           final n = pol.length - 1;
-          final turev = [for (var j = 0; j < n; j++) pol[j] * (n - j)];
+          final turev = turevi(pol);
           final deger = _deg(turev, k);
           return _tam(
             'f(x) = ${_pol(pol)} fonksiyonu için f′(${_n(k)}) değeri kaçtır?',
@@ -1754,11 +1902,25 @@ final lmMatIleri = <AdvancedFamily>[
             '${_yerine(turev, k)} = ${_n(deger)}.',
           );
         case 1:
-          final p = 1 + a % 5, q = const [-3, -1, 1, 2, 4][a ~/ 5];
+          final p = 1 + a % 5;
           final r = const [1, 2, 3, -1][b ~/ 5];
-          final s = const [-4, -1, 2, 3, 5][b % 5];
           final k = 1 + v;
-          final u = p * k + q, w = r * k * k + s, wt = 2 * r * k;
+          final wt = 2 * r * k;
+          // Birinci çarpan k noktasında sıfır olursa kuralın tek terimi de
+          // doğru yanıtı verir; bu sabit atlanır.
+          final q = _uygun(
+            const [-3, -1, 1, 2, 4, -2, 3],
+            a ~/ 5,
+            (x) => p * k + x != 0,
+          );
+          final u = p * k + q;
+          // Türevleri çarpan (f′·g′) ya da türev almadan f(k) hesaplayan
+          // yolların da doğru değeri verdiği sabitler atlanır.
+          final s = _uygun(const [-4, -1, 2, 3, 5, -5, 1, 4, 6, -2], b % 5, (x) {
+            final y = p * (r * k * k + x) + u * wt;
+            return y != p * wt && y != u * (r * k * k + x);
+          });
+          final w = r * k * k + s;
           final deger = p * w + u * wt;
           return _tam(
             'f(x) = (${_pol([p, q])})·(${_pol([r, 0, s])}) fonksiyonu için '
@@ -1770,11 +1932,19 @@ final lmMatIleri = <AdvancedFamily>[
             '$p·${_p(w)} + ${_p(u)}·${_p(wt)} = ${_n(deger)}.',
           );
         case 2:
-          final p = 1 + a % 5, qm = const [1, 2, 3, 5, 7][a ~/ 5];
+          final p = 1 + a % 5;
           final r = 1 + b ~/ 5, sm = 1 + b % 5;
-          final q = v == 0 ? -qm : qm, s = v == 0 ? sm : -sm;
+          final s = v == 0 ? sm : -sm;
           final k = v == 0 ? 1 : -1;
-          final pay = p * s - q * r, alt = r * k + s;
+          final alt = r * k + s;
+          // Pay ve paydanın türevlerini oranlayan (p/r) yolun da doğru değeri
+          // verdiği sabitler atlanır.
+          final q = _uygun(
+            [for (final x in const [1, 2, 3, 5, 7, 4, 6]) v == 0 ? -x : x],
+            a ~/ 5,
+            (x) => (p * s - x * r) * r != p * alt * alt,
+          );
+          final pay = p * s - q * r;
           return _kes(
             'f(x) = (${_pol([p, q])})/(${_pol([r, s])}) fonksiyonu için '
             'f′(${_n(k)}) değeri kaçtır?',
@@ -1789,10 +1959,22 @@ final lmMatIleri = <AdvancedFamily>[
         default:
           // f çift, f′ ve g tek seçilir: f′·g tek, f·g′ çift olduğundan
           // çarpım ve bölüm türevinin payı hiçbir zaman sıfır olmaz.
+          // g(k) ≠ 1 olduğundan paydanın karesini almayı unutan aynı değeri
+          // bulamaz. Türevleri çarpan ya da oranlayan (f′·g′, f′/g′) ve
+          // f·f′ + g·g′ alan yolların da doğru değeri verdiği g′ değerleri
+          // atlanır.
           final fa = const [2, 4, -2, 6, -4][a % 5];
           final ft = const [-3, -1, 1, 3, 5][a ~/ 5];
-          final ga = const [1, 3, -1, 5][b ~/ 5];
-          final gt = const [-4, -1, 2, 3, 5][b % 5];
+          final ga = const [3, -3, -1, 5][b ~/ 5];
+          final gt = _uygun(const [-4, -1, 2, 3, 5, -2, 4, -5, 1, 6], b % 5, (x) {
+            if (c % 5 == 3) {
+              final ht = ft * ga + fa * x;
+              return ht != ft * x && ht != fa * ft + ga * x;
+            }
+            return v == 0
+                ? (ft * ga - fa * x) * x != ft * ga * ga
+                : (x * fa - ga * ft) * ft != x * fa * fa;
+          });
           final k = 1 + (a + b) % 4;
           final veri =
               'Türevlenebilir f ve g fonksiyonları için f($k) = ${_n(fa)}, '
@@ -1874,9 +2056,12 @@ final lmMatIleri = <AdvancedFamily>[
           final q = _sifirsiz(a, 12);
           final p = const [1, 2, 3, -1][b ~/ 5];
           final k = const [-2, -1, 1, 2, 3][b % 5];
-          final r = const [5, -3, 2, -7, 4, 1, -6][(a + b) % 7];
-          final pol = [p, q, r], turev = [2 * p, q];
           final egim = 2 * p * k + q;
+          // y(k) = y′(k) olursa türev almadan da eğim bulunur; o durumda
+          // sabit terimin işareti çevrilir.
+          final r0 = const [5, -3, 2, -7, 4, 1, -6][(a + b) % 7];
+          final r = v == 0 && _deg([p, q, r0], k) == egim ? -r0 : r0;
+          final pol = [p, q, r], turev = [2 * p, q];
           if (v == 0) {
             return _tam(
               'y = ${_pol(pol)} parabolüne x = ${_n(k)} apsisli noktasından '
@@ -1900,15 +2085,20 @@ final lmMatIleri = <AdvancedFamily>[
             '${_n(egim - q)} ve x = ${_n(k)} bulunur.',
           );
         case 1:
-          final q = _sifirsiz(a, 12);
           final k = const [-2, -1, 1, 2, 3][b % 5];
+          final p0 = const [1, 2, 3, -1][b ~/ 5];
+          // Yatay teğet (m = 0) ile orijinden geçen teğet (n = 0) atlanır:
+          // bu durumlarda m + n, yalnız n ya da yalnız m bulunarak da elde
+          // edilir. v = 0 iken n = r − p·k², v = 1 iken n = d − 2k³ olur.
+          final q = _uygun(
+            _sifirsizAralik(-12, 14),
+            a,
+            (x) => (v == 0 ? 2 * p0 * k : 3 * k * k) + x != 0,
+          );
+          final r0 = const [5, -3, 2, -7, 4, 1, -6][(a + b) % 7];
           final pol = v == 0
-              ? [
-                  const [1, 2, 3, -1][b ~/ 5],
-                  q,
-                  const [5, -3, 2, -7, 4, 1, -6][(a + b) % 7],
-                ]
-              : [1, 0, q, const [-6, -2, 3, 7][b ~/ 5]];
+              ? [p0, q, r0 == p0 * k * k ? -r0 : r0]
+              : [1, 0, q, const [-6, -3, 3, 7][b ~/ 5]];
           final n = pol.length - 1;
           final turev = [for (var j = 0; j < n; j++) pol[j] * (n - j)];
           final m = _deg(turev, k), yk = _deg(pol, k), kesen = yk - m * k;
@@ -1928,7 +2118,14 @@ final lmMatIleri = <AdvancedFamily>[
           final c0 = a % 5 - 2, g = 1 + a ~/ 5;
           final r1 = c0 - g, r2 = c0 + g;
           final i = c % 5 == 2 && b >= 10 ? -1 : 1;
-          final d = c % 5 == 2 ? _sifirsiz(b % 10, 5) : _sifirsiz(b, 9);
+          // Ekstremum değeri sorulurken değerin, noktanın apsisine eşit
+          // çıktığı sabit terim atlanır.
+          final d = c % 5 == 2
+              ? _sifirsiz(b % 10, 5)
+              : _uygun(_sifirsizAralik(-9, 12), b, (x) {
+                  final x0 = v == 0 ? r1 : r2;
+                  return _deg([1, -3 * c0, 3 * (c0 * c0 - g * g), x], x0) != x0;
+                });
           final pol = [i, -3 * c0 * i, 3 * (c0 * c0 - g * g) * i, d];
           final turev = [3 * i, -6 * c0 * i, 3 * (c0 * c0 - g * g) * i];
           final kritik =
@@ -1962,7 +2159,9 @@ final lmMatIleri = <AdvancedFamily>[
           );
         default:
           // f(x) = ±(2x³ − 3(r₁ + r₂)x² + 6r₁r₂x) + d.
-          final r1 = a % 5 - 3, r2 = r1 + 1 + a ~/ 5;
+          // m = 0 olursa n − m ile m + n aynı sayı olur; bu yüzden aralığın
+          // sol ucu sıfırdan farklı seçilir.
+          final r1 = const [-3, -2, -1, 1, 2][a % 5], r2 = r1 + 1 + a ~/ 5;
           final i = b >= 10 ? -1 : 1;
           final d = _sifirsiz(b % 10, 5);
           final pol = [2 * i, -3 * (r1 + r2) * i, 6 * r1 * r2 * i, d];
@@ -2004,15 +2203,23 @@ final lmMatIleri = <AdvancedFamily>[
     BloomLevel.uygulama,
     (a, b, c) {
       final v = c ~/ 5;
+      // (0, 3) yoktur: 3³ = 3·3² olduğundan parametre sorusunda ilkel yerine
+      // integrandı kullanan da aynı sonucu bulurdu.
       const sinirlar = [
         [(0, 1), (0, 2), (1, 2), (1, 3)],
-        [(0, 3), (2, 3), (1, 4), (2, 4)],
+        [(0, 4), (2, 3), (1, 4), (2, 4)],
       ];
       switch (c % 5) {
         case 0:
           final p = 1 + a % 5, q = const [-2, -1, 1, 2, 3][a ~/ 5];
-          final r = const [-4, -1, 2, 5, 7][b % 5];
           final (alt, ust) = sinirlar[v][b ~/ 5];
+          // İntegralin 0 çıktığı ya da integral almadan f(üst) − f(alt)
+          // hesaplayan yolun da doğru değeri verdiği sabitler atlanır.
+          final r = _uygun(const [-4, -1, 2, 5, 7, -7, 1, 4, -2, 8], b % 5, (x) {
+            final y = _deg([p, q, x, 0], ust) - _deg([p, q, x, 0], alt);
+            return y != 0 &&
+                y != _deg([3 * p, 2 * q, x], ust) - _deg([3 * p, 2 * q, x], alt);
+          });
           final f = [3 * p, 2 * q, r], ilkel = [p, q, r, 0];
           final fu = _deg(ilkel, ust), fa = _deg(ilkel, alt);
           return _tam(
@@ -2025,8 +2232,26 @@ final lmMatIleri = <AdvancedFamily>[
           );
         case 1:
           final p = 1 + a % 5, r = 1 + a ~/ 5;
-          final alt = b % 5 - 2, ust = alt + 1 + b ~/ 5;
           final f = [3 * p, 2 * v, r], ilkel = [p, v, r, 0];
+          // Alanın, taban × uç yükseklik çarpımına ya da uç yüksekliklerin
+          // farkına eşit çıktığı aralıklar atlanır: integral almadan da doğru
+          // yanıt bulunurdu.
+          final (alt, ust) = _uygun(
+            [
+              for (var boy = 1; boy <= 4; boy++)
+                for (var x = -2; x <= 2; x++) (x, x + boy),
+              (-3, -2), (3, 4), (-3, -1), (3, 5), (-3, 0), (-3, 1),
+              (-3, 2), (-2, 3), (-3, 3), (-4, -3), (4, 5), (-1, 4),
+            ],
+            b,
+            (s) {
+              final alan = _deg(ilkel, s.$2) - _deg(ilkel, s.$1);
+              final y1 = _deg(f, s.$1), y2 = _deg(f, s.$2);
+              return alan != y1 * (s.$2 - s.$1) &&
+                  alan != y2 * (s.$2 - s.$1) &&
+                  alan != (y2 - y1).abs();
+            },
+          );
           final fu = _deg(ilkel, ust), fa = _deg(ilkel, alt);
           final boy = ust - alt, ya = _deg(f, alt), yu = _deg(f, ust);
           return _tam(
@@ -2135,10 +2360,15 @@ final lmMatIleri = <AdvancedFamily>[
           'değeri kaçtır?';
       switch (c % 5) {
         case 0:
-          final q = _sifirsiz(a, 12);
           final p = (2 + b ~/ 5) * (v == 0 ? 1 : -1);
           final n = const [8, 10, 12, 15, 20][b % 5];
           final t = n * (n + 1) ~/ 2;
+          // Toplamın, yalnız son terime (p·n + q) eşit çıktığı sabit atlanır.
+          final q = _uygun(
+            _sifirsizAralik(-12, 17),
+            a,
+            (x) => p * t + x * n != p * n + x,
+          );
           final toplam = p * t + q * n;
           return _tam(
             sigma(1, n, '(${v == 0 ? _pol([p, q], 'k') : _polArtan([q, p], 'k')})'),
@@ -2174,10 +2404,16 @@ final lmMatIleri = <AdvancedFamily>[
           );
         case 2:
           final m = 3 + a % 5;
-          final q = (1 + a ~/ 5) * (v == 0 ? 1 : -1);
           final p = 2 + b ~/ 5;
           final adet = const [6, 8, 10, 12, 14][b % 5];
           final n = m + adet - 1;
+          // Alt sınırı 1 sayan yolun da doğru toplamı verdiği (ilk m − 1
+          // terimin toplamı 0) ya da ilk terimin 0 olduğu sabitler atlanır.
+          final q = _uygun(
+            [for (var x = 1; x <= 8; x++) v == 0 ? x : -x],
+            a ~/ 5,
+            (x) => 2 * x != -p * m && x != -p * m && x != -p * n,
+          );
           final kt = (m + n) * adet ~/ 2;
           final toplam = p * kt + q * adet;
           return _tam(

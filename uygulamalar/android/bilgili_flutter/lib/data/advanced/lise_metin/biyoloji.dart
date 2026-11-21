@@ -120,13 +120,13 @@ const _tekKarakter = <(String, _Karakter)>[
   ('Meyve sineklerinde', ('uzun kanat', 'körelmiş kanat', 'K', 'uzun kanatlı', 'körelmiş kanatlı')),
   ('Meyve sineklerinde', ('gri gövde', 'siyah gövde', 'G', 'gri gövdeli', 'siyah gövdeli')),
   ('Domateslerde', ('kırmızı meyve', 'sarı meyve', 'R', 'kırmızı meyveli', 'sarı meyveli')),
-  ('Kobaylarda', ('siyah kıl', 'beyaz kıl', 'S', 'siyah kıllı', 'beyaz kıllı')),
-  ('Kobaylarda', ('kısa kıl', 'uzun kıl', 'K', 'kısa kıllı', 'uzun kıllı')),
+  ('Mısır bitkisinde', ('mor tane', 'sarı tane', 'M', 'mor taneli', 'sarı taneli')),
+  ('Mısır bitkisinde', ('dolgun tane', 'buruşuk tane', 'D', 'dolgun taneli', 'buruşuk taneli')),
 ];
 
 final _f01 = lmAile(
   'biy_monohibrit',
-  'Monohibrit çaprazlamada beklenen yavru sayısı',
+  'Monohibrit çaprazlamada olasılık ve yavru sayısı',
   Topic.biology,
   Difficulty.medium,
   BloomLevel.uygulama,
@@ -231,13 +231,22 @@ final _f01 = lmAile(
           positive: true,
         );
       case 8:
-        return sayisal(
-          '$hetIki toplam $n yavru elde ediliyor. Bu yavrulardan kaç tanesinin '
-          'homozigot baskın ($dom) genotipli olması beklenir?',
-          m,
-          [2 * m, 3 * m, n],
-          '$oran Homozigot baskın yavru sayısı $n · 1/4 = $m olur.',
-          positive: true,
+        // Sayım verisinden ebeveyn genotipi çıkarılır; yanıt bir olasılıktır.
+        final (olay, pay) = [
+          (domF, 3),
+          ('heterozigot genotipli', 2),
+          ('homozigot baskın genotipli', 1),
+        ][(a + b) % 3];
+        return _olasilik(
+          '$giris Fenotipi $domF olan iki bireyin çaprazlanmasıyla elde edilen '
+          '$n yavrudan $m tanesi $recF çıkıyor. Aynı ebeveynlerden oluşacak '
+          'yeni bir yavrunun $olay olma olasılığı kaçtır?',
+          pay,
+          4,
+          [(1, 4), (1, 2), (3, 4), (2, 3), (1, 3)],
+          'Çaprazlamada $recF yavru oluştuğuna göre ebeveynlerin ikisi de $het '
+          'genotiplidir ($m / $n = 1/4). $oran İstenen olasılık '
+          '${kesir(pay, 4)} bulunur.',
         );
       default:
         return sayisal(
@@ -340,7 +349,7 @@ final _f02 = lmAile(
             'olasılığı ${kesir(n1, 4)}, $cap2 çaprazlamasında $ad2 olasılığı '
             '${kesir(n2, 4)} olur. Bağımsız olayların olasılıkları çarpılır: '
             '${kesir(n, 16)}.',
-        [(n1, 4), (n2, 4), (n1 + n2, 8), (16 - n, 16), (n1 + n2, 4)],
+        [(n1, 4), (n2, 4), (n1 + n2, 8), (16 - n, 16)],
       ));
     }
 
@@ -396,12 +405,16 @@ final _f02 = lmAile(
       [(d1 * d2, 16), ((4 - d1) * (4 - d2), 16), (8 - d1 - d2, 8), (8 - d1 - d2, 4)],
     );
     final (hedef, n, aciklama, aday) = hedefler[(c + a) % hedefler.length];
+    // Ebeveynler aynı genotipteyse tanım yinelenmez.
+    final ebeveynler = p1 == q1 && p2 == q2
+        ? '${tanim(p1, p2)} iki birey'
+        : '${tanim(p1, p2)} bir birey ile ${tanim(q1, q2)} bir birey';
     return _olasilik(
       '$org ${k1.$1} aleli ($h1) ${k1.$2} aleline (${h1.toLowerCase()}), '
       '${k2.$1} aleli ($h2) ${k2.$2} aleline (${h2.toLowerCase()}) baskındır '
-      've bu iki gen farklı kromozomlarda bulunur. Bu türden ${tanim(p1, p2)} '
-      'bir birey ile ${tanim(q1, q2)} bir birey çaprazlanıyor. Bu '
-      'çaprazlamadan oluşacak bir yavrunun $hedef olma olasılığı kaçtır?',
+      've bu iki gen farklı kromozomlarda bulunur. Bu türden $ebeveynler '
+      'çaprazlanıyor. Bu çaprazlamadan oluşacak bir yavrunun $hedef olma '
+      'olasılığı kaçtır?',
       n,
       16,
       aday,
@@ -418,28 +431,41 @@ final _f02 = lmAile(
 // bağımsız olarak da birbirinden ayrılır.
 const _genHarfleri = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'K', 'L', 'M', 'N'];
 
-/// k genli ve en az bir geni heterozigot olan genotiplerden j numaralısı.
-/// İlk heterozigot genin yerine göre bloklara ayrılır; her j ayrı bir
-/// genotip verir (0 = homozigot baskın, 1 = heterozigot, 2 = homozigot çekinik).
+/// k genli genotiplerden j numaralısı (0 = homozigot baskın, 1 = heterozigot,
+/// 2 = homozigot çekinik). Önce en az iki geni heterozigot olanlar, ikinci
+/// heterozigot genin yerine göre bloklar hâlinde sıralanır; ardından yalnız
+/// bir geni heterozigot olanlar gelir. Her j ayrı bir genotip verir.
 List<int> _genotipSec(int k, int j) {
-  for (var p = 0; p < k; p++) {
-    final blok = (1 << p) * _us(3, k - 1 - p);
-    if (j < blok) {
-      final d = List<int>.filled(k, 1);
-      var r = j;
-      for (var q = 0; q < p; q++) {
-        d[q] = (r % 2) * 2;
+  final d = List<int>.filled(k, 0);
+  for (var q = 1; q < k; q++) {
+    final blok = (1 << (q - 1)) * _us(3, k - 1 - q);
+    if (j < q * blok) {
+      final p = j ~/ blok; // ilk heterozigot genin yeri
+      var r = j % blok;
+      d[p] = 1;
+      d[q] = 1;
+      for (var t = 0; t < q; t++) {
+        if (t == p) continue;
+        d[t] = (r % 2) * 2;
         r ~/= 2;
       }
-      for (var q = p + 1; q < k; q++) {
-        d[q] = r % 3;
+      for (var t = q + 1; t < k; t++) {
+        d[t] = r % 3;
         r ~/= 3;
       }
       return d;
     }
-    j -= blok;
+    j -= q * blok;
   }
-  throw StateError('Genotip sırası aralık dışında');
+  final p = j ~/ (1 << (k - 1)) % k;
+  var r = j % (1 << (k - 1));
+  d[p] = 1;
+  for (var t = 0; t < k; t++) {
+    if (t == p) continue;
+    d[t] = (r % 2) * 2;
+    r ~/= 2;
+  }
+  return d;
 }
 
 String _genotipYaz(List<String> harf, List<int> d) => [
@@ -454,9 +480,10 @@ final _f03 = lmAile(
   BloomLevel.uygulama,
   (a, b, c) {
     final k = (c == 4 || c == 5 || c == 9) ? 7 : 6;
-    final gecerli = _us(3, k) - (1 << k);
+    // Altı gende en az iki geni heterozigot 473, yedi gende 1611 genotip
+    // vardır; altı genli ailelerde 27 vakada tek gen heterozigottur.
     final sira = (a + 25 * b) * 277 + 31 * c;
-    final d = _genotipSec(k, sira % gecerli);
+    final d = _genotipSec(k, sira % (k == 6 ? 500 : 1611));
     final harf = kombinasyon(
       _genHarfleri,
       k,
@@ -643,7 +670,8 @@ List<(String, int)> _aboHedefler(String anne, String baba) {
   }
   return [
     for (final e in fen.entries) ('${e.key} kan gruplu', e.value),
-    for (final e in gen.entries) ('kan grubu genotipi ${e.key} olan', e.value),
+    for (final e in gen.entries)
+      ('AB0 sistemi bakımından ${e.key} genotipli', e.value),
   ];
 }
 
@@ -693,13 +721,18 @@ final _f04 = lmAile(
       if (rhVar) kesir(rhPay, 4),
       if (cins != 0) '1/2',
     ];
+    final anneTanim = '$anne${rhVar ? ' ${_rhYaz(anneRh)}' : ''}';
+    final babaTanim = '$baba${rhVar ? ' ${_rhYaz(babaRh)}' : ''}';
+    // Anne ve baba aynı genotipteyse tanım yinelenmez.
+    final ebeveynler = anneTanim == babaTanim
+        ? 'Her ikisinin de kan grubu genotipi $anneTanim olan bir anne ile '
+              'bir babanın'
+        : 'Kan grubu genotipi $anneTanim olan bir anne ile $babaTanim olan '
+              'bir babanın';
     return _olasilik(
       'AB0 kan grubu sisteminde A ve B alelleri eş baskın, 0 aleli '
       'çekiniktir${rhVar ? '; Rh(+) aleli (R), Rh(−) aleline (r) baskındır' : ''}. '
-      'Kan grubu genotipi $anne${rhVar ? ' ${_rhYaz(anneRh)}' : ''} olan bir '
-      'anne ile $baba${rhVar ? ' ${_rhYaz(babaRh)}' : ''} olan bir babanın '
-      'doğacak bir çocuğunun '
-      '$hedef olma olasılığı kaçtır?',
+      '$ebeveynler doğacak bir çocuğunun $hedef olma olasılığı kaçtır?',
       n,
       d,
       [
@@ -724,14 +757,33 @@ final _f04 = lmAile(
 
 // ───────────────────────── 5. X'e bağlı çekinik kalıtım ─────────────────────────
 
-// (hastalık adı, hasta olanı niteleyen söz, hasta olmayanı niteleyen söz)
+// (hastalık adı, hasta olanı niteleyen söz, hasta olmayanı niteleyen söz,
+//  çekinik aleli taşımayanı niteleyen söz, “hasta olma” yüklemi,
+//  “hasta olmama” yüklemi)
 const _xHastaliklar = [
-  ('Kırmızı-yeşil renk körlüğü', 'renk körü', 'renk körü olmayan'),
-  ('Hemofili', 'hemofili hastası', 'hemofili hastası olmayan'),
+  (
+    'Kırmızı-yeşil renk körlüğü',
+    'renk körü',
+    'renk körü olmayan',
+    'renk körlüğü alelini taşımayan',
+    'renk körü olma',
+    'renk körü olmama',
+  ),
+  (
+    'Hemofili',
+    'hemofili hastası',
+    'hemofili hastası olmayan',
+    'hemofili alelini taşımayan',
+    'hemofili hastası olma',
+    'hemofili hastası olmama',
+  ),
   (
     'Kalıtsal bir enzim eksikliği',
     'enzim eksikliği görülen',
     'enzim eksikliği görülmeyen',
+    'enzim eksikliği alelini taşımayan',
+    'enzim eksikliği gösterme',
+    'enzim eksikliği göstermeme',
   ),
 ];
 
@@ -755,28 +807,31 @@ final _f05 = lmAile(
   BloomLevel.analiz,
   (a, b, c) {
     final (anneX, babaX, tur, xPay, xPayda) = _xDurumlar[(a * 7) % 25];
-    final (ad, hasta, saglam) = _xHastaliklar[c % 3];
+    final (ad, hasta, saglam, alelsiz, hastaOlma, saglamOlma) =
+        _xHastaliklar[c % 3];
     final (anne, baba) = _aboCiftler[b];
     final hedefler = _aboHedefler(anne, baba);
     final (abo, aboPay) = hedefler[(c ~/ 3 + a) % hedefler.length];
+    // 0 aleli de çekinik olduğundan X'e bağlı alel adıyla anılır.
     final anneSoz = switch (anneX) {
       0 => 'bu özellik bakımından taşıyıcı',
       1 => hasta,
-      _ => 'çekinik aleli taşımayan',
+      _ => alelsiz,
     };
     final babaSoz = babaX == 0 ? saglam : hasta;
+    // Cinsiyet belirtilmeyen hedeflerde yüklem doğrudan kurulur.
     final soru = switch (tur) {
       0 => 'doğacak bir çocuğunun $abo ve $hasta bir erkek olma',
       1 => 'doğacak bir çocuğunun $abo ve $hasta bir kız olma',
       2 => 'doğacak bir çocuğunun $abo ve taşıyıcı bir kız olma',
-      3 => 'doğacak bir çocuğunun $abo ve $hasta bir çocuk olma',
+      3 => 'doğacak bir çocuğunun $abo olma ve $hastaOlma',
       4 => 'doğacak bir çocuğunun $abo ve $saglam bir erkek olma',
-      5 => 'doğacak bir çocuğunun $abo ve çekinik aleli taşımayan bir kız olma',
-      6 => 'doğacak bir çocuğunun $abo ve $saglam bir çocuk olma',
-      7 => 'doğacak bir erkek çocuğunun $abo ve $hasta bir birey olma',
-      8 => 'doğacak bir kız çocuğunun $abo ve taşıyıcı bir birey olma',
+      5 => 'doğacak bir çocuğunun $abo ve $alelsiz bir kız olma',
+      6 => 'doğacak bir çocuğunun $abo olma ve $saglamOlma',
+      7 => 'doğacak bir erkek çocuğunun $abo olma ve $hastaOlma',
+      8 => 'doğacak bir kız çocuğunun $abo ve taşıyıcı olma',
       9 => 'doğacak bir çocuğunun $abo ve $saglam bir kız olma',
-      _ => 'doğacak bir kız çocuğunun $abo ve $hasta bir birey olma',
+      _ => 'doğacak bir kız çocuğunun $abo olma ve $hastaOlma',
     };
     final xAciklama = switch ((anneX, babaX)) {
       (0, 0) =>
@@ -840,7 +895,7 @@ final _f06 = lmAile(
   (a, b, c) {
     // 31 diziden birincisi için 25, ikincisi için 20 ayrı seçim; ikinci
     // karakterde iki alelli eş baskın dizi (sıra 1) kullanılmaz.
-    final (n1, es1) = _alelDizileri[a * 5 % 31];
+    final (n1, es1) = _alelDizileri[(a * 5 + 1) % 31];
     final (n2, es2) = _alelDizileri[2 + (b * 7 + 3) % 29];
     String iliski(String harf, int n, List<bool> es) {
       final sb = StringBuffer('$harf${_altRakam[1]}');
@@ -1123,7 +1178,7 @@ final _f08 = lmAile(
           '${n * sa} saat sonra $son hücre sayıldığına göre bir hücrenin art '
           'arda iki bölünmesi arasında kaç saat geçmektedir?',
           sa,
-          [n * sa ~/ kat, n * sa ~/ 2, n * sa ~/ (n + 1), sa * 2, sa ~/ 2],
+          [sa * 2, sa ~/ 2, n * sa ~/ (n + 1), n * sa ~/ (n - 1), sa + 6],
           'Hücre sayısı $son / $k = $kat = 2${_ust(n)} katına çıkmıştır; '
           '${n * sa} saatte $n bölünme olmuştur. Bölünme aralığı '
           '${n * sa} / $n = $sa saat bulunur.',
@@ -1134,7 +1189,7 @@ final _f08 = lmAile(
           '$bakteri ${n * dk} dakika sonra besiyerinde $son bakteri '
           'sayıldığına göre başlangıçta kaç bakteri ekilmiştir?',
           k,
-          [2 * k, son ~/ n, son ~/ (2 * n), 4 * k, k + n],
+          [2 * k, 4 * k, son ~/ (2 * n), k ~/ 2, k + n],
           '$bolunmeDk Başlangıçtaki sayı '
           '$son / 2${_ust(n)} = $son / $kat = $k olur.',
           positive: true,
@@ -1530,7 +1585,9 @@ final _f11 = lmAile(
   Difficulty.medium,
   BloomLevel.uygulama,
   (a, b, c) {
-    final n1 = 50 + 4 * a, n2 = 31 + 5 * b; // zincirlerdeki amino asit sayıları
+    // Zincirlerdeki amino asit sayıları: biri çift, diğeri tek olduğundan
+    // “biri …, diğeri …” anlatımında iki sayı eşit çıkmaz.
+    final n1 = 50 + 4 * a, n2 = 31 + 6 * b;
     final r = b + 2; // ribozom sayısı
     final m1 = 3 * (n1 + 1), m2 = 3 * (n2 + 1);
     final iki =
@@ -1675,7 +1732,7 @@ final _f12 = lmAile(
   'biy_dehidrasyon',
   'Dehidrasyon ve hidrolizde su ve bağ sayıları',
   Topic.biology,
-  Difficulty.medium,
+  Difficulty.easy,
   BloomLevel.uygulama,
   (a, b, c) {
     final x = a + 2, y = b + 3;
@@ -1781,7 +1838,7 @@ final _f12 = lmAile(
           positive: true,
         );
       case 8:
-        final p1 = 30 + 4 * a, p2 = 21 + 5 * b;
+        final p1 = 30 + 4 * a, p2 = 21 + 6 * b; // biri çift, diğeri tek
         return sayisal(
           'Karaciğerde biri $p1, diğeri $p2 glikoz biriminden oluşan iki '
           'glikojen molekülü tamamen glikoza hidroliz ediliyor. Bu olayda '
@@ -2164,18 +2221,17 @@ final _f15 = lmAile(
           positive: true,
         );
       case 7:
-        final gerek = const [500, 800, 1000, 2000][v];
-        final say = a + 2;
-        final ust = say * gerek * 100;
+        final gunluk = e0 ~/ 10; // üreticilerin günde bağladığı enerji
+        final ay = gunluk * 30 ~/ _us(10, t);
         return sayisal(
-          '$giris $uretici $ust kcal enerji bulunmaktadır. Bir ${z[2]} '
-          'bireyinin enerji gereksinimi $gerek kcal olduğuna göre bu enerji '
-          'en çok kaç ${z[2]} bireyinin gereksinimini karşılar?',
-          say,
-          [say * 10, say * 100, say ~/ 10, say * 5, say + 10],
-          'Üreticiden ${z[2]} basamağına 2 aktarım vardır: $ust / 10² = '
-          '${ust ~/ 100} kcal. Birey sayısı ${ust ~/ 100} / $gerek = $say '
-          'olur.',
+          '$giris Zincirin üreticisi olan ${z[0]} basamağı günde ortalama '
+          '$gunluk kcal enerji bağlamaktadır. Buna göre 30 günde ${z[t]} '
+          'popülasyonuna aktarılan toplam enerji kaç kcal olur?',
+          ay,
+          [gunluk ~/ _us(10, t), ay * 10, ay ~/ 10, gunluk * 3 * t, ay * 100],
+          'Üreticiler 30 günde $gunluk · 30 = ${gunluk * 30} kcal enerji '
+          'bağlar. Üreticiden ${z[t]} basamağına $t aktarım olduğundan '
+          '${gunluk * 30} / 10${_ust(t)} = $ay kcal aktarılır.',
           positive: true,
         );
       case 8:
@@ -2351,6 +2407,59 @@ final _f16 = lmAile(
 
 // ───────────────────────── 17. Kalp debisi ve solunum hacmi ─────────────────────────
 
+// Beş etkinlik düzeyi: (yalın tanım, ilgi hâli, işaret sözü, işaret sözünün
+// ilgi hâli, atım hacmi tabanı mL, bir solukta alınan hava tabanı mL). Nabız
+// ve soluk sayısı da düzeyle birlikte arttığından kalp debisi ve solunum
+// hacmi her düzeyde gerçek hayattaki aralıkta kalır.
+const _etkinlikler = [
+  (
+    'Dinlenme hâlindeki bir kişi',
+    'Dinlenme hâlindeki bir kişinin',
+    'bu kişi',
+    'bu kişinin',
+    60,
+    400,
+  ),
+  (
+    'Hafif tempoda yürüyen bir kişi',
+    'Hafif tempoda yürüyen bir kişinin',
+    'bu kişi',
+    'bu kişinin',
+    70,
+    700,
+  ),
+  (
+    'Tempolu yürüyüş yapan bir kişi',
+    'Tempolu yürüyüş yapan bir kişinin',
+    'bu kişi',
+    'bu kişinin',
+    80,
+    1000,
+  ),
+  (
+    'Koşu yapan bir kişi',
+    'Koşu yapan bir kişinin',
+    'bu kişi',
+    'bu kişinin',
+    90,
+    1400,
+  ),
+  (
+    'Yoğun antrenman yapan bir sporcu',
+    'Yoğun antrenman yapan bir sporcunun',
+    'bu sporcu',
+    'bu sporcunun',
+    110,
+    1800,
+  ),
+];
+
+// Dinlenme nabzı 60, 65, 70, 75 ve 80 atım için atım hacmi tabanı (mL):
+// nabız yükseldikçe taban düşer, dinlenme debisi 4–7,2 L arasında kalır.
+const _dinlenmeAtimi = [68, 64, 60, 56, 52];
+
+String _buyukBasla(String s) => s[0].toUpperCase() + s.substring(1);
+
 final _f17 = lmAile(
   'biy_dolasim_solunum',
   'Kalp debisi ve dakikadaki solunum hacmi',
@@ -2358,10 +2467,15 @@ final _f17 = lmAile(
   Difficulty.easy,
   BloomLevel.uygulama,
   (a, b, c) {
-    final nabiz = 56 + 2 * a, atim = 50 + 5 * b; // atım/dk, mL
+    final (kisi, kisinin, bu, bunun, atimTabani, havaTabani) =
+        _etkinlikler[a ~/ 5];
+    // Nabız 5'in, atım hacmi 2'nin katıdır; çarpım 10 mL'nin katı olur.
+    final nabiz = 60 + 5 * a; // atım/dk: 60 … 180
+    final atim = (a < 5 ? _dinlenmeAtimi[a] : atimTabani) + 2 * b; // mL
     final debi = nabiz * atim / 1000; // L/dk
-    final soluk = 10 + a, hacim = 400 + 50 * b; // soluk/dk, mL
+    final soluk = 12 + a, hacim = havaTabani + 10 * b; // soluk/dk, mL
     final hava = soluk * hacim / 1000; // L/dk
+    final buBas = _buyukBasla(bu), bununBas = _buyukBasla(bunun);
     Iterable<double> uygun(List<double> adaylar) =>
         adaylar.where((v) => v > 0 && _ikiBasamakli(v));
     const debiTanim =
@@ -2372,11 +2486,11 @@ final _f17 = lmAile(
     switch (c) {
       case 0:
         return ondalikli(
-          'Bir kişinin nabzı dakikada $nabiz atım, kalbinin bir kasılmada '
-          'pompaladığı kan miktarı (atım hacmi) $atim mL olarak ölçülüyor. Bu '
-          'kişinin kalp debisi dakikada kaç litredir?',
+          '$kisinin nabzı dakikada $nabiz atım, kalbinin bir kasılmada '
+          'pompaladığı kan miktarı (atım hacmi) $atim mL olarak ölçülüyor. '
+          '$bununBas kalp debisi dakikada kaç litredir?',
           debi,
-          uygun([debi * 10, debi / 10, (nabiz + atim) / 10, debi * 2, debi / 2, debi * 100]),
+          uygun([debi * 10, debi / 10, debi * 2, debi / 2, debi * 100]),
           '$debiTanim $nabiz · $atim = ${nabiz * atim} mL, yani ${tr(debi)} L '
           'olur.',
           unit: 'L',
@@ -2384,8 +2498,8 @@ final _f17 = lmAile(
         );
       case 1:
         return sayisal(
-          'Bir kişinin kalp debisi dakikada ${tr(debi)} litre, nabzı dakikada '
-          '$nabiz atım olarak ölçülüyor. Bu kişinin kalbinin bir kasılmada '
+          '$kisinin kalp debisi dakikada ${tr(debi)} litre, nabzı dakikada '
+          '$nabiz atım olarak ölçülüyor. $bununBas kalbinin bir kasılmada '
           'pompaladığı kan miktarı (atım hacmi) kaç mL olur?',
           atim,
           [atim * 10, atim + 10, atim - 10, atim * 2, atim + 20],
@@ -2395,9 +2509,9 @@ final _f17 = lmAile(
         );
       case 2:
         return sayisal(
-          'Bir kişinin kalp debisi dakikada ${tr(debi)} litre, kalbinin bir '
+          '$kisinin kalp debisi dakikada ${tr(debi)} litre, kalbinin bir '
           'kasılmada pompaladığı kan miktarı (atım hacmi) $atim mL olarak '
-          'ölçülüyor. Bu kişinin nabzı dakikada kaç atımdır?',
+          'ölçülüyor. $bununBas nabzı dakikada kaç atımdır?',
           nabiz,
           [nabiz + 10, nabiz - 10, nabiz + 20, nabiz * 2, nabiz - 20],
           '$debiTanim Nabız ${nabiz * atim} mL / $atim mL = $nabiz atım '
@@ -2406,11 +2520,11 @@ final _f17 = lmAile(
         );
       case 3:
         return ondalikli(
-          'Egzersiz yapan bir sporcu dakikada $soluk kez soluk alıp veriyor ve '
-          'her solukta akciğerlerine $hacim mL hava alıyor. Bu sporcunun '
-          'akciğerlerine bir dakikada giren hava kaç litredir?',
+          '$kisi dakikada $soluk kez soluk alıp veriyor ve her solukta '
+          'akciğerlerine $hacim mL hava alıyor. $bununBas akciğerlerine bir '
+          'dakikada giren hava kaç litredir?',
           hava,
-          uygun([hava * 10, hava / 10, (soluk + hacim) / 100, hava * 2, hava / 2, hava * 100]),
+          uygun([hava * 10, hava / 10, hava * 2, hava / 2, hava * 100]),
           '$havaTanim $soluk · $hacim = ${soluk * hacim} mL, yani ${tr(hava)} '
           'L olur.',
           unit: 'L',
@@ -2418,20 +2532,20 @@ final _f17 = lmAile(
         );
       case 4:
         return sayisal(
-          'Egzersiz yapan bir sporcunun akciğerlerine bir dakikada '
-          '${tr(hava)} litre hava giriyor. Sporcu dakikada $soluk kez soluk '
-          'alıp verdiğine göre her solukta akciğerlerine kaç mL hava alır?',
+          '$kisinin akciğerlerine bir dakikada ${tr(hava)} litre hava giriyor. '
+          '$buBas dakikada $soluk kez soluk alıp verdiğine göre her solukta '
+          'akciğerlerine kaç mL hava alır?',
           hacim,
-          [hacim + 50, hacim - 50, hacim * 2, hacim + 100, hacim ~/ 2],
+          [hacim * 10, hacim ~/ 10, hacim + 50, hacim - 50, hacim * 2],
           '$havaTanim Bir solukta alınan hava ${soluk * hacim} mL / $soluk = '
           '$hacim mL bulunur (${tr(hava)} L = ${soluk * hacim} mL).',
           positive: true,
         );
       case 5:
         return sayisal(
-          'Egzersiz yapan bir sporcunun akciğerlerine bir dakikada '
-          '${tr(hava)} litre hava giriyor. Sporcu her solukta $hacim mL hava '
-          'aldığına göre dakikada kaç kez soluk alıp verir?',
+          '$kisinin akciğerlerine bir dakikada ${tr(hava)} litre hava giriyor. '
+          '$buBas her solukta $hacim mL hava aldığına göre dakikada kaç kez '
+          'soluk alıp verir?',
           soluk,
           [soluk + 2, soluk - 2, soluk * 2, soluk + 4, soluk + 6],
           '$havaTanim Soluk sayısı ${soluk * hacim} mL / $hacim mL = $soluk '
@@ -2439,41 +2553,49 @@ final _f17 = lmAile(
           positive: true,
         );
       case 6:
-        final nabiz2 = nabiz + 50, atim2 = atim + 25;
-        final debi2 = nabiz2 * atim2 / 1000;
+        // Dinlenme: nabız 60–80, debi 4–7,2 L. Koşu: nabız 120–180, atım
+        // hacmi 30 mL fazla; debi 11–25 L arasında kalır.
+        final n1 = 60 + 5 * (a % 5), s1 = _dinlenmeAtimi[a % 5] + 2 * b;
+        final n2 = n1 + 60 + 10 * (a ~/ 5), s2 = s1 + 30;
+        final d1 = n1 * s1, d2 = n2 * s2; // mL/dk
         return ondalikli(
-          'Bir kişinin dinlenirken nabzı dakikada $nabiz atım, atım hacmi '
-          '$atim mL; koşarken nabzı dakikada $nabiz2 atım, atım hacmi $atim2 '
-          'mL olarak ölçülüyor. Bu kişinin kalp debisi koşarken dinlenme '
-          'durumuna göre dakikada kaç litre artmıştır?',
-          debi2 - debi,
-          uygun([debi2, debi, 50 * 25 / 1000, (debi2 - debi) * 10, debi2 + debi]),
-          '$debiTanim Dinlenirken $nabiz · $atim = ${nabiz * atim} mL, '
-          'koşarken $nabiz2 · $atim2 = ${nabiz2 * atim2} mL olur. Artış '
-          '${nabiz2 * atim2 - nabiz * atim} mL, yani ${tr(debi2 - debi)} L '
+          'Bir kişinin dinlenirken nabzı dakikada $n1 atım, atım hacmi $s1 '
+          'mL; koşarken nabzı dakikada $n2 atım, atım hacmi $s2 mL olarak '
+          'ölçülüyor. Bu kişinin kalp debisi koşarken dinlenme durumuna göre '
+          'dakikada kaç litre artmıştır?',
+          (d2 - d1) / 1000,
+          uygun([
+            d2 / 1000,
+            d1 / 1000,
+            (n2 - n1) * (s2 - s1) / 1000,
+            (d2 - d1) / 100,
+            (d2 + d1) / 1000,
+          ]),
+          '$debiTanim Dinlenirken $n1 · $s1 = $d1 mL, koşarken $n2 · $s2 = '
+          '$d2 mL olur. Artış ${d2 - d1} mL, yani ${tr((d2 - d1) / 1000)} L '
           'bulunur.',
           unit: 'L',
           positive: true,
         );
       case 7:
         return ondalikli(
-          'Bir kişinin nabzı dakikada $nabiz atım, kalbinin bir kasılmada '
+          '$kisinin nabzı dakikada $nabiz atım, kalbinin bir kasılmada '
           'pompaladığı kan miktarı (atım hacmi) $atim mL olarak ölçülüyor. '
-          'Nabız ve atım hacmi değişmediğine göre bu kişinin kalbi bir saatte '
+          'Nabız ve atım hacmi değişmediğine göre $bunun kalbi 30 dakikada '
           'kaç litre kan pompalar?',
-          debi * 60,
-          uygun([debi, debi * 6, debi * 600, debi * 30, debi * 3600 / 100]),
+          debi * 30,
+          uygun([debi, debi * 60, debi * 3, debi * 300, debi * 15]),
           '$debiTanim $nabiz · $atim = ${nabiz * atim} mL, yani ${tr(debi)} L '
-          'olur. Bir saatte ${tr(debi)} · 60 = ${tr(debi * 60)} L kan '
+          'olur. 30 dakikada ${tr(debi)} · 30 = ${tr(debi * 30)} L kan '
           'pompalanır.',
           unit: 'L',
           positive: true,
         );
       case 8:
         return ondalikli(
-          'Egzersiz yapan bir sporcu dakikada $soluk kez soluk alıp veriyor ve '
-          'her solukta akciğerlerine $hacim mL hava alıyor. Bu sporcunun '
-          'akciğerlerine 5 dakikada giren hava kaç litredir?',
+          '$kisi dakikada $soluk kez soluk alıp veriyor ve her solukta '
+          'akciğerlerine $hacim mL hava alıyor. $bununBas akciğerlerine 5 '
+          'dakikada giren hava kaç litredir?',
           hava * 5,
           uygun([hava, hava * 50, hava * 10, hava * 2.5, hava / 2]),
           '$havaTanim Bir dakikada $soluk · $hacim = ${soluk * hacim} mL, yani '
@@ -2483,20 +2605,28 @@ final _f17 = lmAile(
           positive: true,
         );
       default:
-        final soluk2 = soluk + 12, hacim2 = hacim + 500;
-        final hava2 = soluk2 * hacim2 / 1000;
+        // Hafif tempo: 16–20 soluk, 700–890 mL. Tempo artınca soluk sayısı
+        // 6–14, bir solukta alınan hava 500 mL artar.
+        final k1 = 16 + a % 5, h1 = 700 + 10 * b;
+        final k2 = k1 + 6 + 2 * (a ~/ 5), h2 = h1 + 500;
+        final v1 = k1 * h1, v2 = k2 * h2; // mL/dk
         return ondalikli(
-          'Bir sporcu hafif tempoda dakikada $soluk kez soluk alıp veriyor ve '
-          'her solukta $hacim mL hava alıyor. Tempo artınca dakikada $soluk2 '
-          'kez soluk alıp veriyor ve her solukta $hacim2 mL hava alıyor. '
+          'Bir sporcu hafif tempoda koşarken dakikada $k1 kez soluk alıp '
+          'veriyor ve her solukta $h1 mL hava alıyor. Tempo artınca dakikada '
+          '$k2 kez soluk alıp veriyor ve her solukta $h2 mL hava alıyor. '
           'Sporcunun akciğerlerine bir dakikada giren hava kaç litre '
           'artmıştır?',
-          hava2 - hava,
-          uygun([hava2, hava, 12 * 500 / 1000, (hava2 - hava) * 10, hava2 + hava]),
-          '$havaTanim İlk durumda $soluk · $hacim = ${soluk * hacim} mL, '
-          'ikinci durumda $soluk2 · $hacim2 = ${soluk2 * hacim2} mL olur. '
-          'Artış ${soluk2 * hacim2 - soluk * hacim} mL, yani '
-          '${tr(hava2 - hava)} L bulunur.',
+          (v2 - v1) / 1000,
+          uygun([
+            v2 / 1000,
+            v1 / 1000,
+            (k2 - k1) * (h2 - h1) / 1000,
+            (v2 - v1) / 100,
+            (v2 + v1) / 1000,
+          ]),
+          '$havaTanim İlk durumda $k1 · $h1 = $v1 mL, ikinci durumda $k2 · '
+          '$h2 = $v2 mL olur. Artış ${v2 - v1} mL, yani '
+          '${tr((v2 - v1) / 1000)} L bulunur.',
           unit: 'L',
           positive: true,
         );
@@ -2698,7 +2828,7 @@ final _f19 = lmAile(
           'ile kas hücrelerinin ürettiği toplam ATP sayılarının toplamı '
           'kaçtır?',
           2 * x + 4 * y,
-          [4 * x + 2 * y, 2 * (x + y), 4 * (x + y), 2 * x + 2 * y + 2, x + 2 * y],
+          [4 * x + 2 * y, 2 * (x + y), 4 * (x + y), x + 2 * y, 2 * x + y],
           '$atp Mayalar 2 · $x = ${2 * x} ATP harcar, kas hücreleri 4 · $y = '
           '${4 * y} ATP üretir. Toplam ${2 * x + 4 * y} olur.',
           positive: true,
@@ -2803,7 +2933,7 @@ final _f20 = lmAile(
   Difficulty.easy,
   BloomLevel.uygulama,
   (a, b, c) {
-    final kh = 10 * (a + 6), yag = b + 5; // gram
+    final kh = 5 * (a + 10), yag = b + 3; // gram
     final pro = 5 * (1 + (a + 2 * b) % 6);
     final toplam = 4 * kh + 4 * pro + 9 * yag;
     final gunluk = (a + b).isEven ? 2000 : 2500;
@@ -2915,7 +3045,7 @@ final _f20 = lmAile(
       case 8:
         return sayisal(
           '$deger Bir sporcu antrenmandan önce $kh g karbonhidrat içeren bir '
-          'içecek, antrenmandan sonra $yag g yağ içeren bir atıştırmalık '
+          'öğün, antrenmandan sonra $yag g yağ içeren bir atıştırmalık '
           'tüketiyor. Karbonhidrattan alınan enerji, yağdan alınan enerjiden '
           'kaç kcal fazladır?',
           4 * kh - 9 * yag,
