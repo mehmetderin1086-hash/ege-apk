@@ -978,7 +978,7 @@ AdvancedItem _binom(int a, int b, int c) {
       final yanit = cnj * _kuvvet(p, jx) * _kuvvet(sq, n - jx);
       final istenen = jx == 0
           ? 'sabit terim'
-          : '${_terimYaz(hx, jx, hy, 0)} çarpanını içeren terimin katsayısı';
+          : '$hx değişkeninin üssü $jx olan terimin katsayısı';
       return _isaretli(
         '${ifade(_ust(n), tek: true)} ifadesinin açılımında $istenen kaçtır?',
         yanit,
@@ -992,7 +992,7 @@ AdvancedItem _binom(int a, int b, int c) {
         jx == 0
             ? 'Sabit terim $hx içermeyen terimdir; k = $n için elde edilir: '
                   '${_par(sq)}${_ust(n)} = ${_eksi(yanit)}.'
-            : '${_terimYaz(hx, jx, hy, 0)} içeren terim C($n, $jx)·'
+            : '$hx değişkeninin üssü $jx olan terim C($n, $jx)·'
                   '(${kat(p, hx)})${_ust(jx)}·${_par(sq)}${_ust(n - jx)} '
                   'biçimindedir. Katsayı $cnj·${_kuvvet(p, jx)}·'
                   '${_par(_kuvvet(sq, n - jx))} = ${_eksi(yanit)} olur.',
@@ -1618,7 +1618,7 @@ const _karistirma = {
 const _veriBaglamlari = [
   ('Bir kafede', 'gün boyunca satılan kek dilimi sayıları'),
   ('Bir kütüphaneden art arda', 'günde ödünç alınan kitap sayıları'),
-  ('Bir basketbolcunun son', 'maçta attığı sayılar'),
+  ('Bir sinema salonunda art arda', 'seansta satılan bilet sayıları'),
   ('Bir otobüs hattında art arda', 'seferde taşınan yolcu sayıları'),
   ('Bir sınıftaki', 'öğrencinin bir ayda çözdüğü test sayıları'),
 ];
@@ -1766,7 +1766,7 @@ const _sapmaSecimleri = [
 const _sapmaBaglamlari = [
   ('Bir öğrencinin', 'sınavdan aldığı puanlar', 60),
   ('Bir çiçekçide art arda', 'günde satılan buket sayıları', 15),
-  ('Bir basketbolcunun son', 'maçta attığı sayılar', 12),
+  ('Bir kafede art arda', 'günde satılan sandviç sayıları', 25),
   ('Bir fidanlıktaki', 'fidanın santimetre cinsinden boyları', 30),
   ('Bir çiftlikte art arda', 'günde toplanan yumurta sayıları', 45),
 ];
@@ -2584,9 +2584,9 @@ const _sikliBaglamlari = [
   (
     veri: 'Bir kavşaktan geçen',
     son: 'aracın',
-    olgu: 'tanesinin otomobil olduğu gözlenmiştir',
-    olumlu: 'kavşaktan geçen bir aracın otomobil olmasının',
-    olumsuz: 'kavşaktan geçen bir aracın otomobil olmamasının',
+    olgu: 'tanesinin şehir dışı plakalı olduğu gözlenmiştir',
+    olumlu: 'kavşaktan geçen bir aracın şehir dışı plakalı olmasının',
+    olumsuz: 'kavşaktan geçen bir aracın şehir dışı plakalı olmamasının',
   ),
   (
     veri: 'Bir kargo merkezine gelen',
@@ -2616,6 +2616,13 @@ const _sikliBaglamlari = [
     olumlu: 'seradaki bir fidenin çiçek açmasının',
     olumsuz: 'seradaki bir fidenin çiçek açmamasının',
   ),
+];
+
+/// Çimlenme ve serbest atış isabeti için gerçekçi oranlar (1/2 … 11/12).
+const _basariOranlari = [
+  (1, 2), (3, 5), (2, 3), (3, 4), (4, 5), (5, 6), (4, 7), (5, 7), (6, 7),
+  (5, 8), (7, 8), (5, 9), (7, 9), (8, 9), (7, 10), (9, 10), (6, 11), (7, 11),
+  (8, 11), (9, 11), (10, 11), (7, 12), (11, 12), (9, 13), (11, 13),
 ];
 
 AdvancedItem _deneysel(int a, int b, int c) {
@@ -2648,7 +2655,7 @@ AdvancedItem _deneysel(int a, int b, int c) {
         'olur. Deneysel olasılık ${_sade(f1 + f3, n)} bulunur.',
       );
     case 1:
-      final (k0, n0) = _kesirler25[a];
+      final (k0, n0) = _basariOranlari[a];
       final g = 3 + 2 * (b % 5), t = 2 + b ~/ 5;
       final n = n0 * g * 5, k = k0 * g * 5, m = n0 * t * 10;
       final beklenen = k0 * t * 10;
@@ -2657,7 +2664,7 @@ AdvancedItem _deneysel(int a, int b, int c) {
             ? 'Bir fidanlıkta ekilen $n tohumdan $k tanesi çimlenmiştir. Aynı '
                   'koşullarda $m tohum ekilirse bu deneysel olasılığa göre '
                   'kaç tohumun çimlenmesi beklenir?'
-            : 'Bir basketbolcu antrenmanda attığı $n serbest atışın $k '
+            : 'Bir basketbolcu antrenmanlarda attığı $n serbest atışın $k '
                   'tanesini sayıya çevirmiştir. Bu deneysel olasılığa göre '
                   'oyuncunun atacağı $m serbest atışın kaç tanesini sayıya '
                   'çevirmesi beklenir?',
@@ -3189,7 +3196,7 @@ AdvancedItem _kurBirim(int a, int b, int c) {
         positive: true,
       );
     case 2:
-      final w = 6 + b % 5;
+      final w = const [6, 7, 5, 4][b ~/ 5] + b % 5;
       final (r1, r2) = _caprazOranlar[b ~/ 5];
       final avroKuru = r1 * w, dolarKuru = r2 * w;
       final m = 10 + 2 * a;

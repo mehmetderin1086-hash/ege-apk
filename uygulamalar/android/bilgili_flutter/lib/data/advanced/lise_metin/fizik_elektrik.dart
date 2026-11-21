@@ -656,16 +656,20 @@ final lmFizikElektrik = <AdvancedFamily>[
       final n = 2 + k;
       final lam = (a + 1) * (b + 1) / 10;
       final d = (n - 1) * lam;
+      final ikili = n == 2;
       return ondalikli(
         'Esnek bir ortamda ${tr(v)} m/s hızla yayılan periyodik dalgalarda, '
-        'art arda gelen $n dalga tepesinden ilki ile sonuncusu arasındaki '
+        '${ikili ? 'ardışık iki dalga tepesi arasındaki' : 'art arda gelen '
+                  '$n dalga tepesinden ilki ile sonuncusu arasındaki'} '
         'uzaklık ${tr(d)} m olarak ölçülüyor. Bu dalgaların periyodu kaç s '
         'olur?',
         per,
         [d / v, d / (n * v), v / lam, lam, lam * v, 2 * per],
-        'Art arda gelen $n tepe arasında ${n - 1} dalga boyu bulunur: '
-        'λ = ${tr(d)} / ${n - 1} = ${tr(lam)} m. T = λ / v = ${tr(lam)} / '
-        '${tr(v)} = ${tr(per)} s olur.',
+        '${ikili ? 'Ardışık iki dalga tepesi arasındaki uzaklık bir dalga '
+                  'boyudur: λ = ${tr(lam)} m.' : 'Art arda gelen $n tepe '
+                  'arasında ${n - 1} dalga boyu bulunur: λ = ${tr(d)} / '
+                  '${n - 1} = ${tr(lam)} m.'} '
+        'T = λ / v = ${tr(lam)} / ${tr(v)} = ${tr(per)} s olur.',
         unit: 's',
         positive: true,
       );
@@ -698,7 +702,7 @@ final lmFizikElektrik = <AdvancedFamily>[
           positive: true,
         );
       }
-      final v = const [1400, 1450, 1500, 1520, 1550][k];
+      final v = const [1450, 1480, 1500, 1520, 1550][k];
       final h1 = v * (a + 1) ~/ 10, h2 = v * (a + b + 2) ~/ 10;
       return sayisal(
         'Bir araştırma gemisinin sonar cihazından deniz tabanına doğru '
@@ -847,7 +851,9 @@ final lmFizikElektrik = <AdvancedFamily>[
         );
       }
       final n = 1 + b % 4;
-      final yaricap = 1000 + 200 * (b ~/ 4 + 5 * k); // km
+      // Yarıçap çekim ivmesiyle birlikte büyür: gezegenin ortalama yoğunluğu
+      // Dünya'nınkinin yaklaşık 0,15 … 1,25 katında kalır.
+      final yaricap = 500 * (a + 2) + 100 * (b ~/ 4 + 5 * k); // km
       final h = n * yaricap;
       final g100 = const [25, 10, 5, 4][n - 1] * (a + 1);
       final kare = (n + 1) * (n + 1);
@@ -902,21 +908,27 @@ final lmFizikElektrik = <AdvancedFamily>[
         );
       }
       final n = 2 + k;
-      final d = tr((b + 3) / 2); // 1,5 … 11 m
-      final siddet = (a + 1) * (b + 3) * (b + 3); // cd
+      // Yüksek tavanlı yapılarda gerçekçi değerler: 3 … 12,5 m yükseklik,
+      // lamba başına 36 … 15625 cd, zeminde 8 … 600 lüks.
+      final d = tr((b + 6) / 2); // m
+      final siddet = (a + 1) * (b + 6) * (b + 6); // cd
       final e = 4 * n * (a + 1);
+      final yer = b < 8
+          ? sec(const ['Bir fabrika atölyesinin', 'Bir depo binasının'], a)
+          : sec(const ['Bir spor salonunun', 'Bir fuar salonunun'], a);
       return sayisal(
-        'Bir salonda tavandan sarkıtılmış aydınlatma armatüründe, her '
-        'birinin ışık şiddeti $siddet cd olan $n özdeş lamba bulunuyor. '
-        'Lambalar birlikte tek bir noktasal kaynak gibi kabul edildiğine '
-        'göre, armatürün $d m altında bulunan ve ışınları dik alan bir masa '
-        'yüzeyindeki aydınlanma şiddeti kaç lüks olur?',
+        '$yer tavanına asılmış bir aydınlatma armatüründe, her birinin ışık '
+        'şiddeti $siddet cd olan $n özdeş lamba bulunuyor. Armatür, tam '
+        'altındaki zemin noktasından $d m yüksektedir ve bu noktaya gelen '
+        'ışınlar zemine diktir. Lambalar birlikte tek bir noktasal kaynak '
+        'gibi kabul edildiğine göre, bu noktadaki aydınlanma şiddeti kaç '
+        'lüks olur?',
         e,
         [
-          2 * n * (a + 1) * (b + 3),
+          2 * n * (a + 1) * (b + 6),
           4 * (a + 1),
           n * siddet,
-          2 * (a + 1) * (b + 3),
+          2 * (a + 1) * (b + 6),
         ],
         'Toplam ışık şiddeti $n·$siddet = ${n * siddet} cd olur. '
         'E = I / d² = ${n * siddet} / $d² = $e lüks bulunur.',

@@ -1746,7 +1746,14 @@ final lmMatIleri = <AdvancedFamily>[
         case 1:
           final i = v == 0 ? 1 : -1;
           final k = i * (1 + a % 5), m = i * const [1, 2, 3, 5, 7][a ~/ 5];
-          final p = 1 + b ~/ 5, n = 1 + b % 5;
+          final p = 1 + b ~/ 5;
+          // Limit 1 çıkarsa “0/0 = 1” diyen de doğru yanıtı bulur; bu payda
+          // katsayısı atlanır.
+          final n = _uygun(
+            const [1, 2, 3, 4, 5, 6],
+            b % 5,
+            (x) => x != p * k + m,
+          );
           final pay = [p, m - p * k, -m * k], payda = [n, -n * k];
           final kok = _pol([1, -k]);
           return _kes(
@@ -1794,7 +1801,13 @@ final lmMatIleri = <AdvancedFamily>[
           // paydadaki sabitin işareti çevrilir.
           final p = 1 + a % 5, u = const [-3, -1, 2, 4, 5][a ~/ 5];
           final q = const [3, 4, 5, 6][b ~/ 5];
-          final r = const [2, 3, 5, 7, 9][b % 5];
+          // r = p·q olursa limit 1 çıkar ve “∞/∞ = 1” diyen de doğru yanıtı
+          // bulur; bu katsayı atlanır.
+          final r = _uygun(
+            const [2, 3, 5, 7, 9, 11],
+            b % 5,
+            (x) => x != p * q,
+          );
           final e = const [1, -2, 3, -1, 2][(a + b) % 5];
           final w0 = const [3, -4, 1, 5, -2][(a ~/ 5 + b ~/ 5) % 5];
           final w = u * e * r == p * q * w0 ? -w0 : w0;
@@ -1827,8 +1840,16 @@ final lmMatIleri = <AdvancedFamily>[
         default:
           final i = v == 0 ? 1 : -1;
           final k = i * (1 + a % 5), m = i * const [1, 2, 3, 5, 7][a ~/ 5];
-          final n = i * const [4, 6, 8, 9, 10, 11, 12, 14, 15, 16][b % 10];
           final p = 1 + b ~/ 10;
+          // Limitin 1 çıktığı (p·k + m = k + n) payda sabiti atlanır.
+          final n = _uygun(
+            [
+              for (final x in const [4, 6, 8, 9, 10, 11, 12, 14, 15, 16, 18])
+                i * x,
+            ],
+            b % 10,
+            (x) => p * k + m != k + x,
+          );
           final pay = [p, m - p * k, -m * k], payda = [1, n - k, -n * k];
           final kok = _pol([1, -k]);
           final ham = '${_n(p * k + m)}/${_p(k + n)}';
