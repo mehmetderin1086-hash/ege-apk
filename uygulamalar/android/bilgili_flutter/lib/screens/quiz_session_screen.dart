@@ -2,7 +2,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/quiz_models.dart';
 import '../services/ai_gateway_service.dart';
-import '../services/native_bridge.dart';
 import '../state/arena_controller.dart';
 import '../theme/arena_design.dart';
 import '../widgets/question_renderers.dart';
@@ -271,15 +270,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                                   ),
                                   const Spacer(),
                                   InkWell(
-                                    onTap: () => NativeBridge.speak(
-                                      QuizNarration.buildQuestionSpeech(
-                                        q,
-                                        round.currentIndex + 1,
-                                      ),
-                                      language: 'tr-TR',
-                                      rate: ctrl.ttsSpeechRate,
-                                      awaitCompletion: false,
-                                    ),
+                                    onTap: ctrl.narrateCurrentQuestion,
                                     child: Icon(
                                       Icons.volume_up_rounded,
                                       size: 19,
@@ -288,6 +279,14 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                                   ),
                                 ],
                               ),
+                              if (q.bloom != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Text(
+                                    [if (q.studyLevel != null) q.studyLevel!, q.bloom!.label, q.responseType.label].join(' · '),
+                                    style: const TextStyle(fontSize: 12, color: Colors.white70),
+                                  ),
+                                ),
                               const SizedBox(height: 12),
                               Text(
                                 q.text,
@@ -307,6 +306,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                                 ),
                               if (q.activity != null)
                                 QuestionActivityWidget(
+                                  key: ValueKey(q.id),
                                   question: q,
                                   accent: q.category.accent,
                                   revealed: round.revealed,
@@ -322,8 +322,50 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                       ),
                       const SizedBox(height: 12),
 
-                      // Multiple-choice options (shown for non-sequence questions, or fallback for pronunciation)
-                      if (!q.isInteractiveSequence)
+                      if (q.creation != null) ...[
+                        ArenaGlassCard(
+                          tint: accent,
+                          padding: const EdgeInsets.all(14),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(q.creation!.brief, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 6),
+                              for (final criterion in q.creation!.criteria)
+                                Text('• $criterion', style: const TextStyle(color: Colors.white70)),
+                              if (round.needsCreation)
+                                _WrittenInput(
+                                  key: ValueKey('design-${q.id}'),
+                                  label: 'Çözümün veya tasarımın',
+                                  action: 'Tasarımımı kaydet ve kontrol sorusuna geç',
+                                  initial: ctrl.creationPortfolio[q.id] ?? '',
+                                  long: true,
+                                  onSubmit: ctrl.saveCreationResponse,
+                                )
+                              else ...[
+                                const SizedBox(height: 8),
+                                SelectableText(round.creationResponse, style: const TextStyle(color: Colors.white)),
+                                const SizedBox(height: 8),
+                                const Text('Tasarımın defterine kaydedildi. Tur puanı aşağıdaki kontrol sorusuna göre hesaplanır.',
+                                  style: TextStyle(color: Colors.white70, fontSize: 12)),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      if (q.multiSelect != null)
+                        _MultipleAnswerInput(key: ValueKey(q.id), task: q.multiSelect!,
+                            revealed: round.revealed, onSubmit: ctrl.submitMultiple),
+                      if (q.responseType == ResponseType.fill && !round.revealed)
+                        _WrittenInput(
+                          key: ValueKey('fill-${q.id}'),
+                          label: 'Yanıtını yaz (varsa birimiyle)',
+                          action: 'Yanıtı kontrol et',
+                          onSubmit: ctrl.submitWrittenAnswer,
+                        ),
+                      if (!round.needsCreation && q.multiSelect == null && !q.isInteractiveSequence &&
+                          q.responseType != ResponseType.fill)
                         for (var i = 0; i < q.options.length; i++)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 9),
@@ -541,6 +583,9 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
               ),
             ],
           ),
+          if (q.responseType == ResponseType.fill && rec?.writtenResponse != null)
+            Text('Yazdığın yanıt: ${rec!.writtenResponse}',
+                style: const TextStyle(color: Colors.white70)),
           if (rec?.spokenTranscript != null && rec!.spokenTranscript!.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
@@ -677,6 +722,9 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
       );
     }
 
+    if (round.needsCreation || q.multiSelect != null || q.responseType == ResponseType.fill) {
+      return const SizedBox.shrink();
+    }
     if (round.setup.liveVoiceHost) {
       return _buildLiveVoiceStudioBar(ctrl, accent);
     }
@@ -694,7 +742,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
             _jokerButton(
               label: '50:50',
               icon: Icons.contrast_rounded,
-              used: round.jokerFiftyUsed || q.isInteractiveSequence || q.isPronunciation,
+              used: round.jokerFiftyUsed || q.responseType != ResponseType.choice || q.options.length < 4,
               onTap: ctrl.useFiftyFiftyJoker,
             ),
             const SizedBox(width: 6),
@@ -1164,4 +1212,80 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
       ],
     );
   }
+}
+
+class _WrittenInput extends StatefulWidget {
+  final String label;
+  final String action;
+  final String initial;
+  final bool long;
+  final ValueChanged<String> onSubmit;
+  const _WrittenInput({super.key, required this.label, required this.action,
+      required this.onSubmit, this.initial = '', this.long = false});
+
+  @override
+  State<_WrittenInput> createState() => _WrittenInputState();
+}
+
+class _WrittenInputState extends State<_WrittenInput> {
+  late final TextEditingController _text = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  void _send() {
+    final value = _text.text.trim();
+    if (value.isEmpty) return;
+    FocusScope.of(context).unfocus();
+    widget.onSubmit(value);
+  }
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      TextField(controller: _text, minLines: widget.long ? 3 : 1,
+        maxLines: widget.long ? 8 : 1, autocorrect: false,
+        style: const TextStyle(color: Colors.white),
+        onChanged: (_) => setState(() {}),
+        onSubmitted: widget.long ? null : (_) => _send(),
+        decoration: InputDecoration(labelText: widget.label),
+      ),
+      const SizedBox(height: 8),
+      FilledButton(onPressed: _text.text.trim().isEmpty ? null : _send,
+        child: Text(widget.action)),
+    ],
+  );
+}
+
+class _MultipleAnswerInput extends StatefulWidget {
+  final MultiSelectTask task;
+  final bool revealed;
+  final ValueChanged<Set<int>> onSubmit;
+  const _MultipleAnswerInput({super.key, required this.task, required this.revealed, required this.onSubmit});
+
+  @override
+  State<_MultipleAnswerInput> createState() => _MultipleAnswerInputState();
+}
+
+class _MultipleAnswerInputState extends State<_MultipleAnswerInput> {
+  final selected = <int>{};
+
+  @override
+  Widget build(BuildContext context) => Column(children: [
+    const Align(alignment: Alignment.centerLeft, child: Text('Geçerli önermelerin tümünü seç.')),
+    for (final (index, option) in widget.task.options.indexed)
+      CheckboxListTile(
+        title: Text(option), value: selected.contains(index),
+        onChanged: widget.revealed ? null : (value) => setState(() {
+          if (value == true) {selected.add(index);} else {selected.remove(index);}
+        }),
+      ),
+    if (!widget.revealed)
+      FilledButton(onPressed: selected.isEmpty ? null : () => widget.onSubmit(Set.of(selected)),
+        child: const Text('Seçimlerimi kontrol et')),
+  ]);
 }

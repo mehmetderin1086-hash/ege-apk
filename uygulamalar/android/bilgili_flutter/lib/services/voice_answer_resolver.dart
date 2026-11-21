@@ -135,26 +135,22 @@ class VoiceAnswerResolver {
 
     // 1. Pronunciation target phrase check
     if (question.isPronunciation) {
-      final target = clean(question.activity?.transcript ?? question.options.first);
-      final spoken = clean(raw);
-      if (target.isEmpty || spoken.isEmpty) return null;
-      final sim = similarity(spoken, target);
-      if (spoken.contains(target) || target.contains(spoken) && spoken.length >= target.length * 0.7 || sim >= 0.68) {
-        return ResolvedSpokenAnswer.choice(0, confidence: sim);
-      }
-      return null;
+      final target = clean(question.activity?.transcript ??
+          question.options.elementAtOrNull(question.answer) ?? '');
+      if (target.isEmpty || (clean(raw) != target && stripped != target)) return null;
+      return ResolvedSpokenAnswer.choice(question.answer);
     }
 
-    // 2. Interactive 4-item sequence (ordering / matching)
     if (question.isInteractiveSequence) {
-      final seq = parseFourIndices(stripped);
-      if (seq != null) {
-        return ResolvedSpokenAnswer.sequence(seq);
-      }
+      final act = question.activity!;
+      final maxNumber = act.kind == ActivityKind.ordering ? act.items.length : act.right.length;
+      final sequence = parseSequence(stripped, length: act.solution.length, maxNumber: maxNumber,
+          distinct: act.solution.toSet().length == act.solution.length);
+      return sequence == null ? null : ResolvedSpokenAnswer.sequence(sequence);
     }
 
     // 3. Direct single-letter / ordinal / letter-name match
-    final direct = _matchLetterOrOrdinal(stripped);
+    final direct = _matchLetterOrOrdinal(stripped, question.options.length);
     if (direct != null && direct < question.options.length) {
       return ResolvedSpokenAnswer.choice(direct);
     }
@@ -166,7 +162,7 @@ class VoiceAnswerResolver {
         final t = rawTokens[i];
         if (i + 1 < rawTokens.length &&
             const {'sik', 'sikki', 'secenek', 'secenegi'}.contains(rawTokens[i + 1])) {
-          final idx = _matchLetterOrOrdinal(t);
+          final idx = _matchLetterOrOrdinal(t, question.options.length);
           if (idx != null && idx < question.options.length) {
             return ResolvedSpokenAnswer.choice(idx);
           }
@@ -224,7 +220,7 @@ class VoiceAnswerResolver {
     return null;
   }
 
-  static int? _matchLetterOrOrdinal(String token) {
+  static int? _matchLetterOrOrdinal(String token, int optionCount) {
     switch (token) {
       case 'a':
       case 'aa':
@@ -253,50 +249,39 @@ class VoiceAnswerResolver {
       case '4':
       case 'dort':
       case 'dorduncu':
+        return 3;
       case 'son':
       case 'sonuncu':
-        return 3;
+        return optionCount - 1;
       default:
         return null;
     }
   }
 
-  static List<int>? parseFourIndices(String text) {
-    final compactDigits = text.replaceAll(' ', '');
-    if (RegExp(r'^[1-4]{4}$').hasMatch(compactDigits)) {
-      final vals = compactDigits.split('').map((c) => int.parse(c) - 1).toList();
-      if (vals.toSet().length == 4) return vals;
+  static List<int>? parseFourIndices(String text) =>
+      parseSequence(clean(text), length: 4, maxNumber: 4);
+
+  static List<int>? parseSequence(String text, {required int length, required int maxNumber,
+      bool distinct = true}) {
+    if (length <= 0 || maxNumber <= 0) return null;
+    const words = {
+      'bir': 1, 'birinci': 1, 'iki': 2, 'ikinci': 2, 'uc': 3, 'ucuncu': 3,
+      'dort': 4, 'dorduncu': 4, 'bes': 5, 'besinci': 5, 'alti': 6, 'altinci': 6,
+      'yedi': 7, 'yedinci': 7, 'sekiz': 8, 'sekizinci': 8, 'dokuz': 9, 'dokuzuncu': 9,
+      'on': 10, 'onuncu': 10,
+    };
+    final bare = text.replaceAll(' ', '');
+    final compact = maxNumber <= 9 && bare.length == length && RegExp(r'^[0-9]+$').hasMatch(bare);
+    final tokens = compact ? bare.split('') : text.split(' ');
+    final indices = <int>[];
+    for (final token in tokens) {
+      final number = int.tryParse(token) ?? words[token];
+      if (number == null) continue;
+      if (number < 1 || number > maxNumber) return null;
+      indices.add(number - 1);
     }
-    final tokens = text.split(' ').where((t) => t.isNotEmpty).toList();
-    final mapped = <int>[];
-    for (final t in tokens) {
-      switch (t) {
-        case '1':
-        case 'bir':
-        case 'birinci':
-          mapped.add(0);
-          break;
-        case '2':
-        case 'iki':
-        case 'ikinci':
-          mapped.add(1);
-          break;
-        case '3':
-        case 'uc':
-        case 'ucuncu':
-          mapped.add(2);
-          break;
-        case '4':
-        case 'dort':
-        case 'dorduncu':
-          mapped.add(3);
-          break;
-      }
-    }
-    if (mapped.length == 4 && mapped.toSet().length == 4) {
-      return mapped;
-    }
-    return null;
+    if (indices.length != length || distinct && indices.toSet().length != length) return null;
+    return indices;
   }
 
   static double similarity(String a, String b) {

@@ -233,36 +233,59 @@ class NativeBridge {
 }
 
 class QuizNarration {
-  static String buildQuestionSpeech(Question q, int number) {
-    final buf = StringBuffer('Soru $number. ${q.category.label}. ');
+  static String buildQuestionSpeech(Question q, int number) =>
+      questionSegments(q, number).map((segment) => segment.text).join(' ');
+
+
+  static List<({String text, String language})> questionSegments(Question q, int number,
+      {bool creationSubmitted = false}) {
+    final segments = <({String text, String language})>[];
+    final intro = StringBuffer('Soru $number. ${q.category.label}. ');
     if (q.visual != null && q.visual!.summary.isNotEmpty) {
-      buf.write('${q.visual!.title}. ${q.visual!.summary} ');
+      intro.write('${q.visual!.title}. ${q.visual!.summary} ');
     }
-    if (q.activity != null) {
-      final act = q.activity!;
-      if (act.kind == ActivityKind.listening && act.transcript != null) {
-        buf.write('Dinleme metni: ${act.transcript!}. ');
-      } else if (act.kind == ActivityKind.ordering) {
-        buf.write('${q.text} Öğeler: ');
-        for (var i = 0; i < act.items.length; i++) {
-          buf.write('${i + 1}: ${act.items[i]}. ');
-        }
-        buf.write('Sıralamayı dört rakam olarak söyleyebilirsin.');
-        return buf.toString();
-      } else if (act.kind == ActivityKind.matching) {
-        buf.write('${q.text} Eşleştirme için sağ sütun numaralarını sırayla söyleyebilirsin.');
-        return buf.toString();
-      } else if (act.kind == ActivityKind.pronunciation) {
-        buf.write('${q.text} Hedef ifade: ${act.transcript ?? q.options.first}.');
-        return buf.toString();
+    intro.write(q.text);
+    final act = q.activity;
+    if (act != null && (act.kind == ActivityKind.listening || act.kind == ActivityKind.pronunciation)) {
+      final transcript = act.transcript ?? '';
+      if (transcript.isNotEmpty) {
+        segments.add((text: intro.toString(), language: 'tr-TR'));
+        segments.add((text: transcript, language: act.language ?? 'tr-TR'));
+        intro.clear();
+      }
+      if (act.kind == ActivityKind.pronunciation) {
+        intro.write('Duyduğun ifadeyi tekrar et.');
+        segments.add((text: intro.toString(), language: 'tr-TR'));
+        return segments;
       }
     }
-    buf.write('${q.text} ');
-    const letters = ['A', 'B', 'C', 'D'];
-    for (var i = 0; i < q.options.length && i < 4; i++) {
-      buf.write('${letters[i]} şıkkı: ${q.options[i]}. ');
+    if (act?.kind == ActivityKind.ordering) {
+      for (final (i, item) in act!.items.indexed) {
+        intro.write(' ${i+1}. $item.');
+      }
+      intro.write(' ${act.solution.length} öğenin numarasını istediğin sırada söyle.');
+    } else if (act?.kind == ActivityKind.matching) {
+      intro.write(' Sol sütun. ');
+      for (final (i, item) in act!.left.indexed) {
+        intro.write('${i+1}. $item. ');
+      }
+      intro.write('Sağ sütun. ');
+      for (final (i, item) in act.right.indexed) {
+        intro.write('${i+1}. $item. ');
+      }
+      intro.write('Her sol öğe için eşleştiği sağ öğenin numarasını sırayla söyle.');
+    } else if (q.creation != null && !creationSubmitted) {
+      intro.write(' ${q.creation!.brief}');
+    } else if (q.responseType == ResponseType.fill) {
+      intro.write(' Yanıtını ekranda yaz.');
+    } else {
+      for (final (i, option) in q.options.indexed) {
+        intro.write(' ${String.fromCharCode(65+i)} şıkkı: $option.');
+      }
+      if (q.multiSelect != null) intro.write(' Uygun seçenekleri ekranda işaretle.');
     }
-    return buf.toString();
+    segments.add((text: intro.toString(), language: 'tr-TR'));
+    return segments;
   }
 
   static String buildFeedbackSpeech(

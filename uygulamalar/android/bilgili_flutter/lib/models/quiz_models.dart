@@ -17,6 +17,16 @@ enum Topic {
   music('Müzik', 'Ritmi ve ezgiyi tanı', Icons.music_note_rounded, Color(0xFFFF7BAC)),
   nature('Doğa', 'Yaşamın dengesini gör', Icons.eco_rounded, Color(0xFF7BE495)),
   exam('Sınav Hazırlık', 'Hedefine bir adım', Icons.school_rounded, Color(0xFFF7B955)),
+  mathematics('Matematik ve Geometri', 'Yapılar, uzay ve değişim', Icons.functions, Color(0xFF79B9FF)),
+  physics('Fizik ve Astronomi', 'Madde, enerji ve evren', Icons.public, Color(0xFF8AB7FF)),
+  chemistry('Kimya ve Malzeme', 'Maddenin yapısı ve dönüşümü', Icons.science, Color(0xFF69DCC4)),
+  biology('Biyoloji ve Yaşam Bilimleri', 'Canlı sistemler ve kalıtım', Icons.eco, Color(0xFF72D989)),
+  engineering('Mühendislik ve Tasarım', 'Tasarımları modelle ve sına', Icons.engineering, Color(0xFF76D7E5)),
+  computing('Bilişim ve Algoritmalar', 'Veriyi işle ve algoritma kur', Icons.computer, Color(0xFF8EC8FF)),
+  statistics('İstatistik ve Veri Bilimi', 'Belirsizliği ölç ve veriyi yorumla', Icons.query_stats, Color(0xFFA9C6FF)),
+  economics('Ekonomi ve Finans', 'Kaynaklar, fiyatlar ve kararlar', Icons.trending_up, Color(0xFFF2BA76)),
+  socialScience('Toplum ve Sosyal Bilimler', 'Toplumları ve kurumları incele', Icons.groups, Color(0xFFC7A6E7)),
+  research('Araştırma Yöntemleri', 'Kanıtı değerlendir ve çalışma tasarla', Icons.biotech, Color(0xFF9CDBC8)),
   custom('Özel Konu', 'Konuyu sen belirle', Icons.edit_note_rounded, Color(0xFF93B5FF));
 
   final String label;
@@ -25,8 +35,16 @@ enum Topic {
   final Color accent;
   const Topic(this.label, this.invitation, this.icon, this.accent);
 
-  String get coverImage => 'assets/images/topic_${name}_cover.webp';
-  String get detailImage => 'assets/images/topic_${name}_detail.webp';
+  String get _artName => switch (this) {
+    Topic.mathematics || Topic.statistics => 'exam',
+    Topic.physics || Topic.chemistry || Topic.research => 'science',
+    Topic.biology => 'nature',
+    Topic.computing || Topic.engineering => 'technology',
+    Topic.economics || Topic.socialScience => 'culture',
+    _ => name,
+  };
+  String get coverImage => 'assets/images/topic_${_artName}_cover.webp';
+  String get detailImage => 'assets/images/topic_${_artName}_detail.webp';
 
   static List<Topic> get poolCategories => values
       .where((t) => t != Topic.mixed && t != Topic.custom)
@@ -96,6 +114,11 @@ enum QuestionFormat {
   mixed('Karışık', Icons.dashboard_customize_rounded),
   visual('Görselli', Icons.bar_chart_rounded),
   text('Metin', Icons.notes_rounded),
+  multipleChoice('Çoktan seçmeli', Icons.list_rounded),
+  multiSelect('Çoklu seçim', Icons.checklist_rounded),
+  trueFalse('Doğru / yanlış', Icons.rule_rounded),
+  fill('Boşluk doldurma', Icons.edit_rounded),
+  creation('Açık uçlu tasarım', Icons.design_services_rounded),
   listening('Dinleme', Icons.headphones_rounded),
   ordering('Sıralama', Icons.swap_vert_rounded),
   matching('Eşleştirme', Icons.compare_arrows_rounded),
@@ -268,7 +291,11 @@ class QuestionVisual {
   });
 
   String? get assetPath {
-    switch (imageID?.toLowerCase()) {
+    final name = imageID?.toLowerCase();
+    if (name != null && RegExp(r'^plate(0[1-9]|1[0-9]|2[0-4])$').hasMatch(name)) {
+      return 'assets/photos/$name.webp';
+    }
+    switch (name) {
       case 'bicycle':
         return 'assets/photos/QuestionBicycle.png';
       case 'leaf':
@@ -429,6 +456,49 @@ class QuestionActivity {
       };
 }
 
+enum BloomLevel {
+  hatirlama('Hatırlama'), anlama('Anlama'), uygulama('Uygulama'),
+  analiz('Analiz'), degerlendirme('Değerlendirme'), yaratma('Yaratma');
+  const BloomLevel(this.label);
+  final String label;
+}
+
+enum ResponseType {
+  choice('Çoktan seçmeli'), multiSelect('Çoklu seçim'), trueFalse('Doğru / yanlış'),
+  fill('Boşluk doldurma'), creation('Açık uçlu tasarım'),
+  ordering('Sıralama'), matching('Eşleştirme'), listening('Dinleme'),
+  pronunciation('Telaffuz');
+  const ResponseType(this.label);
+  final String label;
+}
+
+class MultiSelectTask {
+  final String prompt;
+  final List<String> options;
+  final List<int> correct;
+  final String explanation;
+  const MultiSelectTask(this.prompt, this.options, this.correct, this.explanation);
+
+  bool matches(Set<int> selection) =>
+      selection.length == correct.length && correct.every(selection.contains);
+
+  Map<String, dynamic> toJson() =>
+      {'prompt': prompt, 'options': options, 'correct': correct, 'explanation': explanation};
+  factory MultiSelectTask.fromJson(Map<String, dynamic> json) => MultiSelectTask(
+      json['prompt'] as String, List<String>.from(json['options'] as List),
+      List<int>.from(json['correct'] as List), json['explanation'] as String);
+}
+
+class CreationTask {
+  final String brief;
+  final List<String> criteria;
+  const CreationTask(this.brief, this.criteria);
+
+  Map<String, dynamic> toJson() => {'brief': brief, 'criteria': criteria};
+  factory CreationTask.fromJson(Map<String, dynamic> json) => CreationTask(
+        json['brief'] as String, List<String>.from(json['criteria'] as List));
+}
+
 class Question {
   final String id;
   final String? contentID;
@@ -445,6 +515,11 @@ class Question {
   final QuestionActivity? activity;
   final String? sourceModel;
   final String? verifiedByModel;
+  final BloomLevel? bloom;
+  final String? studyLevel;
+  final CreationTask? creation;
+  final MultiSelectTask? multiSelect;
+  final ResponseType _answerMode;
 
   const Question({
     required this.id,
@@ -462,9 +537,83 @@ class Question {
     this.activity,
     this.sourceModel,
     this.verifiedByModel,
-  });
+    this.bloom,
+    this.studyLevel,
+    this.creation,
+    this.multiSelect,
+    ResponseType responseType = ResponseType.choice,
+  }) : _answerMode = responseType;
+
+  ResponseType get responseType {
+    if (creation != null) return ResponseType.creation;
+    if (multiSelect != null) return ResponseType.multiSelect;
+    return switch (activity?.kind) {
+      ActivityKind.ordering => ResponseType.ordering,
+      ActivityKind.matching => ResponseType.matching,
+      ActivityKind.listening => ResponseType.listening,
+      ActivityKind.pronunciation => ResponseType.pronunciation,
+      null => _answerMode,
+    };
+  }
+
+  /// Match exact academic terms or equivalent numeric fractions/decimals.
+  /// Preserve SI unit case, operation signs and inequality symbols.
+  bool acceptsWritten(String value) {
+    String clean(String s) => s.trim().replaceAll('−', '-')
+        .replaceAll(RegExp(r'\s+'), ' ');
+    final expected = clean(correctAnswerText), given = clean(value);
+    if (given.isEmpty) return false;
+    if (given == expected) return true;
+    if (given.length > 2048) return false;
+    final number = RegExp(r'^([+-]?\d+(?:[,.]\d+)?(?:[eE][+-]?\d+)?(?:/[+-]?\d+)?)\s*(.*)$');
+    String percent(String s) => s.startsWith('%') || s.startsWith('‰')
+        ? '${s.substring(1).trim()}${s[0]}' : s;
+    final a = number.firstMatch(percent(expected));
+    final b = number.firstMatch(percent(given));
+    if (a == null || b == null) {
+      if (a != null || b != null) return false;
+      if (category == Topic.language && expected.toLowerCase() == given.toLowerCase()) {
+        return true;
+      }
+      String fold(String s) => s.replaceAll('İ', 'i').replaceAll('I', 'ı').toLowerCase();
+      return fold(expected) == fold(given);
+    }
+    const optionalUnits = {
+      '%', '‰', '°', '°C', 'K', 'm', 'km', 'cm', 'mm', 'nm', 'µm',
+      'm²', 'cm²', 'km²', 'm³', 'cm³', 'L', 'mL', 'kg', 'g', 'mg',
+      's', 'ms', 'dk', 'sa', 'saat', 'dakika', 'saniye', 'gün', 'yıl',
+      'm/s', 'm/s²', 'km/sa', 'km/saat', 'N', 'kN', 'J', 'kJ', 'W',
+      'kW', 'MW', 'mW', 'Wh', 'kWh', 'Pa', 'kPa', 'MPa', 'Hz', 'kHz', 'MHz',
+      'mol', 'mmol', 'mol/L', 'g/L', 'kg/m³', 'V', 'mV', 'A', 'mA', 'Ω',
+      'C', 'F', 'TL', 'puan', 'kişi', 'adet', 'bit', 'bayt', 'MB', 'GB',
+      'N·s', 'N·m', 'µmol/L', 'kişi/km²', 'g/mol', 'mg/L', 'mmol/L',
+    };
+    final expectedUnit = a.group(2)!, enteredUnit = b.group(2)!;
+    if (expectedUnit != enteredUnit &&
+        !(enteredUnit.isEmpty && optionalUnits.contains(expectedUnit))) {
+      return false;
+    }
+    (BigInt, BigInt)? ratio(String s) {
+      final fraction = s.toLowerCase().replaceAll(',', '.').split('/');
+      final scientific = fraction.first.split('e');
+      final places = scientific.first.contains('.') ? scientific.first.split('.').last.length : 0;
+      final exponent = scientific.length == 2 ? int.tryParse(scientific.last) : 0;
+      if (exponent == null || exponent.abs() > 308) return null;
+      final shift = exponent - places;
+      final coefficient = BigInt.parse(scientific.first.replaceAll('.', ''));
+      final divisor = fraction.length == 2 ? BigInt.parse(fraction.last) : BigInt.one;
+      if (divisor == BigInt.zero) return null;
+      return (coefficient * BigInt.from(10).pow(max(0, shift)),
+          divisor * BigInt.from(10).pow(max(0, -shift)));
+    }
+    final x = ratio(a.group(1)!), y = ratio(b.group(1)!);
+    return x != null && y != null && x.$1 * y.$2 == y.$1 * x.$2;
+  }
 
   String get correctAnswerText {
+    if (multiSelect != null) {
+      return multiSelect!.correct.map((i) => multiSelect!.options[i]).join(' · ');
+    }
     if (activity != null) {
       if (activity!.kind == ActivityKind.ordering || activity!.kind == ActivityKind.matching) {
         if (activity!.solution.isNotEmpty) {
@@ -494,6 +643,16 @@ class Question {
         return visual != null;
       case QuestionFormat.text:
         return visual == null && activity == null;
+      case QuestionFormat.multiSelect:
+        return responseType == ResponseType.multiSelect;
+      case QuestionFormat.multipleChoice:
+        return responseType == ResponseType.choice;
+      case QuestionFormat.trueFalse:
+        return responseType == ResponseType.trueFalse;
+      case QuestionFormat.fill:
+        return responseType == ResponseType.fill;
+      case QuestionFormat.creation:
+        return responseType == ResponseType.creation;
       case QuestionFormat.listening:
         return activity?.kind == ActivityKind.listening;
       case QuestionFormat.ordering:
@@ -505,7 +664,8 @@ class Question {
     }
   }
 
-  String get poolKey => normalizePoolKey(text);
+  // Graph and table questions can share a stem while presenting different evidence.
+  String get poolKey => id.startsWith('ak38_') ? id : normalizePoolKey(text);
 
   static String normalizePoolKey(String raw) {
     final lower = raw
@@ -522,7 +682,7 @@ class Question {
   }
 
   Question shuffled(Random rng) {
-    if (isInteractiveSequence || isPronunciation || options.length != 4) {
+    if (isInteractiveSequence || isPronunciation || multiSelect != null || options.length != 4) {
       return this;
     }
     final indices = [0, 1, 2, 3]..shuffle(rng);
@@ -547,16 +707,19 @@ class Question {
       activity: activity,
       sourceModel: sourceModel,
       verifiedByModel: verifiedByModel,
+      bloom: bloom, studyLevel: studyLevel, creation: creation, multiSelect: multiSelect, responseType: _answerMode,
     );
   }
 
   factory Question.fromJson(Map<String, dynamic> json, {int fallbackIndex = 0}) {
     final rawOpts = (json['options'] as List?)?.map((e) => e.toString()).toList() ??
         const ['A', 'B', 'C', 'D'];
-    final opts = rawOpts.length >= 4
+    final mode = ResponseType.values.where((v) => v.name == json['responseType']).firstOrNull
+        ?? ResponseType.choice;
+    final opts = mode == ResponseType.trueFalse && rawOpts.length == 2 ? rawOpts : rawOpts.length >= 4
         ? rawOpts.sublist(0, 4)
         : [...rawOpts, ...List.filled(4 - rawOpts.length, '-')];
-    final ans = ((json['answer'] as num?)?.toInt() ?? 0).clamp(0, 3);
+    final ans = ((json['answer'] as num?)?.toInt() ?? 0).clamp(0, opts.length - 1);
     final contentId = json['contentID']?.toString();
     final id = json['id']?.toString() ??
         contentId ??
@@ -582,6 +745,13 @@ class Question {
           : null,
       sourceModel: json['sourceModel']?.toString(),
       verifiedByModel: json['verifiedByModel']?.toString(),
+      bloom: BloomLevel.values.where((b) => b.name == json['bloom']).firstOrNull,
+      studyLevel: json['studyLevel'] as String?,
+      creation: json['creation'] is Map
+          ? CreationTask.fromJson(Map<String, dynamic>.from(json['creation'])) : null,
+      multiSelect: json['multiSelect'] is Map
+          ? MultiSelectTask.fromJson(Map<String, dynamic>.from(json['multiSelect'])) : null,
+      responseType: mode,
     );
   }
 
@@ -601,6 +771,11 @@ class Question {
         if (activity != null) 'activity': activity!.toJson(),
         if (sourceModel != null) 'sourceModel': sourceModel,
         if (verifiedByModel != null) 'verifiedByModel': verifiedByModel,
+        if (bloom != null) 'bloom': bloom!.name,
+        if (studyLevel != null) 'studyLevel': studyLevel,
+        if (creation != null) 'creation': creation!.toJson(),
+        if (multiSelect != null) 'multiSelect': multiSelect!.toJson(),
+        if (responseType != ResponseType.choice) 'responseType': responseType.name,
       };
 }
 
@@ -613,6 +788,7 @@ class AnswerRecord {
   final int earnedPoints;
   final int elapsedSeconds;
   final int? duelPlayerIndex;
+  final String? writtenResponse;
 
   const AnswerRecord({
     required this.question,
@@ -623,6 +799,7 @@ class AnswerRecord {
     required this.earnedPoints,
     required this.elapsedSeconds,
     this.duelPlayerIndex,
+    this.writtenResponse,
   });
 }
 

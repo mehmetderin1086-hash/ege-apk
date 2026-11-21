@@ -175,7 +175,7 @@ class QuestionVisualViewer extends StatelessWidget {
             path,
             height: expanded ? 340 : 175,
             width: double.infinity,
-            fit: expanded ? BoxFit.contain : BoxFit.cover,
+            fit: BoxFit.contain,
           ),
         );
 
@@ -227,31 +227,32 @@ class QuestionVisualViewer extends StatelessWidget {
         );
 
       case VisualKind.barChart:
-        return SizedBox(
-          height: expanded ? 250 : 155,
+      case VisualKind.lineChart:
+        final series = List.generate(visual.values.length, (i) {
+          final label = i < visual.labels.length ? visual.labels[i] : '${i + 1}';
+          return '$label: ${_chartNumber(visual.values[i])} ${visual.unit ?? ''}'.trim();
+        });
+        final chart = SizedBox(
+          height: expanded ? 230 : 155,
           child: CustomPaint(
             size: Size.infinite,
-            painter: _BarChartPainter(
-              labels: visual.labels,
-              values: visual.values,
-              unit: visual.unit,
-              accent: accent,
-            ),
+            painter: visual.kind == VisualKind.barChart
+                ? _BarChartPainter(labels: visual.labels, values: visual.values,
+                    unit: visual.unit, accent: accent)
+                : _LineChartPainter(labels: visual.labels, values: visual.values,
+                    unit: visual.unit, accent: accent),
           ),
         );
-
-      case VisualKind.lineChart:
-        return SizedBox(
-          height: expanded ? 250 : 155,
-          child: CustomPaint(
-            size: Size.infinite,
-            painter: _LineChartPainter(
-              labels: visual.labels,
-              values: visual.values,
-              unit: visual.unit,
-              accent: accent,
+        return Semantics(
+          label: series.join('. '),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            chart,
+            if (expanded) Wrap(
+              alignment: WrapAlignment.center, spacing: 14, runSpacing: 4,
+              children: [for (final entry in series)
+                Text(entry, style: const TextStyle(color: Colors.white, fontSize: 12))],
             ),
-          ),
+          ]),
         );
 
       case VisualKind.diagram:
@@ -264,6 +265,14 @@ class QuestionVisualViewer extends StatelessWidget {
         );
     }
   }
+}
+
+String _chartNumber(double value) {
+  if (value == value.truncateToDouble()) return '${value.toInt()}';
+  final text = value != 0 && value.abs() < 1e-6
+      ? value.toStringAsExponential(3)
+      : value.toStringAsFixed(8).replaceFirst(RegExp(r'0+$'), '');
+  return text.replaceAll('.', ',');
 }
 
 class _BarChartPainter extends CustomPainter {
@@ -282,25 +291,30 @@ class _BarChartPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (values.isEmpty) return;
-    final maxVal = max(values.reduce(max), 1.0);
+    final maxVal = max(values.reduce(max), 0.0);
+    final minVal = min(values.reduce(min), 0.0);
+    final span = maxVal == minVal ? 1.0 : maxVal - minVal;
     final bottom = size.height - 26;
     final top = 22.0;
     final chartH = max(bottom - top, 20.0);
 
+    final zero = bottom + minVal / span * chartH;
+
     final gridPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.12)
       ..strokeWidth = 1;
-    canvas.drawLine(Offset(8, bottom), Offset(size.width - 8, bottom), gridPaint);
+    canvas.drawLine(Offset(8, zero), Offset(size.width - 8, zero), gridPaint);
 
     final slotW = (size.width - 20) / values.length;
     final barW = min(slotW * 0.54, 42.0);
 
     for (var i = 0; i < values.length; i++) {
       final v = values[i];
-      final h = (v / maxVal) * chartH;
+      final y = bottom - (v - minVal) / span * chartH;
+      final h = (zero - y).abs();
       final cx = 10 + slotW * (i + 0.5);
       final rect = RRect.fromRectAndCorners(
-        Rect.fromLTWH(cx - barW / 2, bottom - h, barW, h),
+        Rect.fromLTWH(cx - barW / 2, min(zero, y), barW, max(0.01, h)),
         topLeft: const Radius.circular(7),
         topRight: const Radius.circular(7),
       );
@@ -314,7 +328,7 @@ class _BarChartPainter extends CustomPainter {
           ).createShader(rect.outerRect),
       );
 
-      final valStr = v == v.roundToDouble() ? '${v.toInt()}' : v.toStringAsFixed(1);
+      final valStr = _chartNumber(v);
       final valTp = TextPainter(
         text: TextSpan(
           text: unit != null && i == values.length - 1 ? '$valStr $unit' : valStr,
@@ -326,7 +340,7 @@ class _BarChartPainter extends CustomPainter {
         ),
         textDirection: TextDirection.ltr,
       )..layout(maxWidth: slotW + 14);
-      valTp.paint(canvas, Offset(cx - valTp.width / 2, bottom - h - 16));
+      valTp.paint(canvas, Offset(cx - valTp.width / 2, (y - 16).clamp(0, bottom - 14).toDouble()));
 
       if (i < labels.length) {
         final lblTp = TextPainter(
@@ -344,7 +358,9 @@ class _BarChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _BarChartPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _BarChartPainter oldDelegate) =>
+      values != oldDelegate.values || labels != oldDelegate.labels ||
+      unit != oldDelegate.unit || accent != oldDelegate.accent;
 }
 
 class _LineChartPainter extends CustomPainter {
@@ -372,6 +388,7 @@ class _LineChartPainter extends CustomPainter {
 
     final pts = <Offset>[];
     final count = values.length;
+    final zeroY = bottom + minVal / span * chartH;
     for (var i = 0; i < count; i++) {
       final x = count == 1
           ? size.width / 2
@@ -381,17 +398,17 @@ class _LineChartPainter extends CustomPainter {
     }
 
     canvas.drawLine(
-      Offset(14, bottom),
-      Offset(size.width - 14, bottom),
+      Offset(14, zeroY),
+      Offset(size.width - 14, zeroY),
       Paint()..color = Colors.white.withValues(alpha: 0.14),
     );
 
     if (pts.length >= 2) {
-      final fillPath = Path()..moveTo(pts.first.dx, bottom);
+      final fillPath = Path()..moveTo(pts.first.dx, zeroY);
       for (final p in pts) {
         fillPath.lineTo(p.dx, p.dy);
       }
-      fillPath.lineTo(pts.last.dx, bottom);
+      fillPath.lineTo(pts.last.dx, zeroY);
       fillPath.close();
       canvas.drawPath(
         fillPath,
@@ -424,7 +441,7 @@ class _LineChartPainter extends CustomPainter {
       canvas.drawCircle(p, 2.0, Paint()..color = Colors.white);
 
       final v = values[i];
-      final valStr = v == v.roundToDouble() ? '${v.toInt()}' : v.toStringAsFixed(1);
+      final valStr = _chartNumber(v);
       final valTp = TextPainter(
         text: TextSpan(
           text: valStr,
@@ -452,7 +469,9 @@ class _LineChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _LineChartPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _LineChartPainter oldDelegate) =>
+      values != oldDelegate.values || labels != oldDelegate.labels ||
+      unit != oldDelegate.unit || accent != oldDelegate.accent;
 }
 
 class _DiagramPainter extends CustomPainter {
@@ -555,7 +574,8 @@ class _DiagramPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _DiagramPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _DiagramPainter oldDelegate) =>
+      elements != oldDelegate.elements || defaultAccent != oldDelegate.defaultAccent;
 }
 
 class QuestionActivityWidget extends StatefulWidget {
@@ -894,11 +914,14 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
                         foregroundColor: const Color(0xFF06101F),
                       ),
                       icon: const Icon(Icons.mic_rounded, size: 18),
-                      label: const Text('Söyle ve Dene'),
+                      label: const Text('Sözcükleri söyle'),
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 6),
+              const Text('Mikrofon, tanınan sözcüklerin örnekle aynı sırada olmasını kontrol eder.',
+                style: TextStyle(fontSize: 11.5, color: Colors.white70)),
             ],
           ),
         );
