@@ -935,7 +935,7 @@ final lmGeometri = <AdvancedFamily>[
             'Alanı $s cm² olan bir eşkenar dörtgenin köşegenlerinden biri '
             '$e cm olduğuna göre diğer köşegeni kaç cm olur?',
             f,
-            [2 * f, if (f.isEven) f ~/ 2, f + e],
+            [2 * f, s ~/ e, f + e],
             'Alan köşegenler çarpımının yarısıdır: $e·k / 2 = $s. Buradan '
             'k = ${2 * s} / $e = $f cm.',
             unit: 'cm',
