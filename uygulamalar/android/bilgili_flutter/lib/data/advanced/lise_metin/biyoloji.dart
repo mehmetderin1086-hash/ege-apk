@@ -1247,13 +1247,13 @@ final _f08 = lmAile(
         return sayisal(
           'Bir memelinin yumurtalığında $k eşey ana hücresi art arda $n kez '
           'mitoz geçiriyor. Oluşan hücrelerin ${_kesirSoz[j]} mayoz '
-          'geçirdiğine göre mayozlar sonunda toplam kaç kutup hücresi oluşur?',
+          'geçirdiğine göre mayozlar sonunda en çok kaç kutup hücresi oluşur?',
           3 * mayoz,
           [mayoz, 4 * mayoz, 2 * mayoz, 3 * son, 3 * k * n],
           'Mitozlar sonunda $k · 2${_ust(n)} = $son hücre oluşur. Bunlardan '
-          '$mayoz tanesi mayoz geçirir; her mayozdan 1 yumurta ve 3 kutup '
-          'hücresi oluştuğundan kutup hücresi sayısı $mayoz · 3 = '
-          '${3 * mayoz} olur.',
+          '$mayoz tanesi mayoz geçirir; ilk kutup hücresi de bölündüğünde her '
+          'mayozdan 1 yumurta ve en çok 3 kutup hücresi oluşur. Kutup hücresi '
+          'sayısı en çok $mayoz · 3 = ${3 * mayoz} olur.',
           positive: true,
         );
     }
@@ -1750,7 +1750,7 @@ final _f12 = lmAile(
           positive: true,
         );
       case 1:
-        final p = 50 + 10 * a;
+        final p = 200 + 40 * a;
         return sayisal(
           'Sindirim sırasında her biri $p glikoz biriminden oluşan $y nişasta '
           'molekülü tamamen glikoza hidroliz ediliyor. Bu olayda toplam kaç '
@@ -1775,7 +1775,7 @@ final _f12 = lmAile(
           positive: true,
         );
       case 3:
-        final p = 20 + 3 * b;
+        final p = 200 + 40 * b;
         return sayisal(
           'Sindirim sırasında $x molekül trigliserit (nötr yağ) ile $p glikoz '
           'biriminden oluşan bir glikojen molekülü yapı taşlarına kadar '
@@ -1801,7 +1801,7 @@ final _f12 = lmAile(
           positive: true,
         );
       case 5:
-        final parca = a + 4, boy = b + 2;
+        final parca = a + 4, boy = 10 * (b + 3);
         return sayisal(
           'Sindirim sırasında ${parca * boy} glikoz biriminden oluşan bir '
           'nişasta molekülü, her biri $boy glikoz içeren parçalara ayrılacak '
@@ -1838,7 +1838,7 @@ final _f12 = lmAile(
           positive: true,
         );
       case 8:
-        final p1 = 30 + 4 * a, p2 = 21 + 6 * b; // biri çift, diğeri tek
+        final p1 = 300 + 40 * a, p2 = 205 + 50 * b; // biri çift, diğeri tek
         return sayisal(
           'Karaciğerde biri $p1, diğeri $p2 glikoz biriminden oluşan iki '
           'glikojen molekülü tamamen glikoza hidroliz ediliyor. Bu olayda '
@@ -1972,7 +1972,7 @@ final _f13 = lmAile(
       final kaplar = [dis, dis + 4, dis + 8];
       final giris =
           'Hücre öz suyundaki çözünen madde derişimi %$x olan özdeş üç bitki '
-          'hücresi; K kabındaki %${tr(kaplar[0])}, L kabındaki '
+          'hücresi, K kabındaki %${tr(kaplar[0])}, L kabındaki '
           '%${tr(kaplar[1])} ve M kabındaki %${tr(kaplar[2])} derişimli '
           'çözeltilere ayrı ayrı konuyor. Çözünen madde hücre zarından '
           'geçemediğine göre';
@@ -2266,7 +2266,7 @@ final _f15 = lmAile(
 
 const _populasyonlar = [
   'Bir adadaki tavşan popülasyonunda',
-  'Bir ormandaki geyik popülasyonunda',
+  'Bir ormandaki sincap popülasyonunda',
   'Bir göldeki sazan popülasyonunda',
   'Bir bozkırdaki tarla faresi popülasyonunda',
   'Bir sulak alandaki ördek popülasyonunda',
@@ -2824,13 +2824,12 @@ final _f19 = lmAile(
         );
       case 2:
         return sayisal(
-          '$deney Maya hücrelerinin glikozu etkinleştirmek için harcadığı ATP '
-          'ile kas hücrelerinin ürettiği toplam ATP sayılarının toplamı '
-          'kaçtır?',
-          2 * x + 4 * y,
-          [4 * x + 2 * y, 2 * (x + y), 4 * (x + y), x + 2 * y, 2 * x + y],
-          '$atp Mayalar 2 · $x = ${2 * x} ATP harcar, kas hücreleri 4 · $y = '
-          '${4 * y} ATP üretir. Toplam ${2 * x + 4 * y} olur.',
+          '$deney Bu iki olayda glikolizin başlangıcında glikozu etkinleştirmek '
+          'için harcanan toplam ATP kaç moleküldür?',
+          2 * (x + y),
+          [4 * (x + y), x + y, 2 * x, 2 * y, 6 * (x + y)],
+          '$atp Glikozu etkinleştirmek için her glikozda 2 ATP harcandığından '
+          'toplam 2 · ($x + $y) = ${2 * (x + y)} ATP harcanır.',
           positive: true,
         );
       case 3:
@@ -2908,14 +2907,18 @@ final _f19 = lmAile(
         );
       default:
         return sayisal(
-          '$deney Maya hücrelerinin net ATP kazancı ile oluşturduğu CO₂ '
-          'molekülü sayısının toplamına, kas hücrelerinin net ATP kazancı '
-          'eklenirse hangi sayı bulunur?',
-          4 * x + 2 * y,
-          [2 * (x + y), 4 * (x + y), 6 * x + 2 * y, 2 * x + 4 * y, 4 * x + 4 * y],
-          '$atp $urun Mayalarda 2 · $x ATP ve 2 · $x CO₂, kas hücrelerinde '
-          '2 · $y ATP vardır: ${2 * x} + ${2 * x} + ${2 * y} = '
-          '${4 * x + 2 * y}.',
+          'Bir deneyde oksijensiz kalan kas hücreleri laktik asit '
+          'fermantasyonuyla ${2 * y} molekül laktik asit oluşturuyor; maya '
+          'hücreleri de etil alkol fermantasyonu yapıyor. İki olayda substrat '
+          'düzeyinde fosforilasyonla toplam ${4 * (x + y)} molekül ATP '
+          'üretildiğine göre maya hücrelerinde oluşan etil alkol molekülü '
+          'sayısı kaçtır?',
+          2 * x,
+          [x, 2 * (x + y), 4 * x, x + y, 2 * y, 4 * x + 2],
+          '$atp Toplam glikoz ${4 * (x + y)} / 4 = ${x + y} olur. Kas '
+          'hücreleri ${2 * y} / 2 = $y glikoz parçalamıştır; mayalara '
+          '${x + y} − $y = $x glikoz kalır. Her glikozdan 2 etil alkol '
+          'oluştuğundan 2 · $x = ${2 * x} bulunur.',
           positive: true,
         );
     }

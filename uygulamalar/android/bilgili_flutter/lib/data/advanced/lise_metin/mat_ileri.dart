@@ -314,6 +314,13 @@ const _geoOran3 = [
   (4, 2), (5, 2), (2, 5), (4, 3), (6, 2),
 ];
 
+/// Bölüm yazımı; sadeleşiyorsa sade biçimi de verir: `_oranYaz(8, 2)` →
+/// `8/2 = 4`, `_oranYaz(1, 4)` → `1/4`.
+String _oranYaz(int n, int d) {
+  final sade = _q(n, d);
+  return sade == '$n/$d' ? sade : '$n/$d = $sade';
+}
+
 /// Üstel ifade: `_ustlu(2, 'x + 3')` → `2^(x + 3)`, `_ustlu(2, 'x')` → `2^x`.
 String _ustlu(int taban, String us) => us == 'x' ? '$taban^x' : '$taban^($us)';
 
@@ -1227,8 +1234,8 @@ final lmMatIleri = <AdvancedFamily>[
             1,
             [(us + q, p), (us - q, 1), (-x, 1), (-us - q, p)],
             '$sag = ${_kuvvet(t, us)} olduğundan üsler eşitlenir: '
-            '${_pol([p, q])} = ${_n(us)}. Buradan ${p}x = ${_n(us - q)} ve '
-            'x = ${_n(x)} bulunur.',
+            '${_pol([p, q])} = ${_n(us)}. Buradan '
+            '${q == 0 ? '' : '${p}x = ${_n(us - q)} ve '}x = ${_n(x)} bulunur.',
           );
         case 1:
           // Tabanlar aynı sayının kuvvetleri: A^(x + u) = C^(x + w).
@@ -1237,15 +1244,21 @@ final lmMatIleri = <AdvancedFamily>[
           final x = b % 10 - 4;
           final u = j * k - x, w = i * k - x;
           final sol = _us(r, i), sag = _us(r, j);
+          // Üs ifadesinin katı: 1·(x + u) → x + u, 2·(x) → 2x.
+          String katli(int c, int kay) => c == 1
+              ? _pol([1, kay])
+              : (kay == 0 ? '${c}x' : '$c·(${_pol([1, kay])})');
+          final solUs = katli(i, u), sagUs = katli(j, w);
+          final acik = solUs == _pol([i, i * u]) && sagUs == _pol([j, j * w])
+              ? ''
+              : ', yani ${_pol([i, i * u])} = ${_pol([j, j * w])}';
           return _tam(
             '${_ustlu(sol, _pol([1, u]))} = ${_ustlu(sag, _pol([1, w]))} $soru',
             x,
             [k, -x, x + k, x - k],
             '${i == 1 ? '' : '$sol = $r${_ust(i)} ve '}$sag = $r${_ust(j)} '
             'olduğundan iki taraf $r tabanında yazılır ve üsler eşitlenir: '
-            '${i == 1 ? _pol([1, u]) : '$i·(${_pol([1, u])})'} = '
-            '$j·(${_pol([1, w])}), yani ${_pol([i, i * u])} = '
-            '${_pol([j, j * w])}. Buradan x = ${_n(x)} bulunur.',
+            '$solUs = $sagUs$acik. Buradan x = ${_n(x)} bulunur.',
           );
         case 2:
           // log_t(px + q) = m.
@@ -1263,7 +1276,8 @@ final lmMatIleri = <AdvancedFamily>[
             [(t * m - q, p), (deger + q, p), (deger - q, 1), (m - q, p)],
             'Logaritmanın tanımından ${_pol([p, q])} = '
             '${m == 1 ? '' : '${_kuvvet(t, m)} = '}$deger olur. Buradan '
-            '${p}x = ${_n(deger - q)} ve x = ${_n(x)} bulunur.',
+            '${q == 0 ? '' : '${p}x = ${_n(deger - q)} ve '}x = ${_n(x)} '
+            'bulunur.',
           );
         case 3:
           // log_t(x + u) − log_t(x + w) = m.
@@ -1274,6 +1288,7 @@ final lmMatIleri = <AdvancedFamily>[
           String lg(int kay) => kay == 0
               ? 'log${_alt(t)} x'
               : 'log${_alt(t)}(${_pol([1, kay])})';
+          String par(int kay) => kay == 0 ? 'x' : '(${_pol([1, kay])})';
           final denklem = v == 0
               ? '${lg(u)} − ${lg(w)} = $m'
               : '${lg(u)} = $m + ${lg(w)}';
@@ -1283,7 +1298,7 @@ final lmMatIleri = <AdvancedFamily>[
             [k, oran * k, -x, u - w],
             '${v == 0 ? '' : 'Denklem ${lg(u)} − ${lg(w)} = $m biçiminde '
                       'yazılır. '}'
-            'Bölüm kuralından (${_pol([1, u])})/(${_pol([1, w])}) = '
+            'Bölüm kuralından ${par(u)}/${par(w)} = '
             '${m == 1 ? '' : '${_kuvvet(t, m)} = '}$oran olur. '
             '${_pol([1, u])} = '
             '${_pol([oran, oran * w])} eşitliğinden x = ${_n(x)} bulunur; bu '
@@ -1444,7 +1459,7 @@ final lmMatIleri = <AdvancedFamily>[
             yq,
             [(an, am), (yq, yp), (an - am, e), (yp, yq * e)],
             'a${_alt(n)} = a${_alt(m)}·r${_ust(e)} olduğundan r${_ust(e)} = '
-            '$an/$am = ${_q(an, am)} olur. Terimler pozitif olduğundan '
+            '${_oranYaz(an, am)} olur. Terimler pozitif olduğundan '
             'r = ${_q(yp, yq)} bulunur.',
             pozitif: true,
           );
@@ -1474,7 +1489,7 @@ final lmMatIleri = <AdvancedFamily>[
                   azalan ? (ak, r) : (ak * r, 1),
                 ],
           'a${_alt(n)} = a${_alt(m)}·r${_ust(e)} olduğundan r${_ust(e)} = '
-          '$an/$am = ${_q(an, am)} ve terimler pozitif olduğundan r = $oran '
+          '${_oranYaz(an, am)} ve terimler pozitif olduğundan r = $oran '
           'olur. a${_alt(k)} = a${_alt(ikinci ? m : n)}·r = '
           '${ikinci ? am : an}·${_sar(oran)} = $ak.',
           pozitif: true,
@@ -1587,10 +1602,12 @@ final lmMatIleri = <AdvancedFamily>[
           final r = 180 * p ~/ q;
           // Verilen iki açının toplamı 90° olursa üçüncü açı da 90° olur ve
           // iki açıyı toplayıp bırakan da doğru yanıtı bulur; bu açı atlanır.
+          // Üçüncü açının verilen açılardan birine eşit çıktığı (yanıtın kökte
+          // yazılı olduğu) ölçüler de atlanır.
           final aci = _uygun(
-            [for (var x = 10; x <= 60; x += 2) x],
+            [for (var x = 10; x <= 64; x += 2) x],
             a,
-            (x) => x + r != 90,
+            (x) => x + r != 90 && 180 - x - r != x && 180 - x - r != r,
           );
           final ucuncu = 180 - aci - r;
           final bas =
@@ -2136,7 +2153,20 @@ final lmMatIleri = <AdvancedFamily>[
           );
         case 2 || 4:
           // f(x) = ±(x³ − 3c₀x² + 3(c₀² − g²)x) + d; kritik noktalar c₀ ∓ g.
-          final c0 = a % 5 - 2, g = 1 + a ~/ 5;
+          // Ekstremum değeri sorulurken ekstremum x = 0 noktasında olursa
+          // değer sabit terime eşit çıkar ve sabit terimi yanıt sanan da doğru
+          // yanıtı bulur; bu (c₀, g) ikilileri atlanır.
+          final (c0, g) = c % 5 == 2
+              ? (a % 5 - 2, 1 + a ~/ 5)
+              : _uygun(
+                  [
+                    for (var g = 1; g <= 5; g++)
+                      for (var c0 = -2; c0 <= 2; c0++) (c0, g),
+                    (-3, 1), (3, 1), (-3, 2), (3, 2),
+                  ],
+                  a,
+                  (t) => (v == 0 ? t.$1 - t.$2 : t.$1 + t.$2) != 0,
+                );
           final r1 = c0 - g, r2 = c0 + g;
           final i = c % 5 == 2 && b >= 10 ? -1 : 1;
           // Ekstremum değeri sorulurken değerin, noktanın apsisine eşit
@@ -2400,10 +2430,18 @@ final lmMatIleri = <AdvancedFamily>[
             '$n·${_p(q)} = ${_n(toplam)}.',
           );
         case 1:
-          final q = _sifirsiz(a, 12);
           final p = 1 + b ~/ 5;
           final n = const [5, 6, 7, 8, 10][b % 5];
           final k1 = n * (n + 1) ~/ 2, k2 = n * (n + 1) * (2 * n + 1) ~/ 6;
+          // Toplamın yalnız son terime eşit çıktığı sabit atlanır: son terimi
+          // toplam sanan da doğru yanıtı bulurdu.
+          final q = _uygun(
+            _sifirsizAralik(-12, 15),
+            a,
+            (x) => v == 0
+                ? p * k2 + x * n != p * n * n + x
+                : p * k2 + x * k1 != p * n * n + x * n,
+          );
           final kareler = 'Σ k² = $n·${n + 1}·${2 * n + 1}/6 = $k2';
           if (v == 0) {
             final toplam = p * k2 + q * n;

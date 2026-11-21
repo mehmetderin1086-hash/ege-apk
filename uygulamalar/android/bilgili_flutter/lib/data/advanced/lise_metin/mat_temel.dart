@@ -499,8 +499,8 @@ AdvancedItem _ondalik(int a, int b, int c) {
       _ => ('y : x', y / x, [yo / xo, x / y, _K(ys - u, xs)]),
     };
     return _kesirSoru(
-      'Aşağıdaki devirli ondalık sayılarda son yazılan rakam sonsuza kadar '
-          'tekrar etmektedir: x = 0,$t$d$d$d… ve y = 0,$u$e$e$e… Buna göre $islem '
+      'Son yazılan rakamı sonsuza kadar tekrar eden x = 0,$t$d$d$d… ve '
+          'y = 0,$u$e$e$e… devirli ondalık sayıları veriliyor. Buna göre $islem '
           'işleminin sonucu kaçtır?',
       r,
       yanlis,
@@ -643,14 +643,14 @@ AdvancedItem _koklu(int a, int b, int c) {
     0 => arti ? x - y : x + y,
     1 => x * y,
     2 => x - 2 * y,
-    3 => 2 * x + y,
+    3 => arti ? 2 * x - y : 2 * x + y,
     _ => x * x + y * y,
   };
   final soru = switch (kk) {
     0 => arti ? 'a − b farkı' : 'a + b toplamı',
     1 => 'a · b çarpımı',
     2 => 'a − 2b ifadesinin değeri',
-    3 => '2a + b ifadesinin değeri',
+    3 => arti ? '2a − b ifadesinin değeri' : '2a + b ifadesinin değeri',
     _ => 'a² + b² toplamı',
   };
   final yanit = f(t, bb);
@@ -755,8 +755,10 @@ AdvancedItem _mutlak(int a, int b, int c) {
       '$esit x tam sayılarının toplamı kaçtır?',
       h * adet,
       [h * (adet + 2), h * (adet - 2), h, adet, -h * adet],
-      '$coz; bu sayılar ${_n(h)} çevresinde simetrik olduğundan toplamları '
-          '$adet · ${h < 0 ? '(${_n(h)})' : '$h'} = ${_n(h * adet)} olur.',
+      adet == 1
+          ? '$coz; toplam ${_n(h)} olur.'
+          : '$coz; bu sayılar ${_n(h)} çevresinde simetrik olduğundan toplamları '
+                '$adet · ${h < 0 ? '(${_n(h)})' : '$h'} = ${_n(h * adet)} olur.',
     );
   }
   return _tam('$esit en büyük x tam sayısı kaçtır?', enB, [
@@ -925,13 +927,19 @@ AdvancedItem _sistem(int a, int b, int c) {
   final ms = s.abs(), mq = q.abs(), topla = q * s < 0;
   final kat = topla ? p * ms + r * mq : p * ms - r * mq;
   final sagTaraf = topla ? e1 * ms + e2 * mq : e1 * ms - e2 * mq;
+  final carpim = ms == 1 && mq == 1
+      ? 'Denklemler'
+      : ms == 1
+      ? 'İkinci denklem $mq ile çarpılıp denklemler'
+      : mq == 1
+      ? 'Birinci denklem $ms ile çarpılıp denklemler'
+      : 'Birinci denklem $ms ile, ikinci denklem $mq ile çarpılıp';
   return _tam(
     '${_ikili(p, q, e1)} ve ${_ikili(r, s, e2)} denklemlerini birlikte '
         'sağlayan x ve y gerçek sayıları için $soru kaçtır?',
     yanit,
     yanlis,
-    '${ms == 1 && mq == 1 ? 'Denklemler' : 'Birinci denklem $ms ile, ikinci '
-                  'denklem $mq ile çarpılıp'} taraf tarafa '
+    '$carpim taraf tarafa '
         '${topla ? 'toplanırsa' : 'çıkarılırsa'} ${_sonuc(kat, sagTaraf, x)} '
         'bulunur. Yerine yazılınca y = ${_n(y)} olur; istenen değer ${_n(yanit)} '
         'bulunur.',
@@ -980,7 +988,7 @@ AdvancedItem _oran(int a, int b, int c) {
       0 => 30 + 10 * b,
       1 => 9 + b,
       2 => 40 + 2 * b,
-      _ => 20 + 5 * b,
+      _ => 20 + 3 * b, // 5 dakikada 20–77 litre: dakikada 4–15,4 litre
     };
     final t1 = u * g, t2 = v * g, n1 = u * w, yanit = v * w;
     final kok = switch (kk) {
@@ -1016,15 +1024,16 @@ AdvancedItem _oran(int a, int b, int c) {
     final w = 1 + b % 10 + (1 + b % 10 >= g ? 1 : 0); // w ≠ g
     final p = (azalt ? v0 : u0) * g, q = (azalt ? u0 : v0) * g;
     final d1 = (azalt ? u0 : v0) * w, d2 = (azalt ? v0 : u0) * w;
+    // Kat g = kk + 1: pompa sayısı en çok 11, makine 22, işçi 33 olur.
     final (nit, birim, isAdi, sure, zb, f1, f2) = const [
       (
-        'Eşit güçteki',
-        'işçi',
-        'işi',
-        'günde',
-        'gün',
-        'bitirmektedir',
-        'bitirir',
+        'Özdeş',
+        'pompa',
+        'depoyu',
+        'saatte',
+        'saat',
+        'doldurmaktadır',
+        'doldurur',
       ),
       (
         'Özdeş',
@@ -1036,13 +1045,13 @@ AdvancedItem _oran(int a, int b, int c) {
         'tamamlar',
       ),
       (
-        'Özdeş',
-        'pompa',
-        'depoyu',
-        'saatte',
-        'saat',
-        'doldurmaktadır',
-        'doldurur',
+        'Eşit güçteki',
+        'işçi',
+        'işi',
+        'günde',
+        'gün',
+        'bitirmektedir',
+        'bitirir',
       ),
     ][kk];
     final bas =
@@ -1536,13 +1545,13 @@ AdvancedItem _isciHavuz(int a, int b, int c) {
     final (x, y, t) = _birlikteUclu[a];
     final adet = b + 2;
     return sayisal(
-      'Bir duvarı usta tek başına $x günde, kalfa tek başına $y günde '
+      'Bir duvarı usta tek başına $x saatte, kalfa tek başına $y saatte '
           'örebilmektedir. İkisi birlikte çalışarak aynı büyüklükteki $adet duvarı '
-          'kaç günde örer?',
+          'kaç saatte örer?',
       adet * t,
       [t, adet * (x + y) ~/ 2, adet * x, adet * (y - x)],
-      'Birlikte bir günde duvarın 1/$x + 1/$y = 1/$t kadarını örerler. Bir '
-          'duvar $t günde, $adet duvar $adet · $t = ${adet * t} günde biter.',
+      'Birlikte bir saatte duvarın 1/$x + 1/$y = 1/$t kadarını örerler. Bir '
+          'duvar $t saatte, $adet duvar $adet · $t = ${adet * t} saatte biter.',
       positive: true,
     );
   }
@@ -1637,9 +1646,17 @@ AdvancedItem _hareket(int a, int b, int c) {
       positive: true,
     );
   }
+  // Hız oranı m : n ve bu oranın birim hızı s; bisiklet hızları dakikada
+  // 150–360 metre (9–21,6 km/sa), yol en çok 16,5 km, tek yön en çok 66 dakika.
   final (m, n) = const [(2, 3), (3, 4), (4, 5), (5, 6), (3, 5)][a % 5];
-  final s = const [50, 60, 70, 80, 90][a ~/ 5], k = b + 1;
-  final hizliGidis = (a + b).isEven;
+  final s = const [
+    [80, 90, 100, 110, 120],
+    [50, 60, 70, 80, 90],
+    [40, 45, 50, 55, 60],
+    [30, 35, 40, 45, 50],
+    [50, 55, 60, 65, 70],
+  ][a % 5][a ~/ 5];
+  final k = 2 + b % 10, hizliGidis = b < 10;
   final vg = s * (hizliGidis ? n : m), vd = s * (hizliGidis ? m : n);
   final yol = s * m * n * k, tg = yol ~/ vg, td = yol ~/ vd, top = tg + td;
   if (kk == 0) {
