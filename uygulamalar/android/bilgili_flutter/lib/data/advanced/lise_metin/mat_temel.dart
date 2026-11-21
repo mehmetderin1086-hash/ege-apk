@@ -582,7 +582,8 @@ AdvancedItem _uslu(int a, int b, int c) {
       kayma == 0 ? '$taban^x' : '$taban^(${_xArti(kayma)})';
   final sag = q == 0 ? '${k}x' : '$k · (${_xArti(-q)})';
   return _tam(
-    '${us(r, p)} = ${us(buyuk, -q)} denklemini sağlayan x değeri kaçtır?',
+    '${us(r, p)} = ${us(buyuk, -q)} eşitliği veriliyor. Üsleri aynı tabana '
+        'getirerek bu eşitliği sağlayan x gerçek sayısını bulunuz. x kaçtır?',
     x,
     [p + q, d, -x, k * d, x + q],
     '$buyuk = $r${_ust(k)} olduğundan iki taraf $r tabanında yazılır ve üsler '

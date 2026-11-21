@@ -2153,19 +2153,24 @@ final lmMatIleri = <AdvancedFamily>[
           );
         case 2 || 4:
           // f(x) = ±(x³ − 3c₀x² + 3(c₀² − g²)x) + d; kritik noktalar c₀ ∓ g.
-          // Ekstremum değeri sorulurken ekstremum x = 0 noktasında olursa
-          // değer sabit terime eşit çıkar ve sabit terimi yanıt sanan da doğru
-          // yanıtı bulur; bu (c₀, g) ikilileri atlanır.
+          // Ekstremum değeri sorulurken değer sabit terime eşit çıkarsa
+          // (ekstremum x = 0 noktasında ya da sabitsiz kısım orada sıfır)
+          // sabit terimi yanıt sanan da doğru yanıtı bulur; bu (c₀, g)
+          // ikilileri atlanır.
           final (c0, g) = c % 5 == 2
               ? (a % 5 - 2, 1 + a ~/ 5)
               : _uygun(
                   [
-                    for (var g = 1; g <= 5; g++)
-                      for (var c0 = -2; c0 <= 2; c0++) (c0, g),
+                    for (var h = 1; h <= 5; h++)
+                      for (var s = -2; s <= 2; s++) (s, h),
                     (-3, 1), (3, 1), (-3, 2), (3, 2),
                   ],
                   a,
-                  (t) => (v == 0 ? t.$1 - t.$2 : t.$1 + t.$2) != 0,
+                  (t) {
+                    final (s, h) = t;
+                    final x0 = v == 0 ? s - h : s + h;
+                    return _deg([1, -3 * s, 3 * (s * s - h * h), 0], x0) != 0;
+                  },
                 );
           final r1 = c0 - g, r2 = c0 + g;
           final i = c % 5 == 2 && b >= 10 ? -1 : 1;

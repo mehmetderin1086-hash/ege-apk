@@ -3054,7 +3054,7 @@ final _f20 = lmAile(
               'indirgenme potansiyeli ${_isaretli(ec)} V olduğuna göre $ia/$ma '
               'yarı hücresinin standart indirgenme potansiyeli kaç V olur?',
               ea,
-              [-ea, ec + pil, pil - ec + 1, pil, ea - 1, ea + 1],
+              [-ea, ec + pil, -(ec + pil), pil, -pil, ea - 1],
               'E°pil = E°katot − E°anot eşitliğinden E°anot = ${_t(ec)} − '
               '${_t(pil)} = ${_t(ea)} V bulunur.',
               birim: 'V',

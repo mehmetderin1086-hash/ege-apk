@@ -1,5 +1,4 @@
 import 'package:bilgili_flutter/data/advanced/catalog.dart';
-import 'package:bilgili_flutter/data/advanced/common.dart';
 import 'package:bilgili_flutter/data/advanced/lise_metin.dart';
 import 'package:bilgili_flutter/data/advanced/lise_metin/ortak.dart';
 import 'package:bilgili_flutter/state/arena_controller.dart';
