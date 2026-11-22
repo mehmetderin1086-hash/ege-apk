@@ -84,7 +84,8 @@ num _ikinciAdim(num k, num s) {
 /// gerektirirse ona en yakın, iki komşuyla kurulabilen sıra kullanılır.
 /// Komşular [komsuAlt] ile [komsuUst] arasında kalır (fiziksel olarak
 /// olanaklı aralık, uçlar dışarıda). Seçenekler iki ondalıkla yazıldığından
-/// aynılık yüzde birlik değerle sınanır (`ayniSecenek` ile eşdeğer).
+/// aynılık yüzde birlik değerle sınanır (`ayniSecenek` ile eşdeğer). Eşit
+/// aralıklı üçlüler ve çok yakın çeldiriciler aşağıdaki kurallarla ayıklanır.
 AdvancedItem _sd(
   String kok,
   num dogru,
@@ -96,7 +97,7 @@ AdvancedItem _sd(
   num? adim,
   num komsuAlt = 0,
   num? komsuUst,
-  bool ucluHata = false,
+  bool ucluHata = true,
 }) {
   final k = (dogru * 100).roundToDouble() / 100;
   if ((dogru - k).abs() > 1e-7 || k <= 0) {
@@ -117,7 +118,10 @@ AdvancedItem _sd(
   final s = adim ?? _komsuAdim(k);
   final altY = (komsuAlt * 100).round();
   final ustY = komsuUst == null ? null : (komsuUst * 100).round();
+  // Komşu anahtardan en çok %35 (ya da 1,5 adım) uzakta olur.
+  final enUzak = math.max(0.35 * k, 1.5 * s) + 1e-9;
   for (final d in [s, _ikinciAdim(k, s), 2 * s, 3 * s, 4 * s, 5 * s, 6 * s]) {
+    if (d > enUzak) continue;
     for (final x in [k + d, k - d]) {
       final y = (x * 100).round();
       if (y > altY && (ustY == null || y < ustY)) ekle(komsu, x);
@@ -186,8 +190,8 @@ AdvancedItem _sd(
   // Dört seçenek eşit aralıklı bir dizi oluşturursa da (anahtar hep bir
   // uçta kalır) en son öncelikli çeldirici atılır. Herhangi üç seçenek eşit
   // aralıklı bir üçlü kurarsa (k, k + s, k + 2s gibi; anahtar uçta ya da
-  // dışarıda kalır) üçlüdeki komşu atılır; [ucluHata] verilmişse komşu yoksa
-  // üçlünün en son öncelikli tipik hatası da atılır (m·(v₁ − v₂), m·v₁,
+  // dışarıda kalır) üçlüdeki komşu atılır; komşu yoksa ([ucluHata] kapalı
+  // değilse) üçlünün en son öncelikli tipik hatası atılır (m·(v₁ − v₂), m·v₁,
   // m·(v₁ + v₂) gibi). Başka bir çeldiriciye çok yakın düşen (%2'den az) komşu
   // da atılır.
   var secilen = sec();
@@ -467,7 +471,6 @@ final _f03 = lmAile(
       '${tr(x)} m bulunur.',
       _hs(a, b, c),
       unit: 'm',
-      ucluHata: true,
     );
   },
   exam: _ayt,
@@ -721,7 +724,6 @@ final _f06 = lmAile(
         '$y m bulunur.',
         _hs(a, b, c),
         unit: 'm',
-        ucluHata: true,
       );
     }
     if (c % 3 == 1) {
@@ -1015,6 +1017,7 @@ final _f08 = lmAile(
         'K cismini çektiğinden gerilme kuvveti $m1 · $ivme = $ip N bulunur.',
         _hs(a, b, c),
         unit: 'N',
+        komsuUst: kuvvet,
       );
     }
     return _sd(
@@ -1035,6 +1038,7 @@ final _f08 = lmAile(
       '$kuvvet N.',
       _hs(a, b, c),
       unit: 'N',
+      komsuAlt: ip,
     );
   },
   exam: _ayt,
@@ -1347,6 +1351,7 @@ final _f11 = lmAile(
       '$pe − $ke = ${pe - ke} J bulunur.',
       _hs(a, b, c),
       unit: 'J',
+      komsuUst: pe,
     );
   },
   exam: _tyt,
@@ -1462,7 +1467,6 @@ final _f13 = lmAile(
         'F = ${tr(dp)} / ${tr(sure)} = $kuvvet N bulunur.',
         _hs(a, b, c),
         unit: 'N',
-        ucluHata: true,
       );
     }
     final m1 = 2 * (a + 1); // 2 … 50 kg
@@ -1609,7 +1613,6 @@ final _f14 = lmAile(
       '${tr(t1)} − ${tr(t2)} = ${tr(t1 - t2)} N·m olur.',
       _hs(a, b, c),
       unit: 'N·m',
-      ucluHata: true,
     );
   },
   exam: _ayt,
@@ -1651,7 +1654,6 @@ final _f15 = lmAile(
         '$n = $kuvvet N olur.',
         _hs(a, b, c),
         unit: 'N',
-        ucluHata: true,
       );
     }
     if (c % 3 == 1) {
@@ -1935,6 +1937,7 @@ final _f18 = lmAile(
         'İp gerilmesi ${tr(agirlik)} − ${tr(fk)} = ${tr(agirlik - fk)} N olur.',
         _hs(a, b, c),
         unit: 'N',
+        komsuUst: agirlik,
       );
     }
     if (c % 3 == 1) {
@@ -2067,6 +2070,7 @@ final _f19 = lmAile(
         adim: 1,
         komsuAlt: t1,
         komsuUst: t2,
+        ucluHata: false,
       );
     }
     final m = 50 * (a + 1); // 50 … 1250 g

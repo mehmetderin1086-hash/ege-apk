@@ -532,10 +532,10 @@ String _heronOlcekli(int x0, int y0, int z0, int a0, int t, String birim) {
 (num, String) _kokAday(int c, int m, String birim) =>
     (c * math.sqrt(m), birimli(_kok(c, m), birim));
 
-/// Anahtarın iki yanındaki komşu değerler (son çare): tam sayı yanıtta
-/// büyüklüğe göre 1, 5 ya da 10 adım, köklü yanıtta katsayıda bir adım.
+/// Anahtarın iki yanındaki komşu değerler (son çare): tam sayı yanıtta ya da
+/// köklü yanıtın katsayısında büyüklüğe göre 1, 5 ya da 10 adım.
 List<(num, String)> _komsuAday(int c, int m, String birim) {
-  final adim = m > 1 || c < 40 ? 1 : (c < 200 ? 5 : 10);
+  final adim = c < 40 ? 1 : (c < 200 ? 5 : 10);
   return [
     for (var e = 1; e <= 4; e++) ...[
       _kokAday(c + e * adim, m, birim),

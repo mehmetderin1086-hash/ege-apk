@@ -34,7 +34,9 @@ List<String> _tipikSirali(
 ) {
   final ayri = <String>[];
   for (final (_, y) in tipik) {
-    if (!ayniSecenek(y, yazim) && !ayri.any((w) => ayniSecenek(w, y))) ayri.add(y);
+    if (!ayniSecenek(y, yazim) && !ayri.any((w) => ayniSecenek(w, y))) {
+      ayri.add(y);
+    }
   }
   return siraliCeldiriciler(anahtar, yazim, [
     ...tipik,
@@ -64,12 +66,17 @@ AdvancedItem _sayisalTipik(
   return AdvancedItem(
     prompt,
     yazim,
-    _tipikSirali(answer, yazim, [
-      for (final x in alternatives)
-        if (x > 0) aday(x),
-    ], komsu ? komsular(1) : const [], [
-      for (var k = 1; k <= 6; k++) ...komsular(k),
-    ], sira),
+    _tipikSirali(
+      answer,
+      yazim,
+      [
+        for (final x in alternatives)
+          if (x > 0) aday(x),
+      ],
+      komsu ? komsular(1) : const [],
+      [for (var k = 1; k <= 6; k++) ...komsular(k)],
+      sira,
+    ),
     explanation,
   );
 }
@@ -90,7 +97,8 @@ AdvancedItem _ondalikliTipik(
   bool komsu = false,
 }) {
   final step = answer.abs() >= 20 ? 1.0 : (answer.abs() >= 2 ? 0.5 : 0.1);
-  double yuvarla(double x) => double.parse(tr(x, digits).replaceFirst(',', '.'));
+  double yuvarla(double x) =>
+      double.parse(tr(x, digits).replaceFirst(',', '.'));
   var olcek = 1.0;
   for (var k = 0; k < digits; k++) {
     olcek *= 10;
@@ -105,12 +113,17 @@ AdvancedItem _ondalikliTipik(
   return AdvancedItem(
     prompt,
     yazim,
-    _tipikSirali(yuvarla(answer), yazim, [
-      for (final x in alternatives)
-        if (x.isFinite && yuvarla(x) > 0 && tam(x)) aday(x),
-    ], komsu ? komsular(1) : const [], [
-      for (var k = 1; k <= 6; k++) ...komsular(k),
-    ], sira),
+    _tipikSirali(
+      yuvarla(answer),
+      yazim,
+      [
+        for (final x in alternatives)
+          if (x.isFinite && yuvarla(x) > 0 && tam(x)) aday(x),
+      ],
+      komsu ? komsular(1) : const [],
+      [for (var k = 1; k <= 6; k++) ...komsular(k)],
+      sira,
+    ),
     explanation,
   );
 }
@@ -154,7 +167,9 @@ AdvancedItem _yerelSaat(int a, int b, int c) {
     final lonV = kVerilir ? lonK : lonL, lonS = kVerilir ? lonL : lonK;
     final ayni = (lonK > 0) == (lonL > 0);
     final fark = (lonS - lonV).abs();
-    final diger = ayni ? lonK.abs() + lonL.abs() : (lonK.abs() - lonL.abs()).abs();
+    final diger = ayni
+        ? lonK.abs() + lonL.abs()
+        : (lonK.abs() - lonL.abs()).abs();
     final yon = lonS > lonV ? 1 : -1;
     final dogru = t + yon * 4 * fark;
     // Tipik hatalar anahtarın iki yanından seçilir; anahtarın saat sırasındaki
@@ -179,18 +194,18 @@ AdvancedItem _yerelSaat(int a, int b, int c) {
     final farkYazi = ayni
         ? 'Merkezler aynı yarım kürede olduğundan boylam farkı $buyuk − $kucuk = $fark° olur'
         : 'Merkezler başlangıç meridyeninin farklı yanlarında olduğundan boylam farkı '
-            '${lonK.abs()} + ${lonL.abs()} = $fark° olur';
+              '${lonK.abs()} + ${lonL.abs()} = $fark° olur';
     return AdvancedItem(
       'K merkezi ${_boylam(lonK)}, L merkezi ${_boylam(lonL)} boylamı üzerindedir. '
-      'Bir boylam derecesi 4 dakikalık yerel saat farkı oluşturmaktadır. '
-      '$verilen merkezinde yerel saat ${_saat(t)} iken $sorulan merkezinde yerel saat kaçtır?',
+          'Bir boylam derecesi 4 dakikalık yerel saat farkı oluşturmaktadır. '
+          '$verilen merkezinde yerel saat ${_saat(t)} iken $sorulan merkezinde yerel saat kaçtır?',
       _saat(dogru),
       siraliCeldiriciler(dogru, _saat(dogru), [
         for (final x in adaylar) (x, _saat(x)),
       ], sira),
       '$farkYazi; zaman farkı $fark × 4 = ${4 * fark} dakikadır (${_sure(4 * fark)}). '
-      '$sorulan merkezi daha ${yon > 0 ? 'doğuda' : 'batıda'} olduğundan yerel saati '
-      '${yon > 0 ? 'ileridir' : 'geridir'}: ${_saat(t)} ${yon > 0 ? '+' : '−'} ${_sure(4 * fark)} = ${_saat(dogru)}.',
+          '$sorulan merkezi daha ${yon > 0 ? 'doğuda' : 'batıda'} olduğundan yerel saati '
+          '${yon > 0 ? 'ileridir' : 'geridir'}: ${_saat(t)} ${yon > 0 ? '+' : '−'} ${_sure(4 * fark)} = ${_saat(dogru)}.',
     );
   }
   // Zaman farkı (dakika).
@@ -203,7 +218,9 @@ AdvancedItem _yerelSaat(int a, int b, int c) {
   };
   final ayni = (lonK > 0) == (lonL > 0);
   final fark = (lonK - lonL).abs();
-  final diger = ayni ? lonK.abs() + lonL.abs() : (lonK.abs() - lonL.abs()).abs();
+  final diger = ayni
+      ? lonK.abs() + lonL.abs()
+      : (lonK.abs() - lonL.abs()).abs();
   final buyuk = lonK.abs() > lonL.abs() ? lonK.abs() : lonL.abs();
   final kucuk = lonK.abs() > lonL.abs() ? lonL.abs() : lonK.abs();
   return _sayisalTipik(
@@ -226,9 +243,9 @@ AdvancedItem _yerelSaat(int a, int b, int c) {
     ],
     ayni
         ? 'İki merkez aynı yarım kürede olduğundan boylam farkı $buyuk − $kucuk = $fark° olur. '
-            'Yerel saat farkı $fark × 4 = ${4 * fark} dakikadır.'
+              'Yerel saat farkı $fark × 4 = ${4 * fark} dakikadır.'
         : 'İki merkez başlangıç meridyeninin farklı yanlarında olduğundan boylam farkı '
-            '${lonK.abs()} + ${lonL.abs()} = $fark° olur. Yerel saat farkı $fark × 4 = ${4 * fark} dakikadır.',
+              '${lonK.abs()} + ${lonL.abs()} = $fark° olur. Yerel saat farkı $fark × 4 = ${4 * fark} dakikadır.',
     sira,
     unit: 'dakika',
   );
@@ -263,10 +280,14 @@ AdvancedItem _boylamBul(int a, int b, int c) {
   final kucukIste = hedefSira(_vaka(a, b, c)) != 0;
   final m = tipik.isEmpty
       ? [dogru + 10, dogru + 15, dogru - 10].firstWhere(gecerli)
-      : tipik.firstWhere((x) => (x < dogru) == kucukIste, orElse: () => tipik.first);
+      : tipik.firstWhere(
+          (x) => (x < dogru) == kucukIste,
+          orElse: () => tipik.first,
+        );
   final String yer;
   if ((lonL > 0) != (lonK > 0)) {
-    yer = 'K merkezinden $d° ${ileri ? 'doğuya' : 'batıya'} gidilirken başlangıç meridyeni '
+    yer =
+        'K merkezinden $d° ${ileri ? 'doğuya' : 'batıya'} gidilirken başlangıç meridyeni '
         'geçilir: $d − ${lonK.abs()} = ${lonL.abs()}';
   } else if (lonL.abs() > lonK.abs()) {
     yer = '${lonK.abs()} + $d = ${lonL.abs()}';
@@ -276,13 +297,13 @@ AdvancedItem _boylamBul(int a, int b, int c) {
   final once = ileri ? tK : tL, sonra = ileri ? tL : tK;
   return secenekli(
     'K merkezi ${ad(lonK)} üzerindedir. K merkezinde yerel saat ${_saat(tK)} iken aynı anda '
-    'L merkezinde yerel saat ${_saat(tL)} olarak belirlenmiştir. Her boylam derecesi '
-    '4 dakikalık yerel saat farkı oluşturduğuna göre L merkezi hangi boylam üzerindedir?',
+        'L merkezinde yerel saat ${_saat(tL)} olarak belirlenmiştir. Her boylam derecesi '
+        '4 dakikalık yerel saat farkı oluşturduğuna göre L merkezi hangi boylam üzerindedir?',
     ad(lonL),
     [ad(-lonL), ad(m), ad(-m)],
     'Yerel saat farkı ${_saat(sonra)} − ${_saat(once)} = ${4 * d} dakikadır; ${4 * d} / 4 = $d° '
-    'boylam farkı eder. L merkezinin yerel saati ${ileri ? 'ileri' : 'geri'} olduğundan L, '
-    'K merkezinin ${ileri ? 'doğusundadır' : 'batısındadır'}. $yer; yanıt ${ad(lonL)} olur.',
+        'boylam farkı eder. L merkezinin yerel saati ${ileri ? 'ileri' : 'geri'} olduğundan L, '
+        'K merkezinin ${ileri ? 'doğusundadır' : 'batısındadır'}. $yer; yanıt ${ad(lonL)} olur.',
   );
 }
 
@@ -306,7 +327,7 @@ AdvancedItem _olcekUzunluk(int a, int b, int c) {
     final ters = cm10 / 10 / s;
     return _ondalikliTipik(
       '1/$payda ölçekli bir haritada $baglam ${tr(cm10 / 10)} cm olarak ölçülmüştür. '
-      'Bu uzaklık gerçekte kaç kilometredir?',
+          'Bu uzaklık gerçekte kaç kilometredir?',
       km,
       // Tipik hatalar anahtarın iki yanında: çarpmak yerine bölme, km'ye çevirirken
       // bir ya da iki basamak kaydırma (×10, ÷10, ×100, ÷100) ve bölme hatasının
@@ -324,7 +345,7 @@ AdvancedItem _olcekUzunluk(int a, int b, int c) {
         km * s,
       ],
       'Haritadaki 1 cm gerçekte $payda cm, yani ${tr(s)} km eder. '
-      '${tr(cm10 / 10)} × ${tr(s)} = ${tr(km)} km bulunur.',
+          '${tr(cm10 / 10)} × ${tr(s)} = ${tr(km)} km bulunur.',
       sira,
       komsu: true,
       unit: 'km',
@@ -336,7 +357,7 @@ AdvancedItem _olcekUzunluk(int a, int b, int c) {
   final cm = cm10 / 10;
   return _ondalikliTipik(
     'Gerçekte ${tr(km)} km olan $baglam, 1/$payda ölçekli bir haritada kaç santimetre '
-    'ile gösterilir?',
+        'ile gösterilir?',
     cm,
     // Tipik hatalar: bölmek yerine çarpma, cm'ye çevirirken basamak kaydırma,
     // orantıyı ters kurma (ölçek değerini uzunluğa bölme), çarpma hatasının basamak
@@ -353,7 +374,7 @@ AdvancedItem _olcekUzunluk(int a, int b, int c) {
       cm / s,
     ],
     'Bu ölçekte haritadaki 1 cm gerçekte $payda cm, yani ${tr(s)} km eder. '
-    '${tr(km)} / ${tr(s)} = ${tr(cm)} cm bulunur.',
+        '${tr(km)} / ${tr(s)} = ${tr(cm)} cm bulunur.',
     sira,
     komsu: true,
     unit: 'cm',
@@ -391,13 +412,13 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
     final adaylar = [payda * 10, payda ~/ 10, payda * 100, payda ~/ 100];
     return AdvancedItem(
       'Gerçekte ${tr(km)} km uzunluğundaki ${sec(_hatBaglam, a + b + q)}, bir haritada '
-      '${tr(cm10 / 10)} cm uzunluğunda gösterilmiştir. Bu haritanın ölçeği nedir?',
+          '${tr(cm10 / 10)} cm uzunluğunda gösterilmiştir. Bu haritanın ölçeği nedir?',
       '1/$payda',
       siraliCeldiriciler(1 / payda, '1/$payda', [
         for (final x in adaylar) (1 / x, '1/$x'),
       ], hedefSira(i)),
       '${tr(km)} km = $gercekCm cm eder. Ölçek = harita uzunluğu / gerçek uzunluk = '
-      '${tr(cm10 / 10)} / $gercekCm = 1/$payda.',
+          '${tr(cm10 / 10)} / $gercekCm = 1/$payda.',
     );
   }
   final yer = sec(_alanBaglam, a + b + q);
@@ -407,7 +428,7 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
     final unut = harita * s; // ölçeğin karesini almayı unutma
     return _ondalikliTipik(
       '1/$payda ölçekli bir haritada $harita cm² yer kaplayan ${yer.$1} gerçek alanı '
-      'kaç kilometrekaredir?',
+          'kaç kilometrekaredir?',
       gercek,
       // Tipik hatalar: kareyi almayı unutma, kare yerine 2 ile çarpma, birim
       // çevirmede basamak kaydırma (uzunlukta bir basamak alanda ×100 / ÷100 eder)
@@ -425,7 +446,7 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
         unut * 100,
       ],
       'Haritadaki 1 cm gerçekte ${tr(s)} km olduğundan 1 cm² gerçekte ${tr(s)} × ${tr(s)} = '
-      '${tr(s * s)} km² eder. $harita × ${tr(s * s)} = ${tr(gercek)} km² bulunur.',
+          '${tr(s * s)} km² eder. $harita × ${tr(s * s)} = ${tr(gercek)} km² bulunur.',
       _ucaYakinSira(i),
       komsu: true,
       unit: 'km²',
@@ -439,7 +460,8 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
   // çevirmede basamak kaydırma ve kareyi unutmanın basamak kaymalı biçimleri.
   // Tam sayı anahtarın rakamlarını ondalık kısmında taşıyan kaydırmalar ("23" için
   // "0,23") sona alınır; yoksa sözcük benzerliği anahtarı öne çıkarır.
-  bool paylasir(double x) => tr(x, 3).split(RegExp('[^0-9]+')).contains('$harita');
+  bool paylasir(double x) =>
+      tr(x, 3).split(RegExp('[^0-9]+')).contains('$harita');
   final adaylar = [
     unut,
     harita * 10.0,
@@ -452,11 +474,11 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
   ];
   return _ondalikliTipik(
     'Gerçek alanı ${tr(gercek)} km² olan ${yer.$2}, 1/$payda ölçekli bir haritada kaç '
-    'santimetrekarelik yer kaplar?',
+        'santimetrekarelik yer kaplar?',
     harita.toDouble(),
     [...adaylar.where((x) => !paylasir(x)), ...adaylar.where(paylasir)],
     'Haritadaki 1 cm gerçekte ${tr(s)} km olduğundan 1 cm² gerçekte ${tr(s * s)} km² eder. '
-    '${tr(gercek)} / ${tr(s * s)} = $harita cm² bulunur.',
+        '${tr(gercek)} / ${tr(s * s)} = $harita cm² bulunur.',
     _ucaYakinSira(i),
     komsu: true,
     unit: 'cm²',
@@ -497,7 +519,7 @@ AdvancedItem _egim(int a, int b, int c) {
     final uzaklik = k.isOdd ? '${tr(yatay / 1000)} km' : '$yatay m';
     return AdvancedItem(
       'Yükseltisi $h1 m olan ${yer.$1} ile yükseltisi $h2 m olan ${yer.$2} arasındaki yatay '
-      'uzaklık $uzaklik olarak ölçülmüştür. Bu iki yer arasındaki ortalama eğim yüzde (%) kaçtır?',
+          'uzaklık $uzaklik olarak ölçülmüştür. Bu iki yer arasındaki ortalama eğim yüzde (%) kaçtır?',
       '%$p',
       // Tipik hatalar: 100 yerine 1000 ile çarpma, 100 ile çarpmayı unutma, oranı ters
       // kurma (yatay uzaklık / yükselti farkı), yükselti farkı yerine yerlerden birinin
@@ -513,8 +535,8 @@ AdvancedItem _egim(int a, int b, int c) {
         (p / 10, 1),
       ], sira),
       'Yükselti farkı $h2 − $h1 = $fark m, yatay uzaklık '
-      '${k.isOdd ? '$uzaklik = $yatay m' : '$yatay m'} olduğundan '
-      'eğim = $fark / $yatay × 100 = %$p olur.',
+          '${k.isOdd ? '$uzaklik = $yatay m' : '$yatay m'} olduğundan '
+          'eğim = $fark / $yatay × 100 = %$p olur.',
     );
   }
   final q = 5 + 3 * a; // ‰5 … ‰77
@@ -522,13 +544,16 @@ AdvancedItem _egim(int a, int b, int c) {
   final fark = q * km;
   final h1 = const [40, 150, 260, 380, 520][k], h2 = h1 + fark;
   final giris = switch ((a + b) % 3) {
-    0 => 'Bir akarsu $h2 m yükseltideki kaynağından doğup $h1 m yükseltideki bir göle '
-        'dökülmektedir. Akarsuyun kaynağı ile döküldüğü yer arasındaki yatay uzaklık $km km '
-        'olduğuna göre akarsu yatağının',
-    1 => 'Bir yol $h1 m yükseltideki bir kasabadan başlayıp $h2 m yükseltideki bir köye '
-        'ulaşmaktadır. Kasaba ile köy arasındaki yatay uzaklık $km km olduğuna göre yolun',
-    _ => 'Bir su iletim hattı $h2 m yükseltideki bir kaynaktan $h1 m yükseltideki bir depoya '
-        'inmektedir. Kaynak ile depo arasındaki yatay uzaklık $km km olduğuna göre hattın',
+    0 =>
+      'Bir akarsu $h2 m yükseltideki kaynağından doğup $h1 m yükseltideki bir göle '
+          'dökülmektedir. Akarsuyun kaynağı ile döküldüğü yer arasındaki yatay uzaklık $km km '
+          'olduğuna göre akarsu yatağının',
+    1 =>
+      'Bir yol $h1 m yükseltideki bir kasabadan başlayıp $h2 m yükseltideki bir köye '
+          'ulaşmaktadır. Kasaba ile köy arasındaki yatay uzaklık $km km olduğuna göre yolun',
+    _ =>
+      'Bir su iletim hattı $h2 m yükseltideki bir kaynaktan $h1 m yükseltideki bir depoya '
+          'inmektedir. Kaynak ile depo arasındaki yatay uzaklık $km km olduğuna göre hattın',
   };
   return AdvancedItem(
     '$giris ortalama eğimi binde (‰) kaçtır?',
@@ -548,7 +573,7 @@ AdvancedItem _egim(int a, int b, int c) {
       (q / 100, 2),
     ], sira),
     'Yükselti farkı $h2 − $h1 = $fark m, yatay uzaklık $km km = ${km * 1000} m olduğundan '
-    'eğim = $fark / ${km * 1000} × 1000 = ‰$q olur.',
+        'eğim = $fark / ${km * 1000} × 1000 = ‰$q olur.',
   );
 }
 
@@ -574,16 +599,27 @@ AdvancedItem _sicaklik(int a, int b, int c) {
   final i = _vaka(a, b, c);
   // Çeldiriciler anahtarın iki yanındaki tipik hatalardan, anahtarın değer sırası
   // [sira] olacak biçimde seçilir; tipik hata yetmezse 1–2 °C komşu değer gelir.
-  AdvancedItem soru(String kok, int dogru, List<int> yanlis, String aciklama, int sira) =>
-      AdvancedItem(
-        kok,
-        yaz(dogru),
-        siraliCeldiriciler(dogru, yaz(dogru), [
-          for (final x in [...yanlis, dogru + 10, dogru - 10, dogru + 20, dogru - 20])
-            (x, yaz(x)),
-        ], sira),
-        aciklama,
-      );
+  AdvancedItem soru(
+    String kok,
+    int dogru,
+    List<int> yanlis,
+    String aciklama,
+    int sira,
+  ) => AdvancedItem(
+    kok,
+    yaz(dogru),
+    siraliCeldiriciler(dogru, yaz(dogru), [
+      for (final x in [
+        ...yanlis,
+        dogru + 10,
+        dogru - 10,
+        dogru + 20,
+        dogru - 20,
+      ])
+        (x, yaz(x)),
+    ], sira),
+    aciklama,
+  );
   // Tipik hatalar: ters yönde işlem, 100 m'de 1 °C sanma, 400 m'de 1 °C sanma
   // (400 m kuralı yalnız sonuç onda bire tam bölündüğünde) ve bunların ters
   // yönlü biçimleri. Çağıran yer bunlara sıcaklık değişimini sıcaklık sanmayı (d)
@@ -602,11 +638,11 @@ AdvancedItem _sicaklik(int a, int b, int c) {
     final d = fark(h), t = deniz - d;
     return soru(
       'Deniz seviyesinde sıcaklığın ${yaz(deniz)} ölçüldüğü bir anda, aynı bölgede $h m '
-      'yükseltideki ${sec(_yuksekYer, a + b)} sıcaklığın kaç °C olması beklenir? $kural',
+          'yükseltideki ${sec(_yuksekYer, a + b)} sıcaklığın kaç °C olması beklenir? $kural',
       t,
       [...hatalar(deniz, d, -1, h % 200 == 0), d],
       'Yükselti farkı $h m olduğundan sıcaklık $h / 200 = ${say(d)} °C azalır: '
-      '${say(deniz)} − ${say(d)} = ${yaz(t)}.',
+          '${say(deniz)} − ${say(d)} = ${yaz(t)}.',
       hedefSira(i),
     );
   }
@@ -619,11 +655,11 @@ AdvancedItem _sicaklik(int a, int b, int c) {
     final s0 = hedefSira(i);
     return soru(
       'Yükseltisi $h m olan bir meteoroloji istasyonunda sıcaklık ${yaz(t)} olarak '
-      'ölçülmüştür. $kural Buna göre istasyonun deniz seviyesine indirgenmiş sıcaklığı kaç °C olur?',
+          'ölçülmüştür. $kural Buna göre istasyonun deniz seviyesine indirgenmiş sıcaklığı kaç °C olur?',
       deniz,
       [...hatalar(t, d, 1, h % 200 == 0), d],
       'İndirgemede yükseltinin etkisi kaldırılır: $h / 200 = ${say(d)} °C eklenir. '
-      '${say(t)} + ${say(d)} = ${yaz(deniz)}.',
+          '${say(t)} + ${say(d)} = ${yaz(deniz)}.',
       s0 == 0 ? 2 + hedefSira(i, 5) % 2 : s0,
     );
   }
@@ -636,13 +672,13 @@ AdvancedItem _sicaklik(int a, int b, int c) {
     final tAlt = tUst + d;
     return soru(
       'Bir dağın yamacında $ust m yükseltideki yaylada sıcaklık ${yaz(tUst)} iken aynı anda '
-      '$alt m yükseltideki köyde sıcaklığın kaç °C olması beklenir? $kural',
+          '$alt m yükseltideki köyde sıcaklığın kaç °C olması beklenir? $kural',
       tAlt,
       // Yükselti farkı yerine yaylanın yükseltisini kullanma da tipik bir hatadır.
       [...hatalar(tUst, d, 1, m % 200 == 0), tUst + fark(ust), d],
       'Yükselti farkı $ust − $alt = $m m olduğundan sıcaklık farkı '
-      '$m / 200 = ${say(d)} °C olur. Alçaktaki köy daha sıcaktır: '
-      '${say(tUst)} + ${say(d)} = ${yaz(tAlt)}.',
+          '$m / 200 = ${say(d)} °C olur. Alçaktaki köy daha sıcaktır: '
+          '${say(tUst)} + ${say(d)} = ${yaz(tAlt)}.',
       hedefSira(i),
     );
   }
@@ -650,12 +686,12 @@ AdvancedItem _sicaklik(int a, int b, int c) {
   final tUst = tAlt - d;
   return soru(
     'Bir dağın yamacında $alt m yükseltideki köyde sıcaklık ${yaz(tAlt)} iken aynı anda '
-    '$ust m yükseltideki yaylada sıcaklığın kaç °C olması beklenir? $kural',
+        '$ust m yükseltideki yaylada sıcaklığın kaç °C olması beklenir? $kural',
     tUst,
     [...hatalar(tAlt, d, -1, m % 200 == 0), tAlt - fark(ust), d],
     'Yükselti farkı $ust − $alt = $m m olduğundan sıcaklık farkı '
-    '$m / 200 = ${say(d)} °C olur. Yüksekteki yayla daha soğuktur: '
-    '${say(tAlt)} − ${say(d)} = ${yaz(tUst)}.',
+        '$m / 200 = ${say(d)} °C olur. Yüksekteki yayla daha soğuktur: '
+        '${say(tAlt)} − ${say(d)} = ${yaz(tUst)}.',
     hedefSira(i),
   );
 }
@@ -686,9 +722,9 @@ AdvancedItem _paralel(int a, int b, int c) {
       [diger * 111, (fark + 1) * 111, (fark - 1) * 111, fark * 100],
       ayni
           ? 'Merkezler aynı yarım kürede olduğundan enlem farkı $buyuk − $kucuk = $fark° olur. '
-              '$fark × 111 = ${fark * 111} km bulunur.'
+                '$fark × 111 = ${fark * 111} km bulunur.'
           : 'Merkezler Ekvator\'un farklı yanlarında olduğundan enlem farkı '
-              '${k.abs()} + ${l.abs()} = $fark° olur. $fark × 111 = ${fark * 111} km bulunur.',
+                '${k.abs()} + ${l.abs()} = $fark° olur. $fark × 111 = ${fark * 111} km bulunur.',
       unit: 'km',
       positive: true,
     );
@@ -706,11 +742,12 @@ AdvancedItem _paralel(int a, int b, int c) {
   final yari = l > 0 ? 'kuzey' : 'güney';
   final ek = gecer || c == 4
       ? '${l > 0 ? 'Kuzey' : 'Güney'} Yarım Küre\'de yer alan L merkezi kaç derece '
-          '$yari enlemindedir?'
+            '$yari enlemindedir?'
       : 'L merkezi kaç derece $yari enlemindedir?';
   final String yol;
   if (gecer) {
-    yol = '${yon > 0 ? 'Kuzeye' : 'Güneye'} doğru $d° gidilirken Ekvator geçilir: '
+    yol =
+        '${yon > 0 ? 'Kuzeye' : 'Güneye'} doğru $d° gidilirken Ekvator geçilir: '
         '$d − ${k.abs()} = ${l.abs()}';
   } else if (l.abs() > k.abs()) {
     yol = 'Ekvator\'dan uzaklaşıldığı için ${k.abs()} + $d = ${l.abs()}';
@@ -719,7 +756,9 @@ AdvancedItem _paralel(int a, int b, int c) {
   }
   final dogru = l.abs();
   final yanlis = [
-    gecer ? k.abs() + d : (l.abs() > k.abs() ? (k.abs() - d).abs() : k.abs() + d),
+    gecer
+        ? k.abs() + d
+        : (l.abs() > k.abs() ? (k.abs() - d).abs() : k.abs() + d),
     d,
     dogru + 2,
     dogru - 2,
@@ -728,7 +767,7 @@ AdvancedItem _paralel(int a, int b, int c) {
   ].where((x) => x > 0 && x <= 90);
   return secenekli(
     'K merkezi ${enlem(k)} paraleli üzerindedir. L merkezi, aynı meridyen üzerinde K merkezinin '
-    '${d * 111} km ${yon > 0 ? 'kuzeyindedir' : 'güneyindedir'}. $kural kabul edildiğinde $ek',
+        '${d * 111} km ${yon > 0 ? 'kuzeyindedir' : 'güneyindedir'}. $kural kabul edildiğinde $ek',
     '$dogru°',
     yanlis.map((x) => '$x°'),
     '${d * 111} / 111 = $d° enlem farkı eder. $yol; L merkezi ${enlem(l)} enlemindedir.',
@@ -745,8 +784,16 @@ const _yogunlukYer = [
 AdvancedItem _nufusYogunlugu(int a, int b, int c) {
   // (biçim, tarım alanı payı 1/m, tarımla geçinenlerin onda payı)
   final (bicim, m, r) = const [
-    (0, 2, 3), (1, 4, 4), (2, 5, 6), (0, 4, 6), (1, 5, 3),
-    (2, 2, 4), (0, 5, 4), (1, 2, 6), (2, 4, 3), (0, 2, 7),
+    (0, 2, 3),
+    (1, 4, 4),
+    (2, 5, 6),
+    (0, 4, 6),
+    (1, 5, 3),
+    (2, 2, 4),
+    (0, 5, 4),
+    (1, 2, 6),
+    (2, 4, 3),
+    (0, 2, 7),
   ][c];
   final alan = 200 + 100 * b; // km²
   final ar = 10 * (2 + a); // aritmetik yoğunluk
@@ -759,25 +806,25 @@ AdvancedItem _nufusYogunlugu(int a, int b, int c) {
   final yer = sec(_yogunlukYer, a + b);
   final (ad, dogru, yanlis, aciklama) = switch (bicim) {
     0 => (
-        'aritmetik',
-        ar,
-        [fiz, tar, karisik],
-        'Aritmetik nüfus yoğunluğu = toplam nüfus / yüz ölçümü = $nufus / $alan = $ar kişi/km².',
-      ),
+      'aritmetik',
+      ar,
+      [fiz, tar, karisik],
+      'Aritmetik nüfus yoğunluğu = toplam nüfus / yüz ölçümü = $nufus / $alan = $ar kişi/km².',
+    ),
     1 => (
-        'tarımsal',
-        tar,
-        [fiz, ar, karisik],
-        'Tarımsal nüfus yoğunluğu = tarımla geçinen nüfus / tarım alanı = '
-            '$tarimNufusu / $tarimAlani = $tar kişi/km².',
-      ),
+      'tarımsal',
+      tar,
+      [fiz, ar, karisik],
+      'Tarımsal nüfus yoğunluğu = tarımla geçinen nüfus / tarım alanı = '
+          '$tarimNufusu / $tarimAlani = $tar kişi/km².',
+    ),
     _ => (
-        'fizyolojik',
-        fiz,
-        [ar, tar, karisik],
-        'Fizyolojik nüfus yoğunluğu = toplam nüfus / tarım alanı = '
-            '$nufus / $tarimAlani = $fiz kişi/km².',
-      ),
+      'fizyolojik',
+      fiz,
+      [ar, tar, karisik],
+      'Fizyolojik nüfus yoğunluğu = toplam nüfus / tarım alanı = '
+          '$nufus / $tarimAlani = $fiz kişi/km².',
+    ),
   };
   return sayisal(
     'Yüz ölçümü $alan km² olan ${yer.$1} toplam nüfusu $nufus kişi, tarım alanı $tarimAlani km² '
@@ -801,8 +848,8 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
     final hiz = dogum - olum, artis = bin * hiz;
     return _sayisalTipik(
       'Yıl ortası nüfusu $nufus olan bir ilçede bir yıl içinde doğum oranı ‰$dogum, ölüm oranı '
-      '‰$olum olarak gerçekleşmiştir. Göçler dikkate alınmadığında bu ilçenin nüfusu bir yılda '
-      'doğal yolla kaç kişi artmıştır?',
+          '‰$olum olarak gerçekleşmiştir. Göçler dikkate alınmadığında bu ilçenin nüfusu bir yılda '
+          'doğal yolla kaç kişi artmıştır?',
       artis,
       // Tipik hatalar anahtarın iki yanında: ölümleri düşmeme, yalnız ölümleri
       // hesaplama, oranları toplama, artış hızını (‰) kişi sayısı sanma, binde yerine
@@ -819,7 +866,7 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
         bin * (hiz + 1),
       ],
       'Doğal nüfus artış hızı ‰$dogum − ‰$olum = ‰$hiz olur. '
-      '$nufus × $hiz / 1000 = ${bin * hiz} kişi.',
+          '$nufus × $hiz / 1000 = ${bin * hiz} kişi.',
       sira,
       unit: 'kişi',
     );
@@ -830,7 +877,7 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
     String binde(num x, [int d = 2]) => '‰${tr(x, d)}';
     return AdvancedItem(
       'Yıl ortası nüfusu $nufus olan bir ilçede bir yıl boyunca $dogum doğum ve $olum ölüm '
-      'kaydedilmiştir. Bu ilçenin doğal nüfus artış hızı binde (‰) kaçtır?',
+          'kaydedilmiştir. Bu ilçenin doğal nüfus artış hızı binde (‰) kaçtır?',
       '‰$hiz',
       // Bütün seçenekler kökün sorduğu binde (‰) ile yazılır. Tipik hatalar: ölümleri
       // düşmeme (doğum hızı), 1000 yerine 100 ile çarpma, ölüm hızını verme, doğum ile
@@ -850,7 +897,7 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
           (x, binde(x, d)),
       ], sira),
       'Doğal artış $dogum − $olum = ${dogum - olum} kişidir. '
-      '${dogum - olum} / $nufus × 1000 = ‰$hiz bulunur.',
+          '${dogum - olum} / $nufus × 1000 = ‰$hiz bulunur.',
     );
   }
   final dogum = 400 + 30 * b;
@@ -863,15 +910,15 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
     final toplam = son - nufus;
     return _sayisalTipik(
       'Yıl başında nüfusu $nufus olan bir ilçede yıl içinde $dogum doğum ve $olum ölüm '
-      'gerçekleşmiş, yıl sonunda nüfus $son olarak belirlenmiştir. Bu ilçenin yıl içindeki net '
-      'göçü (aldığı göç ile verdiği göç arasındaki fark) kaç kişidir?',
+          'gerçekleşmiş, yıl sonunda nüfus $son olarak belirlenmiştir. Bu ilçenin yıl içindeki net '
+          'göçü (aldığı göç ile verdiği göç arasındaki fark) kaç kişidir?',
       net,
       // Tipik hatalar: toplam artışı net göç sanma, doğal artışı çıkarmak yerine
       // ekleme, doğal artışı verme, doğal artış yerine yalnız doğumları ya da doğum
       // ile ölümün toplamını çıkarma.
       [toplam, toplam + dogal, dogal, toplam - dogum, toplam - dogum - olum],
       'Toplam artış $son − $nufus = ${son - nufus} kişi, doğal artış $dogum − $olum = $dogal '
-      'kişidir. Net göç ${son - nufus} − $dogal = $net kişi olur.',
+          'kişidir. Net göç ${son - nufus} − $dogal = $net kişi olur.',
       sira,
       komsu: true,
       unit: 'kişi',
@@ -898,7 +945,7 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
         nufus + dogal + gelen,
       ],
       'Doğal artış $dogum − $olum = $dogal, net göç $gelen − $giden = $net kişidir. '
-      '$nufus + $dogal + $net = $son kişi.',
+          '$nufus + $dogal + $net = $son kişi.',
       sira,
       unit: 'kişi',
     );
@@ -919,7 +966,7 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
       (dogal - net).abs(),
     ],
     'Doğal artış $dogum − $olum = $dogal, net göç $gelen − $giden = $net kişidir. '
-    'Toplam artış $dogal + $net = ${dogal + net} kişi.',
+        'Toplam artış $dogal + $net = ${dogal + net} kişi.',
     sira,
     unit: 'kişi',
   );
@@ -935,16 +982,22 @@ AdvancedItem _bagilNem(int a, int b, int c) {
     case 0:
       return secenekli(
         'Bir hava kütlesinin mutlak nemi ${tr(mutlak)} g/m³, bulunduğu sıcaklıkta taşıyabileceği '
-        'en fazla nem (maksimum nem) $maks g/m³ olarak ölçülmüştür. Bu havanın bağıl nemi '
-        'yüzde kaçtır?',
+            'en fazla nem (maksimum nem) $maks g/m³ olarak ölçülmüştür. Bu havanın bağıl nemi '
+            'yüzde kaçtır?',
         '%$r',
-        ['%${100 - r}', '%${tr(acik)}', '%${tr(mutlak)}', '%${r + 10}', '%${r + 5}'],
+        [
+          '%${100 - r}',
+          '%${tr(acik)}',
+          '%${tr(mutlak)}',
+          '%${r + 10}',
+          '%${r + 5}',
+        ],
         'Bağıl nem = mutlak nem / maksimum nem × 100 = ${tr(mutlak)} / $maks × 100 = %$r.',
       );
     case 1:
       return ondalikli(
         'Sıcaklığı sabit olan bir hava kütlesinin maksimum nemi $maks g/m³, bağıl nemi %$r '
-        'olarak ölçülmüştür. Bu havanın mutlak nemi kaç g/m³ olur?',
+            'olarak ölçülmüştür. Bu havanın mutlak nemi kaç g/m³ olur?',
         mutlak,
         [acik, mutlak * 10, mutlak / 10, maks + mutlak],
         'Mutlak nem = maksimum nem × bağıl nem / 100 = $maks × $r / 100 = ${tr(mutlak)} g/m³.',
@@ -954,7 +1007,7 @@ AdvancedItem _bagilNem(int a, int b, int c) {
     case 2:
       return ondalikli(
         'Mutlak nemi ${tr(mutlak)} g/m³ olan bir hava kütlesinin bağıl nemi %$r olarak '
-        'ölçülmüştür. Bu havanın maksimum nemi kaç g/m³ olur?',
+            'ölçülmüştür. Bu havanın maksimum nemi kaç g/m³ olur?',
         maks.toDouble(),
         [(mutlak * r).round() / 100, acik, maks / 10],
         'Maksimum nem = mutlak nem × 100 / bağıl nem = ${tr(mutlak)} × 100 / $r = $maks g/m³.',
@@ -963,11 +1016,11 @@ AdvancedItem _bagilNem(int a, int b, int c) {
     default:
       return ondalikli(
         'Maksimum nemi $maks g/m³ olan bir hava kütlesinin bağıl nemi %$r olarak ölçülmüştür. '
-        'Bu havanın doyma noktasına ulaşması için gereken nem miktarı (nem açığı) kaç g/m³ olur?',
+            'Bu havanın doyma noktasına ulaşması için gereken nem miktarı (nem açığı) kaç g/m³ olur?',
         acik,
         [mutlak, maks - r / 10, acik * 10, acik / 10],
         'Mutlak nem $maks × $r / 100 = ${tr(mutlak)} g/m³ olur. '
-        'Nem açığı = maksimum nem − mutlak nem = $maks − ${tr(mutlak)} = ${tr(acik)} g/m³.',
+            'Nem açığı = maksimum nem − mutlak nem = $maks − ${tr(mutlak)} = ${tr(acik)} g/m³.',
         digits: 3,
         positive: true,
       );
@@ -987,9 +1040,9 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
     final calisanPay = (calisan * 100 / (calisan + bagimli)).round();
     return AdvancedItem(
       'Bir ilçede 0–14 yaş grubunda $genc, 15–64 yaş grubunda $calisan, 65 ve üzeri yaş grubunda '
-      '$yasli kişi yaşamaktadır. Bağımlı nüfus oranı, 0–14 ile 65 ve üzeri yaş gruplarındaki '
-      'toplam nüfusun 15–64 yaş grubundaki nüfusa oranının 100 ile çarpılmasıyla bulunduğuna '
-      'göre bu ilçenin bağımlı nüfus oranı yüzde kaçtır?',
+          '$yasli kişi yaşamaktadır. Bağımlı nüfus oranı, 0–14 ile 65 ve üzeri yaş gruplarındaki '
+          'toplam nüfusun 15–64 yaş grubundaki nüfusa oranının 100 ile çarpılmasıyla bulunduğuna '
+          'göre bu ilçenin bağımlı nüfus oranı yüzde kaçtır?',
       '%$oran',
       // Tipik hatalar anahtarın iki yanında: bağımlı nüfusu toplam nüfusa oranlama,
       // oranı ters kurma (15–64 / bağımlı), yalnız 0–14 yaşı ya da yalnız 65 ve üzeri
@@ -1010,15 +1063,15 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
           (x, '%${tr(x)}'),
       ], sira),
       'Bağımlı nüfus $genc + $yasli = $bagimli kişidir. '
-      '$bagimli / $calisan × 100 = %$oran bulunur.',
+          '$bagimli / $calisan × 100 = %$oran bulunur.',
     );
   }
   final pay = const [55, 62, 68, 72, 78][k];
   final yasli = bagimli * (100 - pay) ~/ 100, genc = bagimli - yasli;
   return _sayisalTipik(
     'Bir ilçede 15–64 yaş grubundaki nüfus $calisan, 65 ve üzeri yaş grubundaki nüfus $yasli '
-    'kişidir. Bağımlı nüfus oranı (0–14 ile 65 ve üzeri yaş nüfusunun 15–64 yaş nüfusuna '
-    'oranının 100 katı) %$oran olduğuna göre bu ilçede 0–14 yaş grubunda kaç kişi yaşamaktadır?',
+        'kişidir. Bağımlı nüfus oranı (0–14 ile 65 ve üzeri yaş nüfusunun 15–64 yaş nüfusuna '
+        'oranının 100 katı) %$oran olduğuna göre bu ilçede 0–14 yaş grubunda kaç kişi yaşamaktadır?',
     genc,
     // Tipik hatalar: 65 ve üzeri nüfusu çıkarmama ya da ekleme, bağımlı nüfusu 15–64
     // yaş nüfusundan çıkarma (65 ve üzeri ile birlikte ya da değil); tipik hata
@@ -1034,7 +1087,7 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
       genc * 3 ~/ 4,
     ],
     'Bağımlı nüfus = $calisan × $oran / 100 = $bagimli kişidir. '
-    '0–14 yaş nüfusu = $bagimli − $yasli = $genc kişi.',
+        '0–14 yaş nüfusu = $bagimli − $yasli = $genc kişi.',
     sira,
     unit: 'kişi',
   );
@@ -1048,11 +1101,11 @@ AdvancedItem _disTicaret(int a, int b, int c) {
     final gsyh = (2 + b) * (3 + a + 25 * q); // milyar dolar
     return sayisal(
       'Nüfusu $nufus milyon olan bir ülkenin gayrisafi yurt içi hasılası $gsyh milyar dolardır. '
-      'Bu ülkede kişi başına düşen gelir kaç dolardır?',
+          'Bu ülkede kişi başına düşen gelir kaç dolardır?',
       kbg,
       [kbg * 10, kbg ~/ 10, kbg ~/ 100],
       '$gsyh milyar dolar = ${gsyh * 1000} milyon dolardır. Kişi başına gelir = '
-      '${gsyh * 1000} milyon dolar / $nufus milyon kişi = $kbg dolar.',
+          '${gsyh * 1000} milyon dolar / $nufus milyon kişi = $kbg dolar.',
       positive: true,
     );
   }
@@ -1062,7 +1115,7 @@ AdvancedItem _disTicaret(int a, int b, int c) {
   if (bicim == 0) {
     return secenekli(
       'Bir ülkenin yıllık ihracatı $ihracat milyon dolar, ithalatı $ithalat milyon dolardır. '
-      'Bu ülkede ihracatın ithalatı karşılama oranı yüzde kaçtır?',
+          'Bu ülkede ihracatın ithalatı karşılama oranı yüzde kaçtır?',
       '%$oran',
       [
         '%${100 - oran}',
@@ -1077,11 +1130,11 @@ AdvancedItem _disTicaret(int a, int b, int c) {
   final acik = ithalat - ihracat;
   return sayisal(
     'Yıllık ithalatı $ithalat milyon dolar olan bir ülkede ihracatın ithalatı karşılama oranı '
-    '%$oran olarak hesaplanmıştır. Bu ülkenin dış ticaret açığı kaç milyon dolardır?',
+        '%$oran olarak hesaplanmıştır. Bu ülkenin dış ticaret açığı kaç milyon dolardır?',
     acik,
     [ihracat, ithalat + ihracat, ithalat - oran],
     'İhracat = $ithalat × $oran / 100 = $ihracat milyon dolardır. '
-    'Dış ticaret açığı = ithalat − ihracat = $ithalat − $ihracat = $acik milyon dolar.',
+        'Dış ticaret açığı = ithalat − ihracat = $ithalat − $ihracat = $acik milyon dolar.',
     positive: true,
   );
 }
@@ -1089,14 +1142,14 @@ AdvancedItem _disTicaret(int a, int b, int c) {
 // ────────────────────────────── Tarih yardımcıları ──────────────────────────
 
 String _altkume(int maske) => switch (maske) {
-      1 => 'Yalnız I',
-      2 => 'Yalnız II',
-      4 => 'Yalnız III',
-      3 => 'I ve II',
-      5 => 'I ve III',
-      6 => 'II ve III',
-      _ => 'I, II ve III',
-    };
+  1 => 'Yalnız I',
+  2 => 'Yalnız II',
+  4 => 'Yalnız III',
+  3 => 'I ve II',
+  5 => 'I ve III',
+  6 => 'II ve III',
+  _ => 'I, II ve III',
+};
 
 /// Öncüllü soru: doğru yanıt [maske] ile verilen alt kümedir (bit 0 → I).
 AdvancedItem _oncullu(String kok, int maske, int i, String aciklama) {
@@ -1130,13 +1183,13 @@ AdvancedItem _ucluOlgu(
   final liste = _liste([for (final e in x) e.$1]);
   if (v.toSet().length == 3 && i % 4 != 3) {
     final kay = 1 + i ~/ 6 % 5;
-    final diger = [...ucluDizilimler.sublist(kay), ...ucluDizilimler.sublist(1, kay)];
-    return secenekli(
-      '$liste$eslestirme',
-      v.join(' – '),
-      [for (final p in diger) [for (final j in p) v[j]].join(' – ')],
-      aciklama(v),
-    );
+    final diger = [
+      ...ucluDizilimler.sublist(kay),
+      ...ucluDizilimler.sublist(1, kay),
+    ];
+    return secenekli('$liste$eslestirme', v.join(' – '), [
+      for (final p in diger) [for (final j in p) v[j]].join(' – '),
+    ], aciklama(v));
   }
   final sorulan = v[i ~/ 6 % 3];
   var maske = 0;
@@ -1173,27 +1226,36 @@ AdvancedItem _yuzyil(int i) {
   if (bicim == 3) {
     final mo = 110 + 37 * (k % 50), ms = 105 + 73 * (k ~/ 50);
     final olay = sec(_sureOlay, k);
-    final fark = (mo - ms).abs();
+    final t = mo + ms, fark = (mo - ms).abs(), sira = hedefSira(i);
+    // Çeldiriciler 2 × 2 düzenindedir: iki tipik hata (toplamak yerine çıkarma;
+    // yüzler ya da onlar basamağında elde hatası) ayrı ayrı ve birlikte verilir.
+    // Böylece çeldiricilerin hepsi anahtarın tek basamaklı sapması olmaz ve basamak
+    // benzerliği anahtarı göstermez. Anahtarın değer sırası [sira] ile belirlenir;
+    // kökteki yıllarla aynı olan değer atlanır.
+    final duzen = switch (sira) {
+      0 => [t + 100, t + 10, t + 110],
+      1 => [t + 100, t - 10, t + 90],
+      2 => [fark, t + 100, fark + 100],
+      _ =>
+        fark > 100 ? [fark, t - 100, fark - 100] : [t - 100, t - 10, t - 110],
+    };
     return _sayisalTipik(
       '${olay.$1} M.Ö. $mo yılında ${olay.$2}, M.S. $ms yılında ${olay.$3}. Milattan önceki bir '
-      'tarih ile milattan sonraki bir tarih arasındaki süre iki tarihin toplanmasıyla '
-      'bulunduğuna göre bu iki olay arasında kaç yıl vardır?',
-      mo + ms,
-      // Tipik hatalar anahtarın iki yanında: toplamak yerine çıkarma, toplamada yüzler
-      // basamağında elde hatası (çıkarma hatasıyla birlikte de), sıfır yılını sayma,
-      // onlar basamağında elde hatası. Kökteki yıllarla aynı olan değer atlanır.
+          'tarih ile milattan sonraki bir tarih arasındaki süre iki tarihin toplanmasıyla '
+          'bulunduğuna göre bu iki olay arasında kaç yıl vardır?',
+      t,
       [
+        ...duzen,
         fark,
-        mo + ms + 100,
+        t + 100,
         fark + 100,
-        mo + ms - 100,
-        mo + ms + 1,
-        mo + ms + 10,
-        mo + ms - 10,
+        t - 100,
+        t + 10,
+        t - 10,
       ].where((x) => x != mo && x != ms),
       'Tarihlerden biri milattan önce, diğeri milattan sonra olduğundan yıllar toplanır: '
-      '$mo + $ms = ${mo + ms} yıl.',
-      hedefSira(i),
+          '$mo + $ms = ${mo + ms} yıl.',
+      sira,
       unit: 'yıl',
     );
   }
@@ -1201,7 +1263,8 @@ AdvancedItem _yuzyil(int i) {
   final ceyrek = mo ? k.isOdd : bicim == 1;
   final kk = mo ? k ~/ 2 : k;
   final yuz = kk ~/ 64;
-  final kalan = _kalanlar[((kk % 64) * 29 + (mo ? 57 : (ceyrek ? 31 : 0))) % 92];
+  final kalan =
+      _kalanlar[((kk % 64) * 29 + (mo ? 57 : (ceyrek ? 31 : 0))) % 92];
   final yil = yuz * 100 + kalan;
   final n = yuz + 1;
   final parca = ceyrek ? 4 : 2, boy = 100 ~/ parca;
@@ -1218,22 +1281,29 @@ AdvancedItem _yuzyil(int i) {
   final komsu = yuz >= 1 && hedefSira(i, 11) < 2 ? n - 1 : n + 1;
   final yanlis = ceyrek
       ? [ad(n, 3 - konum), ad(komsu, konum), ad(komsu, 3 - konum)]
-      : [ad(n, 1 - konum), ad(komsu, konum), ad(komsu, 1 - konum), ad(n + 1, konum)];
+      : [
+          ad(n, 1 - konum),
+          ad(komsu, konum),
+          ad(komsu, 1 - konum),
+          ad(n + 1, konum),
+        ];
   final (bas, son) = mo
       ? (yuz * 100 + 100 - boy * konum, yuz * 100 + 101 - boy * (konum + 1))
       : (yuz * 100 + boy * konum + 1, yuz * 100 + boy * (konum + 1));
-  final aralik = mo ? '${yuz * 100 + 100}–${yuz * 100 + 1}' : '${yuz * 100 + 1}–${yuz * 100 + 100}';
+  final aralik = mo
+      ? '${yuz * 100 + 100}–${yuz * 100 + 1}'
+      : '${yuz * 100 + 1}–${yuz * 100 + 100}';
   final parcaAdi = ceyrek
       ? '${_ceyrekAdi[konum]} çeyreği'
       : '${konum == 0 ? 'ilk' : 'ikinci'} yarısı';
   return secenekli(
     '$on $yil yılında ${sec(_yuzyilOlay, kk + bicim)} hangi yüzyılın hangi '
-    '${ceyrek ? 'çeyreğine' : 'yarısına'} tarihlenir?',
+        '${ceyrek ? 'çeyreğine' : 'yarısına'} tarihlenir?',
     ad(n, konum),
     yanlis,
     '$on $yil yılı, $on $aralik yıllarını kapsayan $n. yüzyıldadır. '
-    '${mo ? 'Milattan önce yıllar geriye doğru sayılır. ' : ''}'
-    'Bu yüzyılın $parcaAdi $bas–$son yıllarıdır.',
+        '${mo ? 'Milattan önce yıllar geriye doğru sayılır. ' : ''}'
+        'Bu yüzyılın $parcaAdi $bas–$son yıllarıdır.',
   );
 }
 
@@ -1324,10 +1394,14 @@ AdvancedItem _kronolojiSoru(int i) {
   final hepsi = [for (final p in ucluDizilimler) yaz(p)];
   return secenekli(
     '${_liste([for (final e in x) e.$2])}'
-    'Bu gelişmelerin kronolojik olarak eskiden yeniye doğru sıralanışı hangi seçenekte '
-    'doğru verilmiştir?',
+        'Bu gelişmelerin kronolojik olarak eskiden yeniye doğru sıralanışı hangi seçenekte '
+        'doğru verilmiştir?',
     yaz(sira),
-    [yaz(sira.reversed.toList()), ...hepsi.sublist(kay), ...hepsi.sublist(0, kay)],
+    [
+      yaz(sira.reversed.toList()),
+      ...hepsi.sublist(kay),
+      ...hepsi.sublist(0, kay),
+    ],
     'Kronolojik sıra: ${sira.map((j) => '${x[j].$2} (${x[j].$1})').join(', ')}.',
   );
 }
@@ -1391,7 +1465,7 @@ AdvancedItem _antlasma(int i) {
       : '${a.$1} hem ${a.$2.first} hem de ${a.$2.last} arasında';
   return _oncullu(
     '${_liste([for (final a in x) a.$1])}'
-    'Bu antlaşmalardan hangileri $taraf arasında imzalanmıştır?',
+        'Bu antlaşmalardan hangileri $taraf arasında imzalanmıştır?',
     maske,
     i,
     '${x.map(ozet).join('; ')} imzalanmıştır.',
@@ -1481,14 +1555,16 @@ const _padisahOlgu = <(String, String)>[
 ];
 
 AdvancedItem _padisah(int i) => _ucluOlgu(
-      i,
-      _padisahOlgu,
-      eslestirme: 'Bu gelişmelerin yaşandığı dönemlerde Osmanlı tahtında bulunan hükümdarlar '
-          'sırasıyla hangi seçenekte doğru verilmiştir?',
-      oncul: (p) => 'Bu gelişmelerden hangileri $p döneminde yaşanmıştır?',
-      aciklama: (v) => 'Birinci gelişme ${v[0]}, ikinci gelişme ${v[1]}, üçüncü gelişme ${v[2]} '
-          'dönemindedir.',
-    );
+  i,
+  _padisahOlgu,
+  eslestirme:
+      'Bu gelişmelerin yaşandığı dönemlerde Osmanlı tahtında bulunan hükümdarlar '
+      'sırasıyla hangi seçenekte doğru verilmiştir?',
+  oncul: (p) => 'Bu gelişmelerden hangileri $p döneminde yaşanmıştır?',
+  aciklama: (v) =>
+      'Birinci gelişme ${v[0]}, ikinci gelişme ${v[1]}, üçüncü gelişme ${v[2]} '
+      'dönemindedir.',
+);
 
 // ─────────────────────────── 17 · İnkılaplar ────────────────────────────────
 
@@ -1515,11 +1591,19 @@ const _inkilaplar = <(String, int, String?)>[
   ("Teşvik-i Sanayi Kanunu'nun çıkarılması", 1927, 'ekonomi'),
   ('Cumhuriyet Dönemi\'nin ilk nüfus sayımının yapılması', 1927, null),
   ("Nutuk'un Mustafa Kemal tarafından okunması", 1927, null),
-  ('Anayasa\'dan "Devletin dini İslam\'dır." ifadesinin çıkarılması', 1928, null),
+  (
+    'Anayasa\'dan "Devletin dini İslam\'dır." ifadesinin çıkarılması',
+    1928,
+    null,
+  ),
   ('Yeni Türk harflerinin kabul edilmesi', 1928, 'eğitim'),
   ('Kadınlara belediye seçimlerine katılma hakkının verilmesi', 1930, null),
   ('Serbest Cumhuriyet Fırkasının kurulması', 1930, 'siyasi'),
-  ('Türk Tarihi Tetkik Cemiyetinin (Türk Tarih Kurumu) kurulması', 1931, 'eğitim'),
+  (
+    'Türk Tarihi Tetkik Cemiyetinin (Türk Tarih Kurumu) kurulması',
+    1931,
+    'eğitim',
+  ),
   ('Ölçü ve tartı birimlerinin değiştirilmesi', 1931, 'toplumsal'),
   ('Türk Dili Tetkik Cemiyetinin (Türk Dil Kurumu) kurulması', 1932, 'eğitim'),
   ('Kadınlara muhtarlık seçimlerine katılma hakkının verilmesi', 1933, null),
@@ -1560,7 +1644,7 @@ AdvancedItem _inkilap(int i) {
     }
     return _oncullu(
       '${liste}Türk inkılabı sürecindeki bu gelişmelerden hangileri ${_alanSorusu[alan]} '
-      'çalışmalar arasında yer alır?',
+          'çalışmalar arasında yer alır?',
       maske,
       i,
       '${x.map((e) => '${e.$1}: ${_alanAdi[e.$3]}').join('; ')}.',
@@ -1570,12 +1654,17 @@ AdvancedItem _inkilap(int i) {
   final aciklama = '${x.map((e) => '${e.$1}: ${e.$2}').join('; ')}.';
   if (yillar.toSet().length == 3 && i % 4 != 3) {
     final kay = 1 + i ~/ 6 % 5;
-    final diger = [...ucluDizilimler.sublist(kay), ...ucluDizilimler.sublist(1, kay)];
+    final diger = [
+      ...ucluDizilimler.sublist(kay),
+      ...ucluDizilimler.sublist(1, kay),
+    ];
     return secenekli(
       '${liste}Türk inkılabı sürecindeki bu gelişmelerin gerçekleştiği yıllar sırasıyla hangi '
       'seçenekte doğru verilmiştir?',
       yillar.join(' – '),
-      [for (final p in diger) [for (final j in p) yillar[j]].join(' – ')],
+      [
+        for (final p in diger) [for (final j in p) yillar[j]].join(' – '),
+      ],
       aciklama,
     );
   }
@@ -1602,14 +1691,20 @@ const _devletOlgu = <(String, String)>[
   ('Balamir tarafından kurulmuştur.', 'Avrupa Hun Devleti'),
   ('En parlak dönemini Attila zamanında yaşamıştır.', 'Avrupa Hun Devleti'),
   ('Bumin Kağan tarafından kurulmuştur.', 'I. Köktürk Devleti'),
-  ('Türk adını devlet adı olarak kullanan ilk devlettir.', 'I. Köktürk Devleti'),
+  (
+    'Türk adını devlet adı olarak kullanan ilk devlettir.',
+    'I. Köktürk Devleti',
+  ),
   (
     'İstemi Yabgu döneminde İpek Yolu için Sasani ve Bizans ile ilişki kurmuştur.',
     'I. Köktürk Devleti',
   ),
   ('İlteriş Kutluk Kağan tarafından kurulmuştur.', 'II. Köktürk Devleti'),
   ('Orhun Yazıtları bu devlet döneminde dikilmiştir.', 'II. Köktürk Devleti'),
-  ('Bilge Kağan, Kültigin ve Tonyukuk bu devletin yöneticileridir.', 'II. Köktürk Devleti'),
+  (
+    'Bilge Kağan, Kültigin ve Tonyukuk bu devletin yöneticileridir.',
+    'II. Köktürk Devleti',
+  ),
   ('Kutluk Bilge Kül Kağan tarafından kurulmuştur.', 'Uygur Devleti'),
   ("Başkenti Karabalgasun'dur (Ordubalık).", 'Uygur Devleti'),
   ("Bögü Kağan döneminde Maniheizm'i benimsemiştir.", 'Uygur Devleti'),
@@ -1619,21 +1714,36 @@ const _devletOlgu = <(String, String)>[
   ('Museviliği benimseyen Türk devletidir.', 'Hazarlar'),
   ("İstanbul'u kuşatan ilk Türk devletidir.", 'Avarlar'),
   ("Almış Han döneminde İslamiyet'i kabul etmiştir.", 'İtil Bulgarları'),
-  ("Satuk Buğra Han döneminde İslamiyet'i resmî din olarak benimsemiştir.", 'Karahanlılar'),
+  (
+    "Satuk Buğra Han döneminde İslamiyet'i resmî din olarak benimsemiştir.",
+    'Karahanlılar',
+  ),
   (
     "Kutadgu Bilig ve Divanü Lügati't-Türk bu devlet döneminde yazılmıştır.",
     'Karahanlılar',
   ),
   ('Alp Tigin tarafından kurulmuştur.', 'Gazneliler'),
-  ("Sultan Mahmut döneminde Hindistan'a on yedi sefer düzenlemiştir.", 'Gazneliler'),
-  ('Hükümdarı, sultan unvanını kullanan ilk Türk hükümdarı olmuştur.', 'Gazneliler'),
+  (
+    "Sultan Mahmut döneminde Hindistan'a on yedi sefer düzenlemiştir.",
+    'Gazneliler',
+  ),
+  (
+    'Hükümdarı, sultan unvanını kullanan ilk Türk hükümdarı olmuştur.',
+    'Gazneliler',
+  ),
   ("Dandanakan Savaşı'nı kaybetmiştir.", 'Gazneliler'),
   ('Tuğrul ve Çağrı Beyler tarafından kurulmuştur.', 'Büyük Selçuklu Devleti'),
   ("Pasinler Savaşı'nda Bizans'ı yenmiştir.", 'Büyük Selçuklu Devleti'),
   ("Malazgirt Savaşı'nı kazanmıştır.", 'Büyük Selçuklu Devleti'),
   ('Nizamiye Medreselerini açmıştır.', 'Büyük Selçuklu Devleti'),
-  ('Melikşah döneminde en geniş sınırlarına ulaşmıştır.', 'Büyük Selçuklu Devleti'),
-  ('Celali Takvimi bu devlet döneminde hazırlanmıştır.', 'Büyük Selçuklu Devleti'),
+  (
+    'Melikşah döneminde en geniş sınırlarına ulaşmıştır.',
+    'Büyük Selçuklu Devleti',
+  ),
+  (
+    'Celali Takvimi bu devlet döneminde hazırlanmıştır.',
+    'Büyük Selçuklu Devleti',
+  ),
   ("Katvan Savaşı'nda Karahıtaylara yenilmiştir.", 'Büyük Selçuklu Devleti'),
   ("Mısır'da kurulan ilk Türk-İslam devletidir.", 'Tolunoğulları'),
   ("Muhammed bin Tuğç tarafından Mısır'da kurulmuştur.", 'İhşidiler'),
@@ -1643,7 +1753,10 @@ const _devletOlgu = <(String, String)>[
   ("Yavuz Sultan Selim'in Mısır Seferi sonunda yıkılmıştır.", 'Memlükler'),
   ("Yassıçemen Savaşı'nı kaybetmiştir.", 'Harzemşahlar'),
   ("Son hükümdarı Celaleddin Harzemşah'tır.", 'Harzemşahlar'),
-  ('Kutalmışoğlu Süleyman Şah tarafından kurulmuştur.', 'Türkiye Selçuklu Devleti'),
+  (
+    'Kutalmışoğlu Süleyman Şah tarafından kurulmuştur.',
+    'Türkiye Selçuklu Devleti',
+  ),
   ("İlk başkenti İznik'tir.", 'Türkiye Selçuklu Devleti'),
   ("Miryokefalon Savaşı'nı kazanmıştır.", 'Türkiye Selçuklu Devleti'),
   ("Kösedağ Savaşı'nı kaybetmiştir.", 'Türkiye Selçuklu Devleti'),
@@ -1652,21 +1765,26 @@ const _devletOlgu = <(String, String)>[
     'Türkiye Selçuklu Devleti',
   ),
   ("Anadolu'da kurulan ilk Türk beyliğidir.", 'Saltuklular'),
-  ("Anadolu'nun ilk medresesi olan Yağıbasan Medresesi'ni yaptırmıştır.", 'Danişmentliler'),
+  (
+    "Anadolu'nun ilk medresesi olan Yağıbasan Medresesi'ni yaptırmıştır.",
+    'Danişmentliler',
+  ),
   ("Divriği Ulu Camii ve Darüşşifası'nı yaptırmıştır.", 'Mengücekliler'),
   ("Malabadi Köprüsü'nü yaptırmıştır.", 'Artuklular'),
   ("İzmir'de kurulmuş ve ilk Türk donanmasını oluşturmuştur.", 'Çaka Beyliği'),
 ];
 
 AdvancedItem _devlet(int i) => _ucluOlgu(
-      i,
-      _devletOlgu,
-      eslestirme: 'Bu bilgilerin ait olduğu devletler ya da beylikler sırasıyla hangi seçenekte '
-          'doğru verilmiştir?',
-      oncul: (dv) => 'Bu bilgilerden hangileri $dv için doğrudur?',
-      aciklama: (v) => 'Birinci bilgi ${v[0]}, ikinci bilgi ${v[1]}, üçüncü bilgi ${v[2]} '
-          'ile ilgilidir.',
-    );
+  i,
+  _devletOlgu,
+  eslestirme:
+      'Bu bilgilerin ait olduğu devletler ya da beylikler sırasıyla hangi seçenekte '
+      'doğru verilmiştir?',
+  oncul: (dv) => 'Bu bilgilerden hangileri $dv için doğrudur?',
+  aciklama: (v) =>
+      'Birinci bilgi ${v[0]}, ikinci bilgi ${v[1]}, üçüncü bilgi ${v[2]} '
+      'ile ilgilidir.',
+);
 
 // ─────────────────────────── 19 · Millî Mücadele ────────────────────────────
 
@@ -1681,7 +1799,10 @@ const _mucadeleOlgu = <(String, String)>[
         'işgal etme hakkı tanımıştır.',
     'Mondros Ateşkes Antlaşması',
   ),
-  ('İşgallere karşı protesto mitingleri düzenlenmesi istenmiştir.', 'Havza Genelgesi'),
+  (
+    'İşgallere karşı protesto mitingleri düzenlenmesi istenmiştir.',
+    'Havza Genelgesi',
+  ),
   (
     "Millî Mücadele'nin gerekçesi, amacı ve yöntemi ilk kez belirtilmiştir.",
     'Amasya Genelgesi',
@@ -1703,10 +1824,22 @@ const _mucadeleOlgu = <(String, String)>[
     'Millî cemiyetler Anadolu ve Rumeli Müdafaa-i Hukuk Cemiyeti adı altında birleştirilmiştir.',
     'Sivas Kongresi',
   ),
-  ('Temsil Heyetinin yetkisi bütün yurdu kapsayacak biçimde genişletilmiştir.', 'Sivas Kongresi'),
-  ('Ali Fuat Paşa, Batı Cephesi Kuvayımilliye Komutanlığına atanmıştır.', 'Sivas Kongresi'),
-  ('İrade-i Milliye gazetesinin çıkarılması kararlaştırılmıştır.', 'Sivas Kongresi'),
-  ('İstanbul Hükûmeti, Temsil Heyetini resmen tanımıştır.', 'Amasya Görüşmeleri'),
+  (
+    'Temsil Heyetinin yetkisi bütün yurdu kapsayacak biçimde genişletilmiştir.',
+    'Sivas Kongresi',
+  ),
+  (
+    'Ali Fuat Paşa, Batı Cephesi Kuvayımilliye Komutanlığına atanmıştır.',
+    'Sivas Kongresi',
+  ),
+  (
+    'İrade-i Milliye gazetesinin çıkarılması kararlaştırılmıştır.',
+    'Sivas Kongresi',
+  ),
+  (
+    'İstanbul Hükûmeti, Temsil Heyetini resmen tanımıştır.',
+    'Amasya Görüşmeleri',
+  ),
   (
     'Temsil Heyeti adına Mustafa Kemal, İstanbul Hükûmeti adına Salih Paşa görüşmüştür.',
     'Amasya Görüşmeleri',
@@ -1728,9 +1861,18 @@ const _mucadeleOlgu = <(String, String)>[
     'TBMM tarafından tanınmamış, imzalayanlar vatan haini ilan edilmiştir.',
     'Sevr Antlaşması',
   ),
-  ("TBMM Hükûmetinin imzaladığı ilk uluslararası antlaşmadır.", 'Gümrü Antlaşması'),
-  ("Ermenistan, Sevr Antlaşması'nı tanımadığını kabul etmiştir.", 'Gümrü Antlaşması'),
-  ("Düzenli ordunun Batı Cephesi'nde kazandığı ilk zaferdir.", 'Birinci İnönü Muharebesi'),
+  (
+    "TBMM Hükûmetinin imzaladığı ilk uluslararası antlaşmadır.",
+    'Gümrü Antlaşması',
+  ),
+  (
+    "Ermenistan, Sevr Antlaşması'nı tanımadığını kabul etmiştir.",
+    'Gümrü Antlaşması',
+  ),
+  (
+    "Düzenli ordunun Batı Cephesi'nde kazandığı ilk zaferdir.",
+    'Birinci İnönü Muharebesi',
+  ),
   (
     "Ardından İtilaf Devletleri, TBMM Hükûmetini Londra Konferansı'na çağırmıştır.",
     'Birinci İnönü Muharebesi',
@@ -1750,7 +1892,10 @@ const _mucadeleOlgu = <(String, String)>[
         'yendiniz." telgrafını çekmiştir.',
     'İkinci İnönü Muharebesi',
   ),
-  ("Türk ordusu Sakarya Irmağı'nın doğusuna çekilmiştir.", 'Kütahya-Eskişehir Muharebeleri'),
+  (
+    "Türk ordusu Sakarya Irmağı'nın doğusuna çekilmiştir.",
+    'Kütahya-Eskişehir Muharebeleri',
+  ),
   (
     "Ardından Mustafa Kemal'e Başkomutanlık yetkisi verilmiştir.",
     'Kütahya-Eskişehir Muharebeleri',
@@ -1769,10 +1914,19 @@ const _mucadeleOlgu = <(String, String)>[
   ),
   ('Türk ordusunun son savunma savaşıdır.', 'Sakarya Meydan Muharebesi'),
   ('Azerbaycan, Gürcistan ve Ermenistan ile imzalanmıştır.', 'Kars Antlaşması'),
-  ('Fransa ile imzalanmış, Güney Cephesi kapanmıştır.', '1921 tarihli Ankara Antlaşması'),
+  (
+    'Fransa ile imzalanmış, Güney Cephesi kapanmıştır.',
+    '1921 tarihli Ankara Antlaşması',
+  ),
   ('Başkomutanlık Meydan Muharebesi ile sonuçlanmıştır.', 'Büyük Taarruz'),
-  ('"Ordular, ilk hedefiniz Akdeniz\'dir. İleri!" emri verilmiştir.', 'Büyük Taarruz'),
-  ('Doğu Trakya savaş yapılmadan kurtarılmıştır.', 'Mudanya Ateşkes Antlaşması'),
+  (
+    '"Ordular, ilk hedefiniz Akdeniz\'dir. İleri!" emri verilmiştir.',
+    'Büyük Taarruz',
+  ),
+  (
+    'Doğu Trakya savaş yapılmadan kurtarılmıştır.',
+    'Mudanya Ateşkes Antlaşması',
+  ),
   (
     "İstanbul ve Boğazlar'ın yönetimi TBMM Hükûmetine bırakılmıştır.",
     'Mudanya Ateşkes Antlaşması',
@@ -1785,14 +1939,17 @@ const _mucadeleOlgu = <(String, String)>[
 ];
 
 AdvancedItem _mucadele(int i) => _ucluOlgu(
-      i,
-      _mucadeleOlgu,
-      eslestirme: "Millî Mücadele Dönemi'ne ait bu bilgilerin ilgili olduğu gelişmeler sırasıyla "
-          'hangi seçenekte doğru verilmiştir?',
-      oncul: (g) => "Millî Mücadele Dönemi'ne ait bu bilgilerden hangileri “$g” için doğrudur?",
-      aciklama: (v) => 'Birinci bilgi ${v[0]}, ikinci bilgi ${v[1]}, üçüncü bilgi ${v[2]} '
-          'ile ilgilidir.',
-    );
+  i,
+  _mucadeleOlgu,
+  eslestirme:
+      "Millî Mücadele Dönemi'ne ait bu bilgilerin ilgili olduğu gelişmeler sırasıyla "
+      'hangi seçenekte doğru verilmiştir?',
+  oncul: (g) =>
+      "Millî Mücadele Dönemi'ne ait bu bilgilerden hangileri “$g” için doğrudur?",
+  aciklama: (v) =>
+      'Birinci bilgi ${v[0]}, ikinci bilgi ${v[1]}, üçüncü bilgi ${v[2]} '
+      'ile ilgilidir.',
+);
 
 // ─────────────────────────── 20 · Kurum ve kavramlar ────────────────────────
 
@@ -1813,7 +1970,10 @@ const _kavramlar = <(String, String)>[
     'Selçuklularda küçük yaşta alınan çocukların özel eğitimle asker ve yönetici olarak '
         'yetiştirilmesi',
   ),
-  ('Divan-ı Saltanat', "Büyük Selçuklu Devleti'nde devlet işlerinin görüşüldüğü büyük divan"),
+  (
+    'Divan-ı Saltanat',
+    "Büyük Selçuklu Devleti'nde devlet işlerinin görüşüldüğü büyük divan",
+  ),
   (
     'Divan-ı Mezalim',
     'Türk-İslam devletlerinde hükümdarın başkanlık ettiği, halkın şikâyetlerinin dinlendiği '
@@ -1856,36 +2016,63 @@ const _kavramlar = <(String, String)>[
     'Osmanlı Devleti\'nde sancağa gönderilen şehzadeleri devlet yönetimi konusunda '
         'yetiştiren deneyimli devlet adamı',
   ),
-  ('Kadı', 'Osmanlı Devleti\'nde kazalarda yargı ve belediye işlerine bakan görevli'),
+  (
+    'Kadı',
+    'Osmanlı Devleti\'nde kazalarda yargı ve belediye işlerine bakan görevli',
+  ),
   ('Subaşı', "Osmanlı Devleti'nde şehirlerin güvenliğini sağlayan görevli"),
-  ('Muhtesip', 'Çarşı ve pazarlarda fiyatları, ölçü ve tartıyı denetleyen görevli'),
+  (
+    'Muhtesip',
+    'Çarşı ve pazarlarda fiyatları, ölçü ve tartıyı denetleyen görevli',
+  ),
   (
     'Dirlik',
     'Osmanlı Devleti\'nde vergi gelirleri hizmet karşılığında asker ve görevlilere '
         'bırakılan topraklar',
   ),
-  ('Cebelü', 'Dirlik sahiplerinin gelirlerine göre yetiştirmek zorunda olduğu atlı asker'),
+  (
+    'Cebelü',
+    'Dirlik sahiplerinin gelirlerine göre yetiştirmek zorunda olduğu atlı asker',
+  ),
   (
     'İltizam',
     'Bir bölgenin vergi gelirini toplama hakkının açık artırmayla ve peşin olarak belirli '
         'bir süreliğine satılması',
   ),
-  ('Malikâne', 'Vergi toplama hakkının kişilere ömür boyu verilmesi uygulaması'),
+  (
+    'Malikâne',
+    'Vergi toplama hakkının kişilere ömür boyu verilmesi uygulaması',
+  ),
   (
     'Devşirme',
     'Osmanlı Devleti\'nde Hristiyan ailelerin çocuklarının alınıp asker ve yönetici olarak '
         'yetiştirilmesi',
   ),
-  ('Pençik', 'Savaş esirlerinin beşte birinin asker yapılmak üzere devletçe alınması'),
-  ('Enderun', 'Osmanlı sarayında devşirmelerin yönetici olarak yetiştirildiği saray okulu'),
+  (
+    'Pençik',
+    'Savaş esirlerinin beşte birinin asker yapılmak üzere devletçe alınması',
+  ),
+  (
+    'Enderun',
+    'Osmanlı sarayında devşirmelerin yönetici olarak yetiştirildiği saray okulu',
+  ),
   (
     'Kapıkulu Ocakları',
     "Osmanlı Devleti'nde doğrudan padişaha bağlı olan maaşlı ve sürekli ordu",
   ),
   ('Ulufe', 'Kapıkulu askerlerine üç ayda bir ödenen maaş'),
-  ('Cülus bahşişi', 'Padişah tahta çıktığında kapıkulu askerlerine dağıtılan para'),
-  ('Akıncılar', 'Sınır boylarında keşif ve yıpratma akınları yapan hafif süvari birlikleri'),
-  ('Cizye', 'Gayrimüslim erkeklerden askerlik yapmamaları karşılığında alınan vergi'),
+  (
+    'Cülus bahşişi',
+    'Padişah tahta çıktığında kapıkulu askerlerine dağıtılan para',
+  ),
+  (
+    'Akıncılar',
+    'Sınır boylarında keşif ve yıpratma akınları yapan hafif süvari birlikleri',
+  ),
+  (
+    'Cizye',
+    'Gayrimüslim erkeklerden askerlik yapmamaları karşılığında alınan vergi',
+  ),
   ('Öşür', 'Müslüman çiftçilerden ürünün onda biri oranında alınan vergi'),
   ('Haraç', 'Gayrimüslim çiftçilerden ürün üzerinden alınan vergi'),
   ('Ağnam', 'Küçükbaş hayvanlardan alınan vergi'),
@@ -1894,14 +2081,29 @@ const _kavramlar = <(String, String)>[
     'Çift bozan',
     'Toprağını izinsiz terk eden ya da üç yıl üst üste boş bırakan köylüden alınan vergi',
   ),
-  ('Müsadere', 'Devlet görevlilerinin mal varlığına devlet tarafından el konulması'),
+  (
+    'Müsadere',
+    'Devlet görevlilerinin mal varlığına devlet tarafından el konulması',
+  ),
   ('Narh', 'Devletin mallara en yüksek satış fiyatını belirlemesi'),
-  ('Vakıf', 'Bir kişinin malını toplum yararına hizmetler için kalıcı olarak bağışlamasıyla oluşan kurum'),
+  (
+    'Vakıf',
+    'Bir kişinin malını toplum yararına hizmetler için kalıcı olarak bağışlamasıyla oluşan kurum',
+  ),
   ('İmaret', 'Yoksullara ve yolculara ücretsiz yemek dağıtılan hayır kurumu'),
-  ('Kervansaray', 'Ticaret yolları üzerinde kervanların ve yolcuların konakladığı yapı'),
-  ('Darüşşifa', 'Türk-İslam devletlerinde hastaların tedavi edildiği sağlık kurumu'),
+  (
+    'Kervansaray',
+    'Ticaret yolları üzerinde kervanların ve yolcuların konakladığı yapı',
+  ),
+  (
+    'Darüşşifa',
+    'Türk-İslam devletlerinde hastaların tedavi edildiği sağlık kurumu',
+  ),
   ('Bedesten', 'Değerli malların alınıp satıldığı kapalı çarşı'),
-  ('Sıbyan mektebi', "Osmanlı Devleti'nde ilköğretim düzeyinde eğitim veren mahalle okulu"),
+  (
+    'Sıbyan mektebi',
+    "Osmanlı Devleti'nde ilköğretim düzeyinde eğitim veren mahalle okulu",
+  ),
   ('Müderris', 'Medreselerde ders veren öğretim görevlisi'),
   ('Ferman', 'Padişahın herhangi bir konudaki yazılı emri'),
   ('Tuğra', 'Padişahın belgelerde kullanılan özel imza işareti'),
@@ -1917,10 +2119,19 @@ const _kavramlar = <(String, String)>[
     'Millet sistemi',
     'Osmanlı toplumunun din ve mezhep esasına göre örgütlenmesi',
   ),
-  ('Seyfiye', 'Osmanlı Devleti\'nde yönetim ve askerlik görevlerini yürüten sınıf'),
-  ('İlmiye', 'Osmanlı Devleti\'nde eğitim, yargı ve din işlerini yürüten sınıf'),
+  (
+    'Seyfiye',
+    'Osmanlı Devleti\'nde yönetim ve askerlik görevlerini yürüten sınıf',
+  ),
+  (
+    'İlmiye',
+    'Osmanlı Devleti\'nde eğitim, yargı ve din işlerini yürüten sınıf',
+  ),
   ('Kalemiye', 'Osmanlı Devleti\'nde yazışma ve maliye işlerini yürüten sınıf'),
-  ('Reaya', 'Osmanlı Devleti\'nde yönetime katılmayan, üretim yapıp vergi veren halk kesimi'),
+  (
+    'Reaya',
+    'Osmanlı Devleti\'nde yönetime katılmayan, üretim yapıp vergi veren halk kesimi',
+  ),
 ];
 
 AdvancedItem _kavram(int i) {
@@ -1929,13 +2140,18 @@ AdvancedItem _kavram(int i) {
   final x = [for (final j in d) uclu[j]];
   final v = [for (final e in x) e.$1];
   final kay = 1 + i ~/ 6 % 5;
-  final diger = [...ucluDizilimler.sublist(kay), ...ucluDizilimler.sublist(1, kay)];
+  final diger = [
+    ...ucluDizilimler.sublist(kay),
+    ...ucluDizilimler.sublist(1, kay),
+  ];
   return secenekli(
     '${_liste([for (final e in x) e.$2])}'
-    'Türk-İslam devletleri ile Osmanlı Devleti\'ndeki kurum ve kavramlara ait bu tanımların '
-    'karşılıkları sırasıyla hangi seçenekte doğru verilmiştir?',
+        'Türk-İslam devletleri ile Osmanlı Devleti\'ndeki kurum ve kavramlara ait bu tanımların '
+        'karşılıkları sırasıyla hangi seçenekte doğru verilmiştir?',
     v.join(' – '),
-    [for (final p in diger) [for (final j in p) v[j]].join(' – ')],
+    [
+      for (final p in diger) [for (final j in p) v[j]].join(' – '),
+    ],
     'Birinci tanım ${v[0]}, ikinci tanım ${v[1]}, üçüncü tanım ${v[2]} kavramını açıklar.',
   );
 }

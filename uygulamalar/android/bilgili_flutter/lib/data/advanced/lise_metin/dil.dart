@@ -1225,7 +1225,7 @@ const _sanatlar = [
   ('Papatyalar, sabah güneşine gülümsüyordu.', _teshis),
   ('Ay, pencereden içeri merakla bakıyordu.', _teshis),
   ('Sonbahar gelince yapraklar ağaçlarla vedalaştı.', _teshis),
-  ('Karınca, ağustos böceğine “Biraz da sen çalışsan olmaz mı?” dedi.', _intak),
+  ('Karınca, ağustosböceğine “Biraz da sen çalışsan olmaz mı?” dedi.', _intak),
   ('Dere, kıyısındaki söğüde “Benimle denize gelir misin?” diye sordu.', _intak),
   ('Yaşlı çınar, altında oynayan çocuklara “Gölgem hepinize yeter.” diye seslendi.', _intak),
   ('Kırlangıç, yavrularına “Artık uçma vakti geldi.” dedi.', _intak),

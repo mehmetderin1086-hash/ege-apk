@@ -360,7 +360,9 @@ bool _yakin(num x, num y, int basamak, [num orijin = 0]) {
   final fark = (p - q).abs(), goreli = fark / buyuk;
   if (goreli < 0.02) return true;
   final op = ondalik(x), oq = ondalik(y);
-  return op != oq && goreli < 0.06 && fark <= 0.5 / _on(op < oq ? op : oq) + 1e-9;
+  return op != oq &&
+      goreli < 0.06 &&
+      fark <= 0.5 / _on(op < oq ? op : oq) + 1e-9;
 }
 
 /// Anahtarın komşu değerleri: d ± %20, %40, %60, %80 ([olcek] büyüklüğüne
@@ -1965,6 +1967,10 @@ final _f09 = lmAile(
         '$fa: ${_t(na * ma)} / ${_t(ma)} = ${_t(na)} mol, $fb: ${_t(nb * mb)} / '
         '${_t(mb)} = ${_t(nb)} mol.';
     final ms = aSinir ? ma : mb; // sınırlayıcının mol kütlesi
+    // Artan madde çeldiricilerinin üst sınırı: tepkimeye sokulan en büyük
+    // miktar (mol) ve en büyük kütle (g).
+    final enCok = na > nb ? na : nb;
+    final enCokKutle = na * ma > nb * mb ? na * ma : nb * mb;
     final sira = _sira(a, b, c);
     switch (c % 5) {
       case 0:
@@ -1982,23 +1988,29 @@ final _f09 = lmAile(
           '$giris $molVeri tam verimle tepkimeye sokuluyor. Tepkime sonunda '
               'artan maddeden kaç mol kalır?',
           artan,
-          [
-            (na - nb).abs(),
-            ne - x,
-            ke * x,
-            ne,
-            ns,
-            ne - ns,
-            artan / ke,
-            ks * artan / ke,
-            artan / 2,
-            artan * 2,
-            artan + x,
-          ],
+          // Artan miktar, tepkimeye sokulan miktarlardan büyük olamaz.
+          _arada(
+            [
+              (na - nb).abs(),
+              ne - x,
+              ke * x,
+              ne,
+              ns,
+              ne - ns,
+              artan / ke,
+              ks * artan / ke,
+              artan / 2,
+              artan * 2,
+              artan + x,
+            ],
+            0,
+            enCok + 1e-9,
+          ),
           '$karar Artan $fe miktarı ${_t(ne)} − ${_t(ke * x)} = ${_t(artan)} '
               'mol olur.',
           sira,
           birim: 'mol',
+          komsuUst: enCok,
         );
       case 2:
         return _saySirali(
@@ -2025,22 +2037,28 @@ final _f09 = lmAile(
           '$giris $kutleVeri tam verimle tepkimeye sokuluyor. Tepkime sonunda '
               'artan maddenin kütlesi kaç gramdır? (${_kut([fa, fb])})',
           artan * me,
-          [
-            (na * ma - nb * mb).abs(),
-            artan * ms,
-            ne * me,
-            (ne - x) * me,
-            ke * x * me,
-            (ne - ns) * me,
-            artan * me / 2,
-            artan * me * 2,
-            artan,
-          ],
+          // Artan kütle, tepkimeye sokulan kütlelerden büyük olamaz.
+          _arada(
+            [
+              (na * ma - nb * mb).abs(),
+              artan * ms,
+              ne * me,
+              (ne - x) * me,
+              ke * x * me,
+              (ne - ns) * me,
+              artan * me / 2,
+              artan * me * 2,
+              artan,
+            ],
+            0,
+            enCokKutle + 1e-9,
+          ),
           '$cevir $karar Artan $fe miktarı ${_t(ne)} − ${_t(ke * x)} = '
               '${_t(artan)} mol, kütlesi ${_t(artan)}·${_t(me)} = '
               '${_t(artan * me)} gram olur.',
           sira,
           birim: 'g',
+          komsuUst: enCokKutle,
         );
       default:
         return _saySirali(
@@ -2592,16 +2610,21 @@ final _f13 = lmAile(
               'gazlarından oluşan karışımın toplam basıncı ${top * u} mmHg olarak '
               'ölçülüyor. Buna göre $gaz gazının kısmi basıncı kaç mmHg olur?',
           n[j] * u,
-          [
-            top * u ~/ 3,
-            n[1 - j] * u,
-            top * u - n[j] * u,
-            n[2] * u,
-            u,
-            top * u ~/ n[j],
-            2 * n[j] * u,
-            n[j] * u ~/ 2,
-          ],
+          // Kısmi basınç toplam basınçtan küçük kalır.
+          _arada(
+            [
+              top * u ~/ 3,
+              n[1 - j] * u,
+              top * u - n[j] * u,
+              n[2] * u,
+              u,
+              top * u ~/ n[j],
+              2 * n[j] * u,
+              n[j] * u ~/ 2,
+            ],
+            0,
+            top * u,
+          ),
           'Toplam mol sayısı $top olduğundan $gaz gazının mol kesri '
               '${kesir(n[j], top)} olur. Kısmi basınç ${top * u}·${n[j]} / $top = '
               '${n[j] * u} mmHg bulunur.',

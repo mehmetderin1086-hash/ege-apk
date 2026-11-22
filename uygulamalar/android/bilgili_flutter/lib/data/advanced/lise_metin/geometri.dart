@@ -109,7 +109,9 @@ List<String> _celdirici(
       break;
     }
   }
-  return [for (final x in [...alt, ...ust]) x.$2];
+  return [
+    for (final x in [...alt, ...ust]) x.$2,
+  ];
 }
 
 /// Komşu değerlerin anahtara uzaklığı (adım sayısı). Üstte ve altta farklı
@@ -129,7 +131,8 @@ List<num> _komsu(num anahtar, num adim) => [
 /// değerler anahtarın büyüklüğüne göre 1, 5 ya da 10 adımlıdır. [alt] ve
 /// [ust] verilirse çeldiriciler bu iki değerin (ikisi de hariç) arasında
 /// kalır: kökün kendi verisiyle çelişen (küçük üçgenin alanının büyüğünkünü
-/// aşması, parçanın bütünden uzun olması gibi) seçenek kurulmaz.
+/// aşması, parçanın bütünden uzun olması gibi) seçenek kurulmaz. Aralıkta
+/// üç farklı değer kalmayan çok küçük vakalarda yalnız pozitiflik aranır.
 AdvancedItem _sayi(
   String prompt,
   int dogru,
@@ -140,10 +143,18 @@ AdvancedItem _sayi(
   int alt = 0,
   int? ust,
 }) {
-  // Uzunluk, alan, hacim ve sayım yanıtlarında yalnız pozitif değerler.
-  bool gecer(int x) => x > alt && (ust == null || x < ust);
   final adim = dogru.abs() >= 200 ? 10 : (dogru.abs() >= 40 ? 5 : 1);
   final yazim = birimli('$dogru', unit);
+  final komsu = [for (final x in _komsu(dogru, adim)) x as int];
+  // Uzunluk, alan, hacim ve sayım yanıtlarında yalnız pozitif değerler.
+  bool aralikta(int x) => x > alt && (ust == null || x < ust);
+  final yeter =
+      {
+        for (final x in [...yanlis, ...komsu])
+          if (x != dogru && aralikta(x)) x,
+      }.length >=
+      3;
+  bool gecer(int x) => yeter ? aralikta(x) : x > 0;
   return AdvancedItem(
     prompt,
     yazim,
@@ -155,8 +166,8 @@ AdvancedItem _sayi(
           if (gecer(x)) (x, birimli('$x', unit)),
       ],
       [
-        for (final x in _komsu(dogru, adim))
-          if (gecer(x as int)) (x, birimli('$x', unit)),
+        for (final x in komsu)
+          if (gecer(x)) (x, birimli('$x', unit)),
       ],
       sira,
     ),
