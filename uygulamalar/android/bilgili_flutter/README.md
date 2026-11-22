@@ -1,4 +1,8 @@
-# Bilgili 3.15.0
+# Bilgili 3.15.1
+
+3.15.1: Sürüm derlemesindeki kaynak küçültme, koddan adıyla çağrılan `res/raw` ses dosyalarını siliyordu; `res/raw/keep.xml` ile korundu. Menü ve oyun müzikleri de bu sürümden itibaren APK'da yer alır.
+
+## 3.15.0
 
 3.15.0 sürümünde Zirve Merdiveni'ne özgün müzik ve ses efektleri eklendi. Bütün sesler `tool/ses/zirve_sesleri.py` ile sentezlenir (hazır kayıt yok) ve `res/raw/zirve_*.ogg` olarak gelir:
 
