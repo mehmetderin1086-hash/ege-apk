@@ -3210,8 +3210,9 @@ List<String> _heceSayiYanlislari(int n) => [
 ];
 
 // Biçimlerin seçkileri ([_sirali] dengeli kipi): hece sayısı (çift sıra
-// numaraları) ve durak kalıbı (tek sıra numaraları). Üç etiketi aynı üçlü
-// alınmaz.
+// numaraları) ve durak kalıbı (tek sıra numaraları). Üç dizenin hece sayıları
+// da kalıpları da birbirinden ayrıdır; her konuma yanıtlardan ve birbirinden
+// ayrı birer çeldirici bulunur.
 final _heceSecki = <List<int>?>[
   _uygunSecki(
     _heceSerpik,
@@ -3219,7 +3220,6 @@ final _heceSecki = <List<int>?>[
     (x) => _dengeliKurulur(
       [for (final e in x) '${_heceSayisi(e.$1)}'],
       [for (final e in x) _heceSayiYanlislari(_heceSayisi(e.$1))],
-      ikili: true,
     ),
   ),
   _uygunSecki(
@@ -3228,7 +3228,6 @@ final _heceSecki = <List<int>?>[
     (x) => _dengeliKurulur(
       [for (final e in x) e.$2],
       [for (final e in x) _heceKarisan[e.$2]!],
-      ikili: true,
     ),
   ),
 ];
@@ -4289,24 +4288,28 @@ const _relThat =
 // yapılmaz; zaman adlarından sonra “that” ve edatlı “which” kullanılabildiği
 // için when sorularında bu ikisi seçeneklere girmez. where cümlelerinde
 // boşluktan sonra gelen ad “whose” ile de bağlanabiliyorsa (“a country whose
-// people …”) cümle alınmamıştır.
+// people …”) cümle alınmamıştır. Öteki ilgi sözcüklerinin hepsi kesin
+// yanlıştır: when kişi ve nesne adlarından, that edatsız where boşluklarından
+// ve whose boşluklarından sonra, where, whose ve when virgüllü cümlelerde
+// kullanılamaz. Böylece üç boşluğun yanıtları ayrı olduğunda her konuma
+// yanıtlardan ve birbirinden ayrı çeldirici bulunur.
 const _relatives = [
   (
     "The woman ___ lives next door is a doctor.",
     "who",
-    ["which", "whose", "where"],
+    ["which", "whose", "where", "when"],
     _relKisi,
   ),
   (
     "This is the book ___ I told you about.",
     "which",
-    ["who", "whose", "where"],
+    ["who", "whose", "where", "when"],
     _relSey,
   ),
   (
     "That is the house ___ my grandfather was born.",
     "where",
-    ["which", "who", "whose"],
+    ["which", "who", "whose", "when", "that"],
     _relYer,
   ),
   (
@@ -4318,31 +4321,31 @@ const _relatives = [
   (
     "This is the girl ___ father is a famous chef.",
     "whose",
-    ["who", "which", "where"],
+    ["who", "which", "where", "when", "that"],
     _relIyelik,
   ),
   (
     "My brother, ___ lives in Ankara, is an engineer.",
     "who",
-    ["that", "which", "whose"],
+    ["that", "which", "whose", "where", "when"],
     _relVirgulKisi,
   ),
   (
     "The museum, ___ opened last year, is very popular.",
     "which",
-    ["that", "who", "where"],
+    ["that", "who", "where", "when", "whose"],
     _relVirgulSey,
   ),
   (
     "Do you know the man ___ car was stolen yesterday?",
     "whose",
-    ["who", "which", "where"],
+    ["who", "which", "where", "when", "that"],
     _relIyelik,
   ),
   (
     "The restaurant ___ we had dinner last night was excellent.",
     "where",
-    ["which", "who", "whose"],
+    ["which", "who", "whose", "when", "that"],
     _relYer,
   ),
   (
@@ -4354,43 +4357,43 @@ const _relatives = [
   (
     "The students ___ passed the exam received a certificate.",
     "who",
-    ["which", "whose", "where"],
+    ["which", "whose", "where", "when"],
     _relKisi,
   ),
   (
     "I lost the umbrella ___ my aunt gave me.",
     "which",
-    ["who", "whose", "where"],
+    ["who", "whose", "where", "when"],
     _relSey,
   ),
   (
     "Everything ___ he said was true.",
     "that",
-    ["who", "whose", "where"],
+    ["who", "whose", "where", "when"],
     _relThat,
   ),
   (
     "This is the best film ___ I have ever seen.",
     "that",
-    ["who", "whose", "where"],
+    ["who", "whose", "where", "when"],
     _relThat,
   ),
   (
     "Istanbul, ___ is the largest city in Türkiye, lies on two continents.",
     "which",
-    ["that", "who", "where"],
+    ["that", "who", "where", "when", "whose"],
     _relVirgulSey,
   ),
   (
     "The man ___ I spoke to on the phone was very polite.",
     "who",
-    ["which", "whose", "where"],
+    ["which", "whose", "where", "when"],
     _relKisi,
   ),
   (
     "Ankara is the city ___ I spent my childhood.",
     "where",
-    ["which", "who", "whose"],
+    ["which", "who", "whose", "when", "that"],
     _relYer,
   ),
   (
@@ -4402,31 +4405,31 @@ const _relatives = [
   (
     "The boy ___ bike was stolen went to the police.",
     "whose",
-    ["who", "which", "where"],
+    ["who", "which", "where", "when", "that"],
     _relIyelik,
   ),
   (
     "A dictionary is a book ___ gives the meanings of words.",
     "which",
-    ["who", "whose", "where"],
+    ["who", "whose", "where", "when"],
     _relSey,
   ),
   (
     "A vet is a person ___ takes care of sick animals.",
     "who",
-    ["which", "whose", "where"],
+    ["which", "whose", "where", "when"],
     _relKisi,
   ),
   (
     "A library is a place ___ you can borrow books.",
     "where",
-    ["which", "who", "whose"],
+    ["which", "who", "whose", "when", "that"],
     _relYer,
   ),
   (
     "An orphan is a child ___ parents have died.",
     "whose",
-    ["who", "which", "where"],
+    ["who", "which", "where", "when", "that"],
     _relIyelik,
   ),
   (
@@ -4438,55 +4441,55 @@ const _relatives = [
   (
     "My grandmother, ___ is eighty years old, still goes swimming every day.",
     "who",
-    ["that", "which", "whose"],
+    ["that", "which", "whose", "where", "when"],
     _relVirgulKisi,
   ),
   (
     "The car ___ my father bought last month is red.",
     "which",
-    ["who", "whose", "where"],
+    ["who", "whose", "where", "when"],
     _relSey,
   ),
   (
     "The singer ___ songs we all love is coming to our city.",
     "whose",
-    ["who", "which", "where"],
+    ["who", "which", "where", "when", "that"],
     _relIyelik,
   ),
   (
     "The village ___ my parents grew up is very small.",
     "where",
-    ["which", "who", "whose"],
+    ["which", "who", "whose", "when", "that"],
     _relYer,
   ),
   (
     "Mr Demir, ___ teaches us history, is very kind.",
     "who",
-    ["that", "which", "whose"],
+    ["that", "which", "whose", "where", "when"],
     _relVirgulKisi,
   ),
   (
     "The laptop, ___ I bought only a month ago, has already broken down.",
     "which",
-    ["that", "who", "where"],
+    ["that", "who", "where", "when", "whose"],
     _relVirgulSey,
   ),
   (
     "The children ___ are playing in the garden are my cousins.",
     "who",
-    ["which", "whose", "where"],
+    ["which", "whose", "where", "when"],
     _relKisi,
   ),
   (
     "I need a knife ___ can cut bread.",
     "which",
-    ["who", "whose", "where"],
+    ["who", "whose", "where", "when"],
     _relSey,
   ),
   (
     "Is this the shop ___ you bought your shoes?",
     "where",
-    ["which", "who", "whose"],
+    ["which", "who", "whose", "when", "that"],
     _relYer,
   ),
   (
@@ -4498,37 +4501,37 @@ const _relatives = [
   (
     "The writer ___ books are on the table is my uncle.",
     "whose",
-    ["who", "which", "where"],
+    ["who", "which", "where", "when", "that"],
     _relIyelik,
   ),
   (
     "All ___ you need is a good night's sleep.",
     "that",
-    ["who", "whose", "where"],
+    ["who", "whose", "where", "when"],
     _relThat,
   ),
   (
     "The only thing ___ matters is your health.",
     "that",
-    ["who", "whose", "where"],
+    ["who", "whose", "where", "when"],
     _relThat,
   ),
   (
     "Our neighbours, ___ dog barks all night, are moving next month.",
     "whose",
-    ["who", "which", "that"],
+    ["who", "which", "that", "where", "when"],
     _relIyelik,
   ),
   (
     "The film ___ we watched last night was boring.",
     "which",
-    ["who", "whose", "where"],
+    ["who", "whose", "where", "when"],
     _relSey,
   ),
   (
     "Can you name a country ___ it never snows?",
     "where",
-    ["which", "who", "whose"],
+    ["which", "who", "whose", "when", "that"],
     _relYer,
   ),
   (
@@ -4540,29 +4543,23 @@ const _relatives = [
   (
     "The teacher ___ helped me with my project was Mrs Kaya.",
     "who",
-    ["which", "whose", "where"],
+    ["which", "whose", "where", "when"],
     _relKisi,
   ),
   (
     "Paris, ___ is the capital of France, is famous for its museums.",
     "which",
-    ["that", "who", "where"],
+    ["that", "who", "where", "when", "whose"],
     _relVirgulSey,
   ),
 ];
 
-// Seçkiler ([_sirali] dengeli kipi). Altı ilgi sözcüğü bulunduğundan
-// yanıtları ayrı üçlülerin yalnız bir bölümüne temiz çeldirici kurulabilir;
-// bu yüzden tam iki yanıtı aynı üçlüler de alınır. Üç yanıtı aynı üçlü
-// alınmaz.
+// Seçkiler ([_sirali] dengeli kipi): üç boşluğun yanıtı ayrıdır ve her
+// konuma öteki iki yanıttan ayrı birer çeldirici bulunur.
 final _relativeSecki = _uygunSecki(
   _relatives,
   lmAileBoyu,
-  (x) => _dengeliKurulur(
-    [for (final e in x) e.$2],
-    [for (final e in x) e.$3],
-    ikili: true,
-  ),
+  (x) => _dengeliKurulur([for (final e in x) e.$2], [for (final e in x) e.$3]),
 );
 
 final _relativeAile = lmSirali(

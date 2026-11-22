@@ -1,6 +1,7 @@
 // Lise metin aileleri · Veri, sayma ve olasılık alanı: permütasyon,
 // kombinasyon, binom, olasılık, merkezî eğilim ve yayılım ölçüleri, kümeler,
 // önermeler, modüler aritmetik ve finansal matematik (20 aile × 5.000 vaka).
+import 'denge.dart';
 import 'ortak.dart';
 
 // ---------------------------------------------------------------------------
@@ -26,6 +27,9 @@ int _perm(int n, int r) {
 }
 
 int _komb(int n, int r) => kombinasyonSayisi(n, r);
+
+/// lmAile koordinatlarından (a, b, c) vakanın sıra numarası.
+int _no(int a, int b, int c) => a + 25 * b + 500 * c;
 
 int _kuvvet(int x, int n) {
   var r = 1;
