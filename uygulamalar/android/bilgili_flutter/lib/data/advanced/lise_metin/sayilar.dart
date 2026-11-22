@@ -425,13 +425,15 @@ AdvancedItem _kes(
 /// [hedef] (0 … 3) olur. [hatalar] tipik hata değerleri, [komsular] anahtarın
 /// iki yanındaki komşu değerlerdir (yakından uzağa); ikililer (değer, yazım)
 /// biçimindedir. Öncelik: o yandaki hatalar, sonra o yandaki komşular; o yanda
-/// aday kalmazsa öbür yanın adayları. Dört seçenekten üçünü eşit aralıklı yapan
-/// hata, aynı yanda başka hata kaldıkça alınmaz; böyle bir komşu değer ise ancak
-/// başka aday kalmazsa alınır (komşular anahtarla eşit aralıklı bir dizi kurup
-/// anahtarı dizinin ucunda ele vermesin). Anahtarı iki çeldiricinin tam
+/// aday kalmazsa öbür yanın adayları. Anahtarla birlikte eşit aralıklı bir üçlü
+/// kuran hata, aynı yanda başka hata kaldıkça alınmaz; böyle bir komşu değer ise
+/// ancak başka aday kalmazsa alınır (komşular anahtarla eşit aralıklı bir dizi
+/// kurup anahtarı dizinin ucunda ele vermesin). Anahtarı iki çeldiricinin tam
 /// ortasında bırakan aday (yanıtı ele veren simetrik çift) en son alınır.
 /// Kökte yazılı bir sayıya eşit aday ([kokte]; anahtar kökte yazılı değilken
-/// öğrenci bu seçenekleri eleyebilir) eşit aralık kuran aday gibi sona bırakılır.
+/// öğrenci bu seçenekleri eleyebilir) ve tam sayı seçeneklerde anahtarı tek ya
+/// da çift olan tek seçenek bırakacak aday da eşit aralık kuran aday gibi sona
+/// bırakılır.
 /// Yazımı anahtarla ya da birbiriyle aynı olan (`ayniSecenek`) adaylar atlanır.
 List<String> _dengeliSec(
   double yanit,
@@ -448,23 +450,31 @@ List<String> _dengeliSec(
       !secilen.any((s) => ayniSecenek(s.$2, e.$2));
   bool esit(double p, double q) =>
       (p - q).abs() <= 1e-9 * (1 + p.abs() + q.abs());
-  // 2: anahtar, x ile bir çeldiricinin tam ortasında; 1: x, seçeneklerden
-  // ikisiyle eşit aralıklı bir üçlü kurar ya da kökte yazılıdır; 0: hiçbiri.
+  // 2: anahtar, x ile bir çeldiricinin tam ortasında; 1: x, anahtar ve bir
+  // çeldiriciyle anahtarın uçta kaldığı eşit aralıklı bir üçlü kurar ya da
+  // kökte yazılıdır; 0: hiçbiri. Yalnız çeldiricilerden oluşan eşit aralıklı
+  // üçlü anahtarı göstermediğinden sayılmaz.
   int duzey((double, String) e) {
     final x = e.$1;
     if (secilen.any((s) => esit(x + s.$1, 2 * yanit))) return 2;
     final deger = _rasyonelDeger(e.$2.split(' ').first);
     if (deger != null && kokte.contains(deger)) return 1;
-    final d = [yanit, for (final s in secilen) s.$1];
-    for (var i = 0; i < d.length; i++) {
-      for (var j = i + 1; j < d.length; j++) {
-        final p = d[i], q = d[j];
-        if (esit(p + q, 2 * x) || esit(p + x, 2 * q) || esit(q + x, 2 * p)) {
-          return 1;
-        }
-      }
+    // Son çeldirici, tam sayı seçeneklerde anahtarı tek ya da çift olan tek
+    // seçenek bırakmasın.
+    bool tam(double v) => v == v.roundToDouble();
+    bool cift(double v) => v.round().isEven;
+    if (secilen.length == 2 &&
+        tam(yanit) &&
+        tam(x) &&
+        secilen.every((s) => tam(s.$1) && cift(s.$1) != cift(yanit)) &&
+        cift(x) != cift(yanit)) {
+      return 1;
     }
-    return 0;
+    return secilen.any(
+          (s) => esit(yanit + s.$1, 2 * x) || esit(yanit + x, 2 * s.$1),
+        )
+        ? 1
+        : 0;
   }
 
   void tur(List<(double, String)> liste, int enCok, bool serbest) {
@@ -6003,6 +6013,8 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
             ?_bol(T - L, v),
             ?_bol(T + L, 2 * v),
             ?_bol(L + T, v * 18 ~/ 5),
+            // Trenin tünele girme süresini (L / v) ayrıca eklemek.
+            ?_bol(T + 2 * L, v),
           ],
           '$cevir olur. Trenin tüneli tamamen geçmesi için tünel boyu ile kendi boyu '
               'kadar yol alması gerekir: ($T + $L) / $v = $t s.',
@@ -6015,7 +6027,13 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
           '$tren bir tünele girmeye başladığı andan tünelden tamamen çıktığı ana kadar '
               '$t saniye geçiyor. Tünelin uzunluğu kaç metredir?',
           T,
-          [v * t, v * t + L, v * t - 2 * L],
+          [
+            v * t,
+            // Hızı km/sa biriminden m/s birimine çevirmemek.
+            (v * 18 ~/ 5) * t - L,
+            v * t + L,
+            v * t - 2 * L,
+          ],
           '$cevir olur. Tren $t saniyede $v · $t = ${v * t} m yol alır. Bu yol tünel '
               'boyu ile tren boyunun toplamıdır: ${v * t} − $L = $T m.',
           birim: 'm',
@@ -6101,6 +6119,8 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
             (goreli + v1) * 18 ~/ 5,
             goreli * 18 ~/ 5,
             ?_bol(toplam * 18, 5 * t * 2),
+            // m/s cinsinden bulunan hızı km/sa birimine çevirmemek.
+            v2,
           ],
           'İki tren birbirini geçerken toplam ${uz1 + uz2} m yol alınır; göreli hız '
               '${uz1 + uz2} / $t = $goreli m/s olur. $bir hızı $v1 m/s '
@@ -6146,7 +6166,13 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
             'başladığı andan tamamen çıktığı ana kadar $t saniyede geçiyor. Trenin hızı '
             'kaç km/sa olur?',
         v * 18 ~/ 5,
-        [?_bol(B * 18, t * 5), v, ?_bol((B - L) * 18, t * 5)],
+        [
+          ?_bol(B * 18, t * 5),
+          v,
+          ?_bol((B - L) * 18, t * 5),
+          // Tren boyunu iki kez eklemek: (B + 2L) / t.
+          ?_bol((B + 2 * L) * 18, t * 5),
+        ],
         'Tren $t saniyede köprü boyu ile kendi boyunun toplamı kadar, yani $B + $L = '
             '${B + L} m yol alır. Hız ${B + L} / $t = $v m/s olur; $v · 3,6 = '
             '${v * 18 ~/ 5} km/sa bulunur.',

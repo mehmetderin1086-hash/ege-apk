@@ -494,16 +494,20 @@ List<String> _dengeli(
   Iterable<(num, String)> adaylar,
   int sira, {
   int enFazla = 10,
+  Iterable<num>? komsu,
 }) {
   final liste = adaylar.toList();
-  // Listenin sonundaki komşu değerler (_komsuTam: k ∓ s, k ∓ 2s) son çaredir;
-  // seçilen her komşu, tipik bir hataya göre bir ceza puanı alır.
+  // Listenin sonundaki komşu değerler son çaredir: [komsu] verilmezse tam
+  // sayı anahtarda _komsuTam değerleri (k ∓ s, k ∓ 2s) alınır. Seçilen her
+  // komşu, tipik bir hataya göre bir ceza puanı alır.
+  final komsular = {
+    ...?komsu,
+    if (komsu == null && anahtar == anahtar.roundToDouble())
+      ..._komsuTam(anahtar.toInt()),
+  };
   var komsuBas = liste.length;
-  if (anahtar == anahtar.roundToDouble()) {
-    final komsu = _komsuTam(anahtar.toInt()).toSet();
-    while (komsuBas > 0 && komsu.contains(liste[komsuBas - 1].$1)) {
-      komsuBas--;
-    }
+  while (komsuBas > 0 && komsular.contains(liste[komsuBas - 1].$1)) {
+    komsuBas--;
   }
   final d = <num>[], y = <String>[], km = <bool>[];
   for (var i = 0; i < liste.length; i++) {
@@ -572,13 +576,14 @@ AdvancedItem _dengele(
   AdvancedItem eski,
   num anahtar,
   Iterable<(num, String)> adaylar,
-  int sira,
-) {
+  int sira, {
+  Iterable<num>? komsu,
+}) {
   try {
     return AdvancedItem(
       eski.prompt,
       eski.correct,
-      _dengeli(anahtar, eski.correct, adaylar, sira),
+      _dengeli(anahtar, eski.correct, adaylar, sira, komsu: komsu),
       eski.explanation,
     );
   } on StateError {
@@ -592,8 +597,11 @@ AdvancedItem _belkiDengele(
   AdvancedItem eski,
   num anahtar,
   List<(num, String)> Function() adaylar,
-  int? hedef,
-) => hedef == null ? eski : _dengele(eski, anahtar, adaylar(), hedef);
+  int? hedef, {
+  Iterable<num>? komsu,
+}) => hedef == null
+    ? eski
+    : _dengele(eski, anahtar, adaylar(), hedef, komsu: komsu);
 
 /// Tam sayı adayları; [pozitif] doğruysa sıfır ve negatifler atılır.
 List<(num, String)> _tamAday(
@@ -614,6 +622,11 @@ List<(num, String)> _rAday(
   for (final x in xs)
     if (x != null && (!pozitif || x.p > 0) && (aralik == null || aralik(x)))
       (x.p / x.q, '$x'),
+];
+
+/// Kesir yanıtın komşu değerleri (son çare): x ∓ 1, 5x/4 ve 3x/4.
+List<num> _rKomsu(_R x) => [
+  for (final y in [x + _R(1), x - _R(1), x * _R(5, 4), x * _R(3, 4)]) y.p / y.q,
 ];
 
 /// Tam sayı yanıtın yakın komşuları (son çare): x ∓ s ve x ∓ 2s; s, x/8'i
@@ -1510,15 +1523,24 @@ AdvancedItem _trigDenklemOzel(int a, int b, int c) {
           1 => k * kok.first.$2,
           _ => k * kok.last.$2,
         };
-  return _dengele(eski, yanit2 / 2, [
-    for (final x in [
-      ...adaylar2,
-      ?bolmeden,
-      ...[yanit2 + 60, yanit2 - 60, yanit2 + 120, yanit2 - 120],
-      ...[yanit2 + 180, yanit2 - 180, yanit2 + 240, yanit2 - 240],
-    ])
-      if (olasi(x)) (x / 2, _yarim(x)),
-  ], hedefSira(_vaka(a, b, c)));
+  return _dengele(
+    eski,
+    yanit2 / 2,
+    [
+      for (final x in [
+        ...adaylar2,
+        ?bolmeden,
+        ...[yanit2 + 60, yanit2 - 60, yanit2 + 120, yanit2 - 120],
+        ...[yanit2 + 180, yanit2 - 180, yanit2 + 240, yanit2 - 240],
+      ])
+        if (olasi(x)) (x / 2, _yarim(x)),
+    ],
+    hedefSira(_vaka(a, b, c)),
+    komsu: [
+      for (final u in const [60, -60, 120, -120, 180, -180, 240, -240])
+        (yanit2 + u) / 2,
+    ],
+  );
 }
 
 /// İkinci dereceden trigonometrik denklemlerin kök çiftleri ((p1, q1),
@@ -3027,10 +3049,16 @@ AdvancedItem _periyotAcik(int c, int j, [int? hedef]) {
     uc * 2 * fq / fp,
     () => [
       ...[uc * fq, (maks ? g : -g) * 2 * fq, (maks ? k - g : k + g) * 2 * fq],
-      ...[uc * 4 * fq, -uc * 2 * fq, (uc + 1) * 2 * fq, (uc - 1) * 2 * fq],
+      // a·T'nin işaretini çevirmek yalnız a < 0 iken (|a| alma) tipik bir
+      // hatadır; a > 0 iken yerine genliği unutup a = k alma hatası girer.
+      ...[uc * 4 * fq, if (uc < 0) -uc * 2 * fq, if (k != 0) k * 2 * fq],
+      ...[(uc + 1) * 2 * fq, (uc - 1) * 2 * fq],
       ...[(uc + 2) * 2 * fq, (uc - 2) * 2 * fq],
     ].map(piAday).toList(),
     hedef,
+    komsu: [
+      for (final u in [1, -1, 2, -2]) (uc + u) * 2 * fq / fp,
+    ],
   );
 }
 
@@ -5243,6 +5271,7 @@ AdvancedItem _sureklilik(int a, int b, int c, int deneme) {
         ...[_R(k, hedef - be), _R(m + 1), _R(m - 1), _R(m + 2), _R(m - 2)],
       ]),
       sira,
+      komsu: [m + 1, m - 1, m + 2, m - 2],
     );
   }
   if (c == 6) {
@@ -6937,6 +6966,7 @@ AdvancedItem _ikiEgriAlan(int a, int b, int c, int deneme) {
           alan * _R(3, 4),
         ], pozitif: true),
         sira,
+        komsu: _rKomsu(alan),
       );
     }
 
@@ -6995,6 +7025,7 @@ AdvancedItem _ikiEgriAlan(int a, int b, int c, int deneme) {
         alan * _R(3, 4),
       ], pozitif: true),
       sira,
+      komsu: _rKomsu(alan),
     );
   }
 

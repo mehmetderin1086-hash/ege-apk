@@ -30,7 +30,10 @@ String _sabit(num x, int d) =>
 /// [sira] verilirse çeldiriciler, anahtardan küçük olanların sayısı [sira]
 /// olacak biçimde seçilir (bkz. [siraliCeldiriciler]); hazır yazılmış
 /// seçenekler bu durumda (değer, yazım) ikilisi olarak verilir ve komşu
-/// değerler anahtarın iki yanına eklenir.
+/// değerler anahtarın iki yanına eklenir. [alt] ve [ust] (yalnız [sira] ile)
+/// bağlamın izin verdiği aralıktır: dışındaki adaylar (fiziksel olarak
+/// olanaksız ya da gerçek dışı değerler) alınmaz. [dogruYan] verilirse
+/// çeldiricilerden en az biri bu açık aralıkta olur (bkz. [_siraliSec]).
 AdvancedItem _s(
   String kok,
   num dogru,
@@ -40,6 +43,9 @@ AdvancedItem _s(
   bool pozitif = true,
   int? basamak,
   int? sira,
+  num? alt,
+  num? ust,
+  (num, num)? dogruYan,
 }) {
   if (sira != null) {
     return _sSirali(
@@ -51,6 +57,9 @@ AdvancedItem _s(
       unit,
       pozitif,
       basamak,
+      alt,
+      ust,
+      dogruYan,
     );
   }
   final k = _iki(dogru);
@@ -98,6 +107,9 @@ AdvancedItem _sSirali(
   String unit,
   bool pozitif,
   int? basamak,
+  num? alt,
+  num? ust,
+  (num, num)? dogruYan,
 ) {
   final k = _iki(dogru);
   if ((dogru - k).abs() > 1e-7) {
@@ -118,13 +130,23 @@ AdvancedItem _sSirali(
   }
   String yaz(num x) =>
       birimli(basamak == null ? _n(x) : _sabit(x, basamak), unit);
-  // Anahtara ya da önceki bir adaya %1'den yakın adaylar atlanır: neredeyse
-  // aynı iki seçenek (ör. 0,98 ile 0,99) hem kötü durur hem ipucu verir.
+  // Anahtara ya da önceki bir adaya %3'ten yakın adaylar atlanır: neredeyse
+  // aynı iki seçenek (ör. 18,75 ile 19, 2,74 ile 2,8) hem kötü durur hem
+  // ipucu verir; anahtara bu kadar yakın bir değer başka bir yuvarlamayla
+  // (√2 = 1,41 gibi) doğru da sayılabilirdi. [alt] – [ust] dışındakiler de
+  // atlanır.
   final adaylar = <(num, String)>[];
   void ekle(num x, String yazim) {
-    final tol = 0.01 * k.abs();
-    if ((x - k).abs() < tol) return;
-    if (adaylar.any((y) => (x - y.$1).abs() < tol)) return;
+    // Sınırdaki bir değer iki ondalığa yuvarlanınca sınırı aşabilir
+    // (ör. 0,125 J → 0,13 J); bu kadarına izin verilir.
+    if (alt != null && x < alt - 0.0051) return;
+    if (ust != null && x > ust + 0.0051) return;
+    if ((x - k).abs() < 0.03 * k.abs()) return;
+    if (adaylar.any(
+      (y) => (x - y.$1).abs() < 0.03 * math.max(x.abs(), y.$1.abs()),
+    )) {
+      return;
+    }
     adaylar.add((x, yazim));
   }
 
@@ -176,12 +198,115 @@ AdvancedItem _sSirali(
     if (adaylar.length > once) komsu++;
   }
   final anahtar = yaz(k);
+  // Kökte anahtarla aynı birimde yazılmış değerler (ör. cismin ağırlığı ya
+  // da ilk hız): çeldiricilerin hepsi böyle bir değerin öbür yanında kalırsa
+  // anahtar, kökteki değere göre "tek başına kalan seçenek" olur (ağırlık
+  // 4 N iken 3; 3,2; 4 ve anahtar 5 N). En az bir çeldirici, kökteki her
+  // değere göre anahtarla aynı yanda olsun.
+  var yan = dogruYan;
+  if (unit.isNotEmpty) {
+    num yanAlt = yan?.$1 ?? double.negativeInfinity;
+    num yanUst = yan?.$2 ?? double.infinity;
+    final birimli = RegExp(
+      '(?<![0-9,])([0-9]+(?:,[0-9]+)?) ${RegExp.escape(unit)}'
+      r'(?![0-9A-Za-zçğıöşüÇĞİÖŞÜ²³/·])',
+    );
+    for (final m in birimli.allMatches(kok)) {
+      final x = double.parse(m.group(1)!.replaceFirst(',', '.'));
+      if ((x - k).abs() < 1e-9) continue;
+      if (x < k) {
+        yanAlt = math.max(yanAlt, x);
+      } else {
+        yanUst = math.min(yanUst, x);
+      }
+    }
+    if (yanAlt.isFinite || yanUst.isFinite) yan = (yanAlt, yanUst);
+  }
   return AdvancedItem(
     kok,
     anahtar,
-    siraliCeldiriciler(k, anahtar, adaylar, sira),
+    _siraliSec(k, anahtar, adaylar, sira, yan),
     aciklama,
   );
+}
+
+/// [siraliCeldiriciler] gibi seçer; ek olarak anahtarın iki yanından
+/// seçilen iki çeldirici anahtara göre simetrik olmaz. Biri ötekinin
+/// yansıması olursa (k − a ile k + a, ya da k / r ile k·r; r = 2, 3, 4, 5,
+/// 10, 100, 1000) anahtar "ortadaki değer" olarak sezilirdi (ör. 1,65 – 3,3
+/// – 6,6 ya da 30 – 60 – 120). Simetrik eşi seçilmiş aday yalnız başka aday
+/// kalmazsa kullanılır.
+///
+/// [yan] kökte verilen bir değerin anahtarla aynı yanıdır (ör. öz süreden
+/// uzun süreler). Hiçbir çeldirici o yanda değilse anahtar, kökteki değere
+/// göre "doğru yöndeki tek seçenek" olarak sezilirdi; bu durumda en son
+/// seçilen çeldirici, o yandaki ilk uygun adayla değiştirilir.
+List<String> _siraliSec(
+  num k,
+  String anahtarYazim,
+  List<(num, String)> adaylar,
+  int sira, [
+  (num, num)? yan,
+]) {
+  bool simetrik(num x, num y) {
+    if ((x - k) * (y - k) >= 0) return false;
+    if ((x + y - 2 * k).abs() <= 0.005 * k.abs() + 1e-9) return true;
+    if (k <= 0 || x <= 0 || y <= 0) return false;
+    final alt = math.min(x, y), ust = math.max(x, y);
+    return const [2, 3, 4, 5, 10, 100, 1000].any(
+      (r) => (ust / k - r).abs() <= 0.01 * r && (k / alt - r).abs() <= 0.01 * r,
+    );
+  }
+
+  final kota = [sira.clamp(0, 3), 3 - sira.clamp(0, 3)];
+  final secilen = <(num, String)>[], yedek = <(num, String)>[];
+  bool yeni((num, String) a) =>
+      a.$2.trim().isNotEmpty &&
+      !ayniSecenek(a.$2, anahtarYazim) &&
+      ![...secilen, ...yedek].any((w) => ayniSecenek(w.$2, a.$2));
+  bool uyar((num, String) a) => !secilen.any((w) => simetrik(w.$1, a.$1));
+  for (final a in adaylar) {
+    if (secilen.length == 3) break;
+    if (!yeni(a)) continue;
+    final yan = a.$1 < k ? 0 : 1;
+    if (kota[yan] > 0 && uyar(a)) {
+      secilen.add(a);
+      kota[yan]--;
+    } else {
+      yedek.add(a);
+    }
+  }
+  for (final sart in [true, false]) {
+    for (final a in yedek) {
+      if (secilen.length == 3) break;
+      if (!secilen.contains(a) && (!sart || uyar(a))) secilen.add(a);
+    }
+  }
+  if (secilen.length != 3) {
+    throw StateError('Eksik çeldirici: $anahtarYazim → $secilen');
+  }
+  bool yanda(num x) => yan != null && x > yan.$1 && x < yan.$2;
+  if (yan != null && !secilen.any((w) => yanda(w.$1))) {
+    // Değiştirilen çeldiricinin anahtara göre yanı korunabiliyorsa
+    // korunur (hedef sıra bozulmasın); olmazsa o yandaki ilk aday alınır.
+    final kalan = secilen.sublist(0, 2);
+    final eskiAlt = secilen[2].$1 < k;
+    (num, String)? yeniAday;
+    for (final ayniYan in [true, false]) {
+      for (final a in adaylar) {
+        if (!yanda(a.$1) || ayniSecenek(a.$2, anahtarYazim)) continue;
+        if (ayniYan && (a.$1 < k) != eskiAlt) continue;
+        if (kalan.any((w) => ayniSecenek(w.$2, a.$2) || simetrik(w.$1, a.$1))) {
+          continue;
+        }
+        yeniAday = a;
+        break;
+      }
+      if (yeniAday != null) break;
+    }
+    if (yeniAday != null) secilen[2] = yeniAday;
+  }
+  return [for (final a in secilen) a.$2];
 }
 
 /// Oran yanıtlı soru: seçenekler anahtar, anahtarın tersi, bir tipik hata
@@ -204,7 +329,11 @@ AdvancedItem _tersCiftli(
   for (final (p, q) in adaylar) {
     if (p <= 0 || q <= 0) continue;
     final x = p / q;
-    if (_icinde(x, [1, r, 1 / r])) continue;
+    // Anahtara, tersine ya da 1'e %3'ten yakın oranlar (ör. 28/25 ile
+    // 125/112) neredeyse aynı iki seçenek verirdi.
+    if ([1, r, 1 / r].any((y) => (x - y).abs() < 0.03 * math.max(x, y))) {
+      continue;
+    }
     secilen ??= (p, q);
     if ([1 / r, x, 1 / x].where((y) => y < r).length == istenen) {
       secilen = (p, q);
@@ -996,6 +1125,9 @@ AdvancedItem _surtunmeKatsayi(int a, int b, int k) {
                   'kuvvetine eşittir: μs·m·g = ${_n(fs)}, μs = ${_n(fs)} / '
                   '($m·10) = ${_n(dogru)}.',
         sira: s,
+        // 1'den büyük katsayılar (10·μ, 1/μ: 3,5 ya da 5 gibi) kasa ile zemin
+        // için gerçek dışıdır.
+        ust: 1,
       );
     default:
       final ms = const [20, 25, 40, 50, 80][q];
@@ -1167,6 +1299,7 @@ AdvancedItem _kayarakDurma(int a, int b, int k) {
             '(2·${_n(d)}) = ${_n(ivme)} m/s² olur. a = μ·g olduğundan '
             'μ = ${_n(ivme)} / 10 = ${_n(mu)} bulunur.',
         sira: s,
+        ust: 1,
       );
     default:
       return _s(
@@ -1292,6 +1425,9 @@ final _f04 = lmAile(
         lHiz,
         unit: 'm/s',
         sira: sira,
+        // Duran L cismi en çok 2·v hızı kazanabilir; daha büyük hızlar
+        // enerjinin korunumunu çiğner.
+        ust: 2 * v,
       );
     }
     if (f == 1) {
@@ -1302,6 +1438,8 @@ final _f04 = lmAile(
         kHiz,
         unit: 'm/s',
         sira: sira,
+        // K cisminin hızı ilk hızını aşamaz.
+        ust: v,
       );
     }
     final ilk = m1 * v * v / 2; // çarpışmadan önceki kinetik enerji
@@ -1323,6 +1461,8 @@ final _f04 = lmAile(
             '½·$m2·${_n(vl)}² = ${_n(e)} J olur.',
         unit: 'J',
         sira: sira,
+        // Hiçbir cismin enerjisi çarpışmadan önceki toplamı aşamaz.
+        ust: ilk,
       );
     }
     final e = m1 * vk * vk / 2;
@@ -1342,6 +1482,7 @@ final _f04 = lmAile(
           '½·$m1·${_n(vk.abs())}² = ${_n(e)} J olur.',
       unit: 'J',
       sira: sira,
+      ust: ilk,
     );
   },
   exam: ExamKind.ayt,
@@ -1735,6 +1876,10 @@ AdvancedItem _eylemsizlik(int a, int b, int k) {
             'olur. Uzaklıklar metreye çevrilirse ${toplam([(m1, r1), (m2, r2)])} = '
             '${_n(i)} kg·m² bulunur.',
         sira: s,
+        // Santimetreyi çevirmemek (I·10000, ör. 3700 kg·m²) birkaç kilogramlık
+        // cisimler için gerçek dışı bir değer verir ve anahtarın rakamlarını
+        // taşıyarak onu ele verir; bu kopya alınmaz.
+        ust: 20 * i,
       );
     case 1:
       var x = 10 * (1 + q); // eksenin K cismine uzaklığı (yedek: 60 … 100 cm)
@@ -1772,6 +1917,7 @@ AdvancedItem _eylemsizlik(int a, int b, int k) {
         'L cismi eksenden $boy − $x = $y cm uzaktadır. Uzaklıklar metreye '
             'çevrilirse ${toplam([(m1, x), (m2, y)])} = ${_n(i)} kg·m² bulunur.',
         sira: s,
+        ust: 20 * i,
       );
     case 2:
       final m3 = 1 + k; // 1 … 4 kg
@@ -1802,6 +1948,7 @@ AdvancedItem _eylemsizlik(int a, int b, int k) {
         'I = Σ m·r² bağıntısında uzaklıklar metreye çevrilirse '
             '${toplam([(m1, r1), (m2, r2), (m3, r3)])} = ${_n(i)} kg·m² bulunur.',
         sira: s,
+        ust: 20 * i,
       );
     default:
       var r1 = 10 * (1 + q); // 10 … 50 cm (yedek: 110 … 150 cm)
@@ -2332,6 +2479,8 @@ AdvancedItem _keplerIkinci(int a, int b, int k) {
           '$t·$p/$q = ${_n(cevap)} günde taranır.',
       unit: 'gün',
       sira: s,
+      // Alanın bir kesrini taramak bütün periyottan uzun süremez.
+      ust: t,
     );
   }
   final (p, q) = _yakinUzak[b ~/ 2];
@@ -2423,6 +2572,9 @@ AdvancedItem _zamanGenislemesi(int a, int b, int k) {
       '$kokYazi = ${_n(uzun)} $birim.',
       unit: parcacik ? '' : 'yıl',
       sira: s,
+      // Çeldiricilerin hepsi kökteki öz süreden kısa ya da ona eşit olursa
+      // "süre uzar" bilgisi tek başına anahtarı seçtirirdi.
+      dogruYan: (oz, double.infinity),
     );
   }
   return _s(
@@ -2447,6 +2599,7 @@ AdvancedItem _zamanGenislemesi(int a, int b, int k) {
     '${_n(oz)} $birim.',
     unit: parcacik ? '' : 'yıl',
     sira: s,
+    dogruYan: (0, uzun),
   );
 }
 
@@ -2518,6 +2671,7 @@ AdvancedItem _boyKisalmasi(int a, int b, int k) {
       '${_n(oz)}·$kokYazi = ${_n(kisa)} $birim.',
       unit: birim,
       sira: sira,
+      dogruYan: (0, oz),
     );
   }
   return _s(
@@ -2535,6 +2689,7 @@ AdvancedItem _boyKisalmasi(int a, int b, int k) {
     '${_n(oz)} $birim bulunur.',
     unit: birim,
     sira: sira,
+    dogruYan: (kisa, double.infinity),
   );
 }
 
@@ -2562,6 +2717,9 @@ AdvancedItem _yildizYolculugu(int a, int b, int k) {
         '$dunya (Işık yılı, ışığın bir yılda aldığı yoldur.)',
         unit: 'yıl',
         sira: s,
+        // Işıktan hızlı gidilemediğinden süre (yıl) uzaklıktan (ışık yılı)
+        // kısa olamaz.
+        alt: d,
       );
     }
     return _s(
@@ -2599,6 +2757,7 @@ AdvancedItem _yildizYolculugu(int a, int b, int k) {
     'Araçtaki gözlemciye göre Dünya–yıldız uzaklığı hareket doğrultusunda '
         'kısalır: L = L₀·√(1 − v²/c²) = $d·$kokYazi = ${_n(kisa)} ışık yılı.',
     sira: s,
+    dogruYan: (0, d),
   );
 }
 
@@ -3623,7 +3782,7 @@ AdvancedItem _acEtkin(int a, int b, int k) {
             'bir ampermetreyle ${_n(x)} A olarak ölçülüyor. Direncin uçları '
             'arasındaki gerilimin maksimum değeri kaç V olur? $_kok2',
         vm,
-        [ve, ve / 1.4, 2 * ve, 1.96 * ve, ve / 2, 1.4 * x],
+        [ve, ve / 1.4, 2 * ve, ve / 2, 1.4 * x],
         'Etkin gerilim ${_n(x)}·$r = ${_n(ve)} V olur. Gerilimin maksimum '
             'değeri etkin değerin √2 katıdır: ${_n(ve)}·1,4 = ${_n(vm)} V.',
         unit: 'V',
@@ -3817,7 +3976,9 @@ AdvancedItem _sacakGenisligi(int a, int b, int k) {
     '${_deney(l, boy, d)} Perdede oluşan ardışık iki aydınlık saçak '
     'arasındaki uzaklık (saçak genişliği) kaç mm olur?',
     dx,
-    [dx / 2, 2 * dx, 1.5 * dx, dx * 1000],
+    // Δx·1000 (bir 10⁻³ çarpanını unutmak) perde uzaklığından büyük, gerçek
+    // dışı bir saçak genişliği verdiğinden alınmaz.
+    [dx / 2, 2 * dx, 1.5 * dx],
     _sacakCozum(l, boy, d),
     unit: 'mm',
     sira: _hs(a, b, 3 * k),
@@ -3952,12 +4113,16 @@ AdvancedItem _girisimTers(int a, int b, int k) {
             'kullanılan ışığın dalga boyu kaç nm olur?',
         l,
         // λ·1000 (bir 10⁻³ çarpanını unutmak) 0,4 mm gibi gerçek dışı bir
-        // dalga boyu verdiğinden alınmaz.
+        // dalga boyu verdiğinden alınmaz. λ / 2 ve 2·λ görünür ışığın dışında
+        // kalır (sınırlar aşağıda); çeldiriciler görünür aralıktaki komşulardır.
         [l / 2, 2 * l],
         'Δx = λ·L / d bağıntısından λ = Δx·d / L = ${_n(dx)}·10⁻³·'
             '${_n(d / 100)}·10⁻³ / ${_n(boy / 100)} m = $l·10⁻⁹ m = $l nm bulunur.',
         unit: 'nm',
         sira: sira,
+        // Görünür ışık: yalnız bu aralıkta kalan dalga boyları.
+        alt: 380,
+        ust: 760,
       );
     case 1:
       return _s(
@@ -4000,6 +4165,8 @@ AdvancedItem _girisimTers(int a, int b, int k) {
             '${_n(s * dx)} / $s = ${_n(dx)} mm olur. λ = Δx·d / L = $l nm bulunur.',
         unit: 'nm',
         sira: sira,
+        alt: 380,
+        ust: 760,
       );
   }
 }
@@ -4511,6 +4678,11 @@ AdvancedItem _yaricapliKureler(int a, int b, int k, bool topraklama) {
     2 => [(q1 - yl).abs(), (q2 - yk).abs(), (yk - yl).abs()],
     _ => [yk * r1 / r2, yl * r1 / (r1 + r2), y * r1 / (r1 + r2)],
   };
+  // Dokunmadan sonra kürenin yükü paylaşılan yükün işaretini taşır ve onun
+  // büyüklüğünü aşamaz (paylaşılan yük: iki kürenin toplamı, topraklamalı
+  // soruda K'de kalan yük). Bunu aşan ya da işareti ters bir değer (ör.
+  // 44 nC toplamda 117,33 nC) yükün korunumunu çiğner ve anahtarı ele verir.
+  final paylasilan = v == 3 ? yk : toplam.toDouble();
   return _s(
     '$giris $soru',
     y,
@@ -4518,6 +4690,8 @@ AdvancedItem _yaricapliKureler(int a, int b, int k, bool topraklama) {
     '$paylasim$ek',
     pozitif: false,
     sira: _hs(a, b, 3 * k + (topraklama ? 2 : 1)),
+    alt: v == 2 ? null : math.min(0, paylasilan),
+    ust: v == 2 ? null : math.max(0, paylasilan),
   );
 }
 
@@ -5479,6 +5653,8 @@ AdvancedItem _acikHava(int a, int b, int k) {
         '$esit $p0·13,6 = h·$ds. Buradan h = $hs cm bulunur.',
         unit: 'cm',
         sira: s,
+        // Sıvı cıvadan hafif olduğundan sütunu cıva sütunundan kısa olamaz.
+        alt: p0,
       ),
       1 => _s(
         'Bir yerde Torricelli deneyi cıva yerine yoğunluğu $ds g/cm³ olan bir '
@@ -5492,6 +5668,10 @@ AdvancedItem _acikHava(int a, int b, int k) {
         [h * d / 100, h / 13.6, 10 * p0, 76],
         '$esit P₀·13,6 = $hs·$ds. Buradan P₀ = $p0 cmHg bulunur.',
         sira: s,
+        // Gerçekçi açık hava basınçları (816 ya da 600 cmHg gibi değerler
+        // anahtarı ele verirdi).
+        alt: 45,
+        ust: 80,
       ),
       _ => _s(
         'Açık hava basıncının $p0 cmHg olduğu bir yerde Torricelli deneyi cıva '
@@ -5504,6 +5684,8 @@ AdvancedItem _acikHava(int a, int b, int k) {
         [p0 / h, h / (13.6 * p0), if (p0 != 76) 13.6 * 76 / h],
         '$esit $p0·13,6 = $hs·d. Buradan d = $ds g/cm³ bulunur.',
         sira: s,
+        // 0,06 g/cm³ gibi hiçbir sıvıya uymayan yoğunluklar alınmaz.
+        alt: 0.5,
       ),
     };
   }
@@ -5515,7 +5697,10 @@ AdvancedItem _acikHava(int a, int b, int k) {
         '${_n(h / 100)} m olarak ölçülüyor. Açık hava basıncı kaç Pa olur? '
         '$_g10',
     p,
-    // Ek: sıvı yerine cıvanın ya da suyun yoğunluğunu kullanmak.
+    // Ek: sıvı yerine cıvanın ya da suyun yoğunluğunu kullanmak, açık hava
+    // basıncını her yerde 1 atm (101300 Pa) sanmak. Birim kaymaları (×100,
+    // ÷100, ÷10) ve cıva yoğunluğu gerçek dışı açık hava basınçları verir;
+    // aşağıdaki aralık bunları eler, gerekirse komşu değerler kullanılır.
     [
       p * 100,
       d * h / 1000,
@@ -5523,11 +5708,14 @@ AdvancedItem _acikHava(int a, int b, int k) {
       if (d != 13600) 1360 * h,
       if (d != 1000) 100 * h,
       p * 10,
+      101300,
     ],
     'Açık hava basıncı sütunun yaptığı basınca eşittir: P = h·d·g = '
         '${_n(h / 100)}·$d·10 = ${_n(p)} Pa.',
     unit: 'Pa',
     sira: s,
+    alt: 60000,
+    ust: 110000,
   );
 }
 
