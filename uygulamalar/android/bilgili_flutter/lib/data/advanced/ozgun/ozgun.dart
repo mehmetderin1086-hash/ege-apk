@@ -1,8 +1,8 @@
 // Üretilen dosya: tool/ozgun/uret.py. Elle yazılmış, birbirinden ayrışan özgün
 // çoktan seçmeli sorular; her aile bir alt alanın bir zorluk düzeyidir.
 import '../common.dart';
-import 'oz_science_1_kolay.dart';
 import 'oz_science_1_orta.dart';
+import 'oz_science_1_kolay.dart';
 import 'oz_science_1_zor.dart';
 import 'oz_science_2_kolay.dart';
 import 'oz_science_2_orta.dart';
@@ -34,8 +34,8 @@ import 'oz_geography_2_zor.dart';
 import 'oz_geography_3_kolay.dart';
 import 'oz_geography_3_orta.dart';
 import 'oz_geography_3_zor.dart';
-import 'oz_geography_4_kolay.dart';
 import 'oz_geography_4_orta.dart';
+import 'oz_geography_4_kolay.dart';
 import 'oz_geography_4_zor.dart';
 import 'oz_art_1_kolay.dart';
 import 'oz_art_1_orta.dart';
@@ -43,6 +43,9 @@ import 'oz_art_1_zor.dart';
 import 'oz_art_2_kolay.dart';
 import 'oz_art_2_orta.dart';
 import 'oz_art_2_zor.dart';
+import 'oz_art_3_kolay.dart';
+import 'oz_art_3_orta.dart';
+import 'oz_art_3_zor.dart';
 import 'oz_art_4_kolay.dart';
 import 'oz_art_4_orta.dart';
 import 'oz_art_4_zor.dart';
@@ -79,6 +82,9 @@ import 'oz_cinema_2_kolay.dart';
 import 'oz_cinema_3_kolay.dart';
 import 'oz_cinema_3_orta.dart';
 import 'oz_cinema_3_zor.dart';
+import 'oz_cinema_4_kolay.dart';
+import 'oz_cinema_4_orta.dart';
+import 'oz_cinema_4_zor.dart';
 import 'oz_language_1_kolay.dart';
 import 'oz_language_1_orta.dart';
 import 'oz_language_1_zor.dart';
@@ -145,6 +151,9 @@ import 'oz_exam_1_zor.dart';
 import 'oz_exam_2_kolay.dart';
 import 'oz_exam_2_orta.dart';
 import 'oz_exam_2_zor.dart';
+import 'oz_exam_3_orta.dart';
+import 'oz_exam_3_kolay.dart';
+import 'oz_exam_3_zor.dart';
 import 'oz_mathematics_1_kolay.dart';
 import 'oz_mathematics_1_orta.dart';
 import 'oz_mathematics_1_zor.dart';
@@ -169,8 +178,8 @@ import 'oz_physics_3_zor.dart';
 import 'oz_physics_4_kolay.dart';
 import 'oz_physics_4_orta.dart';
 import 'oz_physics_4_zor.dart';
-import 'oz_chemistry_1_kolay.dart';
 import 'oz_chemistry_1_orta.dart';
+import 'oz_chemistry_1_kolay.dart';
 import 'oz_chemistry_1_zor.dart';
 import 'oz_chemistry_2_kolay.dart';
 import 'oz_chemistry_2_orta.dart';
@@ -199,8 +208,8 @@ import 'oz_engineering_1_zor.dart';
 import 'oz_engineering_2_kolay.dart';
 import 'oz_engineering_2_orta.dart';
 import 'oz_engineering_2_zor.dart';
-import 'oz_engineering_3_kolay.dart';
 import 'oz_engineering_3_orta.dart';
+import 'oz_engineering_3_kolay.dart';
 import 'oz_engineering_3_zor.dart';
 import 'oz_engineering_4_kolay.dart';
 import 'oz_engineering_4_orta.dart';
@@ -226,6 +235,9 @@ import 'oz_statistics_2_zor.dart';
 import 'oz_statistics_3_kolay.dart';
 import 'oz_statistics_3_orta.dart';
 import 'oz_statistics_3_zor.dart';
+import 'oz_statistics_4_kolay.dart';
+import 'oz_statistics_4_orta.dart';
+import 'oz_statistics_4_zor.dart';
 import 'oz_economics_1_kolay.dart';
 import 'oz_economics_1_orta.dart';
 import 'oz_economics_1_zor.dart';
@@ -268,8 +280,8 @@ AdvancedFamily _aile(String key, String title, Topic topic, Difficulty d, BloomL
         lesson: title, sourceLabel: 'Bilgili · Özgün Soru Bankası', build: (i) => AdvancedItem(v[i].$1, v[i].$2, v[i].$3, v[i].$4));
 
 final ozgunAileler = <AdvancedFamily>[
-  _aile('oz_science_1_kolay', 'Bilim tarihi ve büyük keşifler', Topic.science, Difficulty.easy, BloomLevel.hatirlama, ozScience1Kolay),
   _aile('oz_science_1_orta', 'Bilim tarihi ve büyük keşifler', Topic.science, Difficulty.medium, BloomLevel.hatirlama, ozScience1Orta),
+  _aile('oz_science_1_kolay', 'Bilim tarihi ve büyük keşifler', Topic.science, Difficulty.easy, BloomLevel.hatirlama, ozScience1Kolay),
   _aile('oz_science_1_zor', 'Bilim tarihi ve büyük keşifler', Topic.science, Difficulty.hard, BloomLevel.analiz, ozScience1Zor),
   _aile('oz_science_2_kolay', 'Gündelik hayatta bilim', Topic.science, Difficulty.easy, BloomLevel.anlama, ozScience2Kolay),
   _aile('oz_science_2_orta', 'Gündelik hayatta bilim', Topic.science, Difficulty.medium, BloomLevel.anlama, ozScience2Orta),
@@ -301,8 +313,8 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_geography_3_kolay', 'Dünya ülkeleri, başkentler, kıtalar, okyanuslar ve önemli yer şekilleri', Topic.geography, Difficulty.easy, BloomLevel.hatirlama, ozGeography3Kolay),
   _aile('oz_geography_3_orta', 'Dünya ülkeleri, başkentler, kıtalar, okyanuslar ve önemli yer şekilleri', Topic.geography, Difficulty.medium, BloomLevel.hatirlama, ozGeography3Orta),
   _aile('oz_geography_3_zor', 'Dünya ülkeleri, başkentler, kıtalar, okyanuslar ve önemli yer şekilleri', Topic.geography, Difficulty.hard, BloomLevel.hatirlama, ozGeography3Zor),
-  _aile('oz_geography_4_kolay', 'Doğal sistemler: iklim, biyomlar, harita bilgisi, doğal afetler', Topic.geography, Difficulty.easy, BloomLevel.hatirlama, ozGeography4Kolay),
   _aile('oz_geography_4_orta', 'Doğal sistemler: iklim, biyomlar, harita bilgisi, doğal afetler', Topic.geography, Difficulty.medium, BloomLevel.anlama, ozGeography4Orta),
+  _aile('oz_geography_4_kolay', 'Doğal sistemler: iklim, biyomlar, harita bilgisi, doğal afetler', Topic.geography, Difficulty.easy, BloomLevel.hatirlama, ozGeography4Kolay),
   _aile('oz_geography_4_zor', 'Doğal sistemler: iklim, biyomlar, harita bilgisi, doğal afetler', Topic.geography, Difficulty.hard, BloomLevel.analiz, ozGeography4Zor),
   _aile('oz_art_1_kolay', 'Resim tarihi: akımlar, ressamlar ve eserler', Topic.art, Difficulty.easy, BloomLevel.hatirlama, ozArt1Kolay),
   _aile('oz_art_1_orta', 'Resim tarihi: akımlar, ressamlar ve eserler', Topic.art, Difficulty.medium, BloomLevel.hatirlama, ozArt1Orta),
@@ -310,6 +322,9 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_art_2_kolay', 'Heykel, mimarlık ve dünya mimari eserleri', Topic.art, Difficulty.easy, BloomLevel.hatirlama, ozArt2Kolay),
   _aile('oz_art_2_orta', 'Heykel, mimarlık ve dünya mimari eserleri', Topic.art, Difficulty.medium, BloomLevel.hatirlama, ozArt2Orta),
   _aile('oz_art_2_zor', 'Heykel, mimarlık ve dünya mimari eserleri', Topic.art, Difficulty.hard, BloomLevel.hatirlama, ozArt2Zor),
+  _aile('oz_art_3_kolay', 'Türk ve İslam sanatları', Topic.art, Difficulty.easy, BloomLevel.hatirlama, ozArt3Kolay),
+  _aile('oz_art_3_orta', 'Türk ve İslam sanatları', Topic.art, Difficulty.medium, BloomLevel.hatirlama, ozArt3Orta),
+  _aile('oz_art_3_zor', 'Türk ve İslam sanatları', Topic.art, Difficulty.hard, BloomLevel.hatirlama, ozArt3Zor),
   _aile('oz_art_4_kolay', 'Sanat kavramları, teknikleri, renk ve tasarım ilkeleri; fotoğraf ve tiyatro', Topic.art, Difficulty.easy, BloomLevel.hatirlama, ozArt4Kolay),
   _aile('oz_art_4_orta', 'Sanat kavramları, teknikleri, renk ve tasarım ilkeleri; fotoğraf ve tiyatro', Topic.art, Difficulty.medium, BloomLevel.hatirlama, ozArt4Orta),
   _aile('oz_art_4_zor', 'Sanat kavramları, teknikleri, renk ve tasarım ilkeleri; fotoğraf ve tiyatro', Topic.art, Difficulty.hard, BloomLevel.hatirlama, ozArt4Zor),
@@ -319,7 +334,7 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_sport_2_kolay', 'Olimpiyatlar ve atletizm; olimpik sporların kuralları', Topic.sport, Difficulty.easy, BloomLevel.hatirlama, ozSport2Kolay),
   _aile('oz_sport_2_orta', 'Olimpiyatlar ve atletizm; olimpik sporların kuralları', Topic.sport, Difficulty.medium, BloomLevel.hatirlama, ozSport2Orta),
   _aile('oz_sport_2_zor', 'Olimpiyatlar ve atletizm; olimpik sporların kuralları', Topic.sport, Difficulty.hard, BloomLevel.hatirlama, ozSport2Zor),
-  _aile('oz_sport_3_kolay', 'Basketbol, voleybol, tenis, güreş, yüzme ve diğer branşların kuralları', Topic.sport, Difficulty.easy, BloomLevel.hatirlama, ozSport3Kolay),
+  _aile('oz_sport_3_kolay', 'Basketbol, voleybol, tenis, güreş, yüzme ve diğer branşların kuralları', Topic.sport, Difficulty.easy, BloomLevel.anlama, ozSport3Kolay),
   _aile('oz_sport_3_orta', 'Basketbol, voleybol, tenis, güreş, yüzme ve diğer branşların kuralları', Topic.sport, Difficulty.medium, BloomLevel.anlama, ozSport3Orta),
   _aile('oz_sport_3_zor', 'Basketbol, voleybol, tenis, güreş, yüzme ve diğer branşların kuralları', Topic.sport, Difficulty.hard, BloomLevel.hatirlama, ozSport3Zor),
   _aile('oz_sport_4_orta', 'Spor bilimi, sağlıklı yaşam, Türk spor tarihi ve geleneksel sporlar', Topic.sport, Difficulty.medium, BloomLevel.hatirlama, ozSport4Orta),
@@ -328,7 +343,7 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_culture_1_kolay', 'Dünya kültürleri, gelenekler, bayramlar ve yemek kültürü', Topic.culture, Difficulty.easy, BloomLevel.uygulama, ozCulture1Kolay),
   _aile('oz_culture_1_orta', 'Dünya kültürleri, gelenekler, bayramlar ve yemek kültürü', Topic.culture, Difficulty.medium, BloomLevel.hatirlama, ozCulture1Orta),
   _aile('oz_culture_1_zor', 'Dünya kültürleri, gelenekler, bayramlar ve yemek kültürü', Topic.culture, Difficulty.hard, BloomLevel.analiz, ozCulture1Zor),
-  _aile('oz_culture_2_kolay', 'Türk kültürü, gelenekler, el sanatları, deyim ve atasözlerinin kökenleri', Topic.culture, Difficulty.easy, BloomLevel.hatirlama, ozCulture2Kolay),
+  _aile('oz_culture_2_kolay', 'Türk kültürü, gelenekler, el sanatları, deyim ve atasözlerinin kökenleri', Topic.culture, Difficulty.easy, BloomLevel.anlama, ozCulture2Kolay),
   _aile('oz_culture_2_orta', 'Türk kültürü, gelenekler, el sanatları, deyim ve atasözlerinin kökenleri', Topic.culture, Difficulty.medium, BloomLevel.hatirlama, ozCulture2Orta),
   _aile('oz_culture_2_zor', 'Türk kültürü, gelenekler, el sanatları, deyim ve atasözlerinin kökenleri', Topic.culture, Difficulty.hard, BloomLevel.hatirlama, ozCulture2Zor),
   _aile('oz_culture_3_kolay', 'Bilinmesi gereken genel bilgiler: ölçü birimleri, takvim, simgeler, kurumlar', Topic.culture, Difficulty.easy, BloomLevel.hatirlama, ozCulture3Kolay),
@@ -346,6 +361,9 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_cinema_3_kolay', 'Sinema dili ve teknikleri: çekim, kurgu, senaryo, ses, ödüller', Topic.cinema, Difficulty.easy, BloomLevel.hatirlama, ozCinema3Kolay),
   _aile('oz_cinema_3_orta', 'Sinema dili ve teknikleri: çekim, kurgu, senaryo, ses, ödüller', Topic.cinema, Difficulty.medium, BloomLevel.hatirlama, ozCinema3Orta),
   _aile('oz_cinema_3_zor', 'Sinema dili ve teknikleri: çekim, kurgu, senaryo, ses, ödüller', Topic.cinema, Difficulty.hard, BloomLevel.hatirlama, ozCinema3Zor),
+  _aile('oz_cinema_4_kolay', 'Animasyon, belgesel ve uyarlamalar', Topic.cinema, Difficulty.easy, BloomLevel.hatirlama, ozCinema4Kolay),
+  _aile('oz_cinema_4_orta', 'Animasyon, belgesel ve uyarlamalar', Topic.cinema, Difficulty.medium, BloomLevel.hatirlama, ozCinema4Orta),
+  _aile('oz_cinema_4_zor', 'Animasyon, belgesel ve uyarlamalar', Topic.cinema, Difficulty.hard, BloomLevel.analiz, ozCinema4Zor),
   _aile('oz_language_1_kolay', 'İngilizce dil bilgisi', Topic.language, Difficulty.easy, BloomLevel.uygulama, ozLanguage1Kolay),
   _aile('oz_language_1_orta', 'İngilizce dil bilgisi', Topic.language, Difficulty.medium, BloomLevel.uygulama, ozLanguage1Orta),
   _aile('oz_language_1_zor', 'İngilizce dil bilgisi', Topic.language, Difficulty.hard, BloomLevel.analiz, ozLanguage1Zor),
@@ -380,7 +398,7 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_literature_3_orta', 'Dünya edebiyatı: yazarlar, eserler, akımlar', Topic.literature, Difficulty.medium, BloomLevel.anlama, ozLiterature3Orta),
   _aile('oz_literature_3_zor', 'Dünya edebiyatı: yazarlar, eserler, akımlar', Topic.literature, Difficulty.hard, BloomLevel.analiz, ozLiterature3Zor),
   _aile('oz_literature_4_kolay', 'Edebî türler, şiir bilgisi, söz sanatları ve anlatım teknikleri', Topic.literature, Difficulty.easy, BloomLevel.hatirlama, ozLiterature4Kolay),
-  _aile('oz_literature_4_orta', 'Edebî türler, şiir bilgisi, söz sanatları ve anlatım teknikleri', Topic.literature, Difficulty.medium, BloomLevel.analiz, ozLiterature4Orta),
+  _aile('oz_literature_4_orta', 'Edebî türler, şiir bilgisi, söz sanatları ve anlatım teknikleri', Topic.literature, Difficulty.medium, BloomLevel.uygulama, ozLiterature4Orta),
   _aile('oz_literature_4_zor', 'Edebî türler, şiir bilgisi, söz sanatları ve anlatım teknikleri', Topic.literature, Difficulty.hard, BloomLevel.analiz, ozLiterature4Zor),
   _aile('oz_music_1_kolay', 'Batı müziği tarihi: besteciler ve dönemler', Topic.music, Difficulty.easy, BloomLevel.hatirlama, ozMusic1Kolay),
   _aile('oz_music_1_zor', 'Batı müziği tarihi: besteciler ve dönemler', Topic.music, Difficulty.hard, BloomLevel.hatirlama, ozMusic1Zor),
@@ -412,6 +430,9 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_exam_2_kolay', 'TYT Türkçe: kısa paragrafta anlam', Topic.exam, Difficulty.easy, BloomLevel.anlama, ozExam2Kolay),
   _aile('oz_exam_2_orta', 'TYT Türkçe: kısa paragrafta anlam', Topic.exam, Difficulty.medium, BloomLevel.analiz, ozExam2Orta),
   _aile('oz_exam_2_zor', 'TYT Türkçe: kısa paragrafta anlam', Topic.exam, Difficulty.hard, BloomLevel.analiz, ozExam2Zor),
+  _aile('oz_exam_3_orta', 'Sayısal mantık ve problemler', Topic.exam, Difficulty.medium, BloomLevel.uygulama, ozExam3Orta),
+  _aile('oz_exam_3_kolay', 'Sayısal mantık ve problemler', Topic.exam, Difficulty.easy, BloomLevel.uygulama, ozExam3Kolay),
+  _aile('oz_exam_3_zor', 'Sayısal mantık ve problemler', Topic.exam, Difficulty.hard, BloomLevel.analiz, ozExam3Zor),
   _aile('oz_mathematics_1_kolay', 'Sayılar, bölünebilme, EBOB-EKOK, üslü ve köklü sayılar', Topic.mathematics, Difficulty.easy, BloomLevel.uygulama, ozMathematics1Kolay),
   _aile('oz_mathematics_1_orta', 'Sayılar, bölünebilme, EBOB-EKOK, üslü ve köklü sayılar', Topic.mathematics, Difficulty.medium, BloomLevel.uygulama, ozMathematics1Orta),
   _aile('oz_mathematics_1_zor', 'Sayılar, bölünebilme, EBOB-EKOK, üslü ve köklü sayılar', Topic.mathematics, Difficulty.hard, BloomLevel.analiz, ozMathematics1Zor),
@@ -424,10 +445,10 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_mathematics_4_kolay', 'Olasılık, permütasyon, kombinasyon, diziler, logaritma, türev ve integral', Topic.mathematics, Difficulty.easy, BloomLevel.uygulama, ozMathematics4Kolay),
   _aile('oz_mathematics_4_zor', 'Olasılık, permütasyon, kombinasyon, diziler, logaritma, türev ve integral', Topic.mathematics, Difficulty.hard, BloomLevel.analiz, ozMathematics4Zor),
   _aile('oz_mathematics_4_orta', 'Olasılık, permütasyon, kombinasyon, diziler, logaritma, türev ve integral', Topic.mathematics, Difficulty.medium, BloomLevel.uygulama, ozMathematics4Orta),
-  _aile('oz_physics_1_kolay', 'Mekanik: hareket, kuvvet, Newton yasaları, iş-enerji, momentum', Topic.physics, Difficulty.easy, BloomLevel.anlama, ozPhysics1Kolay),
+  _aile('oz_physics_1_kolay', 'Mekanik: hareket, kuvvet, Newton yasaları, iş-enerji, momentum', Topic.physics, Difficulty.easy, BloomLevel.uygulama, ozPhysics1Kolay),
   _aile('oz_physics_1_orta', 'Mekanik: hareket, kuvvet, Newton yasaları, iş-enerji, momentum', Topic.physics, Difficulty.medium, BloomLevel.uygulama, ozPhysics1Orta),
   _aile('oz_physics_1_zor', 'Mekanik: hareket, kuvvet, Newton yasaları, iş-enerji, momentum', Topic.physics, Difficulty.hard, BloomLevel.analiz, ozPhysics1Zor),
-  _aile('oz_physics_2_kolay', 'Elektrik ve manyetizma', Topic.physics, Difficulty.easy, BloomLevel.uygulama, ozPhysics2Kolay),
+  _aile('oz_physics_2_kolay', 'Elektrik ve manyetizma', Topic.physics, Difficulty.easy, BloomLevel.anlama, ozPhysics2Kolay),
   _aile('oz_physics_2_orta', 'Elektrik ve manyetizma', Topic.physics, Difficulty.medium, BloomLevel.uygulama, ozPhysics2Orta),
   _aile('oz_physics_2_zor', 'Elektrik ve manyetizma', Topic.physics, Difficulty.hard, BloomLevel.uygulama, ozPhysics2Zor),
   _aile('oz_physics_3_kolay', 'Dalgalar, ses, optik ve ışık', Topic.physics, Difficulty.easy, BloomLevel.anlama, ozPhysics3Kolay),
@@ -436,10 +457,10 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_physics_4_kolay', 'Isı, madde ve özellikleri, basınç, modern fizik ve astronomi', Topic.physics, Difficulty.easy, BloomLevel.anlama, ozPhysics4Kolay),
   _aile('oz_physics_4_orta', 'Isı, madde ve özellikleri, basınç, modern fizik ve astronomi', Topic.physics, Difficulty.medium, BloomLevel.anlama, ozPhysics4Orta),
   _aile('oz_physics_4_zor', 'Isı, madde ve özellikleri, basınç, modern fizik ve astronomi', Topic.physics, Difficulty.hard, BloomLevel.uygulama, ozPhysics4Zor),
-  _aile('oz_chemistry_1_kolay', 'Atom, periyodik sistem ve kimyasal bağlar', Topic.chemistry, Difficulty.easy, BloomLevel.hatirlama, ozChemistry1Kolay),
   _aile('oz_chemistry_1_orta', 'Atom, periyodik sistem ve kimyasal bağlar', Topic.chemistry, Difficulty.medium, BloomLevel.uygulama, ozChemistry1Orta),
+  _aile('oz_chemistry_1_kolay', 'Atom, periyodik sistem ve kimyasal bağlar', Topic.chemistry, Difficulty.easy, BloomLevel.hatirlama, ozChemistry1Kolay),
   _aile('oz_chemistry_1_zor', 'Atom, periyodik sistem ve kimyasal bağlar', Topic.chemistry, Difficulty.hard, BloomLevel.analiz, ozChemistry1Zor),
-  _aile('oz_chemistry_2_kolay', 'Maddenin halleri, karışımlar, çözeltiler', Topic.chemistry, Difficulty.easy, BloomLevel.uygulama, ozChemistry2Kolay),
+  _aile('oz_chemistry_2_kolay', 'Maddenin halleri, karışımlar, çözeltiler', Topic.chemistry, Difficulty.easy, BloomLevel.anlama, ozChemistry2Kolay),
   _aile('oz_chemistry_2_orta', 'Maddenin halleri, karışımlar, çözeltiler', Topic.chemistry, Difficulty.medium, BloomLevel.uygulama, ozChemistry2Orta),
   _aile('oz_chemistry_2_zor', 'Maddenin halleri, karışımlar, çözeltiler', Topic.chemistry, Difficulty.hard, BloomLevel.analiz, ozChemistry2Zor),
   _aile('oz_chemistry_3_kolay', 'Kimyasal tepkimeler, mol, asitler-bazlar, denge, hız', Topic.chemistry, Difficulty.easy, BloomLevel.anlama, ozChemistry3Kolay),
@@ -466,8 +487,8 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_engineering_2_kolay', 'Makine, otomotiv ve havacılık temel kavramları', Topic.engineering, Difficulty.easy, BloomLevel.hatirlama, ozEngineering2Kolay),
   _aile('oz_engineering_2_orta', 'Makine, otomotiv ve havacılık temel kavramları', Topic.engineering, Difficulty.medium, BloomLevel.anlama, ozEngineering2Orta),
   _aile('oz_engineering_2_zor', 'Makine, otomotiv ve havacılık temel kavramları', Topic.engineering, Difficulty.hard, BloomLevel.analiz, ozEngineering2Zor),
-  _aile('oz_engineering_3_kolay', 'Elektrik-elektronik mühendisliği temel kavramları ve devre elemanları', Topic.engineering, Difficulty.easy, BloomLevel.hatirlama, ozEngineering3Kolay),
   _aile('oz_engineering_3_orta', 'Elektrik-elektronik mühendisliği temel kavramları ve devre elemanları', Topic.engineering, Difficulty.medium, BloomLevel.anlama, ozEngineering3Orta),
+  _aile('oz_engineering_3_kolay', 'Elektrik-elektronik mühendisliği temel kavramları ve devre elemanları', Topic.engineering, Difficulty.easy, BloomLevel.anlama, ozEngineering3Kolay),
   _aile('oz_engineering_3_zor', 'Elektrik-elektronik mühendisliği temel kavramları ve devre elemanları', Topic.engineering, Difficulty.hard, BloomLevel.analiz, ozEngineering3Zor),
   _aile('oz_engineering_4_kolay', 'Tasarım süreci, malzeme bilgisi, ölçme ve mühendislik etiği', Topic.engineering, Difficulty.easy, BloomLevel.hatirlama, ozEngineering4Kolay),
   _aile('oz_engineering_4_orta', 'Tasarım süreci, malzeme bilgisi, ölçme ve mühendislik etiği', Topic.engineering, Difficulty.medium, BloomLevel.anlama, ozEngineering4Orta),
@@ -493,12 +514,15 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_statistics_3_kolay', 'Veri toplama, örnekleme, anket ve grafik yorumlama', Topic.statistics, Difficulty.easy, BloomLevel.uygulama, ozStatistics3Kolay),
   _aile('oz_statistics_3_orta', 'Veri toplama, örnekleme, anket ve grafik yorumlama', Topic.statistics, Difficulty.medium, BloomLevel.analiz, ozStatistics3Orta),
   _aile('oz_statistics_3_zor', 'Veri toplama, örnekleme, anket ve grafik yorumlama', Topic.statistics, Difficulty.hard, BloomLevel.analiz, ozStatistics3Zor),
+  _aile('oz_statistics_4_kolay', 'Veri bilimi kavramları, korelasyon, istatistiksel yanılgılar', Topic.statistics, Difficulty.easy, BloomLevel.anlama, ozStatistics4Kolay),
+  _aile('oz_statistics_4_orta', 'Veri bilimi kavramları, korelasyon, istatistiksel yanılgılar', Topic.statistics, Difficulty.medium, BloomLevel.analiz, ozStatistics4Orta),
+  _aile('oz_statistics_4_zor', 'Veri bilimi kavramları, korelasyon, istatistiksel yanılgılar', Topic.statistics, Difficulty.hard, BloomLevel.analiz, ozStatistics4Zor),
   _aile('oz_economics_1_kolay', 'Temel ekonomi kavramları: arz-talep, piyasa, üretim', Topic.economics, Difficulty.easy, BloomLevel.anlama, ozEconomics1Kolay),
   _aile('oz_economics_1_orta', 'Temel ekonomi kavramları: arz-talep, piyasa, üretim', Topic.economics, Difficulty.medium, BloomLevel.analiz, ozEconomics1Orta),
   _aile('oz_economics_1_zor', 'Temel ekonomi kavramları: arz-talep, piyasa, üretim', Topic.economics, Difficulty.hard, BloomLevel.analiz, ozEconomics1Zor),
   _aile('oz_economics_2_kolay', 'Para, bankacılık, enflasyon, faiz ve kişisel finans', Topic.economics, Difficulty.easy, BloomLevel.anlama, ozEconomics2Kolay),
   _aile('oz_economics_2_orta', 'Para, bankacılık, enflasyon, faiz ve kişisel finans', Topic.economics, Difficulty.medium, BloomLevel.anlama, ozEconomics2Orta),
-  _aile('oz_economics_2_zor', 'Para, bankacılık, enflasyon, faiz ve kişisel finans', Topic.economics, Difficulty.hard, BloomLevel.analiz, ozEconomics2Zor),
+  _aile('oz_economics_2_zor', 'Para, bankacılık, enflasyon, faiz ve kişisel finans', Topic.economics, Difficulty.hard, BloomLevel.hatirlama, ozEconomics2Zor),
   _aile('oz_economics_3_kolay', 'Uluslararası ekonomi, ticaret ve ekonomi tarihi', Topic.economics, Difficulty.easy, BloomLevel.hatirlama, ozEconomics3Kolay),
   _aile('oz_economics_3_orta', 'Uluslararası ekonomi, ticaret ve ekonomi tarihi', Topic.economics, Difficulty.medium, BloomLevel.hatirlama, ozEconomics3Orta),
   _aile('oz_economics_3_zor', 'Uluslararası ekonomi, ticaret ve ekonomi tarihi', Topic.economics, Difficulty.hard, BloomLevel.hatirlama, ozEconomics3Zor),
@@ -523,9 +547,9 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_research_2_kolay', 'Kaynak değerlendirme, bilgi okuryazarlığı, alıntı ve intihal', Topic.research, Difficulty.easy, BloomLevel.anlama, ozResearch2Kolay),
   _aile('oz_research_2_orta', 'Kaynak değerlendirme, bilgi okuryazarlığı, alıntı ve intihal', Topic.research, Difficulty.medium, BloomLevel.anlama, ozResearch2Orta),
   _aile('oz_research_2_zor', 'Kaynak değerlendirme, bilgi okuryazarlığı, alıntı ve intihal', Topic.research, Difficulty.hard, BloomLevel.anlama, ozResearch2Zor),
-  _aile('oz_research_3_kolay', 'Gözlem, anket, görüşme ve örnekleme yöntemleri', Topic.research, Difficulty.easy, BloomLevel.uygulama, ozResearch3Kolay),
+  _aile('oz_research_3_kolay', 'Gözlem, anket, görüşme ve örnekleme yöntemleri', Topic.research, Difficulty.easy, BloomLevel.anlama, ozResearch3Kolay),
   _aile('oz_research_3_orta', 'Gözlem, anket, görüşme ve örnekleme yöntemleri', Topic.research, Difficulty.medium, BloomLevel.degerlendirme, ozResearch3Orta),
-  _aile('oz_research_3_zor', 'Gözlem, anket, görüşme ve örnekleme yöntemleri', Topic.research, Difficulty.hard, BloomLevel.analiz, ozResearch3Zor),
+  _aile('oz_research_3_zor', 'Gözlem, anket, görüşme ve örnekleme yöntemleri', Topic.research, Difficulty.hard, BloomLevel.anlama, ozResearch3Zor),
   _aile('oz_research_4_kolay', 'Veriyi yorumlama, nedensellik-korelasyon, yanlılık ve geçerlilik', Topic.research, Difficulty.easy, BloomLevel.uygulama, ozResearch4Kolay),
   _aile('oz_research_4_orta', 'Veriyi yorumlama, nedensellik-korelasyon, yanlılık ve geçerlilik', Topic.research, Difficulty.medium, BloomLevel.analiz, ozResearch4Orta),
   _aile('oz_research_4_zor', 'Veriyi yorumlama, nedensellik-korelasyon, yanlılık ve geçerlilik', Topic.research, Difficulty.hard, BloomLevel.analiz, ozResearch4Zor),
