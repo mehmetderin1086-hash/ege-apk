@@ -43,6 +43,11 @@ class AdvancedFamily {
   /// Sorunun kaynak etiketi; verilmezse akademik bankanın etiketi kullanılır.
   final String? sourceLabel;
 
+  /// Seçkiyle daraltılmış ailelerde her yerel sıranın özgün vaka numarası.
+  /// Soru kimlikleri özgün numarayı taşır; böylece kayıtlı istatistikler
+  /// seçkiden sonra da aynı soruya bağlı kalır.
+  final List<int>? ozgunSira;
+
   const AdvancedFamily({
     required this.key,
     required this.title,
@@ -60,7 +65,42 @@ class AdvancedFamily {
     this.exam,
     this.lesson,
     this.sourceLabel,
+    this.ozgunSira,
   });
+
+  /// Yalnız [secki] içindeki özgün vakaları sunan aile.
+  AdvancedFamily secili(List<int> secki) => AdvancedFamily(
+        key: key,
+        title: title,
+        topic: topic,
+        level: level,
+        count: secki.length,
+        difficulty: difficulty,
+        build: (j) => build(secki[j]),
+        visualKind: visualKind,
+        bloom: bloom,
+        shortAnswer: shortAnswer,
+        activityKind: activityKind,
+        creation: creation,
+        multiSelect: multiSelect,
+        exam: exam,
+        lesson: lesson,
+        sourceLabel: sourceLabel,
+        ozgunSira: List.unmodifiable(secki),
+      );
+
+  static final _yerelSiralar = Expando<Map<int, int>>();
+
+  /// Soru kimliğindeki özgün numaranın bu ailedeki yerel sırası.
+  int? yerelSira(int ozgun) {
+    final secki = ozgunSira;
+    if (secki == null) return ozgun >= 0 && ozgun < count ? ozgun : null;
+    final harita = _yerelSiralar[secki] ??=
+        {for (var j = 0; j < secki.length; j++) secki[j]: j};
+    return harita[ozgun];
+  }
+
+  int ozgunNumara(int yerel) => ozgunSira?[yerel] ?? yerel;
 
   ResponseType responseAt(int index) {
     if (creation != null) return ResponseType.creation;
@@ -73,12 +113,8 @@ class AdvancedFamily {
         ActivityKind.pronunciation => ResponseType.pronunciation,
       };
     }
-    // Stable response modes for each distinct case; formats do not multiply the count.
-    return switch ((index + _salt) % 8) {
-      1 || 5 => ResponseType.trueFalse,
-      2 || 6 || 7 when shortAnswer => ResponseType.fill,
-      _ => ResponseType.choice,
-    };
+    // Bankadaki bütün sorular dört seçenekli çoktan seçmeli sunulur.
+    return ResponseType.choice;
   }
 
   int get _salt => key.codeUnits.fold<int>(0, (a, b) => a + b);
@@ -131,7 +167,7 @@ class AdvancedFamily {
     final isBinary = mode == ResponseType.trueFalse;
     final statementCorrect = ((index ~/ 8 + index ~/ 4 + _salt ~/ 8) % 2) == 0;
     final proposed = statementCorrect ? item.correct : item.wrong[(index ~/ 2) % 3];
-    final id = 'ak38_${key}_$index';
+    final id = 'ak38_${key}_${ozgunNumara(index)}';
     return Question(
       id: id,
       contentID: id,

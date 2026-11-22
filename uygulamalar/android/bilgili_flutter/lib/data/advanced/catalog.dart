@@ -7,6 +7,7 @@ import 'math.dart';
 import 'physics.dart';
 import 'plates.dart';
 import 'renewed.dart';
+import 'secki.g.dart';
 import 'social.dart';
 
 enum PoolCollection {
@@ -26,7 +27,8 @@ enum PoolCollection {
 }
 
 class AdvancedCatalog {
-  static final families = List<AdvancedFamily>.unmodifiable([
+  /// Kaynak dosyalardaki bütün aileler, seçkiden önceki hâlleriyle.
+  static final kaynakAileler = List<AdvancedFamily>.unmodifiable([
     ...mathFamilies,
     ...physicsFamilies,
     ...socialFamilies,
@@ -35,6 +37,22 @@ class AdvancedCatalog {
     ...renewedFamilies,
     ...liseMetinFamilies,
   ]);
+
+  /// Oyunun sunduğu aileler: yalnız lise düzeyindeki çoktan seçmeli aileler,
+  /// her biri `secki.g.dart` dosyasındaki birbirinden ayrışan vakalarla.
+  static final families = List<AdvancedFamily>.unmodifiable([
+    for (final f in kaynakAileler)
+      if (cokSecmeliLise(f) && seckiler[f.key] != null)
+        f.secili(seckiler[f.key]!),
+  ]);
+
+  /// Ailenin seçkiye girebilmesi için lise düzeyinde olması ve etkinlik,
+  /// açık uçlu görev ya da çoklu seçim taşımaması gerekir.
+  static bool cokSecmeliLise(AdvancedFamily f) =>
+      f.level == StudyLevel.lise &&
+      f.activityKind == null &&
+      f.creation == null &&
+      f.multiSelect == null;
   static final _byKey = {for (final f in families) f.key: f};
   static final all = FamilyQuestions(families);
   static final visuals = select(format: QuestionFormat.visual);
@@ -52,11 +70,12 @@ class AdvancedCatalog {
     final family = _byKey[id.substring(5, split)];
     final tail = id.substring(split + 1);
     final index = int.tryParse(tail);
-    if (family == null || index == null || index < 0 || index >= family.count ||
-        index.toString() != tail) {
+    if (family == null || index == null || index.toString() != tail) {
       return null;
     }
-    return (family: family, index: index);
+    final yerel = family.yerelSira(index);
+    if (yerel == null) return null;
+    return (family: family, index: yerel);
   }
 
   static bool hasId(String id) => _locate(id) != null;
