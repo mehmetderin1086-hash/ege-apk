@@ -926,7 +926,7 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
             if (tekUslu.length > 1) ...[k ~/ tekUslu.last, k ~/ tekUslu.first],
             // En küçük asal çarpanla çarpmanın yeteceğini sanmak.
             asallar.first,
-          ].where((x) => x > 1),
+          ].where((x) => x > 1 && x <= 10 * k),
           '$yaz olur. ${_kareAciklama(f, k)} Gerçekten $n · $k = ${n * k} = '
               '${_tamKok(n * k, 2)}² olur.',
           pozitif: true,
@@ -1063,7 +1063,7 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
           _kupTamlayan(f),
           // Üssü tek olan çarpanlardan yalnız birini tamamlamak.
           if (tekUslu.length > 1) ...[k ~/ tekUslu.last, k ~/ tekUslu.first],
-        ].where((x) => x > 1),
+        ].where((x) => x > 1 && x <= 10 * k),
         '$yaz ${_kareAciklama(f, k)}',
         pozitif: true,
       );
@@ -1085,7 +1085,7 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
           // Üssü zaten üçün katı olan çarpanı da bir sonraki kata tamamlamak.
           if (_carp([for (final x in f) _kuvvet(x.$1, 3 - x.$2 % 3)]) <= 10 * k)
             _carp([for (final x in f) _kuvvet(x.$1, 3 - x.$2 % 3)]),
-        ].where((x) => x > 1),
+        ].where((x) => x > 1 && x <= 10 * k),
         '$yaz ${_kupAciklama(f, k)}',
         pozitif: true,
       );
