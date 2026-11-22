@@ -475,8 +475,7 @@ final _f01 = lmAile(
           yanlisToplam / 10, // fazla olan elementi sınırlayıcı sanma
           2 * (yFazla ? mx : my) / 10, // kütlece 1:1 birleşme sanma
           e / 10, // oluşan bileşik yerine artan kütleyi verme
-          (yFazla ? yTep : xTep) /
-              10, // yalnız fazla elementin harcanan kütlesi
+          (yFazla ? yTep : xTep) / 10, // fazla elementin harcanan kütlesi
         ], veriler),
       ),
       '$birlesme Kütlenin korunumuna göre ${g(xTep)} + ${g(yTep)} = ${g(top)} g '
@@ -3224,7 +3223,8 @@ final _f14 = lmAile(
         (dh - digerFark) / net.sign, // bağ sayısına bölmeyi unutma
         (isi - digerFark) / net, // ölçülen ısıyı ΔH sanma
         (-dh - digerFark) / net.sign, // ters işaret, bölmeyi de unutma
-        if (k != 1) (dh / k - digerFark) / net, // ΔH'yi 1 mol $f için alma
+        if (k != 1)
+          (dh / k - digerFark) / net, // ΔH'yi ölçülen maddenin 1 molü için alma
         (-isi - digerFark) / net, // ölçülen ısıyı ters işaretle kullanma
       ])
         y.abs().round(),
