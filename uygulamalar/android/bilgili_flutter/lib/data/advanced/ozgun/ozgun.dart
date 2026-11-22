@@ -40,15 +40,15 @@ import 'oz_geography_4_zor.dart';
 import 'oz_art_1_kolay.dart';
 import 'oz_art_1_orta.dart';
 import 'oz_art_1_zor.dart';
-import 'oz_art_2_kolay.dart';
 import 'oz_art_2_orta.dart';
+import 'oz_art_2_kolay.dart';
 import 'oz_art_2_zor.dart';
 import 'oz_art_3_kolay.dart';
 import 'oz_art_3_orta.dart';
 import 'oz_art_3_zor.dart';
-import 'oz_art_4_kolay.dart';
 import 'oz_art_4_orta.dart';
 import 'oz_art_4_zor.dart';
+import 'oz_art_4_kolay.dart';
 import 'oz_sport_1_kolay.dart';
 import 'oz_sport_1_orta.dart';
 import 'oz_sport_1_zor.dart';
@@ -154,6 +154,9 @@ import 'oz_exam_2_zor.dart';
 import 'oz_exam_3_orta.dart';
 import 'oz_exam_3_kolay.dart';
 import 'oz_exam_3_zor.dart';
+import 'oz_exam_4_kolay.dart';
+import 'oz_exam_4_orta.dart';
+import 'oz_exam_4_zor.dart';
 import 'oz_mathematics_1_kolay.dart';
 import 'oz_mathematics_1_orta.dart';
 import 'oz_mathematics_1_zor.dart';
@@ -193,15 +196,15 @@ import 'oz_chemistry_4_zor.dart';
 import 'oz_biology_1_kolay.dart';
 import 'oz_biology_1_orta.dart';
 import 'oz_biology_1_zor.dart';
-import 'oz_biology_2_kolay.dart';
 import 'oz_biology_2_orta.dart';
+import 'oz_biology_2_kolay.dart';
 import 'oz_biology_2_zor.dart';
 import 'oz_biology_3_kolay.dart';
 import 'oz_biology_3_orta.dart';
 import 'oz_biology_3_zor.dart';
 import 'oz_biology_4_kolay.dart';
-import 'oz_biology_4_zor.dart';
 import 'oz_biology_4_orta.dart';
+import 'oz_biology_4_zor.dart';
 import 'oz_engineering_1_kolay.dart';
 import 'oz_engineering_1_orta.dart';
 import 'oz_engineering_1_zor.dart';
@@ -274,6 +277,75 @@ import 'oz_research_3_zor.dart';
 import 'oz_research_4_kolay.dart';
 import 'oz_research_4_orta.dart';
 import 'oz_research_4_zor.dart';
+import 'oz_art_5_orta.dart';
+import 'oz_art_5_kolay.dart';
+import 'oz_art_5_zor.dart';
+import 'oz_biology_5_kolay.dart';
+import 'oz_biology_5_orta.dart';
+import 'oz_biology_5_zor.dart';
+import 'oz_chemistry_5_zor.dart';
+import 'oz_chemistry_5_orta.dart';
+import 'oz_chemistry_5_kolay.dart';
+import 'oz_cinema_5_kolay.dart';
+import 'oz_cinema_5_orta.dart';
+import 'oz_cinema_5_zor.dart';
+import 'oz_computing_5_orta.dart';
+import 'oz_computing_5_kolay.dart';
+import 'oz_computing_5_zor.dart';
+import 'oz_culture_5_orta.dart';
+import 'oz_culture_5_kolay.dart';
+import 'oz_culture_5_zor.dart';
+import 'oz_economics_5_kolay.dart';
+import 'oz_economics_5_orta.dart';
+import 'oz_economics_5_zor.dart';
+import 'oz_engineering_5_orta.dart';
+import 'oz_engineering_5_zor.dart';
+import 'oz_engineering_5_kolay.dart';
+import 'oz_exam_5_kolay.dart';
+import 'oz_exam_5_orta.dart';
+import 'oz_exam_5_zor.dart';
+import 'oz_geography_5_kolay.dart';
+import 'oz_geography_5_orta.dart';
+import 'oz_geography_5_zor.dart';
+import 'oz_history_5_zor.dart';
+import 'oz_history_5_orta.dart';
+import 'oz_history_5_kolay.dart';
+import 'oz_language_5_orta.dart';
+import 'oz_language_5_zor.dart';
+import 'oz_language_5_kolay.dart';
+import 'oz_literature_5_kolay.dart';
+import 'oz_literature_5_zor.dart';
+import 'oz_literature_5_orta.dart';
+import 'oz_mathematics_5_kolay.dart';
+import 'oz_mathematics_5_orta.dart';
+import 'oz_mathematics_5_zor.dart';
+import 'oz_music_5_orta.dart';
+import 'oz_music_5_zor.dart';
+import 'oz_music_5_kolay.dart';
+import 'oz_nature_5_zor.dart';
+import 'oz_nature_5_orta.dart';
+import 'oz_nature_5_kolay.dart';
+import 'oz_physics_5_kolay.dart';
+import 'oz_physics_5_zor.dart';
+import 'oz_physics_5_orta.dart';
+import 'oz_research_5_orta.dart';
+import 'oz_research_5_kolay.dart';
+import 'oz_research_5_zor.dart';
+import 'oz_science_5_orta.dart';
+import 'oz_science_5_zor.dart';
+import 'oz_science_5_kolay.dart';
+import 'oz_socialscience_5_orta.dart';
+import 'oz_socialscience_5_zor.dart';
+import 'oz_socialscience_5_kolay.dart';
+import 'oz_sport_5_kolay.dart';
+import 'oz_sport_5_orta.dart';
+import 'oz_sport_5_zor.dart';
+import 'oz_statistics_5_kolay.dart';
+import 'oz_statistics_5_orta.dart';
+import 'oz_statistics_5_zor.dart';
+import 'oz_technology_5_kolay.dart';
+import 'oz_technology_5_orta.dart';
+import 'oz_technology_5_zor.dart';
 
 AdvancedFamily _aile(String key, String title, Topic topic, Difficulty d, BloomLevel b, List<(String, String, List<String>, String)> v) =>
     AdvancedFamily(key: key, title: title, topic: topic, level: StudyLevel.lise, count: v.length, difficulty: d, bloom: b,
@@ -319,15 +391,15 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_art_1_kolay', 'Resim tarihi: akımlar, ressamlar ve eserler', Topic.art, Difficulty.easy, BloomLevel.hatirlama, ozArt1Kolay),
   _aile('oz_art_1_orta', 'Resim tarihi: akımlar, ressamlar ve eserler', Topic.art, Difficulty.medium, BloomLevel.hatirlama, ozArt1Orta),
   _aile('oz_art_1_zor', 'Resim tarihi: akımlar, ressamlar ve eserler', Topic.art, Difficulty.hard, BloomLevel.hatirlama, ozArt1Zor),
-  _aile('oz_art_2_kolay', 'Heykel, mimarlık ve dünya mimari eserleri', Topic.art, Difficulty.easy, BloomLevel.hatirlama, ozArt2Kolay),
   _aile('oz_art_2_orta', 'Heykel, mimarlık ve dünya mimari eserleri', Topic.art, Difficulty.medium, BloomLevel.hatirlama, ozArt2Orta),
+  _aile('oz_art_2_kolay', 'Heykel, mimarlık ve dünya mimari eserleri', Topic.art, Difficulty.easy, BloomLevel.hatirlama, ozArt2Kolay),
   _aile('oz_art_2_zor', 'Heykel, mimarlık ve dünya mimari eserleri', Topic.art, Difficulty.hard, BloomLevel.hatirlama, ozArt2Zor),
   _aile('oz_art_3_kolay', 'Türk ve İslam sanatları', Topic.art, Difficulty.easy, BloomLevel.hatirlama, ozArt3Kolay),
   _aile('oz_art_3_orta', 'Türk ve İslam sanatları', Topic.art, Difficulty.medium, BloomLevel.hatirlama, ozArt3Orta),
   _aile('oz_art_3_zor', 'Türk ve İslam sanatları', Topic.art, Difficulty.hard, BloomLevel.hatirlama, ozArt3Zor),
-  _aile('oz_art_4_kolay', 'Sanat kavramları, teknikleri, renk ve tasarım ilkeleri; fotoğraf ve tiyatro', Topic.art, Difficulty.easy, BloomLevel.hatirlama, ozArt4Kolay),
   _aile('oz_art_4_orta', 'Sanat kavramları, teknikleri, renk ve tasarım ilkeleri; fotoğraf ve tiyatro', Topic.art, Difficulty.medium, BloomLevel.hatirlama, ozArt4Orta),
   _aile('oz_art_4_zor', 'Sanat kavramları, teknikleri, renk ve tasarım ilkeleri; fotoğraf ve tiyatro', Topic.art, Difficulty.hard, BloomLevel.hatirlama, ozArt4Zor),
+  _aile('oz_art_4_kolay', 'Sanat kavramları, teknikleri, renk ve tasarım ilkeleri; fotoğraf ve tiyatro', Topic.art, Difficulty.easy, BloomLevel.hatirlama, ozArt4Kolay),
   _aile('oz_sport_1_kolay', 'Futbol: kurallar, turnuvalar, tarih', Topic.sport, Difficulty.easy, BloomLevel.hatirlama, ozSport1Kolay),
   _aile('oz_sport_1_orta', 'Futbol: kurallar, turnuvalar, tarih', Topic.sport, Difficulty.medium, BloomLevel.hatirlama, ozSport1Orta),
   _aile('oz_sport_1_zor', 'Futbol: kurallar, turnuvalar, tarih', Topic.sport, Difficulty.hard, BloomLevel.hatirlama, ozSport1Zor),
@@ -433,6 +505,9 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_exam_3_orta', 'Sayısal mantık ve problemler', Topic.exam, Difficulty.medium, BloomLevel.uygulama, ozExam3Orta),
   _aile('oz_exam_3_kolay', 'Sayısal mantık ve problemler', Topic.exam, Difficulty.easy, BloomLevel.uygulama, ozExam3Kolay),
   _aile('oz_exam_3_zor', 'Sayısal mantık ve problemler', Topic.exam, Difficulty.hard, BloomLevel.analiz, ozExam3Zor),
+  _aile('oz_exam_4_kolay', 'Sözel mantık ve akıl yürütme', Topic.exam, Difficulty.easy, BloomLevel.uygulama, ozExam4Kolay),
+  _aile('oz_exam_4_orta', 'Sözel mantık ve akıl yürütme', Topic.exam, Difficulty.medium, BloomLevel.analiz, ozExam4Orta),
+  _aile('oz_exam_4_zor', 'Sözel mantık ve akıl yürütme', Topic.exam, Difficulty.hard, BloomLevel.analiz, ozExam4Zor),
   _aile('oz_mathematics_1_kolay', 'Sayılar, bölünebilme, EBOB-EKOK, üslü ve köklü sayılar', Topic.mathematics, Difficulty.easy, BloomLevel.uygulama, ozMathematics1Kolay),
   _aile('oz_mathematics_1_orta', 'Sayılar, bölünebilme, EBOB-EKOK, üslü ve köklü sayılar', Topic.mathematics, Difficulty.medium, BloomLevel.uygulama, ozMathematics1Orta),
   _aile('oz_mathematics_1_zor', 'Sayılar, bölünebilme, EBOB-EKOK, üslü ve köklü sayılar', Topic.mathematics, Difficulty.hard, BloomLevel.analiz, ozMathematics1Zor),
@@ -472,15 +547,15 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_biology_1_kolay', 'Hücre, canlıların temel bileşenleri ve hücre bölünmeleri', Topic.biology, Difficulty.easy, BloomLevel.hatirlama, ozBiology1Kolay),
   _aile('oz_biology_1_orta', 'Hücre, canlıların temel bileşenleri ve hücre bölünmeleri', Topic.biology, Difficulty.medium, BloomLevel.anlama, ozBiology1Orta),
   _aile('oz_biology_1_zor', 'Hücre, canlıların temel bileşenleri ve hücre bölünmeleri', Topic.biology, Difficulty.hard, BloomLevel.analiz, ozBiology1Zor),
-  _aile('oz_biology_2_kolay', 'Kalıtım, genetik ve evrim', Topic.biology, Difficulty.easy, BloomLevel.anlama, ozBiology2Kolay),
   _aile('oz_biology_2_orta', 'Kalıtım, genetik ve evrim', Topic.biology, Difficulty.medium, BloomLevel.anlama, ozBiology2Orta),
+  _aile('oz_biology_2_kolay', 'Kalıtım, genetik ve evrim', Topic.biology, Difficulty.easy, BloomLevel.anlama, ozBiology2Kolay),
   _aile('oz_biology_2_zor', 'Kalıtım, genetik ve evrim', Topic.biology, Difficulty.hard, BloomLevel.analiz, ozBiology2Zor),
   _aile('oz_biology_3_kolay', 'İnsan fizyolojisi: sistemler', Topic.biology, Difficulty.easy, BloomLevel.hatirlama, ozBiology3Kolay),
   _aile('oz_biology_3_orta', 'İnsan fizyolojisi: sistemler', Topic.biology, Difficulty.medium, BloomLevel.anlama, ozBiology3Orta),
   _aile('oz_biology_3_zor', 'İnsan fizyolojisi: sistemler', Topic.biology, Difficulty.hard, BloomLevel.analiz, ozBiology3Zor),
   _aile('oz_biology_4_kolay', 'Bitki biyolojisi, ekoloji ve canlıların sınıflandırılması', Topic.biology, Difficulty.easy, BloomLevel.anlama, ozBiology4Kolay),
-  _aile('oz_biology_4_zor', 'Bitki biyolojisi, ekoloji ve canlıların sınıflandırılması', Topic.biology, Difficulty.hard, BloomLevel.analiz, ozBiology4Zor),
   _aile('oz_biology_4_orta', 'Bitki biyolojisi, ekoloji ve canlıların sınıflandırılması', Topic.biology, Difficulty.medium, BloomLevel.analiz, ozBiology4Orta),
+  _aile('oz_biology_4_zor', 'Bitki biyolojisi, ekoloji ve canlıların sınıflandırılması', Topic.biology, Difficulty.hard, BloomLevel.analiz, ozBiology4Zor),
   _aile('oz_engineering_1_kolay', 'İnşaat ve yapı mühendisliği temel kavramları, ünlü yapılar', Topic.engineering, Difficulty.easy, BloomLevel.hatirlama, ozEngineering1Kolay),
   _aile('oz_engineering_1_orta', 'İnşaat ve yapı mühendisliği temel kavramları, ünlü yapılar', Topic.engineering, Difficulty.medium, BloomLevel.hatirlama, ozEngineering1Orta),
   _aile('oz_engineering_1_zor', 'İnşaat ve yapı mühendisliği temel kavramları, ünlü yapılar', Topic.engineering, Difficulty.hard, BloomLevel.analiz, ozEngineering1Zor),
@@ -553,4 +628,73 @@ final ozgunAileler = <AdvancedFamily>[
   _aile('oz_research_4_kolay', 'Veriyi yorumlama, nedensellik-korelasyon, yanlılık ve geçerlilik', Topic.research, Difficulty.easy, BloomLevel.uygulama, ozResearch4Kolay),
   _aile('oz_research_4_orta', 'Veriyi yorumlama, nedensellik-korelasyon, yanlılık ve geçerlilik', Topic.research, Difficulty.medium, BloomLevel.analiz, ozResearch4Orta),
   _aile('oz_research_4_zor', 'Veriyi yorumlama, nedensellik-korelasyon, yanlılık ve geçerlilik', Topic.research, Difficulty.hard, BloomLevel.analiz, ozResearch4Zor),
+  _aile('oz_art_5_orta', 'Genel ek sorular: Sanat kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.art, Difficulty.medium, BloomLevel.hatirlama, ozArt5Orta),
+  _aile('oz_art_5_kolay', 'Genel ek sorular: Sanat kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.art, Difficulty.easy, BloomLevel.hatirlama, ozArt5Kolay),
+  _aile('oz_art_5_zor', 'Genel ek sorular: Sanat kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.art, Difficulty.hard, BloomLevel.hatirlama, ozArt5Zor),
+  _aile('oz_biology_5_kolay', 'Genel ek sorular: Biyoloji kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.biology, Difficulty.easy, BloomLevel.hatirlama, ozBiology5Kolay),
+  _aile('oz_biology_5_orta', 'Genel ek sorular: Biyoloji kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.biology, Difficulty.medium, BloomLevel.anlama, ozBiology5Orta),
+  _aile('oz_biology_5_zor', 'Genel ek sorular: Biyoloji kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.biology, Difficulty.hard, BloomLevel.analiz, ozBiology5Zor),
+  _aile('oz_chemistry_5_zor', 'Genel ek sorular: Kimya kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.chemistry, Difficulty.hard, BloomLevel.analiz, ozChemistry5Zor),
+  _aile('oz_chemistry_5_orta', 'Genel ek sorular: Kimya kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.chemistry, Difficulty.medium, BloomLevel.hatirlama, ozChemistry5Orta),
+  _aile('oz_chemistry_5_kolay', 'Genel ek sorular: Kimya kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.chemistry, Difficulty.easy, BloomLevel.hatirlama, ozChemistry5Kolay),
+  _aile('oz_cinema_5_kolay', 'Genel ek sorular: Sinema ve TV kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.cinema, Difficulty.easy, BloomLevel.anlama, ozCinema5Kolay),
+  _aile('oz_cinema_5_orta', 'Genel ek sorular: Sinema ve TV kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.cinema, Difficulty.medium, BloomLevel.hatirlama, ozCinema5Orta),
+  _aile('oz_cinema_5_zor', 'Genel ek sorular: Sinema ve TV kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.cinema, Difficulty.hard, BloomLevel.hatirlama, ozCinema5Zor),
+  _aile('oz_computing_5_orta', 'Genel ek sorular: Bilişim ve Algoritmalar kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.computing, Difficulty.medium, BloomLevel.uygulama, ozComputing5Orta),
+  _aile('oz_computing_5_kolay', 'Genel ek sorular: Bilişim ve Algoritmalar kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.computing, Difficulty.easy, BloomLevel.hatirlama, ozComputing5Kolay),
+  _aile('oz_computing_5_zor', 'Genel ek sorular: Bilişim ve Algoritmalar kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.computing, Difficulty.hard, BloomLevel.analiz, ozComputing5Zor),
+  _aile('oz_culture_5_orta', 'Genel ek sorular: Genel Kültür kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.culture, Difficulty.medium, BloomLevel.hatirlama, ozCulture5Orta),
+  _aile('oz_culture_5_kolay', 'Genel ek sorular: Genel Kültür kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.culture, Difficulty.easy, BloomLevel.hatirlama, ozCulture5Kolay),
+  _aile('oz_culture_5_zor', 'Genel ek sorular: Genel Kültür kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.culture, Difficulty.hard, BloomLevel.anlama, ozCulture5Zor),
+  _aile('oz_economics_5_kolay', 'Genel ek sorular: Ekonomi ve Finans kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.economics, Difficulty.easy, BloomLevel.hatirlama, ozEconomics5Kolay),
+  _aile('oz_economics_5_orta', 'Genel ek sorular: Ekonomi ve Finans kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.economics, Difficulty.medium, BloomLevel.anlama, ozEconomics5Orta),
+  _aile('oz_economics_5_zor', 'Genel ek sorular: Ekonomi ve Finans kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.economics, Difficulty.hard, BloomLevel.analiz, ozEconomics5Zor),
+  _aile('oz_engineering_5_orta', 'Genel ek sorular: Mühendislik ve Tasarım kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.engineering, Difficulty.medium, BloomLevel.anlama, ozEngineering5Orta),
+  _aile('oz_engineering_5_zor', 'Genel ek sorular: Mühendislik ve Tasarım kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.engineering, Difficulty.hard, BloomLevel.analiz, ozEngineering5Zor),
+  _aile('oz_engineering_5_kolay', 'Genel ek sorular: Mühendislik ve Tasarım kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.engineering, Difficulty.easy, BloomLevel.anlama, ozEngineering5Kolay),
+  _aile('oz_exam_5_kolay', 'Genel ek sorular: Sınav Hazırlık kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.exam, Difficulty.easy, BloomLevel.uygulama, ozExam5Kolay),
+  _aile('oz_exam_5_orta', 'Genel ek sorular: Sınav Hazırlık kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.exam, Difficulty.medium, BloomLevel.analiz, ozExam5Orta),
+  _aile('oz_exam_5_zor', 'Genel ek sorular: Sınav Hazırlık kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.exam, Difficulty.hard, BloomLevel.analiz, ozExam5Zor),
+  _aile('oz_geography_5_kolay', 'Genel ek sorular: Coğrafya kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.geography, Difficulty.easy, BloomLevel.hatirlama, ozGeography5Kolay),
+  _aile('oz_geography_5_orta', 'Genel ek sorular: Coğrafya kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.geography, Difficulty.medium, BloomLevel.hatirlama, ozGeography5Orta),
+  _aile('oz_geography_5_zor', 'Genel ek sorular: Coğrafya kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.geography, Difficulty.hard, BloomLevel.hatirlama, ozGeography5Zor),
+  _aile('oz_history_5_zor', 'Genel ek sorular: Tarih kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.history, Difficulty.hard, BloomLevel.hatirlama, ozHistory5Zor),
+  _aile('oz_history_5_orta', 'Genel ek sorular: Tarih kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.history, Difficulty.medium, BloomLevel.hatirlama, ozHistory5Orta),
+  _aile('oz_history_5_kolay', 'Genel ek sorular: Tarih kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.history, Difficulty.easy, BloomLevel.hatirlama, ozHistory5Kolay),
+  _aile('oz_language_5_orta', 'Genel ek sorular: Yabancı Dil kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.language, Difficulty.medium, BloomLevel.uygulama, ozLanguage5Orta),
+  _aile('oz_language_5_zor', 'Genel ek sorular: Yabancı Dil kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.language, Difficulty.hard, BloomLevel.analiz, ozLanguage5Zor),
+  _aile('oz_language_5_kolay', 'Genel ek sorular: Yabancı Dil kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.language, Difficulty.easy, BloomLevel.anlama, ozLanguage5Kolay),
+  _aile('oz_literature_5_kolay', 'Genel ek sorular: Edebiyat kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.literature, Difficulty.easy, BloomLevel.anlama, ozLiterature5Kolay),
+  _aile('oz_literature_5_zor', 'Genel ek sorular: Edebiyat kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.literature, Difficulty.hard, BloomLevel.hatirlama, ozLiterature5Zor),
+  _aile('oz_literature_5_orta', 'Genel ek sorular: Edebiyat kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.literature, Difficulty.medium, BloomLevel.anlama, ozLiterature5Orta),
+  _aile('oz_mathematics_5_kolay', 'Genel ek sorular: Matematik kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.mathematics, Difficulty.easy, BloomLevel.uygulama, ozMathematics5Kolay),
+  _aile('oz_mathematics_5_orta', 'Genel ek sorular: Matematik kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.mathematics, Difficulty.medium, BloomLevel.uygulama, ozMathematics5Orta),
+  _aile('oz_mathematics_5_zor', 'Genel ek sorular: Matematik kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.mathematics, Difficulty.hard, BloomLevel.uygulama, ozMathematics5Zor),
+  _aile('oz_music_5_orta', 'Genel ek sorular: Müzik kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.music, Difficulty.medium, BloomLevel.hatirlama, ozMusic5Orta),
+  _aile('oz_music_5_zor', 'Genel ek sorular: Müzik kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.music, Difficulty.hard, BloomLevel.hatirlama, ozMusic5Zor),
+  _aile('oz_music_5_kolay', 'Genel ek sorular: Müzik kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.music, Difficulty.easy, BloomLevel.anlama, ozMusic5Kolay),
+  _aile('oz_nature_5_zor', 'Genel ek sorular: Doğa kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.nature, Difficulty.hard, BloomLevel.hatirlama, ozNature5Zor),
+  _aile('oz_nature_5_orta', 'Genel ek sorular: Doğa kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.nature, Difficulty.medium, BloomLevel.anlama, ozNature5Orta),
+  _aile('oz_nature_5_kolay', 'Genel ek sorular: Doğa kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.nature, Difficulty.easy, BloomLevel.hatirlama, ozNature5Kolay),
+  _aile('oz_physics_5_kolay', 'Genel ek sorular: Fizik kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.physics, Difficulty.easy, BloomLevel.hatirlama, ozPhysics5Kolay),
+  _aile('oz_physics_5_zor', 'Genel ek sorular: Fizik kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.physics, Difficulty.hard, BloomLevel.analiz, ozPhysics5Zor),
+  _aile('oz_physics_5_orta', 'Genel ek sorular: Fizik kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.physics, Difficulty.medium, BloomLevel.hatirlama, ozPhysics5Orta),
+  _aile('oz_research_5_orta', 'Genel ek sorular: Araştırma Yöntemleri kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.research, Difficulty.medium, BloomLevel.hatirlama, ozResearch5Orta),
+  _aile('oz_research_5_kolay', 'Genel ek sorular: Araştırma Yöntemleri kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.research, Difficulty.easy, BloomLevel.hatirlama, ozResearch5Kolay),
+  _aile('oz_research_5_zor', 'Genel ek sorular: Araştırma Yöntemleri kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.research, Difficulty.hard, BloomLevel.hatirlama, ozResearch5Zor),
+  _aile('oz_science_5_orta', 'Genel ek sorular: Bilim kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.science, Difficulty.medium, BloomLevel.anlama, ozScience5Orta),
+  _aile('oz_science_5_zor', 'Genel ek sorular: Bilim kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.science, Difficulty.hard, BloomLevel.hatirlama, ozScience5Zor),
+  _aile('oz_science_5_kolay', 'Genel ek sorular: Bilim kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.science, Difficulty.easy, BloomLevel.anlama, ozScience5Kolay),
+  _aile('oz_socialScience_5_orta', 'Genel ek sorular: Toplum ve Sosyal Bilimler kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.socialScience, Difficulty.medium, BloomLevel.hatirlama, ozSocialscience5Orta),
+  _aile('oz_socialScience_5_zor', 'Genel ek sorular: Toplum ve Sosyal Bilimler kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.socialScience, Difficulty.hard, BloomLevel.anlama, ozSocialscience5Zor),
+  _aile('oz_socialScience_5_kolay', 'Genel ek sorular: Toplum ve Sosyal Bilimler kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.socialScience, Difficulty.easy, BloomLevel.hatirlama, ozSocialscience5Kolay),
+  _aile('oz_sport_5_kolay', 'Genel ek sorular: Spor kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.sport, Difficulty.easy, BloomLevel.hatirlama, ozSport5Kolay),
+  _aile('oz_sport_5_orta', 'Genel ek sorular: Spor kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.sport, Difficulty.medium, BloomLevel.hatirlama, ozSport5Orta),
+  _aile('oz_sport_5_zor', 'Genel ek sorular: Spor kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.sport, Difficulty.hard, BloomLevel.hatirlama, ozSport5Zor),
+  _aile('oz_statistics_5_kolay', 'Genel ek sorular: İstatistik ve Veri Bilimi kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.statistics, Difficulty.easy, BloomLevel.uygulama, ozStatistics5Kolay),
+  _aile('oz_statistics_5_orta', 'Genel ek sorular: İstatistik ve Veri Bilimi kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.statistics, Difficulty.medium, BloomLevel.uygulama, ozStatistics5Orta),
+  _aile('oz_statistics_5_zor', 'Genel ek sorular: İstatistik ve Veri Bilimi kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.statistics, Difficulty.hard, BloomLevel.uygulama, ozStatistics5Zor),
+  _aile('oz_technology_5_kolay', 'Genel ek sorular: Teknoloji kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.technology, Difficulty.easy, BloomLevel.hatirlama, ozTechnology5Kolay),
+  _aile('oz_technology_5_orta', 'Genel ek sorular: Teknoloji kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.technology, Difficulty.medium, BloomLevel.hatirlama, ozTechnology5Orta),
+  _aile('oz_technology_5_zor', 'Genel ek sorular: Teknoloji kategorisinde bankada henüz sorulmamış bilgi ve beceriler', Topic.technology, Difficulty.hard, BloomLevel.hatirlama, ozTechnology5Zor),
 ];

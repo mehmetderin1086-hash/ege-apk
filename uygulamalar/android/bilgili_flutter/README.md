@@ -1,4 +1,8 @@
-# Bilgili 3.11.0
+# Bilgili 3.12.0
+
+3.12.0 sürümünde 23 kategoriye toplam 50.966 yeni, elle yazılmış özgün çoktan seçmeli soru eklendi. Banka artık 59.357 soru içeriyor. Her soru, cevap anahtarını görmeyen ayrı bir çözücü tarafından çözüldü; uyuşmazlıklar ve kusur notları hakem incelemesinden geçti. Ardından her kategoride aynı bilgiyi farklı cümleyle soran sorular, zamanla eskiyebilecek sorular ve aynı anlama gelen seçenekler ayıklandı. Veri `tool/ozgun/uret.py` ile `lib/data/advanced/ozgun/` altına üretilir.
+
+## 3.11.0
 
 Lise öğrencileri için hazırlanmış çevrimdışı Android soru uygulaması. Bu sürümde banka baştan ayıklandı: üniversite soruları ve çoktan seçmeli olmayan soru türleri (doğru/yanlış, boşluk doldurma, sıralama, eşleştirme, dinleme, telaffuz, açık uçlu görev, çoklu seçim) kaldırıldı. Kalan 8.391 sorunun hepsi lise düzeyinde, dört seçenekli ve birbirinden belirgin biçimde ayrışıyor.
 

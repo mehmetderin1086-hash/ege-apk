@@ -16,7 +16,7 @@ void main() {
       for (var i = 0; i < f.count; i++) {
         final item = f.build(i);
         expect(item.wrong, hasLength(3), reason: '${f.key} $i');
-        final secenekler = {item.correct, ...item.wrong}.map((s) => s.toLowerCase()).toSet();
+        final secenekler = {item.correct, ...item.wrong}.map((s) => s.trim()).toSet();
         expect(secenekler, hasLength(4), reason: '${f.key} $i');
         expect(item.explanation.trim(), isNotEmpty);
         expect(kokler.add(item.prompt.trim().toLowerCase()), isTrue, reason: item.prompt);

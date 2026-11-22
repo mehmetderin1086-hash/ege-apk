@@ -61,7 +61,9 @@ for a in ALAN:
         if not l.strip(): continue
         sid=f'{a["id"]}_{n}'
         if sid in SIL: tekrar_sil+=1; continue
-        r,dz=notsuz(secenek_duzelt(sid,json.loads(l))); duzeltilen+=dz; k=kume(r['soru']); d=duz(r['soru'])
+        r,dz=notsuz(secenek_duzelt(sid,json.loads(l))); duzeltilen+=dz
+        if len(r['yanlis'])!=3 or len({x.strip().lower() for x in [r['dogru'],*r['yanlis']]})<4: elenen+=1; continue
+        k=kume(r['soru']); d=duz(r['soru'])
         if d in gorulen or benzer(k): elenen+=1; continue
         gorulen.add(d); ekle(k)
         gruplar[r.get('zorluk','orta')].append(r)
