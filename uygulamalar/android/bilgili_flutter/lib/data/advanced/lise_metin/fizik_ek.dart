@@ -270,7 +270,20 @@ List<String> _siraliSec(
       a.$2.trim().isNotEmpty &&
       !ayniSecenek(a.$2, anahtarYazim) &&
       ![...secilen, ...yedek].any((w) => ayniSecenek(w.$2, a.$2));
-  bool uyar((num, String) a) => !secilen.any((w) => simetrik(w.$1, a.$1));
+  // Anahtarla birlikte eşit aralıklı bir dizi (7,5 – 8 – 8,5 – 9) kuran
+  // üçüncü çeldirici de yalnız başka aday kalmazsa alınır.
+  bool esitAralikli(num x) {
+    if (secilen.length != 2) return false;
+    final d = [k, secilen[0].$1, secilen[1].$1, x]..sort();
+    final adim = d[1] - d[0];
+    final tol = 0.006 * d.map((v) => v.abs()).reduce(math.max) + 1e-9;
+    return adim > tol &&
+        (d[2] - d[1] - adim).abs() <= tol &&
+        (d[3] - d[2] - adim).abs() <= tol;
+  }
+
+  bool uyar((num, String) a) =>
+      !secilen.any((w) => simetrik(w.$1, a.$1)) && !esitAralikli(a.$1);
   for (final a in adaylar) {
     if (secilen.length == 3) break;
     if (!yeni(a)) continue;
