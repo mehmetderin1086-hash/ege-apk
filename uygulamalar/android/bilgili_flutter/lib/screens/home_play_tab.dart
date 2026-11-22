@@ -1,8 +1,53 @@
 import 'package:flutter/material.dart';
+import 'arena_salon.dart';
 import '../models/quiz_models.dart';
 import '../state/arena_controller.dart';
 import '../services/native_bridge.dart';
 import '../theme/arena_design.dart';
+
+class _SalonKarti extends StatelessWidget {
+  final String baslik;
+  final String alt;
+  final IconData ikon;
+  final List<Color> renkler;
+  final VoidCallback onTap;
+  const _SalonKarti({required this.baslik, required this.alt, required this.ikon, required this.renkler, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: '$baslik. $alt',
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: onTap,
+          child: Container(
+            height: 96,
+            padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              gradient: LinearGradient(colors: renkler, begin: Alignment.topLeft, end: Alignment.bottomRight),
+              boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 10, offset: Offset(0, 4))],
+            ),
+            child: Row(children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(baslik, maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Colors.white)),
+                    const SizedBox(height: 3),
+                    Text(alt, maxLines: 2, overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Colors.white)),
+                  ],
+                ),
+              ),
+              Icon(ikon, color: Colors.white, size: 38),
+            ]),
+          ),
+        ),
+      );
+}
 
 class HomePlayTab extends StatefulWidget {
   final ArenaController controller;
@@ -553,6 +598,32 @@ class _HomePlayTabState extends State<HomePlayTab> {
                 imageAsset: 'assets/images/card_daily_trophy.jpg',
                 accent: const Color(0xFFF6C453),
                 onTap: ctrl.startDailyChallenge,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _SalonKarti(
+                baslik: 'Çok Oyunculu',
+                alt: 'Bire Bir · Çoklu · Özel Oda',
+                ikon: Icons.groups_rounded,
+                renkler: const [Color(0xFF12C25A), Color(0xFF0B7A3A)],
+                onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                    builder: (_) => OyunModlariScreen(controller: ctrl))),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _SalonKarti(
+                baslik: 'Etkinlikler',
+                alt: 'Süreli konu yarışmaları',
+                ikon: Icons.event_available_rounded,
+                renkler: const [Color(0xFFF39A12), Color(0xFFB8590A)],
+                onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                    builder: (_) => EtkinliklerScreen(controller: ctrl))),
               ),
             ),
           ],

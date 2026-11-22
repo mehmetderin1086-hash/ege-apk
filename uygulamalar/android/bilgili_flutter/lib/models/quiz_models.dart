@@ -817,7 +817,11 @@ class RoundSetup {
   final String? lesson;
   final String customTopicPrompt;
   final bool liveVoiceHost;
-  final List<String> duelPlayerNames; // empty = solo, 2..4 = duel/tournament
+  final List<String> duelPlayerNames; // empty = solo, 2..10 = sırayla oynayan oyuncular
+  /// Klasik modda soru başına süre (sn); boşsa varsayılan 15 sn.
+  final int? secondsPerQuestion;
+  /// Bilgisayar rakipleri (Bire Bir, Çoklu); her soruda kendi hızlarıyla cevaplar.
+  final List<String> rivalNames;
 
   const RoundSetup({
     this.topic = Topic.mixed,
@@ -831,6 +835,8 @@ class RoundSetup {
     this.customTopicPrompt = '',
     this.liveVoiceHost = false,
     this.duelPlayerNames = const [],
+    this.secondsPerQuestion,
+    this.rivalNames = const [],
   });
 
   RoundSetup copyWith({
@@ -845,6 +851,8 @@ class RoundSetup {
     String? customTopicPrompt,
     bool? liveVoiceHost,
     List<String>? duelPlayerNames,
+    int? secondsPerQuestion,
+    List<String>? rivalNames,
   }) {
     return RoundSetup(
       topic: topic ?? this.topic,
@@ -858,6 +866,8 @@ class RoundSetup {
       customTopicPrompt: customTopicPrompt ?? this.customTopicPrompt,
       liveVoiceHost: liveVoiceHost ?? this.liveVoiceHost,
       duelPlayerNames: duelPlayerNames ?? this.duelPlayerNames,
+      secondsPerQuestion: secondsPerQuestion ?? this.secondsPerQuestion,
+      rivalNames: rivalNames ?? this.rivalNames,
     );
   }
 }

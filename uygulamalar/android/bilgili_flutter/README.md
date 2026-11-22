@@ -1,4 +1,14 @@
-# Bilgili 3.12.0
+# Bilgili 3.13.0
+
+3.13.0 sürümünde yeni **Lavanta** teması (mor geçiş, yeşil vurgular; yeni kurulumlarda varsayılan) ve oyun salonu eklendi:
+
+- **Çok Oyunculu › Bire Bir / Çoklu:** bilgisayar rakiplerine (1 ya da 4) karşı aynı sorularda yarış; oyun sırasında canlı sıralama, sonda kürsü.
+- **Özel Oda:** kategori, 7/14/21 soru ve 20/40 sn süre seçilir; altı haneli oda numarası bu ayarları ve soruları taşır. Numarayı kopyala ya da paylaş; arkadaşların "Oda No Gir" ile aynı soruları kendi telefonlarında çözer. Odaya 10 oyuncuya kadar ad eklenirse aynı telefonda sırayla oynanır.
+- **Etkinlikler:** her gün yeni bir konu etkinliği başlar, 1–3 gün sürer; sabit soru sayısı, sınırlı deneme hakkı, geri sayım ve en iyi puan. "Gelecek" bölümünde yaklaşan etkinlikler görünür.
+
+Uygulama çevrimdışı çalışır; gerçek zamanlı internet eşleşmesi yoktur.
+
+## 3.12.0
 
 3.12.0 sürümünde 23 kategoriye toplam 50.966 yeni, elle yazılmış özgün çoktan seçmeli soru eklendi. Banka artık 59.357 soru içeriyor. Her soru, cevap anahtarını görmeyen ayrı bir çözücü tarafından çözüldü; uyuşmazlıklar ve kusur notları hakem incelemesinden geçti. Ardından her kategoride aynı bilgiyi farklı cümleyle soran sorular, zamanla eskiyebilecek sorular ve aynı anlama gelen seçenekler ayıklandı. Veri `tool/ozgun/uret.py` ile `lib/data/advanced/ozgun/` altına üretilir.
 

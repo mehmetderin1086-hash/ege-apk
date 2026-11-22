@@ -208,6 +208,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
 
                 // Duel Scoreboard Banner if active
                 if (round.isDuel) _buildDuelBanner(round, accent),
+                if (round.hasRivals) _buildRivalBanner(round),
 
                 // Scrollable Question + Options + Coach Area
                 Expanded(
@@ -432,6 +433,35 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRivalBanner(ActiveRound round) {
+    final satirlar = <(String, int)>[
+      ('Sen', round.totalScore),
+      for (var i = 0; i < round.setup.rivalNames.length; i++) (round.setup.rivalNames[i], round.rivalScores[i]),
+    ]..sort((a, b) => b.$2.compareTo(a.$2));
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF12C25A).withValues(alpha: .16),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF12C25A).withValues(alpha: .5)),
+      ),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 4,
+        children: [
+          for (var i = 0; i < satirlar.length; i++)
+            Text('${i + 1}. ${satirlar[i].$1}: ${satirlar[i].$2}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: satirlar[i].$1 == 'Sen' ? FontWeight.w900 : FontWeight.w600,
+                  color: satirlar[i].$1 == 'Sen' ? const Color(0xFF8DD14F) : Colors.white70,
+                )),
         ],
       ),
     );
@@ -1065,16 +1095,16 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                 ),
               ),
 
-              if (round.isDuel && ctrl.history.isNotEmpty) ...[
+              if ((round.isDuel || round.hasRivals) && ctrl.history.isNotEmpty) ...[
                 const SizedBox(height: 14),
                 ArenaGlassCard(
                   tint: const Color(0xFFFFB454),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Düello Kürsüsü',
-                        style: TextStyle(
+                      Text(
+                        round.hasRivals ? 'Sıralama' : 'Düello Kürsüsü',
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,

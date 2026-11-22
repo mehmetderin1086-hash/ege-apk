@@ -13,6 +13,7 @@ import '../services/ai_gateway_service.dart';
 import '../services/native_bridge.dart';
 import '../services/voice_answer_resolver.dart';
 import '../theme/arena_design.dart';
+import 'arena_rooms.dart';
 
 enum LiveVoicePhase {
   idle,
@@ -50,6 +51,10 @@ class ActiveRound {
   final List<AnswerRecord> answers = [];
   final List<int> duelScores;
   final List<int> duelCorrects;
+  final List<int> rivalScores;
+  final List<int> rivalCorrects;
+  final List<int> rivalStreaks;
+  final Random rivalRng;
 
   ActiveRound({
     required this.id,
@@ -57,7 +62,16 @@ class ActiveRound {
     required this.setup,
     required this.questions,
   })  : duelScores = List<int>.filled(setup.duelPlayerNames.length, 0),
-        duelCorrects = List<int>.filled(setup.duelPlayerNames.length, 0);
+        duelCorrects = List<int>.filled(setup.duelPlayerNames.length, 0),
+        rivalScores = List<int>.filled(setup.rivalNames.length, 0),
+        rivalCorrects = List<int>.filled(setup.rivalNames.length, 0),
+        rivalStreaks = List<int>.filled(setup.rivalNames.length, 0),
+        rivalRng = Random(id.hashCode);
+
+  bool get hasRivals => setup.rivalNames.isNotEmpty;
+
+  /// Rakip i'nin bilme olasılığı: 0,55 ile 0,80 arasında, adına göre sabit.
+  double rivalSkill(int i) => 0.55 + (setup.rivalNames[i].hashCode % 26).abs() / 100;
 
   Question get current => questions[currentIndex];
   bool get isDuel => setup.duelPlayerNames.length >= 2;
@@ -126,6 +140,10 @@ class ArenaController extends ChangeNotifier {
 
   // User Progress & Collections
   int xp = 0;
+  /// Etkinlik anahtarı → kullanılan deneme sayısı ve en yüksek puan.
+  final Map<String, int> etkinlikDenemeleri = {};
+  final Map<String, int> etkinlikEnIyi = {};
+  String? _aktifEtkinlik;
   int dailyStreak = 1;
   String? lastPlayedDayKey;
   String? completedDailyChallengeDayKey;
@@ -196,7 +214,7 @@ class ArenaController extends ChangeNotifier {
   String dailyPoolDayKey = _todayKey();
 
   // Visual, Audio & Accessibility Settings
-  String wallpaperId = 'observatory';
+  String wallpaperId = 'lavanta';
   WallpaperClarity wallpaperClarity = WallpaperClarity.balanced;
   EffectIntensity effectIntensity = EffectIntensity.rich;
   bool menuMusicEnabled = false;
@@ -614,6 +632,57 @@ class ArenaController extends ChangeNotifier {
     );
   }
 
+  /// Özel oda: aynı oda numarası aynı soruları üretir. İki ya da daha çok
+  /// oyuncu varsa aynı cihazda sırayla oynanır.
+  bool startOdaRound(OdaAyari oda, List<String> oyuncular) {
+    final adlar = oyuncular.map((e) => e.trim()).where((e) => e.isNotEmpty).take(10).toList();
+    final cfg = RoundSetup(
+      topic: oda.kategori,
+      mode: GameMode.classic,
+      format: QuestionFormat.multipleChoice,
+      questionCount: oda.soruSayisi * max(1, adlar.length),
+      secondsPerQuestion: oda.sure,
+      duelPlayerNames: adlar.length >= 2 ? adlar : const [],
+    );
+    return startConfiguredRound(customTitle: 'Özel Oda ${oda.kod}', overrideSetup: cfg, seed: oda.tohum);
+  }
+
+  /// Bire Bir ya da Çoklu: bilgisayar rakiplerine karşı.
+  bool startRakipMaci({required List<String> rakipler, Topic topic = Topic.mixed, int soru = 7, int sure = 20}) {
+    final cfg = RoundSetup(
+      topic: topic,
+      mode: GameMode.classic,
+      format: QuestionFormat.multipleChoice,
+      questionCount: soru,
+      secondsPerQuestion: sure,
+      rivalNames: rakipler,
+    );
+    return startConfiguredRound(
+      customTitle: rakipler.length == 1 ? 'Bire Bir · ${rakipler.first}' : 'Çoklu Oda (${rakipler.length + 1} kişi)',
+      overrideSetup: cfg,
+    );
+  }
+
+  int etkinlikDenemesi(Etkinlik e) => etkinlikDenemeleri[e.anahtar] ?? 0;
+
+  bool startEtkinlik(Etkinlik e) {
+    if (etkinlikDenemesi(e) >= e.hak) return false;
+    final cfg = RoundSetup(
+      topic: e.tema.konu,
+      mode: GameMode.classic,
+      format: QuestionFormat.multipleChoice,
+      questionCount: e.soruSayisi,
+      secondsPerQuestion: 20,
+    );
+    final ok = startConfiguredRound(customTitle: 'Etkinlik · ${e.tema.ad}', overrideSetup: cfg, seed: e.tohum + etkinlikDenemesi(e));
+    if (ok) {
+      etkinlikDenemeleri[e.anahtar] = etkinlikDenemesi(e) + 1;
+      _aktifEtkinlik = e.anahtar;
+      unawaited(_savePersistedState());
+    }
+    return ok;
+  }
+
   void startQuestionPractice(Question question) {
     _beginRound(
       title: question.lesson ?? question.category.label,
@@ -682,7 +751,7 @@ class ArenaController extends ChangeNotifier {
         round.remainingSeconds = 0;
         break;
       case GameMode.classic:
-        round.totalTimerSeconds = round.setup.liveVoiceHost ? 35 : 15;
+        round.totalTimerSeconds = round.setup.liveVoiceHost ? 35 : (round.setup.secondsPerQuestion ?? 15);
         round.remainingSeconds = round.totalTimerSeconds;
         break;
       case GameMode.sprint:
@@ -887,6 +956,28 @@ class ArenaController extends ChangeNotifier {
     );
   }
 
+  /// Bilgisayar rakipleri bu soruyu kendi hızlarında cevaplar; puanlama
+  /// oyuncununkiyle aynı kuralı izler.
+  void _simulateRivals(ActiveRound round, Question question) {
+    for (var i = 0; i < round.setup.rivalNames.length; i++) {
+      final hardness = switch (question.difficulty) {
+        Difficulty.easy => 0.12,
+        Difficulty.medium => 0.0,
+        Difficulty.hard => -0.15,
+      };
+      final knows = round.rivalRng.nextDouble() < (round.rivalSkill(i) + hardness).clamp(0.2, 0.95);
+      if (knows) {
+        round.rivalStreaks[i]++;
+        final speed = (round.rivalRng.nextDouble() * 0.8 + 0.1);
+        final speedBonus = round.totalTimerSeconds > 0 ? (speed * 45).round() : 20;
+        round.rivalScores[i] += question.difficulty.basePoints + speedBonus + min(round.rivalStreaks[i] * 15, 90);
+        round.rivalCorrects[i]++;
+      } else {
+        round.rivalStreaks[i] = 0;
+      }
+    }
+  }
+
   void _commitAnswer({
     required ActiveRound round,
     required Question question,
@@ -919,6 +1010,8 @@ class ArenaController extends ChangeNotifier {
       round.streak = 0;
       NativeBridge.playSfx('wrong', enabled: sfxEnabled, haptics: hapticsEnabled);
     }
+
+    _simulateRivals(round, question);
 
     round.answers.add(
       AnswerRecord(
@@ -1010,6 +1103,11 @@ class ArenaController extends ChangeNotifier {
     _stopRoundTimer();
     stopLiveVoiceCycle();
     r.finished = true;
+    final etkinlik = _aktifEtkinlik;
+    _aktifEtkinlik = null;
+    if (etkinlik != null && r.title.startsWith('Etkinlik · ')) {
+      etkinlikEnIyi[etkinlik] = max(etkinlikEnIyi[etkinlik] ?? 0, r.totalScore);
+    }
 
     final correctCount = r.answers.where((a) => a.correct).length;
     int gainedXp = correctCount * 22 + (r.maxStreak * 8) + 25;
@@ -1033,6 +1131,12 @@ class ArenaController extends ChangeNotifier {
           'score': r.duelScores[i],
           'correct': r.duelCorrects[i],
         });
+      }
+      standings.sort((a, b) => (b['score'] as int).compareTo(a['score'] as int));
+    } else if (r.hasRivals) {
+      standings.add({'name': 'Sen', 'score': r.totalScore, 'correct': correctCount});
+      for (var i = 0; i < r.setup.rivalNames.length; i++) {
+        standings.add({'name': r.setup.rivalNames[i], 'score': r.rivalScores[i], 'correct': r.rivalCorrects[i]});
       }
       standings.sort((a, b) => (b['score'] as int).compareTo(a['score'] as int));
     }
@@ -1807,9 +1911,20 @@ class ArenaController extends ChangeNotifier {
         'highContrast': highContrast,
         'readingScale': readingScale,
         'reduceMotion': reduceMotion,
+        'etkinlikDenemeleri': etkinlikDenemeleri,
+        'etkinlikEnIyi': etkinlikEnIyi,
       };
 
   void _applyStateMap(Map<String, dynamic> map) {
+    for (final (hedef, ad) in [(etkinlikDenemeleri, 'etkinlikDenemeleri'), (etkinlikEnIyi, 'etkinlikEnIyi')]) {
+      hedef.clear();
+      final m = map[ad];
+      if (m is Map) {
+        for (final e in m.entries) {
+          hedef[e.key.toString()] = (e.value as num?)?.toInt() ?? 0;
+        }
+      }
+    }
     xp = (map['xp'] as num?)?.toInt() ?? 0;
     dailyStreak = (map['dailyStreak'] as num?)?.toInt() ?? 1;
     lastPlayedDayKey = map['lastPlayedDayKey']?.toString();

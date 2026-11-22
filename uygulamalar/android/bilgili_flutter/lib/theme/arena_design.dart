@@ -10,6 +10,8 @@ class ArenaWallpaper {
   final Color secondary;
   final Color surface;
   final Color ink;
+  /// Resimsiz temalarda arka plan geçişi (yukarıdan aşağı).
+  final List<Color>? gradient;
 
   const ArenaWallpaper({
     required this.id,
@@ -20,6 +22,7 @@ class ArenaWallpaper {
     required this.secondary,
     required this.surface,
     required this.ink,
+    this.gradient,
   });
 }
 
@@ -46,6 +49,16 @@ enum EffectIntensity {
 
 class ArenaWallpapers {
   static const List<ArenaWallpaper> catalog = [
+    ArenaWallpaper(
+      id: 'lavanta',
+      title: 'Lavanta',
+      subtitle: 'Parlak mor geçiş, yeşil vurgular',
+      primary: Color(0xFF8DD14F),
+      secondary: Color(0xFFFFB03A),
+      surface: Color(0xFF3B1FA3),
+      ink: Color(0xFF1E0D5E),
+      gradient: [Color(0xFF7356E8), Color(0xFF5B34DC), Color(0xFF3A1A9E), Color(0xFF200F62)],
+    ),
     ArenaWallpaper(
       id: 'observatory',
       title: 'Gök Kubbe',
@@ -191,7 +204,14 @@ class _ArenaAmbientBackgroundState extends State<ArenaAmbientBackground>
     return Stack(
       fit: StackFit.expand,
       children: [
-        ColoredBox(color: wp.ink),
+        if (wp.gradient != null)
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomCenter, colors: wp.gradient!),
+            ),
+          )
+        else
+          ColoredBox(color: wp.ink),
         if (wp.assetPath != null)
           AnimatedBuilder(
             animation: _ctrl,
@@ -213,7 +233,7 @@ class _ArenaAmbientBackgroundState extends State<ArenaAmbientBackground>
               ),
             ),
           ),
-        DecoratedBox(
+        if (wp.gradient == null) DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
