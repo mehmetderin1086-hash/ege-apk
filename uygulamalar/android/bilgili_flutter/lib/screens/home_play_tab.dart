@@ -1,9 +1,56 @@
 import 'package:flutter/material.dart';
 import 'arena_salon.dart';
+import 'zirve_screen.dart';
 import '../models/quiz_models.dart';
 import '../state/arena_controller.dart';
 import '../services/native_bridge.dart';
 import '../theme/arena_design.dart';
+
+class _ZirveKarti extends StatelessWidget {
+  final int enIyi;
+  final VoidCallback onTap;
+  const _ZirveKarti({required this.enIyi, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: 'Zirve Merdiveni: 15 soru, 4 joker, 1.000.000 puanlık zirve',
+        child: InkWell(
+          borderRadius: BorderRadius.circular(26),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(color: const Color(0xFFF2C14E), width: 2),
+              gradient: const RadialGradient(
+                center: Alignment(-.4, -.6),
+                radius: 1.4,
+                colors: [Color(0xFF1C2C8C), Color(0xFF0B1450), Color(0xFF03061C)],
+              ),
+              boxShadow: const [BoxShadow(color: Color(0x55F2C14E), blurRadius: 16)],
+            ),
+            child: Row(children: [
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('Zirve Merdiveni',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFFF2C14E))),
+                  const SizedBox(height: 4),
+                  const Text('15 soru · 2 baraj · 4 joker · zirvede 1.000.000 puan',
+                      style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Colors.white)),
+                  if (enIyi > 0) ...[
+                    const SizedBox(height: 4),
+                    Text('En iyi: ${puanYaz(enIyi)} puan',
+                        style: const TextStyle(fontSize: 12, color: Colors.white70)),
+                  ],
+                ]),
+              ),
+              const Icon(Icons.stairs_rounded, color: Color(0xFFF2C14E), size: 48),
+            ]),
+          ),
+        ),
+      );
+}
 
 class _SalonKarti extends StatelessWidget {
   final String baslik;
@@ -601,6 +648,12 @@ class _HomePlayTabState extends State<HomePlayTab> {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 10),
+        _ZirveKarti(
+          enIyi: ctrl.zirveEnIyi,
+          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => ZirveScreen(controller: ctrl))),
         ),
         const SizedBox(height: 10),
         Row(

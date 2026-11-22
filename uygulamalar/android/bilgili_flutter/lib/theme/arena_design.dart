@@ -50,6 +50,16 @@ enum EffectIntensity {
 class ArenaWallpapers {
   static const List<ArenaWallpaper> catalog = [
     ArenaWallpaper(
+      id: 'studyo',
+      title: 'Gece Stüdyosu',
+      subtitle: 'Lacivert sahne ışıkları, altın vurgular',
+      primary: Color(0xFFF2C14E),
+      secondary: Color(0xFF5AA9FF),
+      surface: Color(0xFF14207A),
+      ink: Color(0xFF03061C),
+      gradient: [Color(0xFF1C2C8C), Color(0xFF0B1450), Color(0xFF060A2E), Color(0xFF03061C)],
+    ),
+    ArenaWallpaper(
       id: 'lavanta',
       title: 'Lavanta',
       subtitle: 'Parlak mor geçiş, yeşil vurgular',

@@ -144,6 +144,9 @@ class ArenaController extends ChangeNotifier {
   final Map<String, int> etkinlikDenemeleri = {};
   final Map<String, int> etkinlikEnIyi = {};
   String? _aktifEtkinlik;
+  /// Zirve Merdiveni: en yüksek kazanç ve ulaşılan en üst basamak.
+  int zirveEnIyi = 0;
+  int zirveEnUstBasamak = 0;
   int dailyStreak = 1;
   String? lastPlayedDayKey;
   String? completedDailyChallengeDayKey;
@@ -214,7 +217,7 @@ class ArenaController extends ChangeNotifier {
   String dailyPoolDayKey = _todayKey();
 
   // Visual, Audio & Accessibility Settings
-  String wallpaperId = 'lavanta';
+  String wallpaperId = 'studyo';
   WallpaperClarity wallpaperClarity = WallpaperClarity.balanced;
   EffectIntensity effectIntensity = EffectIntensity.rich;
   bool menuMusicEnabled = false;
@@ -661,6 +664,34 @@ class ArenaController extends ChangeNotifier {
       customTitle: rakipler.length == 1 ? 'Bire Bir · ${rakipler.first}' : 'Çoklu Oda (${rakipler.length + 1} kişi)',
       overrideSetup: cfg,
     );
+  }
+
+  /// Zirve Merdiveni için 15 soru: 5 kolay, 5 orta, 5 zor; hepsi dört
+  /// seçenekli metin sorusu. Ek olarak her zorluktan birer yedek soru
+  /// (soru değiştirme jokeri için) döner.
+  ({List<Question> sorular, Map<Difficulty, Question> yedek})? zirveSorulari({Topic topic = Topic.mixed, int? seed}) {
+    final rng = Random(seed ?? DateTime.now().microsecondsSinceEpoch);
+    final sorular = <Question>[];
+    final yedek = <Difficulty, Question>{};
+    for (final d in Difficulty.values) {
+      final cfg = RoundSetup(topic: topic, difficulty: d, mode: GameMode.classic, format: QuestionFormat.text, questionCount: 12);
+      final aday = sampleQuestions(cfg, seed: rng.nextInt(1 << 30))
+          .where((q) => q.options.length == 4 && q.visual == null && q.activity == null)
+          .where((q) => sorular.every((x) => x.id != q.id))
+          .toList();
+      if (aday.length < 6) return null;
+      sorular.addAll(aday.take(5));
+      yedek[d] = aday[5];
+    }
+    return (sorular: sorular, yedek: yedek);
+  }
+
+  void zirveKaydet({required int kazanc, required int basamak}) {
+    zirveEnIyi = max(zirveEnIyi, kazanc);
+    zirveEnUstBasamak = max(zirveEnUstBasamak, basamak);
+    xp += basamak * 15;
+    notifyListeners();
+    unawaited(_savePersistedState());
   }
 
   int etkinlikDenemesi(Etkinlik e) => etkinlikDenemeleri[e.anahtar] ?? 0;
@@ -1913,9 +1944,13 @@ class ArenaController extends ChangeNotifier {
         'reduceMotion': reduceMotion,
         'etkinlikDenemeleri': etkinlikDenemeleri,
         'etkinlikEnIyi': etkinlikEnIyi,
+        'zirveEnIyi': zirveEnIyi,
+        'zirveEnUstBasamak': zirveEnUstBasamak,
       };
 
   void _applyStateMap(Map<String, dynamic> map) {
+    zirveEnIyi = (map['zirveEnIyi'] as num?)?.toInt() ?? 0;
+    zirveEnUstBasamak = (map['zirveEnUstBasamak'] as num?)?.toInt() ?? 0;
     for (final (hedef, ad) in [(etkinlikDenemeleri, 'etkinlikDenemeleri'), (etkinlikEnIyi, 'etkinlikEnIyi')]) {
       hedef.clear();
       final m = map[ad];

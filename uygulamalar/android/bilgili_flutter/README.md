@@ -1,4 +1,14 @@
-# Bilgili 3.13.0
+# Bilgili 3.14.0
+
+3.14.0 sürümünde **Gece Stüdyosu** teması (lacivert sahne, altın vurgular; yeni kurulumlarda varsayılan) ve **Zirve Merdiveni** modu eklendi:
+
+- 15 soru: ilk 5 kolay, sonraki 5 orta, son 5 zor; 100 puandan 1.000.000 puana uzanan ödül merdiveni.
+- 5. ve 10. basamaklar baraj: geçildikten sonra yanlış cevapta baraj puanıyla ayrılırsın.
+- "Kesin cevabın mı?" onayı, gerilimli açıklama, istenen anda çekilme.
+- Dört joker: Yarı Yarıya (50:50), Salon Oylaması, Danışman, Soru Değiştir.
+- Süre: ilk 5 soru 30 sn, sonraki 5 soru 45 sn, son 5 soru süresiz. En iyi kazanç kaydedilir.
+
+## 3.13.0
 
 3.13.0 sürümünde yeni **Lavanta** teması (mor geçiş, yeşil vurgular; yeni kurulumlarda varsayılan) ve oyun salonu eklendi:
 
