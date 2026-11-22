@@ -597,11 +597,31 @@ final lmGeometri = <AdvancedFamily>[
       final veri = j < 3
           ? '|BH| = $p cm ve |HC| = $q cm'
           : '|BH| = $p cm ve |BC| = $hip cm';
+      // Üçüncü çeldirici: yanıt köklüyse öteki Öklid bağıntısı ya da
+      // Pisagor'u yanlış dik kenarla kurma (köklü, hipotenüsten kısa). Yanıt
+      // tam sayıysa (kök içi tam kare) seçeneklerde yalnız o tam sayı
+      // kalmasın diye tam sayı bir hata: geometrik ortalama yerine aritmetik
+      // ortalama, o da tam sayı değilse iki parçanın farkı. ("Karekökü
+      // almayı unutma" eklenmez: hipotenüsten kat kat uzun bir dik kenar
+      // ya da yükseklik verirdi.)
+      bool tamKare(int x) {
+        for (var y = 1; y * y <= x; y++) {
+          if (y * y == x) return true;
+        }
+        return false;
+      }
+
+      (int, int) tamHata(int u, int v, int fark) =>
+          (u + v).isEven ? ((u + v) ~/ 2, 1) : (fark, 1);
       if (j == 0 || j == 3) {
         return _koklu(
           '$giris $veri olduğuna göre |AH| kaç cm olur?',
           (g, s * t),
-          [(g * g * s * t, 1), (g, s * s + t * t), (g, s * (s + t))],
+          [
+            tamKare(s * t) ? tamHata(p, q, (q - p).abs()) : (g, t * (s + t)),
+            (g, s * s + t * t),
+            (g, s * (s + t)),
+          ],
           '${j == 3 ? '|HC| = $hip − $p = $q cm olur. ' : ''}Öklid bağıntısına '
           'göre |AH|² = |BH|·|HC| = $p·$q = ${p * q}, buradan |AH| = '
           '${_kok(g, s * t)} cm bulunur.',
@@ -611,7 +631,11 @@ final lmGeometri = <AdvancedFamily>[
         return _koklu(
           '$giris $veri olduğuna göre |AC| kaç cm olur?',
           (g, t * (s + t)),
-          [(g, s * t), (g * g * t * (s + t), 1), (g, s * (s + t))],
+          [
+            (g, s * t),
+            tamKare(t * (s + t)) ? tamHata(q, hip, p) : (g, t * (2 * s + t)),
+            (g, s * (s + t)),
+          ],
           '|BC| = $p + $q = $hip cm olur. Öklid bağıntısına göre |AC|² = '
           '|HC|·|BC| = $q·$hip = ${q * hip}, buradan |AC| = '
           '${_kok(g, t * (s + t))} cm bulunur.',
@@ -620,7 +644,11 @@ final lmGeometri = <AdvancedFamily>[
       return _koklu(
         '$giris $veri olduğuna göre |AB| kaç cm olur?',
         (g, s * (s + t)),
-        [(g, s * t), (g * g * s * (s + t), 1), (g, t * (s + t))],
+        [
+          (g, s * t),
+          tamKare(s * (s + t)) ? tamHata(p, hip, q) : (g, s * (s + 2 * t)),
+          (g, t * (s + t)),
+        ],
         '${j == 1 ? '|BC| = $p + $q = $hip cm olur. ' : ''}Öklid bağıntısına '
         'göre |AB|² = |BH|·|BC| = $p·$hip = ${p * hip}, buradan |AB| = '
         '${_kok(g, s * (s + t))} cm bulunur.',

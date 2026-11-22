@@ -77,6 +77,8 @@ AdvancedItem _sayisalTipik(
 /// Pozitif ondalıklı yanıtlı soru; değerler [digits] basamakla yazılır, sıra
 /// yazılan değere göre bulunur ve çeldiriciler [_tipikSirali] ile seçilir.
 /// [komsu] doğruysa anahtarın bir adım altı ve üstü son çare olarak kullanılır.
+/// [digits] basamakla tam yazılamayan (yuvarlanması gereken) tipik hata değerleri
+/// kullanılmaz: tam anahtarın yanında "1,667 km" gibi yuvarlanmış bir değer göze batar.
 AdvancedItem _ondalikliTipik(
   String prompt,
   double answer,
@@ -89,6 +91,11 @@ AdvancedItem _ondalikliTipik(
 }) {
   final step = answer.abs() >= 20 ? 1.0 : (answer.abs() >= 2 ? 0.5 : 0.1);
   double yuvarla(double x) => double.parse(tr(x, digits).replaceFirst(',', '.'));
+  var olcek = 1.0;
+  for (var k = 0; k < digits; k++) {
+    olcek *= 10;
+  }
+  bool tam(double x) => (x * olcek - (x * olcek).round()).abs() < 1e-6;
   (double, String) aday(double x) => (yuvarla(x), birimli(tr(x, digits), unit));
   List<(double, String)> komsular(int k) => [
     aday(answer + k * step),
@@ -100,7 +107,7 @@ AdvancedItem _ondalikliTipik(
     yazim,
     _tipikSirali(yuvarla(answer), yazim, [
       for (final x in alternatives)
-        if (x.isFinite && yuvarla(x) > 0) aday(x),
+        if (x.isFinite && yuvarla(x) > 0 && tam(x)) aday(x),
     ], komsu ? komsular(1) : const [], [
       for (var k = 1; k <= 6; k++) ...komsular(k),
     ], sira),
@@ -579,8 +586,9 @@ AdvancedItem _sicaklik(int a, int b, int c) {
       );
   // Tipik hatalar: ters yönde işlem, 100 m'de 1 °C sanma, 400 m'de 1 °C sanma
   // (400 m kuralı yalnız sonuç onda bire tam bölündüğünde) ve bunların ters
-  // yönlü biçimleri. Çağıran yer bunlara sıcaklık değişimini sıcaklık sanmayı
-  // (d, yükselen yerde −d) ekler.
+  // yönlü biçimleri. Çağıran yer bunlara sıcaklık değişimini sıcaklık sanmayı (d)
+  // ekler; aynı hatanın işaretli biçimi (−d) ayrıca verilmez, yoksa iki çeldirici
+  // aynı yanlışı gösterir.
   List<int> hatalar(int t0, int d, int yon, bool tam400) => [
     t0 - yon * d,
     t0 + 2 * yon * d,
@@ -596,7 +604,7 @@ AdvancedItem _sicaklik(int a, int b, int c) {
       'Deniz seviyesinde sıcaklığın ${yaz(deniz)} ölçüldüğü bir anda, aynı bölgede $h m '
       'yükseltideki ${sec(_yuksekYer, a + b)} sıcaklığın kaç °C olması beklenir? $kural',
       t,
-      [...hatalar(deniz, d, -1, h % 200 == 0), d, -d],
+      [...hatalar(deniz, d, -1, h % 200 == 0), d],
       'Yükselti farkı $h m olduğundan sıcaklık $h / 200 = ${say(d)} °C azalır: '
       '${say(deniz)} − ${say(d)} = ${yaz(t)}.',
       hedefSira(i),
@@ -644,7 +652,7 @@ AdvancedItem _sicaklik(int a, int b, int c) {
     'Bir dağın yamacında $alt m yükseltideki köyde sıcaklık ${yaz(tAlt)} iken aynı anda '
     '$ust m yükseltideki yaylada sıcaklığın kaç °C olması beklenir? $kural',
     tUst,
-    [...hatalar(tAlt, d, -1, m % 200 == 0), tAlt - fark(ust), d, -d],
+    [...hatalar(tAlt, d, -1, m % 200 == 0), tAlt - fark(ust), d],
     'Yükselti farkı $ust − $alt = $m m olduğundan sıcaklık farkı '
     '$m / 200 = ${say(d)} °C olur. Yüksekteki yayla daha soğuktur: '
     '${say(tAlt)} − ${say(d)} = ${yaz(tUst)}.',

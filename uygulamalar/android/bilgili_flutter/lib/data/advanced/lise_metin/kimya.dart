@@ -259,6 +259,9 @@ int _sira(int a, int b, int c) {
 /// sırada toplanmaz. Komşu değerler
 /// yalnız ([komsuAlt], [komsuUst]) açık aralığından alınır; adımları
 /// [komsuOlcek] (verilmezse anahtarın kendisi) büyüklüğüne göre seçilir.
+/// Anahtara ya da öncelikli bir adaya pratikte eş görünen adaylar (60,72 ile
+/// 60,7; 0,21 ile 0,2) atlanır; yakınlık [orijin] noktasından ölçülür (ör.
+/// kaynama noktalarında 100 °C).
 AdvancedItem _saySirali(
   String kok,
   num dogru,
@@ -274,6 +277,7 @@ AdvancedItem _saySirali(
   num komsuAlt = double.negativeInfinity,
   num komsuUst = double.infinity,
   num? komsuOlcek,
+  num orijin = 0,
 }) {
   String yaz(num x, {bool kesin = false}) {
     var s = kesin ? _t(x, basamak) : _yz(x, basamak);
@@ -285,10 +289,13 @@ AdvancedItem _saySirali(
   final esik = 0.5 / _on(basamak);
   bool gecerli(num x) => x.isFinite && (!arti || x >= esik);
   final anahtar = yaz(dogru, kesin: true);
+  bool yakin(num x, num y) => _yakin(x, y, basamak, orijin);
   final tipik = <(num, String)>[];
   for (final x in adaylar.where(gecerli)) {
     final y = yaz(x);
-    if (ayniSecenek(y, anahtar) || tipik.any((t) => ayniSecenek(t.$2, y))) {
+    if (ayniSecenek(y, anahtar) ||
+        yakin(x, d) ||
+        tipik.any((t) => ayniSecenek(t.$2, y) || yakin(t.$1, x))) {
       continue;
     }
     tipik.add((x, y));
@@ -316,16 +323,44 @@ AdvancedItem _saySirali(
       }
     }
   }
+  final komsular = <(num, String)>[];
+  for (final x in _komsular(d, (komsuOlcek ?? d).toDouble(), basamak)) {
+    if (gecerli(x) &&
+        x > komsuAlt &&
+        x < komsuUst &&
+        !yakin(x, d) &&
+        ![...tipik, ...komsular].any((t) => yakin(t.$1, x))) {
+      komsular.add((x, yaz(x)));
+    }
+  }
   return AdvancedItem(
     kok,
     anahtar,
-    siraliCeldiriciler(d, anahtar, [
-      ...tipik,
-      for (final x in _komsular(d, (komsuOlcek ?? d).toDouble(), basamak))
-        if (gecerli(x) && x > komsuAlt && x < komsuUst) (x, yaz(x)),
-    ], hedef),
+    siraliCeldiriciler(d, anahtar, [...tipik, ...komsular], hedef),
     aciklama,
   );
+}
+
+/// [x] ile [y], [basamak] basamakla yazıldığında pratikte aynı mı görünür:
+/// göreli farkları (büyüklük [orijin] noktasından ölçülür) %2'den küçükse ya
+/// da ondalık basamak sayıları farklıyken kısa yazılanın son basamağının
+/// yarısı içinde kalıyorlarsa (ve göreli fark %6'dan küçükse). Örnek: 60,72
+/// ile 60,7; 0,21 ile 0,2; 340 ile 336.
+bool _yakin(num x, num y, int basamak, [num orijin = 0]) {
+  num yazilan(num v) => num.parse(tr(v, basamak).replaceFirst(',', '.'));
+  int ondalik(num v) {
+    final s = tr(v, basamak), virgul = s.indexOf(',');
+    return virgul < 0 ? 0 : s.length - virgul - 1;
+  }
+
+  final p = yazilan(x), q = yazilan(y);
+  final u = (p - orijin).abs(), w = (q - orijin).abs();
+  final buyuk = u > w ? u : w;
+  if (buyuk == 0) return true;
+  final fark = (p - q).abs(), goreli = fark / buyuk;
+  if (goreli < 0.02) return true;
+  final op = ondalik(x), oq = ondalik(y);
+  return op != oq && goreli < 0.06 && fark <= 0.5 / _on(op < oq ? op : oq) + 1e-9;
 }
 
 /// Anahtarın komşu değerleri: d ± %20, %40, %60, %80 ([olcek] büyüklüğüne
@@ -3207,6 +3242,7 @@ final _f16 = lmAile(
           birim: '°C',
           arti: false,
           komsuOlcek: dt,
+          orijin: donma ? 0 : 100,
         );
       case 1:
         return _saySirali(
@@ -4440,6 +4476,7 @@ final _f20 = lmAile(
             ],
             '$bilgi Toplam ${_par(s1)} + $s2 = ${s1 + s2} olur.',
             sira,
+            basamak: 0,
           );
         }
         return _saySirali(
@@ -4456,20 +4493,21 @@ final _f20 = lmAile(
           ],
           '$bilgi Fark $s2 − ${_par(s1)} = ${s2 - s1} olur.',
           sira,
+          basamak: 0,
         );
       case 1:
-        final sira = a * 20 + b;
-        final cift = kombinasyon(_yariHucreler, 2, sira % 171, spread: false);
+        final no = a * 20 + b;
+        final cift = kombinasyon(_yariHucreler, 2, no % 171, spread: false);
         final (ma, ia, pa) = cift[0]; // küçük potansiyel: anot
         final (mc, ic, pc) = cift[1];
         final ea = pa / 100, ec = pc / 100, pil = (pc - pa) / 100;
-        final once = sira.isEven;
+        final once = no.isEven;
         final karar =
             'İndirgenme potansiyeli büyük olan $mc katot, küçük olan $ma anot '
             'olur.';
         final hesap =
             'E°pil = E°katot − E°anot = ${_t(ec)} − ${_par(ea)} = ${_t(pil)} V';
-        switch (sira ~/ 171) {
+        switch (no ~/ 171) {
           case 0:
             final ilk = '$ia/$ma için ${_isaretli(ea)} V';
             final son = '$ic/$mc için ${_isaretli(ec)} V';

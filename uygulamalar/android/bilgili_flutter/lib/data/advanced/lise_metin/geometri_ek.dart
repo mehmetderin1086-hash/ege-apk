@@ -3561,14 +3561,28 @@ final lmGeometriEk = <AdvancedFamily>[
         kenar += 30;
       }
       final q = 8 * kenar - p * x, s = kenar - r * x;
+      // Denklemi kurarken 8 ile çarpmayı unutma ya da 8'i yalnız x'li terime
+      // dağıtma; bulunan x ile kenarı hesaplama.
+      int? yanlisKenar(int? xx) =>
+          xx == null || r * xx + s <= 0 ? null : r * xx + s;
+      final k1 = yanlisKenar(_bolIsaretli(s - q, p - r));
+      final k2 = yanlisKenar(_bolIsaretli(s - q, p - 8 * r));
       // Çevreyi yanıt sanma, x değerini yanıt sanma, 8 yerine 6 ya da 4 ile
-      // bölme ve sabit terimi unutma.
+      // bölme, sabit terimi unutma ve denklem kurma hataları.
       return sayisalSirali(
         'ABCDEFGH düzgün sekizgeninin çevresi ${_pr(p, q)} cm ve bir '
             'kenarının uzunluğu ${_pr(r, s)} cm olarak veriliyor. Buna göre '
             'sekizgenin bir kenarı kaç cm olur?',
         kenar,
-        [8 * kenar, x, ?_bol(p * x + q, 6), ?_bol(p * x + q, 4), r * x],
+        [
+          8 * kenar,
+          x,
+          ?_bol(p * x + q, 6),
+          ?_bol(p * x + q, 4),
+          r * x,
+          ?k1,
+          ?k2,
+        ],
         'Düzgün sekizgenin sekiz kenarı eşittir: ${_dx(p, q)} = '
             '8·${_pr(r, s)}. Buradan x = $x ve bir kenar ${_dx(r, s)} = $kenar '
             'cm bulunur.',
