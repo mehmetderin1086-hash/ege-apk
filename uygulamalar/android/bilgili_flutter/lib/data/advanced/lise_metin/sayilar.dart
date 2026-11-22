@@ -161,6 +161,8 @@ int _ozet(String s) {
 /// çeldiricinin yanıttan küçük olacağı için kökten bir hedef seçilir (0 … 3) ve
 /// bu sınırlar içinde tutturulur; seçenek kaldıkça, dört seçenekten üçünü eşit
 /// aralıklı yapan değerler alınmaz ([carpimsal] ise eşit oranlı: 0,3 · 3 · 30).
+/// [kaydir] doğruysa hataların yanıtın tek yanında toplandığı vakalarda
+/// yanıtın hep en büyük ya da en küçük seçenek olması da önlenir (aşağıda).
 List<String> _dengeli(
   String kok,
   double yanit,
@@ -169,6 +171,7 @@ List<String> _dengeli(
   Iterable<(double, String)> dolguK,
   Iterable<(double, String)> dolguB, {
   bool carpimsal = false,
+  bool kaydir = false,
 }) {
   final gorulen = <String>{};
   List<(double, String)> tekil(Iterable<(double, String)> x) => [
@@ -210,13 +213,59 @@ List<String> _dengeli(
   int sinirla(int x, int alt, int ust) => x < alt ? alt : (x > ust ? ust : x);
   if (ak.length + ab.length >= 3) {
     // Yalnızca hatalardan türetilen adaylar kullanılır.
-    final s = sinirla(
+    var s = sinirla(
       hedef,
       3 - ab.length < 0 ? 0 : 3 - ab.length,
       ak.length < 3 ? ak.length : 3,
     );
     sec(ak, s);
     sec(ab, 3 - s);
+    if (kaydir) {
+      // Hatalar yanıtın bir yanında toplanınca yanıt hep en büyük (ya da en
+      // küçük) seçenek olur ve seçenekler sıralanarak bulunur. Yanıt, hedef
+      // istemediği hâlde uçta ya da hedefin öbür yarısında kaldıysa yanıta en
+      // uzak hatalı çeldirici, karşı yandaki en yakın uygun komşu değerle
+      // değiştirilir (en çok bir kez; en az iki çeldirici hatalardan gelir).
+      bool sapma() =>
+          (s != hedef && (s == 0 || s == 3)) || ((s < 2) != (hedef < 2));
+      for (var n = 0; n < 1 && sapma(); n++) {
+        final asagi = s < hedef; // yanıttan küçük bir komşu gerekir
+        final kalabalik = [
+          for (var x = 1; x <= 3; x++)
+            if (asagi ? x > s : x <= s) x,
+        ];
+        if (kalabalik.isEmpty) break;
+        final cikan = kalabalik.reduce(
+          (p, q) => (degerler[p] - yanit).abs() >= (degerler[q] - yanit).abs()
+              ? p
+              : q,
+        );
+        final eskiD = [...degerler], eskiS = [...sonuc];
+        degerler.removeAt(cikan);
+        sonuc.removeAt(cikan - 1);
+        final uygun = (asagi ? dk : db)
+            .where((e) => !sonuc.contains(e.$2) && !esitAralikli(e.$1))
+            .toList();
+        if (uygun.isEmpty) {
+          degerler
+            ..clear()
+            ..addAll(eskiD);
+          sonuc
+            ..clear()
+            ..addAll(eskiS);
+          break;
+        }
+        // Küçük çeldiriciler önde kalır (ortaCift bu sırayı kullanır).
+        if (asagi) {
+          degerler.insert(s + 1, uygun.first.$1);
+          sonuc.insert(s, uygun.first.$2);
+          s++;
+        } else {
+          ekle(uygun.first);
+          s--;
+        }
+      }
+    }
     // Yanıt, biri küçük biri büyük iki çeldiricinin tam ortasında kaldıysa
     // çiftin bir üyesi komşu bir değerle değiştirilir: küçük çeldirici hedefin
     // altındaysa büyük üye küçük bir komşuyla, üstündeyse küçük üye büyük bir
@@ -242,7 +291,9 @@ List<String> _dengeli(
       final eskiD = [...degerler], eskiS = [...sonuc];
       degerler.removeAt(cikan);
       sonuc.removeAt(cikan - 1);
-      final uygun = yedek.where((e) => !esitAralikli(e.$1)).toList();
+      final uygun = yedek
+          .where((e) => !sonuc.contains(e.$2) && !esitAralikli(e.$1))
+          .toList();
       if (uygun.isEmpty) {
         degerler
           ..clear()
@@ -269,7 +320,9 @@ List<String> _dengeli(
 
 /// Tam sayı yanıtlı soru; eksi işareti tipografik yazılır. Adaylar yetmezse
 /// komşu değerlerle tamamlanır. [enCok] verilirse ondan büyük çeldirici
-/// alınmaz (ör. sayma sorusunda evrensel kümenin eleman sayısı).
+/// alınmaz (ör. sayma sorusunda evrensel kümenin eleman sayısı); [enAz]
+/// verilirse ondan küçük çeldirici alınmaz. [komsuAdim] komşu değerlerin
+/// aralığıdır (ör. hep çift olan yanıtlarda 2).
 AdvancedItem _tam(
   String kok,
   int yanit,
@@ -277,11 +330,17 @@ AdvancedItem _tam(
   String aciklama, {
   String birim = '',
   bool pozitif = false,
+  int? enAz,
   int? enCok,
+  int? komsuAdim,
 }) {
-  final adim = yanit.abs() >= 200 ? 10 : (yanit.abs() >= 40 ? 5 : 1);
+  final adim =
+      komsuAdim ?? (yanit.abs() >= 200 ? 10 : (yanit.abs() >= 40 ? 5 : 1));
   bool uygun(int x) =>
-      x != yanit && (!pozitif || x > 0) && (enCok == null || x <= enCok);
+      x != yanit &&
+      (!pozitif || x > 0) &&
+      (enAz == null || x >= enAz) &&
+      (enCok == null || x <= enCok);
   final aday = [
     for (final x in adaylar)
       if (uygun(x)) x,
@@ -303,6 +362,7 @@ AdvancedItem _tam(
         for (var j = 1; j <= 8; j++)
           if (uygun(yanit + j * adim)) yanit + j * adim,
       ].map(yaz),
+      kaydir: true,
     ),
     aciklama,
   );
@@ -586,6 +646,7 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
               'olur. Her pozitif bölenin negatifi de bir bölen olduğundan tam '
               'sayı bölen sayısı 2 · $bolen = ${2 * bolen} bulunur.',
           pozitif: true,
+          komsuAdim: 2, // tam sayı bölen sayısı hep çifttir
         );
       case 2:
         final top = _topla(asallar);
@@ -685,6 +746,13 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
   final yaz = '$ayrim olduğundan A = ${_carpanYaz(f)} olur.';
   final bolen = _carp([for (final x in f) x.$2 + 1]);
   final saf = (s + 1) * (t + 1);
+  // Ortak asal çarpanı birleştirmeden her tabanın çarpanlarını ayrı sayan yol:
+  // 4² · 6 = 2⁴ · 2 · 3 için (4 + 1) · (1 + 1) · (1 + 1). Tabanlar ortak bir
+  // asal içerdiğinden bu değer doğru yanıttan hep büyüktür.
+  final ayrik = _carp([
+    for (final x in _asalCarpan(m)) x.$2 * s + 1,
+    for (final x in _asalCarpan(n)) x.$2 * t + 1,
+  ]);
   final asallar = [for (final x in f) x.$1];
   switch (c) {
     case 5:
@@ -697,6 +765,7 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
           _carp([for (final x in f) x.$2]),
           2 * bolen,
           _topla([for (final x in f) x.$2 + 1]),
+          ayrik,
         ],
         '$yaz Pozitif bölen sayısı ${_bolenYaz(f)} = $bolen bulunur.',
         pozitif: true,
@@ -711,10 +780,12 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
           2 * saf,
           saf,
           2 * _carp([for (final x in f) x.$2]),
+          2 * ayrik,
         ],
         '$yaz Pozitif bölen sayısı ${_bolenYaz(f)} = $bolen, tam sayı bölen '
             'sayısı 2 · $bolen = ${2 * bolen} bulunur.',
         pozitif: true,
+        komsuAdim: 2, // tam sayı bölen sayısı hep çifttir
       );
     case 7:
       final k = _kareTamlayan(f);
@@ -759,7 +830,7 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
         'A = $ifade olduğuna göre A sayısının asal olmayan pozitif '
             'bölenlerinin sayısı kaçtır?',
         bolen - f.length,
-        [bolen, bolen - f.length - 1, saf - 2, bolen - 1],
+        [bolen, bolen - f.length - 1, saf - 2, bolen - 1, ayrik - f.length],
         '$yaz Pozitif bölen sayısı ${_bolenYaz(f)} = $bolen olur. Bunlardan '
             '${f.length} tanesi (${_liste([for (final p in asallar) '$p'])}) '
             'asal olduğundan asal olmayan bölen sayısı $bolen − ${f.length} = '
@@ -1022,7 +1093,8 @@ AdvancedItem _faktoriyelSoru(int a, int b, int c) {
       return _tam(
         '$n! + $m! toplamının sonunda kaç tane sıfır vardır?',
         zm,
-        [zn + zm, zn, zn * zm],
+        // Son yanlış: 5 çarpanı yerine 10'un katlarını saymak.
+        [zn + zm, zn, zn * zm, m ~/ 10],
         'Toplam $m! · (1 + ${m + 1} · … · $n) biçiminde yazılır. ${m + 1} · … · '
             '$n çarpımı 10 sayısının katı olduğundan parantezin içi 1 ile biten, '
             '2 ve 5 çarpanı içermeyen bir sayıdır. Bu nedenle sondaki sıfır sayısı '
@@ -2893,7 +2965,8 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
           _ciftSay(A, B, (x, y) => x + y <= k),
         ],
         'Toplamı $k olan sıralı ikililer ${liste.join(', ')} olup $say tanedir.',
-        pozitif: true,
+        // Yanıt çoğunlukla 2 olduğundan “hiçbiri” (0) de çeldirici olabilir.
+        enAz: 0,
         enCok: A.length * B.length,
       );
     case 9:
@@ -3126,9 +3199,18 @@ int _sabitDegil(List<int> a, List<int> b) =>
         [buyuk, _permutasyon(n, m), _bireBirYanlis(a, b), kesin, toplamYanlis],
       );
     case 4:
+      final tA = a.where((x) => x.isOdd).length,
+          tB = b.where((y) => y.isOdd).length;
       return (
         _bireBirParite(a, b),
-        [_permutasyon(n, m), _ayniParite(a, b), _permutasyon(n, m) ~/ 2],
+        [
+          _permutasyon(n, m),
+          _ayniParite(a, b),
+          _permutasyon(n, m) ~/ 2,
+          // Yalnız tek ya da yalnız çift elemanların eşlenmesini saymak.
+          _permutasyon(tB, tA),
+          _permutasyon(n - tB, m - tA),
+        ],
       );
     case 5:
       return (hepsi - esitDegil, [esitDegil, hepsi, ortak * _kuvvet(n, m - 1)]);
@@ -3152,6 +3234,9 @@ int _sabitDegil(List<int> a, List<int> b) =>
           _permutasyon(n, m),
           cift * _kuvvet(n, m - 1),
           cift * _permutasyon(n, m - 1),
+          // f(x₁) için seçenek sayısıyla çarpmayı unutmak ya da toplamak.
+          _permutasyon(n - 1, m - 1),
+          cift + _permutasyon(n - 1, m - 1),
         ],
       );
     case 8:
@@ -3668,7 +3753,8 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
       return _tam(
         '$m² − $n² işleminin sonucu kaçtır?',
         top * fark,
-        [fark * fark, top + fark, top * fark ~/ 2],
+        // Son yanlış: işareti karıştırıp m² + n² hesaplamak.
+        [fark * fark, top + fark, top * fark ~/ 2, m * m + n * n],
         'İki kare farkı özdeşliğine göre $m² − $n² = ($m − $n) · ($m + $n) = '
             '$fark · $top = ${top * fark} olur.',
         pozitif: true,
@@ -3695,10 +3781,14 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
         '$m² $isaret 2 · $m · $n + $n² işleminin sonucu kaçtır?',
         k * k,
         [
+          // Ortadaki 2mn terimini unutmak.
           m * m + n * n,
           topla ? (m - n) * (m - n) : (m + n) * (m + n),
-          k * k + 2 * m * n * (topla ? -1 : 1),
+          // Ortadaki terimin 2 katsayısını unutmak: m² ± mn + n².
+          m * m + (topla ? 1 : -1) * m * n + n * n,
           2 * k,
+          // 2 katsayısını ikinci terime yazmak: (m ± 2n)².
+          (topla ? m + 2 * n : m - 2 * n) * (topla ? m + 2 * n : m - 2 * n),
         ],
         '$m² $isaret 2 · $m · $n + $n² = ($m $isaret $n)² = $k² = ${k * k} olur.',
         pozitif: true,
@@ -5318,6 +5408,8 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
             q1 * q2 * q3 - p1 * q2 * q3 - p2 * q1 * q3 - p3 * q1 * q2,
           ),
           kalan * 3,
+          // Kalan kesirler yerine harcanan kesirleri çarpmak.
+          ?_bol(kalan * q1 * q2 * q3, p1 * p2 * p3),
         ].where((x) => x > 0),
         'Harçlık x olsun. Kalan para x · $k1/$q1 · $k2/$q2 · $k3/$q3 = x · '
             '${_q(k1 * k2 * k3, q1 * q2 * q3)} olur. Bu değer $kalan olduğundan '
@@ -5434,6 +5526,8 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
           kalan * q2 ~/ k2,
           if (q1 * q2 - p1 * q2 - p2 * q1 > 0)
             ?_bol(kalan * q1 * q2, q1 * q2 - p1 * q2 - p2 * q1),
+          // Okunmayan kesirler yerine okunan kesirleri çarpmak.
+          ?_bol(kalan * q1 * q2, p1 * p2),
         ],
         'Roman x sayfa olsun. Okunmayan kısım x · $k1/$q1 · $k2/$q2 = x · '
             '${_q(k1 * k2, q1 * q2)} olur. x · ${_q(k1 * k2, q1 * q2)} = $kalan '

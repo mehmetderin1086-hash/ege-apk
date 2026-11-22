@@ -439,7 +439,6 @@ final _sesOlayi = lmSirali(
         _maske(etiket, hedef),
         aciklama,
         i,
-
         _desenSes,
       );
     }
@@ -564,8 +563,6 @@ final _cumleOgesi = lmSirali(
 
 // ───────────────────────────── 3 · Sözcük türleri ────────────────────────────
 
-const _turHavuzu = ['isim', 'sıfat', 'zarf', 'zamir', 'edat', 'bağlaç', 'fiil'];
-
 // (cümle, tırnak içindeki sözcüğün türü, gerekçe)
 const _sozcukTurleri = [
   ('Bahçedeki “ağaç” bu yıl erken çiçek açtı.', 'isim', 'bir varlığın adı'),
@@ -625,19 +622,67 @@ const _sozcukTurleri = [
 ];
 
 final _turSerpik = _serpistir(_sozcukTurleri, 7);
-final _turAgirlik = _dengeAgirlik([
-  for (final e in _sozcukTurleri) (e.$2, _haric(_turHavuzu, e.$2)),
-]);
 
+// Her türdeki sözcüğün öğrencilerce gerçekten karıştırıldığı türler; çeldirici
+// etiketler yalnız bunlardan seçilir. Ad soylu sözcükler cümledeki görevine
+// göre birbirine geçebildiği için birbiriyle (isim–sıfat–zamir, sıfat–zarf),
+// edat bağlaç ve zarfla, bağlaç edatla, çekimli fiil adlarını taşıdığı
+// fiilimsilerle (isim-fiil, sıfat-fiil, zarf-fiil) karıştırılır. “Deniz” için
+// “bağlaç”, “ve” için “fiil” gibi hiçbir öğrencinin yapmayacağı eşleştirmeler
+// yazılmaz: her çeldiricide iki konum yanlış olduğundan böyle bir etiket
+// seçenekleri tek başına eler.
 const _turKarisan = {
-  'isim': ['zamir', 'sıfat'],
-  'sıfat': ['zarf', 'zamir'],
-  'zarf': ['sıfat', 'edat'],
+  'isim': ['sıfat', 'zamir'],
+  'sıfat': ['zarf', 'isim'],
+  'zarf': ['sıfat', 'isim'],
   'zamir': ['sıfat', 'isim'],
   'edat': ['bağlaç', 'zarf'],
-  'bağlaç': ['edat', 'zarf'],
-  'fiil': ['isim', 'zarf'],
+  'bağlaç': ['edat'],
+  'fiil': ['isim', 'sıfat', 'zarf'],
 };
+
+// Türünün genel listesinden ayrılan sözcükler (tırnak içindeki biçimiyle):
+// işaret, belgisiz ve soru sıfatları zamirle; “çok” ve “aşağı” (-den çok,
+// -den aşağı) edatla; “biraz” zamirle; “geç” “geç-”, “göre” “gör-” fiiliyle;
+// “Hepsi” “hep” zarfıyla; “doğru” sıfat ve zarf olan biçimiyle; “çünkü” ve
+// “oysa” zarfla karıştırılır; -mış, -er, -acak, -me ekli çekimli fiiller aynı
+// ekli sıfat-fiil ve isim-fiillerle karışır. Kimi sözcüklerde genel listedeki
+// tür hiç karıştırılmadığı için yazılmaz (“Ben” için sıfat, “çok” için isim).
+const _turKarisanOzel = {
+  'Bu': ['zamir'],
+  'Bazı': ['zamir'],
+  'Hangi': ['zamir'],
+  'Yeşil': ['isim'],
+  'üç': ['isim'],
+  'yaşlı': ['isim'],
+  'hızlı': ['sıfat'],
+  'sessizce': ['sıfat'],
+  'çok': ['sıfat', 'edat'],
+  'aşağı': ['sıfat', 'isim', 'edat'],
+  'erken': ['sıfat'],
+  'biraz': ['sıfat', 'zamir'],
+  'geç': ['sıfat', 'fiil'],
+  'Ben': ['isim'],
+  'Hepsi': ['sıfat', 'isim', 'zarf'],
+  'doğru': ['sıfat', 'zarf'],
+  'göre': ['zarf', 'fiil'],
+  'çünkü': ['edat', 'zarf'],
+  'oysa': ['edat', 'zarf'],
+  'açmış': ['sıfat'],
+  'içer': ['sıfat'],
+  'çıkacağız': ['sıfat', 'isim'],
+  'ezberlemelisin': ['isim'],
+};
+
+List<String> _turYanlis((String, String, String) e) {
+  final s = e.$1;
+  return _turKarisanOzel[s.substring(s.indexOf('“') + 1, s.indexOf('”'))] ??
+      _turKarisan[e.$2]!;
+}
+
+final _turAgirlik = _dengeAgirlik([
+  for (final e in _sozcukTurleri) (e.$2, _turYanlis(e)),
+]);
 
 final _sozcukTuru = lmSirali(
   'tde_sozcuk_turu',
@@ -652,10 +697,7 @@ final _sozcukTuru = lmSirali(
       '${_uc([for (final e in x) e.$1])}\nBu cümlelerde tırnak içinde verilen '
       'sözcüklerin türleri sırasıyla hangi seçenekte doğru verilmiştir?',
       etiket,
-      [
-        for (var p = 0; p < 3; p++)
-          _digerleri(_turHavuzu, etiket[p], i + p, _turKarisan[etiket[p]]!),
-      ],
+      [for (final e in x) _turYanlis(e)],
       '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${x[p].$2}: ${x[p].$3}'].join('; ')}.',
       i,
       agirlik: _turAgirlik,
@@ -898,7 +940,6 @@ final _yapi = lmSirali(
         _maske(etiket, hedef),
         aciklama,
         i,
-
         _desenYapi,
       );
     }
@@ -2599,7 +2640,6 @@ final _preposition = lmSirali(
         _maske(etiket, hedef),
         aciklama,
         i,
-
         _desenEdat,
       );
     }

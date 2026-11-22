@@ -4844,13 +4844,11 @@ bool _adKurulur(_AlkanAdi a) {
   return true;
 }
 
-_AlkanAdi _tersNumara(_AlkanAdi a) => (a.$1, [
-  for (final (k, s) in a.$2) (a.$1 + 1 - k, s),
-]);
+_AlkanAdi _tersNumara(_AlkanAdi a) =>
+    (a.$1, [for (final (k, s) in a.$2) (a.$1 + 1 - k, s)]);
 
-_AlkanAdi _kaydir(_AlkanAdi a, int y) => (a.$1, [
-  for (final (k, s) in a.$2) (k + y, s),
-]);
+_AlkanAdi _kaydir(_AlkanAdi a, int y) =>
+    (a.$1, [for (final (k, s) in a.$2) (k + y, s)]);
 
 /// Ana zinciri bir fazla ya da bir eksik saymanın kurulabilir sonuçları;
 /// ad uzunluğunu koruyanlar önce.
@@ -4886,10 +4884,13 @@ List<String>? _uclarDuzeni(_AlkanAdi a, Set<String> yasak) {
   final (n, d) = a;
   if (d.length < 2) return null;
   final ad = _adYazi(a);
-  _AlkanAdi kay(_AlkanAdi x, int t, int y) => (n, [
-    for (var u = 0; u < d.length; u++)
-      u == t ? (x.$2[u].$1 + y, x.$2[u].$2) : x.$2[u],
-  ]);
+  _AlkanAdi kay(_AlkanAdi x, int t, int y) => (
+    n,
+    [
+      for (var u = 0; u < d.length; u++)
+        u == t ? (x.$2[u].$1 + y, x.$2[u].$2) : x.$2[u],
+    ],
+  );
   for (final (y1, y2) in const [(1, -1), (1, 1), (-1, -1), (-1, 1)]) {
     final x = kay(a, 0, y1), y = kay(a, d.length - 1, y2);
     final xy = kay(x, d.length - 1, y2);
@@ -5014,10 +5015,13 @@ List<String> _yedekAdlar(
     _kaydir(a, -1),
     for (final ilk in [true, false])
       for (final y in const [1, -1])
-        (n, [
-          for (var t = 0; t < d.length; t++)
-            t == (ilk ? 0 : d.length - 1) ? (d[t].$1 + y, d[t].$2) : d[t],
-        ]),
+        (
+          n,
+          [
+            for (var t = 0; t < d.length; t++)
+              t == (ilk ? 0 : d.length - 1) ? (d[t].$1 + y, d[t].$2) : d[t],
+          ],
+        ),
   ];
   final boylar = _yanlisZincirBoylari(a);
   final out = <String>[];
@@ -5041,8 +5045,8 @@ List<String> _yedekAdlar(
     ekle(_adYazi((n, [for (final (k, _) in d) (k, 1)])));
   }
   for (final t in tekli) {
-    for (final m in boylar) {
-      if (_adKurulur(t) && _adKurulur((m, t.$2))) ekle(_adYazi((m, t.$2)));
+    for (final m in [n + 1, n - 1]) {
+      if (_adKurulur((m, t.$2))) ekle(_adYazi((m, t.$2)));
     }
   }
   zincirAdlari.forEach(ekle);

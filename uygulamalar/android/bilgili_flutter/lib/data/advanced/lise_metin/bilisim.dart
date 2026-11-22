@@ -647,7 +647,9 @@ AdvancedItem _onaltilikDonusum(int a, int b, int c) {
     final tam = (1 << (3 * (bit.length ~/ 3))) - 1;
     // A hataları: soldan gruplama, rakamları ters yazma, dörderli gruplama,
     // soldaki eksik grubu atlama. B hatası: bir grubu bir fazla ya da eksik
-    // çevirme. Harfsiz yazımlar onluk okumayla sıralanır.
+    // çevirme. Dörderli gruplama yalnız geçerli bir sekizlik yazım (0 … 7
+    // rakamları) verdiğinde kullanılır: 8, 9 ya da harf içeren seçenek
+    // biçiminden elenirdi. Yazımlar onluk okumayla sıralanır.
     return AdvancedItem(
       'İkilik tabandaki ${_tabanli(bit, 2)} sayısı, bitleri sağdan üçerli '
           'gruplanarak sekizlik tabana çevrilecektir. Sayının sekizlik '
@@ -659,7 +661,10 @@ AdvancedItem _onaltilikDonusum(int a, int b, int c) {
         [
           (x) => _grupla(_ikilik(x), 3, soldan: true),
           (x) => _sifirsiz(_ters(_sekizlik(x))),
-          (x) => _grupla(_ikilik(x), 4),
+          (x) {
+            final g = _grupla(_ikilik(x), 4);
+            return RegExp(r'^[0-7]+$').hasMatch(g) ? g : null;
+          },
           (x) => _sekizlik(x & tam),
         ],
         [(x) => x - 1, (x) => x + 1, (x) => x - 8, (x) => x + 8],
@@ -2660,7 +2665,9 @@ AdvancedItem _kosul(int a, int b, int c) {
     ];
     // Çeldiriciler: üç yanlış dal ya da iki hatalı tasarım (bir yanlış dal w,
     // doğru dalda elde, ödünç ya da birler basamağı hatası n + e ve ikisi
-    // birlikte w + e). Girişlerle ve sıfırla aynı değerler kullanılmaz.
+    // birlikte w + e). Hesap hatası ±10 (elde ya da ödünç) ya da ±1, ±2
+    // (birler basamağı) olur; ±20 gibi doğal olmayan kaymalar kullanılmaz.
+    // Girişlerle ve sıfırla aynı değerler kullanılmaz.
     String yaz(int v) => v < 0 ? '−${-v}' : '$v';
     final secilen = _ikiHataliSayisal(
       d[dal],
@@ -2668,7 +2675,7 @@ AdvancedItem _kosul(int a, int b, int c) {
         for (var t = 0; t < 4; t++)
           if (t != dal) d[t],
       ],
-      const [10, -10, 1, -1, 2, -2, 3, -3, 20, -20],
+      const [10, -10, 1, -1, 2, -2],
       hedefSira(_no(a, b, c)),
       uygun: (v) => v != 0 && v != x && v != y,
     );

@@ -5950,9 +5950,13 @@ AdvancedItem _bukum(int a, int b, int c, int deneme) {
   if (c <= 3 || c == 9) {
     // Üçüncü derece: f(x) = k(x − h)³ + m(x − h) + n; büküm noktası (h, n),
     // oradaki teğetin eğimi m.
-    // c = 9'da öncül katsayı 1'dir; a yalnız büküm noktasını seçer.
+    // c = 9'da öncül katsayı 1'dir; a yalnız büküm noktasını seçer. Büküm
+    // apsisi 1 olamaz: f(1) = 1 + a + b + c olduğundan a + b + c doğrudan
+    // ordinattan okunur, büküm koşulu ve eğim gereksiz kalırdı.
     final k = const [1, -1, 2, -2, 3][a % 5];
-    final h = const [-2, -1, 1, 2, 3][c == 9 ? a % 5 : a ~/ 5];
+    final h = c == 9
+        ? const [-2, -1, -3, 2, 3][a % 5]
+        : const [-2, -1, 1, 2, 3][a ~/ 5];
     // Büküm noktasındaki eğim m kökteki katsayılara, sabit terim ise
     // ordinata eşit çıkmasın (m = −kh² iken sabit terim n olur).
     final yasak = {
@@ -5980,11 +5984,18 @@ AdvancedItem _bukum(int a, int b, int c, int deneme) {
       (x) {
         if (c != 9) return !yasak.contains(x);
         // c = 9: a + b + c = x(1 − h) + n − h³ + 3h² − 3h, kökteki h, n ve
-        // eğime eşit olmasın (h = 1 iken yanıt eğimden bağımsız n − 1'dir;
-        // verilen eğim bu değere eşit seçilmez).
+        // eğime eşit olmasın. b = x + 3h² ya da c = n − h³ − xh sıfır
+        // çıkarsa bir katsayıyı unutan yol, yanıt 0 iken işaret hatası,
+        // yanıt n − 1 iken büküm ordinatını f(1) sanan yol
+        // (1 + a + b + c = n) yanıtı verirdi; bu eğimler atlanır.
         final nn = const [3, -4, 5, -1, 6][a ~/ 5];
         final y = x * (1 - h) + nn - h * h * h + 3 * h * h - 3 * h;
-        return !{x, -x, h, -h, nn, -nn}.contains(y);
+        final b9 = x + 3 * h * h, c9 = nn - h * h * h - x * h;
+        return y != 0 &&
+            y != nn - 1 &&
+            b9 != 0 &&
+            c9 != 0 &&
+            !{x, -x, h, -h, nn, -nn}.contains(y);
       },
     );
     final n = c == 9
@@ -6023,8 +6034,10 @@ AdvancedItem _bukum(int a, int b, int c, int deneme) {
               'noktası (${_n(h)}, ${_n(n)}) ve a + b = ${_n(h + n)} olur.',
         );
       case 3:
-        // f(x) = x³ + px² + qx + r: büküm noktası (h₂, n₂) verilir.
-        final h2 = const [-2, -1, 1, 2, 3][a % 5];
+        // f(x) = x³ + px² + qx + r: büküm noktası (h₂, n₂) verilir. h₂ = 1
+        // olamaz: f(1) = 1 + p + q + r eşitliği p + q'yu büküm koşulu
+        // kullanılmadan verirdi.
+        final h2 = const [-2, -1, -3, 2, 3][a % 5];
         final r = const [4, -3, 2, -5, 1][a ~/ 5];
         AdvancedItem kur(int q) {
           final p = -3 * h2;
@@ -6033,7 +6046,16 @@ AdvancedItem _bukum(int a, int b, int c, int deneme) {
             'f(x) = x³ + px² + qx${_sabitEk(r)} fonksiyonunun büküm noktası '
                 '(${_n(h2)}, ${_n(n2)}) olduğuna göre p + q toplamı kaçtır?',
             p + q,
-            [q - p, p, 3 * h2 + q, p * q],
+            [
+              q - p,
+              p,
+              3 * h2 + q,
+              p * q,
+              // Büküm ordinatını f(1) sanan yol (1 + p + q + r = n₂) ve büküm
+              // noktasını f′(h₂) = 0 ile arayan yol (tam sayı çıkarsa).
+              n2 - 1 - r,
+              if (q % h2 == 0) -q ~/ h2 - 3 * h2 * h2 + 2 * q,
+            ],
             'f″(x) = 6x + 2p olur. f″(${_n(h2)}) = 0 eşitliğinden p = ${_n(p)} '
                 'bulunur. f(${_n(h2)}) = ${_n(n2)} eşitliğinden '
                 '${_n(h2 * h2 * h2 + p * h2 * h2 + r)} + ${_p(h2)}·q = ${_n(n2)} ve '

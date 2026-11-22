@@ -61,14 +61,30 @@ num _komsuAdim(num k) {
   return 2000 * taban;
 }
 
+/// Aynı yandaki ikinci komşunun uzaklığı: 2·s değil 1,5·s (yazım
+/// duyarlığında yoksa 1,4·s; tek birimlik adımda yarım birim, o da yoksa
+/// 3 birim). k, k + s, k + 2s eşit aralıklı bir üçlü olur ve anahtarı hep
+/// dizinin ucunda bırakırdı.
+num _ikinciAdim(num k, num s) {
+  final ky = (k * 100).round(), sy = (s * 100).round();
+  final u = ky % 100 == 0 && sy % 100 == 0
+      ? 100
+      : (ky % 10 == 0 && sy % 10 == 0 ? 10 : 1);
+  final m = sy ~/ u;
+  if (m.isEven) return 1.5 * sy / 100;
+  if (m > 1) return (1.4 * m).round() * u / 100;
+  return (u > 1 ? 1.5 * u : 3 * u) / 100;
+}
+
 /// Değer sırası dengeli pozitif sayısal soru. Anahtardan küçük çeldirici
 /// sayısı [sira] olur (`hedefSira`). [hatalar] öncelik sırasıyla tipik hata
 /// değerleridir (anahtarın iki yanında da); bir yanda yetmezse anahtarın
 /// [adim] (verilmezse `_komsuAdim`) aralıklı komşularıyla tamamlanır. Bir
 /// soruda en çok iki komşu değer bulunur: hedef sıra daha fazlasını
 /// gerektirirse ona en yakın, iki komşuyla kurulabilen sıra kullanılır.
-/// Seçenekler iki ondalıkla yazıldığından aynılık yüzde birlik değerle
-/// sınanır (`ayniSecenek` ile eşdeğer).
+/// Komşular [komsuAlt] ile [komsuUst] arasında kalır (fiziksel olarak
+/// olanaklı aralık, uçlar dışarıda). Seçenekler iki ondalıkla yazıldığından
+/// aynılık yüzde birlik değerle sınanır (`ayniSecenek` ile eşdeğer).
 AdvancedItem _sd(
   String kok,
   num dogru,
@@ -78,6 +94,8 @@ AdvancedItem _sd(
   String unit = '',
   bool yuzde = false,
   num? adim,
+  num komsuAlt = 0,
+  num? komsuUst,
 }) {
   final k = (dogru * 100).roundToDouble() / 100;
   if ((dogru - k).abs() > 1e-7 || k <= 0) {
@@ -96,10 +114,15 @@ AdvancedItem _sd(
     ekle(hata, x);
   }
   final s = adim ?? _komsuAdim(k);
-  for (var j = 1; j <= 6; j++) {
-    ekle(komsu, k + j * s);
-    ekle(komsu, k - j * s);
+  final altY = (komsuAlt * 100).round();
+  final ustY = komsuUst == null ? null : (komsuUst * 100).round();
+  for (final d in [s, _ikinciAdim(k, s), 2 * s, 3 * s, 4 * s, 5 * s, 6 * s]) {
+    for (final x in [k + d, k - d]) {
+      final y = (x * 100).round();
+      if (y > altY && (ustY == null || y < ustY)) ekle(komsu, x);
+    }
   }
+  final komsuY = komsu.toSet();
   // Hedef sıra için gereken komşu sayısı; üç komşu gerekirse en yakın uygun
   // sıraya geçilir.
   final altH = hata.where((y) => y < kY).length;
@@ -144,13 +167,27 @@ AdvancedItem _sd(
     return secilen;
   }
 
+  // Verilen değerlerden komşu olanların en son öncelikli olanı (yoksa null).
+  int? sonKomsu(Iterable<int> ys) {
+    int? en;
+    for (final y in ys) {
+      if (komsuY.contains(y) &&
+          (en == null || aday.indexOf(y) > aday.indexOf(en))) {
+        en = y;
+      }
+    }
+    return en;
+  }
+
   // Anahtar iki çeldiricinin aritmetik ya da geometrik ortası olursa
   // (k/10 ile 10k, k − d ile k + d gibi) "ortadakini seç" ipucu doğar; o
   // çiftin sonraki öncelikli adayı atılıp aynı sırayla yeniden seçilir.
   // Dört seçenek eşit aralıklı bir dizi oluşturursa da (anahtar hep bir
-  // uçta kalır) en son öncelikli çeldirici atılır.
+  // uçta kalır) en son öncelikli çeldirici atılır. Bir komşu, iki seçenekle
+  // eşit aralıklı bir üçlü kurarsa (k, k + s, k + 2s gibi) ya da başka bir
+  // çeldiriciye çok yakın düşerse (%2'den az) o komşu atılır.
   var secilen = sec();
-  for (var deneme = 0; deneme < 8; deneme++) {
+  for (var deneme = 0; deneme < 12; deneme++) {
     int? at;
     for (var p = 0; p < 3 && at == null; p++) {
       for (var q = p + 1; q < 3 && at == null; q++) {
@@ -167,7 +204,23 @@ AdvancedItem _sd(
         d[2] - d[1] == d[3] - d[2]) {
       at = secilen.reduce((x, y) => aday.indexOf(x) > aday.indexOf(y) ? x : y);
     }
-    if (at == null) break;
+    for (var p = 0; p < 2 && at == null; p++) {
+      for (var q = p + 1; q < 3 && at == null; q++) {
+        for (var t = q + 1; t < 4 && at == null; t++) {
+          final g1 = d[q] - d[p], g2 = d[t] - d[q];
+          if ((g1 - g2).abs() <= 0.1 * math.max(g1, g2)) {
+            at = sonKomsu([d[p], d[q], d[t]]);
+          }
+        }
+      }
+    }
+    for (var p = 0; p < 3 && at == null; p++) {
+      for (var q = p + 1; q < 3 && at == null; q++) {
+        final x = secilen[p], y = secilen[q];
+        if ((x - y).abs() < 0.02 * math.max(x, y)) at = sonKomsu([x, y]);
+      }
+    }
+    if (at == null || aday.length <= 3) break;
     aday.remove(at);
     secilen = sec();
   }
@@ -354,6 +407,8 @@ final _f03 = lmAile(
           v0 + ivme * t * 2, // a·t değerini iki kez ekleme
           v0 + ivme, // süreyi unutma
           if (v0 + ivme * t * t <= 2 * v) v0 + ivme * t * t, // a·t²
+          if (v0 + ivme * t * t / 2 <= 2 * v)
+            v0 + ivme * t * t / 2, // yol bağıntısındaki ½·a·t²
           v0 + ivme * t / 2, // ½·a·t ile hesaplama
           if ((v0 + ivme) * t <= 2 * v) (v0 + ivme) * t, // işlem önceliği
         ],
@@ -1574,6 +1629,7 @@ final _f15 = lmAile(
           yuk + makara, // ip kollarına bölmeme
           (yuk - makara) / n, // makara ağırlığını çıkarma
           (yuk + makara) / (n - 1), // bir ip kolunu eksik sayma
+          yuk / n + makara, // makara ağırlığını ip kollarına bölmeme
           (yuk + makara) / (n + 1), // serbest ucu da taşıyıcı sayma
           (yuk + makara) / 2, // iki ip kolu sanma
         ],
@@ -1706,6 +1762,9 @@ final _f16 = lmAile(
         '${tr(d2)} · $v2 = ${tr(m2)} g olur. Karışımın özkütlesi (${tr(m1)} + ${tr(m2)}) / '
         '($v1 + $v2) = ${tr(m1 + m2)} / ${v1 + v2} = ${tr(dk)} g/cm³ bulunur.',
         _hs(a, b, c),
+        adim: 0.05,
+        komsuAlt: d2,
+        komsuUst: d1,
       );
     }
     return _sd(
@@ -1725,6 +1784,9 @@ final _f16 = lmAile(
       '${tr(d2)} = $v2 cm³ olur. Karışımın özkütlesi (${tr(m1)} + ${tr(m2)}) / ($v1 + $v2) = '
       '${tr(m1 + m2)} / ${v1 + v2} = ${tr(dk)} g/cm³ bulunur.',
       _hs(a, b, c),
+      adim: 0.05,
+      komsuAlt: d2,
+      komsuUst: d1,
     );
   },
   exam: _tyt,
@@ -1881,6 +1943,7 @@ final _f18 = lmAile(
           hacim * (1 - dc), // sıvının özkütlesini unutup çıkarma
           hacim / 2, // yarısının battığını sanma
           hacim * (ds - dc), // özkütle farkıyla hesaplama
+          if (!ust) hacim, // yüzmeyi askıda kalmayla karıştırma
         ],
         'Yüzen cisimde batan hacmin toplam hacme oranı özkütlelerin oranına '
         'eşittir: ${tr(dc)} / ${tr(ds)} = ${tr(oran)}. Batan hacim $hacim · '
@@ -1888,6 +1951,7 @@ final _f18 = lmAile(
         '${ust ? ', sıvı yüzeyinin üzerinde kalan hacim $hacim − ${tr(batan)} = ${tr(disari)} cm³ olur.' : ' olur.'}',
         _hs(a, b, c),
         unit: 'cm³',
+        komsuUst: hacim,
       );
     }
     final hacim = 100 * (a + 1); // 100 … 2500 cm³
@@ -1972,19 +2036,23 @@ final _f19 = lmAile(
         'sular arasında gerçekleştiğine göre ısıl denge sağlandığında karışımın '
         'sıcaklığı kaç °C olur?',
         denge,
+        // Aralık dışı (t1 … t2 dışında) en çok bir tipik hata görünsün: komşular
+        // iki sıcaklığın arasında kalır.
         [
           (t1 + t2) / 2, // kütleleri yok sayma
           (m1 * t2 + m2 * t1) / (m1 + m2), // kütleleri karıştırma
+          if (p > 1) denge + adim, // ara değer
           t2 - t1, // sıcaklık farkını bulma
           t1 + t2, // sıcaklıkları toplama
-          (t2 - t1) / 2, // farkın yarısı
-          denge + adim, // ara değer
         ],
         'Alınan ısı verilen ısıya eşittir: $m1 · (T − $t1) = $m2 · ($t2 − T). '
         'Buradan T = ($m1 · $t1 + $m2 · $t2) / ($m1 + $m2) = '
         '${m1 * t1 + m2 * t2} / ${m1 + m2} = $denge °C olur.',
         _hs(a, b, c),
         unit: '°C',
+        adim: 1,
+        komsuAlt: t1,
+        komsuUst: t2,
       );
     }
     final m = 50 * (a + 1); // 50 … 1250 g

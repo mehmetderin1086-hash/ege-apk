@@ -1,6 +1,8 @@
 // Lise geometri ve analitik geometri ek aileleri: paralel doğrularda açılar,
 // üçgen eşitsizliği, Heron, çemberler, düzgün çokgenler, piramit, hacim
 // korunumu ve analitik düzlemde kesişim, alan, simetri ve döndürme.
+import 'dart:math' as math;
+
 import 'denge.dart';
 import 'ortak.dart';
 
@@ -526,37 +528,73 @@ String _heronOlcekli(int x0, int y0, int z0, int a0, int t, String birim) {
       'çıkınca alan $t² katına çıkar: $t²·$a0 = ${t * t * a0} $birim.';
 }
 
-/// Tam sayı Heron alanı için çeldiriciler: dik üçgen sanma, karekök almayı
-/// unutma, iki katını ya da yarısını alma.
-List<String> _heronTamYanlis(
+/// c·√m değeri ve yazımı (sıralı çeldirici adayı).
+(num, String) _kokAday(int c, int m, String birim) =>
+    (c * math.sqrt(m), birimli(_kok(c, m), birim));
+
+/// Anahtarın iki yanındaki komşu değerler (son çare): tam sayı yanıtta
+/// büyüklüğe göre 1, 5 ya da 10 adım, köklü yanıtta katsayıda bir adım.
+List<(num, String)> _komsuAday(int c, int m, String birim) {
+  final adim = m > 1 || c < 40 ? 1 : (c < 200 ? 5 : 10);
+  return [
+    for (var e = 1; e <= 4; e++) ...[
+      _kokAday(c + e * adim, m, birim),
+      if (c - e * adim > 0) _kokAday(c - e * adim, m, birim),
+    ],
+  ];
+}
+
+/// Tam sayı Heron alanı için adaylar: dik üçgen sanma, iki katını ya da
+/// yarısını alma, karekök almayı unutma; [olcekli] ise (kenarlar küçük
+/// üçgenin t katı) alanı t ya da t³ katına çıkarma ve hiç büyütmeme.
+List<(num, String)> _heronTamAday(
   int x,
   int y,
   int z,
   int alan,
   int t,
-  String birim,
-) => [
-  if ((x * y).isEven) '${x * y ~/ 2} $birim',
-  if (alan <= 3000) '${alan * alan} $birim',
-  '${2 * alan} $birim',
-  if (alan.isEven) '${alan ~/ 2} $birim',
-  '${alan + t * t} $birim',
-];
+  String birim, {
+  int a0 = 0,
+}) {
+  (num, String) w(int v) => (v, '$v $birim');
+  final olcekli = a0 > 0 && t > 1;
+  return [
+    if ((x * y).isEven) w(x * y ~/ 2),
+    if (olcekli) w(t * a0),
+    w(2 * alan),
+    if (alan.isEven) w(alan ~/ 2),
+    if (olcekli) w(a0),
+    if (olcekli) w(t * alan),
+    if ((x * z).isEven) w(x * z ~/ 2),
+    if (alan <= 3000) w(alan * alan),
+    ..._komsuAday(alan, 1, birim),
+  ];
+}
 
-/// Heron alanı için çeldiriciler: çevreyi yarı çevre sanma, karekök almayı
-/// unutma, dik üçgen sanma ve iki katını alma.
-List<String> _heronYanlis(int x, int y, int z, int k, int m, String birim) {
+/// Köklü Heron alanı için adaylar: çevreyi yarı çevre sanma, dik üçgen
+/// sanma, iki katını ya da yarısını alma, bağıntıdaki s çarpanını unutma
+/// (√((s − x)(s − y)(s − z))) ve karekök almayı unutma.
+List<(num, String)> _heronKokAday(
+  int x,
+  int y,
+  int z,
+  int k,
+  int m,
+  String birim,
+) {
   final u = x + y + z;
   final s = u ~/ 2;
   final n = s * (s - x) * (s - y) * (s - z);
   final (k2, m2) = _kokAyir(u * (u - x) * (u - y) * (u - z));
+  final (k3, m3) = _kokAyir((s - x) * (s - y) * (s - z));
   return [
-    if (m2 <= 1000) '${_kok(k2, m2)} $birim',
-    if ((x * y).isEven) '${x * y ~/ 2} $birim',
-    if (n <= 1000000) '$n $birim',
-    '${_kok(2 * k, m)} $birim',
-    if (k.isEven) '${_kok(k ~/ 2, m)} $birim',
-    '${_kok(k + 1, m)} $birim',
+    if (m2 <= 1000) _kokAday(k2, m2, birim),
+    if ((x * y).isEven) (x * y ~/ 2, '${x * y ~/ 2} $birim'),
+    _kokAday(2 * k, m, birim),
+    if (k.isEven) _kokAday(k ~/ 2, m, birim),
+    _kokAday(k3, m3, birim),
+    if (n <= 1000000) (n, '$n $birim'),
+    ..._komsuAday(k, m, birim),
   ];
 }
 
@@ -998,6 +1036,27 @@ AdvancedItem _tam(
   prompt,
   _m(dogru),
   [...yanlis, dogru + 1, dogru - 1, dogru + 2, dogru - 2, dogru + 3].map(_m),
+  aciklama,
+);
+
+/// İşaretli tam sayı yanıtlı soru; anahtarın değer sırası [sira] ile seçilir.
+/// Tipik hatalardan sonra anahtarın iki yanındaki komşular denenir.
+AdvancedItem _tamSirali(
+  String prompt,
+  int dogru,
+  List<int> yanlis,
+  String aciklama,
+  int sira,
+) => AdvancedItem(
+  prompt,
+  _m(dogru),
+  siraliCeldiriciler(dogru, _m(dogru), [
+    for (final x in [
+      ...yanlis,
+      for (var k = 1; k <= 4; k++) ...[dogru + k, dogru - k],
+    ])
+      (x, _m(x)),
+  ], sira),
   aciklama,
 );
 
@@ -1473,6 +1532,7 @@ final lmGeometriEk = <AdvancedFamily>[
       // Oran ve çevre/alan biçimlerinde üçlü a + b ile seçilir: ölçek
       // sadeleştiği için b yalnız ölçeği değil üçlüyü de değiştirir.
       final (l1, l2, w) = _yonluUclu(c < 4 || c >= 7 ? (a + b) % 26 : a);
+      final sira = hedefSira(_no(a, b, c));
       if (c < 4) {
         final k = 1 + b % 4, g = b ~/ 4;
         // (dik köşe, P1, P2, verilen kenarlar).
@@ -1496,13 +1556,24 @@ final lmGeometriEk = <AdvancedFamily>[
                 'olur.',
           ),
         };
+        // Çeldiriciler: öteki oranlar, Pisagor yerine kenarları toplama ya da
+        // çıkarma (eksik kenar hipotenüsse l1 + l2, dik kenarsa w − l1) ve
+        // oranı ters yazma (hipotenüs paya).
+        final hipHesap = g == 0 || g == 3;
         final (ad, kose, pay, payda, yanlis, tanim) = switch (c) {
           0 => (
             'sin',
             p1,
             l2,
             w,
-            [(l1, w), (l2, l1), (l1, l2)],
+            [
+              (l1, w),
+              (l2, l1),
+              (l1, l2),
+              hipHesap ? (l2, l1 + l2) : (w - l1, w),
+              (w, l2),
+              (w, l1),
+            ],
             'sin $p1 = karşı dik kenar / hipotenüs = $kar / $hip',
           ),
           1 => (
@@ -1510,7 +1581,14 @@ final lmGeometriEk = <AdvancedFamily>[
             p1,
             l1,
             w,
-            [(l2, w), (l2, l1), (l1, l2)],
+            [
+              (l2, w),
+              (l2, l1),
+              (l1, l2),
+              if (hipHesap) (l1, l1 + l2),
+              (w, l1),
+              (w, l2),
+            ],
             'cos $p1 = komşu dik kenar / hipotenüs = $kom / $hip',
           ),
           2 => (
@@ -1518,7 +1596,14 @@ final lmGeometriEk = <AdvancedFamily>[
             p1,
             l2,
             l1,
-            [(l2, w), (l1, w), (l1, l2)],
+            [
+              (l2, w),
+              (l1, w),
+              (l1, l2),
+              if (!hipHesap) (w - l1, l1),
+              (w, l1),
+              (w, l2),
+            ],
             'tan $p1 = karşı dik kenar / komşu dik kenar = $kar / $kom',
           ),
           _ => (
@@ -1526,7 +1611,14 @@ final lmGeometriEk = <AdvancedFamily>[
             p2,
             l1,
             w,
-            [(l2, w), (l1, l2), (l2, l1)],
+            [
+              (l2, w),
+              (l1, l2),
+              (l2, l1),
+              if (hipHesap) (l1, l1 + l2),
+              (w, l1),
+              (w, l2),
+            ],
             'sin $p2 = karşı dik kenar / hipotenüs = $kom / $hip',
           ),
         };
@@ -1537,13 +1629,14 @@ final lmGeometriEk = <AdvancedFamily>[
           _ => '${k * l1}/${k * w}',
         };
         final sade = kesir(pay, payda);
-        return kesirli(
+        return kesirliSirali(
           'ABC üçgeninde $r açısının ölçüsü 90° olup $veri olarak veriliyor. '
               'Buna göre $ad $kose değeri kaçtır?',
           pay,
           payda,
           yanlis,
           '$eksik $tanim = $ham${ham == sade ? '' : ' = $sade'}.',
+          sira,
         );
       }
       // Ölçek en az 2: kenarlar orandaki sayılarla aynı çıkmaz.
@@ -1563,7 +1656,9 @@ final lmGeometriEk = <AdvancedFamily>[
             '$hip = ${k * w} cm',
             kom,
             k * l1,
-            [k * l2, k * (w - l2), k * w],
+            // Öteki dik kenar, Pisagor yerine çıkarma, hipotenüs ve ölçeği
+            // unutma (orandaki sayıları kenar sanma).
+            [k * l2, k * (w - l2), k * w, l1],
             'sin $p1 = $kar / $hip = $sinP olduğundan $kar = ${k * l2} cm '
                 'olur. Pisagor bağıntısıyla $kom = √(${k * w}² − '
                 '${k * l2}²) = ${k * l1} cm bulunur.',
@@ -1573,7 +1668,15 @@ final lmGeometriEk = <AdvancedFamily>[
             '$kom = ${k * l1} cm',
             hip,
             k * w,
-            [k * l2, k * (l1 + l2)],
+            // Öteki dik kenar, dik kenarları toplama, ölçeği unutma, cos ile
+            // çarpma ve sin ile bölme.
+            [
+              k * l2,
+              k * (l1 + l2),
+              w,
+              ?_bol(k * l1 * l1, w),
+              ?_bol(k * l1 * w, l2),
+            ],
             'cos $p1 = $kom / $hip = $cosP olduğundan ${k * l1} / $hip = '
                 '$cosP, $hip = ${k * w} cm bulunur.',
           ),
@@ -1582,7 +1685,9 @@ final lmGeometriEk = <AdvancedFamily>[
             '$kom = ${k * l1} cm',
             kar,
             k * l2,
-            [k * w, k * (w - l1), k * l1],
+            // Hipotenüs, hipotenüsten çıkarma, verilen kenar, ölçeği unutma
+            // ve tan ile bölme.
+            [k * w, k * (w - l1), k * l1, l2, ?_bol(k * l1 * l1, l2)],
             'tan $p1 = $kar / $kom = $tanP olduğundan $kar = ${k * l1}·'
                 '$tanP = ${k * l2} cm bulunur.',
           ),
@@ -1591,7 +1696,9 @@ final lmGeometriEk = <AdvancedFamily>[
             '$kar = ${k * l2} cm',
             hip,
             k * w,
-            [k * l1, k * (l1 + l2)],
+            // Ara sonuç (komşu kenar), dik kenarları toplama ve ölçeği
+            // unutma.
+            [k * l1, k * (l1 + l2), w],
             'tan $p1 = $kar / $kom = $tanP olduğundan $kom = ${k * l1} cm '
                 'olur. Pisagor bağıntısıyla $hip = √(${k * l1}² + '
                 '${k * l2}²) = ${k * w} cm bulunur.',
@@ -1601,18 +1708,21 @@ final lmGeometriEk = <AdvancedFamily>[
             '$hip = ${k * w} cm',
             kar,
             k * l2,
-            [k * l1, k * (w - l1), k * w],
+            // Ara sonuç (komşu kenar), Pisagor yerine çıkarma, hipotenüs ve
+            // ölçeği unutma.
+            [k * l1, k * (w - l1), k * w, l2],
             'cos $p1 = $kom / $hip = $cosP olduğundan $kom = ${k * l1} cm '
                 'olur. Pisagor bağıntısıyla $kar = √(${k * w}² − '
                 '${k * l1}²) = ${k * l2} cm bulunur.',
           ),
         };
-        return sayisal(
+        return sayisalSirali(
           'ABC üçgeninde $r açısının ölçüsü 90°, $oran ve $verilen olarak '
           'veriliyor. Buna göre $sorulan kaç cm olur?',
           yanit,
           yanlis,
           cozum,
+          sira,
           unit: 'cm',
           positive: true,
         );
@@ -1628,20 +1738,25 @@ final lmGeometriEk = <AdvancedFamily>[
           3 => ('sin $p2', cosP),
           _ => ('cos $p2', sinP),
         };
-        return sayisal(
+        return sayisalSirali(
           'ABC üçgeninde $r açısının ölçüsü 90°, $oran = $deger ve üçgenin '
               'çevresi $cevre cm olarak veriliyor. Buna göre ABC üçgeninin alanı '
               'kaç cm² olur?',
           alan,
+          // İkiye bölmeyi unutma, ölçeği unutma, hipotenüsü dik kenar sanma,
+          // çevreyi yanıt sanma ve alanı t² yerine t ile ölçekleme.
           [
             k * k * l1 * l2,
             l1 * l2 ~/ 2,
             if ((k * k * l1 * w).isEven) k * k * l1 * w ~/ 2,
             cevre,
+            k * l1 * l2 ~/ 2,
+            if ((k * k * l2 * w).isEven) k * k * l2 * w ~/ 2,
           ],
           'Oran $deger olduğundan kenarlar ${l1}t, ${l2}t ve ${w}t biçimindedir. '
               'Çevre ${l1 + l2 + w}t = $cevre eşitliğinden t = $k olur; '
               '$kenarlar. Alan ${k * l1}·${k * l2} / 2 = $alan cm².',
+          sira,
           unit: 'cm²',
           positive: true,
         );
@@ -1682,17 +1797,38 @@ final lmGeometriEk = <AdvancedFamily>[
       final veri =
           'ABC üçgeninde $r açısının ölçüsü 90°, $oran ve $verilen olarak '
           'veriliyor.';
+      // Pisagor yerine kenarları toplama ya da çıkarma: v = 2, 3 vakalarında
+      // hipotenüs k(l1 + l2), öteki vakalarda hesaplanan dik kenar hipotenüs
+      // eksi verilen dik kenar bulunur.
+      final hipYanlis = v == 2 || v == 3;
       if (c == 7) {
-        return sayisal(
+        return sayisalSirali(
           '$veri Buna göre ABC üçgeninin çevresi kaç cm olur?',
           cevre,
-          [k * (l2 + w), k * (l1 + w), l1 + l2 + w, k * (l1 + l2)],
+          // Bir kenarı eklemeyi unutma, ölçeği unutma, Pisagor hatası ve
+          // alanı çevre sanma.
+          [
+            k * (l2 + w),
+            k * (l1 + w),
+            l1 + l2 + w,
+            k * (l1 + l2),
+            hipYanlis ? 2 * k * (l1 + l2) : 2 * k * w,
+            alan,
+          ],
           '$cozum Çevre ${k * l1} + ${k * l2} + ${k * w} = $cevre cm.',
+          sira,
           unit: 'cm',
           positive: true,
         );
       }
-      return sayisal(
+      // Hesaplanan dik kenarı hipotenüsten çıkararak bulan öğrencinin alanı
+      // (v = 2, 3 vakalarında alan için hipotenüs gerekmez).
+      final pisagorAlan = switch (v) {
+        0 || 4 => k * k * (w - l2) * l2,
+        1 => k * k * l1 * (w - l1),
+        _ => 0,
+      };
+      return sayisalSirali(
         '$veri Buna göre ABC üçgeninin alanı kaç cm² olur?',
         alan,
         [
@@ -1700,9 +1836,12 @@ final lmGeometriEk = <AdvancedFamily>[
           if ((l2 * w).isEven) k * k * l2 * w ~/ 2,
           if ((l1 * w).isEven) k * k * l1 * w ~/ 2,
           cevre,
+          l1 * l2 ~/ 2,
+          ?_bol(pisagorAlan, 2),
         ],
         '$cozum Alan, dik kenarların çarpımının yarısıdır: ${k * l1}·'
             '${k * l2} / 2 = $alan cm².',
+        sira,
         unit: 'cm²',
         positive: true,
       );
@@ -1718,17 +1857,22 @@ final lmGeometriEk = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.uygulama,
     (a, b, c) {
-      final i = a + 25 * b;
+      final i = a + 25 * b, sira = hedefSira(_no(a, b, c));
       if (c == 0) {
         // 500 vaka tarla havuzuna eşit aralıkla yayılır.
         final n = _heronTarla.length;
         final ((x0, y0, z0, a0, _), t) = _heronTarla[i * n ~/ 500];
         final x = t * x0, y = t * y0, z = t * z0, alan = t * t * a0;
-        return secenekli(
+        return AdvancedItem(
           'Kenar uzunlukları $x m, $y m ve $z m olan üçgen biçimindeki bir '
               'tarlanın alanı kaç m² olur?',
           '$alan m²',
-          _heronTamYanlis(x, y, z, alan, t, 'm²'),
+          siraliCeldiriciler(
+            alan,
+            '$alan m²',
+            _heronTamAday(x, y, z, alan, t, 'm²', a0: a0),
+            sira,
+          ),
           _heronOlcekli(x0, y0, z0, a0, t, 'm²'),
         );
       }
@@ -1744,14 +1888,20 @@ final lmGeometriEk = <AdvancedFamily>[
         final t = ilk + i ~/ havuz.length;
         final x = t * x0, y = t * y0, z = t * z0, kk = t * t * k0;
         final cozum = '${_heronAdim(x, y, z, kk, m)} cm² olur.';
-        final yanlis = m == 1
-            ? _heronTamYanlis(x, y, z, kk, t, 'cm²')
-            : _heronYanlis(x, y, z, kk, m, 'cm²');
+        final anahtar = '${_kok(kk, m)} cm²';
+        final yanlis = siraliCeldiriciler(
+          kk * math.sqrt(m),
+          anahtar,
+          m == 1
+              ? _heronTamAday(x, y, z, kk, t, 'cm²')
+              : _heronKokAday(x, y, z, kk, m, 'cm²'),
+          sira,
+        );
         if (c == 1 || c == 8) {
-          return secenekli(
+          return AdvancedItem(
             'ABC üçgeninde |AB| = $x cm, |BC| = $y cm ve |AC| = $z cm olarak '
-                'veriliyor. Buna göre ABC üçgeninin alanı kaç cm² olur?',
-            '${_kok(kk, m)} cm²',
+            'veriliyor. Buna göre ABC üçgeninin alanı kaç cm² olur?',
+            anahtar,
             yanlis,
             cozum,
           );
@@ -1763,11 +1913,11 @@ final lmGeometriEk = <AdvancedFamily>[
           for (var j = 0; j < 3; j++)
             if (j != e) kenar[j],
         ];
-        return secenekli(
+        return AdvancedItem(
           'Çevresi ${x + y + z} cm olan bir üçgenin iki kenarının uzunlukları '
               '${verilen[0]} cm ve ${verilen[1]} cm olduğuna göre bu üçgenin alanı '
               'kaç cm² olur?',
-          '${_kok(kk, m)} cm²',
+          anahtar,
           yanlis,
           'Üçüncü kenar ${x + y + z} − ${verilen[0]} − ${verilen[1]} = '
               '${kenar[e]} cm olur. $cozum',
@@ -1797,16 +1947,27 @@ final lmGeometriEk = <AdvancedFamily>[
             'Kenar uzunlukları $x cm, $y cm ve $z cm olan bir üçgenin '
             '$soru uzunluğu kaç cm olur?';
       }
-      final yanlis = <String>[
+      // Adaylar (değer, yazım): başka kenara ait yükseklik, 2 ile çarpmayı
+      // unutma, 2 ile bölme, 4 ile çarpma, alanı yanıt sanma; yedekler
+      // yanıtın bir, iki ve üç fazlası ya da eksiği.
+      final kokm = math.sqrt(m);
+      (num, String)? aday(int pay, int payda) {
+        final v = _kokluDeger(pay, payda, m);
+        return v == null ? null : (pay / payda * kokm, '$v cm');
+      }
+
+      final yanlis = <(num, String)>[
         // İkizkenar üçgende eş kenara ait yükseklik aynıdır; çeldirici olmaz.
         for (final d in digerleri)
-          if (d != s)
-            if (_kokluDeger(2 * kk, d, m) case final v?) '$v cm',
-        if (_kokluDeger(kk, s, m) case final v?) '$v cm',
-        if (_kokluDeger(4 * kk, s, m) case final v?) '$v cm',
-        '${_kok(kk, m)} cm',
-        // Yedekler: yanıtın bir, iki ve üç fazlası.
-        for (var e = 1; e <= 3; e++) '${_kokluDeger(2 * kk + e * s, s, m)} cm',
+          if (d != s) ?aday(2 * kk, d),
+        ?aday(kk, s),
+        ?aday(kk, 2 * s),
+        ?aday(4 * kk, s),
+        (kk * kokm, '${_kok(kk, m)} cm'),
+        for (var e = 1; e <= 3; e++) ...[
+          ?aday(2 * kk + e * s, s),
+          if (2 * kk > e * s) ?aday(2 * kk - e * s, s),
+        ],
       ];
       final neden = c == 6
           ? 'En kısa yükseklik en uzun kenara, yani $s cm uzunluğundaki '
@@ -1815,10 +1976,10 @@ final lmGeometriEk = <AdvancedFamily>[
                 ? 'En uzun yükseklik en kısa kenara, yani $s cm uzunluğundaki '
                       'kenara aittir. '
                 : '');
-      return secenekli(
+      return AdvancedItem(
         kok,
         '$h cm',
-        yanlis,
+        siraliCeldiriciler(2 * kk / s * kokm, '$h cm', yanlis, sira),
         '${_heronAdim(x, y, z, kk, m)} cm² olur. ${neden}Alan = $s·h / 2 '
             'olduğundan h = 2·${_kok(kk, m)} / $s = $h cm.',
       );
@@ -1835,7 +1996,7 @@ final lmGeometriEk = <AdvancedFamily>[
     Difficulty.hard,
     BloomLevel.analiz,
     (a, b, c) {
-      final i = a + 25 * b;
+      final i = a + 25 * b, sira = hedefSira(_no(a, b, c));
       if (c == 0) {
         // Pisagor üçlüleri dört biçimde: dik kenarlar → r, dik kenarlar → R,
         // kısa dik kenar ve hipotenüs → r, uzun dik kenar ve hipotenüs → r.
@@ -1846,16 +2007,29 @@ final lmGeometriEk = <AdvancedFamily>[
             'Alan $u·$v / 2 = $alan cm², yarı çevre ($u + $v + $w) / 2 = '
             '${tr(s2 / 2)} cm olur. İç teğet çemberin yarıçapı r = Alan / '
             'yarı çevre = $alan / ${tr(s2 / 2)} = $r cm.';
-        final rYanlis = [2.0 * r, w / 2, r / 2];
+        // 2 ile bölmeyi unutma, çevrel çemberle karıştırma, tam çevreyle
+        // bölme, yarı çevreyi ya da köşeden çizilen başka bir teğet parçasını
+        // (s − u) yarıçap sanma ve 2 ile iki kez bölme.
+        final rYanlis = [2.0 * r, w / 2, r / 2, s2 / 2, (v + w - u) / 2, r / 4];
         if (tur == 1) {
-          return ondalikli(
+          // Çapı yarıçap sanma, iç teğet çember, dik kenarların ortalaması,
+          // dört ile bölme, yarı çevre ve hipotenüse ait yükseklik.
+          return ondalikliSirali(
             'Dik kenarlarının uzunlukları $u cm ve $v cm olan bir dik üçgenin '
                 'çevrel çemberinin yarıçapı kaç cm olur?',
             w / 2,
-            [w.toDouble(), r.toDouble(), (u + v) / 2, w / 4],
+            [
+              w.toDouble(),
+              r.toDouble(),
+              (u + v) / 2,
+              w / 4,
+              s2 / 2,
+              if (_temizAralik(u * v, w, 0, w / 2)) u * v / w,
+            ],
             'Hipotenüs √($u² + $v²) = $w cm olur. Dik üçgende çevrel çemberin '
                 'merkezi hipotenüsün orta noktasıdır: R = $w / 2 = ${tr(w / 2)} '
                 'cm.',
+            sira,
             unit: 'cm',
             positive: true,
           );
@@ -1874,11 +2048,12 @@ final lmGeometriEk = <AdvancedFamily>[
             'Diğer dik kenar √($w² − $v²) = $u cm olur.',
           ),
         };
-        return ondalikli(
+        return ondalikliSirali(
           '$veri bir dik üçgenin iç teğet çemberinin yarıçapı kaç cm olur?',
           r.toDouble(),
           rYanlis,
           '$eksik $rCozum',
+          sira,
           unit: 'cm',
           positive: true,
         );
@@ -1897,23 +2072,40 @@ final lmGeometriEk = <AdvancedFamily>[
             'Yarı çevre s = $s cm, Heron bağıntısıyla alan √($s·${s - x}·'
             '${s - y}·${s - z}) = $alan cm² olur.';
         if (!cevrel) {
-          return kesirli(
+          // Tam çevreyle bölme, 2 ile çarpma, çevrel çember; yarı çevreyi
+          // alana bölme ve 4 ile bölme.
+          return kesirliSirali(
             '$veri iç teğet çemberinin yarıçapı kaç cm olur?',
             alan,
             s,
-            [(alan, 2 * s), (2 * alan, s), (x * y * z, 4 * alan)],
+            [
+              (alan, 2 * s),
+              (2 * alan, s),
+              (x * y * z, 4 * alan),
+              (s, alan),
+              (alan, 4 * s),
+            ],
             '$heron İç teğet çemberin yarıçapı r = Alan / s = $alan / $s = '
                 '${kesir(alan, s)} cm.',
+            sira,
             unit: 'cm',
           );
         }
-        return kesirli(
+        // 4 yerine 2 ya da 1 ile bölme, iç teğet çember ve çapı (2r ≤ R).
+        return kesirliSirali(
           '$veri çevrel çemberinin yarıçapı kaç cm olur?',
           x * y * z,
           4 * alan,
-          [(x * y * z, 2 * alan), (x * y * z, alan), (alan, s)],
+          [
+            (x * y * z, 2 * alan),
+            (alan, s),
+            (x * y * z, alan),
+            (2 * alan, s),
+            (x * y * z, 8 * alan),
+          ],
           '$heron Çevrel çemberin yarıçapı R = |AB|·|BC|·|AC| / (4·Alan) = '
               '${x * y * z} / ${4 * alan} = ${kesir(x * y * z, 4 * alan)} cm.',
+          sira,
           unit: 'cm',
         );
       }
@@ -1927,28 +2119,37 @@ final lmGeometriEk = <AdvancedFamily>[
             'cm. Dik kenarlar a ve b olmak üzere r = (a + b − c) / 2 '
             'olduğundan a + b = 2·$r + $hip = ${2 * r + hip} cm olur.';
         return switch (c) {
-          2 => sayisal(
+          // Hipotenüsü R sanma, r'yi iki katlamayı unutma, r'yi iki kez
+          // ekleme, yarı çevreyi yanıt sanma ve a + b = 2(r + c) yazma.
+          2 => sayisalSirali(
             '$veri bu üçgenin çevresi kaç cm olur?',
             2 * r + 4 * R,
-            [2 * r + 2 * R, r + 4 * R, 4 * r + 4 * R],
+            [2 * r + 2 * R, r + 4 * R, 4 * r + 4 * R, r + 2 * R, 2 * r + 6 * R],
             '$adim Çevre ${2 * r + hip} + $hip = ${2 * r + 4 * R} cm.',
+            sira,
             unit: 'cm',
             positive: true,
           ),
-          3 => sayisal(
+          // Tam çevreyle çarpma, s yerine 2R ya da r + R alma ve r yerine R
+          // ile çarpma.
+          3 => sayisalSirali(
             '$veri bu üçgenin alanı kaç cm² olur?',
             r * (r + 2 * R),
-            [2 * r * (r + 2 * R), 2 * r * R, r * (r + R)],
+            [2 * r * (r + 2 * R), 2 * r * R, R * (r + 2 * R), r * (r + R)],
             '$adim Yarı çevre s = ${2 * r + 4 * R} / 2 = ${r + 2 * R} cm ve '
                 'alan r·s = $r·${r + 2 * R} = ${r * (r + 2 * R)} cm².',
+            sira,
             unit: 'cm²',
             positive: true,
           ),
-          _ => sayisal(
+          // Çevreyi yanıt sanma, r ve R'yi toplama, 2·hipotenüs, r'yi iki
+          // katlamayı unutma ve hipotenüsü R sanma.
+          _ => sayisalSirali(
             '$veri dik kenarlarının uzunlukları toplamı kaç cm olur?',
             2 * r + 2 * R,
-            [2 * r + 4 * R, r + R, 4 * R],
+            [2 * r + 4 * R, r + R, 4 * R, r + 2 * R, 2 * r + R],
             adim,
+            sira,
             unit: 'cm',
             positive: true,
           ),
@@ -1964,21 +2165,33 @@ final lmGeometriEk = <AdvancedFamily>[
             'Dik kenarlar a ve b olmak üzere r = (a + b − c) / 2 olduğundan '
             'a + b = 2·$r + $hip = ${2 * r + hip} cm olur.';
         if (c == 4) {
-          return sayisal(
+          // r'yi iki katlamayı unutma, hipotenüsü eklemeyi unutma, r'yi iki
+          // kez ekleme ve a + b = 2(r + c) yazma.
+          return sayisalSirali(
             '$veri bu üçgenin çevresi kaç cm olur?',
             2 * r + 2 * hip,
-            [2 * hip + r, hip + 2 * r, 2 * hip + 4 * r],
+            [2 * hip + r, hip + 2 * r, 2 * hip + 4 * r, 2 * r + 3 * hip],
             '$adim Çevre ${2 * r + hip} + $hip = ${2 * r + 2 * hip} cm.',
+            sira,
             unit: 'cm',
             positive: true,
           );
         }
-        return sayisal(
+        // s yerine hipotenüs, a + b ya da tam çevre alma; s'yi (a + b) / 2
+        // sanma.
+        return sayisalSirali(
           '$veri bu üçgenin alanı kaç cm² olur?',
           r * (r + hip),
-          [r * hip, r * (r + 2 * hip), 2 * r * (r + hip)],
+          [
+            r * hip,
+            r * (r + 2 * hip),
+            2 * r * (r + hip),
+            r * (2 * r + hip),
+            ?_bol(r * (2 * r + hip), 2),
+          ],
           '$adim Yarı çevre s = (${2 * r + hip} + $hip) / 2 = ${r + hip} cm, '
               'alan r·s = $r·${r + hip} = ${r * (r + hip)} cm².',
+          sira,
           unit: 'cm²',
           positive: true,
         );
@@ -1986,13 +2199,15 @@ final lmGeometriEk = <AdvancedFamily>[
       if (c == 5) {
         // r = 1 ve r = 2 için alan yarı çevreye ya da çevreye eşit çıkar.
         final r = 3 + a, s = 6 * r + b, cevre = 2 * s;
-        return sayisal(
+        // Tam çevreyle çarpma, 2 ile bölme ve toplama.
+        return sayisalSirali(
           'Çevresi $cevre cm olan bir üçgenin iç teğet çemberinin yarıçapı $r '
               'cm olduğuna göre bu üçgenin alanı kaç cm² olur?',
           r * s,
           [r * cevre, if ((r * s).isEven) r * s ~/ 2, r + s],
           'Alan, iç teğet çemberin yarıçapı ile yarı çevrenin çarpımıdır: '
               'yarı çevre $cevre / 2 = $s cm, alan $r·$s = ${r * s} cm².',
+          sira,
           unit: 'cm²',
           positive: true,
         );
@@ -2002,29 +2217,46 @@ final lmGeometriEk = <AdvancedFamily>[
         // r = r2 / 2; alan = r·s.
         final alanPay = r2 * s;
         final alan = alanPay / 2;
-        return ondalikli(
+        // Tam çevreyle bölme, 2 ile çarpma, yarı çevreyi alana bölme ve 4
+        // ile bölme.
+        return ondalikliSirali(
           'Alanı ${tr(alan)} cm², çevresi ${2 * s} cm olan bir üçgenin iç '
               'teğet çemberinin yarıçapı kaç cm olur?',
           r2 / 2,
-          [r2 / 4, r2.toDouble(), r2 / 2 + 1],
+          [
+            r2 / 4,
+            r2.toDouble(),
+            if (_temizAralik(2, r2, 0, 1000)) 2 / r2,
+            r2 / 8,
+            r2 / 2 + 1,
+          ],
           'Alan = r·s eşitliğinde yarı çevre s = ${2 * s} / 2 = $s cm olur. '
               'r = Alan / s = ${tr(alan)} / $s = ${tr(r2 / 2)} cm.',
+          sira,
           unit: 'cm',
           positive: true,
         );
       }
       final m = 2 + a, n = m + 1 + b;
-      return sayisal(
+      return sayisalSirali(
         'Bir dik üçgenin iç teğet çemberi hipotenüse D noktasında değiyor. D '
             'noktası hipotenüsü $m cm ve $n cm uzunluğunda iki parçaya ayırdığına '
             'göre bu üçgenin alanı kaç cm² olur?',
         m * n,
-        [if ((m * n).isEven) m * n ~/ 2, 2 * m * n, m * m + n * n],
+        // Parçaları dik kenar sanıp 2 ile bölme, 2 ile çarpma, kareler
+        // toplamı ve ikizkenar dik üçgen sanma ((m + n)² / 4).
+        [
+          if ((m * n).isEven) m * n ~/ 2,
+          2 * m * n,
+          m * m + n * n,
+          ?_bol((m + n) * (m + n), 4),
+        ],
         'İç teğet çemberin yarıçapı r olsun. Köşeden çizilen teğet parçaları '
             'eşit olduğundan dik kenarlar ($m + r) ve ($n + r) cm olur. Pisagor '
             'bağıntısı ($m + r)² + ($n + r)² = ${m + n}² sadeleşince r² + '
             '${m + n}r = ${m * n} verir. Alan r·s = r·(${m + n} + r) = r² + '
             '${m + n}r = ${m * n} cm².',
+        sira,
         unit: 'cm²',
         positive: true,
       );
@@ -2291,6 +2523,7 @@ final lmGeometriEk = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.uygulama,
     (a, b, c) {
+      final sira = hedefSira(_no(a, b, c));
       if (c <= 2) {
         final q = 4 + a;
         // |KL| = (|AB| − |DC|) / 2 sorusunda fark iki koordinatla değişir.
@@ -2307,39 +2540,61 @@ final lmGeometriEk = <AdvancedFamily>[
             '[AD] ve [BC] kenarlarının orta noktalarını birleştiren orta '
             'tabanın uzunluğu';
         if (c == 0) {
-          return ondalikli(
+          // İkiye bölmeyi unutma, |KL| ile karıştırma, fark; toplamın
+          // yalnız bir terimini ikiye bölme.
+          return ondalikliSirali(
             '$giris |AB| = $p cm ve |DC| = $q cm olarak veriliyor. $ortaUzunluk '
                 'kaç cm olur?',
             (p + q) / 2,
-            [(p + q).toDouble(), (p - q) / 2, (p - q).toDouble()],
+            [
+              (p + q).toDouble(),
+              (p - q) / 2,
+              (p - q).toDouble(),
+              p / 2 + q,
+              p + q / 2,
+            ],
             'Orta tabanın uzunluğu, tabanların uzunlukları toplamının '
                 'yarısıdır: ($p + $q) / 2 = ${tr((p + q) / 2)} cm.',
+            sira,
             unit: 'cm',
             positive: true,
           );
         }
         if (c == 1) {
           final m2 = p + q;
-          return ondalikli(
+          // 2 ile çarpmayı unutma, işaret hatası, |DC| değerini çıkarmayı
+          // unutma ve farkı ikiyle çarpma.
+          return ondalikliSirali(
             'ABCD yamuğunda [AB] ∥ [DC] ve |DC| = $q cm olarak veriliyor. '
                 '$ortaUzunluk ${tr(m2 / 2)} cm olduğuna göre |AB| kaç cm olur?',
             p.toDouble(),
-            [m2 / 2 + q, m2 / 2 - q, m2 / 2 + q / 2],
+            [
+              m2 / 2 + q,
+              m2 / 2 - q,
+              m2 / 2 + q / 2,
+              (m2 + q).toDouble(),
+              m2.toDouble(),
+              (m2 - 2 * q).toDouble(),
+            ],
             'Orta taban (|AB| + |DC|) / 2 olduğundan |AB| = 2·${tr(m2 / 2)} − '
                 '$q = $p cm.',
+            sira,
             unit: 'cm',
             positive: true,
           );
         }
-        return ondalikli(
+        // Orta taban, ikiye bölmeyi unutma, küçük ya da büyük tabanın yarısı
+        // ve iki kez ikiye bölme.
+        return ondalikliSirali(
           '$giris |AB| = $p cm ve |DC| = $q cm olarak veriliyor. $orta, [AC] '
               've [BD] köşegenlerini sırasıyla K ve L noktalarında kesiyor. Buna '
               'göre |KL| kaç cm olur?',
           (p - q) / 2,
-          [(p + q) / 2, (p - q).toDouble(), q / 2],
+          [(p + q) / 2, (p - q).toDouble(), q / 2, p / 2, (p - q) / 4],
           'Orta taban ABC üçgeninde |AB| / 2, ADC üçgeninde |DC| / 2 '
               'uzunluğunda parçalar ayırır: |KL| = ($p − $q) / 2 = '
               '${tr((p - q) / 2)} cm.',
+          sira,
           unit: 'cm',
           positive: true,
         );
@@ -2351,7 +2606,8 @@ final lmGeometriEk = <AdvancedFamily>[
         // Köşegen: (|AB| + |DC|) / 2, yükseklik ve köşegen bir Pisagor üçlüsü.
         final k = 1 + 20 ~/ l1, dd = k * l1, h = k * l2, kg = k * w;
         final q = 1 + b, p = 2 * dd - q;
-        return sayisal(
+        // Pisagor yerine toplama, ara sonucu ya da yüksekliği yanıt sanma.
+        return sayisalSirali(
           'ABCD ikizkenar yamuğunda [AB] ∥ [DC], |AB| = $p cm, |DC| = $q cm '
               've yamuğun yüksekliği $h cm olarak veriliyor. Buna göre [AC] '
               'köşegeninin uzunluğu kaç cm olur?',
@@ -2360,6 +2616,7 @@ final lmGeometriEk = <AdvancedFamily>[
           'C köşesinden [AB] tabanına inen dikmenin ayağı H olsun. |AH| = '
               '($p + $q) / 2 = $dd cm olur. AHC dik üçgeninde |AC| = √($dd² + '
               '$h²) = $kg cm.',
+          sira,
           unit: 'cm',
           positive: true,
         );
@@ -2381,32 +2638,47 @@ final lmGeometriEk = <AdvancedFamily>[
             'D ve C köşelerinden [AB] tabanına inen dikmeler, tabanın iki '
             'ucunda ($p − $q) / 2 = $d cm uzunluğunda parçalar ayırır.';
         return switch (c) {
-          3 => sayisal(
+          // Pisagor yerine çıkarma ya da toplama, ikiye bölmeyi unutma, ara
+          // sonuç ve yan kenarı yükseklik sanma.
+          3 => sayisalSirali(
             '$giris olup |AB| = $p cm, |DC| = $q cm ve |AD| = $w cm olarak '
                 'veriliyor. Buna göre yamuğun yüksekliği kaç cm olur?',
             h,
-            [w - d, 2 * d, d],
+            [w - d, 2 * d, d, w + d, w],
             '$ayir Yükseklik √($w² − $d²) = $h cm.',
+            sira,
             unit: 'cm',
             positive: true,
           ),
-          4 => sayisal(
+          // Pisagor yerine toplama (d ya da 2d ile), ikiye bölmeyi unutma,
+          // yüksekliği yan kenar sanma ve çıkarma.
+          4 => sayisalSirali(
             '$giris olup |AB| = $p cm, |DC| = $q cm ve yamuğun yüksekliği $h '
                 'cm olarak veriliyor. Buna göre |AD| kaç cm olur?',
             w,
-            [h + d, h + 2 * d, 2 * d],
+            [h + d, h + 2 * d, 2 * d, h, (h - d).abs()],
             '$ayir |AD| = √($h² + $d²) = $w cm.',
+            sira,
             unit: 'cm',
             positive: true,
           ),
-          _ => sayisal(
+          // |AB| için d ya da hiç parça eklememe, 4d ekleme; parçayı w − h
+          // sanma ve dikmeleri çevreye katma.
+          _ => sayisalSirali(
             '$giris olup |DC| = $q cm, |AD| = $w cm ve yamuğun yüksekliği $h '
                 'cm olarak veriliyor. Buna göre yamuğun çevresi kaç cm olur?',
             p + q + 2 * w,
-            [2 * q + 2 * w + d, 2 * q + 2 * w, 2 * q + 2 * w + 4 * d],
+            [
+              2 * q + 2 * w + d,
+              2 * q + 2 * w,
+              2 * q + 2 * w + 4 * d,
+              2 * q + 2 * w + 2 * (w - h),
+              p + q + 2 * w + 2 * h,
+            ],
             'D ve C köşelerinden [AB] tabanına inen dikmelerin tabanın '
                 'uçlarında ayırdığı parçalar √($w² − $h²) = $d cm olur. |AB| = '
                 '$q + 2·$d = $p cm, çevre $p + $q + 2·$w = ${p + q + 2 * w} cm.',
+            sira,
             unit: 'cm',
             positive: true,
           ),
@@ -2421,32 +2693,47 @@ final lmGeometriEk = <AdvancedFamily>[
           'C köşesinden [AB] tabanına inen dikmenin ayağı H olsun; AHCD bir '
           'dikdörtgen olduğundan |HB| = $p − $q = $l1 cm olur.';
       return switch (c) {
-        6 => sayisal(
+        // Pisagor yerine toplama ya da çıkarma, |AD| değerini, farkı ya da
+        // büyük tabanı yanıt sanma.
+        6 => sayisalSirali(
           '$giris |AB| = $p cm, |DC| = $q cm ve |AD| = $l2 cm olduğuna göre '
               '|BC| kaç cm olur?',
           w,
-          [l1 + l2, l2, p],
+          [l1 + l2, l2, p, (l2 - l1).abs(), l1],
           '$dikme CHB dik üçgeninde |BC| = √($l2² + $l1²) = $w cm.',
+          sira,
           unit: 'cm',
           positive: true,
         ),
-        7 => sayisal(
+        // Pisagor yerine çıkarma ya da toplama, farkı ya da |BC| değerini
+        // yanıt sanma.
+        7 => sayisalSirali(
           '$giris |AB| = $p cm, |DC| = $q cm ve |BC| = $w cm olduğuna göre '
               '|AD| kaç cm olur?',
           l2,
-          [w - l1, l1, w],
+          [w - l1, l1, w, w + l1],
           '$dikme CHB dik üçgeninde |CH| = √($w² − $l1²) = $l2 cm ve |AD| = '
               '|CH| = $l2 cm.',
+          sira,
           unit: 'cm',
           positive: true,
         ),
-        _ => sayisal(
+        // |BC| = |AD| sanma, Pisagor yerine toplama, |BC| değerini eklemeyi
+        // unutma ve dikdörtgen gibi 2(|AB| + |AD|) alma.
+        _ => sayisalSirali(
           '$giris |AB| = $p cm, |DC| = $q cm ve |AD| = $l2 cm olduğuna göre '
               'yamuğun çevresi kaç cm olur?',
           p + q + l2 + w,
-          [p + q + 2 * l2, p + q + l2 + l1 + l2, p + q + l2],
+          [
+            p + q + 2 * l2,
+            p + q + l2 + l1 + l2,
+            p + q + l2,
+            2 * (p + l2),
+            p + q + l2 + (l2 - l1).abs(),
+          ],
           '$dikme |BC| = √($l2² + $l1²) = $w cm. Çevre $p + $q + $l2 + $w = '
               '${p + q + l2 + w} cm.',
+          sira,
           unit: 'cm',
           positive: true,
         ),
@@ -2886,19 +3173,22 @@ final lmGeometriEk = <AdvancedFamily>[
     Difficulty.easy,
     BloomLevel.uygulama,
     (a, b, c) {
-      final i = a + 25 * b;
+      final i = a + 25 * b, sira = hedefSira(_no(a, b, c));
       const esMerkez = 'Merkezleri aynı olan ve yarıçapları';
       switch (c) {
         case 0:
           final r = 1 + a, R = r + 1 + b, fark = R * R - r * r;
-          return sayisal(
+          // Farkın karesi, toplama, çevre farkı, küçük daireyi çıkarmayı
+          // unutma ve yalnız R'nin karesini alma.
+          return sayisalSirali(
             '$esMerkez $r cm ve $R cm olan iki çember arasında kalan daire '
                 'halkasının alanı kaç π cm² olur?',
             fark,
-            [(R - r) * (R - r), R * R + r * r, 2 * (R - r)],
+            [(R - r) * (R - r), R * R + r * r, 2 * (R - r), R * R, R * R - r],
             'Halkanın alanı büyük dairenin alanından küçük dairenin alanı '
                 'çıkarılarak bulunur: π·$R² − π·$r² = π·(${R * R} − ${r * r}) = '
                 '${_pi(fark)} cm².',
+            sira,
             positive: true,
           );
         case 1:
@@ -2907,14 +3197,17 @@ final lmGeometriEk = <AdvancedFamily>[
           final r = 2 + (a + b) % 25;
           final R = r + 1 + b == 2 * r ? r + 21 + b : r + 1 + b;
           final fark = R * R - r * r;
-          return sayisal(
+          // Karekök almayı unutma, işaret hatası, yarıçap farkı ve karekök
+          // yerine ikiye bölme.
+          return sayisalSirali(
             '$esMerkez farklı olan iki çemberden büyüğünün yarıçapı $R cm, iki '
                 'çember arasında kalan daire halkasının alanı ${_pi(fark)} cm² olduğuna '
                 'göre küçük çemberin yarıçapı kaç cm olur?',
             r,
-            [r * r, ?_tamKok(R * R + fark), R - r],
+            [r * r, ?_tamKok(R * R + fark), R - r, ?_bol(r * r, 2)],
             'π·$R² − π·r² = ${_pi(fark)} eşitliğinden r² = ${R * R} − $fark = '
                 '${r * r}, r = $r cm bulunur.',
+            sira,
             unit: 'cm',
             positive: true,
           );
@@ -2929,7 +3222,9 @@ final lmGeometriEk = <AdvancedFamily>[
           final fark = R * R - r * r, alan = fark * aci ~/ 360;
           // İki ışın arasındaki açı 180°'yi aşamaz ve iki ışın halkayı iki
           // dilime ayırır; dilim merkez açısıyla tek türlü belirtilir.
-          return sayisal(
+          // Bütün halka, küçük daireyi çıkarmama, farkın karesi; öteki dilim,
+          // 360 yerine 180 ile bölme ve küçük dairenin dilimi.
+          return sayisalSirali(
             '$esMerkez $r cm ve $R cm olan iki çember arasındaki halkadan, '
                 'merkez açısının ölçüsü $aci° olan bir halka dilimi ayrılıyor. Bu '
                 'halka diliminin alanı kaç π cm² olur?',
@@ -2938,81 +3233,105 @@ final lmGeometriEk = <AdvancedFamily>[
               fark,
               ?_bol(R * R * aci, 360),
               ?_bol((R - r) * (R - r) * aci, 360),
+              ?_bol(fark * (360 - aci), 360),
+              ?_bol(fark * aci, 180),
+              ?_bol(r * r * aci, 360),
             ],
             'Halkanın alanı π·($R² − $r²) = ${_pi(fark)} cm² olur. Halka dilimi bunun '
                 '$aci / 360 = ${kesir(aci, 360)} kadarıdır: $fark·${kesir(aci, 360)} '
                 '= ${_pi(alan)} cm².',
+            sira,
             positive: true,
           );
         case 3:
           final q = 2 * (1 + i);
-          return sayisal(
+          // İç teğet çember (r = a / 2), r = a, köşegeni yarıçap sanma ve
+          // yarıçapı köşegenin dörtte biri alma.
+          return sayisalSirali(
             'Alanı $q cm² olan bir karenin köşelerinden geçen çemberin '
                 'sınırladığı dairenin alanı kaç π cm² olur?',
             q ~/ 2,
-            [?_bol(q, 4), q, 2 * q],
+            [?_bol(q, 4), q, 2 * q, ?_bol(q, 8)],
             'Karenin kenarı a ise köşegeni a√2 olur ve bu köşegen çemberin '
                 'çapıdır: r² = (a√2 / 2)² = a² / 2. a² = $q olduğundan dairenin '
                 'alanı π·$q / 2 = ${_pi(q ~/ 2)} cm².',
+            sira,
             positive: true,
           );
         case 4:
           final q = 4 * (1 + i);
-          return sayisal(
+          // Çevrel çember, r = a, r = a / 4 (iki kez) ve köşegeni yarıçap
+          // sanma.
+          return sayisalSirali(
             'Alanı $q cm² olan bir karenin kenarlarına içten teğet olan '
                 'çemberin sınırladığı dairenin alanı kaç π cm² olur?',
             q ~/ 4,
-            [q ~/ 2, q, ?_bol(q, 8)],
+            [q ~/ 2, q, ?_bol(q, 8), ?_bol(q, 16), 2 * q],
             'Çemberin çapı karenin bir kenarına eşittir: r = a / 2, r² = a² / 4. '
                 'a² = $q olduğundan dairenin alanı π·$q / 4 = ${_pi(q ~/ 4)} cm².',
+            sira,
             positive: true,
           );
         case 5:
           final s = 1 + i;
-          return sayisal(
+          // Dışa çizilen kare, r² ya da yarısı; kenarı köşegenle çarparak
+          // (2r√2) bulma.
+          return sayisalSirali(
             'Alanı ${_pi(s)} cm² olan bir dairenin içine, köşeleri çember üzerinde '
                 'olan bir kare çiziliyor. Bu karenin alanı kaç cm² olur?',
             2 * s,
-            [4 * s, s, if (s.isEven) s ~/ 2],
+            [4 * s, s, if (s.isEven) s ~/ 2, 8 * s],
             'Dairenin yarıçapı r olsun; r² = $s olur. Karenin köşegeni çapa '
                 'eşittir: 2r. Köşegeni 2r olan karenin alanı (2r)² / 2 = 2r² = '
                 '${2 * s} cm².',
+            sira,
             unit: 'cm²',
             positive: true,
           );
         case 6:
           final s = 1 + i;
-          return sayisal(
+          // İçe çizilen kare, r², köşegeni çapın √2 katı sanma (8r²), kenarı
+          // 4r sanma ve iç karenin yarısı.
+          return sayisalSirali(
             'Alanı ${_pi(s)} cm² olan bir dairenin dışına, kenarları çembere teğet '
                 'olan bir kare çiziliyor. Bu karenin alanı kaç cm² olur?',
             4 * s,
-            [2 * s, s, 8 * s],
+            [2 * s, s, 8 * s, 16 * s, if (s.isEven) s ~/ 2],
             'Dairenin yarıçapı r olsun; r² = $s olur. Karenin bir kenarı çapa '
                 'eşittir: 2r. Karenin alanı (2r)² = 4r² = ${4 * s} cm².',
+            sira,
             unit: 'cm²',
             positive: true,
           );
         case 7:
           final r = 1 + a, R = _karekokIkiUstu(r) + b;
           final alan = 2 * R * R - 4 * r * r;
-          return sayisal(
+          return sayisalSirali(
             '$esMerkez $r cm ve $R cm olan iki çember veriliyor. Büyük çemberin '
                 'içine köşeleri çember üzerinde olan bir kare, küçük çemberin '
                 'dışına da kenarları çembere teğet ve ilk karenin kenarlarına '
                 'paralel olan bir kare çiziliyor. İki kare arasında kalan bölgenin '
                 'alanı kaç cm² olur?',
             alan,
-            [2 * R * R - 2 * r * r, 4 * R * R - 4 * r * r, R * R - r * r],
+            // Karelerin birinde ya da ikisinde iç/dış kareyi karıştırma ve
+            // yarıçapları kenar sanma.
+            [
+              2 * R * R - 2 * r * r,
+              4 * R * R - 4 * r * r,
+              R * R - r * r,
+              4 * R * R - 2 * r * r,
+            ],
             'Büyük karenin köşegeni ${2 * R} cm olduğundan alanı (${2 * R})² / 2 '
                 '= ${2 * R * R} cm², küçük karenin kenarı ${2 * r} cm olduğundan '
                 'alanı ${4 * r * r} cm² olur. Aradaki bölge ${2 * R * R} − '
                 '${4 * r * r} = $alan cm².',
+            sira,
             unit: 'cm²',
             positive: true,
           );
         case 8:
           final s = 1 + i;
-          return sayisal(
+          return sayisalSirali(
             'Bir karenin kenarlarına içten teğet olan çemberin sınırladığı '
                 'dairenin alanı ${_pi(s)} cm² olduğuna göre aynı karenin köşelerinden '
                 'geçen çemberin sınırladığı dairenin alanı kaç π cm² olur?',
@@ -3021,19 +3340,30 @@ final lmGeometriEk = <AdvancedFamily>[
             'İç çemberin yarıçapı r ise karenin kenarı 2r, köşegeni 2r√2 olur. '
                 'Dış çemberin yarıçapı r√2, karesi 2r² olduğundan alan 2·${_pi(s)} = '
                 '${_pi(2 * s)} cm².',
+            sira,
             positive: true,
           );
         default:
           final r = 1 + a, R = r + 1 + b, fark = R * R - r * r;
-          return kesirli(
+          // Farkın karesi, büyük daireye oranlama, çıkarmayı unutma; kareler
+          // toplamı, karesiz oran ve ters oran.
+          return kesirliSirali(
             '$esMerkez $r cm ve $R cm olan iki çember arasında kalan daire '
                 'halkasının alanı, küçük dairenin alanının kaç katıdır?',
             fark,
             r * r,
-            [((R - r) * (R - r), r * r), (fark, R * R), (R * R, r * r)],
+            [
+              ((R - r) * (R - r), r * r),
+              (fark, R * R),
+              (R * R, r * r),
+              (R * R + r * r, r * r),
+              (R - r, r),
+              (r * r, fark),
+            ],
             'Halkanın alanı π·(${R * R} − ${r * r}) = ${_pi(fark)}, küçük dairenin '
                 'alanı ${_pi(r * r)} olur. Oran $fark / ${r * r}'
                 '${kesir(fark, r * r) == '$fark/${r * r}' ? '' : ' = ${kesir(fark, r * r)}'}.',
+            sira,
           );
       }
     },
@@ -3048,14 +3378,17 @@ final lmGeometriEk = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.uygulama,
     (a, b, c) {
-      final i = a + 25 * b;
+      final i = a + 25 * b, sira = hedefSira(_no(a, b, c));
       const altigenAlan =
           'Kenarı a olan düzgün altıgen, kenarı a olan altı eşkenar üçgenden '
           'oluşur; alanı 6·(a²√3 / 4) = (3a² / 2)√3 olur.';
       if (c == 0 || c == 8) {
         final (x, y) = _altigenCerceve[i + (c == 8 ? 500 : 0)];
         final k = 3 * (x * x - y * y) ~/ 2;
-        return sayisal(
+        // 2 ile bölmeyi unutma, kenar farkının karesi, 4 ile bölme; tek
+        // eşkenar üçgen alanı, kareler farkı ve üçgen alanında 4 ile bölmeyi
+        // unutma (6a²).
+        return sayisalSirali(
           'Bir kenarı $x cm olan düzgün altıgen biçimindeki bir levhanın '
               'ortasından, kenarı $y cm olan ve kenarları levhanın kenarlarına '
               'paralel düzgün altıgen biçiminde bir parça çıkarılıyor. Kalan '
@@ -3065,9 +3398,13 @@ final lmGeometriEk = <AdvancedFamily>[
             3 * (x * x - y * y),
             ?_bol(3 * (x - y) * (x - y), 2),
             ?_bol(3 * (x * x - y * y), 4),
+            ?_bol(x * x - y * y, 4),
+            x * x - y * y,
+            6 * (x * x - y * y),
           ],
           '$altigenAlan Çerçeve alanı (3·$x² / 2)√3 − (3·$y² / 2)√3 = '
               '(3·${x * x - y * y} / 2)√3 = $k√3 cm², k = $k.',
+          sira,
           positive: true,
         );
       }
@@ -3077,17 +3414,20 @@ final lmGeometriEk = <AdvancedFamily>[
         // Karo kenarı 20–39 cm, salonun bir kenarı 2–13 m olur; yanıt (en az
         // 600) kökteki iki uzunluktan da büyüktür.
         final n = 10 + (a + b) % 25, t = 20 + b, kenar = n * t;
-        return sayisal(
+        // Kareyi almayı unutma, tek üçgen, yarısı; 6n'nin karesini alma ve
+        // kenardaki karo sayısını bir fazla sayma.
+        return sayisalSirali(
           'Bir kenarı $kenar cm olan düzgün altıgen biçimindeki bir salonun '
               'zemini, bir kenarı $t cm olan eşkenar üçgen biçimindeki karolarla '
               'boşluk kalmadan ve karolar üst üste gelmeden kaplanıyor. Bu iş için '
               'kaç karo gerekir?',
           6 * n * n,
-          [6 * n, n * n, 3 * n * n],
+          [6 * n, n * n, 3 * n * n, 36 * n * n, 6 * (n + 1) * (n + 1)],
           'Düzgün altıgen, kenarı $kenar cm olan altı eşkenar üçgenden oluşur. '
               'Kenarı $kenar cm olan eşkenar üçgenin kenarı karonun kenarının $n '
               'katı olduğundan bu üçgen $n² = ${n * n} karoya ayrılır. Toplam '
               '6·${n * n} = ${6 * n * n} karo.',
+          sira,
           positive: true,
         );
       }
@@ -3100,16 +3440,25 @@ final lmGeometriEk = <AdvancedFamily>[
                 {x, y}.contains(6 * x * x ~/ (y * y))) {
           y += 20;
         }
-        return kesirli(
+        // Kenar oranının karesini almama, tek üçgen, yarısı; 6'yı da kareye
+        // katma ve iki katını alma.
+        return kesirliSirali(
           'Bir kenarı $x cm olan düzgün altıgenin alanı, bir kenarı $y cm olan '
               'eşkenar üçgenin alanının kaç katıdır?',
           6 * x * x,
           y * y,
-          [(6 * x, y), (x * x, y * y), (3 * x * x, y * y)],
+          [
+            (6 * x, y),
+            (x * x, y * y),
+            (3 * x * x, y * y),
+            (36 * x * x, y * y),
+            (12 * x * x, y * y),
+          ],
           'Altıgen, kenarı $x cm olan altı eşkenar üçgenden oluşur. Eşkenar '
               'üçgenlerin alanları oranı kenarlar oranının karesidir: '
               '6·$x² / $y² = ${6 * x * x}/${y * y}'
               '${kesir(6 * x * x, y * y) == '${6 * x * x}/${y * y}' ? '' : ' = ${kesir(6 * x * x, y * y)}'}.',
+          sira,
         );
       }
       if (c == 3 || c == 7) {
@@ -3124,35 +3473,52 @@ final lmGeometriEk = <AdvancedFamily>[
         final kosegen = kisa
             ? '|AC| = ${_pr(p, q)}√3 cm'
             : '|AD| = ${_pr(p, q)} cm';
+        final xYanlis = kisa
+            ? _bolIsaretli(2 * s - q, p - 2 * r)
+            : _bolIsaretli(s - q, p - r);
+        final kenarYanlis = xYanlis == null ? 0 : r * xYanlis + s;
         final kural = kisa
             ? 'Düzgün altıgende kısa köşegen kenarın √3 katıdır: |AC| = '
                   '|AB|·√3. Buradan ${_dx(p, q)} = ${_dx(r, s)}'
             : 'Düzgün altıgende uzun köşegen kenarın iki katıdır: |AD| = '
                   '2·|BC|. Buradan ${_dx(p, q)} = 2·${_pr(r, s)}';
-        return sayisal(
+        return sayisalSirali(
           'ABCDEF düzgün altıgeninde $kosegen ve |${kisa ? 'AB' : 'BC'}| = '
               '${_pr(r, s)} cm olarak veriliyor. Buna göre altıgenin çevresi kaç '
               'cm olur?',
           6 * kenar,
-          [kenar, 3 * kenar, 6 * x, 12 * kenar],
+          // Kenarı ya da yarım çevreyi yanıt sanma, x ile çarpma, iki katını
+          // alma ve köşegen kuralını karıştırma (kısa köşegeni kenarın iki
+          // katı, uzun köşegeni kenara eşit sanma).
+          [kenar, 3 * kenar, 6 * x, 12 * kenar, ?_bol(6 * kenarYanlis, 1)],
           '$kural, x = $x bulunur. Bir kenar $kenar cm olduğundan çevre '
               '6·$kenar = ${6 * kenar} cm.',
+          sira,
           unit: 'cm',
           positive: true,
         );
       }
       if (c == 4) {
         final ak = 20 + 2 * a, tur = 2 + b, yol = 6 * ak * tur + 2 * ak;
-        return sayisal(
+        // Köşegeni kenar sanma, köşegeni unutma, bir tur fazla; köşegeni her
+        // tura ekleme ve bir tur eksik sayma.
+        return sayisalSirali(
           'Bir kenarının uzunluğu $ak m olan düzgün altıgen biçimindeki bir '
               'parkın çevresinde $tur tur koşan bir sporcu, ardından bulunduğu '
               'köşeden karşı köşeye parkın en uzun köşegeni boyunca yürüyor. '
               'Sporcu toplam kaç m yol almıştır?',
           yol,
-          [6 * ak * tur + ak, 6 * ak * tur, 6 * ak * (tur + 1)],
+          [
+            6 * ak * tur + ak,
+            6 * ak * tur,
+            6 * ak * (tur + 1),
+            8 * ak * tur,
+            6 * ak * (tur - 1) + 2 * ak,
+          ],
           'Parkın çevresi 6·$ak = ${6 * ak} m, $tur turda ${6 * ak * tur} m '
               'koşulur. Düzgün altıgende en uzun köşegen kenarın iki katıdır: '
               '${2 * ak} m. Toplam ${6 * ak * tur} + ${2 * ak} = $yol m.',
+          sira,
           unit: 'm',
           positive: true,
         );
@@ -3160,17 +3526,20 @@ final lmGeometriEk = <AdvancedFamily>[
       if (c == 5 || c == 9) {
         final (x, y) = _sekizgenCerceve[i + (c == 9 ? 500 : 0)];
         final m = 2 * (x * x - y * y);
-        return sayisal(
+        // Yalnız m'yi alma, kenar farkının karesi, iki katını alma; alanı
+        // 2a²(2 + √2) sanma ve yarısını alma.
+        return sayisalSirali(
           'Bir kenarı $x cm olan düzgün sekizgen biçimindeki bir levhanın '
               'ortasından, kenarı $y cm olan ve kenarları levhanın kenarlarına '
               'paralel düzgün sekizgen biçiminde bir parça çıkarılıyor. m ve n '
               'tam sayı olmak üzere kalan çerçevenin alanı (m + n√2) cm² olduğuna '
               'göre m + n toplamı kaçtır?',
           2 * m,
-          [m, 4 * (x - y) * (x - y), 4 * m],
+          [m, 4 * (x - y) * (x - y), 4 * m, 3 * m, m ~/ 2],
           'Kenarı a olan düzgün sekizgenin alanı 2a²(1 + √2) olur. Çerçeve '
               'alanı 2·($x² − $y²)·(1 + √2) = $m + $m√2 cm² olduğundan m = n = $m '
               've m + n = ${2 * m}.',
+          sira,
           positive: true,
         );
       }
@@ -3188,15 +3557,18 @@ final lmGeometriEk = <AdvancedFamily>[
         kenar += 30;
       }
       final q = 8 * kenar - p * x, s = kenar - r * x;
-      return sayisal(
+      // Çevreyi yanıt sanma, x değerini yanıt sanma, 8 yerine 6 ya da 4 ile
+      // bölme ve sabit terimi unutma.
+      return sayisalSirali(
         'ABCDEFGH düzgün sekizgeninin çevresi ${_pr(p, q)} cm ve bir '
             'kenarının uzunluğu ${_pr(r, s)} cm olarak veriliyor. Buna göre '
             'sekizgenin bir kenarı kaç cm olur?',
         kenar,
-        [8 * kenar, x, ?_bol(p * x + q, 6)],
+        [8 * kenar, x, ?_bol(p * x + q, 6), ?_bol(p * x + q, 4), r * x],
         'Düzgün sekizgenin sekiz kenarı eşittir: ${_dx(p, q)} = '
             '8·${_pr(r, s)}. Buradan x = $x ve bir kenar ${_dx(r, s)} = $kenar '
             'cm bulunur.',
+        sira,
         unit: 'cm',
         positive: true,
       );
@@ -3213,18 +3585,28 @@ final lmGeometriEk = <AdvancedFamily>[
     BloomLevel.uygulama,
     (a, b, c) {
       const kare = 'kare dik piramidin';
+      final sira = hedefSira(_no(a, b, c));
       switch (c) {
         case 0:
           // Taban b ile birlikte büyür: yükseklik tabanın en çok 2,8 katı olur
           // (taban 3 cm, yükseklik 60 cm gibi şiş biçimli piramit çıkmaz).
           final t = 3 + a + b, h = 3 + 3 * b, v = t * t * h ~/ 3;
-          return sayisal(
+          // 3 ile bölmeyi unutma, 2 ile bölme, kareyi almayı unutma; tabanı
+          // üçgen gibi t² / 2 alma ve t·h.
+          return sayisalSirali(
             'Taban ayrıtı $t cm, yüksekliği $h cm olan bir $kare hacmi kaç cm³ '
                 'olur?',
             v,
-            [t * t * h, ?_bol(t * t * h, 2), ?_bol(t * h, 3)],
+            [
+              t * t * h,
+              ?_bol(t * t * h, 2),
+              ?_bol(t * h, 3),
+              ?_bol(t * t * h, 6),
+              t * h,
+            ],
             'Piramidin hacmi taban alanı ile yüksekliğin çarpımının üçte '
                 'biridir: $t²·$h / 3 = ${t * t}·$h / 3 = $v cm³.',
+            sira,
             unit: 'cm³',
             positive: true,
           );
@@ -3237,13 +3619,16 @@ final lmGeometriEk = <AdvancedFamily>[
           // vakada kullanılmaz.
           if (h == t) h = 66;
           final v = t * t * h ~/ 3;
-          return sayisal(
+          // 3 ile çarpmayı unutma, kare yerine taban ayrıtına bölme ve 3 ile
+          // çarpmak yerine bölme (h / 9).
+          return sayisalSirali(
             'Taban ayrıtı $t cm olan bir kare dik piramidin hacmi $v cm³ '
                 'olduğuna göre yüksekliği kaç cm olur?',
             h,
-            [h ~/ 3, ?_bol(v, t), ?_bol(v, t * t)],
+            [h ~/ 3, ?_bol(v, t), ?_bol(v, t * t), ?_bol(v, 3 * t * t)],
             'Hacim taban alanı · yükseklik / 3 olduğundan ${t * t}·h / 3 = $v, '
                 'h = 3·$v / ${t * t} = $h cm.',
+            sira,
             unit: 'cm',
             positive: true,
           );
@@ -3257,45 +3642,66 @@ final lmGeometriEk = <AdvancedFamily>[
               'kenarlar, yan yüz yüksekliği hipotenüs olmak üzere bir dik üçgen '
               'oluşturur';
           return switch (alt) {
-            0 => sayisal(
+            // Pisagor yerine toplama, yarım yerine bütün taban ayrıtı,
+            // taban ayrıtı, yükseklik ya da yarım ayrıtı yanıt sanma.
+            0 => sayisalSirali(
               'Taban ayrıtı $t cm, yüksekliği $h cm olan bir $kare yan yüz '
                   'yüksekliği kaç cm olur?',
               ys,
-              [h + k * l1, ?_tamKok(h * h + t * t), t],
+              [h + k * l1, ?_tamKok(h * h + t * t), t, h, k * l1],
               '$dik: √($h² + ${k * l1}²) = $ys cm.',
+              sira,
               unit: 'cm',
               positive: true,
             ),
-            1 => sayisal(
+            // Pisagor yerine çıkarma ya da toplama, bütün taban ayrıtı, yarım
+            // ayrıtı ya da yan yüz yüksekliğini yanıt sanma.
+            1 => sayisalSirali(
               'Taban ayrıtı $t cm, yan yüz yüksekliği $ys cm olan bir $kare '
                   'yüksekliği kaç cm olur?',
               h,
-              [ys - k * l1, ?_tamKok(ys * ys - t * t), k * l1],
+              [ys - k * l1, ?_tamKok(ys * ys - t * t), k * l1, ys, ys + k * l1],
               '$dik: √($ys² − ${k * l1}²) = $h cm.',
+              sira,
               unit: 'cm',
               positive: true,
             ),
-            2 => sayisal(
+            // 2 ile bölmeyi unutma, iki yüz, yükseklikle çarpma; tabanı katma
+            // ve tek yüz.
+            2 => sayisalSirali(
               'Taban ayrıtı $t cm, yüksekliği $h cm olan bir $kare yanal alanı '
                   'kaç cm² olur?',
               2 * t * ys,
-              [4 * t * ys, t * ys, 2 * t * h],
+              [4 * t * ys, t * ys, 2 * t * h, t * t + 2 * t * ys, t * ys ~/ 2],
               '$dik; yan yüz yüksekliği √($h² + ${k * l1}²) = $ys cm. Dört yan '
                   'yüzün alanları toplamı 4·($t·$ys / 2) = ${2 * t * ys} cm².',
+              sira,
               unit: 'cm²',
               positive: true,
             ),
-            3 => sayisal(
+            // 3 ile bölmeyi unutma, yan yüz yüksekliğini yükseklik sanma
+            // (3 ile bölerek ya da bölmeden), yarım ayrıtla taban alanı ve
+            // kareyi almayı unutma.
+            3 => sayisalSirali(
               'Taban ayrıtı $t cm, yan yüz yüksekliği $ys cm olan bir $kare '
                   'hacmi kaç cm³ olur?',
               t * t * h ~/ 3,
-              [t * t * h, ?_bol(t * t * ys, 3), t * t * ys],
+              [
+                t * t * h,
+                ?_bol(t * t * ys, 3),
+                t * t * ys,
+                ?_bol(k * l1 * k * l1 * h, 3),
+                ?_bol(t * h, 3),
+              ],
               '$dik; yükseklik √($ys² − ${k * l1}²) = $h cm. Hacim $t²·$h / 3 '
                   '= ${t * t * h ~/ 3} cm³.',
+              sira,
               unit: 'cm³',
               positive: true,
             ),
-            _ => sayisal(
+            // Tabanı unutma, 2 ile bölmeyi unutma, yarım ayrıtı taban ayrıtı
+            // sanma ve iki taban sayma.
+            _ => sayisalSirali(
               'Yüksekliği $h cm, yan yüz yüksekliği $ys cm olan bir $kare tüm '
                   'yüzey alanı kaç cm² olur?',
               t * t + 2 * t * ys,
@@ -3303,10 +3709,12 @@ final lmGeometriEk = <AdvancedFamily>[
                 2 * t * ys,
                 t * t + 4 * t * ys,
                 k * l1 * k * l1 + 2 * k * l1 * ys,
+                2 * t * t + 2 * t * ys,
               ],
               '$dik; taban ayrıtının yarısı √($ys² − $h²) = ${k * l1} cm, taban '
                   'ayrıtı $t cm olur. Tüm alan $t² + 4·($t·$ys / 2) = '
                   '${t * t + 2 * t * ys} cm².',
+              sira,
               unit: 'cm²',
               positive: true,
             ),
@@ -3319,36 +3727,43 @@ final lmGeometriEk = <AdvancedFamily>[
           if (c == 7 && ys == t) ys += 30;
           final yanal = 2 * t * ys, tum = t * t + yanal;
           if (c == 3) {
-            return sayisal(
+            // İki yüz, 2 ile bölmeyi unutma, tabanı katma ve tek yüz.
+            return sayisalSirali(
               'Taban ayrıtı $t cm, yan yüz yüksekliği $ys cm olan bir $kare '
                   'yanal alanı kaç cm² olur?',
               yanal,
-              [t * ys, 4 * t * ys, tum],
+              [t * ys, 4 * t * ys, tum, t * ys ~/ 2],
               'Her yan yüz tabanı $t cm, yüksekliği $ys cm olan bir ikizkenar '
                   'üçgendir. Yanal alan 4·($t·$ys / 2) = $yanal cm².',
+              sira,
               unit: 'cm²',
               positive: true,
             );
           }
           if (c == 4) {
-            return sayisal(
+            // Tabanı unutma, 2 ile bölmeyi unutma, iki yüz ve iki taban sayma.
+            return sayisalSirali(
               'Taban ayrıtı $t cm, yan yüz yüksekliği $ys cm olan bir $kare '
                   'tüm yüzey alanı kaç cm² olur?',
               tum,
-              [yanal, t * t + 4 * t * ys, t * t + t * ys],
+              [yanal, t * t + 4 * t * ys, t * t + t * ys, 2 * t * t + yanal],
               'Taban alanı $t² = ${t * t} cm², yanal alan 4·($t·$ys / 2) = '
                   '$yanal cm². Tüm alan ${t * t} + $yanal = $tum cm².',
+              sira,
               unit: 'cm²',
               positive: true,
             );
           }
-          return sayisal(
+          // 2 ile bölmeyi unutma (iki kat), tabanı çıkarmayı unutma, 4t ile
+          // bölme ve tabanı çıkarmadan 4t ile bölme.
+          return sayisalSirali(
             'Taban ayrıtı $t cm olan bir kare dik piramidin tüm yüzey alanı '
                 '$tum cm² olduğuna göre yan yüz yüksekliği kaç cm olur?',
             ys,
-            [2 * ys, ?_bol(tum, 2 * t), ?_bol(ys, 2)],
+            [2 * ys, ?_bol(tum, 2 * t), ?_bol(ys, 2), ?_bol(tum, 4 * t)],
             'Tüm alan $t² + 4·($t·h / 2) = ${t * t} + ${2 * t}h = $tum, '
                 '${2 * t}h = $yanal ve h = $ys cm.',
+            sira,
             unit: 'cm',
             positive: true,
           );
@@ -3368,22 +3783,40 @@ final lmGeometriEk = <AdvancedFamily>[
           final taban =
               'Taban alanı ($t²·√3) / 4 = ${_kok(t * t ~/ 4, 3)} cm² olur.';
           if (c == 5) {
-            return sayisal(
+            // 3 ile bölmeyi unutma, taban alanını t²√3 / 2 ya da t²√3 alma;
+            // taban ayrıtının karesini almama ve 3 ile iki kez bölme.
+            return sayisalSirali(
               'Taban ayrıtı $t cm, yüksekliği $h cm olan bir $ucgen hacmi k√3 '
                   'cm³ olduğuna göre k kaçtır?',
               k,
-              [t * t * h ~/ 4, ?_bol(t * t * h, 6), t * t * h ~/ 3],
+              [
+                t * t * h ~/ 4,
+                ?_bol(t * t * h, 6),
+                t * t * h ~/ 3,
+                ?_bol(t * h, 12),
+                ?_bol(t * t * h, 36),
+              ],
               '$taban Hacim (1/3)·${_kok(t * t ~/ 4, 3)}·$h = ${_kok(k, 3)} cm³, k = $k.',
+              sira,
               positive: true,
             );
           }
-          return sayisal(
+          // 3 ile çarpmayı unutma, karesini almadan bölme, 3 ile çarpmak
+          // yerine bölme ve tabandaki 4'ü unutma.
+          return sayisalSirali(
             'Taban ayrıtı $t cm olan bir $ucgen hacmi $k√3 cm³ olduğuna göre '
                 'yüksekliği kaç cm olur?',
             h,
-            [h ~/ 3, ?_bol(4 * k, t), ?_bol(12 * k, t)],
+            [
+              h ~/ 3,
+              ?_bol(4 * k, t),
+              ?_bol(12 * k, t),
+              ?_bol(4 * k, 3 * t * t),
+              ?_bol(3 * k, t * t),
+            ],
             '$taban (1/3)·${_kok(t * t ~/ 4, 3)}·h = $k√3 eşitliğinden h = 3·$k / '
                 '${t * t ~/ 4} = $h cm.',
+            sira,
             unit: 'cm',
             positive: true,
           );
@@ -3391,14 +3824,16 @@ final lmGeometriEk = <AdvancedFamily>[
           // Taban ayrıtı en az 6 cm (yan yüz yüksekliği tabanın en çok dört
           // katı); ys > t / (2√3) her vakada sağlanır.
           final t = 6 + 2 * a, ys = t ~/ 3 + 1 + b, yanal = 3 * t * ys ~/ 2;
-          return sayisal(
+          // 2 ile bölmeyi unutma, tek yüz, kare piramit gibi dört yüz; iki yüz.
+          return sayisalSirali(
             'Taban ayrıtı $t cm ve yan yüz yüksekliği $ys cm olan bir düzgün '
                 'üçgen piramidin yanal alanı kaç cm² olur?',
             yanal,
-            [3 * t * ys, t * ys ~/ 2, 2 * t * ys],
+            [3 * t * ys, t * ys ~/ 2, 2 * t * ys, t * ys],
             'Düzgün üçgen piramidin üç yan yüzü tabanı $t cm, yüksekliği $ys '
                 'cm olan eş ikizkenar üçgenlerdir. Yanal alan 3·($t·$ys / 2) = '
                 '$yanal cm².',
+            sira,
             unit: 'cm²',
             positive: true,
           );
@@ -3406,16 +3841,18 @@ final lmGeometriEk = <AdvancedFamily>[
           // Taban ayrıtı 10–34 cm: ince uzun çubuk biçiminde blok çıkmaz.
           final t = 10 + a, h = 3 + 3 * b;
           final prizma = t * t * h, piramit = prizma ~/ 3;
-          return sayisal(
+          // Piramidin hacmi, prizmanın hacmi, yarısı ve toplamı.
+          return sayisalSirali(
             'Taban ayrıtı $t cm, yüksekliği $h cm olan kare dik prizma '
                 'biçimindeki bir tahta bloktan, tabanı prizmanın alt tabanı ve '
                 'tepe noktası üst tabanın merkezi olan bir kare dik piramit oyularak '
                 'çıkarılıyor. Kalan parçanın hacmi kaç cm³ olur?',
             prizma - piramit,
-            [piramit, prizma, ?_bol(prizma, 2)],
+            [piramit, prizma, ?_bol(prizma, 2), prizma + piramit],
             'Prizmanın hacmi $t²·$h = $prizma cm³, piramidin hacmi $prizma / 3 '
                 '= $piramit cm³ olur. Kalan $prizma − $piramit = '
                 '${prizma - piramit} cm³.',
+            sira,
             unit: 'cm³',
             positive: true,
           );
@@ -3432,7 +3869,7 @@ final lmGeometriEk = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.analiz,
     (a, b, c) {
-      final i = a + 25 * b;
+      final i = a + 25 * b, sira = hedefSira(_no(a, b, c));
       String cm(num x) => '${tr(x)} cm';
       switch (c) {
         case 0:
@@ -3446,23 +3883,30 @@ final lmGeometriEk = <AdvancedFamily>[
           });
           final d = _ondalik(e * e * e, l * w)!, h0 = e + 2 + (l + w) % 7;
           final yanit = sor ? d : h0 + d;
-          return ondalikli(
+          // Yüzey alanı ya da bir yüzün alanıyla hesaplama, ikiye bölme,
+          // taban alanı yerine l + w ile bölme; yükselmeyi ayrıt sanma. Son
+          // yükseklikte aynı hatalar h0'a eklenir; çıkarma hatası da vardır.
+          final artis = [
+            ?_ondalik(6 * e * e, l * w),
+            ?_ondalik(e * e, l * w),
+            ?_ondalik(e * e * e, 2 * l * w),
+            ?_ondalik(e * e * e, l + w),
+          ];
+          return ondalikliSirali(
             '${_prizmaKap(l, w)} biçimindeki bir kapta $h0 cm yüksekliğinde su '
                 'vardır. Kaba bir ayrıtı $e cm olan küp biçiminde bir demir parça '
                 'bırakılıyor ve '
                 'parça tamamen suya batıyor. Su taşmadığına göre '
                 '${sor ? 'su seviyesi kaç cm yükselir' : 'suyun son yüksekliği kaç cm olur'}?',
             yanit,
-            [
-              sor ? h0 + d : d,
-              ?_ondalik(6 * e * e, l * w),
-              ?_ondalik(e * e, l * w),
-              ?_ondalik(e * e * e, 2 * l * w),
-            ],
+            sor
+                ? [h0 + d, ...artis, e.toDouble()]
+                : [d, for (final x in artis) h0 + x, h0 + e.toDouble(), h0 - d],
             'Küpün hacmi $e³ = ${e * e * e} cm³ kadar su yer değiştirir. Kabın '
                 'taban alanı $l·$w = ${l * w} cm² olduğundan su seviyesi '
                 '${e * e * e} / ${l * w} = ${cm(d)} yükselir.'
                 '${sor ? '' : ' Son yükseklik $h0 + ${tr(d)} = ${cm(h0 + d)}.'}',
+            sira,
             unit: 'cm',
             positive: true,
           );
@@ -3478,22 +3922,27 @@ final lmGeometriEk = <AdvancedFamily>[
               }.contains(4 * t.$1 * t.$2 * t.$2 * t.$2 / (3 * t.$3 * t.$3)),
             );
             final d = _ondalik(4 * n * r * r * r, 3 * R * R)!;
-            return ondalikli(
+            return ondalikliSirali(
               'Taban yarıçapı $R cm olan dik dairesel silindir biçimindeki bir '
                   'kapta su vardır. Kaba, her birinin yarıçapı $r cm olan $n tane '
                   'metal bilye bırakılıyor. Bilyeler tamamen suya battığına ve su '
                   'taşmadığına göre su seviyesi kaç cm yükselir?',
               d,
+              // 4/3 katsayısını, bilye sayısını ya da 3 ile bölmeyi unutma;
+              // çapla hesaplama, kuvvetleri karıştırma, R'nin karesini almama.
               [
                 ?_ondalik(n * r * r * r, R * R),
                 ?_ondalik(4 * n * r * r, 3 * R),
                 ?_ondalik(4 * r * r * r, 3 * R * R),
                 ?_ondalik(32 * n * r * r * r, 3 * R * R),
+                ?_ondalik(4 * n * r * r * r, R * R),
+                ?_ondalik(4 * n * r * r * r, 3 * R),
               ],
               'Bilyelerin toplam hacmi $n·(4/3)·π·$r³ = '
                   '${kesir(4 * n * r * r * r, 3)}π cm³ olur. Bu hacim π·$R²·h '
                   'kadar suyu yükseltir: h = ${kesir(4 * n * r * r * r, 3)} / '
                   '${R * R} = ${cm(d)}.',
+              sira,
               unit: 'cm',
               positive: true,
             );
@@ -3509,15 +3958,23 @@ final lmGeometriEk = <AdvancedFamily>[
             }.contains(t.$1 * t.$2 * t.$3 / (3 * t.$4 * t.$4)),
           );
           final v = x * y * z, d = _ondalik(v, 3 * R * R)!;
-          return ondalikli(
+          return ondalikliSirali(
             'Taban yarıçapı $R cm olan dik dairesel silindir biçimindeki bir '
                 'kapta su vardır. Kaba, ${_blokAd(x, y, z)} biçiminde bir metal '
                 'blok bırakılıyor; blok tamamen suya batıyor ve su taşmıyor. Buna '
                 'göre su seviyesi kaç cm yükselir? (π = 3 alınız.)',
             d,
-            [?_ondalik(v, R * R), ?_ondalik(v, 6 * R * R), ?_ondalik(v, 3 * R)],
+            // π ile bölmeyi unutma, 2πR² ile bölme, R'nin karesini almama ve
+            // çapı yarıçap sanma.
+            [
+              ?_ondalik(v, R * R),
+              ?_ondalik(v, 6 * R * R),
+              ?_ondalik(v, 3 * R),
+              ?_ondalik(v, 12 * R * R),
+            ],
             'Bloğun hacmi $x·$y·$z = $v cm³, kabın taban alanı 3·$R² = '
                 '${3 * R * R} cm² olur. Yükselme $v / ${3 * R * R} = ${cm(d)}.',
+            sira,
             unit: 'cm',
             positive: true,
           );
@@ -3532,21 +3989,26 @@ final lmGeometriEk = <AdvancedFamily>[
             }.contains(t.$2 * t.$1 * t.$1 / (t.$3 * t.$3)),
           );
           final d = _ondalik(h1 * r1 * r1, r2 * r2)!;
-          return ondalikli(
+          return ondalikliSirali(
             'Taban yarıçapı $r1 cm olan dik dairesel silindir biçimindeki bir '
                 'kapta $h1 cm yüksekliğinde su vardır. Bu suyun tamamı, taban '
                 'yarıçapı $r2 cm olan dik dairesel silindir biçimindeki boş bir '
                 'kaba taşmadan boşaltılıyor. İkinci kaptaki suyun yüksekliği kaç cm '
                 'olur?',
             d,
+            // Oranı ters kurma, yarıçapların karesini almama, ikiye bölme ve
+            // yüksekliğin değişmediğini sanma.
             [
               ?_ondalik(h1 * r2 * r2, r1 * r1),
               ?_ondalik(h1 * r1, r2),
               ?_ondalik(h1 * r1 * r1, 2 * r2 * r2),
+              h1.toDouble(),
+              ?_ondalik(h1 * r2, r1),
             ],
             'Suyun hacmi π·$r1²·$h1 = ${r1 * r1 * h1}π cm³ olur. İkinci kapta '
                 'π·$r2²·h = ${r1 * r1 * h1}π eşitliğinden h = ${r1 * r1 * h1} / '
                 '${r2 * r2} = ${cm(d)}.',
+            sira,
             unit: 'cm',
             positive: true,
           );
@@ -3567,21 +4029,25 @@ final lmGeometriEk = <AdvancedFamily>[
                     t.$3 * t.$1 * t.$2 * (t.$4 + t.$5),
           );
           final d = _ondalik(h1 * l1 * w1, l2 * w2)!;
-          return ondalikli(
+          return ondalikliSirali(
             '${_prizmaKap(l1, w1)} biçimindeki bir kapta $h1 cm yüksekliğinde '
                 'su vardır. Bu suyun tamamı, '
                 '${_prizmaKap(l2, w2, cumleBasi: false)} biçimindeki boş bir kaba '
                 'taşmadan boşaltılıyor. İkinci kaptaki suyun yüksekliği kaç cm '
                 'olur?',
             d,
+            // Oranı ters kurma, taban çevreleri oranı, ikiye bölme ve
+            // yüksekliğin değişmediğini sanma.
             [
               ?_ondalik(h1 * l2 * w2, l1 * w1),
               ?_ondalik(h1 * (l1 + w1), l2 + w2),
               ?_ondalik(h1 * l1 * w1, 2 * l2 * w2),
+              h1.toDouble(),
             ],
             'Suyun hacmi $l1·$w1·$h1 = ${l1 * w1 * h1} cm³ olur. İkinci kabın '
                 'taban alanı $l2·$w2 = ${l2 * w2} cm² olduğundan yükseklik '
                 '${l1 * w1 * h1} / ${l2 * w2} = ${cm(d)}.',
+            sira,
             unit: 'cm',
             positive: true,
           );
@@ -3596,21 +4062,26 @@ final lmGeometriEk = <AdvancedFamily>[
             }.contains(t.$2 * t.$1 * t.$1 / (3 * t.$3 * t.$3)),
           );
           final d = _ondalik(h * r1 * r1, 3 * r2 * r2)!;
-          return ondalikli(
+          return ondalikliSirali(
             'Taban yarıçapı $r1 cm, yüksekliği $h cm olan dik dairesel koni '
                 'biçimindeki bir kap ağzına kadar su ile doludur. Bu suyun tamamı, '
                 'taban yarıçapı $r2 cm olan dik dairesel silindir biçimindeki boş '
                 'bir kaba taşmadan boşaltılıyor. Silindirdeki suyun yüksekliği kaç '
                 'cm olur?',
             d,
+            // 3 ile bölmeyi unutma, karesini almama, oranı ters kurma; ikiye
+            // bölme ve yarıçapları yok sayıp h / 3 alma.
             [
               ?_ondalik(h * r1 * r1, r2 * r2),
               ?_ondalik(h * r1, 3 * r2),
               ?_ondalik(h * r2 * r2, 3 * r1 * r1),
+              ?_ondalik(h * r1 * r1, 6 * r2 * r2),
+              ?_ondalik(h, 3),
             ],
             'Koninin hacmi π·$r1²·$h / 3 = ${kesir(r1 * r1 * h, 3)}π cm³ olur. '
                 'π·$r2²·x = ${kesir(r1 * r1 * h, 3)}π eşitliğinden x = '
                 '${kesir(r1 * r1 * h, 3)} / ${r2 * r2} = ${cm(d)}.',
+            sira,
             unit: 'cm',
             positive: true,
           );
@@ -3621,19 +4092,24 @@ final lmGeometriEk = <AdvancedFamily>[
             return !{x, y, z, l, w, h0}.contains(x * y * z / (l * w));
           });
           final d = _ondalik(x * y * z, l * w)!, h0 = z + 3 + (x + l) % 6;
-          return ondalikli(
+          return ondalikliSirali(
             '${_prizmaKap(l, w)} biçimindeki bir kapta, ${_blokAd(x, y, z)} '
                 'biçiminde bir metal blok tamamen su içinde durmaktadır ve suyun '
                 'yüksekliği $h0 cm olarak ölçülmüştür. Blok kaptan çıkarılırsa su '
                 'seviyesi kaç cm düşer?',
             d,
+            // Kalan yüksekliği, bloğun yüksekliğini düşüş sanma; yükseklikle
+            // bölme, taban çevresine bölme ve ikiye bölme.
             [
               h0 - d,
               ?_ondalik(x * y * z, l * w * z),
               ?_ondalik(x * y * z, 2 * (l + w)),
+              z.toDouble(),
+              ?_ondalik(x * y * z, 2 * l * w),
             ],
             'Bloğun hacmi $x·$y·$z = ${x * y * z} cm³ kadar su seviyesi düşer: '
                 '${x * y * z} / ($l·$w) = ${cm(d)}.',
+            sira,
             unit: 'cm',
             positive: true,
           );
@@ -3644,16 +4120,26 @@ final lmGeometriEk = <AdvancedFamily>[
             return !{r, h, R, h0}.contains(r * r * h / (R * R));
           });
           final d = _ondalik(r * r * h, R * R)!, h0 = h + 2 + (r + R) % 5;
-          return ondalikli(
+          return ondalikliSirali(
             'Taban yarıçapı $R cm olan dik dairesel silindir biçimindeki bir '
                 'kapta $h0 cm yüksekliğinde su vardır. Kaba, taban yarıçapı $r cm '
                 've yüksekliği $h cm olan silindir biçiminde bir metal çubuk dik '
                 'olarak bırakılıyor ve çubuk tamamen suya batıyor. Su taşmadığına '
                 'göre su seviyesi kaç cm yükselir?',
             d,
-            [?_ondalik(r * h, R), ?_ondalik(r * r * h, R * R - r * r), h0 + d],
+            // Karesini almama, çubuğun kapladığı tabanı çıkarma, son
+            // yükseklik; koni hacmi, r'nin karesini almama ve ikiye bölme.
+            [
+              ?_ondalik(r * h, R),
+              ?_ondalik(r * r * h, R * R - r * r),
+              h0 + d,
+              ?_ondalik(r * r * h, 3 * R * R),
+              ?_ondalik(r * h, R * R),
+              ?_ondalik(r * r * h, 2 * R * R),
+            ],
             'Çubuğun hacmi π·$r²·$h = ${r * r * h}π cm³ olur. Bu hacim π·$R²·x '
                 'kadar suyu yükseltir: x = ${r * r * h} / ${R * R} = ${cm(d)}.',
+            sira,
             unit: 'cm',
             positive: true,
           );
@@ -3669,20 +4155,24 @@ final lmGeometriEk = <AdvancedFamily>[
             }.contains(t.$1 * t.$2 * t.$3 / (3 * t.$4 * t.$4)),
           );
           final d = _ondalik(l * w * h, 3 * r * r)!;
-          return ondalikli(
+          return ondalikliSirali(
             '${_prizmaKap(l, w)} biçimindeki bir kapta $h cm yüksekliğinde su '
                 'vardır. Bu suyun tamamı, taban yarıçapı $r cm olan dik dairesel '
                 'silindir biçimindeki boş bir kaba taşmadan boşaltılıyor. '
                 'Silindirdeki suyun yüksekliği kaç cm olur? (π = 3 alınız.)',
             d,
+            // π ile bölmeyi unutma, 2πr² ile bölme, karesini almama ve çapı
+            // yarıçap sanma.
             [
               ?_ondalik(l * w * h, r * r),
               ?_ondalik(l * w * h, 6 * r * r),
               ?_ondalik(l * w * h, 3 * r),
+              ?_ondalik(l * w * h, 12 * r * r),
             ],
             'Suyun hacmi $l·$w·$h = ${l * w * h} cm³, silindirin taban alanı '
                 '3·$r² = ${3 * r * r} cm² olur. Yükseklik ${l * w * h} / '
                 '${3 * r * r} = ${cm(d)}.',
+            sira,
             unit: 'cm',
             positive: true,
           );
@@ -3698,21 +4188,26 @@ final lmGeometriEk = <AdvancedFamily>[
             }.contains(3 * t.$1 * t.$1 * t.$2 / (t.$3 * t.$4)),
           );
           final d = _ondalik(3 * r * r * h, l * w)!;
-          return ondalikli(
+          return ondalikliSirali(
             'Taban yarıçapı $r cm olan dik dairesel silindir biçimindeki bir '
                 'kapta $h cm yüksekliğinde su vardır. Bu suyun tamamı, '
                 '${_prizmaKap(l, w, cumleBasi: false)} biçimindeki boş bir kaba '
                 'taşmadan boşaltılıyor. İkinci kaptaki suyun yüksekliği kaç cm '
                 'olur? (π = 3 alınız.)',
             d,
+            // π ile çarpmayı unutma, πr² yerine 2πr, taban çevresine bölme;
+            // çapı yarıçap sanma ve ikiye bölme.
             [
               ?_ondalik(r * r * h, l * w),
               ?_ondalik(6 * r * h, l * w),
               ?_ondalik(3 * r * r * h, 2 * (l + w)),
+              ?_ondalik(12 * r * r * h, l * w),
+              ?_ondalik(3 * r * r * h, 2 * l * w),
             ],
             'Suyun hacmi 3·$r²·$h = ${3 * r * r * h} cm³, prizmanın taban '
                 'alanı $l·$w = ${l * w} cm² olur. Yükseklik ${3 * r * r * h} / '
                 '${l * w} = ${cm(d)}.',
+            sira,
             unit: 'cm',
             positive: true,
           );
@@ -3723,7 +4218,7 @@ final lmGeometriEk = <AdvancedFamily>[
             return !{r, h, R, h0}.contains(r * r * h / (3 * R * R));
           });
           final d = _ondalik(r * r * h, 3 * R * R)!, h0 = h + 2 + (r + R) % 5;
-          return ondalikli(
+          return ondalikliSirali(
             'Taban yarıçapı $R cm olan dik dairesel silindir biçimindeki bir '
                 'kapta $h0 cm yüksekliğinde su vardır. Kaba, taban yarıçapı $r cm '
                 've yüksekliği $h cm olan dik dairesel koni biçiminde bir metal '
@@ -3731,10 +4226,19 @@ final lmGeometriEk = <AdvancedFamily>[
                 'tamamen suya batıyor. Su taşmadığına göre su seviyesi kaç cm '
                 'yükselir?',
             d,
-            [?_ondalik(r * r * h, R * R), ?_ondalik(r * h, 3 * R), h0 + d],
+            // 3 ile bölmeyi unutma, karesini almama, son yükseklik; ikiye
+            // bölme ve r'nin karesini almama.
+            [
+              ?_ondalik(r * r * h, R * R),
+              ?_ondalik(r * h, 3 * R),
+              h0 + d,
+              ?_ondalik(r * r * h, 6 * R * R),
+              ?_ondalik(r * h, 3 * R * R),
+            ],
             'Koninin hacmi π·$r²·$h / 3 = ${kesir(r * r * h, 3)}π cm³ olur. Bu '
                 'hacim π·$R²·x kadar suyu yükseltir: x = ${kesir(r * r * h, 3)} / '
                 '${R * R} = ${cm(d)}.',
+            sira,
             unit: 'cm',
             positive: true,
           );
@@ -4225,7 +4729,7 @@ final lmGeometriEk = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.uygulama,
     (a, b, c) {
-      final x1 = a - 12, y1 = b - 10;
+      final x1 = a - 12, y1 = b - 10, sira = hedefSira(_no(a, b, c));
       if (c <= 3) {
         final (u1, v1, u2, v0) = switch (c) {
           0 => (3 + a % 5, -(1 + b % 4), 1 + b % 6, 4 + a % 7),
@@ -4245,7 +4749,10 @@ final lmGeometriEk = <AdvancedFamily>[
         final x2 = x1 + u1, y2 = y1 + v1, x3 = x1 + u2, y3 = y1 + v2;
         final t = x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2);
         final yarim = x1 * y2 + x2 * y3 + x3 * y1;
-        return ondalikli(
+        final yarimTers = x2 * y1 + x3 * y2 + x1 * y3;
+        // 2 ile bölmeyi unutma, çarpımları yanlış işaretle toplama ve çapraz
+        // toplamın yalnız bir yarısını alma.
+        return ondalikliSirali(
           'Analitik düzlemde köşeleri A${_n(x1, y1)}, B${_n(x2, y2)} ve '
               'C${_n(x3, y3)} olan ABC üçgeninin alanı kaç birimkaredir?',
           t.abs() / 2,
@@ -4253,11 +4760,13 @@ final lmGeometriEk = <AdvancedFamily>[
             t.abs().toDouble(),
             (u1 * v2 + u2 * v1).abs() / 2,
             if (yarim != 0) yarim.abs() / 2,
+            if (yarimTers != 0) yarimTers.abs() / 2,
           ],
           'Alan |x₁(y₂ − y₃) + x₂(y₃ − y₁) + x₃(y₁ − y₂)| / 2 bağıntısıyla '
               'bulunur: |${_pz(x1)}·${_pz(y2 - y3)} + ${_pz(x2)}·${_pz(y3 - y1)} + '
               '${_pz(x3)}·${_pz(y1 - y2)}| / 2 = |${_m(t)}| / 2 = '
               '${tr(t.abs() / 2)} birimkare.',
+          sira,
           positive: true,
         );
       }
@@ -4295,16 +4804,20 @@ final lmGeometriEk = <AdvancedFamily>[
 
         final s = kos(p), ters = kos([p[0], p[1], p[3], p[2]]);
         final abc = kos([p[0], p[1], p[2]]);
+        final acd = kos([p[0], p[2], p[3]]);
         final ad = ['A', 'B', 'C', 'D'];
-        return ondalikli(
+        // 2 ile bölmeyi unutma, köşeleri yanlış sırayla alma ve yalnız ABC ya
+        // da ACD üçgenini hesaplama.
+        return ondalikliSirali(
           'Analitik düzlemde köşeleri ${[for (var j = 0; j < 4; j++) '${ad[j]}${_n(p[j].$1, p[j].$2)}'].join(', ')} '
               'olan ABCD dörtgeninin alanı kaç birimkaredir?',
           s.abs() / 2,
-          [s.abs().toDouble(), ters.abs() / 2, abc.abs() / 2],
+          [s.abs().toDouble(), ters.abs() / 2, abc.abs() / 2, acd.abs() / 2],
           'Köşeler sırasıyla alınarak alan |Σ(xᵢ·yᵢ₊₁ − xᵢ₊₁·yᵢ)| / 2 '
               'bağıntısıyla bulunur. ${[for (var j = 0; j < 4; j++) '${_pz(p[j].$1)}·${_pz(p[(j + 1) % 4].$2)} − ${_pz(p[(j + 1) % 4].$1)}·${_pz(p[j].$2)}'].join(' + ')} '
               '= ${_m(s)} olduğundan alan |${_m(s)}| / 2 = ${tr(s.abs() / 2)} '
               'birimkare.',
+          sira,
           positive: true,
         );
       }
@@ -4322,7 +4835,9 @@ final lmGeometriEk = <AdvancedFamily>[
           yc += yc > 0 ? 9 : -9;
         }
         final alan = taban * yc.abs() / 2;
-        return ondalikli(
+        // 2 ile bölmeyi unutma, taban ile yüksekliği toplama, C'nin apsisini
+        // taban sanma ve tabanı B'nin apsisi sanma.
+        return ondalikliSirali(
           'Analitik düzlemde köşeleri A(${_m(x1)}, 0), B(${_m(xb)}, 0) ve '
               'C${_n(xc, yc)} olan ABC üçgeninin alanı kaç birimkaredir?',
           alan,
@@ -4330,11 +4845,13 @@ final lmGeometriEk = <AdvancedFamily>[
             (taban * yc.abs()).toDouble(),
             (taban + yc.abs()) / 2,
             if (xc != 0) (xc.abs() * yc.abs()) / 2,
+            if (xb != 0) (xb.abs() * yc.abs()) / 2,
           ],
           '[AB] kenarı x ekseni üzerindedir ve uzunluğu ${_m(xb)} − ${_pz(x1)} '
               '= $taban birimdir. C noktasının x eksenine uzaklığı |${_m(yc)}| = '
               '${yc.abs()} birim olduğundan alan $taban·${yc.abs()} / 2 = '
               '${tr(alan)} birimkare.',
+          sira,
           positive: true,
         );
       }
@@ -4353,27 +4870,31 @@ final lmGeometriEk = <AdvancedFamily>[
       final alan = w * h / 2;
       if (c == 8) {
         final xc = x1 + a % 3;
-        return _tam(
+        // 2 ile çarpma yerine 4 ile çarpma, uzaklığı yanıt sanma, işaret
+        // hatası ve 2 ile çarpmayı unutma.
+        return _tamSirali(
           'Analitik düzlemde A${_n(x1, yy)}, B${_n(x1 + w, yy)} ve '
               'C(${_m(xc)}, k) noktaları veriliyor. k > ${_m(yy)} olmak üzere ABC '
               'üçgeninin alanı ${tr(alan)} birimkare olduğuna göre k kaçtır?',
           yy + h,
-          [yy + 2 * h, h, yy - h],
+          [yy + 2 * h, h, yy - h, if (h.isEven) yy + h ~/ 2],
           '[AB] kenarı yatay olup uzunluğu $w birimdir. C noktasının AB '
               'doğrusuna uzaklığı k − ${_pz(yy)} olur: $w·(k − ${_pz(yy)}) / 2 = '
               '${tr(alan)}, k − ${_pz(yy)} = $h ve k = ${_m(yy + h)}.',
+          sira,
         );
       }
       final xx = yy, yc = x1 + a % 3;
-      return _tam(
+      return _tamSirali(
         'Analitik düzlemde A${_n(xx, x1)}, B${_n(xx, x1 + w)} ve '
             'C(k, ${_m(yc)}) noktaları veriliyor. k > ${_m(xx)} olmak üzere ABC '
             'üçgeninin alanı ${tr(alan)} birimkare olduğuna göre k kaçtır?',
         xx + h,
-        [xx + 2 * h, h, xx - h],
+        [xx + 2 * h, h, xx - h, if (h.isEven) xx + h ~/ 2],
         '[AB] kenarı düşey olup uzunluğu $w birimdir. C noktasının AB '
             'doğrusuna uzaklığı k − ${_pz(xx)} olur: $w·(k − ${_pz(xx)}) / 2 = '
             '${tr(alan)}, k − ${_pz(xx)} = $h ve k = ${_m(xx + h)}.',
+        sira,
       );
     },
     exam: ExamKind.ayt,

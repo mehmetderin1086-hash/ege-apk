@@ -412,11 +412,16 @@ AdvancedItem _pHSirali(
   komsuUst: 14.5,
 );
 
-/// [x], [ref] değerinin 1/[kat] katı ile [kat] katı arasındaysa kendisi, değilse
-/// NaN (aday listesinden düşer). Anahtardan çok uzak kalan ve bağlamda
-/// gerçekçi olmayan büyüklükleri ayıklar.
-num _olcekte(num x, num ref, [num kat = 4]) =>
-    x >= ref / kat && x <= ref * kat ? x : double.nan;
+/// [x], [ref] ile aynı işaretliyse ve büyüklüğü [ref] büyüklüğünün 1/[kat]
+/// katı ile [kat] katı arasındaysa kendisi, değilse NaN (aday listesinden
+/// düşer). Anahtardan çok uzak kalan, bağlamda gerçekçi olmayan büyüklükleri
+/// ayıklar.
+num _olcekte(num x, num ref, [num kat = 4]) {
+  final u = x.abs(), r = ref.abs();
+  return x * ref > 0 && u >= r / kat - 1e-9 && u <= r * kat + 1e-9
+      ? x
+      : double.nan;
+}
 
 /// Yalnız alt < x < üst aralığındaki adayları bırakır (ör. bir örnekteki
 /// element kütlesi örneğin kütlesini aşamaz).
@@ -614,7 +619,7 @@ final _f01 = lmAile(
       if (tur == 4) {
         return soru(
           '$giris $x, bu ${r == 0 ? 'atom' : 'iyon'} ile izoelektronik '
-          'olduğuna göre X elementinin atom numarası kaçtır?',
+              'olduğuna göre X elementinin atom numarası kaçtır?',
           zx,
           [zy, e, e - q, zy + q, ky - zx, zx + 1],
           yol,
@@ -2728,8 +2733,7 @@ final _f13 = lmAile(
             [
               boy / 2,
               boy - yanit,
-              boy * ma / (mh + ma),
-              boy * mh / (mh + ma),
+              ikinci ? boy * mh / (mh + ma) : boy * ma / (mh + ma),
               boy / oran,
               yanit + oran,
               yanit - oran,

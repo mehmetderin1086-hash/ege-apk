@@ -225,9 +225,8 @@ AdvancedItem _ebobEkok(int a, int b, int c) {
           m + n,
           g,
           l, // EKOK yanıt sanılmış
-          l - g, // bölme yerine çıkarma
+          x * y, // bölme yerine çarpma: EBOB · EKOK
           n, // ara sonuç: büyük sayının EBOB'a bölümü
-          l + g, // bölme yerine toplama
           m, // ara sonuç: küçük sayının EBOB'a bölümü
         ],
         '$ayir Bölüm $l / $g = ${m * n} bulunur.',
@@ -407,7 +406,7 @@ AdvancedItem _bolme(int a, int b, int c) {
         t - kalan, // (bölüm + 1) · x değeri yanıt sanılmış
         t - bolum, // kalan yerine bölüm çıkarılmış
         bolen * bolum - kalan, // kalan çıkarılmış
-        t, // verilen toplam
+        bolunen + kalan, // kalan iki kez eklenmiş
       ],
       'Bölen x ise bölünen $bolum · x + $kalan olur. $bolum · x + $kalan + x = '
           '$t eşitliğinden ${bolum + 1} · x = ${t - kalan} ve x = $bolen bulunur. '
@@ -1172,7 +1171,6 @@ AdvancedItem _esitsizlik(int a, int b, int c) {
           -enB, // işaret hatası
           enB + 1,
           enB - 1,
-          sol,
         ],
         '$coz Bu aralıktaki en büyük tam sayı ${_n(enB)} olur.',
         sira,
@@ -1188,7 +1186,6 @@ AdvancedItem _esitsizlik(int a, int b, int c) {
         -enK, // işaret hatası
         enK - 1,
         enK + 1,
-        sag,
       ],
       '$coz Bu aralıktaki en küçük tam sayı ${_n(enK)} olur.',
       sira,
@@ -1597,7 +1594,6 @@ AdvancedItem _karZarar(int a, int b, int c) {
                 satis * 100 ~/ (100 + p - q), // yüzdeler çıkarılmış
                 etiket,
                 satis * 100 ~/ (100 + p), // indirim hesaba katılmamış
-                satis, // satış fiyatı yanıt sanılmış
                 satis * (100 - p) ~/ 100, // kâr satış fiyatından düşülmüş
               ]
             : [
@@ -1624,10 +1620,10 @@ AdvancedItem _karZarar(int a, int b, int c) {
           etiket, // indirim yapılmamış
           m * (100 + p - q) ~/ 100, // yüzdeler çıkarılmış
           kar,
-          m,
           etiket * (100 + q) ~/ 100, // indirim eklenmiş
           m * (100 - q) ~/ 100, // indirim maliyete uygulanmış
           indirim,
+          m,
         ],
       ),
       1 => (
@@ -1687,7 +1683,6 @@ AdvancedItem _karZarar(int a, int b, int c) {
           karli * (100 - p - q) ~/ 100,
           d,
           m * q ~/ 100, // zarar tutarı
-          karli,
           m * (100 + q) ~/ 100, // zarar eklenmiş
         ],
         '$maliyet ${100 + p}x/100 = $karli eşitliğinden x = $m bulunur. '
@@ -1709,7 +1704,6 @@ AdvancedItem _karZarar(int a, int b, int c) {
           if (zararli * 100 % (100 - p - q) == 0)
             zararli * 100 ~/ (100 - p - q), // fark kârlı fiyata göre alınmış
           m * (100 + p + q) ~/ 100, // zarar oranı da eklenmiş
-          zararli,
         ],
         '$maliyet ${100 - q}x/100 = $zararli eşitliğinden x = $m bulunur. '
             'Kârlı satış fiyatı $m · ${100 + p}/100 = $karli TL olur.',
@@ -1745,7 +1739,6 @@ AdvancedItem _karZarar(int a, int b, int c) {
           100 - q,
           q * 100 ~/ (100 + p), // zarar kârlı fiyata göre oranlanmış
           q * 100 ~/ (100 - q), // zarar satış fiyatına göre oranlanmış
-          p,
         ],
         '$maliyet ${100 + p}x/100 = $karli eşitliğinden x = $m bulunur. Zarar '
             '$m − $zararli = ${m - zararli} TL olup maliyetin %$q kadarıdır.',
@@ -1764,7 +1757,6 @@ AdvancedItem _karZarar(int a, int b, int c) {
           m - zararli, // yalnız zarar tutarı
           m,
           zararli * p ~/ 100,
-          zararli,
         ],
         '$maliyet ${100 - q}x/100 = $zararli eşitliğinden x = $m bulunur. '
             'Kârlı satış fiyatı $karli TL olacağından fiyat $karli − $zararli = '
@@ -1909,7 +1901,6 @@ AdvancedItem _isciHavuz(int a, int b, int c) {
           kalanGun + d,
           x - d,
           (m + n) * j, // biten kısmın süresi
-          d,
         ],
         '$coz Kalan $kalan kadarlık işi kalfa $y · $kalan = $kalanGun günde '
             'bitirir.',
@@ -2019,7 +2010,6 @@ AdvancedItem _isciHavuz(int a, int b, int c) {
           kalanGun + d, // toplam süre
           y, // ustanın yaptığı düşülmemiş
           n * j, // biten kısmın kalfa süresi
-          d,
         ],
         '$coz.',
         sira,
@@ -2441,7 +2431,7 @@ AdvancedItem _sayiProblemi(int a, int b, int c) {
         s - r,
         s ~/ (k + 1) * k,
         k * (kucuk + r), // fazlalık da katla çarpılmış
-        s, // toplam
+        buyuk + r, // fazlalık iki kez eklenmiş
       ],
       'Küçük sayı x ise büyük sayı ${k}x + $r olur. ${k + 1}x + $r = $s '
           'eşitliğinden x = $kucuk ve büyük sayı $k · $kucuk + $r = $buyuk '
@@ -2461,7 +2451,6 @@ AdvancedItem _sayiProblemi(int a, int b, int c) {
       s - fark, // ikiye bölünmemiş
       s ~/ 2,
       s + fark,
-      fark,
       if (s.isEven) kk == 0 ? s ~/ 2 + fark : s ~/ 2 - fark, // farkın tamamı
     ],
     'Büyük sayı ($s + $fark) / 2 = $buyuk, küçük sayı ($s − $fark) / 2 = '

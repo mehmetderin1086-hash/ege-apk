@@ -25,13 +25,15 @@ int _hs(int a, int b, int c) {
 /// kullanılır (hatalar üçten azsa gereken kadar). Hedef sıra bu sınırla
 /// kurulamıyorsa kurulabilen sıralardan biri [sira] ~/ 4 ile seçilir.
 /// Böylece seçenekler anahtarın çevresine dizilmiş komşulardan oluşmaz.
+/// [enCokAlt] verilirse anahtardan küçük çeldirici sayısı onu aşmaz.
 List<String> _celdirici(
   num anahtar,
   String yazim,
   Iterable<(num, String)> hatalar,
   Iterable<(num, String)> komsular,
-  int sira,
-) {
+  int sira, {
+  int enCokAlt = 3,
+}) {
   // Bir çağrıdaki bütün adaylar aynı birim ve biçimdedir ve yazımları
   // değerlerinden türetilir; bu yüzden değeri aynı olan aday aynı seçenektir.
   final alinan = <num>{anahtar};
@@ -58,7 +60,9 @@ List<String> _celdirici(
   ];
   int eksik(int r) => max(0, r - hA.length) + max(0, 3 - r - hU.length);
   bool olur(int r) =>
-      r - hA.length <= kA.length && 3 - r - hU.length <= kU.length;
+      r <= enCokAlt &&
+      r - hA.length <= kA.length &&
+      3 - r - hU.length <= kU.length;
   final olasi = [
     for (var r = 0; r < 4; r++)
       if (olur(r)) r,
@@ -1281,7 +1285,7 @@ final lmGeometri = <AdvancedFamily>[
             f,
             // 2 ile çarpmayı unutma, alanı köşegenlerin çarpımının dörtte
             // biri sanma, kare sanıp diğer köşegeni eşit alma, köşegeni alanın
-            // yarısı sanma.
+            // yarısı sanma, 2 ile çarpmak yerine 2'ye bölme.
             [bol(s, e), 2 * f, e, bol(s, 2), bol(f, 4)],
             'Alan köşegenler çarpımının yarısıdır: $e·k / 2 = $s. Buradan '
                 'k = ${2 * s} / $e = $f cm.',
@@ -2282,8 +2286,8 @@ final lmGeometri = <AdvancedFamily>[
       // da paydası anahtarla ortak olan "kökü unutma", "paydayı unutma" gibi
       // seçenekler anahtarı ötekilerin ortası yapardı. Bu ikisi yalnız pay
       // hataları çakıştığında (nokta orijindeyse, sabit sıfırsa) eklenir.
-      // Anahtar tam sayıysa paydayı unutma hatası en başa alınır; böylece
-      // anahtar tek tam sayı seçenek kalmaz.
+      // Anahtar tam sayıysa paydayı unutma hatası en başa alınır ve her
+      // vakada kullanılır; böylece anahtar tek tam sayı seçenek kalmaz.
       List<String> celdir(int pay, Iterable<int> paylar) {
         final yazim = kesir(pay, h);
         final farkli = {
@@ -2306,6 +2310,10 @@ final lmGeometri = <AdvancedFamily>[
               if (e > 0) (e / h, kesir(e as int, h)),
           ],
           sira,
+          // Tam sayı anahtarda tek tam sayı çeldirici (paydayı unutma)
+          // anahtardan büyüktür; üç çeldiricinin de küçük olduğu sıra
+          // seçilmez.
+          enCokAlt: pay % h == 0 ? 2 : 3,
         );
       }
 

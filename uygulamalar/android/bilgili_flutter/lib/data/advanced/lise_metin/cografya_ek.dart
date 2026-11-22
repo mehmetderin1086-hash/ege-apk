@@ -898,6 +898,61 @@ int _hataFark((String, int) ka, (String, int) kb) =>
     ? ka.$2.abs() + kb.$2.abs()
     : (ka.$2.abs() - kb.$2.abs()).abs();
 
+/// Süresi [k] dakika olan uçuş sorusuna üç çeldirici süre seçer. [adaylar]
+/// öncelik sırasıyla (süre, maliyet) ikilileridir: tipik hatalar ucuz, ±1 ve
+/// ±2 saatlik komşu değerler pahalıdır. Anahtardan kısa çeldirici sayısı
+/// [hedef] değerinden her uzaklaştığında maliyete 4 eklenir. Anahtar dört
+/// seçeneğin ortalamasına en yakın seçenek, birbirine en yakın ikiliden biri,
+/// ötekilere toplam uzaklığı en küçük ya da ötekilerden en uzak (tek kalan)
+/// seçenek olduğunda da maliyet artar. En düşük maliyetli üçlü seçilir.
+List<int> _sureCeldiricileri(int k, List<(int, double)> adaylar, int hedef) {
+  final havuz = <(int, double)>[];
+  for (final (m, c) in adaylar) {
+    if (m < 60 || m > 1800 || m == k || havuz.any((h) => h.$1 == m)) continue;
+    havuz.add((m, c));
+  }
+  double asim(double pay) => pay > 0.25 ? pay - 0.25 : 0.0;
+  List<int>? enIyi;
+  var enIyiMaliyet = double.infinity;
+  for (var p = 0; p < havuz.length; p++) {
+    for (var q = p + 1; q < havuz.length; q++) {
+      for (var r = q + 1; r < havuz.length; r++) {
+        final s = [k, havuz[p].$1, havuz[q].$1, havuz[r].$1];
+        if (s.contains(k + 60) && s.contains(k - 60)) continue;
+        final once = s.where((x) => x < k).length;
+        final ort = (s[0] + s[1] + s[2] + s[3]) / 4;
+        final yakin = <double>[], toplam = <double>[], ortUzak = <double>[];
+        for (var a = 0; a < 4; a++) {
+          var enk = -1, t = 0;
+          for (var b = 0; b < 4; b++) {
+            if (b == a) continue;
+            final u = (s[a] - s[b]).abs();
+            if (enk < 0 || u < enk) enk = u;
+            t += u;
+          }
+          yakin.add(enk.toDouble());
+          toplam.add(t.toDouble());
+          ortUzak.add((s[a] - ort).abs());
+        }
+        final maliyet =
+            havuz[p].$2 +
+            havuz[q].$2 +
+            havuz[r].$2 +
+            4 * (once - hedef).abs() +
+            3 * _enKucukPayi(ortUzak) +
+            8 * asim(_enKucukPayi(yakin)) +
+            3 * asim(_enKucukPayi(toplam)) +
+            3 * asim(_enKucukPayi([for (final x in yakin) -x]));
+        if (maliyet < enIyiMaliyet - 1e-9) {
+          enIyiMaliyet = maliyet;
+          enIyi = s.sublist(1);
+        }
+      }
+    }
+  }
+  return enIyi!;
+}
+
 AdvancedItem _saatDilimi(int a, int b, int c) {
   final bicim = c % 3, q = c ~/ 3;
   final i = a + 25 * b + 500 * c;
@@ -1018,30 +1073,29 @@ AdvancedItem _saatDilimi(int a, int b, int c) {
             'bundan ${_sure(sure)} çıkarılınca kalkış ${an(ay, kalkis)} bulunur.',
       );
     }
-    // Süre: saat farkını unutma ya da ters yönde uygulama, UTC işaret hatası,
-    // eksi çıkan farka 24 saat ekleme; gerekirse saat dilimlerini bir ya da iki
-    // eksik/fazla sayma. Anahtarın değer sırası vakadan vakaya değişir.
+    // Süre: saat farkını unutma ya da ters yönde uygulama, UTC işaret hatası
+    // (ters yönle birlikte de), eksi çıkan farka 24 saat ekleme; gerekirse saat
+    // dilimlerini bir ya da iki eksik/fazla sayma. Anahtarın değer sırası
+    // vakadan vakaya değişir; ortada ya da tek başına kalması cezalandırılır.
     final ham = varis - kalkis;
-    final sureler = [
-      ham,
-      ham + 60 * fark,
+    final sureler = <(int, double)>[
+      (ham, 1),
+      (ham + 60 * fark, 1),
       if (isaret) ...[
-        sure + y * 60 * (fark.abs() - hataFark),
-        sure + y * 60 * (fark.abs() + hataFark),
+        (sure + y * 60 * (fark.abs() - hataFark), 2),
+        (sure + y * 60 * (fark.abs() + hataFark), 3),
       ],
-      if (ham < 60) ham + 1440,
-      sure + 60,
-      sure - 60,
-      sure + 120,
-      sure - 120,
-    ].where((x) => x >= 60 && x <= 1800 && x != sure);
+      if (ham < 60) (ham + 1440, 1),
+      (sure + 60, 4),
+      (sure - 60, 4),
+      (sure + 120, 5),
+      (sure - 120, 5),
+    ];
     return secenekli(
       '${_kentAd(ka)} kentinden ${_anKok(ay, kalkis)} iken kalkan bir uçak, ${_kentAd(kb)} '
           'kentine ${_anKok(ay, varis)} iken iniyor. Bu uçuş ne kadar sürmüştür?',
       _sure(sure),
-      siraliCeldiriciler(sure, _sure(sure), [
-        for (final x in sureler) (x, _sure(x)),
-      ], hedefSira(i)),
+      _sureCeldiricileri(sure, sureler, hedefSira(i)).map(_sure),
       '$farkYaz. Kalkış anında ${kb.$1} kentinde saat ${an(ay, kalkis + 60 * fark)} olur; '
           'buradan varışa kadar geçen süre ${_sure(sure)} bulunur.',
     );

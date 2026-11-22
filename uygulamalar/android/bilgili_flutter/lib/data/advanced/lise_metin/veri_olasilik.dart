@@ -70,20 +70,8 @@ String _sade(int n, int d) {
 }
 
 const _adlar = [
-  'Defne',
-  'Kerem',
-  'Elif',
-  'Mert',
-  'Zeynep',
-  'Emre',
-  'Selin',
-  'Burak',
-  'İpek',
-  'Onur',
-  'Ceren',
-  'Tolga',
-  'Nehir',
-  'Kaan',
+  'Defne', 'Kerem', 'Elif', 'Mert', 'Zeynep', 'Emre', 'Selin', 'Burak',
+  'İpek', 'Onur', 'Ceren', 'Tolga', 'Nehir', 'Kaan',
 ];
 
 /// Olasılık yanıtlı soru: çeldiriciler 0 ile 1 arasındaki sade kesirlerdir.
@@ -400,7 +388,8 @@ AdvancedItem _ondalikAralikli(
   void ekle(int p, int q) {
     if (q <= 0 || p <= 0 || (p * 100) % q != 0) return;
     final v = p / q;
-    if ((v - yanit).abs() < 1e-9 || aday.any((y) => (y.$1 - v).abs() < 1e-9)) {
+    if ((v - yanit).abs() < 1e-9 ||
+        aday.any((y) => (y.$1 - v).abs() < 1e-9)) {
       return;
     }
     aday.add((v, tr(v)));
@@ -567,26 +556,9 @@ const _gorevBaglamlari = [
 
 /// (seçilecek kişi sayısı, koşul türü) ikilileri.
 const _permKosullari = [
-  (2, 0),
-  (2, 2),
-  (2, 3),
-  (2, 4),
-  (3, 0),
-  (3, 1),
-  (3, 2),
-  (3, 3),
-  (3, 4),
-  (3, 5),
-  (3, 6),
-  (3, 7),
-  (4, 0),
-  (4, 1),
-  (4, 2),
-  (4, 3),
-  (4, 4),
-  (4, 5),
-  (4, 6),
-  (4, 7),
+  (2, 0), (2, 2), (2, 3), (2, 4),
+  (3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7),
+  (4, 0), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7),
 ];
 
 AdvancedItem _permutasyon(int a, int b, int c) {
@@ -768,56 +740,16 @@ AdvancedItem _permutasyon(int a, int b, int c) {
 
 /// En az dört farklı harfi olan ve en az bir harfi yinelenen sözcükler.
 const _yinelenenSozcukler = [
-  'KELEBEK',
-  'MATEMATİK',
-  'PAPATYA',
-  'ANKARA',
-  'MALATYA',
-  'ERZURUM',
-  'SAKARYA',
-  'KARAMAN',
-  'ISPARTA',
-  'KÜTAHYA',
-  'MANİSA',
-  'ERZİNCAN',
-  'ÇANAKKALE',
-  'KIRIKKALE',
-  'ESKİŞEHİR',
-  'GAZİANTEP',
-  'NEVŞEHİR',
-  'AMASYA',
-  'ARDAHAN',
-  'BATMAN',
-  'BAYBURT',
-  'BİLECİK',
-  'BİTLİS',
-  'ÇANKIRI',
-  'DENİZLİ',
-  'EDİRNE',
-  'HAKKARİ',
-  'KARABÜK',
-  'SAMSUN',
-  'TOKAT',
-  'YALOVA',
-  'ŞANLIURFA',
-  'KARINCA',
-  'ARKADAŞ',
-  'KİTAPLIK',
-  'TELEFON',
-  'PENCERE',
-  'ANAHTAR',
-  'KALEMLİK',
-  'SALATALIK',
-  'PORTAKAL',
-  'MANDALİNA',
-  'LİMONATA',
-  'DONDURMA',
-  'BARDAK',
-  'SANDALYE',
-  'KELİME',
-  'DEFTER',
-  'ÖĞRETMEN',
-  'GEOMETRİ',
+  'KELEBEK', 'MATEMATİK', 'PAPATYA', 'ANKARA', 'MALATYA',
+  'ERZURUM', 'SAKARYA', 'KARAMAN', 'ISPARTA', 'KÜTAHYA',
+  'MANİSA', 'ERZİNCAN', 'ÇANAKKALE', 'KIRIKKALE', 'ESKİŞEHİR',
+  'GAZİANTEP', 'NEVŞEHİR', 'AMASYA', 'ARDAHAN', 'BATMAN',
+  'BAYBURT', 'BİLECİK', 'BİTLİS', 'ÇANKIRI', 'DENİZLİ',
+  'EDİRNE', 'HAKKARİ', 'KARABÜK', 'SAMSUN', 'TOKAT',
+  'YALOVA', 'ŞANLIURFA', 'KARINCA', 'ARKADAŞ', 'KİTAPLIK',
+  'TELEFON', 'PENCERE', 'ANAHTAR', 'KALEMLİK', 'SALATALIK',
+  'PORTAKAL', 'MANDALİNA', 'LİMONATA', 'DONDURMA', 'BARDAK',
+  'SANDALYE', 'KELİME', 'DEFTER', 'ÖĞRETMEN', 'GEOMETRİ',
 ];
 
 const _harfCiftleri = [(0, 1), (1, 0), (0, 2), (2, 0), (1, 2), (2, 1), (0, 3)];
@@ -835,10 +767,7 @@ int _cokluDizilis(List<int> adetler) {
 /// "7!/(2!·3!)" biçiminde yazım; yinelenen yoksa yalnız "7!".
 String _cokluYaz(List<int> adetler) {
   final n = adetler.fold<int>(0, (x, y) => x + y);
-  final payda = [
-    for (final k in adetler)
-      if (k > 1) '$k!',
-  ];
+  final payda = [for (final k in adetler) if (k > 1) '$k!'];
   if (payda.isEmpty) return '$n!';
   return payda.length == 1 ? '$n!/${payda[0]}' : '$n!/(${payda.join('·')})';
 }
@@ -937,10 +866,7 @@ AdvancedItem _sozcukDizilisi(int a, int b, int c, int sira) {
     final m = {for (final h in farkli) h: harfler.where((x) => x == h).length};
     if (eksik1 != null) m[eksik1] = m[eksik1]! - 1;
     if (eksik2 != null) m[eksik2] = m[eksik2]! - 1;
-    return [
-      for (final h in farkli)
-        if (m[h]! > 0) m[h]!,
-    ];
+    return [for (final h in farkli) if (m[h]! > 0) m[h]!];
   }
 
   final tum = adet();
@@ -1002,7 +928,7 @@ AdvancedItem _sozcukDizilisi(int a, int b, int c, int sira) {
           _tamBol(toplam, 2),
         ],
         '$genel $h harfi ile başlayanlar ${_cokluYaz(kalan)} = $sabit '
-            'tanedir. İstenen sayı $toplam − $sabit = ${toplam - sabit} olur.',
+        'tanedir. İstenen sayı $toplam − $sabit = ${toplam - sabit} olur.',
         sira,
       );
     }
@@ -1024,7 +950,7 @@ AdvancedItem _sozcukDizilisi(int a, int b, int c, int sira) {
         _tamBol(sabit, 2),
       ],
       'Bir $h harfi $yer yazılır. Kalan ${n - 1} harf ${_cokluYaz(kalan)} = '
-          '$sabit farklı biçimde dizilir.',
+      '$sabit farklı biçimde dizilir.',
       sira,
     );
   }
@@ -1034,7 +960,7 @@ AdvancedItem _sozcukDizilisi(int a, int b, int c, int sira) {
   final sonuc = _cokluDizilis(kalan);
   return _tamSirali(
     '$giris Bu sözcüklerin kaç tanesi $h1 harfi ile başlayıp $h2 harfi ile '
-        'biter?',
+    'biter?',
     sonuc,
     [
       _cokluDizilis(adet(eksik1: h1)),
@@ -1048,7 +974,7 @@ AdvancedItem _sozcukDizilisi(int a, int b, int c, int sira) {
       _tamBol(sonuc, 2),
     ],
     'Başa bir $h1, sona bir $h2 harfi yazılır. Kalan ${n - 2} harf '
-        '${_cokluYaz(kalan)} = $sonuc farklı biçimde dizilir.',
+    '${_cokluYaz(kalan)} = $sonuc farklı biçimde dizilir.',
     sira,
   );
 }
@@ -1082,7 +1008,7 @@ AdvancedItem _ozdesDizilis(int a, int b, int v, int sira) {
           _tamBol(toplam, 2),
         ],
         'Toplam $n nesne vardır; aynı renkliler özdeş olduğundan diziliş '
-            'sayısı $tumYazi olur.',
+        'sayısı $tumYazi olur.',
         sira,
       );
     case 1:
@@ -1090,7 +1016,7 @@ AdvancedItem _ozdesDizilis(int a, int b, int v, int sira) {
       final x = _cokluDizilis(kalan);
       return _tamSirali(
         '$giris İlk sırada $r1 bir $nesne bulunması koşuluyla kaç farklı '
-            'diziliş elde edilebilir?',
+        'diziliş elde edilebilir?',
         x,
         [
           if (toplam <= 40 * x) toplam,
@@ -1105,7 +1031,7 @@ AdvancedItem _ozdesDizilis(int a, int b, int v, int sira) {
           _tamBol(x, 2),
         ],
         'İlk sıraya bir $r1 $nesne konur. Kalan ${n - 1} nesne '
-            '${_cokluYaz(kalan)} = $x farklı biçimde dizilir.',
+        '${_cokluYaz(kalan)} = $x farklı biçimde dizilir.',
         sira,
       );
     case 2:
@@ -1113,7 +1039,7 @@ AdvancedItem _ozdesDizilis(int a, int b, int v, int sira) {
       final x = _cokluDizilis(kalan);
       return _tamSirali(
         '$giris İlk sırada $r1, son sırada $r3 bir $nesne bulunması koşuluyla '
-            'kaç farklı diziliş elde edilebilir?',
+        'kaç farklı diziliş elde edilebilir?',
         x,
         [
           _cokluDizilis([if (p > 1) p - 1, q, s]),
@@ -1126,7 +1052,7 @@ AdvancedItem _ozdesDizilis(int a, int b, int v, int sira) {
           _tamBol(x, 2),
         ],
         'İlk sıraya bir $r1, son sıraya bir $r3 $nesne konur. Kalan ${n - 2} '
-            'nesne ${_cokluYaz(kalan)} = $x farklı biçimde dizilir.',
+        'nesne ${_cokluYaz(kalan)} = $x farklı biçimde dizilir.',
         sira,
       );
     case 3:
@@ -1134,7 +1060,7 @@ AdvancedItem _ozdesDizilis(int a, int b, int v, int sira) {
       final x = _cokluDizilis(kalan);
       return _tamSirali(
         '$giris İlk sırada $r1 bir $nesne bulunmaması koşuluyla kaç farklı '
-            'diziliş elde edilebilir?',
+        'diziliş elde edilebilir?',
         toplam - x,
         [
           x,
@@ -1147,14 +1073,14 @@ AdvancedItem _ozdesDizilis(int a, int b, int v, int sira) {
           _cokluDizilis([p, q, s - 1]),
         ],
         'Tüm dizilişler $tumYazi tanedir. İlk sırada $r1 $nesne bulunanlar '
-            '${_cokluYaz(kalan)} = $x tanedir. Fark: $toplam − $x = ${toplam - x}.',
+        '${_cokluYaz(kalan)} = $x tanedir. Fark: $toplam − $x = ${toplam - x}.',
         sira,
       );
     case 4:
       final x = _cokluDizilis([p, q, 1]);
       return _tamSirali(
         '$giris Buna göre $r3 ${ctx.cogulGen} tümünün yan yana gelmesi '
-            'koşuluyla kaç farklı diziliş elde edilebilir?',
+        'koşuluyla kaç farklı diziliş elde edilebilir?',
         x,
         [
           if (s <= 3) x * _fakt(s),
@@ -1166,8 +1092,8 @@ AdvancedItem _ozdesDizilis(int a, int b, int v, int sira) {
           _tamBol(x, 2),
         ],
         '$s $r3 $nesne tek bir blok sayılır; blokla birlikte ${p + q + 1} '
-            'nesne ${_cokluYaz([p, q, 1])} = $x farklı biçimde dizilir. Blok '
-            'içindeki nesneler özdeş olduğu için ayrıca çarpım yapılmaz.',
+        'nesne ${_cokluYaz([p, q, 1])} = $x farklı biçimde dizilir. Blok '
+        'içindeki nesneler özdeş olduğu için ayrıca çarpım yapılmaz.',
         sira,
       );
     default:
@@ -1175,7 +1101,7 @@ AdvancedItem _ozdesDizilis(int a, int b, int v, int sira) {
       final x = _cokluDizilis(kalan);
       return _tamSirali(
         '$giris İlk iki sıranın ikisinde de $r3 $nesne bulunması koşuluyla '
-            'kaç farklı diziliş elde edilebilir?',
+        'kaç farklı diziliş elde edilebilir?',
         x,
         [
           _cokluDizilis([p, q, s - 1]),
@@ -1188,7 +1114,7 @@ AdvancedItem _ozdesDizilis(int a, int b, int v, int sira) {
           _tamBol(x, 2),
         ],
         'İlk iki sıraya birer $r3 $nesne konur. Kalan ${n - 2} nesne '
-            '${_cokluYaz(kalan)} = $x farklı biçimde dizilir.',
+        '${_cokluYaz(kalan)} = $x farklı biçimde dizilir.',
         sira,
       );
   }
@@ -1381,26 +1307,10 @@ const _secimBaglamlari = [
 
 /// (seçilecek kişi sayısı, koşul türü, birinci gruptan istenen kişi sayısı).
 const _kombKosullari = [
-  (3, 0, 0),
-  (3, 1, 1),
-  (3, 1, 2),
-  (3, 2, 0),
-  (3, 3, 0),
-  (3, 4, 0),
-  (3, 5, 0),
-  (3, 6, 0),
-  (3, 7, 0),
-  (4, 0, 0),
-  (4, 1, 1),
-  (4, 1, 2),
-  (4, 1, 3),
-  (4, 2, 0),
-  (4, 3, 0),
-  (4, 4, 0),
-  (4, 5, 0),
-  (4, 6, 0),
-  (5, 1, 2),
-  (5, 1, 3),
+  (3, 0, 0), (3, 1, 1), (3, 1, 2), (3, 2, 0), (3, 3, 0),
+  (3, 4, 0), (3, 5, 0), (3, 6, 0), (3, 7, 0), (4, 0, 0),
+  (4, 1, 1), (4, 1, 2), (4, 1, 3), (4, 2, 0), (4, 3, 0),
+  (4, 4, 0), (4, 5, 0), (4, 6, 0), (5, 1, 2), (5, 1, 3),
 ];
 
 AdvancedItem _kombinasyon(int a, int b, int c) {
@@ -1470,7 +1380,8 @@ AdvancedItem _kombinasyon(int a, int b, int c) {
           'Tüm seçimler C($n, $r) = $cnr tanedir. Hiç ${ctx.a} bulunmayan '
           'seçimler C($g2, $r) = $hic tanedir. Fark: $cnr − $hic = $yanit.';
     case 3:
-      kok = '$giris Bu kişilerden $ad1 mutlaka seçilecektir. Buna göre $soru';
+      kok =
+          '$giris Bu kişilerden $ad1 mutlaka seçilecektir. Buna göre $soru';
       yanit = _komb(n - 1, r - 1);
       yanlis = [
         cnr, // koşul unutulur
@@ -1561,11 +1472,7 @@ AdvancedItem _kombinasyon(int a, int b, int c) {
 // ---------------------------------------------------------------------------
 
 const _binomHarfleri = [
-  ('x', 'y'),
-  ('a', 'b'),
-  ('p', 'q'),
-  ('u', 'v'),
-  ('c', 'd'),
+  ('x', 'y'), ('a', 'b'), ('p', 'q'), ('u', 'v'), ('c', 'd'),
 ];
 
 /// "x³y²" biçiminde terim; 0 üslü çarpan yazılmaz, 1 üssü gösterilmez.
@@ -1615,7 +1522,7 @@ AdvancedItem _binom(int a, int b, int c) {
       final yanit = _kuvvet(p + sq, m);
       return _isaretliSirali(
         '${ifade(_ust(m))} ifadesinin açılımındaki katsayıların toplamı '
-            'kaçtır?',
+        'kaçtır?',
         yanit,
         [
           _kuvvet(p - sq, m), // işaret hatası
@@ -1628,8 +1535,8 @@ AdvancedItem _binom(int a, int b, int c) {
           _kuvvet(p + sq, m - 1),
         ],
         'Katsayılar toplamı için $hx = $hy = 1 yazılır: '
-            '($p $isaret $q)${_ust(m)} = ${_par(p + sq)}${_ust(m)} = '
-            '${_eksi(yanit)}.',
+        '($p $isaret $q)${_ust(m)} = ${_par(p + sq)}${_ust(m)} = '
+        '${_eksi(yanit)}.',
         i,
       );
     case 1:
@@ -1638,14 +1545,14 @@ AdvancedItem _binom(int a, int b, int c) {
       final yanit = cnk * _kuvvet(p, n - k) * _kuvvet(sq, k);
       return _isaretliSirali(
         '${ifade(_ust(n))} ifadesinin açılımında '
-            '${_terimYaz(hx, n - k, hy, k)} çarpanını içeren terimin katsayısı '
-            'kaçtır?',
+        '${_terimYaz(hx, n - k, hy, k)} çarpanını içeren terimin katsayısı '
+        'kaçtır?',
         yanit,
         _terimHatalari(n, k, p, sq),
         'Genel terim C($n, k)·(${kat(p, hx)})${_ust(n)}⁻ᵏ·($ikinci)ᵏ '
-            'biçimindedir. k = $k için katsayı C($n, $k)·$p${_ust(n - k)}·'
-            '${_par(sq)}${_ust(k)} = $cnk·${_kuvvet(p, n - k)}·'
-            '${_par(_kuvvet(sq, k))} = ${_eksi(yanit)}.',
+        'biçimindedir. k = $k için katsayı C($n, $k)·$p${_ust(n - k)}·'
+        '${_par(sq)}${_ust(k)} = $cnk·${_kuvvet(p, n - k)}·'
+        '${_par(_kuvvet(sq, k))} = ${_eksi(yanit)}.',
         i,
       );
     case 2:
@@ -1656,7 +1563,7 @@ AdvancedItem _binom(int a, int b, int c) {
       final hatalar = _terimHatalari(n, k, p, sq);
       return _isaretliSirali(
         '${ifade(_ust(n))} ifadesinin açılımı $hx değişkeninin azalan '
-            'kuvvetlerine göre yazıldığında baştan $r. terimin katsayısı kaçtır?',
+        'kuvvetlerine göre yazıldığında baştan $r. terimin katsayısı kaçtır?',
         yanit,
         [
           _komb(n, r) * _kuvvet(p, n - r) * _kuvvet(sq, r), // k = r alınır
@@ -1665,8 +1572,8 @@ AdvancedItem _binom(int a, int b, int c) {
           ...hatalar.skip(3),
         ],
         'Baştan $r. terim k = $k için elde edilir: C($n, $k)·'
-            '(${kat(p, hx)})${_ust(n - k)}·($ikinci)${_ust(k)}. Katsayı '
-            '$cnk·${_kuvvet(p, n - k)}·${_par(_kuvvet(sq, k))} = ${_eksi(yanit)}.',
+        '(${kat(p, hx)})${_ust(n - k)}·($ikinci)${_ust(k)}. Katsayı '
+        '$cnk·${_kuvvet(p, n - k)}·${_par(_kuvvet(sq, k))} = ${_eksi(yanit)}.',
         i,
       );
     case 3:
@@ -1706,7 +1613,7 @@ AdvancedItem _binom(int a, int b, int c) {
       final yanit = _kuvvet(p + sq, m);
       return _isaretliSirali(
         '${ifade('ⁿ')} ifadesinin açılımında ${m + 1} terim vardır. Buna göre '
-            'bu açılımdaki katsayıların toplamı kaçtır?',
+        'bu açılımdaki katsayıların toplamı kaçtır?',
         yanit,
         [
           _kuvvet(p + sq, m + 1), // terim sayısı üs sanılır
@@ -1718,9 +1625,9 @@ AdvancedItem _binom(int a, int b, int c) {
           _kuvvet(p + sq, m - 1),
         ],
         'n. kuvvetin açılımında n + 1 terim bulunur; n + 1 = ${m + 1} '
-            'olduğundan n = $m. $hx = $hy = 1 için katsayılar toplamı '
-            '($p $isaret $q)${_ust(m)} = ${_par(p + sq)}${_ust(m)} = '
-            '${_eksi(yanit)}.',
+        'olduğundan n = $m. $hx = $hy = 1 için katsayılar toplamı '
+        '($p $isaret $q)${_ust(m)} = ${_par(p + sq)}${_ust(m)} = '
+        '${_eksi(yanit)}.',
         i,
       );
   }
@@ -1749,36 +1656,17 @@ final _zarOlaylari = <(String, bool Function(int))>[
 /// Para olayları: (para sayısı, tür, j). Tür 0: tam j tura, 1: en az j tura,
 /// 2: en çok j tura, 3: hepsi aynı yüz.
 const _paraOlaylari = [
-  (2, 0, 1),
-  (2, 1, 1),
-  (2, 3, 0),
-  (3, 0, 1),
-  (3, 0, 2),
-  (3, 1, 1),
-  (3, 1, 2),
-  (3, 2, 1),
-  (3, 3, 0),
-  (4, 0, 1),
-  (4, 0, 2),
-  (4, 0, 3),
-  (4, 1, 1),
-  (4, 1, 2),
-  (4, 1, 3),
-  (4, 2, 1),
-  (5, 0, 2),
-  (5, 0, 3),
-  (5, 1, 4),
-  (5, 2, 1),
+  (2, 0, 1), (2, 1, 1), (2, 3, 0),
+  (3, 0, 1), (3, 0, 2), (3, 1, 1), (3, 1, 2), (3, 2, 1), (3, 3, 0),
+  (4, 0, 1), (4, 0, 2), (4, 0, 3), (4, 1, 1), (4, 1, 2), (4, 1, 3), (4, 2, 1),
+  (5, 0, 2), (5, 0, 3), (5, 1, 4), (5, 2, 1),
 ];
 
 AdvancedItem _zarPara(int a, int b, int c) {
   final (zarYazi, zarOlay) = _zarOlaylari[a];
   final (n, tur, j) = _paraOlaylari[b];
   final baglac = c % 5;
-  final x = [
-    for (var k = 1; k <= 6; k++)
-      if (zarOlay(k)) k,
-  ].length;
+  final x = [for (var k = 1; k <= 6; k++) if (zarOlay(k)) k].length;
   final t = _kuvvet(2, n);
   var y = 0;
   for (var k = 0; k <= n; k++) {
@@ -2085,8 +1973,7 @@ const _kosulluBaglamlari = [
     t1: 'sertifikalı',
     t0: 'sertifikasız',
     t0Bildirme: 'sertifikasızdır',
-    secim:
-        'Bu mühendis ve teknisyenler arasından rastgele seçilen bir '
+    secim: 'Bu mühendis ve teknisyenler arasından rastgele seçilen bir '
         'çalışanın',
     g1: 'mühendis',
     g2: 'teknisyen',
@@ -2109,8 +1996,7 @@ const _kosulluBaglamlari = [
     t1: 'ehliyetli',
     t0: 'ehliyetsiz',
     t0Bildirme: 'ehliyetsizdir',
-    secim:
-        'Bu kurye ve depo görevlileri arasından rastgele seçilen bir '
+    secim: 'Bu kurye ve depo görevlileri arasından rastgele seçilen bir '
         'çalışanın',
     g1: 'kurye',
     g2: 'depo görevlisi',
@@ -2129,54 +2015,15 @@ const _kosulluBaglamlari = [
 ];
 
 const _kesirler25 = [
-  (1, 2),
-  (1, 3),
-  (2, 3),
-  (1, 4),
-  (3, 4),
-  (1, 5),
-  (2, 5),
-  (3, 5),
-  (4, 5),
-  (1, 6),
-  (5, 6),
-  (1, 7),
-  (2, 7),
-  (3, 7),
-  (4, 7),
-  (5, 7),
-  (6, 7),
-  (1, 8),
-  (3, 8),
-  (5, 8),
-  (7, 8),
-  (1, 9),
-  (2, 9),
-  (4, 9),
-  (5, 9),
+  (1, 2), (1, 3), (2, 3), (1, 4), (3, 4), (1, 5), (2, 5), (3, 5), (4, 5),
+  (1, 6), (5, 6), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (1, 8),
+  (3, 8), (5, 8), (7, 8), (1, 9), (2, 9), (4, 9), (5, 9),
 ];
 
 const _kesirler20 = [
-  (1, 2),
-  (1, 3),
-  (2, 3),
-  (1, 4),
-  (3, 4),
-  (1, 5),
-  (2, 5),
-  (3, 5),
-  (4, 5),
-  (1, 6),
-  (5, 6),
-  (1, 10),
-  (3, 10),
-  (7, 10),
-  (9, 10),
-  (1, 12),
-  (5, 12),
-  (7, 12),
-  (11, 12),
-  (7, 9),
+  (1, 2), (1, 3), (2, 3), (1, 4), (3, 4), (1, 5), (2, 5), (3, 5), (4, 5),
+  (1, 6), (5, 6), (1, 10), (3, 10), (7, 10), (9, 10), (1, 12), (5, 12),
+  (7, 12), (11, 12), (7, 9),
 ];
 
 AdvancedItem _kosulluSayim(int a, int b, int tur) {
@@ -2190,50 +2037,35 @@ AdvancedItem _kosulluSayim(int a, int b, int tur) {
       '${ctx.t0Bildirme}.';
   final (bilinen, sorulan, pay, payda, yanlis) = switch (tur) {
     0 => (
-      ctx.t1,
-      ctx.g1,
-      u,
-      u + v,
+      ctx.t1, ctx.g1, u, u + v,
       [(u, u + p), (u, n), (u + v, n), (v, u + v)],
     ),
     1 => (
-      ctx.g1,
-      ctx.t1,
-      u,
-      u + p,
+      ctx.g1, ctx.t1, u, u + p,
       [(u, u + v), (u, n), (u + p, n), (p, u + p)],
     ),
     2 => (
-      ctx.t0,
-      ctx.g2,
-      q,
-      p + q,
+      ctx.t0, ctx.g2, q, p + q,
       [(q, v + q), (q, n), (p + q, n), (p, p + q)],
     ),
     3 => (
-      ctx.g2,
-      ctx.t0,
-      q,
-      v + q,
+      ctx.g2, ctx.t0, q, v + q,
       [(q, p + q), (q, n), (v + q, n), (v, v + q)],
     ),
     _ => (
-      ctx.t1,
-      ctx.g2,
-      v,
-      u + v,
+      ctx.t1, ctx.g2, v, u + v,
       [(v, v + q), (v, n), (u + v, n), (u, u + v)],
     ),
   };
   return _olasilik(
     '$giris ${ctx.secim} $bilinen olduğu bilindiğine göre $sorulan olma '
-        'olasılığı kaçtır?',
+    'olasılığı kaçtır?',
     pay,
     payda,
     yanlis,
     'Koşul örnek uzayı daraltır: $bilinen olanların sayısı $payda, bunlardan '
-        '$sorulan olanların sayısı $pay olduğundan olasılık '
-        '${_sade(pay, payda)} olur.',
+    '$sorulan olanların sayısı $pay olduğundan olasılık '
+    '${_sade(pay, payda)} olur.',
   );
 }
 
@@ -2281,7 +2113,7 @@ AdvancedItem _bagimsizOlay(int a, int b, int tur) {
         qd,
         [
           (pn * pn * qn, pd * d),
-          (pn * (pd * qd - pd * qn), pd * d),
+          (pn * (pd * qd - pd * qn) , pd * d),
           (pn * qd - pn * qn, d),
           (pd * qd - pn * qn, d),
         ],
@@ -2372,8 +2204,8 @@ AdvancedItem _ortalama(int a, int b, int c) {
       final x = m + s * d * (n + 1), yeni = m + s * d;
       return _tamAralikli(
         'Bir kırtasiyede $n gün boyunca günde ortalama $m kalem satılmıştır. '
-            'Sonraki gün $x kalem satıldığına göre ${n + 1} günlük satış '
-            'ortalaması kaç kalem olur?',
+        'Sonraki gün $x kalem satıldığına göre ${n + 1} günlük satış '
+        'ortalaması kaç kalem olur?',
         yeni,
         [
           (m + x) ~/ 2, // eski ortalama ile yeni değerin ortalaması
@@ -2387,16 +2219,16 @@ AdvancedItem _ortalama(int a, int b, int c) {
           m, // ortalama değişmez sanılır
         ],
         'İlk $n günün toplamı $n·$m = ${n * m} kalemdir. Yeni toplam '
-            '${n * m} + $x = ${n * m + x} olur; ortalama ${n * m + x} : ${n + 1} '
-            '= $yeni bulunur.',
+        '${n * m} + $x = ${n * m + x} olur; ortalama ${n * m + x} : ${n + 1} '
+        '= $yeni bulunur.',
         i,
       );
     case 1:
       final x = m + s * d * (n - 1), yeni = m - s * d;
       return _tamAralikli(
         'Bir kütüphaneye $n gün boyunca günde ortalama $m kişi gelmiştir. '
-            '$x kişinin geldiği gün hesaba katılmazsa kalan ${n - 1} günün '
-            'ortalaması kaç kişi olur?',
+        '$x kişinin geldiği gün hesaba katılmazsa kalan ${n - 1} günün '
+        'ortalaması kaç kişi olur?',
         yeni,
         [
           m + s * d, // değişimin yönü ters alınır
@@ -2407,16 +2239,16 @@ AdvancedItem _ortalama(int a, int b, int c) {
           m, // ortalama değişmez sanılır
         ],
         'Toplam $n·$m = ${n * m} kişidir. Bir gün çıkarılınca toplam '
-            '${n * m} − $x = ${n * m - x} olur; ortalama ${n * m - x} : ${n - 1} '
-            '= $yeni bulunur.',
+        '${n * m} − $x = ${n * m - x} olur; ortalama ${n * m - x} : ${n - 1} '
+        '= $yeni bulunur.',
         i,
       );
     case 2:
       final yeni = m + s * d, x = m + s * d * (n + 1);
       return _tamAralikli(
         'Bir fırında $n gün boyunca günde ortalama $m ekmek satılmıştır. '
-            'Sonraki günün satışı da hesaba katıldığında ${n + 1} günlük ortalama '
-            '$yeni ekmek olmuştur. Buna göre sonraki gün kaç ekmek satılmıştır?',
+        'Sonraki günün satışı da hesaba katıldığında ${n + 1} günlük ortalama '
+        '$yeni ekmek olmuştur. Buna göre sonraki gün kaç ekmek satılmıştır?',
         x,
         [
           m + s * d * n, // fark n ile çarpılır
@@ -2429,17 +2261,17 @@ AdvancedItem _ortalama(int a, int b, int c) {
           (n + 2) * yeni - n * m,
         ],
         'İlk $n günün toplamı $n·$m = ${n * m}, ${n + 1} günün toplamı '
-            '${n + 1}·$yeni = ${(n + 1) * yeni} ekmektir. Fark: '
-            '${(n + 1) * yeni} − ${n * m} = $x.',
+        '${n + 1}·$yeni = ${(n + 1) * yeni} ekmektir. Fark: '
+        '${(n + 1) * yeni} − ${n * m} = $x.',
         i,
       );
     default:
       final yeni = m - s * d, x = m + s * d * (n - 1);
       return _tamAralikli(
         'Bir otoparka $n gün boyunca günde ortalama $m araç girmiştir. Bu '
-            'günlerden biri hesaba katılmadığında kalan ${n - 1} günün ortalaması '
-            '$yeni araç olmuştur. Buna göre hesaba katılmayan gün otoparka kaç '
-            'araç girmiştir?',
+        'günlerden biri hesaba katılmadığında kalan ${n - 1} günün ortalaması '
+        '$yeni araç olmuştur. Buna göre hesaba katılmayan gün otoparka kaç '
+        'araç girmiştir?',
         x,
         [
           m + s * d * n, // fark n ile çarpılır
@@ -2451,8 +2283,8 @@ AdvancedItem _ortalama(int a, int b, int c) {
           n * m - (n - 2) * yeni, // gün sayıları karıştırılır
         ],
         '$n günün toplamı $n·$m = ${n * m}, kalan ${n - 1} günün toplamı '
-            '${n - 1}·$yeni = ${(n - 1) * yeni} araçtır. Fark: '
-            '${n * m} − ${(n - 1) * yeni} = $x.',
+        '${n - 1}·$yeni = ${(n - 1) * yeni} araçtır. Fark: '
+        '${n * m} − ${(n - 1) * yeni} = $x.',
         i,
       );
   }
@@ -2697,26 +2529,9 @@ const _sapmaKaliplari = [
 
 /// (kalıp numarası, çarpan).
 const _sapmaSecimleri = [
-  (0, 1),
-  (0, 2),
-  (0, 3),
-  (0, 4),
-  (0, 5),
-  (1, 1),
-  (1, 2),
-  (2, 1),
-  (2, 2),
-  (3, 1),
-  (4, 1),
-  (5, 1),
-  (6, 1),
-  (7, 1),
-  (7, 2),
-  (8, 1),
-  (8, 3),
-  (9, 1),
-  (10, 1),
-  (11, 1),
+  (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (1, 1), (1, 2), (2, 1), (2, 2),
+  (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (7, 2), (8, 1), (8, 3), (9, 1),
+  (10, 1), (11, 1),
 ];
 
 const _sapmaBaglamlari = [
@@ -2756,8 +2571,9 @@ AdvancedItem _standartSapma(int a, int b, int c) {
     kok++;
   }
   if (kok * kok != kareler) kok = 0;
-  final kareYazi = [for (var i = 0; i < n; i++) '${_par(veri[i] - ort)}²']
-      .join(' + ');
+  final kareYazi = [
+    for (var i = 0; i < n; i++) '${_par(veri[i] - ort)}²',
+  ].join(' + ');
   final giris =
       '$yer $n $ne ${_liste(veri)} olarak kaydedilmiştir. Varyans, verilerin '
       'aritmetik ortalamadan farklarının kareleri toplamı veri sayısının 1 '
@@ -2817,26 +2633,10 @@ const _dersUcluleri = [
 ];
 
 const _krediUcluleri = [
-  (2, 3, 4),
-  (2, 4, 3),
-  (2, 1, 3),
-  (2, 3, 1),
-  (2, 2, 3),
-  (2, 3, 2),
-  (2, 4, 2),
-  (3, 2, 4),
-  (3, 4, 2),
-  (3, 2, 2),
-  (3, 1, 2),
-  (3, 2, 1),
-  (3, 4, 3),
-  (3, 2, 5),
-  (4, 2, 3),
-  (4, 3, 2),
-  (4, 3, 3),
-  (4, 2, 2),
-  (4, 1, 3),
-  (4, 5, 2),
+  (2, 3, 4), (2, 4, 3), (2, 1, 3), (2, 3, 1), (2, 2, 3),
+  (2, 3, 2), (2, 4, 2), (3, 2, 4), (3, 4, 2), (3, 2, 2),
+  (3, 1, 2), (3, 2, 1), (3, 4, 3), (3, 2, 5), (4, 2, 3),
+  (4, 3, 2), (4, 3, 3), (4, 2, 2), (4, 1, 3), (4, 5, 2),
 ];
 
 AdvancedItem _agirlikli(int a, int b, int c) {
@@ -2844,10 +2644,7 @@ AdvancedItem _agirlikli(int a, int b, int c) {
     // Karışım fiyatı: p1 = P − d·m2, p2 = P + d·m1 seçilince ortalama P olur.
     final fiyat = 120 + 5 * a;
     final m1 = 2 + b ~/ 4;
-    final m2 = [
-      for (var k = 2; k <= 6; k++)
-        if (k != m1) k,
-    ][b % 4];
+    final m2 = [for (var k = 2; k <= 6; k++) if (k != m1) k][b % 4];
     final d = 2 * (c ~/ 2 + 1);
     final p1 = fiyat - d * m2, p2 = fiyat + d * m1;
     final urun = _karisimUrunleri[(a + b) % 4];
@@ -2855,7 +2652,7 @@ AdvancedItem _agirlikli(int a, int b, int c) {
     // Karışımın fiyatı iki fiyat arasında kalır; çeldiriciler de öyle.
     return _tamAralikli(
       'Bir aktar, kilogramı $p1 TL olan $m1 kg $urun ile kilogramı $p2 TL '
-          'olan $m2 kg $urun karıştırıyor. Bu karışımın kilogramı kaç TL olur?',
+      'olan $m2 kg $urun karıştırıyor. Bu karışımın kilogramı kaç TL olur?',
       fiyat,
       [
         (p1 + p2) ~/ 2, // fiyatların düz ortalaması
@@ -2865,8 +2662,8 @@ AdvancedItem _agirlikli(int a, int b, int c) {
         (p1 + p2) ~/ 2 + d,
       ].where((x) => x > p1 && x < p2),
       'Karışımın toplam değeri $p1·$m1 + $p2·$m2 = $tutar TL, toplam kütlesi '
-          '$m1 + $m2 = ${m1 + m2} kg olur. Kilogram fiyatı '
-          '$tutar : ${m1 + m2} = $fiyat TL bulunur.',
+      '$m1 + $m2 = ${m1 + m2} kg olur. Kilogram fiyatı '
+      '$tutar : ${m1 + m2} = $fiyat TL bulunur.',
       _no(a, b, c),
       unit: 'TL',
       agirlik: const [2, 1, 2, 3],
@@ -2889,9 +2686,9 @@ AdvancedItem _agirlikli(int a, int b, int c) {
   final enYuksek = [g1, g2, g3].reduce((x, y) => x > y ? x : y);
   return _tamAralikli(
     'Bir üniversite öğrencisi $k1 kredilik ${dersler[0]} dersinden $g1, '
-        '$k2 kredilik ${dersler[1]} dersinden $g2 ve $k3 kredilik ${dersler[2]} '
-        'dersinden $g3 almıştır. Bu üç notun krediye göre ağırlıklı ortalaması '
-        'kaçtır?',
+    '$k2 kredilik ${dersler[1]} dersinden $g2 ve $k3 kredilik ${dersler[2]} '
+    'dersinden $g3 almıştır. Bu üç notun krediye göre ağırlıklı ortalaması '
+    'kaçtır?',
     ort,
     [
       duz, // düz ortalama
@@ -2905,8 +2702,8 @@ AdvancedItem _agirlikli(int a, int b, int c) {
       ort - d,
     ].where((x) => x > enDusuk && x < enYuksek),
     'Notlar kredileriyle çarpılıp toplanır: $k1·$g1 + $k2·$g2 + $k3·$g3 = '
-        '$toplam. Toplam kredi $kredi olduğundan ortalama $toplam : $kredi = '
-        '$ort olur.',
+    '$toplam. Toplam kredi $kredi olduğundan ortalama $toplam : $kredi = '
+    '$ort olur.',
     _no(a, b, c),
     agirlik: const [2, 1, 2, 3],
   );
@@ -2965,106 +2762,106 @@ AdvancedItem _kume(int a, int b, int c) {
     case 0:
       return sayisal(
         '$on s(E) = $n, s(A) = $sa, s(B) = $sb ve s(A ∩ B) = $z olduğuna '
-            'göre A ∪ B kümesinin tümleyeninin eleman sayısı kaçtır?',
+        'göre A ∪ B kümesinin tümleyeninin eleman sayısı kaçtır?',
         n0,
         [n - sa - sb, bir, n0 + z, n - z],
         's(A ∪ B) = s(A) + s(B) − s(A ∩ B) = $sa + $sb − $z = $bir olur. '
-            'Tümleyenin eleman sayısı $n − $bir = $n0 bulunur.',
+        'Tümleyenin eleman sayısı $n − $bir = $n0 bulunur.',
         positive: true,
       );
     case 1:
       return sayisal(
         '$on s(E) = $n, s(A) = $sa ve s(B) = $sb veriliyor. A ∪ B kümesinin '
-            'tümleyeni $n0 elemanlı olduğuna göre s(A ∩ B) kaçtır?',
+        'tümleyeni $n0 elemanlı olduğuna göre s(A ∩ B) kaçtır?',
         z,
         [sa + sb - n, z + n0, bir - sb, n - bir],
         's(A ∪ B) = $n − $n0 = $bir olur. s(A ∩ B) = s(A) + s(B) − s(A ∪ B) '
-            '= $sa + $sb − $bir = $z bulunur.',
+        '= $sa + $sb − $bir = $z bulunur.',
         positive: true,
       );
     case 2:
       return sayisal(
         '$on s(E) = $n, s(A) = $sa, s(B) = $sb ve s(A ∩ B) = $z olduğuna '
-            'göre s(A′ ∪ B′) kaçtır?',
+        'göre s(A′ ∪ B′) kaçtır?',
         n - z,
         [n0, n - bir + z, 2 * n - sa - sb, bir - z],
         'De Morgan kuralına göre A′ ∪ B′ = (A ∩ B)′ olur. Eleman sayısı '
-            's(E) − s(A ∩ B) = $n − $z = ${n - z} bulunur.',
+        's(E) − s(A ∩ B) = $n − $z = ${n - z} bulunur.',
         positive: true,
       );
     case 3:
       final alt = _kuvvet(2, p);
       return sayisal(
         '$on s(E) = $n, s(A) = $sa ve s(B) = $sb veriliyor. A ∪ B kümesinin '
-            'tümleyeni $n0 elemanlı olduğuna göre A \\ B kümesinin alt küme '
-            'sayısı kaçtır?',
+        'tümleyeni $n0 elemanlı olduğuna göre A \\ B kümesinin alt küme '
+        'sayısı kaçtır?',
         alt,
         [_kuvvet(2, sa), p, 2 * p, _kuvvet(2, z), alt - 1],
         's(A ∪ B) = $n − $n0 = $bir ve s(A \\ B) = s(A ∪ B) − s(B) = '
-            '$bir − $sb = $p olur. $p elemanlı kümenin alt küme sayısı '
-            '2${_ust(p)} = $alt bulunur.',
+        '$bir − $sb = $p olur. $p elemanlı kümenin alt küme sayısı '
+        '2${_ust(p)} = $alt bulunur.',
         positive: true,
       );
     case 4:
       return sayisal(
         '$on s(E) = $n, s(A \\ B) = $p, s(B \\ A) = $q ve s(A ∩ B) = $z '
-            'olduğuna göre s(B′) kaçtır?',
+        'olduğuna göre s(B′) kaçtır?',
         n - sb,
         [n - q, n0, p, n - bir + z],
         's(B) = s(B \\ A) + s(A ∩ B) = $q + $z = $sb olur. '
-            's(B′) = s(E) − s(B) = $n − $sb = ${n - sb} bulunur.',
+        's(B′) = s(E) − s(B) = $n − $sb = ${n - sb} bulunur.',
         positive: true,
       );
     case 5:
       return sayisal(
         '$n ${ctx.grup} ${ctx.x} $sa, ${ctx.y} $sb, ${ctx.ikisi} $z kişi '
-            'vardır. Buna göre ${ctx.hic} kaç kişi vardır?',
+        'vardır. Buna göre ${ctx.hic} kaç kişi vardır?',
         n0,
         [n - sa - sb, n0 + z, bir, n - sa],
         'En az birini sağlayanların sayısı $sa + $sb − $z = $bir olur. '
-            'Hiçbirini sağlamayanların sayısı $n − $bir = $n0 bulunur.',
+        'Hiçbirini sağlamayanların sayısı $n − $bir = $n0 bulunur.',
         positive: true,
       );
     case 6:
       return sayisal(
         '$n ${ctx.grup} ${ctx.x} $sa, ${ctx.y} $sb, ${ctx.ikisi} $z kişi '
-            'vardır. Buna göre ${ctx.yalnizBir} kaç kişi vardır?',
+        'vardır. Buna göre ${ctx.yalnizBir} kaç kişi vardır?',
         p + q,
         [bir, sa + sb, sa + sb - z, n - z, p + q + n0],
         'Yalnız ${ctx.x} $sa − $z = $p, yalnız ${ctx.y} $sb − $z = $q '
-            'kişidir. Toplam $p + $q = ${p + q} bulunur.',
+        'kişidir. Toplam $p + $q = ${p + q} bulunur.',
         positive: true,
       );
     case 7:
       return sayisal(
         '$n ${ctx.grup} ${ctx.x} $sa, ${ctx.y} $sb, ${ctx.hic} $n0 kişi '
-            'vardır. Buna göre ${ctx.ikisi} kaç kişi vardır?',
+        'vardır. Buna göre ${ctx.ikisi} kaç kişi vardır?',
         z,
         [sa + sb - n, z + n0, n - bir, bir - sa],
         'En az birini sağlayanların sayısı $n − $n0 = $bir olur. İkisini de '
-            'sağlayanların sayısı $sa + $sb − $bir = $z bulunur.',
+        'sağlayanların sayısı $sa + $sb − $bir = $z bulunur.',
         positive: true,
       );
     case 8:
       return sayisal(
         'Bir toplulukta ${ctx.x} $sa, ${ctx.y} $sb, ${ctx.ikisi} $z, '
-            '${ctx.hic} $n0 kişi vardır. Buna göre bu toplulukta toplam kaç kişi '
-            'vardır?',
+        '${ctx.hic} $n0 kişi vardır. Buna göre bu toplulukta toplam kaç kişi '
+        'vardır?',
         n,
         [sa + sb + z + n0, sa + sb + n0, bir, n + z + 1],
         'En az birini sağlayanların sayısı $sa + $sb − $z = $bir olur. '
-            'Hiçbirini sağlamayan $n0 kişi eklenince toplam $bir + $n0 = $n '
-            'bulunur.',
+        'Hiçbirini sağlamayan $n0 kişi eklenince toplam $bir + $n0 = $n '
+        'bulunur.',
         positive: true,
       );
     default:
       return sayisal(
         '$n ${ctx.grup} ${ctx.x} $sa, ${ctx.y} $sb, ${ctx.ikisi} $z kişi '
-            'vardır. Buna göre ${ctx.enCokBir} kaç kişi vardır?',
+        'vardır. Buna göre ${ctx.enCokBir} kaç kişi vardır?',
         n - z,
         [p + q, bir, n0, n - bir + z],
         'En çok birini sağlayanlar, ikisini birden sağlayanların dışında '
-            'kalanlardır: $n − $z = ${n - z}.',
+        'kalanlardır: $n − $z = ${n - z}.',
         positive: true,
       );
   }
@@ -3099,6 +2896,36 @@ const _onermeBaglac2 = [(2, 1), (0, 2), (1, 0), (3, 0), (2, 2)];
 // III. (X ∘ Y)′ ∘ Z kalıbı: 2 üçlü × 5 bağlaç çifti.
 const _onermeUclu3 = [(0, 2, 1), (1, 5, 0)];
 const _onermeBaglac3 = [(0, 1), (1, 2), (2, 0), (1, 3), (3, 1)];
+
+/// Üç doğruluk değerinden (D/Y) oluşan seçeneklerde çeldirici maskeleri
+/// (bit 4: I, bit 2: II, bit 1: III; 1 = D). Her konumda anahtarın değeri dört
+/// seçeneğin tam ikisinde bulunur, konum çoğunluğu anahtarı vermez. Anahtarın
+/// D sayısına göre küme türü karıştırılır (DDD için üç çift değişiklik, öteki
+/// anahtarlarda DDD/YYY ve tümleyen çiftleri içeren kümeler); böylece en çok D
+/// içeren ya da tek tür değerden oluşan seçenek de anahtarı göstermez.
+List<int> _onermeCeldiricileri(int k, int i) {
+  final d = (k & 1) + ((k >> 1) & 1) + ((k >> 2) & 1);
+  final h = hedefSira(i, 2) * 4 + hedefSira(i, 3), u = hedefSira(i, 4);
+  if (d == 3) return [k ^ 3, k ^ 5, k ^ 6];
+  if (d == 0) {
+    final x = const [6, 5, 3][u % 3];
+    return [7, x, 7 ^ x];
+  }
+  if (h < 10) return [7, 7 ^ k, 0];
+  if (d == 2) {
+    return [
+      for (final m in const [6, 5, 3])
+        if (m != k) m,
+      0,
+    ];
+  }
+  final esler = [
+    for (final x in const [1, 2, 4])
+      if (x != k) x,
+  ];
+  final x = esler[u % 2];
+  return [7 ^ k, x, 7 ^ x];
+}
 
 AdvancedItem _onerme(int a, int b, int c) {
   final kod = (a + 2 * b + 3 * c) % 8;
@@ -3149,19 +2976,21 @@ AdvancedItem _onerme(int a, int b, int c) {
       '${_bit(_yalinDeger(z3, d))} ≡ ${_bit(s3)}';
 
   String dizi(bool u, bool v, bool w) => '${dy(u)} – ${dy(v)} – ${dy(w)}';
+  final anahtar = (s1 ? 4 : 0) | (s2 ? 2 : 0) | (s3 ? 1 : 0);
   return secenekli(
     'p ${ad(d[0])}, q ${ad(d[1])} ve r ${ad(d[2])} birer önermedir; ′ işareti, '
-        'sonuna yazıldığı önermenin değilini gösterir.\n'
-        'I. $yazi1\nII. $yazi2\nIII. $yazi3\n'
-        'Bu bileşik önermelerin doğruluk değerleri (D: doğru, Y: yanlış) numara '
-        'sırasıyla hangi seçenekte doğru verilmiştir?',
+    'sonuna yazıldığı önermenin değilini gösterir.\n'
+    'I. $yazi1\nII. $yazi2\nIII. $yazi3\n'
+    'Bu bileşik önermelerin doğruluk değerleri (D: doğru, Y: yanlış) numara '
+    'sırasıyla hangi seçenekte doğru verilmiştir?',
     dizi(s1, s2, s3),
-    // Her çeldiricide iki değer yanlıştır (110, 101, 011 deseni): her konumda
-    // doğru değer dört seçeneğin ikisinde görülür, çoğunluk anahtarı vermez.
-    [dizi(!s1, !s2, s3), dizi(!s1, s2, !s3), dizi(s1, !s2, !s3)],
+    [
+      for (final m in _onermeCeldiricileri(anahtar, _no(a, b, c)))
+        dizi((m & 4) != 0, (m & 2) != 0, (m & 1) != 0),
+    ],
     'p ≡ ${_bit(d[0])}, q ≡ ${_bit(d[1])}, r ≡ ${_bit(d[2])} alınır; '
-        'değiller bunların tersidir. I. $cozum1. II. $cozum2. III. $cozum3. '
-        'Sonuç: ${dizi(s1, s2, s3)}.',
+    'değiller bunların tersidir. I. $cozum1. II. $cozum2. III. $cozum3. '
+    'Sonuç: ${dizi(s1, s2, s3)}.',
   );
 }
 
@@ -3171,54 +3000,19 @@ AdvancedItem _onerme(int a, int b, int c) {
 
 /// 5, 7 ve 11 ile bölümünden kalanı 0 ya da 1 olmayan tabanlar.
 const _modTabanlari = [
-  2,
-  3,
-  4,
-  9,
-  13,
-  17,
-  18,
-  19,
-  24,
-  27,
-  32,
-  37,
-  38,
-  39,
-  47,
-  48,
-  52,
-  53,
-  54,
-  58,
-  59,
-  62,
-  68,
-  69,
-  72,
+  2, 3, 4, 9, 13, 17, 18, 19, 24, 27, 32, 37, 38,
+  39, 47, 48, 52, 53, 54, 58, 59, 62, 68, 69, 72,
 ];
 
 /// Seçenek ve cümle başı yazımı.
 const _gunler = [
-  'Pazartesi',
-  'Salı',
-  'Çarşamba',
-  'Perşembe',
-  'Cuma',
-  'Cumartesi',
-  'Pazar',
+  'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar',
 ];
 
 /// Cümle içi yazım: belirli bir tarih bildirmeyen gün adı küçük harfle
 /// başlar.
 const _gunlerKucuk = [
-  'pazartesi',
-  'salı',
-  'çarşamba',
-  'perşembe',
-  'cuma',
-  'cumartesi',
-  'pazar',
+  'pazartesi', 'salı', 'çarşamba', 'perşembe', 'cuma', 'cumartesi', 'pazar',
 ];
 
 int _modKuvvet(int taban, int us, int m) {
@@ -3284,12 +3078,12 @@ AdvancedItem _moduler(int a, int b, int c) {
     final adaylar = [ters, (son + 1) % 7, (son + 6) % 7, bas, (son + 2) % 7];
     return secenekli(
       'Bugün günlerden ${_gunlerKucuk[bas]} olduğuna göre bugünden $n gün '
-          '$yon gün hangisidir?',
+      '$yon gün hangisidir?',
       _gunler[son],
       adaylar.map((g) => _gunler[g]),
       '$n = 7·$bolum + $kalan olduğundan $n gün, $kalan gün $yonKisa aynı '
-          'güne denk gelir. ${_gunler[bas]} gününden $kalan gün $yon gün '
-          '${_gunlerKucuk[son]} olur.',
+      'güne denk gelir. ${_gunler[bas]} gününden $kalan gün $yon gün '
+      '${_gunlerKucuk[son]} olur.',
     );
   }
   if (c < 7) {
@@ -3328,13 +3122,13 @@ AdvancedItem _moduler(int a, int b, int c) {
   final yanit = deger % m;
   return _kalanSecenekli(
     'x ve y birer pozitif tam sayıdır. x sayısının $m ile bölümünden kalan '
-        '$r1, y sayısının $m ile bölümünden kalan $r2 olduğuna göre $ifade '
-        'sayısının $m ile bölümünden kalan kaçtır?',
+    '$r1, y sayısının $m ile bölümünden kalan $r2 olduğuna göre $ifade '
+    'sayısının $m ile bölümünden kalan kaçtır?',
     yanit,
     m,
     [(r1 + r2 + k) % m, r1 * r2 % m, (deger + r1) % m, (r1 + r2) % m],
     'Kalanlar yerine yazılır: $hesap = $deger. $deger sayısının $m ile '
-        'bölümünden kalan $yanit olur.',
+    'bölümünden kalan $yanit olur.',
   );
 }
 
@@ -3375,7 +3169,7 @@ AdvancedItem _rakamlaSayi(int a, int b, int c) {
       final yanit = (n - z) * (n - 1) * (n - 2);
       return sayisal(
         '$giris üç basamaklı, rakamları birbirinden farklı kaç doğal sayı '
-            'yazılabilir?',
+        'yazılabilir?',
         yanit,
         [
           n * (n - 1) * (n - 2),
@@ -3384,7 +3178,7 @@ AdvancedItem _rakamlaSayi(int a, int b, int c) {
           (n - 1) * (n - 2) * (n - 3),
         ],
         '$ilk, ikinci basamağa ${n - 1}, üçüncü basamağa ${n - 2} rakam '
-            'yazılabilir: ${n - z}·${n - 1}·${n - 2} = $yanit.',
+        'yazılabilir: ${n - z}·${n - 1}·${n - 2} = $yanit.',
         positive: true,
       );
     case 5:
@@ -3421,7 +3215,7 @@ AdvancedItem _rakamlaSayi(int a, int b, int c) {
       final yanit = (n - z) * n * n;
       return sayisal(
         '$giris, bir rakam birden çok kez kullanılabilmek koşuluyla üç '
-            'basamaklı kaç doğal sayı yazılabilir?',
+        'basamaklı kaç doğal sayı yazılabilir?',
         yanit,
         [
           (n - z) * (n - 1) * (n - 2),
@@ -3430,14 +3224,14 @@ AdvancedItem _rakamlaSayi(int a, int b, int c) {
           3 * n,
         ],
         '$ilk, öteki iki basamağın her birine $n rakam yazılabilir: '
-            '${n - z}·$n·$n = $yanit.',
+        '${n - z}·$n·$n = $yanit.',
         positive: true,
       );
     case 7:
       final yanit = tek * (n - 1 - z) * (n - 2);
       return sayisal(
         '$giris üç basamaklı, rakamları birbirinden farklı kaç tek doğal '
-            'sayı yazılabilir?',
+        'sayı yazılabilir?',
         yanit,
         [
           tek * (n - 1) * (n - 2) + z,
@@ -3446,16 +3240,16 @@ AdvancedItem _rakamlaSayi(int a, int b, int c) {
           tek * n * n,
         ],
         'Birler basamağına $tek tek rakamdan biri yazılır. '
-            '${z == 1 ? 'Sıfır başa gelemeyeceği için ilk' : 'İlk'} basamağa '
-            'kalan ${n - 1 - z}, ortaya kalan ${n - 2} rakamdan biri gelir: '
-            '$tek·${n - 1 - z}·${n - 2} = $yanit.',
+        '${z == 1 ? 'Sıfır başa gelemeyeceği için ilk' : 'İlk'} basamağa '
+        'kalan ${n - 1 - z}, ortaya kalan ${n - 2} rakamdan biri gelir: '
+        '$tek·${n - 1 - z}·${n - 2} = $yanit.',
         positive: true,
       );
     case 8:
       final yanit = (n - z) * (n - 1) * (n - 2) * (n - 3);
       return sayisal(
         '$giris dört basamaklı, rakamları birbirinden farklı kaç doğal sayı '
-            'yazılabilir?',
+        'yazılabilir?',
         yanit,
         [
           n * (n - 1) * (n - 2) * (n - 3) + z,
@@ -3464,14 +3258,14 @@ AdvancedItem _rakamlaSayi(int a, int b, int c) {
           (n - z) * (n - 1) * (n - 2),
         ],
         '$ilk, sonraki basamaklara sırasıyla ${n - 1}, ${n - 2} ve ${n - 3} '
-            'rakam yazılabilir: ${n - z}·${n - 1}·${n - 2}·${n - 3} = $yanit.',
+        'rakam yazılabilir: ${n - z}·${n - 1}·${n - 2}·${n - 3} = $yanit.',
         positive: true,
       );
     default:
       final yanit = (n - z) * n * cift;
       return sayisal(
         '$giris, bir rakam birden çok kez kullanılabilmek koşuluyla üç '
-            'basamaklı kaç çift doğal sayı yazılabilir?',
+        'basamaklı kaç çift doğal sayı yazılabilir?',
         yanit,
         [
           (n - z) * n * n,
@@ -3480,7 +3274,7 @@ AdvancedItem _rakamlaSayi(int a, int b, int c) {
           (n - z) * (n - 1) * cift,
         ],
         '$ilk, onlar basamağına $n, birler basamağına $cift çift rakamdan '
-            'biri yazılabilir: ${n - z}·$n·$cift = $yanit.',
+        'biri yazılabilir: ${n - z}·$n·$cift = $yanit.',
         positive: true,
       );
   }
@@ -3503,15 +3297,15 @@ AdvancedItem _sayma(int a, int b, int c) {
       final yanit = (x * y + z) * t;
       return sayisal(
         '$k1 kentinden $k2 kentine $x, $k2 kentinden $k3 kentine $y farklı '
-            'yol vardır. Ayrıca $k1 kentinden $k3 kentine, $k2 kentine uğramadan '
-            'giden $z farklı yol bulunmaktadır. $k3 kentinden $k4 kentine ise $t '
-            'farklı yol vardır. Buna göre $k1 kentinden $k4 kentine kaç farklı '
-            'yoldan gidilebilir?',
+        'yol vardır. Ayrıca $k1 kentinden $k3 kentine, $k2 kentine uğramadan '
+        'giden $z farklı yol bulunmaktadır. $k3 kentinden $k4 kentine ise $t '
+        'farklı yol vardır. Buna göre $k1 kentinden $k4 kentine kaç farklı '
+        'yoldan gidilebilir?',
         yanit,
         [x * y * z * t, (x + y + z) * t, x * y + z + t, x * y * t + z],
         '$k1 kentinden $k3 kentine $k2 üzerinden $x·$y = ${x * y}, doğrudan '
-            '$z yolla gidilir: ${x * y} + $z = ${x * y + z}. Her biri $t yolla '
-            'sürdürülür: ${x * y + z}·$t = $yanit.',
+        '$z yolla gidilir: ${x * y} + $z = ${x * y + z}. Her biri $t yolla '
+        'sürdürülür: ${x * y + z}·$t = $yanit.',
         positive: true,
       );
     case 1:
@@ -3596,13 +3390,13 @@ AdvancedItem _sayma(int a, int b, int c) {
       final yanit = x * (y + e) * k;
       return sayisal(
         'Bir mağazada $x farklı gömlek, $y farklı pantolon, $e farklı etek '
-            've $k farklı ayakkabı beğenen biri; bir gömlek, alt giyim olarak bir '
-            'pantolon ya da bir etek ve bir ayakkabıdan oluşan bir takımı kaç '
-            'farklı şekilde seçebilir?',
+        've $k farklı ayakkabı beğenen biri; bir gömlek, alt giyim olarak bir '
+        'pantolon ya da bir etek ve bir ayakkabıdan oluşan bir takımı kaç '
+        'farklı şekilde seçebilir?',
         yanit,
         [x * y * e * k, x + y + e + k, x * y * k + e, (x + y + e) * k],
         'Alt giyim için $y + $e = ${y + e} seçenek vardır. Gömlek, alt '
-            'giyim ve ayakkabı seçimleri çarpılır: $x·${y + e}·$k = $yanit.',
+        'giyim ve ayakkabı seçimleri çarpılır: $x·${y + e}·$k = $yanit.',
         positive: true,
       );
     default:
@@ -3610,13 +3404,13 @@ AdvancedItem _sayma(int a, int b, int c) {
       final yanit = y * t * (x + z);
       return sayisal(
         'Bir lokantanın menüsünde $x çeşit çorba, $y çeşit ana yemek, $z '
-            'çeşit tatlı ve $t çeşit içecek vardır. Bir ana yemek ile bir içecek '
-            'mutlaka, çorba ve tatlı çeşitlerinin tümü içinden ise yalnızca bir '
-            'tane seçilerek kaç farklı öğün oluşturulabilir?',
+        'çeşit tatlı ve $t çeşit içecek vardır. Bir ana yemek ile bir içecek '
+        'mutlaka, çorba ve tatlı çeşitlerinin tümü içinden ise yalnızca bir '
+        'tane seçilerek kaç farklı öğün oluşturulabilir?',
         yanit,
         [x * y * z * t, y * t * x * z + 1, x + y + z + t, y * t + x + z],
         'Çorba ya da tatlı için $x + $z = ${x + z} seçenek vardır. Ana '
-            'yemek, içecek ve bu seçim çarpılır: $y·$t·${x + z} = $yanit.',
+        'yemek, içecek ve bu seçim çarpılır: $y·$t·${x + z} = $yanit.',
         positive: true,
       );
   }
@@ -3666,31 +3460,9 @@ const _sikliBaglamlari = [
 
 /// Çimlenme ve serbest atış isabeti için gerçekçi oranlar (1/2 … 11/12).
 const _basariOranlari = [
-  (1, 2),
-  (3, 5),
-  (2, 3),
-  (3, 4),
-  (4, 5),
-  (5, 6),
-  (4, 7),
-  (5, 7),
-  (6, 7),
-  (5, 8),
-  (7, 8),
-  (5, 9),
-  (7, 9),
-  (8, 9),
-  (7, 10),
-  (9, 10),
-  (6, 11),
-  (7, 11),
-  (8, 11),
-  (9, 11),
-  (10, 11),
-  (7, 12),
-  (11, 12),
-  (9, 13),
-  (11, 13),
+  (1, 2), (3, 5), (2, 3), (3, 4), (4, 5), (5, 6), (4, 7), (5, 7), (6, 7),
+  (5, 8), (7, 8), (5, 9), (7, 9), (8, 9), (7, 10), (9, 10), (6, 11), (7, 11),
+  (8, 11), (9, 11), (10, 11), (7, 12), (11, 12), (9, 13), (11, 13),
 ];
 
 AdvancedItem _deneysel(int a, int b, int c) {
@@ -3705,22 +3477,22 @@ AdvancedItem _deneysel(int a, int b, int c) {
       if (v == 0) {
         return _olasilik(
           '$giris Bu deneye göre ibrenin mavi bölgede durmasının deneysel '
-              'olasılığı kaçtır?',
+          'olasılığı kaçtır?',
           f2,
           n,
           [(1, 3), (f2, f1 + f3), (f1, n), (f3, n)],
           'Deneysel olasılık, olayın gerçekleşme sayısının deneme sayısına '
-              'oranıdır: ${_sade(f2, n)}.',
+          'oranıdır: ${_sade(f2, n)}.',
         );
       }
       return _olasilik(
         '$giris Bu deneye göre ibrenin kırmızı ya da sarı bölgede durmasının '
-            'deneysel olasılığı kaçtır?',
+        'deneysel olasılığı kaçtır?',
         f1 + f3,
         n,
         [(2, 3), (f2, n), (f1, n), (f1 * f3, n * n)],
         'Kırmızı ya da sarı bölgede durma sayısı $f1 + $f3 = ${f1 + f3} '
-            'olur. Deneysel olasılık ${_sade(f1 + f3, n)} bulunur.',
+        'olur. Deneysel olasılık ${_sade(f1 + f3, n)} bulunur.',
       );
     case 1:
       final (k0, n0) = _basariOranlari[a];
@@ -3753,7 +3525,7 @@ AdvancedItem _deneysel(int a, int b, int c) {
           yuzde,
           [100 - yuzde, k, 100 * k ~/ (n - k), yuzde * 2],
           'Göreli sıklık $k/$n olur. Yüzde olarak $k·100 : $n = $yuzde '
-              'bulunur.',
+          'bulunur.',
         );
       }
       return _yuzdeli(
@@ -3761,8 +3533,8 @@ AdvancedItem _deneysel(int a, int b, int c) {
         100 - yuzde,
         [yuzde, k, 100 * (n - k) ~/ (n + k), 100 - yuzde ~/ 2],
         'Olayın gerçekleşmediği durum sayısı $n − $k = ${n - k} olur. '
-            'Göreli sıklık ${n - k}/$n, yüzde olarak ${n - k}·100 : $n = '
-            '${100 - yuzde} bulunur.',
+        'Göreli sıklık ${n - k}/$n, yüzde olarak ${n - k}·100 : $n = '
+        '${100 - yuzde} bulunur.',
       );
     case 3:
       final f = [
@@ -3782,18 +3554,18 @@ AdvancedItem _deneysel(int a, int b, int c) {
         final pay = f[1] + f[3] + f[5];
         return _olasilik(
           '$giris Bu deneye göre zarın üst yüzüne çift sayı gelmesinin '
-              'deneysel olasılığı kaçtır?',
+          'deneysel olasılığı kaçtır?',
           pay,
           n,
           [(1, 2), (n - pay, n), (f[1] + f[3], n), (3, n)],
           'Çift sayıların gelme sayısı ${f[1]} + ${f[3]} + ${f[5]} = $pay '
-              'olur. Deneysel olasılık ${_sade(pay, n)} bulunur.',
+          'olur. Deneysel olasılık ${_sade(pay, n)} bulunur.',
         );
       }
       final pay = f[1] + f[2] + f[4];
       return _olasilik(
         '$giris Bu deneye göre zarın üst yüzüne asal sayı gelmesinin '
-            'deneysel olasılığı kaçtır?',
+        'deneysel olasılığı kaçtır?',
         pay,
         n,
         [
@@ -3803,8 +3575,8 @@ AdvancedItem _deneysel(int a, int b, int c) {
           (n - pay, n),
         ],
         'Asal sayılar 2, 3 ve 5 olduğundan gelme sayısı '
-            '${f[1]} + ${f[2]} + ${f[4]} = $pay olur. Deneysel olasılık '
-            '${_sade(pay, n)} bulunur.',
+        '${f[1]} + ${f[2]} + ${f[4]} = $pay olur. Deneysel olasılık '
+        '${_sade(pay, n)} bulunur.',
       );
     default:
       final n = 2 * (20 + a), d = 1 + b % 5;
@@ -3819,42 +3591,42 @@ AdvancedItem _deneysel(int a, int b, int c) {
         case 0:
           return _olasilik(
             '$giris Bu deneye göre tura gelmesinin deneysel olasılığı '
-                'kaçtır?',
+            'kaçtır?',
             tura,
             n,
             [(1, 2), (yazi, n), (tura, yazi + n), (yazi, tura)],
             '${v == 0 ? '' : '$ek '}Tura gelmesinin deneysel olasılığı '
-                '${_sade(tura, n)} olur.',
+            '${_sade(tura, n)} olur.',
           );
         case 1:
           return _olasilik(
             '$giris Bu deneye göre yazı gelmesinin deneysel olasılığı '
-                'kaçtır?',
+            'kaçtır?',
             yazi,
             n,
             [(1, 2), (tura, n), (yazi, tura), (yazi, tura + n)],
             '${v == 0 ? '$ek ' : ''}Yazı gelmesinin deneysel olasılığı '
-                '${_sade(yazi, n)} olur.',
+            '${_sade(yazi, n)} olur.',
           );
         case 2:
           return _olasilik(
             '$giris Bu deneyde tura gelmesinin deneysel olasılığı, teorik '
-                'olasılığından kaç fazladır?',
+            'olasılığından kaç fazladır?',
             d,
             n,
             [(2 * d, n), (tura, n), (d, n ~/ 2 + d), (yazi, n)],
             '${v == 0 ? '' : '$ek '}Deneysel olasılık $tura/$n, teorik '
-                'olasılık 1/2 = ${n ~/ 2}/$n olur. Fark ${_sade(d, n)} bulunur.',
+            'olasılık 1/2 = ${n ~/ 2}/$n olur. Fark ${_sade(d, n)} bulunur.',
           );
         default:
           return _olasilik(
             '$giris Bu deneye göre tura gelmesinin deneysel olasılığı ile '
-                'yazı gelmesinin deneysel olasılığı arasındaki fark kaçtır?',
+            'yazı gelmesinin deneysel olasılığı arasındaki fark kaçtır?',
             2 * d,
             n,
             [(d, n), (tura, n), (2 * d, tura), (yazi, n)],
             '$ek Deneysel olasılıklar $tura/$n ve $yazi/$n olduğundan fark '
-                '${_sade(tura - yazi, n)} bulunur.',
+            '${_sade(tura - yazi, n)} bulunur.',
           );
       }
   }
@@ -3874,7 +3646,7 @@ AdvancedItem _basitFaiz(int a, int b, int c) {
       final ana = 3000 + 500 * a, faiz = ana * oran * yil ~/ 100;
       return _tamAralikli(
         'Bir bankaya yıllık %$oran basit faizle yatırılan $ana TL, $yil yıl '
-            'sonunda kaç TL faiz getirir?',
+        'sonunda kaç TL faiz getirir?',
         faiz,
         [
           ana * oran ~/ 100, // süreyle çarpılmaz
@@ -3886,7 +3658,7 @@ AdvancedItem _basitFaiz(int a, int b, int c) {
           ana * oran * yil ~/ 1200, // aylık bağıntı kullanılır
         ],
         'Basit faiz = ana para·oran·süre : 100 = $ana·$oran·$yil : 100 = '
-            '$faiz TL.',
+        '$faiz TL.',
         i,
         unit: 'TL',
       );
@@ -3894,8 +3666,8 @@ AdvancedItem _basitFaiz(int a, int b, int c) {
       final ana = 3000 + 500 * a, faiz = ana * oran * yil ~/ 100;
       return _tamAralikli(
         'Yıllık %$oran basit faizle bankaya yatırılan bir miktar para $yil '
-            'yılda $faiz TL faiz getirmiştir. Bankaya yatırılan para kaç '
-            'TL\'dir?',
+        'yılda $faiz TL faiz getirmiştir. Bankaya yatırılan para kaç '
+        'TL\'dir?',
         ana,
         [
           faiz * 100 ~/ oran, // süreye bölünmez
@@ -3908,7 +3680,7 @@ AdvancedItem _basitFaiz(int a, int b, int c) {
           faiz, // faiz ana para sanılır
         ],
         'Ana para = faiz·100 : (oran·süre) = $faiz·100 : ($oran·$yil) = '
-            '$ana TL.',
+        '$ana TL.',
         i,
         unit: 'TL',
       );
@@ -3916,7 +3688,7 @@ AdvancedItem _basitFaiz(int a, int b, int c) {
       final ana = 3000 + 500 * a, faiz = ana * oran * yil ~/ 100;
       return _yuzdeAralikli(
         'Bankaya basit faizle yatırılan $ana TL, $yil yılda $faiz TL faiz '
-            'getirmiştir. Buna göre yıllık faiz oranı yüzde kaçtır?',
+        'getirmiştir. Buna göre yıllık faiz oranı yüzde kaçtır?',
         oran,
         [
           oran * yil, // süreye bölünmez
@@ -3928,14 +3700,14 @@ AdvancedItem _basitFaiz(int a, int b, int c) {
           oran + 3,
         ],
         'Oran = faiz·100 : (ana para·süre) = $faiz·100 : ($ana·$yil) = '
-            '$oran; yıllık faiz oranı %$oran olur.',
+        '$oran; yıllık faiz oranı %$oran olur.',
         i,
       );
     case 3:
       final ana = 3000 + 500 * a, faiz = ana * oran * yil ~/ 100;
       return _tamAralikli(
         'Yıllık %$oran basit faizle bankaya yatırılan $ana TL kaç yılda '
-            '$faiz TL faiz getirir?',
+        '$faiz TL faiz getirir?',
         yil,
         [
           yil + 1,
@@ -3947,7 +3719,7 @@ AdvancedItem _basitFaiz(int a, int b, int c) {
           12 * yil, // aylık bağıntı kullanılır
         ],
         'Süre = faiz·100 : (ana para·oran) = $faiz·100 : ($ana·$oran) = '
-            '$yil yıl.',
+        '$yil yıl.',
         i,
         unit: 'yıl',
       );
@@ -3956,7 +3728,7 @@ AdvancedItem _basitFaiz(int a, int b, int c) {
       final faiz = (2 + a) * oran * ay;
       return _tamAralikli(
         'Yıllık %$oran basit faizle bankaya yatırılan $ana TL, $ay ay '
-            'sonunda kaç TL faiz getirir?',
+        'sonunda kaç TL faiz getirir?',
         faiz,
         [
           ana * oran * ay ~/ 100, // ay yıl sanılır
@@ -3968,7 +3740,7 @@ AdvancedItem _basitFaiz(int a, int b, int c) {
           faiz * 10,
         ],
         'Süre ay olarak verildiğinde faiz = ana para·oran·ay : 1200 '
-            'bağıntısı kullanılır: $ana·$oran·$ay : 1200 = $faiz TL.',
+        'bağıntısı kullanılır: $ana·$oran·$ay : 1200 = $faiz TL.',
         i,
         unit: 'TL',
       );
@@ -4033,13 +3805,13 @@ AdvancedItem _bilesikFaiz(int a, int b, int c) {
     case 2:
       return sayisal(
         '$giris için $yil yıl sonunda elde edilen bileşik $kazanc, aynı '
-            'oranla basit $kazanc hesaplansaydı elde edilecek tutardan kaç TL '
-            'fazla olur?',
+        'oranla basit $kazanc hesaplansaydı elde edilecek tutardan kaç TL '
+        'fazla olur?',
         son - ana - basit,
         [son - ana, basit, ana * oran ~/ 100, (son - ana - basit) * 2],
         '$ortak Bileşik $kazanc $son − $ana = ${son - ana} TL, basit $kazanc '
-            '$ana·$oran·$yil : 100 = $basit TL olur. Fark '
-            '${son - ana} − $basit = ${son - ana - basit} TL bulunur.',
+        '$ana·$oran·$yil : 100 = $basit TL olur. Fark '
+        '${son - ana} − $basit = ${son - ana - basit} TL bulunur.',
         unit: 'TL',
         positive: true,
       );
@@ -4055,7 +3827,7 @@ AdvancedItem _bilesikFaiz(int a, int b, int c) {
           tutar[yil - 1] * oran ~/ 100 + ana * oran ~/ 100,
         ],
         '$ortak $yil. yılın $kazanc tutarı $son − ${tutar[yil - 1]} = '
-            '$sonYil TL bulunur.',
+        '$sonYil TL bulunur.',
         unit: 'TL',
         positive: true,
       );
@@ -4123,7 +3895,7 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
             kdv,
           ],
           '$ortak Ödenecek tutar $indirimli + $kdv = ${indirimli + kdv} TL '
-              'bulunur.',
+          'bulunur.',
           i,
           unit: 'TL',
           agirlik: _altSiraAgirligi,
@@ -4178,7 +3950,7 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
       }
       return _tamAralikli(
         '$giris Bu ürünün fiyatının içindeki KDV tutarı kaç '
-            'TL\'dir?',
+        'TL\'dir?',
         dahil - haric,
         [
           dahil * k ~/ 100, // KDV dâhil fiyatın %k'si alınır
@@ -4224,7 +3996,7 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
       }
       return _tamAralikli(
         '$giris Bu iki indirim sonunda etiket fiyatından toplam kaç TL '
-            'düşülmüş olur?',
+        'düşülmüş olur?',
         fiyat - son,
         [
           fiyat * (x + y) ~/ 100, // indirim oranları toplanır
@@ -4263,7 +4035,7 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
             pesin * (100 - vade) ~/ 100 ~/ taksit, // vade farkı düşülür
           ],
           'Taksitli fiyat $pesin·${100 + vade} : 100 = $toplam TL olur. Her '
-              'taksit $toplam : $taksit = ${toplam ~/ taksit} TL bulunur.',
+          'taksit $toplam : $taksit = ${toplam ~/ taksit} TL bulunur.',
           i,
           unit: 'TL',
           agirlik: _altSiraAgirligi,
@@ -4271,7 +4043,7 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
       }
       return _tamAralikli(
         '$giris Ürünü taksitle alan biri, peşin alan birine göre toplam kaç '
-            'TL fazla öder?',
+        'TL fazla öder?',
         toplam - pesin,
         [
           (toplam - pesin) ~/ taksit, // bir taksitteki fark
@@ -4282,7 +4054,7 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
           (toplam - pesin) * 10,
         ],
         'Vade farkı peşin fiyatın %$vade kadarıdır: $pesin·$vade : 100 = '
-            '${toplam - pesin} TL.',
+        '${toplam - pesin} TL.',
         i,
         unit: 'TL',
         agirlik: _altSiraAgirligi,
@@ -4293,8 +4065,8 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
       if (v == 0) {
         return _yuzdeAralikli(
           'Etiket fiyatı $etiket TL olan bir ayakkabı indirim döneminde '
-              '$satis TL fiyatla satılıyor. Uygulanan indirim oranı yüzde '
-              'kaçtır?',
+          '$satis TL fiyatla satılıyor. Uygulanan indirim oranı yüzde '
+          'kaçtır?',
           x,
           [
             100 - x, // satış fiyatının oranı
@@ -4305,15 +4077,15 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
             x - 4,
           ],
           'İndirim tutarı $etiket − $satis = ${etiket - satis} TL olur. '
-              'Oran ${etiket - satis}·100 : $etiket = $x; indirim %$x bulunur.',
+          'Oran ${etiket - satis}·100 : $etiket = $x; indirim %$x bulunur.',
           i,
           agirlik: _altSiraAgirligi,
         );
       }
       return _tamAralikli(
         'Bir ayakkabı, etiket fiyatı üzerinden %$x indirim yapılarak $satis '
-            'TL fiyatla satılıyor. Ayakkabının etiket fiyatı kaç '
-            'TL\'dir?',
+        'TL fiyatla satılıyor. Ayakkabının etiket fiyatı kaç '
+        'TL\'dir?',
         etiket,
         [
           satis * (100 + x) ~/ 100, // satış fiyatına %x eklenir
@@ -4324,7 +4096,7 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
           satis,
         ],
         'Satış fiyatı etiket fiyatının %${100 - x} kadarıdır: etiket fiyatı '
-            '$satis·100 : ${100 - x} = $etiket TL bulunur.',
+        '$satis·100 : ${100 - x} = $etiket TL bulunur.',
         i,
         unit: 'TL',
         agirlik: _altSiraAgirligi,
@@ -4349,7 +4121,7 @@ AdvancedItem _kurBirim(int a, int b, int c) {
       final kur = (v == 0 ? 28 : 34) + b, miktar = 50 + 10 * a;
       return _tamAralikli(
         'Bir döviz bürosunda 1 $para $kur TL olarak işlem görmektedir. Bu '
-            'büroda $miktar $para bozduran biri kaç TL alır?',
+        'büroda $miktar $para bozduran biri kaç TL alır?',
         miktar * kur,
         [
           miktar * kur ~/ 10, // basamak kayması
@@ -4359,7 +4131,7 @@ AdvancedItem _kurBirim(int a, int b, int c) {
           miktar * kur * 10,
         ],
         'Her $para $kur TL ettiğinden $miktar·$kur = ${miktar * kur} TL '
-            'alınır.',
+        'alınır.',
         i,
         unit: 'TL',
         agirlik: _altSiraAgirligi,
@@ -4370,7 +4142,7 @@ AdvancedItem _kurBirim(int a, int b, int c) {
       final tl = miktar * kur;
       return _tamAralikli(
         'Bir döviz bürosunda 1 $para $kur TL olarak işlem görmektedir. Bu '
-            'büroda $tl TL ile kaç $para alınabilir?',
+        'büroda $tl TL ile kaç $para alınabilir?',
         miktar,
         [
           miktar + kur,
@@ -4407,7 +4179,7 @@ AdvancedItem _kurBirim(int a, int b, int c) {
             dolar + m,
           ],
           '$avro avro $avro·$avroKuru = ${avro * avroKuru} TL eder. Bu tutar '
-              '${avro * avroKuru} : $dolarKuru = $dolar dolar olur.',
+          '${avro * avroKuru} : $dolarKuru = $dolar dolar olur.',
           i,
           agirlik: _altSiraAgirligi,
         );
@@ -4424,7 +4196,7 @@ AdvancedItem _kurBirim(int a, int b, int c) {
           avro - m,
         ],
         '$dolar dolar $dolar·$dolarKuru = ${dolar * dolarKuru} TL eder. Bu '
-            'tutar ${dolar * dolarKuru} : $avroKuru = $avro avro olur.',
+        'tutar ${dolar * dolarKuru} : $avroKuru = $avro avro olur.',
         i,
         agirlik: _altSiraAgirligi,
       );
@@ -4444,7 +4216,7 @@ AdvancedItem _kurBirim(int a, int b, int c) {
       if (v == 0) {
         return _tamAralikli(
           '$giris Bu iki markanın kilogram fiyatları arasındaki fark kaç '
-              'TL\'dir?',
+          'TL\'dir?',
           fark,
           [
             (p1 - p2).abs(), // paket fiyatlarının farkı
@@ -4456,7 +4228,7 @@ AdvancedItem _kurBirim(int a, int b, int c) {
             fark * 10,
           ],
           '$ortak Fark ${u1 > u2 ? '$u1 − $u2' : '$u2 − $u1'} = $fark TL '
-              'bulunur.',
+          'bulunur.',
           i,
           unit: 'TL',
           agirlik: _altSiraAgirligi,
@@ -4464,7 +4236,7 @@ AdvancedItem _kurBirim(int a, int b, int c) {
       }
       return _tamAralikli(
         '$giris Kilogram fiyatı daha düşük olan markanın kilogram fiyatı kaç '
-            'TL\'dir?',
+        'TL\'dir?',
         dusuk,
         [
           u1 < u2 ? u2 : u1, // pahalı olan seçilir
@@ -4477,7 +4249,7 @@ AdvancedItem _kurBirim(int a, int b, int c) {
           dusuk * 10,
         ],
         '$ortak Daha düşük olan ${u1 < u2 ? 'A' : 'B'} markasının kilogram '
-            'fiyatı $dusuk TL bulunur.',
+        'fiyatı $dusuk TL bulunur.',
         i,
         unit: 'TL',
         agirlik: _altSiraAgirligi,

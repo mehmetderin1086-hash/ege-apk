@@ -95,30 +95,42 @@ AdvancedItem _sSirali(
     throw StateError('Kesin olmayan anahtar $dogru: $kok');
   }
   if (pozitif && k <= 0) throw StateError('Pozitif olmayan anahtar $k: $kok');
-  final tam = k == k.roundToDouble();
-  num adim = tam
-      ? (k.abs() >= 200 ? 10 : (k.abs() >= 40 ? 5 : 1))
-      : (k.abs() >= 20 ? 1 : (k.abs() >= 2 ? 0.5 : 0.1));
-  for (var j = 0; 40 * adim < k.abs(); j++) {
-    adim *= const [2, 2.5, 2][j % 3];
+  // Komşu adımı: anahtarın %10'unu aşmayan en büyük 1-2-5 değeri; en az
+  // yazım duyarlığı kadar (tam sayı anahtarda 1).
+  final num enAz = basamak != null
+      ? math.pow(10, -basamak)
+      : (k == k.roundToDouble() ? 1 : 0.01);
+  num adim = enAz;
+  for (var e = -2; e <= 9; e++) {
+    for (final c in const [1, 2, 5]) {
+      final x = c * math.pow(10, e);
+      if (x >= enAz - 1e-12 && x <= 0.1 * k.abs() + 1e-12) adim = x;
+    }
   }
   String yaz(num x) =>
       birimli(basamak == null ? _n(x) : _sabit(x, basamak), unit);
+  // Anahtara ya da önceki bir adaya %1'den yakın adaylar atlanır: neredeyse
+  // aynı iki seçenek (ör. 0,98 ile 0,99) hem kötü durur hem ipucu verir.
   final adaylar = <(num, String)>[];
+  void ekle(num x, String yazim) {
+    final tol = 0.01 * k.abs();
+    if ((x - k).abs() < tol) return;
+    if (adaylar.any((y) => (x - y.$1).abs() < tol)) return;
+    adaylar.add((x, yazim));
+  }
+
   for (final h in hatalar) {
     if (h is (num, String)) {
-      if (!pozitif || h.$1 > 0) adaylar.add(h);
+      if (!pozitif || h.$1 > 0) ekle(h.$1, h.$2);
     } else if (h is num) {
-      if (h.isFinite && (!pozitif || _iki(h) > 0)) {
-        adaylar.add((_iki(h), yaz(_iki(h))));
-      }
+      if (h.isFinite && (!pozitif || _iki(h) > 0)) ekle(_iki(h), yaz(_iki(h)));
     } else if (h != null) {
       throw StateError('Değeri bilinmeyen çeldirici $h: $kok');
     }
   }
   for (final m in const [1, -1, 2, -2, 3, -3, 4, -4, 5, 6]) {
     final x = _iki(k + m * adim);
-    if (!pozitif || x > 0) adaylar.add((x, yaz(x)));
+    if (!pozitif || x > 0) ekle(x, yaz(x));
   }
   final anahtar = yaz(k);
   return AdvancedItem(
@@ -127,6 +139,42 @@ AdvancedItem _sSirali(
     siraliCeldiriciler(k, anahtar, adaylar, sira),
     aciklama,
   );
+}
+
+/// Oran yanıtlı soru: seçenekler anahtar, anahtarın tersi, bir tipik hata
+/// ve o hatanın tersidir. Her seçeneğin ters eşi bulunduğundan (pay ve payda
+/// aynı sayılar) anahtar, tersiyle paylaştığı rakamlardan seçilemez. Tipik
+/// hata [adaylar] içinden, anahtarın değer sırası [sira] ile uyumlu olacak
+/// biçimde seçilir: anahtar 1'den büyükse sıra 2 ya da 3, küçükse 0 ya da 1
+/// olabilir.
+AdvancedItem _tersCiftli(
+  String kok,
+  int n,
+  int d,
+  Iterable<(int, int)> adaylar,
+  String aciklama,
+  int sira,
+) {
+  final r = n / d;
+  final istenen = r > 1 ? (sira.isOdd ? 3 : 2) : (sira.isOdd ? 1 : 0);
+  (int, int)? secilen;
+  for (final (p, q) in adaylar) {
+    if (p <= 0 || q <= 0) continue;
+    final x = p / q;
+    if (_icinde(x, [1, r, 1 / r])) continue;
+    secilen ??= (p, q);
+    if ([1 / r, x, 1 / x].where((y) => y < r).length == istenen) {
+      secilen = (p, q);
+      break;
+    }
+  }
+  if (secilen == null) throw StateError('Eksik çeldirici: $kok');
+  final (p, q) = secilen;
+  return AdvancedItem(kok, kesir(n, d), [
+    kesir(d, n),
+    kesir(p, q),
+    kesir(q, p),
+  ], aciklama);
 }
 
 /// Vakanın sıra numarasından hedef değer sırası (0 … 3).
@@ -826,7 +874,7 @@ AdvancedItem _zitItme(int a, int b, int k) {
     '$_g10',
     dogru,
     kayar
-        ? [fs, p, p - fk, f1, fk / 10, fs / 10, f1 + f2]
+        ? [fs, p, p - fk, f1, fs / 10, f1 + f2]
         : [fs, fk, f1, f1 + f2, fs / 10, fk / 10, fs - p],
     kayar
         ? '$itme ${_n(p)} > ${_n(fs)}; kasa harekete geçer. Kayan kasaya '
@@ -894,7 +942,8 @@ AdvancedItem _surtunmeKatsayi(int a, int b, int k) {
         '${kinetik ? 'kinetik' : 'statik'} sürtünme katsayısı kaçtır? $_g10',
         dogru,
         [
-          (kinetik ? fk : fs) / m,
+          // 10·μ, μ tek ondalıklıyken anahtarla aynı rakamı taşır (0,2 – 2).
+          if ((kinetik ? mk : ms) % 10 != 0) (kinetik ? fk : fs) / m,
           (kinetik ? ms : mk) / 100,
           10 * m / (kinetik ? fk : fs),
           (ms - mk) / 100,
@@ -1073,7 +1122,7 @@ AdvancedItem _kayarakDurma(int a, int b, int k) {
         '$hizla ${_n(d)} m yol alıp duruyor. $yuzey arasındaki kinetik '
             'sürtünme katsayısı kaçtır? $_g10',
         mu,
-        [2 * mu, ivme, mu / 2, mu / v0],
+        [2 * mu, if (mu100 % 10 != 0) ivme, mu / 2, mu / v0],
         'v₀² = 2·a·x bağıntısından yavaşlama ivmesi a = ${_n(v0)}² / '
             '(2·${_n(d)}) = ${_n(ivme)} m/s² olur. a = μ·g olduğundan '
             'μ = ${_n(ivme)} / 10 = ${_n(mu)} bulunur.',
@@ -1180,6 +1229,7 @@ final _f04 = lmAile(
     final s = m1 + m2, v = v2 / 2;
     final vl = _vL(m1, m2, v2) / 100, vk = _vK(m1, m2, v2) / 100;
     final ortak = m1 * v / s; // kenetlenme sanan öğrencinin hızı
+    final sira = _hs(a, b, c);
     final giris =
         'Sürtünmesiz yatay bir düzlemde ${_n(v)} m/s hızla ilerleyen $m1 kg '
         'kütleli K cismi, aynı doğrultu üzerinde durmakta olan $m2 kg kütleli L '
@@ -1198,18 +1248,20 @@ final _f04 = lmAile(
       return _s(
         '$giris Çarpışmadan sonra L cisminin hızı kaç m/s olur?',
         vl,
-        [ortak, m1 * v / m2, v, vk.abs()],
+        [ortak, m1 * v / m2, v, vk.abs(), 2 * m2 * v / s, 2 * m1 * v / m2],
         lHiz,
         unit: 'm/s',
+        sira: sira,
       );
     }
     if (f == 1) {
       return _s(
         '$giris Çarpışmadan sonra K cisminin hızının büyüklüğü kaç m/s olur?',
         vk.abs(),
-        [vl, ortak, v],
+        [vl, ortak, v, m2 * v / s, vk * vk / v, 2 * m2 * v / s],
         kHiz,
         unit: 'm/s',
+        sira: sira,
       );
     }
     final ilk = m1 * v * v / 2; // çarpışmadan önceki kinetik enerji
@@ -1218,20 +1270,38 @@ final _f04 = lmAile(
       return _s(
         '$giris Çarpışmadan sonra L cisminin kinetik enerjisi kaç J olur?',
         e,
-        [ilk, m2 * v * v / 2, m2 * ortak * ortak / 2, ilk - e],
+        [
+          ilk,
+          m2 * v * v / 2,
+          m2 * ortak * ortak / 2,
+          ilk - e,
+          2 * e,
+          m1 * vl * vl / 2,
+          m2 * vl / 2,
+        ],
         '$lHiz Çarpışmadan sonra L cisminin kinetik enerjisi '
             '½·$m2·${_n(vl)}² = ${_n(e)} J olur.',
         unit: 'J',
+        sira: sira,
       );
     }
     final e = m1 * vk * vk / 2;
     return _s(
       '$giris Çarpışmadan sonra K cisminin kinetik enerjisi kaç J olur?',
       e,
-      [ilk, ilk - e, m1 * ortak * ortak / 2, m1 * vl * vl / 2],
+      [
+        ilk,
+        ilk - e,
+        m1 * ortak * ortak / 2,
+        m1 * vl * vl / 2,
+        2 * e,
+        m1 * vk.abs() / 2,
+        m2 * vk * vk / 2,
+      ],
       '$kHiz Çarpışmadan sonra K cisminin kinetik enerjisi '
           '½·$m1·${_n(vk.abs())}² = ${_n(e)} J olur.',
       unit: 'J',
+      sira: sira,
     );
   },
   exam: ExamKind.ayt,
@@ -1596,6 +1666,7 @@ AdvancedItem _eylemsizlik(int a, int b, int k) {
   // çıkarsa bir uzaklık, olağan aralığın dışındaki bir değere taşınır; bu
   // değerler başka vakada kullanılmadığından kök yine tek kalır.
   bool cakisir(num x, List<num> ler) => _icinde(x, ler);
+  final s = _hs(a, b, 3 * k);
   switch (v) {
     case 0:
       final r1 = 10 * (1 + q); // 10 … 50 cm
@@ -1619,10 +1690,11 @@ AdvancedItem _eylemsizlik(int a, int b, int k) {
             '$r1 cm ve $r2 cm uzaklığa yerleştirilmiştir. Sistemin bu eksene göre '
             'eylemsizlik momenti kaç kg·m² olur?',
         i,
-        yanlis(),
+        [...yanlis(), i / 2, terim(m2, r2), (m1 + m2) * r2 * r2 / 10000],
         'Noktasal cisimlerden oluşan sistemin eylemsizlik momenti I = Σ m·r² '
             'olur. Uzaklıklar metreye çevrilirse ${toplam([(m1, r1), (m2, r2)])} = '
             '${_n(i)} kg·m² bulunur.',
+        sira: s,
       );
     case 1:
       var x = 10 * (1 + q); // eksenin K cismine uzaklığı (yedek: 60 … 100 cm)
@@ -1651,9 +1723,15 @@ AdvancedItem _eylemsizlik(int a, int b, int k) {
             'döndürülüyor. Sistemin bu eksene göre eylemsizlik momenti kaç kg·m² '
             'olur?',
         i,
-        yanlis(),
+        [
+          ...yanlis(),
+          i / 2,
+          (m1 + m2) * x * x / 10000,
+          (m1 + m2) * y * y / 10000,
+        ],
         'L cismi eksenden $boy − $x = $y cm uzaktadır. Uzaklıklar metreye '
             'çevrilirse ${toplam([(m1, x), (m2, y)])} = ${_n(i)} kg·m² bulunur.',
+        sira: s,
       );
     case 2:
       final m3 = 1 + k; // 1 … 4 kg
@@ -1680,9 +1758,10 @@ AdvancedItem _eylemsizlik(int a, int b, int k) {
             'sırasıyla $r1 cm, $r2 cm ve $r3 cm uzaklığa yerleştirilmiştir. '
             'Sistemin bu eksene göre eylemsizlik momenti kaç kg·m² olur?',
         i,
-        yanlis(),
+        [...yanlis(), i / 2, (m1 + m2 + m3) * r3 * r3 / 10000],
         'I = Σ m·r² bağıntısında uzaklıklar metreye çevrilirse '
             '${toplam([(m1, r1), (m2, r2), (m3, r3)])} = ${_n(i)} kg·m² bulunur.',
+        sira: s,
       );
     default:
       var r1 = 10 * (1 + q); // 10 … 50 cm (yedek: 110 … 150 cm)
@@ -1708,9 +1787,10 @@ AdvancedItem _eylemsizlik(int a, int b, int k) {
             'etrafında $w rad/s büyüklüğünde açısal hızla dönmektedir. Sistemin '
             'açısal momentumunun büyüklüğü kaç kg·m²/s olur?',
         l,
-        yanlis(),
+        [...yanlis(), i / w, i * w / 2, i * w * w / 2],
         'Eylemsizlik momenti ${toplam([(m1, r1), (m2, r2)])} = ${_n(i)} kg·m² '
             'olur. Açısal momentum L = I·ω = ${_n(i)}·$w = ${_n(l)} kg·m²/s bulunur.',
+        sira: s,
       );
   }
 }
@@ -1789,6 +1869,7 @@ AdvancedItem _acisalKorunum(int a, int b, int k) {
   final n = a + 25 * (b ~/ 4) + 125 * k; // 0 … 374
   const korunur =
       'Dış tork olmadığından açısal momentum korunur: I₁·ω₁ = I₂·ω₂.';
+  final s = _hs(a, b, 3 * k + 1);
   switch (v) {
     case 0:
       final (i1, i2, f10) = _yay(_patenciF, n, 375);
@@ -1800,10 +1881,17 @@ AdvancedItem _acisalKorunum(int a, int b, int k) {
             'eylemsizlik momenti ${_n(i2 / 10)} kg·m² oluyor. Sürtünmeler '
             'önemsiz olduğuna göre patencinin yeni dönme frekansı kaç Hz olur?',
         f2,
-        [f10 * i2 / (10 * i1), f10 / 10, f10 * i1 * i1 / (10 * i2 * i2)],
+        [
+          f10 * i2 / (10 * i1),
+          f10 / 10,
+          f10 * i1 * i1 / (10 * i2 * i2),
+          f10 / 10 * math.sqrt(i1 / i2),
+          f2 - f10 / 10,
+        ],
         '$korunur ω = 2·π·f olduğundan I₁·f₁ = I₂·f₂ yazılır: '
             'f₂ = ${_n(i1 / 10)}·${_n(f10 / 10)} / ${_n(i2 / 10)} = ${_n(f2)} Hz.',
         unit: 'Hz',
+        sira: s,
       );
     case 1:
       final (i1, i2, t10) = _yay(_patenciT, n, 375);
@@ -1815,10 +1903,17 @@ AdvancedItem _acisalKorunum(int a, int b, int k) {
             'eylemsizlik momenti ${_n(i2 / 10)} kg·m² oluyor. Sürtünmeler '
             'önemsiz olduğuna göre patencinin yeni dönme periyodu kaç s olur?',
         t2,
-        [t10 * i1 / (10 * i2), t10 / 10, t10 * i2 * i2 / (10 * i1 * i1)],
+        [
+          t10 * i1 / (10 * i2),
+          t10 / 10,
+          t10 * i2 * i2 / (10 * i1 * i1),
+          t10 / 10 * math.sqrt(i2 / i1),
+          t10 / 10 - t2,
+        ],
         '$korunur ω = 2·π / T olduğundan I₁ / T₁ = I₂ / T₂ yazılır: '
             'T₂ = ${_n(t10 / 10)}·${_n(i2 / 10)} / ${_n(i1 / 10)} = ${_n(t2)} s.',
         unit: 's',
+        sira: s,
       );
     case 2:
       final (i0, m, r, w) = _yay(_platform, n, 375);
@@ -1832,10 +1927,19 @@ AdvancedItem _acisalKorunum(int a, int b, int k) {
             'birlikte dönmeye başlıyor. Torba noktasal kabul edildiğine göre '
             'platformun yeni açısal hızı kaç rad/s olur?',
         w2,
-        [w * (ib + ek) / ib, w * ib / (ib + m * rm), w * ib / ek],
+        [
+          w * (ib + ek) / ib,
+          w * ib / (ib + m * rm),
+          w * ib / ek,
+          w,
+          w * math.sqrt(ib / (ib + ek)),
+          w * ek / (ib + ek),
+          w * (ib - ek) / ib,
+        ],
         '$korunur Torba eklenince eylemsizlik momenti ${_n(ib)} + '
             '$m·${_n(rm)}² = ${_n(ib + ek)} kg·m² olur. ω₂ = ${_n(ib)}·$w / '
             '${_n(ib + ek)} = ${_n(w2)} rad/s bulunur.',
+        sira: s,
       );
     default:
       final (r1, r2, w) = _yay(_boncuk, n, 375);
@@ -1848,9 +1952,10 @@ AdvancedItem _acisalKorunum(int a, int b, int k) {
             'geliyor. Boncuklar noktasal kabul edildiğine göre çubuğun yeni açısal '
             'hızı kaç rad/s olur?',
         w2,
-        [w * r1 / r2, w * r2 * r2 / (r1 * r1), w],
+        [w * r1 / r2, w * r2 * r2 / (r1 * r1), w, w * r2 / r1],
         '$korunur Boncukların kütlesi m ise I = 2·m·r² olduğundan '
             'r₁²·ω₁ = r₂²·ω₂ olur: ω₂ = $w·$r1² / $r2² = ${_n(w2)} rad/s.',
+        sira: s,
       );
   }
 }
@@ -1913,6 +2018,7 @@ AdvancedItem _ipDelik(int a, int b, int k) {
   const korunur =
       'İpin cisme uyguladığı kuvvet deliğe doğru olduğundan tork oluşturmaz; '
       'açısal momentum korunur.';
+  final s = _hs(a, b, 3 * k + 2);
   switch (v) {
     case 0:
       final (r1, r2, v10) = _yay(_delikHiz, n, 375);
@@ -1921,10 +2027,16 @@ AdvancedItem _ipDelik(int a, int b, int k) {
         '$masa $r1 cm yarıçaplı çembersel yörüngede ${_n(v10 / 10)} m/s hızla '
             'dolanıyor. $cekilir $r2 cm yapılırsa cismin hızı kaç m/s olur?',
         v2,
-        [v10 * r2 / (10 * r1), v10 * r1 * r1 / (10 * r2 * r2), v10 / 10],
+        [
+          v10 * r2 / (10 * r1),
+          v10 * r1 * r1 / (10 * r2 * r2),
+          v10 / 10,
+          v2 - v10 / 10,
+        ],
         '$korunur m·v₁·r₁ = m·v₂·r₂ eşitliğinden v₂ = ${_n(v10 / 10)}·$r1 / '
             '$r2 = ${_n(v2)} m/s bulunur.',
         unit: 'm/s',
+        sira: s,
       );
     case 1:
       final (r1, r2, t10) = _yay(_delikPeriyot, n, 375);
@@ -1934,11 +2046,12 @@ AdvancedItem _ipDelik(int a, int b, int k) {
             'dolanıyor. $cekilir $r2 cm yapılırsa cismin dolanım periyodu kaç '
             's olur?',
         t2,
-        [t1 * r2 / r1, t1 * r1 * r1 / (r2 * r2), t1],
+        [t1 * r2 / r1, t1 * r1 * r1 / (r2 * r2), t1, 1 / t2, t1 - t2],
         '$korunur L = m·r²·ω ve ω = 2π / T olduğundan r² / T sabittir: '
             'r₁² / T₁ = r₂² / T₂. Buradan T₂ = ${_n(t1)}·$r2² / $r1² = '
             '${_n(t2)} s bulunur.',
         unit: 's',
+        sira: s,
       );
     case 2:
       final m10 = 1 + a % 10; // 0,1 … 1 kg
@@ -1953,10 +2066,17 @@ AdvancedItem _ipDelik(int a, int b, int k) {
             'dolanıyor. Cismin kütlesi ${_n(m10 / 10)} kg ise deliğe göre '
             'açısal momentumunun büyüklüğü kaç kg·m²/s olur?',
         l,
-        [l * 100, m10 * hiz / 10, m10 * hiz * r10 * r10 / 1000],
+        [
+          l * 100,
+          m10 * hiz / 10,
+          m10 * hiz * r10 * r10 / 1000,
+          l / 2,
+          m10 * hiz / r10,
+        ],
         'Çembersel yörüngedeki noktasal cismin açısal momentumu L = m·v·r '
             'olur. Yarıçap ${_n(r10 / 10)} m olduğundan L = ${_n(m10 / 10)}·$hiz·'
             '${_n(r10 / 10)} = ${_n(l)} kg·m²/s bulunur.',
+        sira: s,
       );
     default:
       final (r1, v1, v2) = _yay(_delikYaricap, n, 375);
@@ -1966,10 +2086,11 @@ AdvancedItem _ipDelik(int a, int b, int k) {
             'İp delikten aşağı doğru yavaşça çekiliyor ve cismin hızı $v2 m/s '
             'oluyor. Cismin yeni yörünge yarıçapı kaç cm olur?',
         r2,
-        [r1 * v2 / v1, r1 * v1 * v1 / (v2 * v2), r1 - v2 + v1],
+        [r1 * v2 / v1, r1 * v1 * v1 / (v2 * v2), r1 - v2 + v1, r1, r1 - r2],
         '$korunur m·v₁·r₁ = m·v₂·r₂ eşitliğinden r₂ = $r1·$v1 / $v2 = '
             '${_n(r2)} cm bulunur.',
         unit: 'cm',
+        sira: s,
       );
   }
 }
@@ -2097,6 +2218,7 @@ AdvancedItem _keplerUcuncu(int a, int b, int k, bool periyotSor) {
     j += 100;
   }
   final x = bilinen(), y = yanit();
+  final s = _hs(a, b, 3 * k + (periyotSor ? 0 : 1));
   const tanim =
       'X gezegeni için periyot ve yarıçap T₁ ve r₁, Y gezegeni için T₂ ve r₂ '
       'olsun. Kepler yasasına göre aynı yıldızın gezegenleri için T² / r³ '
@@ -2107,10 +2229,17 @@ AdvancedItem _keplerUcuncu(int a, int b, int k, bool periyotSor) {
           '$kare katıdır.')} X gezegeninin dolanım periyodu ${_n(x)} yıl '
           'olduğuna göre Y gezegeninin dolanım periyodu kaç yıl olur?',
       y,
-      [x * q * q / (p * p), x * q / p, x * q * q * q * q / (p * p * p * p)],
+      [
+        x * q * q / (p * p),
+        x * q / p,
+        x * q * q * q * q / (p * p * p * p),
+        x,
+        x * p * p * p / (q * q * q),
+      ],
       '$tanim r₂ / r₁ = $kare olduğundan (T₂ / T₁)² = $altinci ve '
           'T₂ / T₁ = $kup bulunur: T₂ = ${_n(x)}·$kup = ${_n(y)} yıl.',
       unit: 'yıl',
+      sira: s,
     );
   }
   return _s(
@@ -2123,13 +2252,17 @@ AdvancedItem _keplerUcuncu(int a, int b, int k, bool periyotSor) {
       x * q * q * q / (p * p * p),
       x * q / p,
       x * math.pow(q, 6) / math.pow(p, 6),
+      x,
+      x * p * p / (q * q),
     ],
     '$tanim T₂ / T₁ = $kup olduğundan (r₂ / r₁)³ = $altinci ve r₂ / r₁ = '
         '$kare bulunur: r₂ = ${_n(x)}·$kare = ${_n(y)} AB.',
+    sira: s,
   );
 }
 
 AdvancedItem _keplerIkinci(int a, int b, int k) {
+  final s = _hs(a, b, 3 * k + 2);
   if (b.isEven) {
     final (p, q) = _alanKesri[b ~/ 2 + 10 * k];
     final t = 72 * (a + 4); // 288 … 2016 gün
@@ -2142,12 +2275,20 @@ AdvancedItem _keplerIkinci(int a, int b, int k) {
       // Kalan alanın süresi, süreyi yarıya bölmek ya da iki katına çıkarmak.
       // 1/3 ve 2/3 kesirlerinde bunlardan ikisi aynı çıktığından son aday
       // taranan alanı kalan alana oranlamaktır (t·p / (q − p)).
-      [t * (q - p) / q, t * p / (2 * q), 2 * cevap, t * p / (q - p)],
+      [
+        t * (q - p) / q,
+        t * p / (2 * q),
+        2 * cevap,
+        t * p / (q - p),
+        t * p / (q + p),
+        t / q,
+      ],
       'Kepler yasasına göre gezegeni yıldıza birleştiren doğru parçası eşit '
           'sürelerde eşit alanlar tarar; taranan alan geçen süreyle doğru '
           'orantılıdır. Alanın tamamı $t günde tarandığından $p/$q kadarı '
           '$t·$p/$q = ${_n(cevap)} günde taranır.',
       unit: 'gün',
+      sira: s,
     );
   }
   final (p, q) = _yakinUzak[b ~/ 2];
@@ -2159,10 +2300,18 @@ AdvancedItem _keplerIkinci(int a, int b, int k) {
         'uzaklığı ${q}r olarak veriliyor. Gezegen en yakın konumdan ${_n(vy)} '
         'km/s hızla geçtiğine göre en uzak konumdan kaç km/s hızla geçer?',
     vu,
-    [vy * q / p, vy * p * p / (q * q), vy],
+    [
+      vy * q / p,
+      vy * p * p / (q * q),
+      vy,
+      vy * (q - p) / q,
+      vy * math.sqrt(p / q),
+      vy * p / (p + q),
+    ],
     'Kepler yasasına göre alan hızı sabittir. En yakın ve en uzak konumlarda '
         'hız yıldıza uzaklığa dik olduğundan v₁·r₁ = v₂·r₂ yazılır: v₂ = '
         '${_n(vy)}·${p}r / ${q}r = ${_n(vu)} km/s.',
+    sira: s,
   );
 }
 
@@ -2207,6 +2356,7 @@ AdvancedItem _zamanGenislemesi(int a, int b, int k) {
   final not = _kokNot(beta, kok);
   final birim = parcacik ? 'µs' : 'yıl';
   final kokYazi = _n(kok / 100);
+  final s = _hs(a, b, 3 * k);
   if (ileri) {
     return _s(
       parcacik
@@ -2218,10 +2368,18 @@ AdvancedItem _zamanGenislemesi(int a, int b, int k) {
                 'bir yolculuğun ${_n(oz)} yıl sürdüğünü gösteriyor. Bu yolculuk '
                 "Dünya'daki bir gözlemciye göre kaç yıl sürer? $not",
       uzun,
-      [oz * kok / 100, oz * 100 / beta, oz * 100 / (100 - beta)],
+      [
+        oz * kok / 100,
+        oz * 100 / beta,
+        oz * 100 / (100 - beta),
+        oz,
+        oz * beta / 100,
+        oz * 10000 / (kok * kok),
+      ],
       'Hareketli saat yavaş işler: Δt = Δt₀ / √(1 − v²/c²) = ${_n(oz)} / '
       '$kokYazi = ${_n(uzun)} $birim.',
       unit: parcacik ? '' : 'yıl',
+      sira: s,
     );
   }
   return _s(
@@ -2234,10 +2392,18 @@ AdvancedItem _zamanGenislemesi(int a, int b, int k) {
               "Dünya'daki bir gözlemciye göre ${_n(uzun)} yıl sürüyor. Bu "
               'yolculuk uzay aracındaki saate göre kaç yıl sürer? $not',
     oz,
-    [uzun * 100 / kok, uzun * beta / 100, uzun * (100 - beta) / 100],
+    [
+      uzun * 100 / kok,
+      uzun * beta / 100,
+      uzun * (100 - beta) / 100,
+      uzun,
+      uzun * kok * kok / 10000,
+      uzun * 10000 / (kok * kok),
+    ],
     'Öz süre en kısa süredir: Δt₀ = Δt·√(1 − v²/c²) = ${_n(uzun)}·$kokYazi = '
     '${_n(oz)} $birim.',
     unit: parcacik ? '' : 'yıl',
+    sira: s,
   );
 }
 
@@ -2293,23 +2459,39 @@ AdvancedItem _boyKisalmasi(int a, int b, int k) {
           'Bu uzaklık istasyonların çerçevesinde kaç km olur? $not',
     ),
   };
+  final sira = _hs(a, b, 3 * k + 1);
   if (!ters) {
     return _s(
       ileriKok,
       kisa,
-      [oz * 100 / kok, oz * beta / 100, oz * (100 - beta) / 100],
+      [
+        oz * 100 / kok,
+        oz * beta / 100,
+        oz * (100 - beta) / 100,
+        oz,
+        oz * kok * kok / 10000,
+      ],
       'Hareket doğrultusundaki uzunluk kısalır: L = L₀·√(1 − v²/c²) = '
       '${_n(oz)}·$kokYazi = ${_n(kisa)} $birim.',
       unit: birim,
+      sira: sira,
     );
   }
   return _s(
     tersKok,
     oz,
-    [kisa * kok / 100, kisa * 100 / beta, kisa * 100 / (100 - beta)],
+    [
+      kisa * kok / 100,
+      kisa * 100 / beta,
+      kisa * 100 / (100 - beta),
+      kisa,
+      kisa * 10000 / (kok * kok),
+      kisa * kok * kok / 10000,
+    ],
     'L = L₀·√(1 − v²/c²) bağıntısından L₀ = ${_n(kisa)} / $kokYazi = '
     '${_n(oz)} $birim bulunur.',
     unit: birim,
+    sira: sira,
   );
 }
 
@@ -2318,6 +2500,7 @@ AdvancedItem _yildizYolculugu(int a, int b, int k) {
   final n = 1 + a + 25 * (b ~/ 4); // 1 … 125
   final not = _kokNot(beta, kok);
   final kokYazi = _n(kok / 100);
+  final s = _hs(a, b, 3 * k + 2);
   if (k < 2) {
     final t = 14 + n; // Dünya'ya göre süre (yıl)
     final d = t * beta / 100; // ışık yılı
@@ -2332,18 +2515,27 @@ AdvancedItem _yildizYolculugu(int a, int b, int k) {
       return _s(
         "$giris Dünya'daki gözlemciye göre yolculuk kaç yıl sürer?",
         t,
-        [oz, d * beta / 100, t * 100 / kok],
+        [oz, d * beta / 100, t * 100 / kok, d, d * 100 / kok],
         '$dunya (Işık yılı, ışığın bir yılda aldığı yoldur.)',
         unit: 'yıl',
+        sira: s,
       );
     }
     return _s(
       '$giris Uzay aracındaki saate göre yolculuk kaç yıl sürer? $not',
       oz,
-      [t, t * 100 / kok, d * kok / 100],
+      [
+        t,
+        t * 100 / kok,
+        d * kok / 100,
+        oz * kok / 100,
+        t * (100 - beta) / 100,
+        d,
+      ],
       '$dunya Araçtaki saat öz süreyi ölçer: Δt₀ = Δt·√(1 − v²/c²) = '
           '$t·$kokYazi = ${_n(oz)} yıl.',
       unit: 'yıl',
+      sira: s,
     );
   }
   final d = 65 + 2 * n; // ışık yılı: 67 … 315 tek sayılar, boy ve süre
@@ -2354,9 +2546,10 @@ AdvancedItem _yildizYolculugu(int a, int b, int k) {
         'hızıyla giden bir uzay aracındaki gözlemciye göre Dünya ile yıldız '
         'arasındaki uzaklık kaç ışık yılı olur? $not',
     kisa,
-    [d * 100 / kok, d * beta / 100, d * (100 - beta) / 100],
+    [d * 100 / kok, d * beta / 100, d * (100 - beta) / 100, d, kisa * kok / 100],
     'Araçtaki gözlemciye göre Dünya–yıldız uzaklığı hareket doğrultusunda '
         'kısalır: L = L₀·√(1 − v²/c²) = $d·$kokYazi = ${_n(kisa)} ışık yılı.',
+    sira: s,
   );
 }
 
@@ -2674,6 +2867,7 @@ AdvancedItem _carpismaUyarma(int a, int b, int k) {
   final (ilk, son) = const [(1, 2), (1, 4), (2, 4), (1, 4)][t];
   final de = _eDuzey[ilk]! - _eDuzey[son]!;
   final yasak = <num>[1, 2, 4, 13.6, 3.4, 0.85, de, 10.2, 12.75, 2.55];
+  final s = _hs(a, b, 3 * k);
   if (t == 3) {
     // 1 → 4 uyarma, ardından 4 → 2 geçişiyle foton; toplam K − 10,2 eV.
     final d = _yuzde(n + 9, [for (final y in yasak) y - 2.55]);
@@ -2688,11 +2882,12 @@ AdvancedItem _carpismaUyarma(int a, int b, int k) {
       // Fotonu unutmak; fotonun enerjisini 10,2 eV almak (gelen enerjiden
       // yalnız 2,55 eV'u çıkarmakla aynı sonuç); atomun n = 2 düzeyinde
       // kaldığını unutup toplamı gelen enerjiye eşit sanmak.
-      [d, _iki(d + 10.2), kin],
+      [d, _iki(d + 10.2), kin, 2.55, _iki(kin + 2.55)],
       'Uyarma için E₄ − E₁ = −0,85 − (−13,6) = 12,75 eV harcanır; elektronun '
           'kinetik enerjisi ${_n(kin)} − 12,75 = ${_n(d)} eV olur. Fotonun enerjisi '
           'E₄ − E₂ = −0,85 − (−3,4) = 2,55 eV olduğundan toplam ${_n(d)} + 2,55 = '
           '${_n(cevap)} eV bulunur.',
+      sira: s,
     );
   }
   final d = _yuzde(n + 9, yasak); // 0,1 eV ve üstü
@@ -2704,11 +2899,19 @@ AdvancedItem _carpismaUyarma(int a, int b, int k) {
         'uyarılıyor. Çarpışmadan sonra elektronun kinetik enerjisi kaç eV olur? '
         '$_eForm',
     d,
-    [_iki(kin - eSon), if (kin > 13.6) _iki(kin - 13.6), de, _iki(kin + de)],
+    [
+      _iki(kin - eSon),
+      if (kin > 13.6) _iki(kin - 13.6),
+      de,
+      _iki(kin + de),
+      if (ilk != 1) _iki(kin - eIlk),
+      _iki(kin - eIlk - eSon),
+    ],
     'Atomun soğurduğu enerji iki düzeyin enerji farkına eşittir: '
         'E${_alt[son]} − E${_alt[ilk]} = −${_n(eSon)} − (−${_n(eIlk)}) = '
         '${_n(de)} eV. Elektronun kinetik '
         'enerjisi ${_n(kin)} − ${_n(de)} = ${_n(d)} eV olur.',
+    sira: s,
   );
 }
 
@@ -2720,6 +2923,7 @@ AdvancedItem _fotonIyonlasma(int a, int b, int k) {
   final yasak = <num>[1, 2, 4, 13.6, ei, 10.2, 12.75, 2.55, 3.4, 0.85];
   final d = _yuzde(n + 9, ileri ? yasak : [for (final y in yasak) y - ei]);
   final foton = _iki(ei + d);
+  final s = _hs(a, b, 3 * k + 1);
   final aciklama =
       'n = $m düzeyindeki elektronun enerjisi −13,6 / $m² = −${_n(ei)} eV '
       'olduğundan iyonlaşma enerjisi ${_n(ei)} eV olur.';
@@ -2740,6 +2944,7 @@ AdvancedItem _fotonIyonlasma(int a, int b, int k) {
       ],
       '$aciklama Kopan elektronun kinetik enerjisi ${_n(foton)} − ${_n(ei)} = '
           '${_n(d)} eV bulunur.',
+      sira: s,
     );
   }
   return _s(
@@ -2756,9 +2961,11 @@ AdvancedItem _fotonIyonlasma(int a, int b, int k) {
       ei,
       if (m == 2) _iki(d + 6.8),
       d,
+      if (m == 4) _iki(d + 3.4),
     ],
     '$aciklama Fotonun enerjisi iyonlaşma enerjisi ile elektronun kinetik '
         'enerjisinin toplamıdır: ${_n(ei)} + ${_n(d)} = ${_n(foton)} eV.',
+    sira: s,
   );
 }
 
@@ -2784,10 +2991,13 @@ AdvancedItem _carpismaIyonlasma(int a, int b, int k) {
       // iyonlaşma enerjisinin kendisi.
       kopan,
       ei,
+      (kin - ei) / 2,
+      kin,
     ],
     'n = $m düzeyindeki elektronu atomdan koparmak için ${_n(ei)} eV gerekir. '
         'Enerji korunumundan ${_n(kin)} = ${_n(ei)} + ${_n(kopan)} + K olur; '
         'çarpan elektronun kinetik enerjisi K = ${_n(_iki(kalan))} eV bulunur.',
+    sira: _hs(a, b, 3 * k + 2),
   );
 }
 
@@ -2856,12 +3066,13 @@ AdvancedItem _dalgaBoyuDegisimi(int a, int b, int k) {
         'parçacığın $degisim de Broglie dalga boyu kaç nm olur? $_goreliDegil',
     son,
     buyur
-        ? [ilk / kat, ilk * kat * kat, ilk]
-        : [ilk * kat, ilk / (kat * kat), ilk],
+        ? [ilk / kat, ilk * kat * kat, ilk, ilk * math.sqrt(kat)]
+        : [ilk * kat, ilk / (kat * kat), ilk, ilk / math.sqrt(kat)],
     '$bagint olduğundan dalga boyu $neden. '
         '${v == 3 ? 'Enerji ${kat * kat} katına çıkınca karekökü $kat katına çıkar. ' : ''}'
         'Yeni dalga boyu ${_n(ilk)} ${buyur ? '·' : '/'} $kat = ${_n(son)} nm olur.',
     unit: 'nm',
+    sira: _hs(a, b, 3 * k),
   );
 }
 
@@ -2968,16 +3179,28 @@ final _elektronEnerji = [
 AdvancedItem _dalgaBoyuOrani(int a, int b, int k) {
   final n = a + 25 * b + 500 * k; // 0 … 1499
   final (m1, m2, v1, v2) = _yay(_ikiParcacik, n, 1500);
-  return kesirli(
+  final r = m2 * v2 / (m1 * v1);
+  return _tersCiftli(
     'Kütlesi $m1 u olan X parçacığı $v1·10⁵ m/s, kütlesi $m2 u olan Y '
         'parçacığı $v2·10⁵ m/s hızla hareket ediyor. X parçacığının de Broglie '
         'dalga boyunun Y parçacığının de Broglie dalga boyuna oranı kaçtır? '
         '$_goreliDegil',
     m2 * v2,
     m1 * v1,
-    [(m1 * v1, m2 * v2), (m2, m1), (v2, v1)],
+    [
+      // Yalnız kütle ya da yalnız hız oranını yazmak, hız oranını ters
+      // çevirmek, momentum yerine kinetik enerjiyi ya da momentumun
+      // karesini kullanmak (her birinin tersi de seçenek olur).
+      (m2, m1),
+      (v2, v1),
+      (m2 * v1, m1 * v2),
+      (m2 * v2 * v2, m1 * v1 * v1),
+      if (r * r <= 50 && r * r >= 1 / 50)
+        (m2 * v2 * m2 * v2, m1 * v1 * m1 * v1),
+    ],
     'λ = h / (m·v) olduğundan dalga boyları oranı momentumların ters oranına '
         'eşittir: ($m2·$v2) / ($m1·$v1) = ${kesir(m2 * v2, m1 * v1)}.',
+    _hs(a, b, 3 * k + 1),
   );
 }
 
@@ -2986,17 +3209,20 @@ AdvancedItem _dalgaBoyuEnerji(int a, int b, int k) {
     final n = a + 25 * (b ~/ 2) + 250 * k; // 0 … 749
     final (m1, m2, e1, e2) = _yay(_enerjiParcacik, n, 750);
     final (p, q) = _kareOran(m2 * e2, m1 * e1)!;
-    return kesirli(
+    return _tersCiftli(
       'Kütlesi $m1 u olan X parçacığının kinetik enerjisi $e1 eV, kütlesi '
           '$m2 u olan Y parçacığının kinetik enerjisi $e2 eV olarak veriliyor. X '
           'parçacığının de Broglie dalga boyunun Y parçacığının de Broglie dalga '
           'boyuna oranı kaçtır? $_goreliDegil',
       p,
       q,
-      [(m2 * e2, m1 * e1), (q, p), (m2, m1)],
+      // Karekökü almamak, yalnız kütle ya da yalnız enerji oranını yazmak
+      // (her birinin tersi de seçenek olur).
+      [(m2 * e2, m1 * e1), (m2, m1), (e2, e1)],
       'p = √(2·m·E) ve λ = h / p olduğundan λ ∝ 1 / √(m·E) olur: '
           'λX / λY = √(($m2·$e2) / ($m1·$e1)) = √(${kesir(m2 * e2, m1 * e1)}) = '
           '${kesir(p, q)}.',
+      _hs(a, b, 3 * k + 2),
     );
   }
   final (p, q) = _enerjiKati[b ~/ 2];
@@ -3009,10 +3235,11 @@ AdvancedItem _dalgaBoyuEnerji(int a, int b, int k) {
         'Broglie dalga boyu kaç pm olur? (1 pm = 10⁻¹² m; göreli etkiler '
         'önemsizdir.)',
     l2,
-    [l1 * p * p / (q * q), l1 * q / p, l1],
+    [l1 * p * p / (q * q), l1 * q / p, l1, l1 * q * q / (p * p)],
     'λ = h / √(2·m·E) olduğundan dalga boyu kinetik enerjinin kareköküyle ters '
         'orantılıdır: λ₂ = λ₁·√(E₁ / E₂) = $l1·√($e1 / $e2) = '
         '$l1·${kesir(p, q)} = $l2 pm.',
+    sira: _hs(a, b, 3 * k + 2),
   );
 }
 
@@ -3094,11 +3321,20 @@ AdvancedItem _cubukEmk(int a, int b, int k) {
     '${_rayDuzeni(b10, l10, v, null)} Çubuğun raylar arasında kalan kısmında '
         'oluşan indüksiyon emk değeri kaç V olur?',
     e,
-    [e * 100, b10 * v / 10, l10 * v / 10],
+    [
+      b10 * v / 10,
+      l10 * v / 10,
+      b10 * l10 / 100,
+      e / 2,
+      b10 * v / l10,
+      b10 * l10 / (100 * v),
+      e * 100,
+    ],
     'Hareketli çubukta oluşan emk ε = B·L·v bağıntısıyla bulunur; L, çubuğun '
         'raylar arasında kalan uzunluğudur. L = ${_n(l10 / 10)} m olduğundan '
         'ε = ${_n(b10 / 10)}·${_n(l10 / 10)}·$v = ${_n(e)} V olur.',
     unit: 'V',
+    sira: _hs(a, b, 3 * k),
   );
 }
 
@@ -3109,11 +3345,20 @@ AdvancedItem _cubukAkim(int a, int b, int k) {
     '${_rayDuzeni(b10, l10, v, r)} Rayların ve çubuğun direnci önemsiz '
         'olduğuna göre devreden geçen indüksiyon akımı kaç A olur?',
     akim,
-    [e * r, e, akim * 100],
+    [
+      e * r,
+      e,
+      b10 * v / (10 * r),
+      b10 * l10 / (100 * r),
+      l10 * v / (10 * r),
+      b10 * l10 / (100 * v * r),
+      akim * 100,
+    ],
     'Çubukta oluşan emk ε = B·L·v = ${_n(b10 / 10)}·${_n(l10 / 10)}·$v = '
         '${_n(e)} V olur. Devreden geçen akım I = ε / R = ${_n(e)} / $r = '
         '${_n(akim)} A bulunur.',
     unit: 'A',
+    sira: _hs(a, b, 3 * k + 1),
   );
 }
 
@@ -3125,27 +3370,30 @@ AdvancedItem _cubukKuvvet(int a, int b, int k) {
       'Çubukta oluşan emk ε = B·L·v = ${_n(b10 / 10)}·${_n(l10 / 10)}·$v = '
       '${_n(e)} V, devreden geçen akım I = ε / R = ${_n(e)} / $r = ${_n(akim)} A '
       'olur.';
+  final s = _hs(a, b, 3 * k + 2);
   if (b.isEven) {
     return _s(
       '${_rayDuzeni(b10, l10, v, r)} Sürtünmeler ile rayların ve çubuğun '
           'direnci önemsiz olduğuna göre çubuğun sabit hızla hareket etmesi için '
           'çubuğa uygulanması gereken kuvvet kaç N olur?',
       f,
-      [e, b10 * e * l10 / 100, b10 * akim / 10],
+      [e, b10 * e * l10 / 100, b10 * akim / 10, akim, akim * l10 / 10, p],
       '$ortak Çubuğa etki eden manyetik kuvvet F = B·I·L = '
           '${_n(b10 / 10)}·${_n(akim)}·${_n(l10 / 10)} = ${_n(f)} N olup çubuğun '
           'sabit hızla gitmesi için aynı büyüklükte kuvvet uygulanmalıdır.',
       unit: 'N',
+      sira: s,
     );
   }
   return _s(
     '${_rayDuzeni(b10, l10, v, r)} Rayların ve çubuğun direnci önemsiz '
         'olduğuna göre dirençte harcanan elektriksel güç kaç W olur?',
     p,
-    [e * e, e * r, e * akim * 2],
+    [e * e, e * r, e * akim * 2, akim * akim / r, akim, e],
     '$ortak Dirençte harcanan güç P = ε·I = ${_n(e)}·${_n(akim)} = ${_n(p)} W '
         'bulunur.',
     unit: 'W',
+    sira: s,
   );
 }
 
@@ -3211,23 +3459,26 @@ AdvancedItem _acFrekans(int a, int b, int k) {
   final frekans =
       'ω = 2·π·f olduğundan f = $wπ / (2π) = $f Hz, yani saniyede $f periyot '
       'olur.';
+  final s = _hs(a, b, 3 * k);
   if (yon) {
     return _s(
       '$giris Kaynağa bağlı bir dirençten geçen akımın yönü $t s içinde kaç kez '
           'değişir?',
       n,
-      [f * t, 4 * f * t, f],
+      [f * t, 4 * f * t, f, 2 * f],
       '$frekans Akımın yönü her periyotta iki kez değiştiğinden $t s içinde '
           '2·$f·$t = $n kez değişir.',
+      sira: s,
     );
   }
   return _s(
     '$giris Kaynağın gerilimi $t s içinde kaç kez pozitif en büyük değerine '
         'ulaşır?',
     n,
-    [2 * f * t, n / 2, f],
+    [2 * f * t, n / 2, f, t],
     '$frekans Gerilim her periyotta bir kez pozitif en büyük değerine ulaştığından '
         '$t s içinde $f·$t = $n kez ulaşır.',
+    sira: s,
   );
 }
 
@@ -3283,6 +3534,7 @@ AdvancedItem _acEtkin(int a, int b, int k) {
   final n = a + 25 * (b ~/ 4) + 125 * k; // 0 … 374
   final (x10, r) = _yay(_acTablolar[v], n, 375);
   final x = x10 / 10;
+  final s = _hs(a, b, 3 * k + 1);
   switch (v) {
     case 0:
       final ie = x / r;
@@ -3291,11 +3543,14 @@ AdvancedItem _acEtkin(int a, int b, int k) {
             'olan bir dirence uygulanıyor. Dirençten geçen akımın etkin değeri kaç '
             'A olur?',
         ie,
-        ['${_k2(_iki(ie))} A', x / (2 * r), x * r],
+        // Anahtarın sayısını taşıyan k√2 biçimli bir seçenek anahtarı ele
+        // verirdi; çeldiriciler bu yüzden yalnız sayıdır.
+        [x / (2 * r), x * r, 2 * ie, r / x, x],
         'Gerilimin etkin değeri maksimum değerin √2 ile bölünmesiyle bulunur: '
             '${_k2(x)} / √2 = ${_n(x)} V. Etkin akım ${_n(x)} / $r = ${_n(ie)} A '
             'olur.',
         unit: 'A',
+        sira: s,
       );
     case 1:
       final ie = x / r, im = 1.4 * x / r;
@@ -3305,10 +3560,11 @@ AdvancedItem _acEtkin(int a, int b, int k) {
             'olduğuna göre dirençten geçen akımın maksimum değeri kaç A olur? '
             '$_kok2',
         im,
-        [ie, x / (1.4 * r), 2 * x / r],
+        [ie, x / (1.4 * r), 2 * x / r, 1.4 * x, x / (2 * r), x * r],
         'Etkin akım ${_n(x)} / $r = ${_n(ie)} A olur. Akımın maksimum değeri '
             'etkin değerin √2 katıdır: ${_n(ie)}·1,4 = ${_n(im)} A.',
         unit: 'A',
+        sira: s,
       );
     case 2:
       final ve = x * r, vm = 1.4 * x * r;
@@ -3317,10 +3573,11 @@ AdvancedItem _acEtkin(int a, int b, int k) {
             'bir ampermetreyle ${_n(x)} A olarak ölçülüyor. Direncin uçları '
             'arasındaki gerilimin maksimum değeri kaç V olur? $_kok2',
         vm,
-        [ve, ve / 1.4, 2 * ve],
+        [ve, ve / 1.4, 2 * ve, 1.96 * ve, ve / 2, 1.4 * x],
         'Etkin gerilim ${_n(x)}·$r = ${_n(ve)} V olur. Gerilimin maksimum '
             'değeri etkin değerin √2 katıdır: ${_n(ve)}·1,4 = ${_n(vm)} V.',
         unit: 'V',
+        sira: s,
       );
     default:
       final ve = x * r;
@@ -3329,10 +3586,11 @@ AdvancedItem _acEtkin(int a, int b, int k) {
             'değeri ${_k2(x)} A olarak veriliyor. Direncin uçları arasındaki '
             'gerilimin etkin değeri kaç V olur?',
         ve,
-        ['${_k2(_iki(ve))} V', ve / 2, x / r],
+        [ve / 2, x / r, 2 * ve, x * x * r, r / x],
         'Akımın etkin değeri ${_k2(x)} / √2 = ${_n(x)} A olur. Etkin gerilim '
             '${_n(x)}·$r = ${_n(ve)} V bulunur.',
         unit: 'V',
+        sira: s,
       );
   }
 }
@@ -3369,6 +3627,7 @@ AdvancedItem _acGuc(int a, int b, int k) {
   final v = b % 4;
   final n = a + 25 * (b ~/ 4) + 125 * k; // 0 … 374
   final (x, r) = _yay(_gucTablolar[v], n, 375);
+  final s = _hs(a, b, 3 * k + 2);
   switch (v) {
     case 0:
       final p = x * x / (2 * r);
@@ -3376,10 +3635,11 @@ AdvancedItem _acGuc(int a, int b, int k) {
         'Maksimum değeri $x V olan alternatif gerilim, direnci $r Ω olan bir '
             'dirence uygulanıyor. Dirençte harcanan ortalama güç kaç W olur?',
         p,
-        [2 * p, p / 2, x / r],
+        [2 * p, p / 2, x / r, p * math.sqrt2, x / (2 * r)],
         'Ortalama güç etkin değerlerle hesaplanır: P = (Vmaks / √2)² / R = '
             'Vmaks² / (2·R) = $x² / (2·$r) = ${_n(p)} W.',
         unit: 'W',
+        sira: s,
       );
     case 1:
       final im = x / 2, p = im * im * r / 2;
@@ -3388,10 +3648,11 @@ AdvancedItem _acGuc(int a, int b, int k) {
             'değeri ${_n(im)} A olarak veriliyor. Dirençte harcanan ortalama güç '
             'kaç W olur?',
         p,
-        [2 * p, p / 2, im * r],
+        [2 * p, p / 2, im * r, p * math.sqrt2, im * r / 2],
         'Ortalama güç etkin akımla hesaplanır: P = (Imaks / √2)²·R = '
             'Imaks²·R / 2 = ${_n(im)}²·$r / 2 = ${_n(p)} W.',
         unit: 'W',
+        sira: s,
       );
     case 2:
       final p = x * x / r;
@@ -3399,10 +3660,11 @@ AdvancedItem _acGuc(int a, int b, int k) {
         'Maksimum değeri ${_k2(x)} V olan alternatif gerilim, direnci $r Ω olan '
             'bir dirence uygulanıyor. Dirençte harcanan ortalama güç kaç W olur?',
         p,
-        [2 * p, p / 2, x / r],
+        [2 * p, p / 2, x / r, p * math.sqrt2, p / math.sqrt2],
         'Etkin gerilim ${_k2(x)} / √2 = $x V olur. Ortalama güç P = Vetkin² / R '
             '= $x² / $r = ${_n(p)} W.',
         unit: 'W',
+        sira: s,
       );
     default:
       final dk = 1 + a % 5 + 5 * k; // 1 … 15 dakika
@@ -3412,11 +3674,12 @@ AdvancedItem _acGuc(int a, int b, int k) {
             'ısıtıcı telin uçlarına uygulanıyor. Tel $dk dakika çalıştırıldığında '
             'harcanan elektrik enerjisi kaç J olur?',
         e,
-        [e * 2, p * dk, e / 2],
+        [e * 2, p * dk, e / 2, x * 60 * dk / r],
         'Ortalama güç P = Vetkin² / R = $x² / $r = ${_n(p)} W olur. $dk dakika '
             '${60 * dk} s olduğundan enerji W = P·t = ${_n(p)}·${60 * dk} = '
             '${_n(e)} J bulunur.',
         unit: 'J',
+        sira: s,
       );
   }
 }
@@ -3504,9 +3767,10 @@ AdvancedItem _sacakGenisligi(int a, int b, int k) {
     '${_deney(l, boy, d)} Perdede oluşan ardışık iki aydınlık saçak '
     'arasındaki uzaklık (saçak genişliği) kaç mm olur?',
     dx,
-    [dx * 1000, dx / 2, 2 * dx],
+    [dx / 2, 2 * dx, 1.5 * dx, dx * 1000],
     _sacakCozum(l, boy, d),
     unit: 'mm',
+    sira: _hs(a, b, 3 * k),
   );
 }
 
@@ -3542,26 +3806,43 @@ AdvancedItem _sacakKonumu(int a, int b, int k) {
   final dx = _sacak(l, boy, d) / 100;
   final cozum = _sacakCozum(l, boy, d);
   const merkez = 'merkezî aydınlık saçağın';
+  final sira = _hs(a, b, 3 * k + 1);
   switch (v) {
     case 0:
       return _s(
         '${_deney(l, boy, d)} Perdede oluşan $s. aydınlık saçağın $merkez '
             'ortasına uzaklığı kaç mm olur?',
         s * dx,
-        [(s - 0.5) * dx, (s + 1) * dx, dx],
+        [
+          (s - 0.5) * dx,
+          (s + 1) * dx,
+          dx,
+          (s + 0.5) * dx,
+          (s - 1) * dx,
+          s * dx / 2,
+        ],
         '$cozum n. aydınlık saçak merkezden n·Δx uzaktadır: $s·${_n(dx)} = '
             '${_n(s * dx)} mm.',
         unit: 'mm',
+        sira: sira,
       );
     case 1:
       return _s(
         '${_deney(l, boy, d)} Perdede oluşan $s. karanlık saçağın $merkez '
             'ortasına uzaklığı kaç mm olur?',
         (s - 0.5) * dx,
-        [s * dx, (s + 0.5) * dx, (s - 1) * dx],
+        [
+          s * dx,
+          (s + 0.5) * dx,
+          (s - 1) * dx,
+          (2 * s - 1) * dx,
+          (s - 0.5) * dx / 2,
+          (s - 1.5) * dx,
+        ],
         '$cozum n. karanlık saçak merkezden (n − ½)·Δx uzaktadır: '
             '${_n(s - 0.5)}·${_n(dx)} = ${_n((s - 0.5) * dx)} mm.',
         unit: 'mm',
+        sira: sira,
       );
     case 2:
       final x = (m - 0.5 - s) * dx; // aynı tarafta
@@ -3570,10 +3851,18 @@ AdvancedItem _sacakKonumu(int a, int b, int k) {
             '$s. aydınlık saçak ile $m. karanlık saçak arasındaki uzaklık kaç mm '
             'olur?',
         x,
-        [(m - s) * dx, (m + 0.5 - s) * dx, (m - 0.5 + s) * dx],
+        [
+          (m - s) * dx,
+          (m + 0.5 - s) * dx,
+          (m - 0.5 + s) * dx,
+          (m - 1 - s) * dx,
+          x / 2,
+          (m - 1.5 - s) * dx,
+        ],
         '$cozum $s. aydınlık saçak ${_n(s * dx)} mm, $m. karanlık saçak '
             '${_n((m - 0.5) * dx)} mm uzaktadır; aradaki uzaklık ${_n(x)} mm olur.',
         unit: 'mm',
+        sira: sira,
       );
     default:
       final x = (s + m - 0.5) * dx; // zıt taraflarda
@@ -3582,10 +3871,17 @@ AdvancedItem _sacakKonumu(int a, int b, int k) {
             'aydınlık saçak ile öbür tarafındaki $m. karanlık saçak arasındaki '
             'uzaklık kaç mm olur?',
         x,
-        [(s + m) * dx, ((m - 0.5 - s).abs()) * dx, (s + m + 0.5) * dx],
+        [
+          (s + m) * dx,
+          ((m - 0.5 - s).abs()) * dx,
+          (s + m + 0.5) * dx,
+          (s + m - 1) * dx,
+          (s + m - 1.5) * dx,
+        ],
         '$cozum Saçaklar merkezin iki yanında olduğundan uzaklıklar toplanır: '
             '$s·${_n(dx)} + ${_n(m - 0.5)}·${_n(dx)} = ${_n(x)} mm.',
         unit: 'mm',
+        sira: sira,
       );
   }
 }
@@ -3596,6 +3892,7 @@ AdvancedItem _girisimTers(int a, int b, int k) {
   final (l, boy, d) = _yay(_girisim, n, 525);
   final dx = _sacak(l, boy, d) / 100;
   final yarik = 'Çift yarık deneyinde';
+  final sira = _hs(a, b, 3 * k + 2);
   switch (v) {
     case 0:
       return _s(
@@ -3604,10 +3901,13 @@ AdvancedItem _girisimTers(int a, int b, int k) {
             'iki aydınlık saçak arasındaki uzaklık ${_n(dx)} mm ölçüldüğüne göre '
             'kullanılan ışığın dalga boyu kaç nm olur?',
         l,
-        [l * 1000, l / 2, 2 * l],
+        // λ·1000 (bir 10⁻³ çarpanını unutmak) 0,4 mm gibi gerçek dışı bir
+        // dalga boyu verdiğinden alınmaz.
+        [l / 2, 2 * l],
         'Δx = λ·L / d bağıntısından λ = Δx·d / L = ${_n(dx)}·10⁻³·'
             '${_n(d / 100)}·10⁻³ / ${_n(boy / 100)} m = $l·10⁻⁹ m = $l nm bulunur.',
         unit: 'nm',
+        sira: sira,
       );
     case 1:
       return _s(
@@ -3616,10 +3916,13 @@ AdvancedItem _girisimTers(int a, int b, int k) {
             'veriliyor. Perdede ardışık iki aydınlık saçak arasındaki uzaklık '
             '${_n(dx)} mm ölçüldüğüne göre yarıklar arasındaki uzaklık kaç mm olur?',
         d / 100,
-        [d / 10, d / 200, d / 50],
+        // 0,x mm biçimindeki anahtarda 10 katı (x mm) anahtarla aynı rakamı
+        // taşıyıp onu ele verirdi; bu durumda alınmaz.
+        [d / 200, d / 50, if (d >= 100 || d % 10 != 0) d / 10],
         'Δx = λ·L / d bağıntısından d = λ·L / Δx = $l·10⁻⁹·${_n(boy / 100)} / '
             '(${_n(dx)}·10⁻³) m = ${_n(d / 100)} mm bulunur.',
         unit: 'mm',
+        sira: sira,
       );
     default:
       final s = 2 + n % 4; // 2 … 5
@@ -3630,10 +3933,23 @@ AdvancedItem _girisimTers(int a, int b, int k) {
             '${_n(s * dx)} mm ölçüldüğüne göre kullanılan ışığın dalga boyu kaç nm '
             'olur?',
         l,
-        [s * l, l * s / (s - 0.5), 2 * l],
+        // Dalga boyları tam nanometreye yuvarlanır (anahtar gibi).
+        [
+          for (final x in [
+            s * l,
+            l * s / (s - 0.5),
+            2 * l,
+            l * s / (s + 1),
+            l * (s - 0.5) / s,
+            l / 2,
+            l * s / (s - 1),
+          ])
+            x.roundToDouble(),
+        ],
         '$s. aydınlık saçak merkezden $s·Δx uzakta olduğundan Δx = '
             '${_n(s * dx)} / $s = ${_n(dx)} mm olur. λ = Δx·d / L = $l nm bulunur.',
         unit: 'nm',
+        sira: sira,
       );
   }
 }
@@ -3714,6 +4030,7 @@ AdvancedItem _derinlikDegisimi(int a, int b, int k) {
   const giris = 'Bir dalga leğeninde periyodik su dalgaları';
   const sabit =
       'Dalgaların frekansı kaynağa bağlı olduğundan iki bölgede de aynıdır';
+  final s = _hs(a, b, 3 * k);
   switch (v) {
     case 0:
       return _s(
@@ -3722,9 +4039,10 @@ AdvancedItem _derinlikDegisimi(int a, int b, int k) {
             'dalga boyu ${_n(la2)} cm oluyor. Dalgaların sığ bölgedeki hızı kaç '
             'cm/s olur?',
         v2,
-        [v1 * la1 / la2, v1, v1 - v2],
+        [v1 * la1 / la2, v1, v1 - v2, v1 * la2 * la2 / (la1 * la1), f10 / 10],
         '$sabit: f = ${_n(v1)} / ${_n(la1)} = ${_n(f10 / 10)} Hz. Sığ bölgedeki '
             'hız v = f·λ = ${_n(f10 / 10)}·${_n(la2)} = ${_n(v2)} cm/s olur.',
+        sira: s,
       );
     case 1:
       return _s(
@@ -3734,10 +4052,17 @@ AdvancedItem _derinlikDegisimi(int a, int b, int k) {
             'cm olur?',
         la2,
         // Oranı ters kurmak, dalga boyunu değişmez sanmak, λ = v·f yazmak.
-        [la1 * v1 / v2, la1, v2 * f10 / 10],
+        [
+          la1 * v1 / v2,
+          la1,
+          v2 * f10 / 10,
+          la1 * v2 * v2 / (v1 * v1),
+          la1 - la2,
+        ],
         '$sabit: f = ${_n(v1)} / ${_n(la1)} = ${_n(f10 / 10)} Hz. Sığ bölgedeki '
             'dalga boyu λ = v / f = ${_n(v2)} / ${_n(f10 / 10)} = ${_n(la2)} cm olur.',
         unit: 'cm',
+        sira: s,
       );
     case 2:
       return _s(
@@ -3746,9 +4071,10 @@ AdvancedItem _derinlikDegisimi(int a, int b, int k) {
             'dalga boyu ${_n(la1)} cm oluyor. Dalgaların derin bölgedeki hızı kaç '
             'cm/s olur?',
         v1,
-        [v2 * la2 / la1, v2, 2 * v2],
+        [v2 * la2 / la1, v2, 2 * v2, v2 * la1 * la1 / (la2 * la2), v1 - v2],
         '$sabit: f = ${_n(v2)} / ${_n(la2)} = ${_n(f10 / 10)} Hz. Derin bölgedeki '
             'hız v = f·λ = ${_n(f10 / 10)}·${_n(la1)} = ${_n(v1)} cm/s olur.',
+        sira: s,
       );
     default:
       final fark = v1 - v2;
@@ -3758,10 +4084,11 @@ AdvancedItem _derinlikDegisimi(int a, int b, int k) {
             'cm, sığ bölgedeki dalga boyu ${_n(la2)} cm olarak ölçülüyor. '
             'Dalgaların derin bölgedeki hızı sığ bölgedekinden kaç cm/s fazladır?',
         fark,
-        [la1 - la2, v1 + v2, v1],
+        [la1 - la2, v1 + v2, v1, v2, (la1 - la2) * 10 / f10],
         '$sabit. Derin bölgede v = ${_n(f10 / 10)}·${_n(la1)} = ${_n(v1)} cm/s, '
             'sığ bölgede v = ${_n(f10 / 10)}·${_n(la2)} = ${_n(v2)} cm/s olur; fark '
             '${_n(fark)} cm/s bulunur.',
+        sira: s,
       );
   }
 }
@@ -3797,10 +4124,18 @@ AdvancedItem _atmaSuresi(int a, int b, int k) {
         'bölgede $v2 cm/s hızla ilerliyor. Atma sığ bölgede $d2 cm daha '
         'ilerlediğinde, harekete başladığı andan itibaren kaç saniye geçmiş olur?',
     t,
-    [(d1 + d2) / v1, (d1 + d2) / v2, (d1 + d2) / ((v1 + v2) / 2)],
+    [
+      (d1 + d2) / v1,
+      (d1 + d2) / v2,
+      (d1 + d2) / ((v1 + v2) / 2),
+      d1 / v2 + d2 / v1,
+      t1,
+      t2,
+    ],
     'Atma derin bölgede $d1 / $v1 = ${_n(t1)} s, sığ bölgede $d2 / $v2 = '
         '${_n(t2)} s ilerler. Toplam süre ${_n(t1)} + ${_n(t2)} = ${_n(t)} s olur.',
     unit: 's',
+    sira: _hs(a, b, 3 * k + 1),
   );
 }
 
@@ -3835,6 +4170,7 @@ final _suYol = [
 
 AdvancedItem _periyodikDalga(int a, int b, int k) {
   final n = a + 25 * (b ~/ 2) + 250 * k; // 0 … 749
+  final s = _hs(a, b, 3 * k + 2);
   if (b.isEven) {
     final (f10, t, d) = _yay(_tepeler, n, 750);
     final f = f10 / 10, la = d / (10 * (t - 1)), v = f * la;
@@ -3844,11 +4180,12 @@ AdvancedItem _periyodikDalga(int a, int b, int k) {
           'dalga tepesinden ilki ile sonuncusu arasındaki uzaklık ${_n(d / 10)} cm '
           'olarak ölçülüyor. Dalgaların sığ bölgedeki hızı kaç cm/s olur?',
       v,
-      [f * d / (10 * t), f * d / 10, v / 2],
+      [f * d / (10 * t), f * d / 10, v / 2, 2 * v],
       '$t tepe arasında ${t - 1} dalga boyu bulunduğundan λ = ${_n(d / 10)} / '
           '${t - 1} = ${_n(la)} cm olur. Frekans kaynağa bağlı olduğundan sığ '
           'bölgede de ${_n(f)} Hz kalır: v = f·λ = ${_n(f)}·${_n(la)} = ${_n(v)} '
           'cm/s.',
+      sira: s,
     );
   }
   final (f10, l1, l2, yol) = _yay(_suYol, n, 750);
@@ -3860,11 +4197,12 @@ AdvancedItem _periyodikDalga(int a, int b, int k) {
         'boyu ${_n(l2 / 10)} cm olarak ölçülüyor. Bir dalga tepesi sığ bölgede '
         '$yol cm yolu kaç saniyede alır?',
     sure,
-    [yol / v1, yol * l2 / (v1 * l1), sure * 2],
+    [yol / v1, yol * l2 / (v1 * l1), sure * 2, sure * l1 / l2, yol * 10 / f10],
     'Frekans iki bölgede aynıdır: f = ${_n(v1)} / ${_n(l1 / 10)} = '
         '${_n(f10 / 10)} Hz. Sığ bölgedeki hız ${_n(f10 / 10)}·${_n(l2 / 10)} = '
         '${_n(v2)} cm/s olduğundan süre $yol / ${_n(v2)} = ${_n(sure)} s bulunur.',
     unit: 's',
+    sira: s,
   );
 }
 
@@ -3996,12 +4334,21 @@ AdvancedItem _ozdesKureler(int a, int b, int k) {
           '= ${_n(y)} µC bulunur.',
     ),
   };
+  // Ek tipik hatalar: işareti kaybetmek, ara adımdaki yükü yanıt sanmak,
+  // bir dokunmayı atlamak ya da fazladan bir kez yarıya bölmek.
+  final ekler = switch (v) {
+    0 => [(qk + ql) / 2, (ql + qm) / 2],
+    1 => <double>[],
+    2 => [(qk + ql) / 8, 0.0],
+    _ => [(qk + ql) / 4, (qk + ql + 4 * qm) / 4],
+  };
   return _s(
     '$giris $islem $soru kaç µC olur?',
     y,
-    yanlis,
+    [...yanlis, ...ekler],
     cozum,
     pozitif: false,
+    sira: _hs(a, b, 3 * k),
   );
 }
 
@@ -4103,7 +4450,25 @@ AdvancedItem _yaricapliKureler(int a, int b, int k, bool topraklama) {
           'yükü ${_n(yk)}·$r1 / ${r1 + r2} = ${_n(y)} nC olur.',
     ),
   };
-  return _s('$giris $soru', y, yanlis, '$paylasim$ek', pozitif: false);
+  // Ek tipik hatalar: yarıçap oranını ters kurmak, yalnız kendi yükünü
+  // paylaştırmak, yükü yüzey alanıyla (r²) orantılı sanmak, son yükleri
+  // karıştırmak.
+  final toplam = q1 + q2, yl = toplam * r2 / (r1 + r2);
+  final alan = r1 * r1 + r2 * r2;
+  final ekler = switch (v) {
+    0 => [toplam * r1 / r2, q1 * r1 / (r1 + r2), toplam * r1 * r1 / alan],
+    1 => [toplam * r2 / r1, q2 * r2 / (r1 + r2), toplam * r2 * r2 / alan],
+    2 => [(q1 - yl).abs(), (q2 - yk).abs(), (yk - yl).abs()],
+    _ => [yk * r1 / r2, yl * r1 / (r1 + r2)],
+  };
+  return _s(
+    '$giris $soru',
+    y,
+    [...yanlis, ...ekler],
+    '$paylasim$ek',
+    pozitif: false,
+    sira: _hs(a, b, 3 * k + (topraklama ? 2 : 1)),
+  );
 }
 
 final _f16 = lmAile(
@@ -4539,7 +4904,18 @@ AdvancedItem _lambaSoru(int i) {
       '${devre.$1} $akimYazi ${lambaAkim(j)}',
     ),
   };
-  return _s('$giris $soru', y, yanlis, cozum, unit: 'W');
+  // Ek tipik hatalar: üretecin toplam gücünü yazmak, ana kol akımını
+  // lambalara eşit bölmek.
+  final nl = devre.$4.length;
+  final ekler = [e * ana, (ana / nl) * (ana / nl) * r];
+  return _s(
+    '$giris $soru',
+    y,
+    [...yanlis, ...ekler],
+    cozum,
+    unit: 'W',
+    sira: hedefSira(i),
+  );
 }
 
 final _f17 = lmSirali(
@@ -4618,6 +4994,7 @@ final _telOranti = [
 
 AdvancedItem _duzTelAlani(int a, int b, int k) {
   final n = a + 25 * (b ~/ 2) + 250 * k; // 0 … 999
+  final s = _hs(a, b, 3 * k);
   if (b.isEven && n % 3 == 1) {
     final (akim, d) = _yay(_duzTelAkim, n ~/ 3, 333);
     final alan = 20 * akim / d;
@@ -4626,10 +5003,12 @@ AdvancedItem _duzTelAlani(int a, int b, int k) {
           'oluşturduğu manyetik alanın büyüklüğü ${_n(alan)} µT olarak '
           'ölçülüyor. Telden geçen akımın şiddeti kaç A olur? $_kNot',
       akim,
-      [alan * d / 10, alan * d / 40, 5 * alan * d],
+      // Çembersel tel bağıntısını (π = 3) kullanmak: I / 3.
+      [alan * d / 10, alan * d / 40, akim / 3, 5 * alan * d],
       'B = 2k·I / d bağıntısından I = B·d / (2k) bulunur: I = '
           '${_n(alan)}·10⁻⁶·${_m(d)} / (2·10⁻⁷) = $akim A.',
       unit: 'A',
+      sira: s,
     );
   }
   if (b.isEven && n % 3 == 2) {
@@ -4640,10 +5019,11 @@ AdvancedItem _duzTelAlani(int a, int b, int k) {
           'oluşturduğu manyetik alanın büyüklüğünün ${_n(alan)} µT olduğu '
           'noktalar telden kaç cm uzaklıktadır? $_kNot',
       d,
-      [d / 2, 2 * d, d / 100],
+      [d / 2, 2 * d, d / 100, 3 * d],
       'B = 2k·I / d bağıntısından d = 2k·I / B bulunur: d = 2·10⁻⁷·$akim / '
           '(${_n(alan)}·10⁻⁶) = ${_m(d)} m = $d cm.',
       unit: 'cm',
+      sira: s,
     );
   }
   if (b.isEven) {
@@ -4654,9 +5034,10 @@ AdvancedItem _duzTelAlani(int a, int b, int k) {
           'cm uzaklıktaki bir noktada telin oluşturduğu manyetik alanın büyüklüğü '
           'kaç µT olur? $_kNot',
       alan,
-      [100 * alan, alan / 2, 2 * alan],
+      [alan / 2, 2 * alan, 3 * alan, 100 * alan],
       'Düz telin oluşturduğu manyetik alan B = 2k·I / d bağıntısıyla bulunur: '
           'B = 2·10⁻⁷·$akim / ${_m(d)} = ${_n(alan)}·10⁻⁶ T = ${_n(alan)} µT.',
+      sira: s,
     );
   }
   final (b1, d1, p, q, d2) = _yay(_telOranti, n, 1000);
@@ -4668,9 +5049,17 @@ AdvancedItem _duzTelAlani(int a, int b, int k) {
         'Telden geçen akım ilk değerinin $kat katı yapılırsa telden $d2 cm '
         'uzaklıktaki bir noktadaki manyetik alanın büyüklüğü kaç µT olur?',
     b2,
-    [b1 * p * d2 / (q * d1), b1 * p / q, b1 * d1 / d2],
+    [
+      b1 * p * d2 / (q * d1),
+      b1 * p / q,
+      b1 * d1 / d2,
+      b1 * q * d1 / (p * d2),
+      b1 * p * d1 * d1 / (q * d2 * d2),
+      b1,
+    ],
     'B = 2k·I / d olduğundan alan akımla doğru, uzaklıkla ters orantılıdır: '
         'B₂ = $b1·$kat·$d1 / $d2 = ${_n(b2)} µT.',
+    sira: s,
   );
 }
 
@@ -4738,10 +5127,14 @@ AdvancedItem _ikiTelAlani(int a, int b, int k) {
       ara
           ? _ikiTelNet(b1, 20 * i2 / x, ayni, ara)
           : _ikiTelNet(20 * i1 / x, b2, ayni, ara),
+      // Alanların ortalamasını almak; iki tele uzaklığı da D sanmak.
+      (b1 + b2) / 2,
+      _ikiTelNet(20 * i1 / dd, 20 * i2 / dd, ayni, ara),
     ],
     'Noktanın X teline uzaklığı $d1 cm, Y teline uzaklığı $d2 cm olur. X telinin '
         'alanı 2·10⁻⁷·$i1 / ${_m(d1)} = ${_n(b1)} µT, Y telinin alanı '
         '2·10⁻⁷·$i2 / ${_m(d2)} = ${_n(b2)} µT bulunur. $yon',
+    sira: _hs(a, b, 3 * k + 1),
   );
 }
 
@@ -4791,6 +5184,7 @@ final _cemberOranti = [
 
 AdvancedItem _cemberTelAlani(int a, int b, int k) {
   final n = a + 25 * (b ~/ 2) + 250 * k; // 0 … 749
+  final s = _hs(a, b, 3 * k + 2);
   if (b.isEven) {
     final (sarim, akim, r) = _yay(_cemberTel, n, 750);
     final alan = 60 * sarim * akim / r;
@@ -4801,10 +5195,12 @@ AdvancedItem _cemberTelAlani(int a, int b, int k) {
       '$tel $akim A şiddetinde akım geçiyor. Çemberin merkezinde oluşan '
           'manyetik alanın büyüklüğü kaç µT olur? $_kPiNot',
       alan,
-      [if (sarim > 1) alan / sarim, alan / 3, 100 * alan],
+      // B = µ₀·N·I / (2r) bağıntısında 2'ye bölmeyi unutmak: 2B.
+      [if (sarim > 1) alan / sarim, alan / 3, 2 * alan, alan / 2, 100 * alan],
       'Çembersel telin merkezindeki alan B = 2π·k·N·I / r bağıntısıyla '
           'bulunur: B = 2·3·10⁻⁷·$sarim·$akim / ${_m(r)} = ${_n(alan)}·10⁻⁶ T = '
           '${_n(alan)} µT.',
+      sira: s,
     );
   }
   final (b1, sk, ap, aq, rp, rq) = _yay(_cemberOranti, n, 750);
@@ -4829,9 +5225,17 @@ AdvancedItem _cemberTelAlani(int a, int b, int k) {
         'manyetik alanın büyüklüğü $b1 µT olarak ölçülüyor. ${_bas(metin)} '
         'getirilirse merkezdeki manyetik alanın büyüklüğü kaç µT olur?',
     b2,
-    [b1 * sk * ap * rp / (aq * rq), b1 * ap * rq / (aq * rp), b1 * sk],
+    [
+      b1 * sk * ap * rp / (aq * rq),
+      b1 * ap * rq / (aq * rp),
+      b1 * sk,
+      b1,
+      if (ap != aq) b1 * sk * aq * rq / (ap * rp),
+      if (rp != rq) b1 * sk * ap * rq * rq / (aq * rp * rp),
+    ],
     'Merkezdeki alan B = 2π·k·N·I / r olduğundan sarım sayısı ve akımla doğru, '
         'yarıçapla ters orantılıdır: B₂ = $carpanlar = ${_n(b2)} µT.',
+    sira: s,
   );
 }
 

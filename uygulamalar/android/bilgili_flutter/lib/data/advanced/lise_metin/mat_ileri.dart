@@ -163,6 +163,39 @@ AdvancedItem _kes(
 int _hs(int a, int b, int c, [int tuz = 0]) =>
     hedefSira(a + 25 * b + 500 * c, tuz);
 
+/// [siraliCeldiriciler] seçimi; dört seçenek eşit aralıklı bir dizi kurarsa
+/// (anahtar dizinin ucunda ya da ortasında kalıp ipucu verebilir) seçilen en
+/// düşük öncelikli çeldirici (önce komşular) havuzdan çıkarılıp yeniden
+/// seçilir; en çok üç deneme yapılır.
+List<String> _diziKirarak(
+  num anahtar,
+  String yazim,
+  List<(num, String)> havuz,
+  int sira,
+) {
+  var aday = havuz;
+  var secim = siraliCeldiriciler(anahtar, yazim, aday, sira);
+  for (var deneme = 0; deneme < 3; deneme++) {
+    final deger = {for (final (v, y) in aday) y: v};
+    final v = [anahtar, for (final y in secim) deger[y]!]..sort();
+    final d = v[1] - v[0];
+    if ((v[2] - v[1] - d).abs() > 1e-9 || (v[3] - v[2] - d).abs() > 1e-9) {
+      return secim;
+    }
+    int yer(String y) => aday.indexWhere((x) => x.$2 == y);
+    final son = secim.reduce((x, y) => yer(x) > yer(y) ? x : y);
+    final yeni = [
+      for (final x in aday)
+        if (x.$2 != son) x,
+    ];
+    final kalan = yeni.where((x) => !ayniSecenek(x.$2, yazim));
+    if (kalan.map((x) => x.$2).toSet().length < 3) return secim;
+    aday = yeni;
+    secim = siraliCeldiriciler(anahtar, yazim, aday, sira);
+  }
+  return secim;
+}
+
 /// [_tam] gibi; ama anahtardan küçük çeldirici sayısı [sira] olur. Adaylar
 /// öncelik sırasıyla verilir (iki yandan da tipik hatalar); bir yan eksik
 /// kalırsa anahtara yakın komşu değerler kullanılır.
@@ -184,7 +217,7 @@ AdvancedItem _tamS(
   return AdvancedItem(
     kok,
     yazim,
-    siraliCeldiriciler(yanit, yazim, [
+    _diziKirarak(yanit, yazim, [
       for (final x in havuz) (x, birimli(_n(x), birim)),
     ], sira),
     aciklama,
@@ -192,9 +225,10 @@ AdvancedItem _tamS(
 }
 
 /// [_kes] gibi; ama anahtardan küçük çeldirici sayısı [sira] olur. Son çare
-/// komşular tam sayı yanıtta ±1, ±2 …; kesirli yanıtta önce payı ve paydası
-/// birlikte, sonra yalnız biri değişen kesirlerdir. [komsuPozitif] yalnız
-/// komşuları pozitif tutar ([pozitif] tüm adayları).
+/// komşular tam sayı yanıtta ±1, ±2 … (büyük yanıtta ±5, ±10 …); kesirli
+/// yanıtta önce aynı paydalı ±1/d, ±2/d, sonra payı ya da paydası değişen
+/// kesirlerdir. [komsuPozitif] yalnız komşuları, [pozitif] tüm adayları
+/// pozitif tutar.
 AdvancedItem _kesS(
   String kok,
   int n,
@@ -207,12 +241,18 @@ AdvancedItem _kesS(
 }) {
   bool arti((int, int) x) => x.$1 * x.$2 > 0;
   final tam = n % d == 0;
+  // Tam sayı yanıtta adım [_tamS] ile aynıdır: 1, 5 ya da 10.
+  final buyukluk = (n ~/ d).abs();
+  final adim = buyukluk >= 200 ? 10 : (buyukluk >= 40 ? 5 : 1);
   final komsu = [
     if (tam)
-      for (var k = 1; k <= 6; k++) ...[(n + k * d, d), (n - k * d, d)]
+      for (var k = 1; k <= 6; k++) ...[
+        (n + k * adim * d, d),
+        (n - k * adim * d, d),
+      ]
     else ...[
-      (n + 1, d + 1), (n - 1, d - 1), (n + 1, d), (n - 1, d), (n, d + 1), //
-      (n, d - 1), (n + 2, d), (n - 2, d), (n + 3, d), (n - 3, d),
+      (n + 1, d), (n - 1, d), (n + 2, d), (n - 2, d), (n + 1, d + 1), //
+      (n - 1, d - 1), (n, d + 1), (n, d - 1), (n + 3, d), (n - 3, d),
     ],
   ].where((x) => !komsuPozitif || arti(x));
   final havuz = [
@@ -223,7 +263,7 @@ AdvancedItem _kesS(
   return AdvancedItem(
     kok,
     yazim,
-    siraliCeldiriciler(n / d, yazim, [
+    _diziKirarak(n / d, yazim, [
       for (final x in havuz) (x.$1 / x.$2, _q(x.$1, x.$2)),
     ], sira),
     aciklama,
@@ -299,24 +339,31 @@ bool _isaretDengeli(int yanit, List<int> u) {
   return ayni == 1 || ayni == 3;
 }
 
-/// Üçlü, anahtarla (n/d) birlikte işaretçe (negatif / negatif olmayan) ve
+/// Bir seçeneğin ipucu taramasındaki özellikleri: değer, yazım uzunluğu,
+/// sözcükleri (işaretsiz pay ve payda), işareti ve biçimi (tam sayı / kesir).
+class _Secenek {
+  _Secenek((int, int) x)
+    : deger = x.$1 / x.$2,
+      boy = _q(x.$1, x.$2).length,
+      sozler = _q(x.$1, x.$2).replaceAll('−', '').split('/').toSet(),
+      negatif = x.$1 != 0 && (x.$1 < 0) != (x.$2 < 0),
+      tam = x.$1 % x.$2 == 0;
+  final double deger;
+  final int boy;
+  final Set<String> sozler;
+  final bool negatif, tam;
+}
+
+/// Üçlü, anahtarla ([k]) birlikte işaretçe (negatif / negatif olmayan) ve
 /// biçimce (tam sayı / kesir) dengeli mi? Her özellikte anahtarla aynı olan
 /// çeldirici sayısı 1 ya da 3 olmalı: ne anahtar ne de bir çeldirici tek
-/// kalır.
-/// [tumBicim] doğruysa üç çeldirici de anahtarla aynı biçimde olmalıdır.
-bool _dengeli(int n, int d, List<(int, int)> u, {bool tumBicim = false}) {
-  if (u.any((x) => x.$2 == 0)) return false;
-  bool neg((int, int) x) => x.$1 != 0 && (x.$1 < 0) != (x.$2 < 0);
-  bool tam((int, int) x) => x.$1 % x.$2 == 0;
-  final isaret = u.where((x) => neg(x) == neg((n, d))).length;
-  final bicim = u.where((x) => tam(x) == tam((n, d))).length;
+/// kalır. [tumBicim] doğruysa üç çeldirici de anahtarla aynı biçimdedir.
+bool _dengeli(_Secenek k, List<_Secenek> u, {bool tumBicim = false}) {
+  final isaret = u.where((x) => x.negatif == k.negatif).length;
+  final bicim = u.where((x) => x.tam == k.tam).length;
   return (isaret == 1 || isaret == 3) &&
       (bicim == 3 || (!tumBicim && bicim == 1));
 }
-
-/// Seçeneğin sözcükleri (ipucu taramasındaki gibi): işaretsiz pay ve payda.
-Set<String> _sozler((int, int) x) =>
-    _q(x.$1, x.$2).replaceAll('−', '').split('/').toSet();
 
 /// Sözcük benzerliğinde (Jaccard toplamı) anahtar öne çıkmıyor mu? Anahtar
 /// en benzer seçenekse en az üç seçenek bu puanı paylaşmalıdır.
@@ -333,44 +380,99 @@ bool _sozcukDengeli(List<Set<String>> s) {
   return puan.where((x) => (x - enb).abs() < 1e-9).length >= 3;
 }
 
-/// Üçlü adaylarını öncelik geçişleriyle verir: önce biçimce tümüyle aynı,
-/// işaretçe, sözcükçe ve uzunlukça dengeli; sonra [_dengeli] ile sözcük ve
-/// uzunluk dengesi; sonra bunların bir kısmı; en sonda koşulsuz. Her geçişte önce [tasarim]
-/// üçlüleri (bileşik tasarımlar), sonra [adaylar] seçkileri gelir.
-Iterable<List<(int, int)>> _gecisler(
+/// Anahtar tek başına en uzun ya da en kısa seçenek olmasın: onunla aynı
+/// uzunlukta en az iki çeldirici ya da hem daha uzun hem daha kısa birer
+/// çeldirici bulunsun.
+bool _uzunDengeli(_Secenek k, List<_Secenek> u) =>
+    u.where((x) => x.boy == k.boy).length >= 2 ||
+    (u.any((x) => x.boy > k.boy) && u.any((x) => x.boy < k.boy));
+
+/// [tasarim] üçlüleri (bileşik tasarımlar) ve [adaylar] seçkileri içinden,
+/// anahtardan (n/d) küçük öge sayısı [sira] olan, değerleri anahtardan ve
+/// birbirinden farklı (ve [pozitif] ise pozitif) ilk üçlüyü öncelik
+/// geçişleriyle seçer: önce biçimce tümüyle aynı, işaretçe, sözcükçe ve
+/// uzunlukça dengeli; sonra bu koşulların bir kısmı; en sonda koşulsuz. Her
+/// geçişte önce tasarımlar, sonra seçkiler (öncelik sırasıyla) denenir. Uygun
+/// üçlü yoksa boş liste verir; sonuç [_kesS] ya da [_tamS] adaylarının başına
+/// konur.
+List<(int, int)> _ucluSec(
   int n,
   int d,
   List<List<(int, int)>> tasarim,
   List<(int, int)> adaylar,
-) sync* {
-  final onbellek = <(int, int), Set<String>>{};
-  Set<String> soz((int, int) x) => onbellek.putIfAbsent(x, () => _sozler(x));
-  bool sozcuk(List<(int, int)> u) =>
-      u.every((x) => x.$2 != 0) &&
-      _sozcukDengeli([soz((n, d)), for (final x in u) soz(x)]);
-  // Anahtar tek başına en uzun ya da en kısa seçenek olmasın: onunla aynı
-  // uzunlukta en az iki çeldirici ya da hem daha uzun hem daha kısa birer
-  // çeldirici bulunsun.
-  final boy = _q(n, d).length;
-  bool uzun(List<(int, int)> u) {
-    final l = [for (final x in u) _q(x.$1, x.$2).length];
-    return l.where((x) => x == boy).length >= 2 ||
-        (l.any((x) => x > boy) && l.any((x) => x < boy));
+  int sira, {
+  bool pozitif = false,
+}) {
+  final k = _Secenek((n, d));
+  final bilgi = <(int, int), _Secenek>{};
+  _Secenek? oku((int, int) x) {
+    if (x.$2 == 0 || (pozitif && x.$1 * x.$2 <= 0)) return null;
+    return bilgi.putIfAbsent(x, () => _Secenek(x));
   }
 
-  for (final kosul in <bool Function(List<(int, int)>)>[
-    (u) => _dengeli(n, d, u, tumBicim: true) && sozcuk(u) && uzun(u),
-    (u) => _dengeli(n, d, u) && sozcuk(u) && uzun(u),
-    (u) => sozcuk(u) && uzun(u),
-    (u) => _dengeli(n, d, u) && sozcuk(u),
-    (u) => _dengeli(n, d, u),
+  bool ayni(double a, double b) => (a - b).abs() <= 1e-9;
+  List<_Secenek>? gecerli(List<(int, int)> u) {
+    final s = <_Secenek>[];
+    for (final x in u) {
+      final b = oku(x);
+      if (b == null || ayni(b.deger, k.deger)) return null;
+      if (s.any((y) => ayni(y.deger, b.deger))) return null;
+      s.add(b);
+    }
+    return s.where((x) => x.deger < k.deger).length == sira ? s : null;
+  }
+
+  final tasarimlar = [
+    for (final u in tasarim)
+      if (gecerli(u) case final s?) (u, s),
+  ];
+  // Seçkiler için adaylar bir kez süzülür: değerce tekil ve anahtardan farklı.
+  final tekil = <(int, int)>[];
+  final tb = <_Secenek>[];
+  for (final x in adaylar) {
+    final b = oku(x);
+    if (b == null || ayni(b.deger, k.deger)) continue;
+    if (tb.any((y) => ayni(y.deger, b.deger))) continue;
+    tekil.add(x);
+    tb.add(b);
+  }
+  final alt = [for (final b in tb) b.deger < k.deger ? 1 : 0];
+  bool sozcuk(List<_Secenek> u) =>
+      _sozcukDengeli([k.sozler, for (final x in u) x.sozler]);
+  final kosullar = <bool Function(List<_Secenek>)>[
+    (u) => _dengeli(k, u, tumBicim: true) && sozcuk(u) && _uzunDengeli(k, u),
+    (u) => _dengeli(k, u) && sozcuk(u) && _uzunDengeli(k, u),
+    (u) => sozcuk(u) && _uzunDengeli(k, u),
+    (u) => _dengeli(k, u) && sozcuk(u),
+    (u) => _dengeli(k, u),
     sozcuk,
     (u) => true,
-  ]) {
-    yield* tasarim.where(kosul);
-    yield* _seckiler(adaylar, kosul);
+  ];
+  final m = tekil.length;
+  for (final kosul in kosullar) {
+    for (final (u, s) in tasarimlar) {
+      if (kosul(s)) return u;
+    }
+    for (var i = 0; i < m; i++) {
+      for (var j = i + 1; j < m; j++) {
+        if (alt[i] + alt[j] > sira) continue;
+        for (var l = j + 1; l < m; l++) {
+          if (alt[i] + alt[j] + alt[l] != sira) continue;
+          if (kosul([tb[i], tb[j], tb[l]])) {
+            return [tekil[i], tekil[j], tekil[l]];
+          }
+        }
+      }
+    }
   }
+  return const [];
 }
+
+/// Aday, anahtarın (n/d) büyüklüğünün en çok 20 katı mı (1'den küçük
+/// anahtarlarda 20)? Saçma büyüklükte yanlışları elemek için.
+bool _olcekte((int, int) x, int n, int d) =>
+    x.$2 != 0 &&
+    (x.$1 / x.$2).abs() <= 20 * ((n / d).abs() < 1 ? 1 : (n / d).abs());
 
 /// Üçlüde değeri tam sayı olan bir kesir var mı?
 bool _tamVar(List<(int, int)> u) => u.any((x) => x.$2 != 0 && x.$1 % x.$2 == 0);
@@ -1912,7 +2014,14 @@ final lmMatIleri = <AdvancedFamily>[
           final (t, m) = _logTanim[a];
           ilk = 'log${_alt(t)} ${_us(t, m)}';
           adim = '${_us(t, m)} = $t${_ust(m)} olduğundan $ilk = $m';
-          (pay, payda, ilkY) = (m, 1, [(m + 1, 1), (m - 1, 1)]);
+          // Bir fazla ya da eksik üs, log_a a = 1 genellemesi, sayıyı tabana
+          // bölme (küçük kalıyorsa).
+          final bolum = _us(t, m - 1);
+          (pay, payda, ilkY) = (
+            m,
+            1,
+            [(m + 1, 1), (m - 1, 1), (1, 1), if (bolum <= 3 * m) (bolum, 1)],
+          );
         case 1:
           final (t, k, y) = _logBolum[a];
           final x = _us(t, k) * y;
@@ -1947,7 +2056,8 @@ final lmMatIleri = <AdvancedFamily>[
           final (t, ara, k) = _logZincir[a];
           ilk = 'log${_alt(t)} $ara · log${_alt(ara)} ${_us(t, k)}';
           adim = '$ilk = log${_alt(t)} ${_us(t, k)} = $k';
-          (pay, payda, ilkY) = (k, 1, [(k + 1, 1), (k - 1, 1)]);
+          // Bir fazla ya da eksik; log_a b·log_b a = 1 deyip üssü unutma.
+          (pay, payda, ilkY) = (k, 1, [(k + 1, 1), (k - 1, 1), (1, 1)]);
       }
       final i = arti ? -1 : 1; // ikinci terimin katkısı: i·tn
       final deger = _q(pay, payda);
@@ -1961,11 +2071,14 @@ final lmMatIleri = <AdvancedFamily>[
       ];
       // Birinci terim × ikinci terim hataları: bileşik (2 × 2) üçlüler önce,
       // sonra ızgaranın öteki üçlüleri.
+      // Toplamı çarpım, farkı bölüm sanma (log a ± log b = log a · log b,
+      // log a / log b karışıklığı).
       final izgara = [
         for (final e in ikinciY) top(ilkD, e),
         for (final y in ilkY) top(y, dogruK),
         for (final y in ilkY)
           for (final e in ikinciY) top(y, e),
+        arti ? (-pay * tn, payda) : (-pay, payda * tn),
       ];
       final n0 = pay + i * tn * payda;
       return _kesS(
@@ -1974,19 +2087,15 @@ final lmMatIleri = <AdvancedFamily>[
         payda,
         [
           // Son çare: değerin bir fazlası ya da eksiği (üssü bir kaydırma).
-          ..._uclu(
+          ..._ucluSec(
             n0,
             payda,
-            _gecisler(
-              n0,
-              payda,
-              [
-                for (final y in ilkY)
-                  for (final e in ikinciY)
-                    [top(ilkD, e), top(y, dogruK), top(y, e)],
-              ],
-              [...izgara, (n0 - payda, payda), (n0 + payda, payda)],
-            ),
+            [
+              for (final y in ilkY)
+                for (final e in ikinciY)
+                  [top(ilkD, e), top(y, dogruK), top(y, e)],
+            ],
+            [...izgara, (n0 - payda, payda), (n0 + payda, payda)],
             hs,
           ),
           ...izgara,
@@ -2326,23 +2435,26 @@ final lmMatIleri = <AdvancedFamily>[
             yp,
             yq,
             [
-              ..._uclu(
+              // Büyüklüğü anahtarın 20 katını aşan yanlışlar elenir; son
+              // çare bir fazlası ya da eksiği.
+              ..._ucluSec(
                 yp,
                 yq,
-                _gecisler(
-                  yp,
-                  yq,
-                  [
+                [
+                  for (final u in [
                     [ters, kok, (am, an)],
                     [ters, bol, (am * e, an)],
                     [kok, bol, fark],
-                  ],
-                  // Son çare: bir fazlası ya da eksiği.
-                  [
+                  ])
+                    if (u.every((x) => _olcekte(x, yp, yq))) u,
+                ],
+                [
+                  for (final x in [
                     kok, ters, fark, bol, (am, an), (am * e, an), //
                     (yp, yq * e), (yp - yq, yq), (yp + yq, yq),
-                  ],
-                ),
+                  ])
+                    if (_olcekte(x, yp, yq)) x,
+                ],
                 hs,
                 pozitif: true,
               ),
@@ -2378,7 +2490,7 @@ final lmMatIleri = <AdvancedFamily>[
           azalan ? (ak, r) : (ak * r, 1),
           azalan ? (taban * r, 1) : (taban, r),
           azalan ? (taban * r + 1, r) : (taban + r, 1),
-          (taban * an, am * e),
+          if (_olcekte((taban * an, am * e), ak, 1)) (taban * an, am * e),
         ];
         return _kesS(
           'Tüm terimleri pozitif olan bir geometrik dizide a${_alt(m)} = $am '
@@ -2386,10 +2498,11 @@ final lmMatIleri = <AdvancedFamily>[
           ak,
           1,
           [
-            ..._uclu(
+            ..._ucluSec(
               ak,
               1,
-              _gecisler(ak, 1, const [], [...yanlis, (ak - 1, 1), (ak + 1, 1)]),
+              const [],
+              [...yanlis, (ak - 1, 1), (ak + 1, 1)],
               hs,
               pozitif: true,
             ),
@@ -2412,10 +2525,17 @@ final lmMatIleri = <AdvancedFamily>[
         // Bir fazla ya da eksik kuvvet (r^n, r^(n − 2)), kuvvet yerine
         // çarpma, işaret, aritmetik dizi formülü; işaret × kuvvet hatası
         // bileşik üçlüler kurar.
+        // Taban ile üssü yer değiştirme ((n − 1)^r) ve işlem önceliği
+        // hatası ((a₁·r)^(n − 1), büyüklüğü anahtarın 10 katını aşmıyorsa)
+        // da tipik yanlışlardır.
         final fazla = an * r, eksik = a1 * _us(r, n - 2);
+        final takas = r > 0 ? a1 * _us(n - 1, r) : 0;
+        final oncelik = _us(a1 * r, n - 1);
         final yanlis = [
           (fazla, 1), (a1 * r * (n - 1), 1), (-an, 1), //
           (a1 + (n - 1) * r, 1), (eksik, 1), (-fazla, 1), (-eksik, 1),
+          if (r > 0 && takas.abs() <= 10 * an.abs()) (takas, 1),
+          if (oncelik.abs() <= 10 * an.abs()) (oncelik, 1),
         ];
         return _kesS(
           'İlk terimi ${_n(a1)} ve ortak çarpanı ${_n(r)} olan bir geometrik '
@@ -2423,13 +2543,14 @@ final lmMatIleri = <AdvancedFamily>[
           an,
           1,
           [
-            ..._uclu(
+            ..._ucluSec(
               an,
               1,
-              _gecisler(an, 1, [
+              [
                 [(-an, 1), (fazla, 1), (-fazla, 1)],
                 [(-an, 1), (eksik, 1), (-eksik, 1)],
-              ], yanlis),
+              ],
+              yanlis,
               hs,
             ),
             ...yanlis,
@@ -2445,7 +2566,8 @@ final lmMatIleri = <AdvancedFamily>[
         // hatası bileşik üçlüler kurar.
         final yanlis = [
           (an, kuvvet * r), (an, r * (n - 1)), (-a1, 1), (a1 * r, 1), //
-          (-a1 * r, 1), (-an, kuvvet * r), (an - (n - 1) * r, 1),
+          (-a1 * r, 1), (-an, kuvvet * r),
+          if (_olcekte((an - (n - 1) * r, 1), a1, 1)) (an - (n - 1) * r, 1),
         ];
         return _kesS(
           'Ortak çarpanı ${_n(r)} ve $n. terimi ${_n(an)} olan bir geometrik '
@@ -2453,13 +2575,14 @@ final lmMatIleri = <AdvancedFamily>[
           a1,
           1,
           [
-            ..._uclu(
+            ..._ucluSec(
               a1,
               1,
-              _gecisler(a1, 1, [
+              [
                 [(-a1, 1), (a1 * r, 1), (-a1 * r, 1)],
                 [(-a1, 1), (an, kuvvet * r), (-an, kuvvet * r)],
-              ], yanlis),
+              ],
+              yanlis,
               hs,
             ),
             ...yanlis,
@@ -2829,25 +2952,21 @@ final lmMatIleri = <AdvancedFamily>[
             y,
             n,
             [
-              ..._uclu(
+              ..._ucluSec(
                 y,
                 n,
-                _gecisler(
-                  y,
-                  n,
-                  [
-                    for (final e in [m - p * k, 2 * p * k])
-                      [(e, n), (y, 1), (e, 1)],
-                  ],
-                  // Sabitlerin oranı (x = 0 koyma), baş katsayıların oranı,
-                  // çarpanlara ayırırken m'nin işaretini karıştırma da
-                  // tipik yanlışlardır.
-                  [
-                    (y, 1), (m - p * k, n), (2 * p * k, n), (m - p * k, 1), //
-                    (2 * p * k, 1), (m, n), (p, n), (p * k - m, n),
-                    (p * k - m, 1), (0, 1), (1, 1),
-                  ],
-                ),
+                [
+                  for (final e in [m - p * k, 2 * p * k])
+                    [(e, n), (y, 1), (e, 1)],
+                ],
+                // Sabitlerin oranı (x = 0 koyma), baş katsayıların oranı,
+                // çarpanlara ayırırken m'nin işaretini karıştırma da tipik
+                // yanlışlardır.
+                [
+                  (y, 1), (m - p * k, n), (2 * p * k, n), (m - p * k, 1), //
+                  (2 * p * k, 1), (m, n), (p, n), (p * k - m, n),
+                  (p * k - m, 1), (0, 1), (1, 1),
+                ],
                 hs,
               ),
               (y, 1),
@@ -2889,18 +3008,14 @@ final lmMatIleri = <AdvancedFamily>[
             p,
             q,
             [
-              ..._uclu(
+              ..._ucluSec(
                 p,
                 q,
-                _gecisler(
-                  p,
-                  q,
-                  [
-                    [(q, p), (u, s), (s, u)],
-                    [(q, p), (w, t), (t, w)],
-                  ],
-                  [(q, p), (u, s), (w, t), (s, u), (t, w), (0, 1), (1, 1)],
-                ),
+                [
+                  [(q, p), (u, s), (s, u)],
+                  [(q, p), (w, t), (t, w)],
+                ],
+                [(q, p), (u, s), (w, t), (s, u), (t, w), (0, 1), (1, 1)],
                 hs,
               ),
               (q, p),
@@ -2950,10 +3065,7 @@ final lmMatIleri = <AdvancedFamily>[
               'lim (x → ∞) [$carpim]/($kare) $son',
               pq,
               r,
-              [
-                ..._uclu(pq, r, _gecisler(pq, r, tasarim, yanlis), hs),
-                ...yanlis,
-              ],
+              [..._ucluSec(pq, r, tasarim, yanlis, hs), ...yanlis],
               '$acilim Limit, en büyük dereceli terimlerin katsayıları '
                   'oranıdır: ${p * q}/$r'
                   '${_q(p * q, r) == '${p * q}/$r' ? '' : ' = ${_q(p * q, r)}'}.',
@@ -2971,7 +3083,7 @@ final lmMatIleri = <AdvancedFamily>[
             'lim (x → ∞) ($kare)/[$carpim] $son',
             r,
             pq,
-            [..._uclu(r, pq, _gecisler(r, pq, tasarim, yanlis), hs), ...yanlis],
+            [..._ucluSec(r, pq, tasarim, yanlis, hs), ...yanlis],
             '$acilim Limit, en büyük dereceli terimlerin katsayıları '
                 'oranıdır: $r/${p * q}'
                 '${_q(r, p * q) == '$r/${p * q}' ? '' : ' = ${_q(r, p * q)}'}.',
@@ -3010,13 +3122,14 @@ final lmMatIleri = <AdvancedFamily>[
             y,
             z,
             [
-              ..._uclu(
+              ..._ucluSec(
                 y,
                 z,
-                _gecisler(y, z, [
+                [
                   [(yT, z), (y, zT), (yT, zT)],
                   [(yS, z), (y, zS), (yS, zS)],
-                ], yanlis),
+                ],
+                yanlis,
                 hs,
               ),
               ...yanlis,
@@ -3449,6 +3562,11 @@ final lmMatIleri = <AdvancedFamily>[
               // ters işaretlisi, anahtarla sözcük ortaklığı kurar).
               ust * _deg(f, ust) - alt * _deg(f, alt),
               fu - fa - r * (ust - alt),
+              // Yalnız x² teriminde 3'e ya da yalnız x teriminde 2'ye bölmeyi
+              // unutma; integral yerine türev alma.
+              fu - fa + 2 * p * (_us(ust, 3) - _us(alt, 3)),
+              fu - fa + q * (ust * ust - alt * alt),
+              6 * p * (ust - alt),
               fa - fu,
             ],
             'İlkel fonksiyon F(x) = ${_pol(ilkel)} olur. F($ust) − F($alt) = '
@@ -3494,8 +3612,9 @@ final lmMatIleri = <AdvancedFamily>[
                 'doğruları ile sınırlanan bölgenin alanı kaç birimkaredir?',
             fu - fa,
             // Yamuk ya da dikdörtgen sanma, integral almadan fark alma;
-            // yeni üsse bölmeyi unutma (x·f(x)), sabitin ilkelini x'siz
-            // bırakma, alt sınırı unutma.
+            // yeni üsse bölmeyi unutma (x·f(x) ya da yalnız bir terimde),
+            // sabitin ilkelini x'siz bırakma, alt sınırı unutma, integral
+            // yerine türev alma.
             [
               if ((ya + yu) * boy % 2 == 0) (ya + yu) * boy ~/ 2,
               (yu - ya).abs(),
@@ -3505,6 +3624,9 @@ final lmMatIleri = <AdvancedFamily>[
               ust * yu - alt * ya,
               fu - fa - r * boy,
               fu,
+              fu - fa + 2 * p * (_us(ust, 3) - _us(alt, 3)),
+              if (v == 1) fu - fa + ust * ust - alt * alt,
+              6 * p * boy,
             ],
             'Eğri x ekseninin üstünde kaldığından alan, fonksiyonun '
                 'x = ${_n(alt)} ile x = ${_n(ust)} arasındaki belirli '

@@ -29,31 +29,6 @@ final lmBiyoloji = <AdvancedFamily>[
 
 // ───────────────────────── Ortak yardımcılar ─────────────────────────
 
-const _olasilikHavuzu = [
-  (1, 2), (1, 4), (3, 4), (1, 8), (3, 8), (1, 16), (3, 16), (9, 16), //
-  (5, 8), (1, 32), (3, 32), (7, 8),
-];
-
-/// Kesir yanıtlı olasılık sorusu; adaylardan (0, 1] aralığındakiler kullanılır.
-AdvancedItem _olasilik(
-  String kok,
-  int n,
-  int d,
-  Iterable<(int, int)> adaylar,
-  String aciklama,
-) {
-  final uygun = [
-    ...adaylar,
-    ..._olasilikHavuzu,
-  ].where((x) => x.$1 > 0 && x.$2 > 0 && x.$1 <= x.$2);
-  return secenekli(
-    kok,
-    kesir(n, d),
-    uygun.map((x) => kesir(x.$1, x.$2)),
-    aciklama,
-  );
-}
-
 int _us(int taban, int kuvvet) {
   var r = 1;
   for (var i = 0; i < kuvvet; i++) {
@@ -269,7 +244,7 @@ AdvancedItem _sayiDengeli(
   int enAz = 1,
   int? enCok,
   String birim = '',
-  int genislik = 3,
+  int genislik = 2,
   List<int> agirlik = const [1, 1, 1, 1],
 }) {
   bool uygun(int x) => x >= enAz && (enCok == null || x <= enCok);
@@ -427,8 +402,9 @@ final _f01 = lmAile(
     final het = _gt(harf, 1), dom = _gt(harf, 0), rec = _gt(harf, 2);
     final m = 6 + b + 2 * a; // yavruların dörtte biri
     final n = 4 * m;
-    // Çeldiriciler m sayısının p/q katlarıdır (tam sayı olanlar): yanlış
-    // oranı kullanma (1/4, 1/2, 3/4, tamamı, 2/3, 1/3, 9/16 …) hataları.
+    // Çeldiriciler m sayısının p/q katlarıdır (tam bölünmüyorsa aşağı
+    // yuvarlanır): yanlış oranı kullanma (1/4, 1/2, 3/4, tamamı, 2/3, 1/3,
+    // 9/16 …) hataları.
     AdvancedItem say(
       String kok,
       int anahtar,
@@ -440,8 +416,8 @@ final _f01 = lmAile(
       kok,
       anahtar,
       [
-        for (final (p, q) in oranlar)
-          if (p * m % q == 0) p * m ~/ q,
+        // Tam bölünmeyen oranlarda öğrencinin aşağı yuvarladığı sayı.
+        for (final (p, q) in oranlar) p * m ~/ q,
       ],
       aciklama,
       _no(a, b, c),
@@ -451,7 +427,7 @@ final _f01 = lmAile(
       agirlik: agirlik,
     );
     // Anahtarın üst ya da alt ucunda kalan sorularda öteki uç öne alınır.
-    const ustUc = [1, 1, 1, 3], altUc = [2, 1, 1, 1];
+    const ustUc = [1, 1, 1, 2], altUc = [2, 1, 1, 1];
     final giris =
         '$org $domOz aleli ($harf), $recOz aleline (${harf.toLowerCase()}) '
         'baskındır.';
@@ -947,6 +923,13 @@ final _f03 = lmAile(
     final ortak =
         'Heterozigot gen çifti sayısı $n olduğundan ($hetAd) gamet çeşidi '
         'sayısı 2${_ust(n)} = ${1 << n} olur.';
+    final no = _no(a, b, c);
+    AdvancedItem say(
+      String kok,
+      int anahtar,
+      List<int> hatalar,
+      String aciklama,
+    ) => _sayiDengeli(kok, anahtar, hatalar, aciklama, no, genislik: 2);
     String alel(int q) {
       final h = harf[q];
       return switch (d[q]) {
@@ -958,16 +941,17 @@ final _f03 = lmAile(
 
     switch (c) {
       case 0 || 4:
-        return sayisal(
+        return say(
           '$giris Bu birey mayozla en çok kaç çeşit gamet oluşturabilir?',
           1 << n,
-          [2 * n, 1 << (n + 1), 1 << k, n, 1 << (n - 1), 2 * k],
+          // 2ⁿ yerine 2n, n ya da 2k alma, üssü bir fazla ya da eksik alma,
+          // bütün genleri sayma, genotip çeşidi formülünü (3ⁿ) kullanma.
+          [2 * n, 1 << (n + 1), 1 << k, n, 1 << (n - 1), 2 * k, _us(3, n)],
           ortak,
-          positive: true,
         );
       case 1 || 5:
         final gamet = [for (var q = 0; q < k; q++) alel(q)].join();
-        return _olasilik(
+        return _olasilikDengeli(
           '$giris Bu bireyin oluşturduğu bir gametin $gamet alel bileşiminde '
               'olma olasılığı kaçtır?',
           1,
@@ -978,32 +962,45 @@ final _f03 = lmAile(
             (1, 1 << (n + 1)),
             (1, 1 << (n - 1)),
             (1, k),
+            (1, _us(3, n)),
+            (1, n),
           ],
           '$ortak Gamet çeşitleri eşit olasılıkla oluştuğundan $gamet '
               'gametinin oluşma olasılığı 1/${1 << n} olur.',
+          no,
         );
       case 2:
         final q0 = (a + b) % k;
         final x = alel(q0);
         final het = d[q0] == 1;
-        return sayisal(
+        return say(
           '$giris Bu bireyin oluşturabileceği gamet çeşitlerinden kaç tanesi '
           '$x alelini taşır?',
           het ? 1 << (n - 1) : 1 << n,
-          [het ? 1 << n : 1 << (n - 1), 1 << (n + 1), n, 2 * n, 1],
+          // Yarıya bölmeyi unutma ya da gereksiz yere yarıya bölme, üssü
+          // bir fazla alma, 2ⁿ yerine n ya da 2n alma, bütün genleri sayma,
+          // genotip çeşidi formülünü kullanma.
+          [
+            het ? 1 << n : 1 << (n - 1),
+            1 << (n + 1),
+            n,
+            2 * n,
+            1,
+            1 << k,
+            _us(3, n),
+          ],
           het
               ? '$ortak ${_gt(harf[q0], 1)} gen çiftinden gelen $x aleli '
                     'bu çeşitlerin yarısında bulunur: ${1 << n} / 2 = '
                     '${1 << (n - 1)}.'
               : '$ortak Birey $x aleli bakımından homozigot olduğundan gamet '
                     'çeşitlerinin tamamı bu aleli taşır: ${1 << n}.',
-          positive: true,
         );
       case 7:
         final q0 = (a + b) % k, q1 = (q0 + 2) % k;
         final ilk = q0 < q1 ? q0 : q1, son = q0 < q1 ? q1 : q0;
         final h = (d[q0] == 1 ? 1 : 0) + (d[q1] == 1 ? 1 : 0);
-        return sayisal(
+        return say(
           '$giris Bu bireyin oluşturabileceği gamet çeşitlerinden kaç tanesi '
           'hem ${alel(ilk)} hem ${alel(son)} alelini birlikte taşır?',
           1 << (n - h),
@@ -1014,6 +1011,8 @@ final _f03 = lmAile(
             1 << (n + 1),
             n,
             2 * n,
+            1 << k,
+            _us(3, n - h),
           ],
           h == 0
               ? '$ortak Sorulan iki alel de homozigot gen çiftlerine ait '
@@ -1021,7 +1020,6 @@ final _f03 = lmAile(
               : '$ortak Sorulan alellerden $h tanesi heterozigot gen çiftine '
                     'aittir; her biri çeşit sayısını yarıya indirir: '
                     '${1 << n} / ${1 << h} = ${1 << (n - h)}.',
-          positive: true,
         );
       case 3 || 8:
         final p = hetler.first;
@@ -1032,7 +1030,7 @@ final _f03 = lmAile(
         final liste = c == 3
             ? '${adlar[0]}, ${adlar[1]} ve ${adlar[2]}'
             : '${adlar[0]} ve ${adlar[1]}';
-        return _olasilik(
+        return _olasilikDengeli(
           '$giris Bu bireyin oluşturduğu bir gametin $liste alellerini '
               'birlikte taşıma olasılığı kaçtır?',
           1,
@@ -1043,11 +1041,18 @@ final _f03 = lmAile(
             (1, 1 << (h + 1)),
             (1, 1 << (h - 1)),
             (1, secim.length),
+            (1, 2 * h),
+            // Bütün genleri heterozigot sanma, üssü iki fazla alma, tümleyen.
+            (1, 1 << k),
+            (1, 1 << (h + 2)),
+            ((1 << h) - 1, 1 << h),
           ],
           'Heterozigot gen çiftinden gelen bir alelin gamete geçme olasılığı '
               '1/2, homozigot gen çiftinden gelen alelin 1 olur. Sorulan '
               'alellerden $h tanesi heterozigot gen çiftine aittir: '
               '(1/2)${_ust(h)} = 1/${1 << h}.',
+          no,
+          birDahil: true,
         );
       default:
         final z = [...d];
@@ -1068,7 +1073,7 @@ final _f03 = lmAile(
           }
           n2 = 3;
         }
-        return kesirli(
+        return _olasilikDengeli(
           'Genleri bağımsız olan iki bireyden birincisinin genotipi $g, '
               'ikincisinin genotipi ${_genotipYaz(harf, z)} biçimindedir. Birinci bireyin '
               'oluşturabileceği gamet çeşidi sayısı, ikinci bireyin '
@@ -1082,10 +1087,17 @@ final _f03 = lmAile(
             (1 << n, 1),
             (2 * (n - n2).abs(), 1),
             (1 << n2, 1),
+            // Heterozigot gen sayılarının farkını ya da genotip çeşidi
+            // sayılarının (3ⁿ) oranını alma, üssü bir fazla alma.
+            ((n - n2).abs(), 1),
+            (_us(3, n), _us(3, n2)),
+            (2 << n, 1 << n2),
           ],
           'Birinci bireyde $n, ikinci bireyde $n2 heterozigot gen çifti vardır. '
               'Gamet çeşidi sayıları 2${_ust(n)} = ${1 << n} ve 2${_ust(n2)} = '
               '${1 << n2} olur; oran ${kesir(1 << n, 1 << n2)} bulunur.',
+          no,
+          sinirsiz: true,
         );
     }
   },
@@ -1436,13 +1448,32 @@ final _f06 = lmAile(
       0 => (
         'iki karakter bakımından en çok kaç çeşit genotip bulunabilir?',
         g1 * g2,
-        [g1 + g2, n1 * n2, f1 * f2, n1 * n1 * n2 * n2],
+        // Toplama, yalnız homozigotları ya da fenotipleri sayma, kare alma,
+        // iki geni tek gen sanma, yalnız heterozigotları sayma.
+        [
+          g1 + g2, n1 * n2, f1 * f2, n1 * n1 * n2 * n2,
+          n1 * n2 * (n1 * n2 + 1) ~/ 2, h1 * h2,
+          // n(n + 1)/2 formülünde 2'ye bölmeyi unutma.
+          4 * g1 * g2,
+        ],
         'Toplam genotip çeşidi $g1 · $g2 = ${g1 * g2} olur.',
       ),
       1 => (
         'iki karakter bakımından en çok kaç çeşit fenotip görülebilir?',
         f1 * f2,
-        [f1 + f2, n1 * n2, g1 * g2, (n1 + e1 + 1) * f2],
+        // Toplama, eş baskınlığı unutma, genotipleri sayma, bir fazla sayma,
+        // eş baskın fenotipleri çarpmak yerine ekleme, bir karakterde eş
+        // baskınlığı unutma.
+        [
+          f1 + f2,
+          n1 * n2,
+          g1 * g2,
+          (n1 + e1 + 1) * f2,
+          n1 * n2 + e1 + e2,
+          f1 * n2,
+          n1 * f2,
+          (f1 + 1) * (f2 + 1),
+        ],
         'Fenotip çeşidi, alel sayısına “=” ile bağlanan alel çifti sayısı '
             'eklenerek bulunur: birinci karakterde $n1 + $e1 = $f1, ikinci '
             'karakterde $n2 + $e2 = $f2. Toplam $f1 · $f2 = ${f1 * f2} olur.',
@@ -1451,7 +1482,9 @@ final _f06 = lmAile(
         'iki karakter bakımından da homozigot olan en çok kaç çeşit genotip '
             'bulunabilir?',
         n1 * n2,
-        [n1 + n2, g1 * g2, h1 * h2, 2 * n1 * n2],
+        // Toplama, bütün genotipleri ya da heterozigotları sayma, iki
+        // katını alma, yalnız bir karakteri sayma.
+        [n1 + n2, g1 * g2, h1 * h2, 2 * n1 * n2, n1, n2],
         'İki karakterde de homozigot genotip çeşidi $n1 · $n2 = ${n1 * n2} '
             'olur.',
       ),
@@ -1459,7 +1492,10 @@ final _f06 = lmAile(
         'iki karakter bakımından da heterozigot olan en çok kaç çeşit genotip '
             'bulunabilir?',
         h1 * h2,
-        [h1 + h2, n1 * n2, g1 * g2, n1 * h2],
+        // Toplama, homozigotları ya da bütün genotipleri sayma, yalnız bir
+        // karakteri sayma.
+        // n(n − 1)/2 formülünde 2'ye bölmeyi unutma.
+        [h1 + h2, n1 * n2, g1 * g2, n1 * h2, h1, h2, 4 * h1 * h2, 2 * h1 * h2],
         'İki karakterde de heterozigot genotip çeşidi $h1 · $h2 = ${h1 * h2} '
             'olur.',
       ),
@@ -1467,14 +1503,25 @@ final _f06 = lmAile(
         'birinci karakter bakımından homozigot, ikinci karakter bakımından '
             'heterozigot olan en çok kaç çeşit genotip bulunabilir?',
         n1 * h2,
-        [h1 * n2, n1 + h2, n1 * n2, h1 * h2],
+        // Karakterleri karıştırma, toplama, homozigot ve heterozigotu
+        // karıştırma, bütün genotipleri alma.
+        [h1 * n2, n1 + h2, n1 * n2, h1 * h2, g1 * h2, n1 * g2],
         'İstenen genotip çeşidi $n1 · $h2 = ${n1 * h2} olur.',
       ),
       5 => (
         'iki karakter bakımından bulunabilecek genotip çeşidi sayısı, '
             'görülebilecek fenotip çeşidi sayısından kaç fazladır?',
         g1 * g2 - f1 * f2,
-        [g1 + g2 - f1 - f2, g1 * g2 - n1 * n2, (g1 - f1) * (g2 - f2), g1 * g2],
+        // Toplamlar üzerinden hesaplama, fenotip yerine homozigot çıkarma,
+        // farkları çarpma, çıkarmayı unutma, fenotip sayısını verme.
+        [
+          g1 + g2 - f1 - f2,
+          g1 * g2 - n1 * n2,
+          (g1 - f1) * (g2 - f2),
+          g1 * g2,
+          f1 * f2,
+          g1 * g2 - f1 - f2,
+        ],
         'Fenotip çeşidi birinci karakterde $n1 + $e1 = $f1, ikincide '
             '$n2 + $e2 = $f2 olur. Fark $g1 · $g2 − $f1 · $f2 = '
             '${g1 * g2 - f1 * f2} bulunur.',
@@ -1483,7 +1530,17 @@ final _f06 = lmAile(
         'en az bir karakter bakımından heterozigot olan en çok kaç çeşit '
             'genotip bulunabilir?',
         g1 * g2 - n1 * n2,
-        [h1 * h2, h1 + h2, g1 * g2, n1 * h2 + h1 * n2],
+        // Yalnız iki karakterde heterozigotları ya da bir karakterde
+        // heterozigotları sayma, çıkarmayı unutma, yanlış çıkarma.
+        // Yalnız tek bir genotipi çıkarma.
+        [
+          h1 * h2,
+          h1 + h2,
+          g1 * g2,
+          n1 * h2 + h1 * n2,
+          g1 * g2 - h1 * h2,
+          g1 * g2 - 1,
+        ],
         'Toplam genotip çeşidinden iki karakterde de homozigot olanlar '
             'çıkarılır: $g1 · $g2 − $n1 · $n2 = ${g1 * g2 - n1 * n2}.',
       ),
@@ -1491,14 +1548,18 @@ final _f06 = lmAile(
         'birinci karakter bakımından heterozigot, ikinci karakter bakımından '
             'homozigot olan en çok kaç çeşit genotip bulunabilir?',
         h1 * n2,
-        [n1 * h2, h1 + n2, n1 * n2, h1 * h2],
+        // Karakterleri karıştırma, toplama, homozigot ve heterozigotu
+        // karıştırma, bütün genotipleri alma.
+        [n1 * h2, h1 + n2, n1 * n2, h1 * h2, h1 * g2, g1 * n2],
         'İstenen genotip çeşidi $h1 · $n2 = ${h1 * n2} olur.',
       ),
       8 => (
         'yalnızca bir karakter bakımından homozigot olan en çok kaç çeşit '
             'genotip bulunabilir?',
         n1 * h2 + h1 * n2,
-        [n1 * n2, n1 * h2, h1 * n2, g1 * g2 - h1 * h2],
+        // Yalnız bir durumu sayma, iki karakterde homozigotları da katma,
+        // yanlış çıkarma.
+        [n1 * n2, n1 * h2, h1 * n2, g1 * g2 - h1 * h2, g1 * g2 - n1 * n2],
         'İstenen genotip çeşidi $n1 · $h2 + $h1 · $n2 = '
             '${n1 * h2 + h1 * n2} olur.',
       ),
@@ -1506,17 +1567,27 @@ final _f06 = lmAile(
         'en az bir karakter bakımından homozigot olan en çok kaç çeşit genotip '
             'bulunabilir?',
         g1 * g2 - h1 * h2,
-        [n1 * n2, n1 + n2, g1 * g2, n1 * h2 + h1 * n2],
+        // Yalnız iki karakterde homozigotları ya da yalnız bir karakterde
+        // homozigotları sayma, çıkarmayı unutma, yanlış çıkarma.
+        // Yalnız tek bir genotipi çıkarma.
+        [
+          n1 * n2,
+          n1 + n2,
+          g1 * g2,
+          n1 * h2 + h1 * n2,
+          g1 * g2 - n1 * n2,
+          g1 * g2 - 1,
+        ],
         'Toplam genotip çeşidinden iki karakterde de heterozigot olanlar '
             'çıkarılır: $g1 · $g2 − $h1 · $h2 = ${g1 * g2 - h1 * h2}.',
       ),
     };
-    return sayisal(
+    return _sayiDengeli(
       '$giris Bu türün popülasyonunda $soru',
       yanit,
       aday,
       '$sayim $sonuc',
-      positive: true,
+      _no(a, b, c),
     );
   },
   exam: ExamKind.tyt,
@@ -1887,8 +1958,9 @@ final _f09 = lmAile(
               'molekülünde guanin içeren nükleotit sayısı kaçtır?',
           gu,
           // A = T ya da G = C eşitliğini unutma, toplamın yarısı, adenin
-          // sayısını yanıt sanma.
-          [top - ad, 2 * gu, ad ~/ 2 + gu, top ~/ 2, ad],
+          // sayısını yanıt sanma, çift sayısından A ile T'yi ayrı ayrı
+          // çıkarma (N/2 − 2A).
+          [top - ad, 2 * gu, ad ~/ 2 + gu, top ~/ 2, ad, gu - ad],
           'A = T olduğundan A + T = ${2 * ad} olur. G + C = $top − ${2 * ad} = '
               '${2 * gu} ve G = C olduğundan G = $gu bulunur.',
         );
@@ -2100,8 +2172,8 @@ final _f10 = lmAile(
           2 * k,
           // Her ağır DNA'dan bir melez sanma, toplamı ya da yalnız ¹⁴N
           // içerenleri verme, zincir sayısını verme, n ile çarpma, yarısını
-          // melez sanma, eşlenme sayısını yanıt sanma.
-          [k, top, top - 2 * k, 2 * top, k * n, top ~/ 2, n],
+          // melez sanma, tek DNA için ezberlenen "2 melez" sonucunu verme.
+          [k, top, top - 2 * k, 2 * top, k * n, top ~/ 2, 2],
           '$ozet Melez molekül sayısı ${2 * k} olur.',
         );
       case 1:
@@ -2124,11 +2196,14 @@ final _f10 = lmAile(
           top,
           [
             (1, 1 << n), (1, n), (top - 2 * k, top), (1, 2 * n), (2, n + 2),
-            // Bir eşlenme fazla ya da eksik sayma.
-            (1, 1 << (n + 1)), if (n >= 3) (1, 1 << (n - 2)),
+            // Bir eşlenme fazla ya da eksik sayma, bütün molekülleri melez
+            // sanma, melezleri yalnız ¹⁴N içerenlere oranlama.
+            (1, 1 << (n + 1)), if (n >= 3) (1, 1 << (n - 2)), (1, 1),
+            (2 * k, top - 2 * k),
           ],
           '$ozet Oran ${2 * k} / $top = ${kesir(2 * k, top)} bulunur.',
           no,
+          birDahil: true,
         );
       case 3:
         return _olasilikDengeli(
@@ -2239,12 +2314,17 @@ final _f10 = lmAile(
             (1, 1 << m),
             (1, 1 << (n1 + m)),
             (1, n1 + m),
-            // Yarısını alma.
+            // Yarısını alma, bütün molekülleri melez sanma, tümleyen, bir
+            // eşlenme fazla sayma.
             (melez2, 2 * top2),
+            (1, 1),
+            ((1 << (n1 + m)) - 1, 1 << (n1 + m)),
+            (1, 1 << (n1 + m + 1)),
           ],
           '$ozet2 Toplam $k · 2${_ust(n1 + m)} = $top2 molekülün $melez2 '
               'tanesi melezdir; oran ${kesir(melez2, top2)} bulunur.',
           no,
+          birDahil: true,
         );
     }
   },
@@ -2887,8 +2967,10 @@ final _f15 = lmAile(
       aciklama,
       no,
       // Anahtardan küçük tipik hata az olduğundan bu sıra kurulabildiğinde
-      // öne alınır.
+      // öne alınır. Komşu değerler 10'un katları arasında göze
+      // batacağından yalnız tipik hatalar bir sıra kuramadığında kullanılır.
       agirlik: const [1, 1, 1, 3],
+      genislik: 1,
     );
     switch (c) {
       case 0:
@@ -3418,6 +3500,7 @@ final _f17 = lmAile(
       no,
       adim: adim(anahtar),
       birim: 'L',
+      genislik: 2,
     );
     AdvancedItem say(
       String kok,
@@ -3450,15 +3533,15 @@ final _f17 = lmAile(
               'pompaladığı kan miktarı (atım hacmi) kaç mL olur?',
           atim,
           // L → mL çevirmesinde kayma, iki katını ya da yarısını alma,
-          // işlem kayması.
+          // işlem kayması. Çarpma ve bölme hataları önce gelir.
           [
             atim * 10,
+            atim * 2,
+            atim ~/ 2,
             atim + 10,
             atim - 10,
-            atim * 2,
             atim + 20,
             atim - 20,
-            atim ~/ 2,
           ],
           '$debiTanim Atım hacmi ${nabiz * atim} mL / $nabiz = $atim mL '
               'bulunur (${tr(debi)} L = ${nabiz * atim} mL).',
@@ -3469,14 +3552,14 @@ final _f17 = lmAile(
               'kasılmada pompaladığı kan miktarı (atım hacmi) $atim mL olarak '
               'ölçülüyor. $bununBas nabzı dakikada kaç atımdır?',
           nabiz,
-          // İşlem kayması, iki katını ya da yarısını alma.
+          // İki katını ya da yarısını alma, işlem kayması.
           [
+            nabiz * 2,
+            nabiz ~/ 2,
             nabiz + 10,
             nabiz - 10,
             nabiz + 20,
-            nabiz * 2,
             nabiz - 20,
-            nabiz ~/ 2,
           ],
           '$debiTanim Nabız ${nabiz * atim} mL / $atim mL = $nabiz atım '
               'bulunur (${tr(debi)} L = ${nabiz * atim} mL).',
@@ -3500,10 +3583,10 @@ final _f17 = lmAile(
           [
             hacim * 10,
             hacim ~/ 10,
-            hacim + 50,
-            hacim - 50,
             hacim * 2,
             hacim ~/ 2,
+            hacim + 50,
+            hacim - 50,
             hacim - 100,
           ],
           '$havaTanim Bir solukta alınan hava ${soluk * hacim} mL / $soluk = '
@@ -3516,13 +3599,13 @@ final _f17 = lmAile(
               'soluk alıp verir?',
           soluk,
           [
+            soluk * 2,
+            if (soluk.isEven) soluk ~/ 2,
             soluk + 2,
             soluk - 2,
-            soluk * 2,
             soluk + 4,
             soluk + 6,
             soluk - 4,
-            if (soluk.isEven) soluk ~/ 2,
           ],
           '$havaTanim Soluk sayısı ${soluk * hacim} mL / $hacim mL = $soluk '
               'bulunur (${tr(hava)} L = ${soluk * hacim} mL).',

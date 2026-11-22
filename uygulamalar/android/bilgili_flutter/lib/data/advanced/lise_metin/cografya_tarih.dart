@@ -19,16 +19,17 @@ int _ucaYakinSira(int i) {
 }
 
 /// Anahtarın değer sırasını [sira] yapan çeldiriciler; `siraliCeldiriciler`
-/// gibi çalışır, ancak anahtarın hemen yanındaki [komsu] değerleri yalnız
-/// [tipik] hatalardan üç ayrı çeldirici çıkmadığında kullanır. Bir yanda tipik
-/// hata yetmezse eksik çeldirici öbür yandaki tipik hatalardan gelir (sıra
-/// kayar); böylece anahtara çok yakın, hiçbir hataya karşılık gelmeyen değerler
-/// seçeneklere girmez.
+/// ile seçilir. Önce [tipik] hatalar, sonra (verilmişse) anahtarın iki yanında
+/// birer [yakin] komşu değer denenir; bir yanda bunlar da yetmezse eksik
+/// çeldirici öbür yandaki tipik hatalardan gelir (sıra kayar). Daha uzak [uzak]
+/// komşular yalnız tipik hatalardan üç ayrı çeldirici çıkmadığında eklenir.
+/// Böylece hiçbir hataya karşılık gelmeyen değerler en çok bir kez görünür.
 List<String> _tipikSirali(
   num anahtar,
   String yazim,
   List<(num, String)> tipik,
-  List<(num, String)> komsu,
+  List<(num, String)> yakin,
+  List<(num, String)> uzak,
   int sira,
 ) {
   final ayri = <String>[];
@@ -37,11 +38,13 @@ List<String> _tipikSirali(
   }
   return siraliCeldiriciler(anahtar, yazim, [
     ...tipik,
-    if (ayri.length < 3) ...komsu,
+    ...yakin,
+    if (ayri.length < 3) ...uzak,
   ], sira);
 }
 
 /// Pozitif tam sayı yanıtlı soru; çeldiriciler [_tipikSirali] ile seçilir.
+/// [komsu] doğruysa anahtarın bir adım altı ve üstü son çare olarak kullanılır.
 AdvancedItem _sayisalTipik(
   String prompt,
   int answer,
@@ -49,21 +52,23 @@ AdvancedItem _sayisalTipik(
   String explanation,
   int sira, {
   String unit = '',
+  bool komsu = false,
 }) {
   final step = answer.abs() >= 200 ? 10 : (answer.abs() >= 40 ? 5 : 1);
   final yazim = birimli('$answer', unit);
   (int, String) aday(int x) => (x, birimli('$x', unit));
+  List<(int, String)> komsular(int k) => [
+    aday(answer + k * step),
+    if (answer - k * step > 0) aday(answer - k * step),
+  ];
   return AdvancedItem(
     prompt,
     yazim,
     _tipikSirali(answer, yazim, [
       for (final x in alternatives)
         if (x > 0) aday(x),
-    ], [
-      for (var k = 1; k <= 6; k++) ...[
-        aday(answer + k * step),
-        if (answer - k * step > 0) aday(answer - k * step),
-      ],
+    ], komsu ? komsular(1) : const [], [
+      for (var k = 1; k <= 6; k++) ...komsular(k),
     ], sira),
     explanation,
   );
@@ -71,6 +76,7 @@ AdvancedItem _sayisalTipik(
 
 /// Pozitif ondalıklı yanıtlı soru; değerler [digits] basamakla yazılır, sıra
 /// yazılan değere göre bulunur ve çeldiriciler [_tipikSirali] ile seçilir.
+/// [komsu] doğruysa anahtarın bir adım altı ve üstü son çare olarak kullanılır.
 AdvancedItem _ondalikliTipik(
   String prompt,
   double answer,
@@ -79,10 +85,15 @@ AdvancedItem _ondalikliTipik(
   int sira, {
   String unit = '',
   int digits = 2,
+  bool komsu = false,
 }) {
   final step = answer.abs() >= 20 ? 1.0 : (answer.abs() >= 2 ? 0.5 : 0.1);
   double yuvarla(double x) => double.parse(tr(x, digits).replaceFirst(',', '.'));
   (double, String) aday(double x) => (yuvarla(x), birimli(tr(x, digits), unit));
+  List<(double, String)> komsular(int k) => [
+    aday(answer + k * step),
+    if (yuvarla(answer - k * step) > 0) aday(answer - k * step),
+  ];
   final yazim = birimli(tr(answer, digits), unit);
   return AdvancedItem(
     prompt,
@@ -90,11 +101,8 @@ AdvancedItem _ondalikliTipik(
     _tipikSirali(yuvarla(answer), yazim, [
       for (final x in alternatives)
         if (x.isFinite && yuvarla(x) > 0) aday(x),
-    ], [
-      for (var k = 1; k <= 6; k++) ...[
-        aday(answer + k * step),
-        if (yuvarla(answer - k * step) > 0) aday(answer - k * step),
-      ],
+    ], komsu ? komsular(1) : const [], [
+      for (var k = 1; k <= 6; k++) ...komsular(k),
     ], sira),
     explanation,
   );
@@ -295,8 +303,9 @@ AdvancedItem _olcekUzunluk(int a, int b, int c) {
       km,
       // Tipik hatalar anahtarın iki yanında: çarpmak yerine bölme, km'ye çevirirken
       // bir ya da iki basamak kaydırma (×10, ÷10, ×100, ÷100) ve bölme hatasının
-      // basamak kaymalı biçimleri. Anahtarın değer sırası vakadan vakaya değişir.
-      // Bu ölçekteki bir haritada gerçekçi olmayan 2000 km üstü değerler kullanılmaz.
+      // basamak kaymalı biçimleri, alan hesabıyla karıştırıp ölçeğin karesini alma.
+      // Anahtarın değer sırası vakadan vakaya değişir. Bu ölçekteki bir haritada
+      // gerçekçi olmayan 2000 km üstü değerler kullanılmaz.
       [
         ters,
         km * 10,
@@ -305,10 +314,12 @@ AdvancedItem _olcekUzunluk(int a, int b, int c) {
         km / 100,
         ters * 10,
         ters * 100,
+        km * s,
       ],
       'Haritadaki 1 cm gerçekte $payda cm, yani ${tr(s)} km eder. '
       '${tr(cm10 / 10)} × ${tr(s)} = ${tr(km)} km bulunur.',
       sira,
+      komsu: true,
       unit: 'km',
       digits: 3,
     );
@@ -320,9 +331,10 @@ AdvancedItem _olcekUzunluk(int a, int b, int c) {
     'Gerçekte ${tr(km)} km olan $baglam, 1/$payda ölçekli bir haritada kaç santimetre '
     'ile gösterilir?',
     cm,
-    // Tipik hatalar: bölmek yerine çarpma, cm'ye çevirirken basamak kaydırma ve
-    // orantıyı ters kurma (ölçek değerini uzunluğa bölme).
-    // Haritada 2 m'yi aşan iki basamaklı kaydırma gerçekçi olmadığından kullanılmaz.
+    // Tipik hatalar: bölmek yerine çarpma, cm'ye çevirirken basamak kaydırma,
+    // orantıyı ters kurma (ölçek değerini uzunluğa bölme), çarpma hatasının basamak
+    // kaymalı biçimi, alan hesabıyla karıştırıp ölçeğin karesine bölme. Haritada
+    // 2 m'yi aşan iki basamaklı kaydırma gerçekçi olmadığından kullanılmaz.
     [
       (km * s * 10).round() / 10,
       cm * 10,
@@ -330,10 +342,13 @@ AdvancedItem _olcekUzunluk(int a, int b, int c) {
       if (cm * 100 <= 200) cm * 100,
       cm / 100,
       s / km,
+      (km * s * 10).round() / 100,
+      cm / s,
     ],
     'Bu ölçekte haritadaki 1 cm gerçekte $payda cm, yani ${tr(s)} km eder. '
     '${tr(km)} / ${tr(s)} = ${tr(cm)} cm bulunur.',
     sira,
+    komsu: true,
     unit: 'cm',
     digits: 3,
   );
@@ -405,6 +420,7 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
       'Haritadaki 1 cm gerçekte ${tr(s)} km olduğundan 1 cm² gerçekte ${tr(s)} × ${tr(s)} = '
       '${tr(s * s)} km² eder. $harita × ${tr(s * s)} = ${tr(gercek)} km² bulunur.',
       _ucaYakinSira(i),
+      komsu: true,
       unit: 'km²',
       digits: 3,
     );
@@ -417,12 +433,11 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
   // Tam sayı anahtarın rakamlarını ondalık kısmında taşıyan kaydırmalar ("23" için
   // "0,23") sona alınır; yoksa sözcük benzerliği anahtarı öne çıkarır.
   bool paylasir(double x) => tr(x, 3).split(RegExp('[^0-9]+')).contains('$harita');
-  // Haritada 2000 cm²'yi aşan iki basamaklı kaydırma gerçekçi değildir.
   final adaylar = [
     unut,
     harita * 10.0,
     harita / 10,
-    if (harita * 100 <= 2000) harita * 100.0,
+    harita * 100.0,
     harita / 100,
     harita * s / 2,
     unut / 10,
@@ -436,6 +451,7 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
     'Haritadaki 1 cm gerçekte ${tr(s)} km olduğundan 1 cm² gerçekte ${tr(s * s)} km² eder. '
     '${tr(gercek)} / ${tr(s * s)} = $harita cm² bulunur.',
     _ucaYakinSira(i),
+    komsu: true,
     unit: 'cm²',
     digits: 3,
   );
@@ -849,6 +865,7 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
       'Toplam artış $son − $nufus = ${son - nufus} kişi, doğal artış $dogum − $olum = $dogal '
       'kişidir. Net göç ${son - nufus} − $dogal = $net kişi olur.',
       sira,
+      komsu: true,
       unit: 'kişi',
     );
   }
@@ -997,7 +1014,7 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
     genc,
     // Tipik hatalar: 65 ve üzeri nüfusu çıkarmama ya da ekleme, bağımlı nüfusu 15–64
     // yaş nüfusundan çıkarma (65 ve üzeri ile birlikte ya da değil); tipik hata
-    // yetmezse en sonda %10–20 komşu değerler. Kökte verilen 65 ve üzeri nüfus
+    // yetmezse en sonda %10 ve %25 komşu değerler. Kökte verilen 65 ve üzeri nüfus
     // çeldirici yapılmaz.
     [
       bagimli,
@@ -1006,7 +1023,7 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
       if (calisan - bagimli - yasli >= genc / 4) calisan - bagimli - yasli,
       genc * 9 ~/ 10,
       genc * 11 ~/ 10,
-      genc * 8 ~/ 10,
+      genc * 3 ~/ 4,
     ],
     'Bağımlı nüfus = $calisan × $oran / 100 = $bagimli kişidir. '
     '0–14 yaş nüfusu = $bagimli − $yasli = $genc kişi.',
@@ -1185,10 +1202,12 @@ AdvancedItem _yuzyil(int i) {
   final on = mo ? 'M.Ö.' : 'M.S.';
   String ad(int yy, int j) =>
       '${mo ? 'M.Ö. ' : ''}$yy. yüzyılın ${ceyrek ? '${_ceyrekAdi[j]} çeyreği' : '${j == 0 ? 'ilk' : 'ikinci'} yarısı'}';
-  final komsu = yuz >= 1 ? n - 1 : n + 1;
-  // Çeldiriciler 2 × 2 düzenindedir: yüzyıl hatası (yılın ilk basamaklarını yüzyıl
-  // sanma) ile parça hatası (yarıyı ya da çeyreği ters uçtan sayma) ayrı ayrı ve
-  // birlikte verilir. Her yüzyıl ve her parça adı ikişer seçenekte görünür.
+  // Çeldiriciler 2 × 2 düzenindedir: yüzyıl hatası ile parça hatası (yarıyı ya da
+  // çeyreği ters uçtan sayma) ayrı ayrı ve birlikte verilir; her yüzyıl ve her
+  // parça adı ikişer seçenekte görünür. Yüzyıl hatası vakaların yarısında yılın ilk
+  // basamaklarını yüzyıl sanmak (bir eksik), yarısında yüzyılı bir fazla saymaktır;
+  // böylece anahtarın yüzyılı seçeneklerdeki iki yüzyılın büyüğü de küçüğü de olur.
+  final komsu = yuz >= 1 && hedefSira(i, 11) < 2 ? n - 1 : n + 1;
   final yanlis = ceyrek
       ? [ad(n, 3 - konum), ad(komsu, konum), ad(komsu, 3 - konum)]
       : [ad(n, 1 - konum), ad(komsu, konum), ad(komsu, 1 - konum), ad(n + 1, konum)];
