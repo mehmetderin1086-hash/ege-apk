@@ -1574,10 +1574,10 @@ final lmGeometriEk = <AdvancedFamily>[
           ),
         };
         // Çeldiriciler: öteki oranlar, Pisagor yerine kenarları toplama ya da
-        // çıkarma (eksik kenar hipotenüsse l1 + l2, dik kenarsa w − l1) ve
-        // oranı ters yazma (hipotenüs paya). sin ve cos 1'den büyük
-        // olamayacağından bu sorularda 1'den büyük çeldirici en çok ikidir
-        // (tan ya da cot ile ters oran).
+        // çıkarma (eksik kenar hipotenüsse l1 + l2, dik kenarsa w − l1);
+        // tan sorusunda oranı ters yazma (hipotenüs paya). sin ve cos 1'den
+        // büyük olamayacağından bu sorularda ters oran kullanılmaz; 1'den
+        // büyük çeldirici en çok bir tanedir (tan ya da cot).
         final hipHesap = g == 0 || g == 3;
         final (ad, kose, pay, payda, yanlis, tanim) = switch (c) {
           0 => (
@@ -1590,7 +1590,6 @@ final lmGeometriEk = <AdvancedFamily>[
               (l2, l1),
               (l1, l2),
               hipHesap ? (l2, l1 + l2) : (w - l1, w),
-              (w, l2),
             ],
             'sin $p1 = karşı dik kenar / hipotenüs = $kar / $hip',
           ),
@@ -1599,7 +1598,7 @@ final lmGeometriEk = <AdvancedFamily>[
             p1,
             l1,
             w,
-            [(l2, w), (l2, l1), (l1, l2), if (hipHesap) (l1, l1 + l2), (w, l1)],
+            [(l2, w), (l2, l1), (l1, l2), if (hipHesap) (l1, l1 + l2)],
             'cos $p1 = komşu dik kenar / hipotenüs = $kom / $hip',
           ),
           2 => (
@@ -1622,7 +1621,7 @@ final lmGeometriEk = <AdvancedFamily>[
             p2,
             l1,
             w,
-            [(l2, w), (l1, l2), (l2, l1), if (hipHesap) (l1, l1 + l2), (w, l1)],
+            [(l2, w), (l1, l2), (l2, l1), if (hipHesap) (l1, l1 + l2)],
             'sin $p2 = karşı dik kenar / hipotenüs = $kom / $hip',
           ),
         };
@@ -2024,12 +2023,13 @@ final lmGeometriEk = <AdvancedFamily>[
             '${tr(s2 / 2)} cm olur. İç teğet çemberin yarıçapı r = Alan / '
             'yarı çevre = $alan / ${tr(s2 / 2)} = $r cm.';
         // 2 ile bölmeyi unutma, çevrel çemberle karıştırma, tam çevreyle
-        // bölme, yarı çevreyi ya da köşeden çizilen başka bir teğet parçasını
-        // (s − u) yarıçap sanma ve 2 ile iki kez bölme.
-        final rYanlis = [2.0 * r, w / 2, r / 2, s2 / 2, (v + w - u) / 2, r / 4];
+        // bölme, köşeden çizilen başka bir teğet parçasını (s − u) yarıçap
+        // sanma ve 2 ile iki kez bölme. (Yarı çevre üçgenin kenarlarından
+        // da uzun olduğundan yarıçap çeldiricisi olarak kullanılmaz.)
+        final rYanlis = [2.0 * r, w / 2, r / 2, (v + w - u) / 2, r / 4];
         if (tur == 1) {
           // Çapı yarıçap sanma, iç teğet çember, dik kenarların ortalaması,
-          // dört ile bölme, yarı çevre ve hipotenüse ait yükseklik.
+          // dört ile bölme ve hipotenüse ait yükseklik.
           return ondalikliSirali(
             'Dik kenarlarının uzunlukları $u cm ve $v cm olan bir dik üçgenin '
                 'çevrel çemberinin yarıçapı kaç cm olur?',
@@ -2039,7 +2039,6 @@ final lmGeometriEk = <AdvancedFamily>[
               r.toDouble(),
               (u + v) / 2,
               w / 4,
-              s2 / 2,
               if (_temizAralik(u * v, w, 0, w / 2)) u * v / w,
             ],
             'Hipotenüs √($u² + $v²) = $w cm olur. Dik üçgende çevrel çemberin '
@@ -3915,7 +3914,8 @@ final lmGeometriEk = <AdvancedFamily>[
           final yanit = sor ? d : h0 + d;
           // Yüzey alanı ya da bir yüzün alanıyla hesaplama, ikiye bölme,
           // taban alanı yerine l + w ile bölme; yükselmeyi ayrıt sanma. Son
-          // yükseklikte aynı hatalar h0'a eklenir; çıkarma hatası da vardır.
+          // yükseklikte aynı hatalar h0'a eklenir (küp eklenince su seviyesi
+          // düşemeyeceğinden h0 − yükselme çeldirici olarak kullanılmaz).
           final artis = [
             ?_ondalik(6 * e * e, l * w),
             ?_ondalik(e * e, l * w),
