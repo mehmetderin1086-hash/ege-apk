@@ -1458,8 +1458,8 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
           son * (son + 1) ~/ 2,
           son * (son + 1) ~/ 2 - ilk * (ilk + 1) ~/ 2,
           ?_bol((ilk + son) * (adet + 1), 2),
-          // Uçların toplamı yerine farkını almak.
-          ?_bol((son - ilk) * adet, 2),
+          // Son terimi toplama katmamak.
+          top - son,
         ],
         'Terim sayısı $son − $ilk + 1 = $adet olur. Toplam (ilk terim + son '
             'terim) · terim sayısı / 2 = ($ilk + $son) · $adet / 2 = $top bulunur.',
@@ -1482,7 +1482,9 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
           (ilk + son) * adet,
           // Aradaki bütün tam sayıların toplamının yarısını almak.
           ?_bol((son - ilk + 1) * (ilk + son), 4),
-          ?_bol((son - ilk) * adet, 2),
+          // İlk ya da son terimi toplama katmamak.
+          top - ilk,
+          top - son,
         ],
         'Terim sayısı ($son − $ilk) / 2 + 1 = $adet olur. Toplam ($ilk + $son) '
             '· $adet / 2 = $top bulunur.',
@@ -1503,7 +1505,9 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
           ?_bol((ilk + son) * (son - ilk + 1), 2),
           // n · ilk + artış · n(n − 1)/2 formülünde artışla çarpmayı unutmak.
           adet * ilk + adet * (adet - 1) ~/ 2,
-          ?_bol((son - ilk) * adet, 2),
+          // İlk ya da son terimi toplama katmamak.
+          top - ilk,
+          top - son,
         ],
         'Terim sayısı ($son − $ilk) / $artis + 1 = $adet olur. Toplam ($ilk + '
             '$son) · $adet / 2 = $top bulunur.',
@@ -1614,7 +1618,7 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
               'sonraki her gün bir önceki günden $artis soru fazla çözüyor. Buna göre '
               'öğrencinin çözdüğü soruların toplamı kaçıncı günün sonunda $top olur?',
           gun,
-          [gun - 1, gun + 1, gun + 2],
+          [gun - 1, gun + 1],
           '$gun gün sonunda son gün $ilk + ($gun − 1) · $artis = $son soru çözülür '
               've toplam ($ilk + $son) · $gun / 2 = $top olur. Buna göre aranan gün '
               '$gun. gündür.',
