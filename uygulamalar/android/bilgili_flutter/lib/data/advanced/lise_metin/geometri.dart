@@ -82,8 +82,9 @@ List<String> _celdirici(
   // geometrik ya da aritmetik ortası olmasın (x/2 ile 2x, x − d ile x + d:
   // "yarısı ve iki katı seçeneklerde" ipucu) ve öteki seçeneklerin çoğunun
   // basit katı (2, 3, 4 kat ya da 1/2, 1/3, 1/4) olduğu tek "merkez"
-  // seçenek olmasın. Uyan birleşimlerden öncelik sıraları toplamı en
-  // küçük olan alınır; komşu sayısı gerekenden (en az bir) fazla olmaz.
+  // seçenek olmasın. Uyan birleşimlerden önce en az komşulu, sonra öncelik
+  // sıraları toplamı en küçük olan alınır; komşu sayısı gerekenden (en az
+  // bir) fazla olmaz.
   // Uyan yoksa yalnız orta koşulu, o da yoksa ilk adaylar kullanılır.
   final alt0 = [...hA, ...kA].take(6).toList();
   final ust0 = [...hU, ...kU].take(6).toList();
@@ -131,7 +132,7 @@ List<String> _celdirici(
             ])
           ? 1
           : 2;
-      final maliyet = [...ia, ...iu].fold<int>(0, (t, i) => t + i);
+      final maliyet = [...ia, ...iu].fold<int>(0, (t, i) => t + i) + 10 * komsu;
       if (duzey > secimDuzey ||
           (duzey == secimDuzey && maliyet < secimMaliyet)) {
         secim = [...a, ...u];

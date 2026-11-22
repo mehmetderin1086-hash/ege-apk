@@ -3303,7 +3303,7 @@ bool _basamakSinirUygun((int, int, int, int) t, bool enAz, int x) {
 
 /// c = 6: en az k basamaklı olması için en küçük n; c = 7: k basamaklı ise
 /// n en çok kaç.
-AdvancedItem _basamakSinir(int c, (int, int, int, int) t, int k) {
+AdvancedItem _basamakSinir(int c, (int, int, int, int) t, int k, [int? sira]) {
   final lg = _logBin(t);
   final enAz = c == 6;
   if (!_basamakSinirUygun(t, enAz, k)) {
@@ -3312,7 +3312,7 @@ AdvancedItem _basamakSinir(int c, (int, int, int, int) t, int k) {
   if (enAz) {
     final sinir = k - 1;
     final n = (sinir * 1000 + lg - 1) ~/ lg;
-    return _tam(
+    final eski = _tam(
       '${t.$1}ⁿ sayısının en az $k basamaklı olması için n doğal sayısı en '
           'az kaç olmalıdır? $_logNot',
       n,
@@ -3323,9 +3323,21 @@ AdvancedItem _basamakSinir(int c, (int, int, int, int) t, int k) {
           '${tr(sinir * 1000 / lg, 2)} olduğundan n en az $n olur.',
       pozitif: true,
     );
+    if (sira == null) return eski;
+    // Sınırı k − 1 yerine k alma, yuvarlamayı ters yapma, basamak sayısını
+    // üs sanma; en sonda komşu değerler.
+    return _dengele(
+      eski,
+      n,
+      _tamAday([
+        ...[n - 1, n + 1, (k * 1000 + lg - 1) ~/ lg, k],
+        ...[sinir * 1000 ~/ lg, k - 1, n - 2, n + 2],
+      ], pozitif: true),
+      sira,
+    );
   }
   final n = k * 1000 ~/ lg;
-  return _tam(
+  final eski = _tam(
     '${t.$1}ⁿ sayısı $k basamaklı olduğuna göre n doğal sayısı en çok kaç '
         'olabilir? $_logNot',
     n,
@@ -3336,16 +3348,28 @@ AdvancedItem _basamakSinir(int c, (int, int, int, int) t, int k) {
         'olduğundan n en çok $n olur.',
     pozitif: true,
   );
+  if (sira == null) return eski;
+  // "En az" yanıtını verme, yuvarlamayı ters yapma, basamak sayısını üs
+  // sanma; en sonda komşu değerler.
+  return _dengele(
+    eski,
+    n,
+    _tamAday([
+      ...[n + 1, n - 1, ((k - 1) * 1000 + lg - 1) ~/ lg, k],
+      ...[(k * 1000 + lg - 1) ~/ lg, k - 1, n - 2, n + 2],
+    ], pozitif: true),
+    sira,
+  );
 }
 
-AdvancedItem _basamakTek((int, int, int, int) t, int n) {
+AdvancedItem _basamakTek((int, int, int, int) t, int n, [int? sira]) {
   final lg = _logBin(t);
   if (!_basamakKesin(n * lg, _bigUs(t, n))) {
     throw StateError('Yuvarlanmış logaritma kesin değil');
   }
   final bin = n * lg;
   final yanit = bin ~/ 1000 + 1;
-  return _tam(
+  final eski = _tam(
     '${t.$1}${_ust(n)} sayısı kaç basamaklıdır? $_logNot',
     yanit,
     [yanit - 1, yanit + 1, (n * lg / 100).round(), n],
@@ -3355,9 +3379,22 @@ AdvancedItem _basamakTek((int, int, int, int) t, int n) {
         '$yanit basamaklıdır.',
     pozitif: true,
   );
+  if (sira == null) return eski;
+  // 1 eklemeyi unutma, virgülü kaydırma, üssü ya da tabanın basamak sayısı
+  // ile üssün çarpımını yanıt sanma; en sonda komşu değerler.
+  return _dengele(
+    eski,
+    yanit,
+    _tamAday([
+      ...[yanit - 1, yanit + 1, n, (n * lg / 100).round()],
+      ...['${t.$1}'.length * n, yanit - 2, yanit + 2, n + 1, n - 1],
+    ], pozitif: true),
+    sira,
+  );
 }
 
 AdvancedItem _logBasamak(int a, int b, int c, int deneme) {
+  final sira = hedefSira(_vaka(a, b, c));
   if (c <= 3) {
     final t = _basTaban[a];
     final n = _temizSec(
@@ -3366,7 +3403,7 @@ AdvancedItem _logBasamak(int a, int b, int c, int deneme) {
       (x) => _basamakTek(t, 11 + x),
       b + 20 * c,
     );
-    return _basamakTek(t, 11 + n);
+    return _basamakTek(t, 11 + n, sira);
   }
   if (c == 4) {
     // 2 ve 5 kuvvetleri: 10'un kuvveti ayrılır.
@@ -3404,7 +3441,7 @@ AdvancedItem _logBasamak(int a, int b, int c, int deneme) {
           '$kalanBasamak basamaklı';
     }
     final ayir = t2 == 2 && t5 == 5 ? '' : ' = 2${_ust(p2)}·5${_ust(p5)}';
-    return _tam(
+    final eski = _tam(
       '$t2${_ust(m)}·$t5${_ust(k)} sayısı kaç basamaklıdır? $_logNot',
       yanit,
       [ortak, p2 + p5, ortak + 1 == yanit ? ortak + 2 : ortak + 1, yanit + 1],
@@ -3412,6 +3449,17 @@ AdvancedItem _logBasamak(int a, int b, int c, int deneme) {
           '$kalanAcik olduğundan çarpım $ortak + $kalanBasamak = $yanit '
           'basamaklıdır.',
       pozitif: true,
+    );
+    // Kalan kuvveti unutma, üsleri toplama, kalan çarpanların her birini bir
+    // basamak sayma; en sonda komşu değerler.
+    return _dengele(
+      eski,
+      yanit,
+      _tamAday([
+        ...[ortak, p2 + p5, yanit + 1, yanit - 1, ortak + fark, m + k],
+        ...[ortak + 1, yanit + 2, yanit - 2],
+      ], pozitif: true),
+      sira,
     );
   }
   if (c == 5) {
@@ -3430,7 +3478,7 @@ AdvancedItem _logBasamak(int a, int b, int c, int deneme) {
     );
     final bin = n1 * _logBin(t1) + n2 * _logBin(t2);
     final yanit = bin ~/ 1000 + 1;
-    return _tam(
+    final eski = _tam(
       '${t1.$1}${_ust(n1)}·${t2.$1}${_ust(n2)} sayısı kaç basamaklıdır? '
           '$_logNot',
       yanit,
@@ -3444,6 +3492,18 @@ AdvancedItem _logBasamak(int a, int b, int c, int deneme) {
           '$n1·log ${t1.$1} + $n2·log ${t2.$1} = ${tr(bin / 1000, 3)} '
           'olduğundan sayı $yanit basamaklıdır.',
       pozitif: true,
+    );
+    final b1 = (n1 * _logBin(t1)) ~/ 1000, b2 = (n2 * _logBin(t2)) ~/ 1000;
+    // Çarpanların basamak sayılarını toplama, tek çarpanı sayma, 1 eklemeyi
+    // unutma, üsleri toplama; en sonda komşu değerler.
+    return _dengele(
+      eski,
+      yanit,
+      _tamAday([
+        ...[yanit - 1, yanit + 1, b1 + b2 + 2, b1 + 1, b2 + 1, n1 + n2],
+        ...[yanit - 2, yanit + 2],
+      ], pozitif: true),
+      sira,
     );
   }
   if (c <= 7) {
@@ -3460,7 +3520,7 @@ AdvancedItem _logBasamak(int a, int b, int c, int deneme) {
       (x) => _basamakSinir(c, t, 12 + x),
       b + 20 * (a ~/ tur),
     );
-    return _basamakSinir(c, t, 12 + k);
+    return _basamakSinir(c, t, 12 + k, sira);
   }
   // c = 8, 9: üç sayının karşılaştırılması.
   final p = 40 + 2 * a;
@@ -3484,7 +3544,7 @@ AdvancedItem _logBasamak(int a, int b, int c, int deneme) {
   final secilen = c == 8 ? degerler.last : degerler.first;
   final diger = c == 8 ? degerler.first : degerler.last;
   final yanit = secilen.$1 ~/ 1000 + 1;
-  return _tam(
+  final eski = _tam(
     'x = 2${_ust(p)}, y = 3${_ust(q)} ve z = 5${_ust(r)} sayılarından en '
         '${c == 8 ? 'büyüğü' : 'küçüğü'} kaç basamaklıdır? $_logNot',
     yanit,
@@ -3494,6 +3554,22 @@ AdvancedItem _logBasamak(int a, int b, int c, int deneme) {
         'olur (log 5 = 1 − log 2). En ${c == 8 ? 'büyüğü' : 'küçüğü'} '
         '${secilen.$2} sayısıdır; ${secilen.$2} sayısı $yanit basamaklıdır.',
     pozitif: true,
+  );
+  final us = switch (secilen.$2) {
+    'x' => p,
+    'y' => q,
+    _ => r,
+  };
+  // Öteki uçtaki ya da ortadaki sayının basamak sayısı, 1 eklemeyi unutma,
+  // üssü basamak sayısı sanma; en sonda komşu değerler.
+  return _dengele(
+    eski,
+    yanit,
+    _tamAday([
+      ...[diger.$1 ~/ 1000 + 1, degerler[1].$1 ~/ 1000 + 1, yanit + 1],
+      ...[yanit - 1, us, yanit + 2, yanit - 2],
+    ], pozitif: true),
+    sira,
   );
 }
 
@@ -3788,7 +3864,7 @@ AdvancedItem _logModel(int a, int b, int c) {
         aday = [
           ...[t ~/ _us(ca, k), t ~/ (k - 1), t ~/ (k + 1), t ~/ 2, t],
           if (t % ca == 0) t ~/ ca,
-          ..._komsuTam(tt),
+          ...[k * t, ..._komsuTam(tt)],
         ];
       }
     case 2 || 3 || 9:
@@ -3810,9 +3886,12 @@ AdvancedItem _logModel(int a, int b, int c) {
       } else if (c == 3) {
         birim = 'g';
         aday = [
-          ...[m0 ~/ (2 * k), m0 ~/ _us(2, k + 1), m0 ~/ _us(2, k - 1)],
-          ...[m0 - m, m0 ~/ 2],
-          if (m0 % _us(2, k + 2) == 0) m0 ~/ _us(2, k + 2),
+          // Tam bölünmeyen hatalı sonuçlar (aşağı yuvarlanır) sona alınır.
+          if (m0 % (2 * k) == 0) m0 ~/ (2 * k),
+          if (m.isEven) m ~/ 2,
+          ...[2 * m, m0 - m, m0 ~/ 2],
+          if (m % 4 == 0) m ~/ 4,
+          if (m0 % (2 * k) != 0) m0 ~/ (2 * k),
           ..._komsuTam(m),
         ];
       } else {
@@ -3820,7 +3899,7 @@ AdvancedItem _logModel(int a, int b, int c) {
         aday = [
           ...[t ~/ (k + 1), t ~/ (k - 1), t * m ~/ m0, t ~/ 2, t],
           if (k >= 3 && t % (k - 2) == 0) t ~/ (k - 2),
-          ..._komsuTam(tt),
+          ...[k * t, ..._komsuTam(tt)],
         ];
       }
     case 4:

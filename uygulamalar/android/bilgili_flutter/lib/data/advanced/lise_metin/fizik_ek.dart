@@ -2275,6 +2275,9 @@ AdvancedItem _keplerUcuncu(int a, int b, int k, bool periyotSor) {
         x * q * q * q * q / (p * p * p * p),
         x,
         x * p * p * p / (q * q * q),
+        // T ∝ r³ sanmak (karekökü unutmak); büyük oranlarda gerçek dışı
+        // büyük bir süre vereceğinden yalnız oran küçükken.
+        if (math.pow(q / p, 6) <= 50) x * math.pow(q / p, 6),
       ],
       '$tanim r₂ / r₁ = $kare olduğundan (T₂ / T₁)² = $altinci ve '
           'T₂ / T₁ = $kup bulunur: T₂ = ${_n(x)}·$kup = ${_n(y)} yıl.',
@@ -3521,7 +3524,8 @@ AdvancedItem _acFrekans(int a, int b, int k) {
     '$giris Kaynağın gerilimi $t s içinde kaç kez pozitif en büyük değerine '
         'ulaşır?',
     n,
-    [2 * f * t, n / 2, f, t],
+    // Ek: her periyotta artı ve eksi tepeler ile iki sıfırdan geçişi saymak.
+    [2 * f * t, n / 2, f, 4 * f * t],
     '$frekans Gerilim her periyotta bir kez pozitif en büyük değerine ulaştığından '
         '$t s içinde $f·$t = $n kez ulaşır.',
     sira: s,

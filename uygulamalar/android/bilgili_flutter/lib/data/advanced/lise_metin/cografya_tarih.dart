@@ -1048,16 +1048,20 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
       // Tipik hatalar anahtarın iki yanında: bağımlı nüfusu toplam nüfusa oranlama,
       // oranı ters kurma (15–64 / bağımlı), yalnız 0–14 yaşı ya da yalnız 65 ve üzeri
       // yaşı hesaba katma, toplam nüfusu 15–64 yaş nüfusuna oranlama, 15–64 yaşın
-      // toplamdaki payını verme; en sonda komşu değerler. Gerçekçi olmayan %150 üstü
-      // oranlar kullanılmaz.
+      // toplamdaki payını verme, bağımlı nüfusu 0–14 yaş nüfusuna oranlama; en sonda
+      // komşu değerler. Gerçekçi olmayan %170 üstü oranlar kullanılmaz. Anahtarın üstünde
+      // yeterli tipik hata bulunur; komşu değerler yalnız anahtarın üstünde
+      // kalabildiğinden çok kullanılırsa anahtar yakın değerlerin en küçüğü olarak
+      // göze batar.
       siraliCeldiriciler(oran, '%$oran', [
         for (final x in <num>[
           toplamdaPay,
-          if (10000 / oran <= 150) (10000 / oran).round(),
+          if (10000 / oran <= 170) (10000 / oran).round(),
           oran * pay / 100,
-          if (100 + oran <= 150) 100 + oran,
+          if (100 + oran <= 170) 100 + oran,
           oran * (100 - pay) / 100,
           calisanPay,
+          if (10000 / pay <= 170) (10000 / pay).round(),
           oran + 10,
           oran + 6,
         ])
@@ -1075,14 +1079,18 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
         'oranının 100 katı) %$oran olduğuna göre bu ilçede 0–14 yaş grubunda kaç kişi yaşamaktadır?',
     genc,
     // Tipik hatalar: 65 ve üzeri nüfusu çıkarmama ya da ekleme, bağımlı nüfusu 15–64
-    // yaş nüfusundan çıkarma (65 ve üzeri ile birlikte ya da değil); tipik hata
-    // yetmezse en sonda %10 ve %25 komşu değerler. Kökte verilen 65 ve üzeri nüfus
-    // çeldirici yapılmaz.
+    // yaş nüfusundan çıkarma (65 ve üzeri ile birlikte ya da değil), bağımlı nüfusu iki
+    // yaş grubuna eşit bölme, 65 ve üzeri nüfusu iki kez çıkarma; tipik hata yetmezse
+    // en sonda %10 ve %25 komşu değerler. Anahtarın altındaki tipik hatalar olmadan
+    // komşular çoğunlukla altta kalır ve anahtar yakın değerlerin en büyüğü olarak
+    // göze batar. Kökte verilen 65 ve üzeri nüfus çeldirici yapılmaz.
     [
       bagimli,
       calisan - bagimli,
       bagimli + yasli,
       if (calisan - bagimli - yasli >= genc / 4) calisan - bagimli - yasli,
+      bagimli ~/ 2,
+      if (bagimli - 2 * yasli >= genc / 4) bagimli - 2 * yasli,
       genc * 9 ~/ 10,
       genc * 11 ~/ 10,
       genc * 3 ~/ 4,

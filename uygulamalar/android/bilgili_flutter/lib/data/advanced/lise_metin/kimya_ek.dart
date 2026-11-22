@@ -5395,44 +5395,58 @@ final _f20 = lmSirali(
     }
     say[0] += dalSay;
     String yaz(List<int> s) => 'sp³: ${s[0]}, sp²: ${s[1]}, sp: ${s[2]}';
-    // Her çeldirici iki sayıda yanlıştır: (a′, b′, c), (a′, b, c′),
-    // (a, b′, c′); her konumda doğru sayı iki seçenekte geçer, konum
-    // çoğunluğu anahtarı göstermez. Bir türün sayısı bir artırılıp öteki
-    // ikisininki bir azaltılır (ya da tersi): bir karbonun türünü yanlış
-    // belirleme. Böylece iki çeldiricide toplam karbon sayısı doğru kalır.
-    final degisimler = [
-      for (var t = 0; t < 3; t++)
-        for (final y in const [-1, 1])
-          if (say[t] + y >= 0 &&
-              [
-                for (var u = 0; u < 3; u++)
-                  if (u != t) say[u] - y,
-              ].every((v) => v >= 0))
-            (t, y),
+    final a = say[0], b = say[1], c = say[2];
+    // 2 × 2 düzen. X: sp³ sayısında hata (metil dallarını unutma, metil dalı
+    // yoksa bir sp³ karbonunu eksik ya da fazla sayma); Y: çoklu bağ
+    // karbonlarının türünü karıştırma (çift bağ karbonlarını sp, üçlü bağ
+    // karbonlarını sp² sayma ya da sp² ile sp sayılarını değiştirme).
+    // Çeldiriciler X, Y ve X + Y'dir: her sayı iki seçenekte doğru geçer, konum
+    // çoğunluğu anahtarı göstermez; çift ve üçlü bağ karbonları ikişer
+    // olduğundan sp² ve sp sayıları her seçenekte çift kalır (tek sayılı bir
+    // çeldirici anahtarı ele vermez). Küçük moleküllerde sp³ sayısı artırılmaz.
+    final h = _onAlti(i);
+    final azalt = [
+      if (dalSay > 0) a - dalSay else if (a >= 1) a - 1,
     ];
-    List<String> celdiriciler((int, int) d) {
-      final (tek, yon) = d;
-      final yanlis = [
-        for (var u = 0; u < 3; u++) u == tek ? say[u] + yon : say[u] - yon,
-      ];
-      return [
-        for (var k = 0; k < 3; k++)
-          yaz([for (var u = 0; u < 3; u++) u == k ? say[u] : yanlis[u]]),
-      ];
-    }
-
+    final artir = [if (a + b + c > 4 || azalt.isEmpty) a + 1];
+    final xler = h.isEven ? [...azalt, ...artir] : [...artir, ...azalt];
+    final yler = <List<int> Function(List<int>)>[
+      if (b > 0) (s) => [s[0], 0, s[1] + s[2]],
+      if (c > 0) (s) => [s[0], s[1] + s[2], 0],
+      if (b > 0 && c > 0 && b != c) (s) => [s[0], s[2], s[1]],
+    ];
+    final duzenler = <List<String>>[
+      for (final x0 in xler)
+        for (var r = 0; r < yler.length; r++)
+          [
+            yaz([x0, b, c]),
+            yaz(yler[(h ~/ 2 + r) % yler.length](say)),
+            yaz(yler[(h ~/ 2 + r) % yler.length]([x0, b, c])),
+          ],
+    ];
     // Sayıların çakışması anahtarı sözcük benzerliğinde aykırı bırakabilir;
     // böyle düzenler, başka düzen varsa kullanılmaz.
-    final uygun = [
-      for (final d in degisimler)
-        if (!_anahtarAykiri([yaz(say), ...celdiriciler(d)])) d,
-    ];
-    final havuz = uygun.isEmpty ? degisimler : uygun;
+    final duzen = duzenler.firstWhere(
+      (d) => !_anahtarAykiri([yaz(say), ...d]),
+      orElse: () => duzenler.first,
+    );
     return secenekli(
       'Yoğun formülü $f olan moleküldeki karbon atomlarından sp³, sp² ve sp '
           'hibritleşmesi yapanların sayıları hangi seçenekte doğru verilmiştir?',
       yaz(say),
-      celdiriciler(havuz[_onAlti(i) % havuz.length]),
+      // Hiç sp³ karbonu olmayan küçük moleküllerde (eten, etin, bütadien
+      // gibi) X hatası kurulamaz; tipik tür karışıklıkları sırayla alınır.
+      a == 0 && dalSay == 0
+          ? [
+              if (c > 0) yaz([a, b + c, 0]),
+              if (b != c) yaz([a, c, b]),
+              if (b > 0) yaz([a + 1, b - 1, c]),
+              yaz([a + b, 0, c]),
+              if (c > 0) yaz([a + c, b, 0]),
+              if (c > 0) yaz([a + 1, b, c - 1]),
+              yaz([a, b + 1, c]),
+            ]
+          : duzen,
       'Üçlü bağa katılan karbonlar sp, çift bağa katılanlar sp², yalnız tekli '
           'bağ yapanlar sp³ hibritleşmesi yapar${dalSay > 0 ? ' (metil dalları da sp³)' : ''}: '
           '${yaz(say)}.',

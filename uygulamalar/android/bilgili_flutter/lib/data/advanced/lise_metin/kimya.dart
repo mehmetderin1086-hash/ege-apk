@@ -260,7 +260,7 @@ int _sira(int a, int b, int c) {
 /// yalnız ([komsuAlt], [komsuUst]) açık aralığından alınır; adımları
 /// [komsuOlcek] (verilmezse anahtarın kendisi) büyüklüğüne göre seçilir.
 /// Anahtara ya da öncelikli bir adaya pratikte eş görünen adaylar (60,72 ile
-/// 60,7; 0,21 ile 0,2) atlanır; yakınlık [orijin] noktasından ölçülür (ör.
+/// 60,7; 340 ile 336) atlanır; yakınlık [orijin] noktasından ölçülür (ör.
 /// kaynama noktalarında 100 °C).
 AdvancedItem _saySirali(
   String kok,
@@ -358,8 +358,8 @@ AdvancedItem _saySirali(
 /// Yazılan iki değer ([_yazim]) pratikte aynı mı görünür: göreli farkları
 /// (büyüklük [orijin] noktasından ölçülür) %2'den küçükse ya da ondalık
 /// basamak sayıları farklıyken kısa yazılanın son basamağının yarısı içinde
-/// kalıyorlarsa (ve göreli fark %6'dan küçükse). Örnek: 60,72 ile 60,7; 0,21
-/// ile 0,2; 340 ile 336.
+/// kalıyorlarsa (ve göreli fark %3'ten küçükse). Örnek: 60,72 ile 60,7; 340
+/// ile 336; 0,54 ile 0,55.
 bool _yakin((num, int) x, (num, int) y, [num orijin = 0]) {
   final (p, op) = x;
   final (q, oq) = y;
@@ -369,7 +369,7 @@ bool _yakin((num, int) x, (num, int) y, [num orijin = 0]) {
   final fark = (p - q).abs(), goreli = fark / buyuk;
   if (goreli < 0.02) return true;
   return op != oq &&
-      goreli < 0.06 &&
+      goreli < 0.03 &&
       fark <= 0.5 / _on(op < oq ? op : oq) + 1e-9;
 }
 
@@ -1890,16 +1890,7 @@ final _f08 = lmAile(
           '$giris normal koşullarda ${_t(v)} litre $fb gazı oluştuğunda kaç mol '
               '$fa harcanmış olur? ($nk)',
           na,
-          [
-            nb,
-            nb * kb / ka,
-            v * ka / kb,
-            v * ka / kb / 2,
-            na * 2,
-            na / 2,
-            nb * 2,
-            nb / 2,
-          ],
+          [nb, nb * kb / ka, v * ka / kb, na * 2, na / 2, nb * 2, nb / 2],
           '${_t(v)} / 22,4 = ${_t(nb)} mol $fb oluşur. $oran ${_t(nb)}·$ka / $kb '
               '= ${_t(na)} mol $fa harcanır.',
           sira,
@@ -3089,7 +3080,7 @@ final _f15 = lmAile(
             [
               d1 * v1 / v2,
               d1 * v2 / vt,
-              d1 * vt / v1,
+              _olcekte(d1 * vt / v1, d2, 10),
               d1,
               d1 / 2,
               d2 / 2,
@@ -3105,7 +3096,15 @@ final _f15 = lmAile(
           '${_t(d1)} mol/L derişimli $v1 mL $x çözeltisinin derişimini '
               '${_t(d2)} mol/L değerine düşürmek için kaç mL saf su eklenmelidir?',
           v2,
-          [vt, v1, vt + v1, v1 * d2 / d1, v1 * v2 / vt, v2 * 2, v2 / 2],
+          [
+            vt,
+            v1,
+            vt + v1,
+            _olcekte(v1 * d2 / d1, v2, 10),
+            v1 * v2 / vt,
+            v2 * 2,
+            v2 / 2,
+          ],
           'M₁V₁ = M₂V₂ eşitliğinden son hacim ${_t(d1)}·$v1 / ${_t(d2)} = $vt '
               'mL olmalıdır. Eklenecek su $vt − $v1 = $v2 mL bulunur.',
           sira,
@@ -4261,7 +4260,7 @@ final _f19 = lmAile(
             v2 / na,
             v2 * nb,
             v1,
-            v1 * d2 / d1,
+            _olcekte(v1 * d2 / d1, v2, 10),
             v2 * 2,
             v2 / 2,
             v2 + v1,
