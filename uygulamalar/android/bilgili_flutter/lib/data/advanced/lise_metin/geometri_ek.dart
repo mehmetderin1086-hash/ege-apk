@@ -76,7 +76,8 @@ AdvancedItem _aci(
 
 /// Derece yanıtlı soru; anahtarın seçenekler arasındaki değer sırası [sira]
 /// (0 … 3) ile seçilir. Önce tipik hata değerleri, en sonda anahtarın iki
-/// yanındaki komşu değerler denenir; hepsi (0°, üst) aralığında tutulur.
+/// yanındaki komşu değerler denenir; hepsi (0°, üst) aralığında, komşular
+/// ayrıca [alt] değerinin üstünde tutulur.
 AdvancedItem _aciSirali(
   String prompt,
   int dogru,
@@ -84,12 +85,15 @@ AdvancedItem _aciSirali(
   String aciklama,
   int sira, {
   int ust = 180,
+  int alt = 0,
 }) {
   final adim = dogru < 30 ? 2 : 5;
   final havuz = [
-    ...yanlis,
-    for (var k = 1; k <= 6; k++) ...[dogru + k * adim, dogru - k * adim],
-  ].where((x) => x > 0 && x < ust);
+    ...yanlis.where((x) => x > 0 && x < ust),
+    for (var k = 1; k <= 6; k++)
+      for (final x in [dogru + k * adim, dogru - k * adim])
+        if (x > alt && x < ust) x,
+  ];
   return AdvancedItem(
     prompt,
     '$dogru°',
@@ -204,13 +208,21 @@ AdvancedItem _kesenAcisi(int a, int b, int j, int i) {
     final buyuk = t > 180 - t ? t : 180 - t;
     // Büyük açının ifadesinde sabit terimi eklemeyi unutma.
     final sabitsiz = t > 180 - t ? p * x : r * x;
+    // Büyük açı 90°'yi aşar: küçük açı ve x dışındaki çeldiriciler de 90°'nin
+    // üstünde tutulur (yalnız anahtar 90°'yi aşan seçenek olmasın).
     return _aciSirali(
       '$veri Buna göre bu iki açıdan büyük olanının ölçüsü kaç derecedir?',
       buyuk,
-      [180 - buyuk, x, ?yanlisAci, ?isaretAci, sabitsiz],
+      [
+        180 - buyuk,
+        x,
+        for (final v in [?yanlisAci, ?isaretAci, sabitsiz])
+          if (v > 90) v,
+      ],
       '$cozum Açıların ölçüleri $t° ve ${180 - t}° olur; büyük olanı '
           '$buyuk°.',
       sira,
+      alt: 90,
     );
   }
   return _aciSirali(

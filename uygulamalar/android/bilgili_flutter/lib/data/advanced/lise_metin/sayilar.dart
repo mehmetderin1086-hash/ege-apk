@@ -4219,6 +4219,7 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
         'Gruplandırma yapılır: $pp · ($r + $sx) + $q · ($r + $sx) = ($pp + $q) · '
             '($r + $sx) = $t1 · $t2 = ${t1 * t2}.',
         pozitif: true,
+        komsuAdim: 10 * t1,
       );
   }
 }

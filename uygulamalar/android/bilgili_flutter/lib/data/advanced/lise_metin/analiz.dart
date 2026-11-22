@@ -485,7 +485,7 @@ bool _dahaIyi(List<int> a, List<int> b) {
 /// Üçlüler sırasıyla şu ölçütlerle karşılaştırılır: anahtardan küçük
 /// çeldirici sayısının [sira] hedefine uzaklığı; anahtarın sözcük
 /// benzerliğinde öne çıkması ya da tek başına geride kalması, uzunlukta tek
-/// başına en uzun olması; adayların öncelik sırası. Yazımı anahtarla ya da önceki bir
+/// başına en uzun ya da en kısa olması; adayların öncelik sırası. Yazımı anahtarla ya da önceki bir
 /// adayla aynı olan adaylar atlanır; ilk [enFazla] farklı aday denenir.
 List<String> _dengeli(
   num anahtar,
@@ -538,7 +538,7 @@ List<String> _dengeli(
           (alt - sira).abs(),
           (tepe == 1 ? 3 : (tepe == 2 || tepe == 0 ? 1 : 0)) +
               (_tekBasina(puan, 0, enKucuk: true) ? 1 : 0) +
-              (_tekBasina(uz, 0) ? 1 : 0),
+              (_tekBasina(uz, 0) || _tekBasina(uz, 0, enKucuk: true) ? 1 : 0),
           p + q + r,
         ];
         if (enIyiCeza == null || _dahaIyi(ceza, enIyiCeza)) {
@@ -2281,6 +2281,11 @@ AdvancedItem _kosinusTeoremi(int a, int b, int c) {
     _R kos(int karsi, int k1, int k2) =>
         _R(k1 * k1 + k2 * k2 - karsi * karsi, 2 * k1 * k2);
     final kz = kos(z, x, y), kx = kos(x, y, z), ky = kos(y, x, z);
+    // En küçük açının kosinüsü üç kosinüsün en büyüğüdür ve tipik hataların
+    // hepsi ondan küçük kalır; anahtar bu sorularda çoğu kez en büyük
+    // seçenektir. Öteki sorularda hedef sıra 0 … 2 alınarak ailenin değer
+    // sırası dağılımı dengelenir.
+    final hedef = hangi == 1 ? sira : sira % 3;
     if (hangi < 2) {
       final buyuk = hangi == 0;
       final o = buyuk ? z : x, s1 = buyuk ? x : y, s2 = buyuk ? y : z;
@@ -2311,7 +2316,7 @@ AdvancedItem _kosinusTeoremi(int a, int b, int c) {
           ...[yanit * _R(2), -yanit * _R(2), yanit / _R(2), -yanit / _R(2)],
           ...[payda, -payda],
         ], aralik: _acikBirlik),
-        sira,
+        hedef,
       );
     }
     // Orta kenar y'nin karşısındaki açı, adlandırılmış köşeyle sorulur.
@@ -2357,7 +2362,7 @@ AdvancedItem _kosinusTeoremi(int a, int b, int c) {
         ...[-yanit, kz, -kz, kx, -kx, yanit * _R(2), -yanit * _R(2)],
         ...[yanit / _R(2), -yanit / _R(2), payda, -payda],
       ], aralik: _acikBirlik),
-      sira,
+      hedef,
     );
   }
   final (bk, ck, cs, ak) = _kosIkiKenar[a + 25 * b];

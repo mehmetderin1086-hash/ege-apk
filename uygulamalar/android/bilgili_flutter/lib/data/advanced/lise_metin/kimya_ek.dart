@@ -143,7 +143,9 @@ AdvancedItem _say(
 /// `_say`'daki komşu adımı kullanılır; adım, yanıtın %5'inden küçükse adımın
 /// katına büyütülür. [son] adayları (akla yatmayan
 /// büyüklükteki hata sonuçları) yalnız başka yoldan üç çeldirici
-/// bulunamazsa kullanılır.
+/// bulunamazsa kullanılır. Bir tipik hata değerine %3'ten yakın komşu değer
+/// atlanır, yerine bir sonraki adım denenir. [yakinKomsu] verilirse bir
+/// adımdan uzak komşu değerler yanıttan en çok %25 uzak olur.
 ///
 /// [tipikOncelik] verilirse komşu değerler anahtara bitişik kümelenmez: iki
 /// adım yanıtın %25'ini aşmıyorsa komşular iki adımdan başlar. Değer true ise
