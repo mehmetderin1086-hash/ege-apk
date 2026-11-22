@@ -1053,14 +1053,16 @@ AdvancedItem _tam(
 
 /// İşaretli tam sayı yanıtlı soru; anahtarın değer sırası [sira] ile seçilir.
 /// Tipik hatalardan sonra anahtarın iki yanındaki komşular (büyüklüğe göre
-/// 1, 5 ya da 10 adım) denenir.
+/// 1, 5 ya da 10 adım) denenir; [alt] verilirse komşular onun üstünde
+/// tutulur (kökte "k > alt" koşulu varsa).
 AdvancedItem _tamSirali(
   String prompt,
   int dogru,
   List<int> yanlis,
   String aciklama,
-  int sira,
-) {
+  int sira, {
+  int? alt,
+}) {
   final adim = dogru.abs() >= 200 ? 10 : (dogru.abs() >= 40 ? 5 : 1);
   return AdvancedItem(
     prompt,
@@ -1068,9 +1070,43 @@ AdvancedItem _tamSirali(
     siraliCeldiriciler(dogru, _m(dogru), [
       for (final x in [
         ...yanlis,
-        for (var k = 1; k <= 4; k++) ...[dogru + k * adim, dogru - k * adim],
+        for (var k = 1; k <= 4; k++)
+          for (final y in [dogru + k * adim, dogru - k * adim])
+            if (alt == null || y > alt) y,
       ])
         (x, _m(x)),
+    ], sira),
+    aciklama,
+  );
+}
+
+/// Uzunluk yanıtlı soru; anahtarın değer sırası [sira] ile seçilir. Tipik
+/// hatalardan sonra anahtarın iki yanındaki komşular (sayisalSirali gibi 1,
+/// 5 ya da 10 adım) denenir; komşular ([alt], [ust]) aralığında tutulur.
+/// Hipotenüs türü bir uzunlukta alt sınır dik kenarların büyüğüdür: yan
+/// kenar ya da köşegen bir dik kenardan kısa olamaz.
+AdvancedItem _uzunlukSirali(
+  String prompt,
+  int dogru,
+  List<int> yanlis,
+  String aciklama,
+  int sira, {
+  int alt = 0,
+  int? ust,
+}) {
+  final adim = dogru >= 200 ? 10 : (dogru >= 40 ? 5 : 1);
+  final yazim = birimli('$dogru', 'cm');
+  return AdvancedItem(
+    prompt,
+    yazim,
+    siraliCeldiriciler(dogru, yazim, [
+      for (final x in [
+        ...yanlis.where((x) => x > 0),
+        for (var k = 1; k <= 6; k++)
+          for (final y in [dogru + k * adim, dogru - k * adim])
+            if (y > alt && (ust == null || y < ust)) y,
+      ])
+        (x, birimli('$x', 'cm')),
     ], sira),
     aciklama,
   );
@@ -3931,7 +3967,7 @@ final lmGeometriEk = <AdvancedFamily>[
             yanit,
             sor
                 ? [h0 + d, ...artis, e.toDouble()]
-                : [d, for (final x in artis) h0 + x, h0 + e.toDouble(), h0 - d],
+                : [d, for (final x in artis) h0 + x, h0 + e.toDouble()],
             'Küpün hacmi $e³ = ${e * e * e} cm³ kadar su yer değiştirir. Kabın '
                 'taban alanı $l·$w = ${l * w} cm² olduğundan su seviyesi '
                 '${e * e * e} / ${l * w} = ${cm(d)} yükselir.'
