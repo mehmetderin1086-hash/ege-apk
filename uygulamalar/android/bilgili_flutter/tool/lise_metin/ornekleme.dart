@@ -6,6 +6,10 @@
 //     [--dart-define=LM_ORNEK_TOHUM=2] [--dart-define=LM_ORNEK_ADET=5] \
 //     [--dart-define=LM_AILELER=lm_a,lm_b] [--dart-define=LM_ANAHTAR=true] \
 //     tool/lise_metin/<alan>_ornek_test.dart
+//
+// LM_DOKUM=true verildiğinde seçili ailelerin bütün vakaları anahtarlarıyla
+// birlikte <klasör>/dokum.jsonl dosyasına yazılır (yazar ve editörün bağımsız
+// yeniden çözümü için). Tohum 1 ve 2 her ailenin ilk ve son vakasını da içerir.
 import 'dart:convert';
 import 'dart:io';
 
@@ -15,7 +19,7 @@ import 'package:flutter_test/flutter_test.dart';
 const _harfler = ['A', 'B', 'C', 'D'];
 
 void liseMetinOrnekle(String alan, List<AdvancedFamily> aileler) {
-  test('$alan: bağımsız çözüm örnekleri', () {
+  test('$alan: bağımsız çözüm örnekleri', () async {
     const dir = String.fromEnvironment('LM_ORNEK_DIR');
     const anahtarYaz = bool.fromEnvironment('LM_ANAHTAR');
     const adet = int.fromEnvironment('LM_ORNEK_ADET', defaultValue: 5);
@@ -24,6 +28,33 @@ void liseMetinOrnekle(String alan, List<AdvancedFamily> aileler) {
     final istenen = secili.isEmpty ? null : secili.split(',').toSet();
     final hedef = Directory(dir.isEmpty ? 'build/lise-metin/$alan' : dir)
       ..createSync(recursive: true);
+    if (const bool.fromEnvironment('LM_DOKUM')) {
+      final cikti = File('${hedef.path}/dokum.jsonl').openWrite();
+      var toplam = 0;
+      for (final f in aileler) {
+        if (istenen != null && !istenen.contains(f.key)) continue;
+        for (var i = 0; i < f.count; i++) {
+          final r = f.build(i);
+          cikti.writeln(
+            jsonEncode({
+              'id': '${f.key}_$i',
+              'aile': f.key,
+              'i': i,
+              'soru': r.prompt,
+              'dogru': r.correct,
+              'yanlis': r.wrong,
+              'aciklama': r.explanation,
+            }),
+          );
+          toplam++;
+        }
+      }
+      await cikti.close();
+      expect(toplam, greaterThan(0), reason: 'Dökülecek aile bulunamadı');
+      // ignore: avoid_print
+      print('$toplam vaka yazıldı: ${hedef.path}/dokum.jsonl');
+      return;
+    }
     final sorular = StringBuffer(), anahtar = StringBuffer();
     var n = 0;
     for (final f in aileler) {
@@ -33,8 +64,8 @@ void liseMetinOrnekle(String alan, List<AdvancedFamily> aileler) {
         (x, y) => (x * 31 + y) & 0x3fffffff,
       );
       final sira = <int>{
-        if (tohum == 1) 0,
-        if (tohum == 1) f.count - 1,
+        if (tohum <= 2) 0,
+        if (tohum <= 2) f.count - 1,
         for (var k = 1; k <= adet + 4; k++)
           (salt * k + 104729 * k * k) % f.count,
       }.take(adet).toList();
