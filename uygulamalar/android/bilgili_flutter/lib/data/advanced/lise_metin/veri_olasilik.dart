@@ -2511,12 +2511,16 @@ AdvancedItem _medyanMod(int a, int b, int c) {
   };
   // Medyan ve mod en küçük ile en büyük veri arasında kalır; bu iki soruda
   // aralık dışındaki hatalar (sıra numarası, tekrar sayısı, açıklık) elenir.
+  // Medyan bu veri gruplarında alt uçta kaldığından anahtar çoğunlukla küçük
+  // seçeneklerdendir; öteki sorularda büyük sıralar yeğlenerek aile
+  // genelinde sıralar dengelenir.
   return _tamAralikli(
     '$giris Bu veri grubunun $soru kaçtır?',
     yanit,
     tur <= 1 ? yanlis.where((x) => x >= l0 && x <= l4) : yanlis,
     cozum,
     _no(a, b, c),
+    agirlik: tur <= 1 ? null : const [1, 1, 2, 2],
   );
 }
 

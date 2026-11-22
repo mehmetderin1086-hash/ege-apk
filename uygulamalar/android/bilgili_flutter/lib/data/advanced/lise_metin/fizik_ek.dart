@@ -226,9 +226,6 @@ int _hs(int a, int b, int c) => hedefSira(a + 25 * b + 500 * c);
 /// Tam sayı katsayılı k√3 değerinin (değer, yazım) ikilisi.
 (num, String) _r3(num k, String unit) => (k * math.sqrt(3), '${_k3(k)} $unit');
 
-/// Tam sayı katsayılı k√2 değerinin (değer, yazım) ikilisi.
-(num, String) _r2(num k, String unit) => (k * math.sqrt2, '${_k2(k)} $unit');
-
 /// Tam kare ise karekökü, değilse null.
 int? _tamKok(int x) {
   if (x < 0) return null;

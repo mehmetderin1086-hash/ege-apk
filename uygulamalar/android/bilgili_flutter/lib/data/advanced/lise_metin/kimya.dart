@@ -2490,11 +2490,11 @@ final _f12 = lmAile(
           [
             p * mk / (0.082 * tc),
             mk / 22.4,
-            mk / rt,
-            p / rt,
+            _olcekte(mk / rt, d, 10),
+            _olcekte(p / rt, d, 10),
             d * 2,
             d / 2,
-            p * mk,
+            _olcekte(p * mk, d, 10),
           ],
           '$kelvin d = P·M / (R·T) = ${_t(p)}·${_t(mk)} / (0,082·$tk) = '
               '${_t(d)} g/L bulunur.',
@@ -2506,7 +2506,14 @@ final _f12 = lmAile(
         '$tc °C sıcaklıkta ve ${_t(p)} atm basınçta yoğunluğu ${_t(d)} g/L olan '
             'ideal gazın mol kütlesi kaç g/mol olur? ($_rYazi)',
         mk,
-        [d * 0.082 * tc / p, d * 22.4, d * rt, mk * 2, mk / 2, d * tk / p],
+        [
+          d * 0.082 * tc / p,
+          d * 22.4,
+          _olcekte(d * rt, mk, 10),
+          mk * 2,
+          mk / 2,
+          _olcekte(d * tk / p, mk, 10),
+        ],
         '$kelvin M = d·R·T / P = ${_t(d)}·0,082·$tk / ${_t(p)} = ${_t(mk)} '
             'g/mol bulunur.',
         sira,
@@ -2524,7 +2531,14 @@ final _f12 = lmAile(
           '${_t(n)} mol ideal gaz $tc °C sıcaklıkta ${_t(p)} atm basınç '
               'yapmaktadır. Gazın hacmi kaç litredir? ($_rYazi)',
           v,
-          [n * 0.082 * tc / p, n * 22.4, n * rt, n * rt * p, v / 2, v * 2],
+          [
+            n * 0.082 * tc / p,
+            n * 22.4,
+            _olcekte(n * rt, v, 10),
+            _olcekte(n * rt * p, v, 10),
+            v / 2,
+            v * 2,
+          ],
           '$kelvin V = n·R·T / P = ${_t(n)}·0,082·$tk / ${_t(p)} = ${_t(v)} L '
               'bulunur.',
           sira,
@@ -2538,8 +2552,8 @@ final _f12 = lmAile(
           [
             n * 0.082 * tc / v,
             n * 22.4 / v,
-            v / (n * rt),
-            n * rt,
+            _olcekte(v / (n * rt), p, 10),
+            _olcekte(n * rt, p, 10),
             p * 2,
             p / 2,
           ],
@@ -2552,7 +2566,15 @@ final _f12 = lmAile(
           '$tc °C sıcaklıkta ${_t(v)} L hacimli kapalı bir kapta ${_t(p)} atm '
               'basınç yapan ideal gaz kaç moldür? ($_rYazi)',
           n,
-          [p * v / (0.082 * tc), v / 22.4, v / rt, p / rt, n * 2, n / 2, p * v],
+          [
+            p * v / (0.082 * tc),
+            v / 22.4,
+            _olcekte(v / rt, n, 10),
+            _olcekte(p / rt, n, 10),
+            n * 2,
+            n / 2,
+            _olcekte(p * v, n, 10),
+          ],
           '$kelvin n = P·V / (R·T) = ${_t(p)}·${_t(v)} / (0,082·$tk) = '
               '${_t(n)} mol bulunur.',
           sira,
@@ -2568,7 +2590,7 @@ final _f12 = lmAile(
           [
             p * v / (0.082 * tc) * mk,
             v / 22.4 * mk,
-            v / rt * mk,
+            _olcekte(v / rt * mk, n * mk, 10),
             n * mk / 2,
             n * mk * 2,
             n,
