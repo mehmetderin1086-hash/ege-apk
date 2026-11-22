@@ -1,6 +1,7 @@
 // Lise coğrafya ek aileleri: Dünya'nın hareketleri, güneş ışınları, iklim, yer
 // şekilleri, kayaçlar, toprak, bitki örtüsü ile Türkiye'nin beşerî ve ekonomik
 // coğrafyası. Hesap aileleri koordinatlarla, olgu aileleri çizelge seçkileriyle üretilir.
+import 'denge.dart';
 import 'ortak.dart';
 
 // ───────────────────────────── Ortak yardımcılar ─────────────────────────────
@@ -780,8 +781,7 @@ bool _esitPaylasim(List<int> s) {
     var t = 0.0;
     for (var b = 0; b < 4; b++) {
       if (b == a) continue;
-      t +=
-          soz[a].intersection(soz[b]).length / soz[a].union(soz[b]).length;
+      t += soz[a].intersection(soz[b]).length / soz[a].union(soz[b]).length;
     }
     z.add(t);
   }
@@ -1055,6 +1055,21 @@ AdvancedItem _saatDilimi(int a, int b, int c) {
   final t0 = (3 + a) * 1440 + 45 + 137 * (b ~/ 2);
   final kayma = doguya ? -1440 : 1440;
   final dogru = t0 + kayma + 60 * saat;
+  // Takvimi ters yönde değiştirme ile saat hatası (limana kadar geçen süreyi
+  // eklemeyi unutma ya da bir saat fazla ekleme) çapraz eşlenir: dört seçenekte
+  // iki tarih ve iki saat ikişer kez görülür. Bir saat fazla ekleme, anahtarın
+  // zaman sırasını değiştirmek için vakaların yaklaşık üçte birinde kullanılır.
+  final w = t0 - kayma + 60 * saat;
+  final fazla =
+      hedefSira(i) == 0 || (hedefSira(i) == 1 && hedefSira(i, 5) == 0);
+  final secilen = _anCeldiricileri(
+    dogru,
+    fazla
+        ? [(w, 1), (dogru + 60, 5), (w + 60, 5)]
+        : [(w, 1), (t0 + kayma, 2), (t0 - kayma, 2)],
+    fazla ? (doguya ? 0 : 2) : (doguya ? 1 : 3),
+    20,
+  );
   return secenekli(
     "Pasifik Okyanusu'nda ${doguya ? 'doğuya' : 'batıya'} doğru ilerleyen bir gemi, "
         'gemideki saat ${_an(ay, t0).replaceFirst(',', ' günü')} iken tarih değiştirme '
@@ -1062,13 +1077,7 @@ AdvancedItem _saatDilimi(int a, int b, int c) {
         'değiştirilmektedir. Gemi çizgiyi geçtikten $saat saat sonra bir limana ulaştığına '
         'göre limana varışta gemideki tarih ve saat nedir?',
     an(ay, dogru),
-    [
-      t0 - kayma + 60 * saat,
-      t0 + 60 * saat,
-      t0 + kayma,
-      dogru + 60,
-      dogru - 60,
-    ].where(gecerli).map((x) => an(ay, x)),
+    secilen.map((x) => an(ay, x)),
     'Tarih değiştirme çizgisini ${doguya ? 'batıdan doğuya geçen gemide takvim bir gün geri' : 'doğudan batıya geçen gemide takvim bir gün ileri'} '
         'alınır: ${an(ay, t0)} → ${an(ay, t0 + kayma)}. $saat saat sonra ${an(ay, dogru)} olur.',
   );
