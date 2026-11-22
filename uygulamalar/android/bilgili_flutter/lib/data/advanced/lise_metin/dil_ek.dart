@@ -10,31 +10,83 @@ const _rakam = ['I', 'II', 'III'];
 String _uc(List<String> x) => 'I. ${x[0]}\nII. ${x[1]}\nIII. ${x[2]}';
 
 /// Tablonun [i] numaralı üçlü seçkisi; dizilim sıra numarasına bağlıdır.
-List<T> _dizili<T>(List<T> tablo, int i) {
-  final u = kombinasyon(tablo, 3, i);
+/// [secki] verilirse seçki onun [i] numaralı sırasından alınır
+/// ([_uygunSecki]).
+List<T> _dizili<T>(List<T> tablo, int i, [List<int>? secki]) {
+  final u = secki == null
+      ? kombinasyon(tablo, 3, i)
+      : kombinasyon(tablo, 3, secki[i], spread: false);
   final d = ucluDizilimler[i % 6];
   return [u[d[0]], u[d[1]], u[d[2]]];
 }
 
 /// [n] ardışık sıra numarasını (j = 0 … n − 1) tablonun bütün üçlü
-/// seçkilerine eşit aralıkla yayar; her j ayrı bir seçki verir.
-List<T> _yayili<T>(List<T> tablo, int j, int n) {
+/// seçkilerine eşit aralıkla yayar; her j ayrı bir seçki verir. [secki]
+/// verilirse seçki onun [j] numaralı sırasından alınır ([_uygunSecki]).
+List<T> _yayili<T>(List<T> tablo, int j, int n, [List<int>? secki]) {
   final toplam = kombinasyonSayisi(tablo.length, 3);
   if (toplam < n) throw StateError('Yetersiz seçki: $toplam < $n');
-  final u = kombinasyon(tablo, 3, j * toplam ~/ n, spread: false);
+  final u = kombinasyon(
+    tablo,
+    3,
+    secki == null ? j * toplam ~/ n : secki[j],
+    spread: false,
+  );
   final d = ucluDizilimler[j % 6];
   return [u[d[0]], u[d[1]], u[d[2]]];
 }
+
+/// [k] soru biçimli bir ailede bir biçime düşen sıra numarası sayısı.
+int _bicimBoyu(int k) => (lmAileBoyu + k - 1) ~/ k;
 
 /// Sıra numarasını [k] soru biçimine böler (biçim = i % k) ve o biçimin
 /// üçlü seçkisini verir. Her biçimin seçkileri tablonun bütün üçlülerine
 /// yayılır; biçimler birbirine göre kaydırıldığı için art arda gelen sıra
 /// numaraları aynı üçlüyü göstermez. Bir biçim içinde her sıra numarası ayrı
-/// bir üçlü verir.
-List<T> _bicimSecki<T>(List<T> tablo, int i, int k) {
-  final n = (lmAileBoyu + k - 1) ~/ k;
+/// bir üçlü verir. [seckiler] her biçim için ya null (bütün üçlüler) ya da
+/// o biçimin [_uygunSecki] listesidir.
+List<T> _bicimSecki<T>(
+  List<T> tablo,
+  int i,
+  int k, [
+  List<List<int>?>? seckiler,
+]) {
+  final n = _bicimBoyu(k);
   final b = i % k;
-  return _yayili(tablo, (i ~/ k + b * (n ~/ k)) % n, n);
+  return _yayili(tablo, (i ~/ k + b * (n ~/ k)) % n, n, seckiler?[b]);
+}
+
+/// [n] sıra numarası (j = 0 … n − 1) için tablonun yalnız [uygun] üçlü
+/// seçkilerinin sıraları (sözlük sırasındaki konumları). Her j önce
+/// [_yayili] ile aynı varsayılan seçkiyi (j · toplam ~/ n) alır; bu seçki
+/// uygun değilse ondan sonra gelen ilk uygun ve kullanılmamış seçkiyi alır.
+/// Böylece uygun seçkili vakaların kökü değişmez ve her j ayrı bir üçlü
+/// verir. Liste ailenin ilk kullanımında bir kez kurulur.
+List<int> _uygunSecki<T>(List<T> tablo, int n, bool Function(List<T>) uygun) {
+  final toplam = kombinasyonSayisi(tablo.length, 3);
+  if (toplam < n) throw StateError('Yetersiz seçki: $toplam < $n');
+  bool iyi(int r) => uygun(kombinasyon(tablo, 3, r, spread: false));
+  final secki = List<int>.filled(n, -1);
+  final dolu = <int>{};
+  for (var j = 0; j < n; j++) {
+    final r = j * toplam ~/ n;
+    if (iyi(r)) {
+      secki[j] = r;
+      dolu.add(r);
+    }
+  }
+  for (var j = 0; j < n; j++) {
+    if (secki[j] >= 0) continue;
+    var r = j * toplam ~/ n;
+    var adim = 0;
+    do {
+      r = (r + 1) % toplam;
+      if (++adim > toplam) throw StateError('Yetersiz uygun seçki: $n');
+    } while (dolu.contains(r) || !iyi(r));
+    secki[j] = r;
+    dolu.add(r);
+  }
+  return secki;
 }
 
 /// Tabloyu, art arda gelen ögeler farklı kümelerden olacak biçimde yeniden
@@ -86,7 +138,28 @@ List<String> _digerleri(
 /// çarpacak kadar uzun ya da kısa olmadığı, sonra uzunluğu doğru etikete
 /// yakın w'ler taşıyan, sonra kaydırma sırasında önce gelen üçlü alınır.
 /// Böylece “en uzun ya da en kısa seçenek” de yanıtı ele vermez ve
-/// çeldiriciler vakadan vakaya değişir.
+/// çeldiriciler vakadan vakaya değişir. [tekrarsiz] kuralına ilk üç adayla
+/// uyulamıyorsa bütün adaylar denenir.
+///
+/// [dengeli] doğruysa seçeneklerdeki etiket yinelemesi de yanıtı ele vermez.
+/// Doğru üçlünün üç etiketi ayrıysa w'ler [tekrarsiz] kuralıyla seçilir:
+/// dört seçeneğin her biri üç ayrı etiket taşır ve her etiket tam iki
+/// seçenekte geçer. Doğru üçlünün tam iki etiketi aynıysa w'ler, dört
+/// seçeneğin her birinde de tam iki etiket aynı olacak biçimde bütün adaylar
+/// arasından seçilir (ör. X – X – Y için A – A – Y, A – X – A, X – A – A).
+/// Böylece ne “tek tekdüze seçenek”, ne “etiket yineleyen tek seçenek”, ne
+/// de “her seçenekte geçen etiket” yolu yanıtı verir. Üç etiketi aynı doğru
+/// üçlü (her seçenekte geçen tek etiketi taşıdığı için kolayca seçilir) bu
+/// kipte kabul edilmez; dengeli biçimlerin seçkileri [_dengeliKurulur] ile
+/// süzülür.
+///
+/// [sayisal] doğruysa (etiketler sayıdır) seçeneklerin toplamı da yanıtı ele
+/// vermez. Sayma yanlışları çoğunlukla fazla saymak olduğundan çeldiriciler
+/// kendiliğinden büyük kalır ve “toplamı en küçük seçenek” yolu doğru yanıtı
+/// sık bulur. Bu yüzden her vakaya, sıra numarasından (seçeneğin gösterildiği
+/// yerden bağımsız olarak) bir hedef verilir: doğru seçenek dört vakanın
+/// birinde toplamı tek başına en küçük, birinde tek başına en büyük, ikisinde
+/// ikisi de değil; hedefe uyan w'ler varsa onlar seçilir.
 AdvancedItem _sirali(
   String kok,
   List<String> dogru,
@@ -94,24 +167,58 @@ AdvancedItem _sirali(
   String aciklama,
   int i, {
   bool tekrarsiz = false,
+  bool dengeli = false,
+  bool sayisal = false,
 }) {
+  final ayri = {...dogru}.length;
+  if (dengeli && ayri == 1) throw StateError('Tekdüze doğru üçlü: $kok');
+  final ikili = dengeli && ayri == 2;
+  final temiz = tekrarsiz || (dengeli && ayri == 3);
   String yaz(List<String> v) => v.join(' – ');
-  final adaylar = <List<String>>[];
-  for (var p = 0; p < 3; p++) {
+  // Sayısal kipte doğru seçeneğin toplamca yeri (0: tek en küçük, 1: tek en
+  // büyük, 2: öteki) ile hedefinden uzaklığı (0, 1 ya da 2).
+  final hedef = const [0, 1, 2, 2][(13 * i + i ~/ 11) % 4];
+  int toplamUzakligi(List<String> w) {
+    if (!sayisal) return 0;
+    int t(List<String> v) => v.fold(0, (s, x) => s + int.parse(x));
+    final v = [
+      t(dogru),
+      t([w[0], w[1], dogru[2]]),
+      t([w[0], dogru[1], w[2]]),
+      t([dogru[0], w[1], w[2]]),
+    ];
+    final kucuk = v.skip(1).every((x) => x > v[0]);
+    final buyuk = v.skip(1).every((x) => x < v[0]);
+    final yer = kucuk ? 0 : (buyuk ? 1 : 2);
+    if (yer == hedef) return 0;
+    return hedef == 2 || yer == 2 ? 1 : 2;
+  }
+
+  // Konum p'nin, sıra numarasına göre kaydırılan sırayla en çok [sinir]
+  // uygun adayı.
+  List<String> adaylar(int p, int sinir) {
     final aday = yanlis[p];
     final bas = (i ~/ 3 + p) % (aday.length < 3 ? aday.length : 3);
     final c = <String>[];
-    for (var t = 0; t < aday.length && c.length < 3; t++) {
+    for (var t = 0; t < aday.length && c.length < sinir; t++) {
       final s = aday[(bas + t) % aday.length];
       if (s == dogru[p] || c.contains(s)) continue;
-      if (tekrarsiz && dogru.contains(s)) continue;
+      if (temiz && dogru.contains(s)) continue;
       c.add(s);
     }
     if (c.isEmpty) {
       throw StateError('Konum ${p + 1} için çeldirici etiket yok: $kok');
     }
-    adaylar.add(c);
+    return c;
   }
+
+  List<int> uzunluklar(List<String> w) => [
+    yaz(dogru).length,
+    yaz([w[0], w[1], dogru[2]]).length,
+    yaz([w[0], dogru[1], w[2]]).length,
+    yaz([dogru[0], w[1], w[2]]).length,
+  ];
+
   // Uzunluğu ötekilerin hepsinden en az 3 karakter ve %10 ayrılan seçenek
   // sayısı; doğru seçeneğin göze çarpması, yanıtı ele verdiği için iki kat
   // sayılır.
@@ -131,31 +238,59 @@ AdvancedItem _sirali(
     return n;
   }
 
-  List<String>? w;
-  var enAz = 1 << 30, sira = 0;
-  for (final a in adaylar[0]) {
-    for (final b in adaylar[1]) {
-      for (final c in adaylar[2]) {
-        sira++;
-        if (tekrarsiz && (a == b || a == c || b == c)) continue;
-        final u = [
-          yaz(dogru).length,
-          yaz([a, b, dogru[2]]).length,
-          yaz([a, dogru[1], c]).length,
-          yaz([dogru[0], b, c]).length,
-        ];
-        var uzak = 0;
-        final aday = [a, b, c];
-        for (var p = 0; p < 3; p++) {
-          final pay = dogru[p].length ~/ 5 > 2 ? dogru[p].length ~/ 5 : 2;
-          if ((aday[p].length - dogru[p].length).abs() > pay) uzak++;
-        }
-        final maliyet = gozeCarpan(u) * 1000 + uzak * 100 + sira;
-        if (maliyet < enAz) {
-          enAz = maliyet;
-          w = aday;
+  // Verilen aday kümelerinden en düşük maliyetli w üçlüsü (yoksa null).
+  List<String>? enIyiUclu(List<List<String>> c) {
+    List<String>? w;
+    var enAz = 1 << 30, sira = 0;
+    for (final a in c[0]) {
+      for (final b in c[1]) {
+        for (final d in c[2]) {
+          sira++;
+          if (temiz && (a == b || a == d || b == d)) continue;
+          final aday = [a, b, d];
+          var uzak = 0;
+          for (var p = 0; p < 3; p++) {
+            final pay = dogru[p].length ~/ 5 > 2 ? dogru[p].length ~/ 5 : 2;
+            if ((aday[p].length - dogru[p].length).abs() > pay) uzak++;
+          }
+          final maliyet =
+              gozeCarpan(uzunluklar(aday)) * 10000 +
+              toplamUzakligi(aday) * 1000 +
+              uzak * 100 +
+              sira;
+          if (maliyet < enAz) {
+            enAz = maliyet;
+            w = aday;
+          }
         }
       }
+    }
+    return w;
+  }
+
+  List<String>? w;
+  if (ikili) {
+    final gecerli = _ikiliSecimler(dogru, [
+      for (var p = 0; p < 3; p++) adaylar(p, 1 << 30),
+    ]);
+    // Uzunluğu göze çarpan seçenek bırakmayanlar (sayısal kipte toplamı da
+    // hedefe en yakın olanlar) arasından, sıra numarasına göre değişen biri;
+    // böylece çeldirici dizilerinin türleri vakadan vakaya değişir.
+    var enAz = 1 << 30;
+    final enIyi = <List<String>>[];
+    for (final g in gecerli) {
+      final m = gozeCarpan(uzunluklar(g)) * 10 + toplamUzakligi(g);
+      if (m < enAz) {
+        enAz = m;
+        enIyi.clear();
+      }
+      if (m == enAz) enIyi.add(g);
+    }
+    if (enIyi.isNotEmpty) w = enIyi[(7 * i + i ~/ 7) % enIyi.length];
+  } else {
+    w = enIyiUclu([for (var p = 0; p < 3; p++) adaylar(p, 3)]);
+    if (w == null && temiz) {
+      w = enIyiUclu([for (var p = 0; p < 3; p++) adaylar(p, 1 << 30)]);
     }
   }
   if (w == null) throw StateError('Ayrı çeldirici etiketler yok: $kok');
@@ -164,6 +299,58 @@ AdvancedItem _sirali(
     yaz([w[0], dogru[1], w[2]]),
     yaz([dogru[0], w[1], w[2]]),
   ], aciklama);
+}
+
+/// Etiketleri ayrı doğru üçlü için, her konumda doğru etiketlerden ve
+/// birbirinden ayrı birer w seçilebilir mi?
+bool _temizKurulur(List<String> dogru, List<List<String>> aday) {
+  for (final a in aday[0]) {
+    if (dogru.contains(a)) continue;
+    for (final b in aday[1]) {
+      if (b == a || dogru.contains(b)) continue;
+      for (final c in aday[2]) {
+        if (c != a && c != b && !dogru.contains(c)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/// Tam iki etiketi aynı doğru üçlü için, dört seçeneğin her birinde de tam
+/// iki etiketi aynı kılan w dizileri (adayların sırasıyla).
+List<List<String>> _ikiliSecimler(
+  List<String> dogru,
+  List<List<String>> aday,
+) {
+  bool ikiAyni(String a, String b, String c) => {a, b, c}.length == 2;
+  return [
+    for (final a in aday[0])
+      if (a != dogru[0])
+        for (final b in aday[1])
+          if (b != dogru[1] && ikiAyni(a, b, dogru[2]))
+            for (final c in aday[2])
+              if (c != dogru[2] &&
+                  ikiAyni(a, dogru[1], c) &&
+                  ikiAyni(dogru[0], b, c))
+                [a, b, c],
+  ];
+}
+
+/// [_sirali] dengeli kipinin bu doğru üçlü için çeldirici kurabilmesi:
+/// etiketleri ayrı üçlülerde ([ayri]) temiz w'ler, tam iki etiketi aynı
+/// üçlülerde ([ikili]) dengeli bir w dizisi bulunmalıdır. Üç etiketi aynı
+/// üçlü hiçbir zaman uygun değildir. [aday], o konumlarda kesin yanlış olan
+/// etiketlerdir (sırası önemsizdir).
+bool _dengeliKurulur(
+  List<String> dogru,
+  List<List<String>> aday, {
+  bool ayri = true,
+  bool ikili = false,
+}) {
+  final k = {...dogru}.length;
+  if (k == 3) return ayri && _temizKurulur(dogru, aday);
+  if (k == 2) return ikili && _ikiliSecimler(dogru, aday).isNotEmpty;
+  return false;
 }
 
 const _kumeAdi = {
@@ -630,7 +817,8 @@ final _deyim = lmSirali(
 
 // (atasözü, anlamı ya da verdiği öğüt). Anlamları birbirine yakın atasözleri
 // (ör. “Ne ekersen onu biçersin” ile “Gülme komşuna, gelir başına”) birlikte
-// alınmamıştır; her açıklama tablodaki tek bir atasözüne uyar.
+// alınmamıştır; her açıklama tablodaki tek bir atasözüne uyar. Sözlüklerde
+// deyim olarak geçen kalıp sözler (ör. “ekmek elden, su gölden”) alınmamıştır.
 const _atasozleri = [
   ('Ağaç yaşken eğilir', 'Eğitime küçük yaşta başlanmalıdır'),
   ('Damlaya damlaya göl olur', 'Küçük birikimler zamanla büyür'),
@@ -702,7 +890,7 @@ const _atasozleri = [
   ('Bal tutan parmağını yalar', 'Bir işi yöneten, ondan çıkar sağlar'),
   ('Ateş olmayan yerden duman çıkmaz', 'Her söylentinin bir aslı vardır'),
   ('Ak koyunun kara kuzusu da olur', 'İyi bir aileden kötü çocuk da çıkabilir'),
-  ('Ekmek elden, su gölden', 'Başkasının sırtından geçinmek'),
+  ('Misafir umduğunu değil, bulduğunu yer', 'Konuk, ev sahibinin sunduğuyla yetinir'),
 ];
 
 final _atasozuAnlamlari = [for (final e in _atasozleri) e.$2];
@@ -1653,6 +1841,15 @@ const _noktalamalar = [
 
 final _noktalamaSerpik = _serpistir(_noktalamalar, 8);
 
+// Sıralı biçimin (çift sıra numaraları) seçkileri: üç cümleye ayrı işaretler
+// gelir ve her konuma öteki iki cümlenin işaretinden ayrı birer çeldirici
+// bulunur ([_sirali] dengeli kipi).
+final _noktalamaSecki = _uygunSecki(
+  _noktalamaSerpik,
+  _bicimBoyu(2),
+  (x) => _dengeliKurulur([for (final e in x) e.$2], [for (final e in x) e.$3]),
+);
+
 final _noktalama = lmSirali(
   'tk_noktalama',
   'Noktalama işaretleri: boş bırakılan yere gelen işaret',
@@ -1660,7 +1857,7 @@ final _noktalama = lmSirali(
   Difficulty.medium,
   BloomLevel.uygulama,
   (i) {
-    final x = _bicimSecki(_noktalamaSerpik, i, 2);
+    final x = _bicimSecki(_noktalamaSerpik, i, 2, [_noktalamaSecki, null]);
     final etiket = [for (final e in x) e.$2];
     final liste = _uc([for (final e in x) e.$1]);
     final aciklama =
@@ -1694,6 +1891,7 @@ final _noktalama = lmSirali(
       [for (final e in x) e.$3],
       aciklama,
       i,
+      dengeli: true,
     );
   },
   exam: ExamKind.tyt,
@@ -2028,6 +2226,46 @@ const _ekDisi = {
 
 final _fiilimsiSerpik = _serpistir(_fiilimsiler, 3);
 
+List<String> _turYanlislari(String tur) => [
+  for (final t in _fiilimsiTurleri)
+    if (t != tur) t,
+];
+
+List<String> _ekYanlislari(String ek, int kay) => _digerleri(
+  [
+    for (final s in _fiilimsiEkleri)
+      if (!(_ekDisi[ek] ?? const <String>[]).contains(s)) s,
+  ],
+  ek,
+  kay,
+  _ekKarisan[ek]!,
+);
+
+// Sıralı biçimlerin seçkileri ([_sirali] dengeli kipi). Üç tür bulunduğundan
+// tür biçiminde üç türü ayrı üçlüye temiz çeldirici kurulamaz; bu biçimde
+// tam iki fiilimsisi aynı türden üçlüler alınır. Ek biçiminde üç ek ayrıdır.
+final _fiilimsiSecki = <List<int>?>[
+  _uygunSecki(
+    _fiilimsiSerpik,
+    _bicimBoyu(3),
+    (x) => _dengeliKurulur(
+      [for (final e in x) e.$3],
+      [for (final e in x) _turYanlislari(e.$3)],
+      ayri: false,
+      ikili: true,
+    ),
+  ),
+  null,
+  _uygunSecki(
+    _fiilimsiSerpik,
+    _bicimBoyu(3),
+    (x) => _dengeliKurulur(
+      [for (final e in x) e.$4],
+      [for (final e in x) _ekYanlislari(e.$4, 0)],
+    ),
+  ),
+];
+
 final _fiilimsi = lmSirali(
   'tk_fiilimsi',
   'Fiilimsiler: tür ve fiilimsi eki',
@@ -2036,7 +2274,7 @@ final _fiilimsi = lmSirali(
   BloomLevel.analiz,
   (i) {
     final bicim = i % 3;
-    final x = _bicimSecki(_fiilimsiSerpik, i, 3);
+    final x = _bicimSecki(_fiilimsiSerpik, i, 3, _fiilimsiSecki);
     final tur = [for (final e in x) e.$3];
     final liste = _uc([for (final e in x) e.$1]);
     final aciklama =
@@ -2059,35 +2297,20 @@ final _fiilimsi = lmSirali(
         'uyumuyla aldıkları biçimlerden bağımsız olarak temel biçimleriyle '
         'yazılmıştır.)',
         ek,
-        [
-          for (var p = 0; p < 3; p++)
-            _digerleri(
-              [
-                for (final s in _fiilimsiEkleri)
-                  if (!(_ekDisi[ek[p]] ?? const <String>[]).contains(s)) s,
-              ],
-              ek[p],
-              i + 5 * p,
-              _ekKarisan[ek[p]]!,
-            ),
-        ],
+        [for (var p = 0; p < 3; p++) _ekYanlislari(ek[p], i + 5 * p)],
         aciklama,
         i,
+        dengeli: true,
       );
     }
     return _sirali(
       '$liste\nNumaralanmış cümlelerde tırnak içinde verilen fiilimsilerin '
       'türleri sırasıyla hangi seçenekte doğru verilmiştir?',
       tur,
-      [
-        for (var p = 0; p < 3; p++)
-          [
-            for (final t in _fiilimsiTurleri)
-              if (t != tur[p]) t,
-          ],
-      ],
+      [for (final t in tur) _turYanlislari(t)],
       aciklama,
       i,
+      dengeli: true,
     );
   },
   exam: ExamKind.tyt,
@@ -2281,6 +2504,66 @@ const _catilar = [
 
 final _catiSerpik = _serpistir(_catilar, 5);
 
+List<String> _ozneYanlislari(String cati, int kay) => _digerleri(
+  [
+    for (final c in _ozneCatilari)
+      if (!(c == _etken && _etkenTartismali(cati))) c,
+  ],
+  cati,
+  kay,
+);
+
+// Öznesine göre çatı biçiminin (i % 3 == 0) seçkileri ([_sirali] dengeli
+// kipi). Dört çatı bulunduğundan üç yüklemi ayrı çatılı üçlüye temiz
+// çeldirici kurulamaz; tam iki yüklemi aynı çatılı üçlüler alınır.
+final _catiSecki = <List<int>?>[
+  _uygunSecki(
+    _catiSerpik,
+    _bicimBoyu(3),
+    (x) => _dengeliKurulur(
+      [for (final e in x) e.$3],
+      [for (final e in x) _ozneYanlislari(e.$3, 0)],
+      ayri: false,
+      ikili: true,
+    ),
+  ),
+  null,
+  null,
+];
+
+final _gecisliCatilar = [
+  for (final e in _catiSerpik)
+    if (e.$4 == _gecisli) e,
+];
+final _gecissizCatilar = [
+  for (final e in _catiSerpik)
+    if (e.$4 == _gecissiz) e,
+];
+
+/// Nesnesine göre çatı biçiminin (i % 3 == 1) üçlüsü. İki etiketli bu
+/// biçimde her çeldirici doğru dizinin iki konumunu değiştirdiği için dört
+/// seçenekten biri her zaman tekdüzedir (ör. geçişsiz – geçişsiz –
+/// geçişsiz). Doğru dizinin sekiz geçişlilik deseni eşit sıklıkta seçilir;
+/// böylece tekdüze seçenek vakaların tam dörtte birinde doğru yanıt olur ve
+/// seçeneklerin yapısı yanıtı ele vermez. Aynı desenli vakalar ayrı yüklem
+/// üçlüleri alır.
+List<(String, String, String, String)> _nesneUclusu(int i) {
+  final j = i ~/ 3;
+  final desen = j % 8, r = j ~/ 8;
+  final g = (desen & 1) + (desen >> 1 & 1) + (desen >> 2 & 1);
+  final adet = (_bicimBoyu(3) - desen + 7) ~/ 8;
+  final zSayisi = kombinasyonSayisi(_gecissizCatilar.length, 3 - g);
+  final toplam = kombinasyonSayisi(_gecisliCatilar.length, g) * zSayisi;
+  final s = r * toplam ~/ adet;
+  final gs = kombinasyon(_gecisliCatilar, g, s ~/ zSayisi, spread: false);
+  final zs = kombinasyon(_gecissizCatilar, 3 - g, s % zSayisi, spread: false);
+  var a = 0, b = 0;
+  return [
+    for (var p = 0; p < 3; p++)
+      desen >> p & 1 == 1 ? gs[(a++ + r) % g] : zs[(b++ + r) % (3 - g)],
+  ];
+}
+
 final _cati = lmSirali(
   'tk_cati',
   'Fiilde çatı: öznesine ve nesnesine göre çatı',
@@ -2289,7 +2572,9 @@ final _cati = lmSirali(
   BloomLevel.analiz,
   (i) {
     final bicim = i % 3;
-    final x = _bicimSecki(_catiSerpik, i, 3);
+    final x = bicim == 1
+        ? _nesneUclusu(i)
+        : _bicimSecki(_catiSerpik, i, 3, _catiSecki);
     final liste = _uc([for (final e in x) e.$1]);
     final ozne = [for (final e in x) e.$3];
     final aciklama =
@@ -2330,19 +2615,10 @@ final _cati = lmSirali(
       '$liste\nNumaralanmış cümlelerde tırnak içinde verilen yüklemlerin '
       'öznesine göre çatıları sırasıyla hangi seçenekte doğru verilmiştir?',
       ozne,
-      [
-        for (var p = 0; p < 3; p++)
-          _digerleri(
-            [
-              for (final c in _ozneCatilari)
-                if (!(c == _etken && _etkenTartismali(ozne[p]))) c,
-            ],
-            ozne[p],
-            i + p,
-          ),
-      ],
+      [for (var p = 0; p < 3; p++) _ozneYanlislari(ozne[p], i + p)],
       aciklama,
       i,
+      dengeli: true,
     );
   },
   exam: ExamKind.tyt,
@@ -3471,8 +3747,10 @@ const _usedD = 'olumsuz ve soru cümlesinde did ile birlikte “use to” yazıl
 
 // (cümle, boşluğa gelen söz, o boşlukta kesin yanlış sözler, gerekçe).
 // Boşluktan sonraki yalın fiil, -ing biçimi ya da ad hangi yapının
-// geleceğini dil bilgisi bakımından belirler. Tartışmalı “didn't used to”
-// biçimi çeldirici yapılmaz.
+// geleceğini dil bilgisi bakımından belirler. Boşluğa yapının bir parçası
+// (yalnız “used” ya da yalnız yardımcı fiil) değil, uygun biçiminin tamamı
+// gelir; “did” ile kurulan soru ve olumsuzlarda bu biçim “use to”dur.
+// Tartışmalı “didn't used to” biçimi çeldirici yapılmaz.
 const _usedTo = [
   (
     "When I was younger, I ___ play tennis every weekend.",
@@ -3613,21 +3891,21 @@ const _usedTo = [
     _usedD,
   ),
   (
-    "___ you use to play with toy cars when you were little?",
-    "Did",
-    ["Were", "Are", "Do"],
+    "Did you ___ play with toy cars when you were little?",
+    "use to",
+    ["using to", "uses to", "be used to"],
     _usedD,
   ),
   (
-    "My brother ___ use to like football, but now he watches every match.",
-    "didn't",
-    ["wasn't", "isn't", "doesn't"],
+    "My brother ___ like football, but now he watches every match.",
+    "didn't use to",
+    ["wasn't used to", "doesn't use to", "isn't used to"],
     _usedD,
   ),
   (
-    "We ___ to go camping every summer when my grandfather was alive.",
-    "used",
-    ["were used", "use", "using"],
+    "We ___ go camping every summer when my grandfather was alive.",
+    "used to",
+    ["were used to", "are used to", "use to"],
     _usedA,
   ),
   (
@@ -4059,6 +4337,9 @@ final _relativeAile = lmSirali(
 //  cümlelerde zaman kaydırması isteğe bağlıdır; bu yüzden ya zaman ifadesi
 //  aktarımı geçmişe bağlar (“that day”, “the next day”) ya da çeldiriciler
 //  kaydırılmamış zaman yerine biçim, sözcük sırası ve zamir yanlışlarıdır.
+//  Dolaylı anlatımdaki her zaman ve yer ifadesi, doğrudan anlatımdaki bir
+//  ifadenin dönüşmüş biçimidir (now → at that moment gibi); kaynağı olmayan
+//  ifade eklenmez.
 const _reported = [
   (
     "Elif said, “I am very tired today.”",
@@ -4215,11 +4496,11 @@ const _reported = [
     "passed → had passed, last week → the week before",
   ),
   (
-    "Baran said, “I am writing an email to my boss.”",
+    "Baran said, “I am writing an email to my boss now.”",
     "Baran said that he ___ an email to his boss at that moment.",
     "was writing",
     ["is writing", "were writing", "was write"],
-    "am writing → was writing",
+    "am writing → was writing, now → at that moment",
   ),
   (
     "The children said, “We are hungry.”",

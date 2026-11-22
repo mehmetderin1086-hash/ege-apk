@@ -36,6 +36,13 @@ String _kok(int c, int n) {
   return k == 1 ? '√$m' : '$k√$m';
 }
 
+/// π katsayısı: 1π yerine π yazılır.
+String _pi(int k) => k == 1 ? 'π' : '$kπ';
+
+/// Ayraçlı px + q ifadesi; tek terimliyse ayraç yazılmaz: (3x + 15), 4x.
+String _pr(int p, int q, [String v = 'x']) =>
+    q == 0 ? _dx(p, q, v) : '(${_dx(p, q, v)})';
+
 /// px + q ifadesi: 3x + 15, x − 7, 4x.
 String _dx(int p, int q, [String v = 'x']) {
   final px = p == 1 ? v : '$p$v';
@@ -115,10 +122,10 @@ AdvancedItem _kesenAcisi(int a, int b, int j) {
       : '${_kesenAd[j]} iki açının';
   final veri =
       'd₁ ∥ d₂ olmak üzere bu iki doğruyu kesen k doğrusunun oluşturduğu '
-      '$tanim ölçüleri (${_dx(p, q)})° ve (${_dx(r, s)})° olarak veriliyor.';
+      '$tanim ölçüleri ${_pr(p, q)}° ve ${_pr(r, s)}° olarak veriliyor.';
   final String denklem, adim;
   if (butunler) {
-    denklem = '(${_dx(p, q)}) + (${_dx(r, s)}) = 180';
+    denklem = '${_pr(p, q)} + ${_pr(r, s)} = 180';
     adim = '${p + r}x = ${(p + r) * x}';
   } else {
     denklem = '${_dx(p, q)} = ${_dx(r, s)}';
@@ -367,10 +374,11 @@ List<(int, int, int, int, int)> _ucgenler(int alt, int ust, int enCokKok) {
   return r;
 }
 
-/// Tarla vakaları: ilkel Heron üçgeni ve ölçek; en uzun kenar en çok 400 m.
+/// Tarla vakaları: ilkel Heron üçgeni ve ölçek; en uzun kenar 50 m ile 400 m
+/// arasında (5 m kenarlı bir tarla gerçekçi değildir).
 final _heronTarla = [
   for (final t in _ucgenler(1, 65, 1))
-    for (var k = 1; k * t.$3 <= 400; k++) (t, k),
+    for (var k = (50 + t.$3 - 1) ~/ t.$3; k * t.$3 <= 400; k++) (t, k),
 ];
 final _heronA1 = _ucgenler(1, 30, 15);
 final _heronA2 = _ucgenler(31, 40, 15);
@@ -1228,8 +1236,8 @@ final lmGeometriEk = <AdvancedFamily>[
           for (final k in artan) _karsiKenar[k]!,
         ]);
         return secenekli(
-          'ABC üçgeninde A açısının ölçüsü (${_dx(p1, q1)})°, B açısının '
-              'ölçüsü (${_dx(p2, q2)})° ve C açısının ölçüsü (${_dx(p3, q3)})° '
+          'ABC üçgeninde A açısının ölçüsü ${_pr(p1, q1)}°, B açısının '
+              'ölçüsü ${_pr(p2, q2)}° ve C açısının ölçüsü ${_pr(p3, q3)}° '
               'olarak veriliyor. $soruKenar',
           dogru,
           yanlis,
@@ -1889,7 +1897,7 @@ final lmGeometriEk = <AdvancedFamily>[
         final ikinci = ardisik ? 'B' : 'C';
         final cozum = ardisik
             ? 'Paralelkenarda ardışık iki açının ölçüleri toplamı 180° olur: '
-                  '(${_dx(p, q)}) + (${_dx(r, s)}) = 180, ${p + r}x = '
+                  '${_pr(p, q)} + ${_pr(r, s)} = 180, ${p + r}x = '
                   '${(p + r) * x}, x = $x. m(A) = $t°, m(B) = ${180 - t}°.'
             : 'Paralelkenarda karşılıklı açıların ölçüleri eşittir: '
                   '${_dx(p, q)} = ${_dx(r, s)}, x = $x. m(A) = m(C) = $t°.';
@@ -1909,8 +1917,8 @@ final lmGeometriEk = <AdvancedFamily>[
             : ' m($sorulan) açısı A açısına komşu olduğundan 180° − $t° = '
                   '${180 - t}°.';
         return _aci(
-          'ABCD paralelkenarında A açısının ölçüsü (${_dx(p, q)})°, $ikinci '
-              'açısının ölçüsü (${_dx(r, s)})° olarak veriliyor. Buna göre '
+          'ABCD paralelkenarında A açısının ölçüsü ${_pr(p, q)}°, $ikinci '
+              'açısının ölçüsü ${_pr(r, s)}° olarak veriliyor. Buna göre '
               '$sorulan açısının ölçüsü kaç derecedir?',
           yanit,
           [180 - yanit, x, ?karisik],
@@ -1953,7 +1961,9 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       if (c == 4) {
-        final p = 2 + a, q = p + 1 + b, k2 = p * p + q * q;
+        // Köşegen yarıları 5 cm'den başlar; uzun köşegen kısanın en çok 5
+        // katı olur (iğne gibi ince eşkenar dörtgen çıkmaz).
+        final p = 5 + a, q = p + 1 + b, k2 = p * p + q * q;
         return secenekli(
           'Köşegen uzunlukları ${2 * p} cm ve ${2 * q} cm olan bir eşkenar '
               'dörtgenin çevresi kaç cm olur?',
@@ -1971,7 +1981,9 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       if (c == 5) {
-        final d = 1 + a, s = d + 1 + b, f2 = s * s - d * d;
+        // Verilen köşegenin yarısı kenarın en az dörtte biri: kenar 27–51 cm,
+        // yarım köşegen ⌈kenar / 4⌉ ile kenar − 1 arasında.
+        final s = 27 + a, d = (s + 3) ~/ 4 + b, f2 = s * s - d * d;
         return secenekli(
           'Bir kenarının uzunluğu $s cm ve köşegenlerinden biri ${2 * d} cm '
               'olan eşkenar dörtgenin diğer köşegeni kaç cm olur?',
@@ -2005,12 +2017,12 @@ final lmGeometriEk = <AdvancedFamily>[
         }
         final q = be - p * x, s = 180 - 2 * be - r * x;
         final veri =
-            'ABCD eşkenar dörtgeninde ABD açısının ölçüsü (${_dx(p, q)})°, '
-            'BCD açısının ölçüsü (${_dx(r, s)})° olarak veriliyor.';
+            'ABCD eşkenar dörtgeninde ABD açısının ölçüsü ${_pr(p, q)}°, '
+            'BCD açısının ölçüsü ${_pr(r, s)}° olarak veriliyor.';
         final cozum =
             'Eşkenar dörtgende köşegenler açıortaydır: m(ABC) = 2·m(ABD). '
-            'Ardışık açılar bütünler olduğundan 2·(${_dx(p, q)}) + '
-            '(${_dx(r, s)}) = 180, ${2 * p + r}x = ${(2 * p + r) * x}, x = $x '
+            'Ardışık açılar bütünler olduğundan 2·${_pr(p, q)} + '
+            '${_pr(r, s)} = 180, ${2 * p + r}x = ${(2 * p + r) * x}, x = $x '
             'bulunur. m(ABD) = $be° olur.';
         if (xSor) {
           return sayisal(
@@ -2035,7 +2047,7 @@ final lmGeometriEk = <AdvancedFamily>[
         final q = h - p * x, s = h - r * x;
         return sayisal(
           'ABCD paralelkenarının köşegenleri E noktasında kesişiyor. |AE| = '
-              '(${_dx(p, q)}) cm ve |EC| = (${_dx(r, s)}) cm olduğuna göre |AC| '
+              '${_pr(p, q)} cm ve |EC| = ${_pr(r, s)} cm olduğuna göre |AC| '
               'kaç cm olur?',
           2 * h,
           [h, x, 4 * h],
@@ -2471,8 +2483,8 @@ final lmGeometriEk = <AdvancedFamily>[
         final q = l - p * x, s = l - r * x;
         final veri =
             'O merkezli çembere dışındaki P noktasından çizilen iki teğet '
-            'çembere A ve B noktalarında değiyor. |PA| = (${_dx(p, q)}) cm ve '
-            '|PB| = (${_dx(r, s)}) cm olarak veriliyor.';
+            'çembere A ve B noktalarında değiyor. |PA| = ${_pr(p, q)} cm ve '
+            '|PB| = ${_pr(r, s)} cm olarak veriliyor.';
         final cozum =
             'Dış noktadan çizilen teğet parçalarının uzunlukları eşittir: '
             '${_dx(p, q)} = ${_dx(r, s)}, x = $x ve |PA| = |PB| = $l cm.';
@@ -2708,7 +2720,7 @@ final lmGeometriEk = <AdvancedFamily>[
             [(R - r) * (R - r), R * R + r * r, 2 * (R - r)],
             'Halkanın alanı büyük dairenin alanından küçük dairenin alanı '
                 'çıkarılarak bulunur: π·$R² − π·$r² = π·(${R * R} − ${r * r}) = '
-                '$farkπ cm².',
+                '${_pi(fark)} cm².',
             positive: true,
           );
         case 1:
@@ -2719,11 +2731,11 @@ final lmGeometriEk = <AdvancedFamily>[
           final fark = R * R - r * r;
           return sayisal(
             '$esMerkez farklı olan iki çemberden büyüğünün yarıçapı $R cm, iki '
-                'çember arasında kalan daire halkasının alanı $farkπ cm² olduğuna '
+                'çember arasında kalan daire halkasının alanı ${_pi(fark)} cm² olduğuna '
                 'göre küçük çemberin yarıçapı kaç cm olur?',
             r,
             [r * r, ?_tamKok(R * R + fark), R - r],
-            'π·$R² − π·r² = $farkπ eşitliğinden r² = ${R * R} − $fark = '
+            'π·$R² − π·r² = ${_pi(fark)} eşitliğinden r² = ${R * R} − $fark = '
                 '${r * r}, r = $r cm bulunur.',
             unit: 'cm',
             positive: true,
@@ -2748,9 +2760,9 @@ final lmGeometriEk = <AdvancedFamily>[
               ?_bol(R * R * aci, 360),
               ?_bol((R - r) * (R - r) * aci, 360),
             ],
-            'Halkanın alanı π·($R² − $r²) = $farkπ cm² olur. Halka dilimi bunun '
+            'Halkanın alanı π·($R² − $r²) = ${_pi(fark)} cm² olur. Halka dilimi bunun '
                 '$aci / 360 = ${kesir(aci, 360)} kadarıdır: $fark·${kesir(aci, 360)} '
-                '= $alanπ cm².',
+                '= ${_pi(alan)} cm².',
             positive: true,
           );
         case 3:
@@ -2762,7 +2774,7 @@ final lmGeometriEk = <AdvancedFamily>[
             [?_bol(q, 4), q, 2 * q],
             'Karenin kenarı a ise köşegeni a√2 olur ve bu köşegen çemberin '
                 'çapıdır: r² = (a√2 / 2)² = a² / 2. a² = $q olduğundan dairenin '
-                'alanı π·$q / 2 = ${q ~/ 2}π cm².',
+                'alanı π·$q / 2 = ${_pi(q ~/ 2)} cm².',
             positive: true,
           );
         case 4:
@@ -2773,13 +2785,13 @@ final lmGeometriEk = <AdvancedFamily>[
             q ~/ 4,
             [q ~/ 2, q, ?_bol(q, 8)],
             'Çemberin çapı karenin bir kenarına eşittir: r = a / 2, r² = a² / 4. '
-                'a² = $q olduğundan dairenin alanı π·$q / 4 = ${q ~/ 4}π cm².',
+                'a² = $q olduğundan dairenin alanı π·$q / 4 = ${_pi(q ~/ 4)} cm².',
             positive: true,
           );
         case 5:
           final s = 1 + i;
           return sayisal(
-            'Alanı $sπ cm² olan bir dairenin içine, köşeleri çember üzerinde '
+            'Alanı ${_pi(s)} cm² olan bir dairenin içine, köşeleri çember üzerinde '
                 'olan bir kare çiziliyor. Bu karenin alanı kaç cm² olur?',
             2 * s,
             [4 * s, s, if (s.isEven) s ~/ 2],
@@ -2792,7 +2804,7 @@ final lmGeometriEk = <AdvancedFamily>[
         case 6:
           final s = 1 + i;
           return sayisal(
-            'Alanı $sπ cm² olan bir dairenin dışına, kenarları çembere teğet '
+            'Alanı ${_pi(s)} cm² olan bir dairenin dışına, kenarları çembere teğet '
                 'olan bir kare çiziliyor. Bu karenin alanı kaç cm² olur?',
             4 * s,
             [2 * s, s, 8 * s],
@@ -2823,13 +2835,13 @@ final lmGeometriEk = <AdvancedFamily>[
           final s = 1 + i;
           return sayisal(
             'Bir karenin kenarlarına içten teğet olan çemberin sınırladığı '
-                'dairenin alanı $sπ cm² olduğuna göre aynı karenin köşelerinden '
+                'dairenin alanı ${_pi(s)} cm² olduğuna göre aynı karenin köşelerinden '
                 'geçen çemberin sınırladığı dairenin alanı kaç π cm² olur?',
             2 * s,
             [4 * s, if (s.isEven) s ~/ 2, 3 * s],
             'İç çemberin yarıçapı r ise karenin kenarı 2r, köşegeni 2r√2 olur. '
-                'Dış çemberin yarıçapı r√2, karesi 2r² olduğundan alan 2·$sπ = '
-                '${2 * s}π cm².',
+                'Dış çemberin yarıçapı r√2, karesi 2r² olduğundan alan 2·${_pi(s)} = '
+                '${_pi(2 * s)} cm².',
             positive: true,
           );
         default:
@@ -2840,8 +2852,8 @@ final lmGeometriEk = <AdvancedFamily>[
             fark,
             r * r,
             [((R - r) * (R - r), r * r), (fark, R * R), (R * R, r * r)],
-            'Halkanın alanı π·(${R * R} − ${r * r}) = $farkπ, küçük dairenin '
-                'alanı ${r * r}π olur. Oran $fark / ${r * r}'
+            'Halkanın alanı π·(${R * R} − ${r * r}) = ${_pi(fark)}, küçük dairenin '
+                'alanı ${_pi(r * r)} olur. Oran $fark / ${r * r}'
                 '${kesir(fark, r * r) == '$fark/${r * r}' ? '' : ' = ${kesir(fark, r * r)}'}.',
           );
       }
@@ -2883,10 +2895,9 @@ final lmGeometriEk = <AdvancedFamily>[
       if (c == 1) {
         // Bir kenardaki karo sayısı n iki koordinatla değişir; karo kenarı t
         // yalnız ölçeği değiştirdiğinden tek başına yanıtı değiştirmez.
-        final n = 2 + (a + b) % 25;
-        var t = 5 + b;
-        if (6 * n * n == n * t || 6 * n * n == t) t += 20;
-        final kenar = n * t;
+        // Karo kenarı 20–39 cm, salonun bir kenarı 2–13 m olur; yanıt (en az
+        // 600) kökteki iki uzunluktan da büyüktür.
+        final n = 10 + (a + b) % 25, t = 20 + b, kenar = n * t;
         return sayisal(
           'Bir kenarı $kenar cm olan düzgün altıgen biçimindeki bir salonun '
               'zemini, bir kenarı $t cm olan eşkenar üçgen biçimindeki karolarla '
@@ -2932,16 +2943,16 @@ final lmGeometriEk = <AdvancedFamily>[
         final hedef = kisa ? kenar : 2 * kenar;
         final q = hedef - p * x, s = kenar - r * x;
         final kosegen = kisa
-            ? '|AC| = (${_dx(p, q)})√3 cm'
-            : '|AD| = (${_dx(p, q)}) cm';
+            ? '|AC| = ${_pr(p, q)}√3 cm'
+            : '|AD| = ${_pr(p, q)} cm';
         final kural = kisa
             ? 'Düzgün altıgende kısa köşegen kenarın √3 katıdır: |AC| = '
                   '|AB|·√3. Buradan ${_dx(p, q)} = ${_dx(r, s)}'
             : 'Düzgün altıgende uzun köşegen kenarın iki katıdır: |AD| = '
-                  '2·|BC|. Buradan ${_dx(p, q)} = 2·(${_dx(r, s)})';
+                  '2·|BC|. Buradan ${_dx(p, q)} = 2·${_pr(r, s)}';
         return sayisal(
           'ABCDEF düzgün altıgeninde $kosegen ve |${kisa ? 'AB' : 'BC'}| = '
-              '(${_dx(r, s)}) cm olarak veriliyor. Buna göre altıgenin çevresi kaç '
+              '${_pr(r, s)} cm olarak veriliyor. Buna göre altıgenin çevresi kaç '
               'cm olur?',
           6 * kenar,
           [kenar, 3 * kenar, 6 * x, 12 * kenar],
@@ -2998,13 +3009,13 @@ final lmGeometriEk = <AdvancedFamily>[
       }
       final q = 8 * kenar - p * x, s = kenar - r * x;
       return sayisal(
-        'ABCDEFGH düzgün sekizgeninin çevresi (${_dx(p, q)}) cm ve bir '
-            'kenarının uzunluğu (${_dx(r, s)}) cm olarak veriliyor. Buna göre '
+        'ABCDEFGH düzgün sekizgeninin çevresi ${_pr(p, q)} cm ve bir '
+            'kenarının uzunluğu ${_pr(r, s)} cm olarak veriliyor. Buna göre '
             'sekizgenin bir kenarı kaç cm olur?',
         kenar,
         [8 * kenar, x, ?_bol(p * x + q, 6)],
         'Düzgün sekizgenin sekiz kenarı eşittir: ${_dx(p, q)} = '
-            '8·(${_dx(r, s)}). Buradan x = $x ve bir kenar ${_dx(r, s)} = $kenar '
+            '8·${_pr(r, s)}. Buradan x = $x ve bir kenar ${_dx(r, s)} = $kenar '
             'cm bulunur.',
         unit: 'cm',
         positive: true,
@@ -3116,8 +3127,10 @@ final lmGeometriEk = <AdvancedFamily>[
             ),
           };
         case 3 || 4 || 7:
-          final t = 2 + 2 * a;
-          var ys = a + 2 + b;
+          // Taban ayrıtı en az 6 cm: yan yüz yüksekliği tabanın en çok dört
+          // katı olur (iğne gibi piramit çıkmaz); ys > t / 2 her vakada sağlanır.
+          final t = 6 + 2 * a;
+          var ys = a + 4 + b;
           if (c == 7 && ys == t) ys += 30;
           final yanal = 2 * t * ys, tum = t * t + yanal;
           if (c == 3) {
@@ -3155,21 +3168,22 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 5 || 8:
-          final t = c == 5 ? 2 + 2 * a : 6 + 2 * a;
+          final t = 6 + 2 * a;
           // Yükseklik sorusunda yanıt iki koordinatla değişir.
           var h = 3 + 3 * (c == 8 ? (a + b) % 20 : b);
           // Yanıt kökteki bir sayıya eşit çıkmasın.
           if (c == 8 ? h == t : {t, h}.contains(t * t * h ~/ 12)) h += 60;
           final k = t * t * h ~/ 12;
           const ucgen = 'düzgün üçgen piramidin';
-          final taban = 'Taban alanı ($t²·√3) / 4 = ${t * t ~/ 4}√3 cm² olur.';
+          final taban =
+              'Taban alanı ($t²·√3) / 4 = ${_kok(t * t ~/ 4, 3)} cm² olur.';
           if (c == 5) {
             return sayisal(
               'Taban ayrıtı $t cm, yüksekliği $h cm olan bir $ucgen hacmi k√3 '
                   'cm³ olduğuna göre k kaçtır?',
               k,
               [t * t * h ~/ 4, ?_bol(t * t * h, 6), t * t * h ~/ 3],
-              '$taban Hacim (1/3)·${t * t ~/ 4}√3·$h = $k√3 cm³, k = $k.',
+              '$taban Hacim (1/3)·${_kok(t * t ~/ 4, 3)}·$h = ${_kok(k, 3)} cm³, k = $k.',
               positive: true,
             );
           }
@@ -3178,13 +3192,15 @@ final lmGeometriEk = <AdvancedFamily>[
                 'yüksekliği kaç cm olur?',
             h,
             [h ~/ 3, ?_bol(4 * k, t), ?_bol(12 * k, t)],
-            '$taban (1/3)·${t * t ~/ 4}√3·h = $k√3 eşitliğinden h = 3·$k / '
+            '$taban (1/3)·${_kok(t * t ~/ 4, 3)}·h = $k√3 eşitliğinden h = 3·$k / '
                 '${t * t ~/ 4} = $h cm.',
             unit: 'cm',
             positive: true,
           );
         case 6:
-          final t = 2 + 2 * a, ys = t ~/ 3 + 1 + b, yanal = 3 * t * ys ~/ 2;
+          // Taban ayrıtı en az 6 cm (yan yüz yüksekliği tabanın en çok dört
+          // katı); ys > t / (2√3) her vakada sağlanır.
+          final t = 6 + 2 * a, ys = t ~/ 3 + 1 + b, yanal = 3 * t * ys ~/ 2;
           return sayisal(
             'Taban ayrıtı $t cm ve yan yüz yüksekliği $ys cm olan bir düzgün '
                 'üçgen piramidin yanal alanı kaç cm² olur?',
@@ -3197,7 +3213,8 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         default:
-          final t = 2 + a, h = 3 + 3 * b;
+          // Taban ayrıtı 10–34 cm: ince uzun çubuk biçiminde blok çıkmaz.
+          final t = 10 + a, h = 3 + 3 * b;
           final prizma = t * t * h, piramit = prizma ~/ 3;
           return sayisal(
             'Taban ayrıtı $t cm, yüksekliği $h cm olan kare dik prizma '
@@ -3622,7 +3639,8 @@ final lmGeometriEk = <AdvancedFamily>[
               positive: true,
             );
           }
-          final x = 10 * (1 + a) + 250 * q, g = x * k * k * k;
+          // Maket en az 40 g: heykel en az 320 g olur.
+          final x = 40 * (1 + a) + 1000 * q, g = x * k * k * k;
           return ondalikli(
             'Bir heykelin 1/$k ölçekli benzer maketi, heykelle aynı malzemeden '
                 'yapılmış ve kütlesi $x g olarak ölçülmüştür. Buna göre heykelin '

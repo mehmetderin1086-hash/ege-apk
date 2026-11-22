@@ -145,6 +145,128 @@ AdvancedItem _kokteOlmayan(
   return ilk;
 }
 
+/// Kök metninden hesaplanan, platformdan bağımsız bir özet sayı.
+int _ozet(String s) {
+  var h = 0;
+  for (final u in s.codeUnits) {
+    h = (h * 31 + u) & 0x3fffffff;
+  }
+  return h;
+}
+
+/// Çeldiricileri seçer. [adayK] ve [adayB] hatalardan türetilen, yanıttan
+/// küçük ve büyük adaylardır; [dolguK] ve [dolguB] aynı yanlardaki komşu
+/// değerlerdir. Komşu değer yalnızca aday yetmezse ya da yanıt iki çeldiricinin
+/// tam ortasında kalıyorsa (yanıtı ele veren simetrik çift) kullanılır. Kaç
+/// çeldiricinin yanıttan küçük olacağı için kökten bir hedef seçilir (0 … 3) ve
+/// bu sınırlar içinde tutturulur; seçenek kaldıkça, dört seçenekten üçünü eşit
+/// aralıklı yapan değerler alınmaz ([carpimsal] ise eşit oranlı: 0,3 · 3 · 30).
+List<String> _dengeli(
+  String kok,
+  double yanit,
+  Iterable<(double, String)> adayK,
+  Iterable<(double, String)> adayB,
+  Iterable<(double, String)> dolguK,
+  Iterable<(double, String)> dolguB, {
+  bool carpimsal = false,
+}) {
+  final gorulen = <String>{};
+  List<(double, String)> tekil(Iterable<(double, String)> x) => [
+    for (final e in x)
+      if (gorulen.add(e.$2)) e,
+  ];
+  final ak = tekil(adayK), ab = tekil(adayB);
+  final dk = tekil(dolguK), db = tekil(dolguB);
+  final hedef = (_ozet(kok) ~/ 7) % 4;
+  final degerler = <double>[yanit];
+  final sonuc = <String>[];
+  // m, a ile b'nin tam ortasında mı (çarpımsal durumda oran olarak)?
+  bool orta(double a, double b, double m) => carpimsal
+      ? (a * b - m * m).abs() <= 1e-9 * m * m
+      : (a + b - 2 * m).abs() < 1e-9;
+  bool esitAralikli(double x) {
+    for (var i = 0; i < degerler.length; i++) {
+      for (var j = i + 1; j < degerler.length; j++) {
+        final p = degerler[i], q = degerler[j];
+        if (orta(p, q, x) || orta(p, x, q) || orta(q, x, p)) return true;
+      }
+    }
+    return false;
+  }
+
+  void ekle((double, String) e) {
+    degerler.add(e.$1);
+    sonuc.add(e.$2);
+  }
+
+  void sec(List<(double, String)> liste, int adet) {
+    final kalan = [...liste];
+    for (var n = 0; n < adet && kalan.isNotEmpty; n++) {
+      final i = kalan.indexWhere((e) => !esitAralikli(e.$1));
+      ekle(kalan.removeAt(i < 0 ? 0 : i));
+    }
+  }
+
+  int sinirla(int x, int alt, int ust) => x < alt ? alt : (x > ust ? ust : x);
+  if (ak.length + ab.length >= 3) {
+    // Yalnızca hatalardan türetilen adaylar kullanılır.
+    final s = sinirla(
+      hedef,
+      3 - ab.length < 0 ? 0 : 3 - ab.length,
+      ak.length < 3 ? ak.length : 3,
+    );
+    sec(ak, s);
+    sec(ab, 3 - s);
+    // Yanıt, biri küçük biri büyük iki çeldiricinin tam ortasında kaldıysa
+    // çiftin bir üyesi komşu bir değerle değiştirilir: küçük çeldirici hedefin
+    // altındaysa büyük üye küçük bir komşuyla, üstündeyse küçük üye büyük bir
+    // komşuyla, hedefteyse büyük üye büyük bir komşuyla.
+    int? ortaCift() {
+      for (var i = 1; i <= s; i++) {
+        for (var t = s + 1; t <= 3; t++) {
+          if (orta(degerler[i], degerler[t], yanit)) return t;
+        }
+      }
+      return null;
+    }
+
+    final t = ortaCift();
+    if (t != null) {
+      final i = [
+        for (var x = 1; x <= s; x++)
+          if (orta(degerler[x], degerler[t], yanit)) x,
+      ].first;
+      final yon = s < hedef ? -1 : (s > hedef ? 1 : 0);
+      final yedek = yon < 0 || (yon == 0 && db.isEmpty) ? dk : db;
+      final cikan = yon > 0 ? i : t;
+      final eskiD = [...degerler], eskiS = [...sonuc];
+      degerler.removeAt(cikan);
+      sonuc.removeAt(cikan - 1);
+      final uygun = yedek.where((e) => !esitAralikli(e.$1)).toList();
+      if (uygun.isEmpty) {
+        degerler
+          ..clear()
+          ..addAll(eskiD);
+        sonuc
+          ..clear()
+          ..addAll(eskiS);
+      } else {
+        ekle(uygun.first);
+      }
+    }
+  } else {
+    ak.forEach(ekle);
+    ab.forEach(ekle);
+    final bos = 3 - ak.length - ab.length;
+    var ek = sinirla(hedef - ak.length, 0, bos);
+    if (ek > dk.length) ek = dk.length;
+    if (bos - ek > db.length) ek = bos - db.length;
+    sec(dk, ek);
+    sec(db, bos - ek);
+  }
+  return sonuc;
+}
+
 /// Tam sayı yanıtlı soru; eksi işareti tipografik yazılır. Adaylar yetmezse
 /// komşu değerlerle tamamlanır.
 AdvancedItem _tam(
@@ -156,20 +278,26 @@ AdvancedItem _tam(
   bool pozitif = false,
 }) {
   final adim = yanit.abs() >= 200 ? 10 : (yanit.abs() >= 40 ? 5 : 1);
-  final havuz = [
-    ...adaylar,
-    yanit + adim,
-    yanit - adim,
-    yanit + 2 * adim,
-    yanit - 2 * adim,
-    yanit + 3 * adim,
-    yanit + 4 * adim,
-    yanit + 5 * adim,
-  ].where((x) => !pozitif || x > 0);
+  bool uygun(int x) => x != yanit && (!pozitif || x > 0);
+  final aday = [
+    for (final x in adaylar)
+      if (uygun(x)) x,
+  ];
+  (double, String) yaz(int x) => (x.toDouble(), birimli(_n(x), birim));
   return secenekli(
     kok,
     birimli(_n(yanit), birim),
-    havuz.map((x) => birimli(_n(x), birim)),
+    _dengeli(
+      kok,
+      yanit.toDouble(),
+      aday.where((x) => x < yanit).map(yaz),
+      aday.where((x) => x > yanit).map(yaz),
+      [
+        for (var j = 1; j <= 8; j++)
+          if (uygun(yanit - j * adim)) yanit - j * adim,
+      ].map(yaz),
+      [for (var j = 1; j <= 8; j++) yanit + j * adim].map(yaz),
+    ),
     aciklama,
   );
 }
@@ -186,22 +314,32 @@ AdvancedItem _kes(
   String birim = '',
 }) {
   final tam = n % d == 0;
-  final havuz = [
-    ...adaylar,
-    if (n != 0 && !tam) (d, n),
-    (n + d, d),
-    (n - d, d),
-    (n + 2 * d, d),
-    (n - 2 * d, d),
-    (n + 3 * d, d),
-    (n + 1, d),
+  // x − n/d farkının işareti.
+  int kars((int, int) x) => ((x.$1 * d - n * x.$2) * (x.$2 * d).sign).sign;
+  bool uygun((int, int) x) =>
+      x.$2 != 0 && (!pozitif || x.$1 * x.$2 > 0) && kars(x) != 0;
+  final aday = [
+    for (final x in [...adaylar, if (n != 0 && !tam) (d, n)])
+      if (uygun(x)) x,
+  ];
+  (double, String) yaz((int, int) x) =>
+      (x.$1 / x.$2, birimli(_q(x.$1, x.$2), birim));
+  final komsu = [
+    for (var j = 1; j <= 6; j++) ...[(n - j * d, d), (n + j * d, d)],
     (n - 1, d),
-    (n + 4 * d, d),
-  ].where((x) => x.$2 != 0 && (!pozitif || x.$1 * x.$2 > 0));
+    (n + 1, d),
+  ].where(uygun);
   return secenekli(
     kok,
     birimli(_q(n, d), birim),
-    havuz.map((x) => birimli(_q(x.$1, x.$2), birim)),
+    _dengeli(
+      kok,
+      n / d,
+      aday.where((x) => kars(x) < 0).map(yaz),
+      aday.where((x) => kars(x) > 0).map(yaz),
+      komsu.where((x) => kars(x) < 0).map(yaz),
+      komsu.where((x) => kars(x) > 0).map(yaz),
+    ),
     aciklama,
   );
 }
@@ -5259,13 +5397,42 @@ AdvancedItem _birimUret(int a, int b, int c, int w) {
     double yanit,
     List<double> yanlis,
     String aciklama,
-  ) => secenekli(kok, d(yanit), [
-    for (final y in yanlis)
-      if (y > 0) d(y),
-    d(yanit * 2),
-    d(yanit / 2),
-    d(yanit + 1),
-  ], aciklama);
+  ) {
+    final dy = d(yanit);
+    // Yazılışı değeri tam göstermeyen (yuvarlanan) değerler alınmaz.
+    bool uygun(double y) {
+      final t = d(y);
+      return y > 0 &&
+          t != dy &&
+          (double.parse(t.replaceAll(',', '.')) - y).abs() <= 1e-9 * y;
+    }
+
+    List<(double, String)> yan(Iterable<double> x, bool kucuk) => [
+      for (final y in x)
+        if (uygun(y) && (kucuk ? y < yanit : y > yanit)) (y, d(y)),
+    ];
+    // Virgülü bir, iki ya da üç basamak kaydırmak tipik dönüşüm hatalarıdır;
+    // bu değerler aday sayılır, diğerleri yalnızca dolgudur.
+    final aday = [
+      ...yanlis,
+      for (final k in const [10, 100, 1000]) ...[yanit / k, yanit * k],
+    ];
+    return secenekli(
+      kok,
+      dy,
+      _dengeli(
+        kok,
+        yanit,
+        yan(aday, true),
+        yan(aday, false),
+        yan([yanit / 2, yanit - 1], true),
+        yan([yanit * 2, yanit + 1], false),
+        carpimsal: true,
+      ),
+      aciklama,
+    );
+  }
+
   switch (c) {
     case 0:
       final km = 1 + a % 5,

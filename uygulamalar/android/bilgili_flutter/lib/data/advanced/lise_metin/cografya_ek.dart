@@ -94,27 +94,117 @@ List<T> _secki<T>(List<T> tablo, int k, int s, int n) {
   return [...u.sublist(r), ...u.sublist(0, r)];
 }
 
+/// [_uygunSecki] için ad başına bir kez çıkarılan uygun seçkiler (çizelgedeki
+/// sıra numaralarıyla, sözlük sırasında).
+final _uygunSeckiler = <String, List<List<int>>>{};
+
+/// [tablo] içinden [uygun] koşulunu sağlayan [k] ögeli seçkilerin, [n] sıraya
+/// eşit aralıkla yayılmış [s] numaralısını verir; ögelerin dizilişi [_secki]
+/// ile aynıdır. [ad] çizelge ile koşulu birlikte adlandırır.
+List<T> _uygunSecki<T>(
+  String ad,
+  List<T> tablo,
+  int k,
+  int s,
+  int n,
+  bool Function(List<T> x) uygun,
+) {
+  final liste = _uygunSeckiler.putIfAbsent(ad, () {
+    final sira = [for (var q = 0; q < tablo.length; q++) q];
+    final toplam = kombinasyonSayisi(tablo.length, k);
+    return [
+      for (var t = 0; t < toplam; t++)
+        if (uygun([
+          for (final q in kombinasyon(sira, k, t, spread: false)) tablo[q],
+        ]))
+          kombinasyon(sira, k, t, spread: false),
+    ];
+  });
+  if (liste.length < n) {
+    throw StateError('Yetersiz uygun seçki ($ad): ${liste.length} < $n');
+  }
+  final u = [for (final q in liste[s * liste.length ~/ n]) tablo[q]];
+  if (k == 3) {
+    final d = ucluDizilimler[s % 6];
+    return [u[d[0]], u[d[1]], u[d[2]]];
+  }
+  final r = s % k;
+  return [...u.sublist(r), ...u.sublist(0, r)];
+}
+
+/// Seçkideki ögelerin etiketleri birbirinden farklıdır. Ögeleri bir türün
+/// tanımı olan çizelgelerde sıralı eşleştirme sorusu aynı türü iki öncülle
+/// tanımlamasın diye kullanılır.
+bool _farkliEtiket(List<_Etiketli> x) {
+  for (var p = 0; p < x.length; p++) {
+    for (var q = p + 1; q < x.length; q++) {
+      if (x[p].$2 == x[q].$2) return false;
+    }
+  }
+  return true;
+}
+
 /// Sıralı etiket yanıtı (üç ya da dört konum) için dengeli çeldiriciler. Her
 /// konuma doğrusundan farklı bir etiket (havuzdaki komşu etiketlerden biri)
 /// atanır; her çeldirici doğru etiketi yalnız bir konumda (dört konumda son iki
 /// konumu üçüncü çeldirici) korur. Böylece her konumda doğru etiket ile seçilen
 /// yanlış etiket ikişer seçenekte geçer ve doğru yanıt, seçeneklerin
 /// birbirine benzerliğinden çıkarılamaz. Her çeldirici en az iki konumda
-/// kesin yanlıştır ve üç çeldirici birbirinden farklıdır.
-List<String> _siraYanlis(List<String> dogru, List<String> havuz, int s) {
+/// kesin yanlıştır ve üç çeldirici birbirinden farklıdır. [gecerli] verilirse
+/// (doğru yanıtların uyduğu bir kural, ör. etiketlerin farklı olması) her
+/// çeldirici de bu kurala uyar: önce yukarıdaki komşu etiket, uymazsa sıradaki
+/// komşular denenir. Böylece kuralı bilen öğrenci çeldirici eleyemez.
+List<String> _siraYanlis(
+  List<String> dogru,
+  List<String> havuz,
+  int s, {
+  bool Function(List<String> x)? gecerli,
+}) {
   final k = dogru.length, n = havuz.length;
-  final alt = <String>[];
+  final aday = <List<String>>[];
   for (var p = 0; p < k; p++) {
     final yer = havuz.indexOf(dogru[p]);
-    final kay = n == 2 ? 1 : const [1, -1, 2, -2][(s + p) % 4];
-    alt.add(havuz[(yer + kay + 2 * n) % n]);
+    final ilk = n == 2 ? 1 : const [1, -1, 2, -2][(s + p) % 4];
+    final l = <String>[];
+    for (final kay in [
+      ilk,
+      for (var d = 1; d < n; d++) ...[d, -d],
+    ]) {
+      final e = havuz[(yer + kay + 2 * n) % n];
+      if (e != dogru[p] && !l.contains(e)) l.add(e);
+    }
+    aday.add(l);
   }
-  return [
+  List<List<String>> celdiriciler(List<String> alt) => [
     for (var r = 0; r < 3; r++)
-      [for (var p = 0; p < k; p++) (p < 3 ? p : 2) == r ? dogru[p] : alt[p]]
-          .join(' – '),
+      [for (var p = 0; p < k; p++) (p < 3 ? p : 2) == r ? dogru[p] : alt[p]],
   ];
+  final alt = <String>[];
+  bool ara(int p) {
+    if (p == k) {
+      return gecerli == null || celdiriciler(alt).every(gecerli);
+    }
+    for (final e in aday[p]) {
+      alt.add(e);
+      if (ara(p + 1)) return true;
+      alt.removeLast();
+    }
+    return false;
+  }
+
+  if (!ara(0)) throw StateError('Kurala uyan çeldirici yok: $dogru');
+  return [for (final c in celdiriciler(alt)) c.join(' – ')];
 }
+
+/// Etiketleri birbirinden farklı bir dizi.
+bool _farkliDizi(List<String> x) => x.toSet().length == x.length;
+
+/// Dört konumlu sıralı yanıtın döndürmeleriyle kurulan çeldiriciler: her
+/// seçenek aynı etiketleri içerir, yalnız öncüllere dağılımı farklıdır.
+List<String> _dondurmeYanlis(List<String> dogru) => [
+  for (var r = 1; r < dogru.length; r++)
+    [...dogru.sublist(r), ...dogru.sublist(0, r)].join(' – '),
+];
 
 /// (öge, etiket, grup) çizelgesi.
 typedef _Etiketli = (String, String, String?);
@@ -125,7 +215,12 @@ typedef _Etiketli = (String, String, String?);
 /// kullanıldığından kökler [n] vaka için farklıdır. [celisir], bir grubun
 /// sorulduğu soruda başka bir grubun ögesi bulunursa sorunun tartışmalı olacağı
 /// grup çiftlerini verir (ör. “karasal iklim” sorusunda sert karasal ögesi);
-/// böyle bir seçkide seçkideki başka bir grup sorulur.
+/// böyle bir seçkide seçkideki başka bir grup sorulur. [siraUygun] verilirse
+/// sıralı eşleştirme seçkileri (ve [uygunHer] doğruysa “hangileri” seçkileri
+/// de) yalnız bu koşulu sağlayan seçkiler arasından alınır; [uygunAd] bu
+/// seçkilerin önbellek adıdır. [celdiriciUygun], doğru yanıtların uyduğu bir
+/// etiket kuralını çeldiricilere de uygular; [siraCeldirici] verilirse sıralı
+/// eşleştirmenin çeldiricileri onunla kurulur.
 AdvancedItem _etiketli(
   int j,
   int n,
@@ -139,9 +234,16 @@ AdvancedItem _etiketli(
   bool grupHer = true,
   bool Function(String hedef, String grup)? celisir,
   String Function(String hedef, bool grup)? olumsuzSoru,
+  String uygunAd = '',
+  bool Function(List<_Etiketli> x)? siraUygun,
+  bool uygunHer = false,
+  bool Function(List<String> x)? celdiriciUygun,
+  List<String> Function(List<String> dogru)? siraCeldirici,
 }) {
   final s = j ~/ 2;
-  final x = _secki(tablo, k, s, (n + 1) ~/ 2);
+  final x = siraUygun != null && (j.isEven || uygunHer)
+      ? _uygunSecki(uygunAd, tablo, k, s, (n + 1) ~/ 2, siraUygun)
+      : _secki(tablo, k, s, (n + 1) ~/ 2);
   final etiket = [for (final e in x) e.$2];
   final liste = '$giris${_liste([for (final e in x) e.$1])}\n';
   final acik = aciklama(x);
@@ -149,7 +251,9 @@ AdvancedItem _etiketli(
     return secenekli(
       '$liste$siraSoru',
       etiket.join(' – '),
-      _siraYanlis(etiket, havuz, s),
+      siraCeldirici != null
+          ? siraCeldirici(etiket)
+          : _siraYanlis(etiket, havuz, s, gecerli: celdiriciUygun),
       acik,
     );
   }
@@ -1385,8 +1489,8 @@ const _levhalar = <_Etiketli>[
   ('Japon Adaları gibi volkanik ada yaylarının oluşması', _yakin, null),
   ("Alp Dağları'nın oluşması", _yakin, null),
   ('Bir levhanın diğerinin altına dalması (dalma-batma)', _yakin, null),
-  ('San Andreas Fayı boyunca levhaların yatay yönde kayması', _yanal, null),
-  ('Kuzey Anadolu Fayı boyunca levhaların yatay yönde kayması', _yanal, null),
+  ("Kaliforniya'daki San Andreas Fayı'nın oluşması", _yanal, null),
+  ("Kuzey Anadolu Fay Hattı'nın oluşması", _yanal, null),
   ('Doğu Anadolu Fayı boyunca levhaların yatay yönde kayması', _yanal, null),
   (
     'İki levhanın birbirine göre yatay yönde, yanlamasına kayması',
@@ -1408,21 +1512,31 @@ const _levhaIle = {
 const _tek = 'tektonik deprem',
     _vdep = 'volkanik deprem',
     _cok = 'çöküntü depremi';
+// Türkiye'deki adı bilinen büyük depremler (hepsi fay hatları boyunca oluşmuş
+// tektonik depremlerdir). Bir seçkide birden çok örnek bulunabilir; türün
+// tanımı olan ögelerden ise her türden en çok biri bulunur.
+const _depremOrnekleri = {
+  '1999 Gölcük depremi',
+  '1939 Erzincan depremi',
+  '2023 Kahramanmaraş depremleri',
+  '1999 Düzce depremi',
+  '2020 Elazığ depremi',
+  '2020 İzmir depremi',
+};
 const _depremler = <_Etiketli>[
   (
     'Levhaların hareketi sonucu fay hatları boyunca oluşan depremler',
     _tek,
     null,
   ),
-  ('Etki alanı en geniş ve en yıkıcı olan deprem türü', _tek, null),
-  (
-    "Türkiye'de görülen depremlerin büyük bölümünü oluşturan deprem türü",
-    _tek,
-    null,
-  ),
+  ('Etki alanı en geniş ve en yıkıcı olan depremler', _tek, null),
+  ("Türkiye'de görülen depremlerin büyük bölümü", _tek, null),
   ('1999 Gölcük depremi', _tek, null),
   ('1939 Erzincan depremi', _tek, null),
   ('2023 Kahramanmaraş depremleri', _tek, null),
+  ('1999 Düzce depremi', _tek, null),
+  ('2020 Elazığ depremi', _tek, null),
+  ('2020 İzmir depremi', _tek, null),
   // Volkanik ve çöküntü depremlerinde her öge ayrı bir bilgi verir (neden, örnek,
   // görüldüğü yer ya da etki alanı); aynı bilgiyi yineleyen öncül çifti oluşmaz.
   (
@@ -1452,11 +1566,66 @@ const _depremler = <_Etiketli>[
     null,
   ),
 ];
-const _depremIle = {
-  _tek: 'tektonik depremlere',
-  _vdep: 'volkanik depremlere',
-  _cok: 'çöküntü depremlerine',
-};
+// Aynı olguyu anlatan iç kuvvet ögeleri: sıralı eşleştirmede bir seçkide her
+// kümeden en çok bir öge bulunur. Deprem ögelerinin dördü de depremin
+// tanımıdır; bu yüzden bir seçkide en çok bir deprem ögesi bulunur.
+const _icKuvvetAyniOlgu = [
+  {
+    "Batı Anadolu'da horst ve grabenlerin oluşması",
+    'Gediz ve Büyük Menderes grabenlerinin oluşması',
+    'Bozdağlar ve Aydın Dağları gibi horstların yükselmesi',
+    'Sert tabakaların kırılarak yükselen ve alçalan bloklara ayrılması',
+  },
+  {
+    'Alp-Himalaya kıvrım kuşağının oluşması',
+    "Himalaya Dağları'nın iki levhanın çarpışmasıyla yükselmesi",
+  },
+  {
+    'Kıtaların geniş alanlarda yavaş yavaş yükselmesi ya da alçalması',
+    "Anadolu'nun geniş bir alanda toptan yükselmesi",
+  },
+];
+
+/// Seçkide verilen kümelerin her birinden en çok bir öge bulunur.
+bool _enCokBir(List<_Etiketli> x, List<Set<String>> kumeler) =>
+    kumeler.every((g) => x.where((e) => g.contains(e.$1)).length <= 1);
+
+bool _icKuvvetSira(List<_Etiketli> x) =>
+    x.where((e) => e.$2 == _dep).length <= 1 && _enCokBir(x, _icKuvvetAyniOlgu);
+
+// Aynı olguyu anlatan levha ögeleri (tanım ile onu yineleyen örnek, aynı sırtın
+// iki parçası): sıralı eşleştirmede bir seçkide birlikte bulunmaz.
+const _levhaAyniOlgu = [
+  {
+    'Doğu Anadolu Fayı boyunca levhaların yatay yönde kayması',
+    'İki levhanın birbirine göre yatay yönde, yanlamasına kayması',
+  },
+  {
+    'Atlas Okyanusu ortasındaki okyanus ortası sırtının oluşması',
+    "İzlanda'nın ortasından geçen yarık sisteminin oluşması",
+  },
+];
+
+bool _levhaSira(List<_Etiketli> x) => _enCokBir(x, _levhaAyniOlgu);
+
+/// Deprem seçkisinde üç tür de bulunur ya da tektonik deprem üç kez geçer:
+/// volkanik ve çöküntü depremi ögeleri birer tanım olduğundan en çok birer
+/// kez, tektonik depremin tanımı olan ögelerden de en çok biri alınır; dört
+/// öncülün dördü de tektonik olmaz.
+bool _depremSira(List<_Etiketli> x) {
+  var tek = 0, tanim = 0, vdep = 0, cok = 0;
+  for (final e in x) {
+    if (e.$2 == _tek) {
+      tek++;
+      if (!_depremOrnekleri.contains(e.$1)) tanim++;
+    } else if (e.$2 == _vdep) {
+      vdep++;
+    } else {
+      cok++;
+    }
+  }
+  return tek <= 3 && tanim <= 1 && vdep <= 1 && cok <= 1;
+}
 
 String _eslesme(List<_Etiketli> x) =>
     '${x.map((e) => '${e.$1}: ${e.$2}').join('; ')}.';
@@ -1472,6 +1641,9 @@ AdvancedItem _icKuvvet(int i) {
       siraSoru: 'Bu oluşumlar sırasıyla hangi iç kuvvet olayına örnektir?',
       hangiSoru: (h, _) => 'Bu oluşumlardan hangileri ${_icKuvvetIle[h]}?',
       aciklama: _eslesme,
+      uygunAd: 'icKuvvet',
+      siraUygun: _icKuvvetSira,
+      celdiriciUygun: (x) => x.where((e) => e == _dep).length <= 1,
     );
   }
   if (r < 9) {
@@ -1484,6 +1656,8 @@ AdvancedItem _icKuvvet(int i) {
           'Bu oluşumların görüldüğü levha sınırı türleri sırasıyla hangisidir?',
       hangiSoru: (h, _) => 'Bu oluşumlardan hangileri ${_levhaIle[h]} görülür?',
       aciklama: _eslesme,
+      uygunAd: 'levha',
+      siraUygun: _levhaSira,
     );
   }
   return _etiketli(
@@ -1492,9 +1666,15 @@ AdvancedItem _icKuvvet(int i) {
     _depremler,
     const [_tek, _vdep, _cok],
     k: 4,
-    siraSoru: 'Bu depremler ya da deprem özellikleri sırasıyla hangi deprem türüne aittir?',
-    hangiSoru: (h, _) => 'Bu bilgilerden hangileri ${_depremIle[h]} aittir?',
+    siraSoru: 'Bu depremler sırasıyla hangi deprem türüne aittir?',
+    hangiSoru: (h, _) => 'Bu depremlerden hangileri $h türündendir?',
     aciklama: _eslesme,
+    uygunAd: 'deprem',
+    siraUygun: _depremSira,
+    uygunHer: true,
+    // Doğru yanıtta her tür bulunur ya da tektonik deprem üç kez geçer;
+    // komşu etiketli çeldiriciler bu kurala uyamadığından döndürmeler kullanılır.
+    siraCeldirici: _dondurmeYanlis,
   );
 }
 
@@ -1763,6 +1943,11 @@ final _f11 = lmSirali(
     lmAileBoyu,
     _topraklar,
     _toprakAdlari,
+    // Her öge bir toprak tipinin tanımıdır: sıralı eşleştirmede aynı tipi iki
+    // öncülle tanımlayan seçki alınmaz.
+    uygunAd: 'toprak',
+    siraUygun: _farkliEtiket,
+    celdiriciUygun: _farkliDizi,
     siraSoru: 'Bu özelliklerin ait olduğu toprak tipleri sırasıyla hangisidir?',
     hangiSoru: (h, grup) => grup
         ? 'Bu özelliklerden hangileri ${_kusakIfade[h]} topraklara aittir?'
@@ -2556,8 +2741,19 @@ const _bitkiler = <_Etiketli>[
     'ılıman okyanusal iklim',
   ),
   (
+    'Altında humusça zengin kahverengi orman topraklarının geliştiği ormanlar',
+    _yaprak,
+    'ılıman okyanusal iklim',
+  ),
+  (
     "Yazları çok yağışlı, kışları kurak geçen Güney ve Güneydoğu Asya'da görülen, kurak dönemde "
         'yaprağını döken ormanlar',
+    _muson,
+    'muson iklimi',
+  ),
+  (
+    "Hindistan ve Bangladeş'te yaz aylarında Hint Okyanusu'ndan esen nemli rüzgârların "
+        'getirdiği yağışlarla gelişen ormanlar',
     _muson,
     'muson iklimi',
   ),
@@ -2622,6 +2818,11 @@ final _f16 = lmSirali(
       ('savan iklimi', 'muson iklimi') => true,
       _ => false,
     },
+    // Her öge bir bitki örtüsünün tanımıdır: sıralı eşleştirmede aynı türü
+    // iki öncülle tanımlayan seçki alınmaz.
+    uygunAd: 'bitki',
+    siraUygun: _farkliEtiket,
+    celdiriciUygun: _farkliDizi,
     siraSoru:
         'Bu özelliklerin ait olduğu bitki örtüsü türleri sırasıyla hangisidir?',
     hangiSoru: (h, grup) => grup
@@ -2742,7 +2943,7 @@ const _gocOrnekleri = <(String, List<String>)>[
     [_disGoc, _beyin, _gonullu],
   ),
   (
-    'Yurt dışında doktora yapıp eğitim aldığı ülkede kalarak çalışmaya başlayan araştırmacılar',
+    'Yurt dışında doktora yapıp eğitim aldıkları ülkede kalarak çalışmaya başlayan araştırmacılar',
     [_disGoc, _beyin, _gonullu],
   ),
   (
@@ -2798,7 +2999,7 @@ const _gocOrnekleri = <(String, List<String>)>[
     [_icGoc, _gonullu],
   ),
   (
-    'Sanayi kentlerindeki fabrikalarda çalışmak için doğduğu ilden ayrılıp oraya yerleşen gençler',
+    'Fabrikalarda çalışmak için doğdukları ilden ayrılıp bir sanayi kentine yerleşen gençler',
     [_icGoc, _gonullu],
   ),
   (
@@ -3036,12 +3237,24 @@ const _afetler = <_Etiketli>[
     null,
   ),
   (
+    'Açık denizde fark edilmeyen dalgaların kıyıya yaklaştıkça yükselerek kıyı yerleşmelerini '
+        'su altında bırakmasıdır.',
+    _afTsunami,
+    null,
+  ),
+  (
     'Magmanın yer kabuğundaki çatlaklardan lav ve kül olarak yeryüzüne çıkmasıyla oluşur.',
     _afVolkan,
     null,
   ),
   (
     "İtalya'daki Etna ve Vezüv dağlarında lav ve kül çıkışıyla yaşanan afettir.",
+    _afVolkan,
+    null,
+  ),
+  (
+    'Etkin yanardağların çevresine yerleşilmemesi ve yanardağların sürekli izlenmesi '
+        'zararını azaltır.',
     _afVolkan,
     null,
   ),
@@ -3068,6 +3281,11 @@ final _f19 = lmSirali(
       _afTsunami,
       _afVolkan,
     ],
+    // Her öge bir afete ait bilgidir: sıralı eşleştirmede aynı afete ait iki
+    // bilgi bir seçkide bulunmaz.
+    uygunAd: 'afet',
+    siraUygun: _farkliEtiket,
+    celdiriciUygun: _farkliDizi,
     siraSoru: 'Bu bilgilerin ait olduğu doğal afetler sırasıyla hangisidir?',
     hangiSoru: (h, _) => 'Bu bilgilerden hangileri $h afetine aittir?',
     olumsuzSoru: (h, _) => 'Bu bilgilerden hangileri $h afetine ait değildir?',

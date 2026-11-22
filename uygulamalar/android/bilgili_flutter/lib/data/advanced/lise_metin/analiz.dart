@@ -1465,18 +1465,19 @@ final List<(int, int, int, int)> _sinusOranUcgen = () {
 }();
 
 /// Çevrel çember verileri (biçim, s, t, r). Biçim 0: sin A = s/t ve |BC|
-/// verilir, R sorulur; 1: R = r ve |BC| verilir, sin A sorulur; 2: m(A) = s°
+/// verilir, R sorulur; 1: R = r ve sin A verilir, |BC| sorulur; 2: m(A) = s°
 /// ve |BC| = r·√… verilir, çap sorulur.
 final List<(int, int, int, int)> _cevrelVeri = () {
   final l = <(int, int, int, int)>[];
   for (final (p, q) in _sinKesir) {
     final birim = q ~/ q.gcd(2 * p);
-    for (var r = birim; r <= 70; r += birim) {
+    for (var r = birim; r <= 90; r += birim) {
       // R yanıtı kökte yazılı sayılara (sinüsün payı, paydası, kenar) eşit
       // olmasın; sin A = 1/2 iken R = |BC| çıkar.
       final kenar = 2 * r * p ~/ q;
       if (!{p, q, kenar}.contains(r)) l.add((0, p, q, r));
-      l.add((1, p, q, r));
+      // |BC| = 2R·sin A yanıtı da kökteki sayılara eşit olmasın.
+      if (!{p, q, r}.contains(kenar)) l.add((1, p, q, r));
     }
   }
   for (final aci in const [30, 45, 60, 120, 135, 150]) {
@@ -1714,13 +1715,19 @@ AdvancedItem _sinusTeoremi(int a, int b, int c) {
       pozitif: true,
     );
   }
-  return _ras(
-    'Çevrel çemberinin yarıçapı $r cm olan ABC üçgeninde |BC| = $aKenar cm '
-        'olduğuna göre sin A değeri kaçtır?',
-    sa,
-    [_R(aKenar, r), _R(2 * r, aKenar), _R(r, 2 * aKenar), _R(aKenar, 4 * r)],
-    'Sinüs teoremine göre |BC|/sin A = 2R olur. $aKenar/sin A = ${2 * r} '
-        'eşitliğinden sin A = $aKenar/${2 * r} = $sa bulunur.',
+  return _tam(
+    'Çevrel çemberinin yarıçapı $r cm olan ABC üçgeninde sin A = $sa '
+        'olduğuna göre |BC| kaç cm olur?',
+    aKenar,
+    [
+      if ((r * s) % t == 0) r * s ~/ t, // 2R yerine R
+      if ((4 * r * s) % t == 0) 4 * r * s ~/ t, // çapı iki kez alma
+      if ((2 * r * t) % s == 0) 2 * r * t ~/ s, // sinüse bölme
+      2 * r,
+    ],
+    'Sinüs teoremine göre |BC|/sin A = 2R olur. Buradan |BC| = 2R·sin A = '
+        '${2 * r}·${_rs(sa)} = $aKenar cm bulunur.',
+    birim: 'cm',
     pozitif: true,
   );
 }
@@ -3908,7 +3915,13 @@ AdvancedItem _parcaliSoru(int a, int b, int c, int deneme) {
   }
   // c = 8, 9: f(t) = v eşitliğini sağlayan t değerlerinin toplamı.
   final (al, be) = _parcaDog[a];
-  final s = c == 8 ? 5 + b ~/ 10 : 3 + b ~/ 10; // 5, 6 ya da 3, 4
+  // s doğrusal parçanın katsayılarına eşit olmasın (yanıt çoğu kez s'dir);
+  // c = 8 ile c = 9 ayrık s kümeleri kullanır.
+  final s = _uygun(
+    c == 8 ? const [5, 6, 7, 8, 9] : const [3, 4, 2, 10, 11],
+    b ~/ 10,
+    (x) => x != al.abs() && x != be.abs(),
+  );
   // γ = ±s iken yanıt s kökte yazılı kalırdı.
   final gamma = _uygun(
     const [-4, -3, -2, -1, 1, 2, 3, 4, 7, -7, 8, -8],
@@ -3951,7 +3964,9 @@ AdvancedItem _parcaliSoru(int a, int b, int c, int deneme) {
         '${_pol([1, 0, gamma])} biçiminde tanımlanıyor. f(t) = ${_n(v)} '
         'eşitliğini sağlayan t değerlerinin toplamı kaçtır?',
     yanit,
-    [dogrusal, dogrusal + _R(s), _R(s), yanit + _R(s), yanit - _R(s)],
+    // Tanım aralıklarını yok sayan bütün köklerin toplamını (doğrusal kök
+    // + s − s) bulur; ±s'den birini yanlış alan yanıtı s kadar kaydırır.
+    [dogrusal, yanit + _R(s), yanit - _R(s)],
     '$aciklama. Geçerli değerlerin toplamı $yanit olur.',
   );
 }
@@ -5231,7 +5246,16 @@ AdvancedItem _belirsizIntegral(int a, int b, int c, int deneme) {
   // c = 4, 5 (teğet biçimi) c = 0, 1 ile aynı veriyi kullanmasın.
   final teget = c == 4 || c == 5;
   final x0 = (teget ? const [1, -1, 2, 0] : const [0, 1, -1, 2])[b % 4];
-  final v = (teget ? const [4, -1, 6, -3, 2] : const [3, -2, 5, 7, -4])[b ~/ 4];
+  // c = 0 ve 4'te F(x₀) = px₀² + qx₀ iken integral sabiti sıfırdır; sabiti
+  // unutan da doğru yanıtı bulurdu. Bu v değerleri atlanır.
+  final g0 =
+      const [1, 2, 3, -1, -2][a % 5] * x0 * x0 +
+      const [-4, -1, 2, 5, 3][a ~/ 5] * x0;
+  final v = _uygun(
+    teget ? const [4, -1, 6, -3, 2, 5, -2] : const [3, -2, 5, 7, -4, 6, -5],
+    b ~/ 4,
+    (y) => !(c == 0 || c == 4) || y != g0,
+  );
   final fark = const [2, 3, -2, 4, -3, 1, -1][(a + b + deneme) % 7];
   final x1 = x0 + fark;
   if (c <= 2 || c == 4 || c == 5) {
@@ -5261,9 +5285,9 @@ AdvancedItem _belirsizIntegral(int a, int b, int c, int deneme) {
       [
         _deg(ilkel, x1), // sabiti unutma
         _deg(turev, x1), // türevin değerini yanıt sanma
-        // x₀ = 0 iken sabit verilen değerin kendisidir; o zaman işaret
+        // İlkel x₀'da sıfırsa sabit verilen değerin kendisidir; o zaman işaret
         // hataları kullanılır.
-        if (x0 == 0) ...[
+        if (_deg(ilkel, x0) == 0) ...[
           v - _deg(ilkel, x1),
           _deg(ilkel, x1) - v,
         ] else ...[
@@ -5293,7 +5317,9 @@ AdvancedItem _belirsizIntegral(int a, int b, int c, int deneme) {
       [
         _degR(ilkel, x1),
         _R(_deg(turev, x1)),
-        x0 == 0 ? _R(v) - _degR(ilkel, x1) : _degR(ilkel, x1) + _R(v),
+        _degR(ilkel, x0).sifir
+            ? _R(v) - _degR(ilkel, x1)
+            : _degR(ilkel, x1) + _R(v),
         // İç türevi unutma (α = 1 iken bu yol doğrudur; 3'e bölmeyi unutma).
         al == 1
             ? _R(_us(x1 + be, 3) - _us(x0 + be, 3)) + _R(v)
@@ -5400,13 +5426,13 @@ AdvancedItem _ikiEgriAlan(int a, int b, int c, int deneme) {
     AdvancedItem kur(int t) {
       final r1 = const [-3, -2, -1, 0, 1][(t + c) % 5];
       final r2 = r1 + d;
-      final m = const [2, -1, 3, -2, 4, -3][(t ~/ 5 + c) % 6];
+      final m = const [2, -1, 3, -2, 4, -3, 5, -4][(t ~/ 5 + c) % 8];
       final n = const [1, -3, 4, 2, -2][(a + t) % 5];
-      // İkinci parabolün baş katsayısı ±4, ±5 ya da ±6: farkla sıfırlanmaz.
+      // İkinci parabolün baş katsayısı ±4 … ±7: farkla sıfırlanmaz.
       final egri2 = c <= 2
           ? [0, m, n]
           : [
-              const [4, -4, 5, -5, 6, -6][t ~/ 5],
+              const [4, -4, 5, -5, 6, -6, 7, -7][t ~/ 5],
               const [-1, 2, -3, 1][(a + t) % 4],
               n,
             ];
@@ -5456,7 +5482,7 @@ AdvancedItem _ikiEgriAlan(int a, int b, int c, int deneme) {
     }
 
     return kur(
-      _temizOge('alan$c-$a', [for (var t = 0; t < 30; t++) t], b, kur),
+      _temizOge('alan$c-$a', [for (var t = 0; t < 40; t++) t], b, kur),
     );
   }
   // c = 6 … 9: üçüncü dereceden eğri ile doğru; kesişimler r − e, r, r + e.

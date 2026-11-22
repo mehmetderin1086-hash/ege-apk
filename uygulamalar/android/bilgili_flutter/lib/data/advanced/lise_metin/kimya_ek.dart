@@ -135,6 +135,31 @@ AdvancedItem _say(
   );
 }
 
+/// [x] değerini kesin yazmak için gereken ondalık basamak sayısı; iki basamakta
+/// kesin yazılamıyorsa 3.
+int _basamakSayisi(num x) {
+  for (var d = 0; d <= 2; d++) {
+    final y = x * _on(d);
+    if ((y - y.roundToDouble()).abs() <= 1e-6 * (1 + y.abs())) return d;
+  }
+  return 3;
+}
+
+/// Yanlış yöntem sonuçlarından, [veriler] (kökteki sayılar ve yanıt) kadar ya
+/// da daha az ondalık basamakla kesin yazılabilenler. Yuvarlanmış ya da daha
+/// ince basamaklı bir çeldirici öteki seçeneklerden biçimiyle ayrılır.
+List<num> _izgarada(Iterable<num> adaylar, Iterable<num> veriler) {
+  var izin = 0;
+  for (final v in veriler) {
+    final d = _basamakSayisi(v);
+    if (d > izin) izin = d;
+  }
+  return [
+    for (final x in adaylar)
+      if (_basamakSayisi(x) <= izin) x,
+  ];
+}
+
 /// Üç konumlu sıralı yanıt. Her çeldirici bir konumu doğru bırakır, öteki iki
 /// konuma o konumun yanlış adayını yazar; böylece her seçenek ötekilerle tam
 /// bir konumda ortaklaşır ve seçeneklerin yapısı doğru yanıtı ele vermez.
@@ -330,7 +355,20 @@ AdvancedItem _katliOran(int a, int b, int w) {
         '$xa ile ${_t(m1y)} g $ya birleşmektedir. Aynı iki elementten oluşan '
         '$f2 bileşiğinde ${_t(m2x)} g $xa ile kaç gram $ya birleşir?',
     cevap,
-    [m2x * r, m2x * r / kat, m2x * r * y2 / y1, m2x * r * x1 / x2, cevap * 2],
+    _izgarada(
+      [
+        m2x * r, // birinci bileşiğin oranını aynen kullanma
+        m2x * r / kat, // katı ters alma
+        m2x * r * y2 / y1, // yalnız Y alt simgelerini oranlama
+        m2x * r * x1 / x2, // yalnız X alt simgelerini oranlama
+        cevap * 2,
+        m1y * kat, // X kütlesinin değiştiğini hesaba katmama
+        m2x + cevap, // Y kütlesi yerine bileşiğin kütlesini verme
+        cevap / 2,
+        m1y * kat * m1x / m2x, // X kütleleri oranını ters kullanma
+      ],
+      [m1x, m1y, m2x, cevap],
+    ),
     '$f1 bileşiğinde m($ys)/m($xs) = ${_t(m1y)}/${_t(m1x)} = $oranYazi olur. '
         'Bir $xs atomuna düşen $ys atomu sayısı $f1 bileşiğinde '
         '${kesir(y1, x1)}, $f2 bileşiğinde ${kesir(y2, x2)} olduğundan $f2 '
@@ -366,6 +404,10 @@ final _f01 = lmAile(
     final tersToplam = tersX <= mx ? my + tersX : mx + tersY;
     // Fazla olan elementi sınırlayıcı sanma hatası.
     final yanlisToplam = yFazla ? my * (p + q) / q : mx * (p + q) / p;
+    final yanlisArtan = yFazla ? e * p / q : e * q / p;
+    // Çeldiriciler kökteki kütleler ve yanıtla aynı basamakta kesin olmalı;
+    // oranı ters kullanma gibi yöntemlerin yuvarlanmış sonuçları atılır.
+    final veriler = [mx / 10, my / 10, (artanSorusu ? e : top) / 10];
     final giris =
         '${_bas(xa)} ve $ya elementlerinden $ad ($f) oluşurken elementlerin '
         'kütlece birleşme oranı m($xs)/m($ys) = ${kesir(p, q)} olarak '
@@ -378,13 +420,15 @@ final _f01 = lmAile(
       return _say(
         '$giris artan maddenin kütlesi kaç gram olur?',
         e / 10,
-        [
-          (mx - my).abs() / 10,
-          tersArtan / 10,
-          (yFazla ? yTep : xTep) / 10,
-          top / 10,
-          (yFazla ? my : mx) / 10,
-        ],
+        _izgarada([
+          (mx - my).abs() / 10, // verilen kütleleri birbirinden çıkarma
+          tersArtan / 10, // oranı ters kullanma
+          (yFazla ? yTep : xTep) / 10, // artan yerine harcanan kütle
+          top / 10, // oluşan bileşiğin kütlesi
+          yanlisArtan / 10, // sınırlayıcı elementi yanlış seçme
+          (yFazla ? my : mx) / 10, // artan elementin başlangıç kütlesi
+          (yFazla ? mx : my) / 10, // sınırlayıcı elementin kütlesi
+        ], veriler),
         '$birlesme ${_bas(yFazla ? ya : xa)} elementinden '
             '${g(yFazla ? my : mx)} − ${g(yFazla ? yTep : xTep)} = ${g(e)} g '
             'artar.',
@@ -394,12 +438,14 @@ final _f01 = lmAile(
     return _say(
       '$giris en çok kaç gram $f oluşur?',
       top / 10,
-      [
-        (mx + my) / 10,
-        tersToplam / 10,
-        yanlisToplam / 10,
-        2 * (yFazla ? mx : my) / 10,
-      ],
+      _izgarada([
+        (mx + my) / 10, // artanı hesaba katmadan toplama
+        tersToplam / 10, // oranı ters kullanma
+        yanlisToplam / 10, // fazla olan elementi sınırlayıcı sanma
+        2 * (yFazla ? mx : my) / 10, // kütlece 1:1 birleşme sanma
+        e / 10, // oluşan bileşik yerine artan kütleyi verme
+        (yFazla ? yTep : xTep) / 10, // yalnız fazla elementin harcanan kütlesi
+      ], veriler),
       '$birlesme Kütlenin korunumuna göre ${g(xTep)} + ${g(yTep)} = ${g(top)} g '
           '$f oluşur; ${yFazla ? ya : xa} elementinden ${g(e)} g artar.',
       birim: 'g',
@@ -2008,6 +2054,12 @@ final _f10 = lmAile(
   Difficulty.hard,
   BloomLevel.analiz,
   (a, b, c) {
+    // Yanıta 3 dereceden yakın yanlış sonuçlar seçenek yapılmaz: yanıtla
+    // neredeyse aynı bir seçenek ikisinden birinin doğru olduğunu ele verir.
+    List<num> uzak(num d, Iterable<num> v) => [
+      for (final x in v)
+        if ((x - d).abs() >= 3) x,
+    ];
     if (c < 2) {
       final t1k = 200 + 10 * (a + 25 * c), x = _enerjiDegisimi[b];
       final t2k = t1k * (100 + x) ~/ 100;
@@ -2021,7 +2073,10 @@ final _f10 = lmAile(
             '${artis ? 'artırılmak' : 'azaltılmak'} isteniyor. Buna göre gaz kaç '
             '°C sıcaklığa ${artis ? 'ısıtılmalıdır' : 'soğutulmalıdır'}?',
         t2,
-        _mutlakUstu([t1 * oran, t2k, t1k * oran * oran - 273, t1 + x]),
+        uzak(
+          t2,
+          _mutlakUstu([t1 * oran, t2k, t1k * oran * oran - 273, t1 + x]),
+        ),
         'Ortalama kinetik enerji mutlak sıcaklıkla doğru orantılıdır. T₁ = '
             '${_yz(t1)} + 273 = $t1k K, T₂ = $t1k·${_t(oran)} = $t2k K olur; '
             'gazın sıcaklığı $t2k − 273 = ${_yz(t2)} °C olmalıdır.',
@@ -2052,12 +2107,12 @@ final _f10 = lmAile(
         return _say(
           '$giris gazın sıcaklığı kaç °C ${artis ? 'artırılmalıdır' : 'azaltılmalıdır'}?',
           fark,
-          [
+          uzak(fark, [
             (p / q * t1k - t1k).abs(),
             (p * p / (q * q) * t1 - t1).abs(),
             t2k,
             t2.abs(),
-          ],
+          ]),
           '$cozum. Sıcaklık ${artis ? '$t2k − $t1k' : '$t1k − $t2k'} = $fark °C '
               '${artis ? 'artırılmalıdır' : 'azaltılmalıdır'}.',
           birim: '°C',
@@ -2067,7 +2122,17 @@ final _f10 = lmAile(
       return _say(
         '$giris gaz kaç °C sıcaklığa ${artis ? 'ısıtılmalıdır' : 'soğutulmalıdır'}?',
         t2,
-        _mutlakUstu([p / q * t1k - 273, p * p / (q * q) * t1, t2k, p / q * t1]),
+        uzak(
+          t2,
+          _mutlakUstu([
+            p / q * t1k - 273,
+            p * p / (q * q) * t1,
+            t2k,
+            p / q * t1,
+            p / q * t1k, // kelvin sonucunu °C diye verme
+            _karekok(p / q) * t1k - 273, // kare yerine karekök alma
+          ]),
+        ),
         '$cozum; bu da $t2k − 273 = ${_yz(t2)} °C eder.',
         birim: '°C',
         basamak: 0,
@@ -2115,14 +2180,25 @@ final _f10 = lmAile(
           'kaç ${kelvin ? 'K' : '°C'} sıcaklıktaki $gy gazının ${_tanecik(gy)} '
           'ortalama hızına eşittir? ($gx: $mx g/mol, $gy: $my g/mol)',
       kelvin ? t2k : t2,
-      kelvin
-          ? [t1 * my / mx, t1k * mx / my, t1k * kok, t2]
-          : _mutlakUstu([
-              t1 * my / mx,
-              t1k * mx / my - 273,
-              t1k * kok - 273,
-              t2k,
-            ]),
+      uzak(
+        kelvin ? t2k : t2,
+        kelvin
+            ? [
+                t1 * my / mx,
+                t1k * mx / my,
+                t1k * kok,
+                t2,
+                t1 * my / mx + 273, // °C ile oranlayıp sonra kelvine çevirme
+                t1k / kok, // karekökü ters kullanma
+                t2k + 273, // kelvine ikinci kez 273 ekleme
+              ]
+            : _mutlakUstu([
+                t1 * my / mx,
+                t1k * mx / my - 273,
+                t1k * kok - 273,
+                t2k,
+              ]),
+      ),
       'Ortalama hız √(T/M) ile orantılıdır; hızlar eşitse T₁/M₁ = T₂/M₂ olur. '
           'T₁ = ${_yz(t1)} + 273 = $t1k K, T₂ = $t1k·$my/$mx = $t2k K'
           '${kelvin ? '' : ' = ${_yz(t2)} °C'} bulunur.',
@@ -3081,16 +3157,32 @@ final _f14 = lmAile(
       (t) => !t.$3,
       orElse: () => turler.first,
     );
-    final j = b + 1 + 20 * (r ~/ baglar.length);
+    // Ölçülen miktar denklemdeki katsayıya eşit olmaz (j = 20): o durumda
+    // ölçülen ısı ΔH'nin kendisi olur ve ısıya dayanan yanlış yöntemler
+    // çeldirici üretmez. Yerine bu bilinmeyenin hiçbir turunda kullanılmayan
+    // bir miktar alınır.
+    var j = b + 1 + 20 * (r ~/ baglar.length);
+    if (j == 20) j = 20 * (4 ~/ baglar.length + 1) + 1;
     final mol = k * j / 20, q = dh.abs() * j / 20;
     final net = (kirilan[bilinmeyen] ?? 0) - (olusan[bilinmeyen] ?? 0);
     final x = _bagEnerjisi[bilinmeyen]!;
     final digerFark = dh - net * x;
     int coz(num d) => ((d - digerFark) / net).round();
+    // Yanlış yöntemlerin sonuçları. Bağ enerjileri tam sayı kJ/mol olarak
+    // verildiğinden bu sonuçlar da en yakın tam sayıyla yazılır (ondalıklı bir
+    // bağ enerjisi seçeneği biçiminden elenirdi); negatif bulan öğrenci
+    // işareti atar.
+    final isi = ekzo ? -q : q;
     final yanlislar = <num>[
-      (-dh - digerFark) / net,
-      (dh - digerFark) / net.sign,
-      ((ekzo ? -q : q) - digerFark) / net,
+      for (final y in [
+        (-dh - digerFark) / net, // işaret kuralını ters kullanma
+        (dh - digerFark) / net.sign, // bağ sayısına bölmeyi unutma
+        (isi - digerFark) / net, // ölçülen ısıyı ΔH sanma
+        (-dh - digerFark) / net.sign, // ters işaret, bölmeyi de unutma
+        if (k != 1) (dh / k - digerFark) / net, // ΔH'yi 1 mol $f için alma
+        (-isi - digerFark) / net, // ölçülen ısıyı ters işaretle kullanma
+      ])
+        y.abs().round(),
     ];
     final digerleri = [
       for (final e in {...kirilan.keys, ...olusan.keys})
@@ -3709,6 +3801,12 @@ final _f17 = lmAile(
       for (var s = 0; s < 3; s++)
         if (s != k && _hSayisi(s, n) > 0) _hSayisi(s, n),
     ];
+    // Çeldiriciler, yanıt gibi 0,05 molün katı olan miktarlardan seçilir;
+    // yuvarlanmış bir değer öteki seçeneklerden biçimiyle ayrılırdı.
+    List<num> izgara(Iterable<num> v) => [
+      for (final e in v)
+        if ((e * 20 - (e * 20).roundToDouble()).abs() < 1e-9) e,
+    ];
     final bilgi =
         '${const ['Alkanların', 'Alkenlerin', 'Alkinlerin'][k]} genel formülü '
         '${_genelFormul[k]} olduğundan';
@@ -3737,7 +3835,7 @@ final _f17 = lmAile(
           '$kok kaç mol $nicelik ${nicelik == 'O₂' ? 'harcanır' : 'oluşur'}?'
           '${ekKutle.isEmpty ? '' : ' ($ekKutle)'}',
           deger,
-          hatalar,
+          izgara(hatalar),
           cozum,
           birim: 'mol',
         );
@@ -3753,7 +3851,7 @@ final _f17 = lmAile(
         '$kok kaç gram $nicelik ${nicelik == 'O₂' ? 'harcanır' : 'oluşur'}? '
             '(${molKutledenBulunur ? 'C: 12, H: 1, O: 16' : gramKutle})',
         g,
-        [for (final e in hatalar) e * molKutle],
+        [for (final e in izgara(hatalar)) e * molKutle],
         '$cozum Bu ${_t(deger)} mol $nicelik ${_t(g)} gram eder.',
         birim: 'g',
       );
@@ -3772,7 +3870,14 @@ final _f17 = lmAile(
             'H₂O',
             h2o,
             18,
-            [for (final hh in hY) x * hh / 2, x * h, co2],
+            [
+              for (final hh in hY) x * hh / 2,
+              x * h,
+              co2,
+              h / 2,
+              o2, // H₂O yerine harcanan O₂
+              co2 + h2o, // ürünlerin toplam miktarı
+            ],
             '$yol 1 mol $f yanınca ${h ~/ 2} mol H₂O oluşur; ${_t(x)} mol için '
                 '${_t(h2o)} mol H₂O oluşur.',
             [x, co2],
@@ -3787,6 +3892,7 @@ final _f17 = lmAile(
             x * (2 * n + h / 2),
             x * (n + h / 2),
             for (final hh in hY) x * (n + hh / 4),
+            n + h / 4,
           ],
           '$yol $f + ${_t(n + h / 4)} O₂ → $n CO₂ + ${h ~/ 2} H₂O denklemine '
               'göre ${_t(x)}·${_t(n + h / 4)} = ${_t(o2)} mol O₂ harcanır.',
@@ -3809,6 +3915,10 @@ final _f17 = lmAile(
                 if (s != k) x * ((h - 2 + 2 * s) / 2),
               h2o,
               x * h,
+              n.toDouble(),
+              o2, // CO₂ yerine harcanan O₂
+              2 * co2, // CO₂ yerine O atomu sayısı
+              co2 + h2o, // ürünlerin toplam miktarı
             ],
             '$yol ${_t(x)} mol $f yanınca ${_t(x)}·$n = ${_t(co2)} mol CO₂ '
                 'oluşur.',
@@ -3825,6 +3935,9 @@ final _f17 = lmAile(
             x * (n + h / 2),
             for (var s = 0; s < 3; s++)
               if (s != k) x * ((h - 2 + 2 * s) / 2 + h / 4),
+            n + h / 4,
+            co2, // O₂ yerine oluşan CO₂
+            co2 + h2o, // ürünlerin toplam miktarı
           ],
           '$yol Denkleme göre 1 mol $f için ${_t(n + h / 4)} mol O₂ gerekir; '
               '${_t(x)} mol için ${_t(o2)} mol O₂ harcanır.',
@@ -3835,12 +3948,18 @@ final _f17 = lmAile(
         final kok =
             'Molekülünde $n karbon atomu bulunan bir $sinif bileşiğinin ${_t(m)} '
             'gramı tamamen yakılıyor. Buna göre';
-        final hatalar = [
+        final hatalar = izgara([
           for (final hh in hY) m / (12 * n + hh) * n,
           m / mk,
           m / 44,
           m / 12,
-        ];
+          h2o, // CO₂ yerine H₂O miktarı
+          n, // kütleyi mole çevirmeden 1 mol alma
+          o2, // CO₂ yerine harcanan O₂
+          co2 + h2o, // ürünlerin toplam miktarı
+          2 * co2, // CO₂ yerine O atomu sayısı
+          x * h, // CO₂ yerine H atomu sayısı
+        ]);
         final yol =
             '$bilgi bileşik $f, mol kütlesi $mk g/mol olur. ${_t(m)} / $mk = '
             '${_t(x)} mol bileşikten ${_t(x)}·$n = ${_t(co2)} mol CO₂ oluşur.';
@@ -3891,6 +4010,12 @@ final _f17 = lmAile(
                 x * (mk - _hSayisi(s, 0)) / 14,
             x * mk / 12,
             x * h / 2,
+            n.toDouble(), // bileşik miktarını hesaba katmama
+            o2, // CO₂ yerine harcanan O₂
+            2 * co2, // CO₂ yerine O atomu sayısı
+            co2 + h2o, // ürünlerin toplam miktarı
+            x, // karbon sayısını hesaba katmama
+            x * h, // CO₂ yerine H atomu sayısı
           ],
           '$yol ${_t(x)} mol $f yanınca ${_t(co2)} mol CO₂ oluşur.',
           [x, mk.toDouble()],
@@ -3927,11 +4052,16 @@ final _f17 = lmAile(
               'kaç mol ${tur == 'toplam' ? 'atom' : '$tur atomu'} bulunur? '
               '(C: 12, H: 1)',
           deger,
-          tur == 'hidrojen'
-              ? [for (final hh in hY) x * hh, x * h / 2, x * n, x * 2 * n]
-              : (tur == 'karbon'
-                    ? [x * h, x * mk / 12, x * (n + h), x * 2 * n]
-                    : [x * h, x * n, x * (n + h / 2), x * 3 * n]),
+          izgara([
+            ...(tur == 'hidrojen'
+                ? [for (final hh in hY) x * hh, x * h / 2, x * n, x * 2 * n]
+                : (tur == 'karbon'
+                      ? [x * h, x * mk / 12, x * (n + h), x * 2 * n]
+                      : [x * h, x * n, x * (n + h / 2), x * 3 * n])),
+            tane, // bileşik miktarını hesaba katmama
+            if (tur != 'toplam') x * (n + h), // toplam atom sayısı
+            2 * deger,
+          ]),
           '$bilgi mol kütlesi $mk g/mol olan bileşik $f olur. Bir molekülde '
               '$tane ${tur == 'toplam' ? 'atom' : '$tur atomu'} bulunduğundan '
               '${_t(x)} mol $f içinde ${_t(x)}·$tane = ${_t(deger)} mol '
@@ -3947,12 +4077,14 @@ final _f17 = lmAile(
           n == 1 ? h2o : co2,
           n == 1 ? 18 : 44,
           n == 1
-              ? [co2, top / 2, x * 4]
+              ? [co2, top / 2, x * 4, h / 2]
               : [
                   top / 2,
                   h2o,
                   for (var s = 0; s < 3; s++)
                     if (s != k) x * (top / x - (1 - s)) / 2,
+                  n.toDouble(), // bileşik miktarını hesaba katmama
+                  o2, // CO₂ yerine harcanan O₂
                 ],
           '$bilgi 1 mol bileşik yanınca n mol CO₂ ve ${k == 0 ? 'n + 1' : (k == 1 ? 'n' : 'n − 1')} '
               'mol H₂O oluşur; toplam ${_t(top / x)} mol olduğundan n = $n '
@@ -4463,11 +4595,15 @@ final _f19 = lmSirali(
           _iupacYanlisAdlari[j * _iupacYanlisAdlari.length ~/ 1000];
       final b = _alkanlar[c];
       final (ad, _, yol, _) = b;
+      // Kökte yanlış olduğu söylenen ad seçeneklere konmaz.
       return secenekli(
         'Bir öğrenci bir alkanı “$yanlis” olarak adlandırmıştır. Bu ad IUPAC '
             'kurallarına uymadığına göre bileşiğin doğru IUPAC adı nedir?',
         ad,
-        [yanlis, ..._iupacYanlislari(b), ..._iupacEkYanlislar(b)],
+        [
+          for (final s in [..._iupacYanlislari(b), ..._iupacEkYanlislar(b)])
+            if (s != yanlis) s,
+        ],
         '“$yanlis” adıyla tanımlanan yapıda en uzun zincir ${yol.length} '
             'karbonludur; dallara en küçük numaralar verilip dallar alfabetik '
             'sırayla yazılınca doğru ad $ad olur.',
