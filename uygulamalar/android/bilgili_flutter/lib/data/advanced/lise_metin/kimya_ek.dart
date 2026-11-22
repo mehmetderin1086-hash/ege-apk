@@ -160,6 +160,32 @@ List<num> _izgarada(Iterable<num> adaylar, Iterable<num> veriler) {
   ];
 }
 
+/// Yanlış yöntem sonuçlarını, önceki bir sonuca çok yakın olanlar (fark büyük
+/// değerin %2'sinden ve [enAz] değerinden küçük) ile [sona] koşulunu
+/// sağlayanlar sona kalacak biçimde sıralar. Böylece neredeyse aynı iki
+/// çeldirici ya da akla yatmayan bir değer ancak başka aday kalmazsa seçilir.
+List<num> _ayrisik(
+  Iterable<num> adaylar, {
+  num enAz = 0,
+  bool Function(num x)? sona,
+}) {
+  bool yakin(num x, num y) {
+    final fark = (x - y).abs();
+    final buyuk = x.abs() > y.abs() ? x.abs() : y.abs();
+    return fark < buyuk * 0.02 || fark < enAz;
+  }
+
+  final once = <num>[], sonra = <num>[];
+  for (final x in adaylar) {
+    if ((sona != null && sona(x)) || once.any((y) => yakin(x, y))) {
+      sonra.add(x);
+    } else {
+      once.add(x);
+    }
+  }
+  return [...once, ...sonra];
+}
+
 /// Üç konumlu sıralı yanıt. Her çeldirici bir konumu doğru bırakır, öteki iki
 /// konuma o konumun yanlış adayını yazar; böylece her seçenek ötekilerle tam
 /// bir konumda ortaklaşır ve seçeneklerin yapısı doğru yanıtı ele vermez.
@@ -355,19 +381,21 @@ AdvancedItem _katliOran(int a, int b, int w) {
         '$xa ile ${_t(m1y)} g $ya birleşmektedir. Aynı iki elementten oluşan '
         '$f2 bileşiğinde ${_t(m2x)} g $xa ile kaç gram $ya birleşir?',
     cevap,
-    _izgarada(
-      [
-        m2x * r, // birinci bileşiğin oranını aynen kullanma
-        m2x * r / kat, // katı ters alma
-        m2x * r * y2 / y1, // yalnız Y alt simgelerini oranlama
-        m2x * r * x1 / x2, // yalnız X alt simgelerini oranlama
-        cevap * 2,
-        m1y * kat, // X kütlesinin değiştiğini hesaba katmama
-        m2x + cevap, // Y kütlesi yerine bileşiğin kütlesini verme
-        cevap / 2,
-        m1y * kat * m1x / m2x, // X kütleleri oranını ters kullanma
-      ],
-      [m1x, m1y, m2x, cevap],
+    _ayrisik(
+      _izgarada(
+        [
+          m2x * r, // birinci bileşiğin oranını aynen kullanma
+          m2x * r / kat, // katı ters alma
+          m2x * r * y2 / y1, // yalnız Y alt simgelerini oranlama
+          m2x * r * x1 / x2, // yalnız X alt simgelerini oranlama
+          cevap * 2,
+          m1y * kat, // X kütlesinin değiştiğini hesaba katmama
+          m2x + cevap, // Y kütlesi yerine bileşiğin kütlesini verme
+          cevap / 2,
+          m1y * kat * m1x / m2x, // X kütleleri oranını ters kullanma
+        ],
+        [m1x, m1y, m2x, cevap],
+      ),
     ),
     '$f1 bileşiğinde m($ys)/m($xs) = ${_t(m1y)}/${_t(m1x)} = $oranYazi olur. '
         'Bir $xs atomuna düşen $ys atomu sayısı $f1 bileşiğinde '
@@ -420,15 +448,17 @@ final _f01 = lmAile(
       return _say(
         '$giris artan maddenin kütlesi kaç gram olur?',
         e / 10,
-        _izgarada([
-          (mx - my).abs() / 10, // verilen kütleleri birbirinden çıkarma
-          tersArtan / 10, // oranı ters kullanma
-          (yFazla ? yTep : xTep) / 10, // artan yerine harcanan kütle
-          top / 10, // oluşan bileşiğin kütlesi
-          yanlisArtan / 10, // sınırlayıcı elementi yanlış seçme
-          (yFazla ? my : mx) / 10, // artan elementin başlangıç kütlesi
-          (yFazla ? mx : my) / 10, // sınırlayıcı elementin kütlesi
-        ], veriler),
+        _ayrisik(
+          _izgarada([
+            (mx - my).abs() / 10, // verilen kütleleri birbirinden çıkarma
+            tersArtan / 10, // oranı ters kullanma
+            (yFazla ? yTep : xTep) / 10, // artan yerine harcanan kütle
+            top / 10, // oluşan bileşiğin kütlesi
+            yanlisArtan / 10, // sınırlayıcı elementi yanlış seçme
+            (yFazla ? my : mx) / 10, // artan elementin başlangıç kütlesi
+            (yFazla ? mx : my) / 10, // sınırlayıcı elementin kütlesi
+          ], veriler),
+        ),
         '$birlesme ${_bas(yFazla ? ya : xa)} elementinden '
             '${g(yFazla ? my : mx)} − ${g(yFazla ? yTep : xTep)} = ${g(e)} g '
             'artar.',
@@ -438,14 +468,17 @@ final _f01 = lmAile(
     return _say(
       '$giris en çok kaç gram $f oluşur?',
       top / 10,
-      _izgarada([
-        (mx + my) / 10, // artanı hesaba katmadan toplama
-        tersToplam / 10, // oranı ters kullanma
-        yanlisToplam / 10, // fazla olan elementi sınırlayıcı sanma
-        2 * (yFazla ? mx : my) / 10, // kütlece 1:1 birleşme sanma
-        e / 10, // oluşan bileşik yerine artan kütleyi verme
-        (yFazla ? yTep : xTep) / 10, // yalnız fazla elementin harcanan kütlesi
-      ], veriler),
+      _ayrisik(
+        _izgarada([
+          (mx + my) / 10, // artanı hesaba katmadan toplama
+          tersToplam / 10, // oranı ters kullanma
+          yanlisToplam / 10, // fazla olan elementi sınırlayıcı sanma
+          2 * (yFazla ? mx : my) / 10, // kütlece 1:1 birleşme sanma
+          e / 10, // oluşan bileşik yerine artan kütleyi verme
+          (yFazla ? yTep : xTep) /
+              10, // yalnız fazla elementin harcanan kütlesi
+        ], veriler),
+      ),
       '$birlesme Kütlenin korunumuna göre ${g(xTep)} + ${g(yTep)} = ${g(top)} g '
           '$f oluşur; ${yFazla ? ya : xa} elementinden ${g(e)} g artar.',
       birim: 'g',
@@ -2057,10 +2090,10 @@ final _f10 = lmAile(
     // Yanıta çok yakın (3 dereceden ya da yanıtın %2'sinden az farklı) yanlış
     // sonuçlar seçenek yapılmaz: yanıtla neredeyse aynı bir seçenek
     // ikisinden birinin doğru olduğunu ele verir.
-    List<num> uzak(num d, Iterable<num> v) => [
+    List<num> uzak(num d, Iterable<num> v) => _ayrisik([
       for (final x in v)
         if ((x - d).abs() >= (d.abs() * 0.02 > 3 ? d.abs() * 0.02 : 3)) x,
-    ];
+    ], enAz: 3);
     if (c < 2) {
       final t1k = 200 + 10 * (a + 25 * c), x = _enerjiDegisimi[b];
       final t2k = t1k * (100 + x) ~/ 100;
@@ -3143,13 +3176,13 @@ final _f14 = lmAile(
             'Buna göre $miktar $fiil ${ekzo ? 'açığa çıkan' : 'alınan'} ısı kaç '
             'kJ olur?${kutleli ? ' ($kut)' : ''}',
         q,
-        [
+        _ayrisik([
           dh.abs() * mol,
           bk * mol / k,
           bo * mol / k,
           yanlisDh.abs() * mol / k,
           dh.abs() / k,
-        ],
+        ]),
         '$dhYol ${kutleli ? '${_t(mol * mk)} gram $f ${_t(mol)} mol eder. ' : ''}'
             'Bu değer denklemdeki $k mol $f içindir; ${_t(mol)} mol için '
             '${dh.abs()}·${_t(mol)}${k == 1 ? '' : '/$k'} = ${_t(q)} kJ ısı '
@@ -3168,14 +3201,15 @@ final _f14 = lmAile(
       (t) => !t.$3,
       orElse: () => turler.first,
     );
-    // Ölçülen miktar denklemdeki katsayıya eşit olmaz (j = 20): o durumda
-    // ölçülen ısı ΔH'nin kendisi olur ve ısıya dayanan yanlış yöntemler
-    // çeldirici üretmez. Yerine bu bilinmeyenin hiçbir turunda kullanılmayan
-    // bir miktar alınır.
-    var j = b + 1 + 20 * (r ~/ baglar.length);
-    if (j == 20) j = 20 * (4 ~/ baglar.length + 1) + 1;
-    final mol = k * j / 20, q = dh.abs() * j / 20;
     final net = (kirilan[bilinmeyen] ?? 0) - (olusan[bilinmeyen] ?? 0);
+    // Ölçülen ısıyı ΔH sanan öğrencinin bulacağı değer yanıta yuvarlanmasın:
+    // |ΔH|·|20 − j| ≤ 10·|net| ise (j = 20'de ölçülen ısı ΔH'nin kendisidir)
+    // bu bilinmeyenin hiçbir turunda kullanılmayan bir miktar alınır.
+    var j = b + 1 + 20 * (r ~/ baglar.length);
+    if (dh.abs() * (20 - j).abs() <= 10 * net.abs()) {
+      j = 20 * (4 ~/ baglar.length + 1) + (j == 20 ? 1 : j + 1);
+    }
+    final mol = k * j / 20, q = dh.abs() * j / 20;
     final x = _bagEnerjisi[bilinmeyen]!;
     final digerFark = dh - net * x;
     int coz(num d) => ((d - digerFark) / net).round();
@@ -3216,7 +3250,9 @@ final _f14 = lmAile(
           'enerjileri (kJ/mol): ${digerleri.join(', ')}. Buna göre $bilinmeyen bağının '
           'enerjisi kaç kJ/mol olur?',
       coz(dh),
-      [for (final y in yanlislar) y],
+      // Bağ enerjisi için akla yatmayan küçük değerler (yanıtın %30'undan az)
+      // ancak başka aday kalmazsa kullanılır.
+      _ayrisik(yanlislar, enAz: 3, sona: (v) => v < 0.3 * x),
       'Denklemdeki $k mol $f için ΔH = ${_isaretli(dh)} kJ olur '
           '(${_t(q)}·$k/${_t(mol)}). $bilinmeyen bağının enerjisi x ile '
           'gösterilirse ΔH = Σ(kırılan) − Σ(oluşan) eşitliği '
@@ -3814,10 +3850,11 @@ final _f17 = lmAile(
     ];
     // Çeldiriciler, yanıt gibi 0,05 molün katı olan miktarlardan seçilir;
     // yuvarlanmış bir değer öteki seçeneklerden biçimiyle ayrılırdı.
-    List<num> izgara(Iterable<num> v) => [
+    // Neredeyse aynı iki çeldirici ancak başka aday kalmazsa birlikte seçilir.
+    List<num> izgara(Iterable<num> v) => _ayrisik([
       for (final e in v)
         if ((e * 20 - (e * 20).roundToDouble()).abs() < 1e-9) e,
-    ];
+    ]);
     final bilgi =
         '${const ['Alkanların', 'Alkenlerin', 'Alkinlerin'][k]} genel formülü '
         '${_genelFormul[k]} olduğundan';
@@ -3999,7 +4036,12 @@ final _f17 = lmAile(
               'molü tamamen yakılıyor. Buna göre kaç gram H₂O oluşur? (H: 1, '
               'O: 16)',
           g,
-          [for (final hh in hY) x * hh / 2 * 18, x * h * 18, co2 * 18, h2o],
+          _ayrisik([
+            for (final hh in hY) x * hh / 2 * 18,
+            x * h * 18,
+            co2 * 18,
+            h2o,
+          ]),
           '$bilgi bileşik $f olur. ${_t(x)} mol $f yanınca ${_t(x)}·${h ~/ 2} = '
               '${_t(h2o)} mol, yani ${_t(h2o)}·18 = ${_t(g)} gram H₂O oluşur.',
           birim: 'g',
@@ -4037,7 +4079,12 @@ final _f17 = lmAile(
           '${yanma('${_t(o2)} mol O₂ harcanıyor.')} Buna göre bu $sinif '
               'bileşiğinin mol kütlesi kaç g/mol olur? (C: 12, H: 1)',
           mk,
-          [for (final hh in hY) 12 * n + hh, 12 * n, 14 * n, 12 * n + 2 * h],
+          _ayrisik([
+            for (final hh in hY) 12 * n + hh,
+            12 * n,
+            14 * n,
+            12 * n + 2 * h,
+          ]),
           '$bilgi 1 mol bileşik için ${_t(o2 / x)} mol O₂ gerekir; n + '
               '${k == 0 ? '(2n + 2)/4' : (k == 1 ? '2n/4' : '(2n − 2)/4')} = '
               '${_t(o2 / x)} eşitliğinden n = $n ($f), mol kütlesi '

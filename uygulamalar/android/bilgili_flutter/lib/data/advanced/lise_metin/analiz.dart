@@ -3147,12 +3147,18 @@ AdvancedItem _logBasamak(int a, int b, int c, int deneme) {
     );
   }
   if (c <= 7) {
-    final t = _basTaban[a];
+    // Taban 10'dan küçüktür (2, 3, 4, 5, 6, 8, 9): daha büyük tabanlarda k
+    // basamaklı kuvvet çoğu kez tektir ya da yoktur; "en az" ile "en çok"
+    // yanıtları ve komşu basamak sayılarının yanıtları çakışır.
+    // c = 7'de yalnız 2, 3 ve 4 tabanları: her basamak sayısında birden çok
+    // kuvvet bulunur, "en az" yanıtı "en çok" yanıtından ayrılır.
+    final tur = c == 6 ? 7 : 3;
+    final t = _basTaban[a % tur];
     final k = _temizSec(
-      'basamak$c-$a',
+      'basamak$c-${a % tur}',
       389,
       (x) => _basamakSinir(c, t, 12 + x),
-      b * 3 + a % 3,
+      b + 20 * (a ~/ tur),
     );
     return _basamakSinir(c, t, 12 + k);
   }
@@ -4694,7 +4700,7 @@ AdvancedItem _konumHiz(int a, int b, int c, int deneme) {
 /// Çit problemleri: (tel uzunluğu L, bölme sayısı k, duvar var mı).
 final List<(int, int, bool)> _citVeri = () {
   final l = <(int, int, bool)>[];
-  for (var uzun = 40; uzun <= 800; uzun += 2) {
+  for (var uzun = 40; uzun <= 1000; uzun += 2) {
     for (var k = 1; k <= 4; k++) {
       for (final duvar in const [true, false]) {
         // Duvarlı: 2(k + 1) | L; duvarsız: 4 | L ve 2(k + 1) | L.

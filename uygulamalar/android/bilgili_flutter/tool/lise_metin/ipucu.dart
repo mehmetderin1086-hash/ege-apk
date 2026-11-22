@@ -131,23 +131,38 @@ IpucuSonuc ipucuOlc(AdvancedFamily f) {
   return s;
 }
 
+/// Hedef: hiçbir kestirim anahtarı vakaların %40'ından fazlasında bulamaz.
+const ipucuHedef = 0.40;
+
+/// [hepsi] verilirse aileler dosyadaki sırayla ve tamamı yazılır; aksi hâlde
+/// en kötü durumdan başlayarak sınırı aşanlar (en az 25 satır) yazılır.
+/// Sınırı aşan satırlar "!" ile başlar.
 void liseMetinIpucu(
   String alan,
   List<AdvancedFamily> aileler, {
-  double esik = 0.40,
+  double esik = ipucuHedef,
+  bool hepsi = false,
 }) {
   test('$alan: seçenek biçiminden ipucu taraması', () {
-    final sonuclar = [for (final f in aileler) ipucuOlc(f)]
-      ..sort((a, b) => b.enKotu.compareTo(a.enKotu));
-    final isaretli = sonuclar.where((s) => s.enKotu >= esik).toList();
+    final sonuclar = [for (final f in aileler) ipucuOlc(f)];
+    final sinir = (100 * esik).round();
+    final asan = {
+      for (final s in sonuclar)
+        if ((100 * s.enKotu).round() > sinir) s.key,
+    };
+    final yazilacak = hepsi
+        ? sonuclar
+        : ([...sonuclar]..sort((a, b) => b.enKotu.compareTo(a.enKotu))).take(
+            max(asan.length, 25),
+          );
     // ignore: avoid_print
     print(
-      '${aileler.length} aile; en az bir kestirimde ≥ %${(esik * 100).round()} '
-      'olan ${isaretli.length} aile:',
+      '$alan: ${aileler.length} aile; en az bir kestirimde %$sinir sınırını '
+      'aşan ${asan.length} aile.',
     );
-    for (final s in sonuclar.take(max(isaretli.length, 25))) {
+    for (final s in yazilacak) {
       // ignore: avoid_print
-      print(s.satir());
+      print('${asan.contains(s.key) ? '!' : ' '} ${s.satir()}');
     }
   }, timeout: const Timeout(Duration(minutes: 30)));
 }

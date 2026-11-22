@@ -1170,13 +1170,22 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
         pozitif: true,
       );
     case 4:
-      final ilk = 2 + a, artis = 3 + b % 5, adet = 12 + 5 * (b ~/ 5);
+      // İlk terim artışa eşitse “son terim / artış” yanlış yolu doğru sonucu
+      // verir; bu durumda ilk terim aralığın dışına kaydırılır.
+      final artis = 3 + b % 5, adet = 12 + 5 * (b ~/ 5);
+      final ilk = 2 + a == artis ? 27 + a : 2 + a;
       final son = ilk + (adet - 1) * artis;
       return _tam(
         'Her terimi bir öncekinden $artis fazla olan $ilk, ${ilk + artis}, '
             '${ilk + 2 * artis}, …, $son sayı dizisinde kaç terim vardır?',
         adet,
-        [adet - 1, adet + 1, son ~/ artis, son - ilk + 1],
+        [
+          adet - 1,
+          adet + 1,
+          if (son % artis == 0) son ~/ artis,
+          son - ilk + 1,
+          son - ilk,
+        ],
         'Terim sayısı (son terim − ilk terim) / artış + 1 = ($son − $ilk) / '
             '$artis + 1 = ${adet - 1} + 1 = $adet olur.',
         pozitif: true,
@@ -2336,6 +2345,84 @@ AdvancedItem _aralikSoru(int a, int b, int c) {
   // Önce, kapalı/açık uç ayrımının yanıtı değiştirdiği (tüm uçları kapalı
   // sanan yolun yanlış sonuç verdiği) seçimler denenir.
   _Ar kapat(_Ar x) => (x.$1, true, x.$3, true);
+  _Ar ac(_Ar x) => (x.$1, false, x.$3, false);
+  // _aralikUret içindeki çeldirici yollarının (uç türü yanlışları, kesişim ile
+  // birleşimi ya da iki farkı karıştırmak …) verdiği değerler.
+  List<int> uyarlamalar(_Ar x, _Ar y) {
+    int say(List<_Ar> t) => _tamlar(t).length;
+    int top(List<_Ar> t) => _topla(_tamlar(t));
+    List<int> uc(List<int> t) => t.isEmpty ? const [] : [t.first + t.last];
+    final kes = [_kesisim(x, y)], bir = [_birlesim(x, y)];
+    return switch (c) {
+      0 || 8 => [
+        say([_kesisim(kapat(x), kapat(y))]),
+        say([_kesisim(ac(x), ac(y))]),
+        say(bir),
+      ],
+      1 || 9 => [
+        say([_birlesim(kapat(x), kapat(y))]),
+        say([_birlesim(ac(x), ac(y))]),
+        say([x]) + say([y]),
+        say(kes),
+      ],
+      2 => [
+        say(_fark(y, x)),
+        say(_fark(kapat(x), ac(y))),
+        say(_fark(ac(x), kapat(y))),
+        say(kes),
+      ],
+      3 => [
+        say(_fark(x, y)),
+        say(_fark(kapat(y), ac(x))),
+        say(_fark(ac(y), kapat(x))),
+        say(kes),
+      ],
+      4 => [
+        top([_kesisim(kapat(x), kapat(y))]),
+        top([_kesisim(ac(x), ac(y))]),
+        top(bir),
+        say(kes),
+      ],
+      5 => [
+        top(_fark(y, x)),
+        top(_fark(kapat(x), ac(y))),
+        top(_fark(ac(x), kapat(y))),
+        say(_fark(x, y)),
+      ],
+      6 => [
+        ...uc(_tamlar([_birlesim(kapat(x), kapat(y))])),
+        ...uc(_tamlar([_birlesim(ac(x), ac(y))])),
+        ...uc(_tamlar(kes)),
+        bir.first.$1 + bir.first.$3,
+      ],
+      _ => [
+        say(bir),
+        say(kes),
+        say(_fark(x, y)) + say(_fark(y, x)) + 1,
+        say(bir) - say(kes) + 1,
+      ],
+    };
+  }
+
+  // En önce, çeldirici yollarından hiçbirinin doğru sonucu vermediği seçimler.
+  for (final t in adaylar) {
+    final (x, y) = araliklar(t);
+    final r = _aralikUret(c, (x, y));
+    if (_yanitKokte(r)) continue;
+    if (uyarlamalar(x, y).any((v) => _n(v) == r.correct)) continue;
+    return r;
+  }
+  // Uymazsa aynı seçimler bütün uçlar 40 birim kaydırılarak denenir; bu kadar
+  // büyük uçlar başka hiçbir vakada kullanılmadığından kökler yine farklı kalır.
+  _Ar kaydir(_Ar x) => (x.$1 + 40, x.$2, x.$3 + 40, x.$4);
+  for (final t in adaylar) {
+    final (x0, y0) = araliklar(t);
+    final (x, y) = (kaydir(x0), kaydir(y0));
+    final r = _aralikUret(c, (x, y));
+    if (_yanitKokte(r)) continue;
+    if (uyarlamalar(x, y).any((v) => _n(v) == r.correct)) continue;
+    return r;
+  }
   for (final t in adaylar) {
     final (x, y) = araliklar(t);
     final r = _aralikUret(c, (x, y));
@@ -2346,9 +2433,6 @@ AdvancedItem _aralikSoru(int a, int b, int c) {
     final r = _aralikUret(c, araliklar(t));
     if (!_yanitKokte(r)) return r;
   }
-  // Hiçbir uç seçimi uymazsa bütün uçlar 40 birim kaydırılır; bu kadar büyük
-  // uçlar başka hiçbir vakada kullanılmadığından kökler yine farklı kalır.
-  _Ar kaydir(_Ar x) => (x.$1 + 40, x.$2, x.$3 + 40, x.$4);
   for (final t in adaylar) {
     final (x, y) = araliklar(t);
     final r = _aralikUret(c, (kaydir(x), kaydir(y)));
@@ -3228,7 +3312,11 @@ AdvancedItem _fonksiyonDegerUret(int a, int b, int c, int w) {
       final sabit = const [3, -4][b ~/ 10] + (c == 6 ? 2 : 0);
       // Sağ taraf −(px + q) olursa f(u) = −u olur ve soru kendiliğinden çözülür;
       // bu durumda r listenin dışındaki bir değere kaydırılır.
-      final r = r0 == -p && sabit == -q ? r0 + (r0 > 0 ? 7 : -7) : r0;
+      // c = 6'da r = p iken “iç ifadenin katsayısını kullanmak” yanlışı da doğru
+      // sonucu verir; o durumda da r kaydırılır.
+      final r = (r0 == -p && sabit == -q) || (c == 6 && r0 == p)
+          ? r0 + (r0 > 0 ? 7 : -7)
+          : r0;
       final dis = _dogrusal(r, sabit);
       // x0 değeri, doğru yanıt tipik yanlışlarla ve kökteki sayılarla
       // çakışmayacak biçimde seçilir.
@@ -3400,9 +3488,12 @@ AdvancedItem _fonksiyonDegerUret(int a, int b, int c, int w) {
             '${n < 0 ? '−' : '+'} ${n.abs()} = $sonuc olur.',
       );
     case 7:
-      final r = const [2, -4, 6, -2, 4, -6, 8, 0, 3, -3][b % 10];
+      final r0 = const [2, -4, 6, -2, 4, -6, 8, 0, 3, -3][b % 10];
       final sabit = const [5, -3][b ~/ 10] + a % 5;
       final qq = q;
+      // r = q iken “sabit terimi değiştirmemek” yanlışı doğru sonucu verir; r
+      // listenin dışına kaydırılır.
+      final r = r0 == qq ? r0 + (r0 > 0 ? 10 : -10) : r0;
       // f(x) = (x − q)² + r(x − q) + s
       final bb = r - 2 * qq, cc = qq * qq - r * qq + sabit;
       return _ifadeSecenek(
@@ -3457,7 +3548,7 @@ AdvancedItem _fonksiyonDegerUret(int a, int b, int c, int w) {
             '${_n(2 * m * h)} ve f(0) = ${_n(n)} olduğuna göre f(${_n(k)}) değeri '
             'kaçtır?',
         v,
-        [2 * m * h * k + n, m * h * k + n, m * k, v + m],
+        [2 * m * h * k + n, if (h > 1) m * h * k + n, m * k, v + m, m * k - n],
         'f(x) = ax + b olsun. f(x + $h) − f(x − $h) = ${2 * h}a = ${_n(2 * m * h)} '
             'eşitliğinden a = ${_n(m)}, f(0) = b = ${_n(n)} bulunur. f(${_n(k)}) = '
             '${_n(m)} · ${_p(k)} ${n < 0 ? '−' : '+'} ${n.abs()} = ${_n(v)} olur.',
@@ -3806,7 +3897,7 @@ AdvancedItem _polinomEsitlikUret(int a, int b, int c, int w) {
       );
     case 1:
       final p = const [2, 3, 4, 5, -2][a % 5],
-          q = const [-3, 5, -1, 4, -5][a ~/ 5];
+          q = const [-3, 7, -1, -4, -5][a ~/ 5];
       final r = const [4, -3, 2, -5, 6][b % 5],
           sv = const [-1, 7, -6, 3][b ~/ 5] + 10 * (w ~/ 2);
       final carpim = _polCarp([p, q], [1, r, sv]);
@@ -3986,7 +4077,7 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c, int w) {
       );
     case 7:
       final p = const [2, -3, 1, 4, -2][a % 5],
-          q = const [-1, 3, -4, 2, 5][a ~/ 5];
+          q = const [-1, -3, -4, 2, 4][a ~/ 5];
       final r = const [3, -1, -2, 4, 5][b % 5],
           sv = const [2, -5, 6, -3][b ~/ 5] + 10 * (w ~/ 2);
       final carpim = _polCarp([1, p, q], [1, r, sv]);
@@ -4100,10 +4191,20 @@ AdvancedItem _polinomBolmeUret(int a, int b, int c, int w) {
   final q2 = const [1, 2, 3, -1, -2][a % 5];
   final q1 = const [-3, 2, -1, 4, 1][a ~/ 5];
   final q0 = const [5, -4, 3, -2, 6, -5, 1, -6, 4, 2][b % 10] + 20 * (w ~/ 3);
-  final k0 = const [2, -1, 3, -2][b ~/ 10 + (c.isEven ? 0 : 2)];
-  // c = 1'de q1 = q2 ve k = −2 iken P'nin x katsayısı istenen toplama eşit olur
-  // (q0 − k·q1 = q2 + q1 + q0); bu durumda bölen x − 2 alınır.
-  final k = c == 1 && k0 == -2 && q1 == q2 ? 2 : k0;
+  final sinif = c.isEven ? const [2, -1] : const [3, -2];
+  final k0 = sinif[b ~/ 10], kDiger = sinif[1 - b ~/ 10];
+  // Bazı bölenlerde yanlış yollar doğru sonucu verir: c = 1'de x + k ile bölmek
+  // (q1 = (k − 1)·q2 iken) ya da P'nin x katsayısını okumak (q2 = −(k + 1)·q1
+  // iken), c = 2'de x + k ile bölmek (q1 = k·q2 iken), c = 8'de −k ile çarpmayı
+  // unutmak (k = −1 iken). Bu durumlarda başka bir bölen alınır.
+  bool cakisir(int k) => switch (c) {
+    1 => q1 == (k - 1) * q2 || q2 == -(k + 1) * q1,
+    2 => q1 == k * q2,
+    _ => false,
+  };
+  final k = c == 8 && k0 == -1
+      ? 3
+      : (!cakisir(k0) ? k0 : (!cakisir(kDiger) ? kDiger : 2));
   final R = const [3, -4, 5, -2, 7, -1, 4][(a + b + c + w) % 7];
   final Q = [q2, q1, q0];
   final P = _polTopla(_polCarp(Q, [1, -k]), [R]);
@@ -4172,15 +4273,24 @@ AdvancedItem _polinomBolmeUret(int a, int b, int c, int w) {
       break;
   }
   // İkinci dereceden bölenler.
-  final d1 = const [-1, 2, -3, 1, 0][a % 5],
-      d0 = const [1, -2, 3, 2, -3][a ~/ 5];
+  final d1 = const [-1, 2, -3, 1, 0][a % 5];
+  final d0Taban = const [1, -2, 3, 2, -3][a ~/ 5];
+  // c = 6'da D(1) = 1 iken “D(1) ile çarpmayı unutmak”, D(1) = 0 iken “D(1)
+  // eklemek” yanlışları doğru sonucu verir; bu durumda sabit terim 3 artırılır.
+  final d0 = c == 6 && (1 + d1 + d0Taban == 0 || 1 + d1 + d0Taban == 1)
+      ? d0Taban + 3
+      : d0Taban;
   final D = [1, d1, d0];
+  // İşaret hatası: x katsayısı 0 ise sabit terimin işareti ters alınır.
+  final yanlisBolen = d1 == 0 ? [1, 0, -d0] : [1, -d1, d0];
   final dYazi = _polinom(D);
   // c = 6'da D(1) · T(1) = −r1 ise yanıt kalanın sabit terimine eşit olur;
   // bu yüzden ikinci varyant r1'i de kaydırır.
   final r1Taban = const [2, -3, 1, 4, -1, 3, -2, 5, -4, 6][b % 10];
-  final r1 = r1Taban + (c == 6 ? r1Taban.sign * 10 * (w ~/ 2) : 0),
-      r0 = const [-5, 4][b ~/ 10] + c + 20 * (w % 2);
+  final r1 = r1Taban + (c == 6 ? r1Taban.sign * 10 * (w ~/ 2) : 0);
+  final r0Taban = const [-5, 4][b ~/ 10] + c + 20 * (w % 2);
+  // c = 6'da R(1) = 0 iken “kalanı eklemeyi unutmak” yanlışı doğru sonucu verir.
+  final r0 = c == 6 && r1 + r0Taban == 0 ? r0Taban + 40 : r0Taban;
   final kalanYazi = _dogrusal(r1, r0);
   switch (c) {
     case 3 || 4:
@@ -4188,7 +4298,7 @@ AdvancedItem _polinomBolmeUret(int a, int b, int c, int w) {
           m0 = const [3, -1, 4, -2, 1][(a + 2 * b) % 5];
       final T = [m1, m0];
       final p3 = _polTopla(_polCarp(D, T), [r1, r0]);
-      final (yanlisB, yanlisK) = _polBol(p3, [1, -d1, d0]);
+      final (yanlisB, yanlisK) = _polBol(p3, yanlisBolen);
       final aciklama =
           'Bölme sonucunda bölüm ${_polinom(T)}, kalan $kalanYazi bulunur; gerçekten '
           '($dYazi) · (${_polinom(T)}) + ($kalanYazi) = ${_polinom(p3)} olur.';
@@ -4211,7 +4321,8 @@ AdvancedItem _polinomBolmeUret(int a, int b, int c, int w) {
         'nedir?',
         _polinom(T),
         [
-          _polinom(yanlisB),
+          // x katsayısı 0 iken işaret hatası bölümü değiştirmez.
+          if (d1 != 0) _polinom(yanlisB),
           _dogrusal(m1, -m0),
           _dogrusal(m1, m0 + 1),
           _dogrusal(-m1, m0),
@@ -4222,7 +4333,7 @@ AdvancedItem _polinomBolmeUret(int a, int b, int c, int w) {
     case 5:
       final T = [q2, q1, q0];
       final p4 = _polTopla(_polCarp(D, T), [r1, r0]);
-      final (yanlisB, _) = _polBol(p4, [1, -d1, d0]);
+      final (yanlisB, _) = _polBol(p4, yanlisBolen);
       return secenekli(
         'P(x) = ${_polinom(p4)} polinomunun $dYazi ile bölümünden elde edilen bölüm '
             'nedir?',
@@ -4232,13 +4343,15 @@ AdvancedItem _polinomBolmeUret(int a, int b, int c, int w) {
           _polinom([q2, -q1, q0]),
           _polinom([q2, q1, q0 + 1]),
           _polinom([q2, q1, -q0]),
-          _polinom([q2, q1 + d1, q0]),
+          if (d1 != 0) _polinom([q2, q1 + d1, q0]),
         ],
         'Bölme sonucunda bölüm ${_polinom(T)}, kalan $kalanYazi bulunur; gerçekten '
             '($dYazi) · (${_polinom(T)}) + ($kalanYazi) = ${_polinom(p4)} olur.',
       );
     case 6:
-      final T = [q2, q1];
+      // T(1) = 0 iken P(1) kalanın değerine eşit olur ve birçok yanlış yol doğru
+      // sonucu verir; bölümün sabit terimi kaydırılır.
+      final T = [q2, q2 + q1 == 0 ? q1 + 10 : q1];
       final top = _polDeger(T, 1) * _polDeger(D, 1) + (r1 + r0);
       return _tam(
         'Bir P(x) polinomunun $dYazi ile bölümünden elde edilen bölüm '
@@ -4604,7 +4717,8 @@ AdvancedItem _isaretUret(int a, int b, int c, int w) {
     // Dört farklı kök: t1 < t2 < t3 < t4.
     final t1 = -9 + a % 13 + 30 * (w ~/ 4 % 2),
         g1 = 2 + b % 4,
-        g2 = 1 + (a + b) % 3,
+        g2 =
+            2 + (a + b) % 3, // ortadaki aralıkta en az bir tam sayı kalır
         g3 = 2 + b ~/ 4 % 5;
     final t2 = t1 + g1, t3 = t2 + g2, t4 = t3 + g3;
     final kokler = [t1, t2, t3, t4];
@@ -5248,7 +5362,7 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
             'tünele girmeye başladığı andan tamamen çıktığı ana kadar $t saniyede '
             'geçiyor. Trenin uzunluğu kaç metredir?',
         L,
-        [v * t, v * t + T, v * (t - 1) - T, T - v * t + 2 * L],
+        [v * t, v * t + T, v * (t - 1) - T, (v * 18 ~/ 5) * t - T],
         '$cevir olur. Tren $t saniyede $v · $t = ${v * t} m yol alır. Bu yol tünel '
             'boyu ile tren boyunun toplamıdır: ${v * t} − $T = $L m.',
         birim: 'm',

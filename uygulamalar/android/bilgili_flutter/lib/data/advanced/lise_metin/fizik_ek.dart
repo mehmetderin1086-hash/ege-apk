@@ -37,14 +37,18 @@ AdvancedItem _s(
       ? (k.abs() >= 200 ? 10 : (k.abs() >= 40 ? 5 : 1))
       : (k.abs() >= 20 ? 1 : (k.abs() >= 2 ? 0.5 : 0.1));
   String yaz(num x) => birimli(_n(x), unit);
+  // Komşu değerler anahtarın iki yanına simetrik eklenirse anahtar, eşit
+  // aralıklı seçeneklerin ortasındaki değer olarak sezilir. Komşular bu
+  // yüzden önce tek yönde eklenir; yön anahtarın değerine bağlıdır.
+  final yon = (k * 100).round().abs() % 7 % 2 == 0 ? 1 : -1;
   final adaylar = <String>[
     for (final h in hatalar)
       if (h is String)
         h
       else if (h is num && h.isFinite && (!pozitif || _iki(h) > 0))
         yaz(_iki(h)),
-    for (final m in const [1, -1, 2, -2, 3, 4, 5, 6])
-      if (!pozitif || k + m * adim > 0) yaz(_iki(k + m * adim)),
+    for (final m in const [1, 2, -1, 3, -2, 4, 5, 6, -3])
+      if (!pozitif || k + m * yon * adim > 0) yaz(_iki(k + m * yon * adim)),
   ];
   return secenekli(kok, yaz(k), adaylar, aciklama);
 }
@@ -288,7 +292,7 @@ String _asili(num w, int i) {
       : w <= 120
       ? const ['bir avize', 'bir saksı']
       : w <= 400
-      ? const ['bir tabela', 'bir trafik lambası']
+      ? const ['bir tabela', 'bir sahne hoparlörü']
       : const ['bir yük kasası', 'bir beton blok'];
   return adlar[i % 2];
 }
@@ -795,68 +799,76 @@ AdvancedItem _surtunmeKatsayi(int a, int b, int k) {
   }
 }
 
-/// (giriş, kısa ad, tamlayan, yüzey ikilisi, μ yüzdeleri, en küçük ve en
-/// büyük hız (0,1 m/s), en büyük durma yolu (m)). Bağlamların μ değerleri
-/// ayrıktır: aynı (μ, v) hesabı iki bağlamda yinelenmez.
-const _kayma = <(String, String, String, String, List<int>, int, int, int)>[
-  (
-    'Donmuş bir gölün yüzeyinde kaydırılan bir taş',
-    'taş',
-    'taşın',
-    'Taş ile buz',
-    [2, 3, 4],
-    10,
-    120,
-    150,
-  ),
-  (
-    'Buz pistinde vurulan bir hokey diski',
-    'disk',
-    'diskin',
-    'Disk ile buz',
-    [5, 6, 8, 10, 12],
-    20,
-    160,
-    80,
-  ),
-  (
-    'Fabrika zemininde itilip bırakılan bir koli',
-    'koli',
-    'kolinin',
-    'Koli ile zemin',
-    [20, 25, 30, 40, 50, 60],
-    4,
-    80,
-    12,
-  ),
-  (
-    'Karla kaplı düz bir alanda kayan bir kızak',
-    'kızak',
-    'kızağın',
-    'Kızak ile kar',
-    [14, 15, 16, 18],
-    20,
-    150,
-    90,
-  ),
-  (
-    'Frene basıldığında tekerlekleri kilitlenen bir otomobil',
-    'otomobil',
-    'otomobilin',
-    'Lastikler ile yol',
-    [55, 65, 70, 75, 80],
-    80,
-    300,
-    110,
-  ),
-];
+/// (özne, kısa ad, tamlayan, yüzey ikilisi, μ yüzdeleri, en küçük ve en
+/// büyük hız (0,1 m/s), en büyük durma yolu (m), yamaçtan inen kızak mı).
+/// Hız aralıkları bağlama uygundur; bağlamların μ değerleri ayrıktır: aynı
+/// (μ, v) hesabı iki bağlamda yinelenmez.
+const _kayma =
+    <(String, String, String, String, List<int>, int, int, int, bool)>[
+      (
+        'Donmuş bir gölün yüzeyinde itilen bir taş',
+        'taş',
+        'taşın',
+        'Taş ile buz',
+        [2, 3, 4],
+        10,
+        120,
+        150,
+        false,
+      ),
+      (
+        'Buz pistinde vurulan bir hokey diski',
+        'disk',
+        'diskin',
+        'Disk ile buz',
+        [5, 6, 8, 10, 12],
+        20,
+        160,
+        80,
+        false,
+      ),
+      (
+        'Toprak bir yolda frene basıldığında tekerlekleri kilitlenen bir bisiklet',
+        'bisiklet',
+        'bisikletin',
+        'Lastikler ile toprak yol',
+        [20, 25, 30, 35, 40, 45, 50, 60],
+        21,
+        80,
+        12,
+        false,
+      ),
+      (
+        'Karla kaplı bir yamaçtan kayarak inen bir kızak',
+        'kızak',
+        'kızağın',
+        'Kızak ile kar',
+        [14, 15, 16, 18],
+        20,
+        150,
+        90,
+        true,
+      ),
+      (
+        'Kuru asfalt bir yolda frene basıldığında tekerlekleri kilitlenen bir '
+            'otomobil',
+        'otomobil',
+        'otomobilin',
+        'Lastikler ile asfalt yol',
+        [55, 65, 70, 75, 80],
+        80,
+        300,
+        110,
+        false,
+      ),
+    ];
 
 /// Her bağlam için (μ yüzdesi, hız (0,1 m/s)) ikilileri: durma yolu
 /// v²/(2μg) ve süresi v/(μg) iki ondalıkta kesin; yol, süre, hız, μ ve g
 /// birbirine eşit değil (yanlış nicelik yazan öğrenci doğruyu bulamasın).
 /// v₀ = 1 ve 2 m/s alınmaz: v ile v² ya da v²/2 ile v aynı sayı olurdu.
 final _kaymaListesi = [
-  for (final (_, _, _, _, mus, v0, v1, dmax) in _kayma)
+  for (final (_, _, _, _, mus, v0, v1, dmax, _) in _kayma)
     [
       for (final mu in mus)
         for (var v = v0; v <= v1; v++)
@@ -880,7 +892,7 @@ final _kaymaListesi = [
 /// Sürtünmeli yatay yüzeyde kayarak durma.
 AdvancedItem _kayarakDurma(int a, int b, int k) {
   final v = b % 4, q = b ~/ 4; // q: bağlam 0 … 4
-  final (giris, ad, tamlayan, yuzey, _, _, _, _) = _kayma[q];
+  final (ozne, ad, tamlayan, yuzey, _, _, _, _, yamac) = _kayma[q];
   final (mu100, v10) = _yay(_kaymaListesi[q], a + 25 * k, 75);
   final mu = mu100 / 100, v0 = v10 / 10, ivme = mu100 / 10;
   final d = v10 * v10 / (20 * mu100), t = v10 / mu100;
@@ -888,12 +900,19 @@ AdvancedItem _kayarakDurma(int a, int b, int k) {
       'Yatay yüzeyde sürtünme kuvveti μ·m·g olduğundan yavaşlama ivmesi '
       'a = μ·g = ${_n(mu)}·10 = ${_n(ivme)} m/s² olur.';
   const yalniz = 'yalnız sürtünme kuvvetinin etkisiyle yavaşlayarak';
+  // Kızak yamaçtan inip düz alana girer; öbür cisimler yatay yüzeyde
+  // kaymaya başlar.
+  final hizla = yamac
+      ? '$ozne, yamacın eteğindeki düz alana ${_n(v0)} m/s hızla girdikten '
+            'sonra $yalniz'
+      : '$ozne, ${_n(v0)} m/s hızla kaymaya başladıktan sonra $yalniz';
+  final baslangic = yamac ? 'düz alana girdikten' : 'kaymaya başladıktan';
   switch (v) {
     case 0:
       return _s(
-        '$giris, ${_n(v0)} m/s hızla kaymaya başladıktan sonra $yalniz '
-            'duruyor. $yuzey arasındaki kinetik sürtünme katsayısı ${_n(mu)} '
-            'olduğuna göre $ad duruncaya kadar kaç metre yol alır? $_g10',
+        '$hizla duruyor. $yuzey arasındaki kinetik sürtünme katsayısı '
+            '${_n(mu)} olduğuna göre $ad duruncaya kadar '
+            '${yamac ? 'düz alanda ' : ''}kaç metre yol alır? $_g10',
         d,
         [2 * d, 10 * d, v0 / (2 * ivme)],
         '$ivmeYazi v₀² = 2·a·x bağıntısından x = ${_n(v0)}² / (2·${_n(ivme)}) '
@@ -902,9 +921,9 @@ AdvancedItem _kayarakDurma(int a, int b, int k) {
       );
     case 1:
       return _s(
-        '$giris, ${_n(v0)} m/s hızla kaymaya başladıktan sonra $yalniz '
-            'duruyor. $yuzey arasındaki kinetik sürtünme katsayısı ${_n(mu)} '
-            'olduğuna göre $ad kaymaya başladıktan kaç saniye sonra durur? $_g10',
+        '$hizla duruyor. $yuzey arasındaki kinetik sürtünme katsayısı '
+            '${_n(mu)} olduğuna göre $ad $baslangic kaç saniye sonra durur? '
+            '$_g10',
         t,
         [v0 / mu, t / 2, 2 * t],
         '$ivmeYazi v = v₀ − a·t = 0 eşitliğinden t = ${_n(v0)} / ${_n(ivme)} '
@@ -913,9 +932,8 @@ AdvancedItem _kayarakDurma(int a, int b, int k) {
       );
     case 2:
       return _s(
-        '$giris, ${_n(v0)} m/s hızla kaymaya başladıktan sonra $yalniz '
-            '${_n(d)} m yol alıp duruyor. $yuzey arasındaki kinetik sürtünme '
-            'katsayısı kaçtır? $_g10',
+        '$hizla ${_n(d)} m yol alıp duruyor. $yuzey arasındaki kinetik '
+            'sürtünme katsayısı kaçtır? $_g10',
         mu,
         [2 * mu, ivme, mu / 2],
         'v₀² = 2·a·x bağıntısından yavaşlama ivmesi a = ${_n(v0)}² / '
@@ -924,9 +942,11 @@ AdvancedItem _kayarakDurma(int a, int b, int k) {
       );
     default:
       return _s(
-        '$giris, $yalniz ${_n(d)} m yol alıp duruyor. $yuzey arasındaki '
-            'kinetik sürtünme katsayısı ${_n(mu)} olduğuna göre $tamlayan kaymaya '
-            'başladığı andaki hızı kaç m/s idi? $_g10',
+        '$ozne, ${yamac ? 'yamacın eteğindeki düz alana girdikten sonra ' : ''}'
+            '$yalniz ${_n(d)} m yol alıp duruyor. $yuzey arasındaki kinetik '
+            'sürtünme katsayısı ${_n(mu)} olduğuna göre $tamlayan '
+            '${yamac ? 'düz alana girdiği' : 'kaymaya başladığı'} andaki hızı '
+            'kaç m/s idi? $_g10',
         v0,
         [v0 * v0, v0 * v0 / 2, 2 * v0],
         '$ivmeYazi v₀² = 2·a·x = 2·${_n(ivme)}·${_n(d)} = ${_n(v0 * v0)} '
@@ -953,46 +973,47 @@ final _f03 = lmAile(
 
 // ─────────────────────── 4 · Merkezî esnek çarpışma ─────────────────────────
 
-/// Duran cisme merkezî esnek çarpışma: (m_K, m_L, v) üçlüleri; çarpışmadan
-/// sonraki hızlar santimetre/saniye birimiyle tam sayıdır (iki ondalık).
+/// Duran cisme merkezî esnek çarpışma: (m_K, m_L, 2·v) üçlüleri; ilk hız
+/// 0,5 … 18 m/s (yarım m/s adımla). Çarpışmadan sonraki hızlar
+/// santimetre/saniye birimiyle tam sayıdır (iki ondalık).
 final _esnek = [
   for (var m1 = 1; m1 <= 25; m1++)
     for (var m2 = 1; m2 <= 25; m2++)
       // m_L = 2·m_K iken K cisminin hızı kenetlenme hızına, m_L = 3·m_K
       // iken L cisminin hızına eşit çıkar; bu oranlar alınmaz.
       if (m1 != m2 && m2 != 2 * m1 && m2 != 3 * m1)
-        for (var v = 1; v <= 30; v++)
-          if (200 * m1 * v % (m1 + m2) == 0) (m1, m2, v),
+        for (var v2 = 1; v2 <= 36; v2++)
+          if (100 * m1 * v2 % (m1 + m2) == 0) (m1, m2, v2),
 ];
 
-int _vL(int m1, int m2, int v) => 200 * m1 * v ~/ (m1 + m2); // cm/s
-int _vK(int m1, int m2, int v) => _vL(m1, m2, v) - 100 * v; // cm/s
+int _vL(int m1, int m2, int v2) => 100 * m1 * v2 ~/ (m1 + m2); // cm/s
+int _vK(int m1, int m2, int v2) => _vL(m1, m2, v2) - 50 * v2; // cm/s
 
-bool _kokteYok(int santi, List<int> sayilar) =>
-    !sayilar.any((x) => 100 * x == santi);
+bool _kokteYok(int santi, (int, int, int) t) =>
+    !_icinde(santi / 100, [t.$1, t.$2, t.$3 / 2]);
 
 // Hız sorularında yalnız kütle oranı ve ilk hız sonucu belirler.
 final _esnekL = _tekil([
-  for (final (m1, m2, v) in _esnek)
-    if (_kokteYok(_vL(m1, m2, v), [m1, m2, v])) (m1, m2, v),
+  for (final t in _esnek)
+    if (_kokteYok(_vL(t.$1, t.$2, t.$3), t)) t,
 ], (t) => (_oran(t.$1, t.$2), t.$3));
 final _esnekK = _tekil([
-  for (final (m1, m2, v) in _esnek)
-    if (_kokteYok(_vK(m1, m2, v).abs(), [m1, m2, v])) (m1, m2, v),
+  for (final t in _esnek)
+    if (_kokteYok(_vK(t.$1, t.$2, t.$3).abs(), t)) t,
 ], (t) => (_oran(t.$1, t.$2), t.$3));
 
 /// Kinetik enerjisi (J) iki ondalıkta kesin ve kökteki sayılardan farklı.
-bool _enerjiUygun(int m, int santi, List<int> sayilar) =>
+bool _enerjiUygun(int m, int santi, (int, int, int) t) =>
     m * santi * santi % 200 == 0 &&
-    !sayilar.any((x) => 20000 * x == m * santi * santi);
+    !_icinde(m * santi * santi / 20000, [t.$1, t.$2, t.$3 / 2]);
 
 final _esnekEL = [
-  for (final (m1, m2, v) in _esnek)
-    if (_enerjiUygun(m2, _vL(m1, m2, v), [m1, m2, v])) (m1, m2, v),
+  for (final t in _esnek)
+    if (_enerjiUygun(t.$2, _vL(t.$1, t.$2, t.$3), t)) t,
 ];
 final _esnekEK = [
-  for (final (m1, m2, v) in _esnek)
-    if (_enerjiUygun(m1, _vK(m1, m2, v), [m1, m2, v])) (m1, m2, v),
+  for (final t in _esnek)
+    if (_enerjiUygun(t.$1, _vK(t.$1, t.$2, t.$3), t)) t,
 ];
 
 final _f04 = lmAile(
@@ -1004,25 +1025,25 @@ final _f04 = lmAile(
   (a, b, c) {
     final k = c ~/ 3, f = c % 3;
     final n = a + 25 * b + 500 * k;
-    final (m1, m2, v) = switch (f) {
+    final (m1, m2, v2) = switch (f) {
       0 => _yay(_esnekL, n, 2000),
       1 => _yay(_esnekK, n, 1500),
       _ => n.isEven ? _yay(_esnekEL, n ~/ 2, 750) : _yay(_esnekEK, n ~/ 2, 750),
     };
-    final s = m1 + m2;
-    final vl = _vL(m1, m2, v) / 100, vk = _vK(m1, m2, v) / 100;
+    final s = m1 + m2, v = v2 / 2;
+    final vl = _vL(m1, m2, v2) / 100, vk = _vK(m1, m2, v2) / 100;
     final ortak = m1 * v / s; // kenetlenme sanan öğrencinin hızı
     final giris =
-        'Sürtünmesiz yatay bir düzlemde $v m/s hızla ilerleyen $m1 kg kütleli '
-        'K cismi, aynı doğrultu üzerinde durmakta olan $m2 kg kütleli L cismine '
-        'merkezî ve esnek olarak çarpıyor.';
+        'Sürtünmesiz yatay bir düzlemde ${_n(v)} m/s hızla ilerleyen $m1 kg '
+        'kütleli K cismi, aynı doğrultu üzerinde durmakta olan $m2 kg kütleli L '
+        'cismine merkezî ve esnek olarak çarpıyor.';
     const kutleler = 'K cisminin kütlesi m₁, L cisminin kütlesi m₂ olsun.';
     final lHiz =
         '$kutleler Momentum ve kinetik enerjinin korunumundan L cisminin '
-        'hızı 2·m₁·v / (m₁ + m₂) = 2·$m1·$v / $s = ${_n(vl)} m/s bulunur.';
+        'hızı 2·m₁·v / (m₁ + m₂) = 2·$m1·${_n(v)} / $s = ${_n(vl)} m/s bulunur.';
     final kHiz =
         '$kutleler Momentum ve kinetik enerjinin korunumundan K cisminin '
-        'hızı (m₁ − m₂)·v / (m₁ + m₂) = ($m1 − $m2)·$v / $s = ${_n(vk)} m/s '
+        'hızı (m₁ − m₂)·v / (m₁ + m₂) = ($m1 − $m2)·${_n(v)} / $s = ${_n(vk)} m/s '
         'bulunur. ${vk < 0 ? 'Eksi işaret K cisminin geri döndüğünü gösterir; '
                   'hızının büyüklüğü ${_n(-vk)} m/s olur.' : 'K cismi aynı '
                   'yönde yavaşlayarak ilerler.'}';
@@ -1098,12 +1119,13 @@ final _top = _tekil([
 ], (t) => (_oran(t.$2, t.$1), t.$3));
 
 /// Kayıktan atlama: (insan kg, kayık kg, kayığın ilk hızı ×2, atlama hızı ×2);
-/// ilk hız 0 ise kayık durgundur. Yanıtlar iki ondalıkta kesin.
+/// ilk hız 0 ise kayık durgundur. Yanıtlar iki ondalıkta kesin. Kayıktan
+/// yatay atlama hızı 1 … 4 m/s, kayığın son hızı en çok 5 m/s'dir.
 List<(int, int, int, int)> _kayikListesi(int tur) => [
-  for (var m = 40; m <= 90; m += 5)
+  for (var m = 40; m <= 90; m += 2)
     for (var kayik = 60; kayik <= 300; kayik += (tur == 0 ? 10 : 20))
       for (var v02 = (tur == 0 ? 0 : 1); v02 <= (tur == 0 ? 0 : 6); v02++)
-        for (var u2 = 2; u2 <= 12; u2++)
+        for (var u2 = 2; u2 <= 8; u2++)
           if (_kayikUygun(tur, m, kayik, v02, u2)) (m, kayik, v02, u2),
 ];
 
@@ -1123,8 +1145,8 @@ bool _kayikUygun(int tur, int m, int kayik, int v02, int u2) {
   final h = _kayikHizi(tur, m, kayik, v02, u2);
   if (h == null) return false;
   final b = h.abs();
-  if (tur == 0 && (b < 0.2 || b > 5)) return false;
-  if (b > 8) return false;
+  if (tur == 0 && (b < 0.2 || b > 4)) return false;
+  if (b > 5) return false;
   if (_icinde(b, [m, kayik, u2 / 2, v02 / 2])) return false;
   if (tur == 0) return true;
   // Yanlış yollar (işaret hatası, ilk hareketi ya da atlamayı yok sayma)
@@ -1221,10 +1243,12 @@ AdvancedItem _geriTepme(int a, int b, int k) {
         '$mg g = ${_n(mg / 1000, 3)} kg olduğundan';
     if (v == 0) {
       return _s(
-        '$giris $hiz m/s hızla atılıyor. Tüfeğin geri tepme hızı kaç m/s '
-            'olur?',
+        '$giris yere göre $hiz m/s hızla atılıyor. Tüfeğin geri tepme hızı '
+            'kaç m/s olur?',
         geri,
-        [mg * hiz / tm, geri * 10],
+        // Gramı kilograma çevirmemek, 10 kat kaydırmak, momentumu (ara
+        // sonucu) yanıt sanmak, oranı ters kurmak.
+        [mg * hiz / tm, geri * 10, mg * hiz / 1000, 1 / geri],
         '$cozum ${_n(mg / 1000, 3)}·$hiz = ${_n(tm)}·V, V = ${_n(geri)} m/s '
             'bulunur.',
         unit: 'm/s',
@@ -1232,7 +1256,7 @@ AdvancedItem _geriTepme(int a, int b, int k) {
     }
     return _s(
       '$giris atıldığında tüfek ${_n(geri)} m/s hızla geri tepiyor. Merminin '
-          'namludan çıkış hızı kaç m/s olur?',
+          'yere göre hızı kaç m/s olur?',
       hiz,
       [tm * geri / mg, hiz / 10, hiz * 10],
       '$cozum ${_n(mg / 1000, 3)}·v = ${_n(tm)}·${_n(geri)}, v = $hiz m/s '
@@ -1250,16 +1274,17 @@ AdvancedItem _geriTepme(int a, int b, int k) {
       'm_gülle·v_gülle = m_top·V olur:';
   if (v == 2) {
     return _s(
-      '$giris $hiz m/s hızla atılıyor. Topun geri tepme hızı kaç m/s olur?',
+      '$giris yere göre $hiz m/s hızla atılıyor. Topun geri tepme hızı kaç m/s '
+          'olur?',
       geri,
-      [mm * hiz / (mt + mm), geri * 10],
+      [mm * hiz / (mt + mm), geri * 10, mm * hiz, 1 / geri],
       '$cozum $mm·$hiz = $mt·V, V = ${_n(geri)} m/s.',
       unit: 'm/s',
     );
   }
   return _s(
     '$giris atıldığında top ${_n(geri)} m/s hızla geri tepiyor. Güllenin '
-        'namludan çıkış hızı kaç m/s olur?',
+        'yere göre hızı kaç m/s olur?',
     hiz,
     [(mt + mm) * geri / mm, hiz / 10, hiz * 10],
     '$cozum $mm·v = $mt·${_n(geri)}, v = $hiz m/s.',
@@ -1291,7 +1316,7 @@ AdvancedItem _kayiktanAtlama(int a, int b, int k) {
     }
     return _s(
       '$giris atladığında kayık ters yönde ${_n(hiz)} m/s hızla hareket '
-          'etmeye başlıyor. Suyun direnci önemsiz olduğuna göre kişinin kıyıya '
+          'etmeye başlıyor. Suyun direnci önemsiz sayılırsa kişinin kıyıya '
           'göre atlama hızı kaç m/s olur?',
       u,
       [m * hiz / kayik, (kayik + m) * hiz / m, hiz],
@@ -1469,12 +1494,15 @@ AdvancedItem _eylemsizlik(int a, int b, int k) {
         x += 50; // 60 … 100, sonra 110 … 150 cm
       }
       final boy = x + y, i = i0();
+      final cisimler = m1 == m2
+          ? 'her birinin kütlesi $m1 kg olan K ve L noktasal cisimleri'
+          : 'kütlesi $m1 kg olan K ve kütlesi $m2 kg olan L noktasal cisimleri';
       return _s(
-        'Uzunluğu $boy cm olan ağırlığı önemsiz bir çubuğun uçlarına kütlesi '
-            '$m1 kg olan K ve kütlesi $m2 kg olan L noktasal cisimleri takılmıştır. '
-            'Çubuk, K cisminden $x cm uzaktaki bir noktadan geçen ve çubuğa dik '
-            'olan bir eksen etrafında döndürülüyor. Sistemin bu eksene göre '
-            'eylemsizlik momenti kaç kg·m² olur?',
+        'Uzunluğu $boy cm olan ağırlığı önemsiz bir çubuğun uçlarına $cisimler '
+            'takılmıştır. Çubuk, K ile L arasında ve K cisminden $x cm uzakta '
+            'bulunan bir noktadan geçen, çubuğa dik bir eksen etrafında '
+            'döndürülüyor. Sistemin bu eksene göre eylemsizlik momenti kaç kg·m² '
+            'olur?',
         i,
         yanlis(),
         'L cismi eksenden $boy − $x = $y cm uzaktadır. Uzaklıklar metreye '
@@ -1775,8 +1803,8 @@ AdvancedItem _ipDelik(int a, int b, int k) {
       final l = m10 * hiz * r10 / 100;
       return _s(
         '$masa ${r10 * 10} cm yarıçaplı çembersel yörüngede $hiz m/s hızla '
-            'dolanıyor. Cismin kütlesi ${_n(m10 / 10)} kg olduğuna göre deliğe '
-            'göre açısal momentumunun büyüklüğü kaç kg·m²/s olur?',
+            'dolanıyor. Cismin kütlesi ${_n(m10 / 10)} kg ise deliğe göre '
+            'açısal momentumunun büyüklüğü kaç kg·m²/s olur?',
         l,
         [l * 100, m10 * hiz / 10, m10 * hiz * r10 * r10 / 1000],
         'Çembersel yörüngedeki noktasal cismin açısal momentumu L = m·v·r '
@@ -1888,6 +1916,17 @@ const _yakinUzak = <(int, int)>[
   (7, 9),
 ];
 
+/// En yakın konumdaki hız adayları (yüzde bir km/s): v = q·w, en uzak
+/// konumdaki hız p·w; w 0,05 adımlı, v 8 … 60 km/s. Uzaklıklar r cinsinden
+/// verildiğinden yıldızın kütlesi için gerçek dışı bir değer ima edilmez.
+final _keplerHiz = [
+  for (final (p, q) in _yakinUzak)
+    [
+      for (var w = 5; q * w <= 6000; w += 5)
+        if (q * w >= 800 && !_icinde(p * w / 100, [p, q, q * w / 100])) q * w,
+    ],
+];
+
 String _ikiGezegen(String bilinen) =>
     'Bir yıldızın çevresinde çembersel yörüngelerde dolanan X ve Y '
     'gezegenlerinden $bilinen';
@@ -1932,7 +1971,12 @@ AdvancedItem _keplerUcuncu(int a, int b, int k, bool periyotSor) {
         'katıdır.')} X gezegeninin yörünge yarıçapı ${_n(x)} AB olduğuna göre '
         'Y gezegeninin yörünge yarıçapı kaç AB olur? (AB: astronomik birim)',
     y,
-    [x * q * q * q / (p * p * p), x * q / p],
+    // r'yi T ile orantılı sanmak, yalnız oranı yazmak, küp kökü almayı unutmak.
+    [
+      x * q * q * q / (p * p * p),
+      x * q / p,
+      x * math.pow(q, 6) / math.pow(p, 6),
+    ],
     '$tanim T₂ / T₁ = $kup olduğundan (r₂ / r₁)³ = $altinci ve r₂ / r₁ = '
         '$kare bulunur: r₂ = ${_n(x)}·$kare = ${_n(y)} AB.',
   );
@@ -1957,20 +2001,18 @@ AdvancedItem _keplerIkinci(int a, int b, int k) {
     );
   }
   final (p, q) = _yakinUzak[b ~/ 2];
-  final ry = p * (k + 1) / 10, ru = q * (k + 1) / 10; // AB
-  final w = (a + 5) / 5; // 1 … 5,8 km/s
-  final vy = q * w, vu = p * w;
+  final v100 = _yay(_keplerHiz[b ~/ 2], a + 25 * k, 75);
+  final vy = v100 / 100, vu = v100 * p / (100 * q);
   return _s(
     'Bir yıldızın çevresinde eliptik yörüngede dolanan bir gezegenin yıldıza '
-        'en yakın olduğu konumdaki uzaklığı ${_n(ry)} AB, en uzak olduğu '
-        'konumdaki uzaklığı ${_n(ru)} AB olarak veriliyor. Gezegen en yakın '
-        'konumdan ${_n(vy)} km/s hızla geçtiğine göre en uzak konumdan kaç km/s '
-        'hızla geçer? (AB: astronomik birim)',
+        'en yakın olduğu konumdaki uzaklığı ${p}r, en uzak olduğu konumdaki '
+        'uzaklığı ${q}r olarak veriliyor. Gezegen en yakın konumdan ${_n(vy)} '
+        'km/s hızla geçtiğine göre en uzak konumdan kaç km/s hızla geçer?',
     vu,
-    [vy * ru / ry, vy * ry * ry / (ru * ru), vy],
+    [vy * q / p, vy * p * p / (q * q), vy],
     'Kepler yasasına göre alan hızı sabittir. En yakın ve en uzak konumlarda '
         'hız yıldıza uzaklığa dik olduğundan v₁·r₁ = v₂·r₂ yazılır: v₂ = '
-        '${_n(vy)}·${_n(ry)} / ${_n(ru)} = ${_n(vu)} km/s.',
+        '${_n(vy)}·${p}r / ${q}r = ${_n(vu)} km/s.',
   );
 }
 
@@ -2207,19 +2249,48 @@ const _tama = 'sonucu en yakın tam sayıya yuvarlayınız.';
 String _u931Yuvarla(String yuvarlama) =>
     '(1 u kütleye karşılık gelen enerji 931 MeV alınız; $yuvarlama)';
 
+/// pay / payda değerinin [basamak] ondalığa yuvarlanmışı (yarımlar yukarı).
+/// Çeldiriciler de kökün istediği basamakla yazılsın diye kullanılır.
+double _yukari(int pay, int payda, int basamak) {
+  final olcek = math.pow(10, basamak).toInt();
+  return ((2 * pay * olcek + payda) ~/ (2 * payda)) / olcek;
+}
+
+/// pay / payda değerinin [basamak] ondalıkta kesilmişi (yuvarlamak yerine
+/// basamak atan öğrencinin yanıtı).
+double _kesik(int pay, int payda, int basamak) {
+  final olcek = math.pow(10, basamak).toInt();
+  return (pay * olcek ~/ payda) / olcek;
+}
+
+/// Hafif çekirdeklerin füzyonunda toplam kütle (yüz binde bir u): kütle
+/// numarası 4 … 12 olan bir toplamın üstündeki fazlalık 0,005 … 0,033 u
+/// arasındadır (ör. ²H + ³H için 5,03015 u). Oluşan taneciklerin fazlalığı da
+/// en az 0,0026 u kalır (⁴He çekirdeği gibi).
+int _fuzyonKutlesi(int m, int dm) {
+  final a = 4 + m % 9;
+  final alt = dm + 260, ust = 3300;
+  return a * 100000 + alt + (389 * m) % (ust - alt + 1);
+}
+
 /// Füzyon ve fisyon tepkimesinde açığa çıkan enerji: kütle farkı her sıra
 /// numarasında farklıdır (füzyonda yüz binde, fisyonda on binde bir u).
 AdvancedItem _tepkimeEnerjisi(int a, int b, int k) {
   final m = a + 25 * b; // 0 … 499
   final fisyon = k == 1;
   final payda = fisyon ? 10000 : 100000;
+  final basamak = fisyon ? 0 : 1;
   var dm = fisyon ? 1500 + 2 * m : 200 + 3 * m;
-  var e = _yuvarla(931 * dm, payda, fisyon ? 0 : 1);
+  var e = _yuvarla(931 * dm, payda, basamak);
   if (e == null) {
     dm += 1;
-    e = _yuvarla(931 * dm, payda, fisyon ? 0 : 1)!;
+    e = _yuvarla(931 * dm, payda, basamak)!;
   }
-  final x = fisyon ? 2360000 + 811 * m : 402820 + 1601 * m;
+  // Fisyonda tepkimeye girenler ²³⁵U + n (236,05 u), ²³³U + n (234,05 u) ya
+  // da ²³⁹Pu + n (240,06 u) toplamlarına yakındır.
+  final x = fisyon
+      ? const [2360000, 2340000, 2400000][m % 3] + 480 + (37 * m) % 141
+      : _fuzyonKutlesi(m, dm);
   final y = x - dm;
   String kutle(int v) => fisyon ? _u(v) : _u5(v);
   final tam = 931 * dm / payda;
@@ -2230,9 +2301,13 @@ AdvancedItem _tepkimeEnerjisi(int a, int b, int k) {
         'tepkimede açığa çıkan enerji yaklaşık kaç MeV olur? '
         '${_u931Yuvarla(fisyon ? _tama : _onda)}',
     e,
-    fisyon
-        ? [e * 10, (e / 10).roundToDouble(), dm / payda]
-        : [e * 10, e / 10, dm / payda],
+    // Kütle farkını bir basamak kaydırmak ve yuvarlamak yerine kesmek;
+    // hepsi kökün istediği basamakla yazılır.
+    [
+      _yukari(9310 * dm, payda, basamak),
+      _yukari(931 * dm, 10 * payda, basamak),
+      _kesik(931 * dm, payda, basamak),
+    ],
     'Kütle farkı Δm = ${kutle(x)} − ${kutle(y)} = ${kutle(dm)} u olur. Açığa '
         'çıkan enerji E = Δm·931 = ${kutle(dm)}·931 = ${_n(tam, 5)} MeV, yani '
         'yaklaşık ${_n(e)} MeV bulunur.',
@@ -2252,9 +2327,8 @@ AdvancedItem _fuzyonKinetik(int a, int b, int k) {
     kc += 1;
     son = _yuvarla(kc * 1000 + 931 * dm, 100000, 1)!;
   }
-  final x = 301510 + 1031 * m, y = x - dm;
+  final x = _fuzyonKutlesi(m, dm), y = x - dm;
   final kin = kc / 100, q = 931 * dm / 100000;
-  final qYuvarlak = _yuvarla(931 * dm, 100000, 1) ?? _iki(q);
   return _s(
     'Bir füzyon tepkimesinde tepkimeye giren çekirdeklerin toplam kütlesi '
         '${_u5(x)} u, oluşan taneciklerin toplam kütlesi ${_u5(y)} u olarak '
@@ -2262,7 +2336,13 @@ AdvancedItem _fuzyonKinetik(int a, int b, int k) {
         '${_n(kin)} MeV olduğuna göre tepkimeden sonra oluşan taneciklerin toplam '
         'kinetik enerjisi yaklaşık kaç MeV olur? ${_u931Yuvarla(_onda)}',
     son,
-    [qYuvarlak, _iki((q - kin).abs()), _iki(kin + dm / 100000)],
+    // Giren kinetik enerjiyi unutmak ya da çıkarmak, kütle farkını bir
+    // basamak kaydırmak; hepsi onda bire yuvarlanmış.
+    [
+      _yukari(931 * dm, 100000, 1),
+      _yukari((931 * dm - kc * 1000).abs(), 100000, 1),
+      _yukari(931 * dm + kc * 10000, 1000000, 1),
+    ],
     'Kütle farkı Δm = ${_u5(x)} − ${_u5(y)} = ${_u5(dm)} u olup Δm·931 = '
         '${_n(q, 5)} MeV enerjiye karşılık gelir. Enerji korunumundan oluşan '
         'taneciklerin toplam kinetik enerjisi ${_n(kin)} + ${_n(q, 5)} = '
@@ -2355,10 +2435,12 @@ AdvancedItem _baglanmaEnerjisi(int a, int b, int k) {
     dm += 1;
     e = hesap();
   }
-  final toplam = 10078 * kutle + (13 * j) % 97; // nükleonların toplam kütlesi
+  // Nükleonların toplam kütlesi: proton 1,00728 u, nötron 1,00866 u olduğundan
+  // nükleon başına yaklaşık 1,0080 u (ağır çekirdeklerde biraz fazla).
+  final toplam = 10080 * kutle + kutle ~/ 8 + (13 * j) % 97;
   final cekirdek = toplam - dm;
   final tam = 931 * dm / 10000;
-  final toplamYuvarlak = _yuvarla(931 * dm, 10000, 0) ?? tam.roundToDouble();
+  final toplamYuvarlak = _yukari(931 * dm, 10000, 0);
   final giris =
       'Kütle numarası $kutle olan bir çekirdeği oluşturan proton ve nötronların '
       'serbest hâldeki toplam kütlesi ${_u(toplam)} u, çekirdeğin kütlesi ise '
@@ -2371,7 +2453,13 @@ AdvancedItem _baglanmaEnerjisi(int a, int b, int k) {
       '$giris Bu çekirdeğin nükleon başına bağlanma enerjisi yaklaşık kaç MeV '
           'olur? ${_u931Yuvarla('sonucu en yakın yüzde birliğe yuvarlayınız.')}',
       e,
-      [toplamYuvarlak],
+      // Nükleon sayısına bölmeyi unutmak, kütle eksikliğini bir basamak
+      // kaydırmak; hepsi kökün istediği basamakla.
+      [
+        toplamYuvarlak,
+        _yukari(9310 * dm, 10000 * kutle, 2),
+        _yukari(931 * dm, 100000 * kutle, 2),
+      ],
       '$eksik bulunur. Nükleon başına düşen bağlanma enerjisi '
           '${_n(tam, 4)} / $kutle ≈ ${_n(e)} MeV olur.',
     );
@@ -2380,7 +2468,11 @@ AdvancedItem _baglanmaEnerjisi(int a, int b, int k) {
     '$giris Bu çekirdeğin bağlanma enerjisi yaklaşık kaç MeV olur? '
         '${_u931Yuvarla(_tama)}',
     e,
-    [(e / kutle).roundToDouble(), e * 10, dm / 10000],
+    [
+      _yukari(931 * dm, 10000 * kutle, 0),
+      _yukari(9310 * dm, 10000, 0),
+      _yukari(931 * dm, 100000, 0),
+    ],
     '$eksik, yani yaklaşık ${_n(e)} MeV bulunur.',
   );
 }
@@ -2403,7 +2495,8 @@ final _f09 = lmAile(
 
 // ─────────────────────────── 10 · Bohr atom modeli ───────────────────────────
 
-const _eForm = '(Hidrojen atomunda Eₙ = −13,6 / n² eV)';
+const _eForm =
+    '(Hidrojen atomunda n. enerji düzeyinin enerjisini −13,6 / n² eV alınız.)';
 
 const _alt = {1: '₁', 2: '₂', 4: '₄'};
 
@@ -2491,11 +2584,15 @@ AdvancedItem _fotonIyonlasma(int a, int b, int k) {
         'atomdan kopan elektronun kinetik enerjisi ${_n(d)} eV oluyor. Soğurulan '
         'fotonun enerjisi kaç eV olur? $_eForm',
     foton,
+    // Temel hâlin iyonlaşma enerjisini kullanmak, işaret hatası (iyonlaşma
+    // enerjisinden kinetik enerjiyi çıkarmak), yalnız iyonlaşma enerjisi.
     [
       if (m != 1) _iki(d + 13.6),
       if (d > ei) _iki(d - ei),
+      if (ei > d) _iki(ei - d),
       ei,
       if (m == 2) _iki(d + 6.8),
+      d,
     ],
     '$aciklama Fotonun enerjisi iyonlaşma enerjisi ile elektronun kinetik '
         'enerjisinin toplamıdır: ${_n(ei)} + ${_n(d)} = ${_n(foton)} eV.',
@@ -2506,7 +2603,8 @@ AdvancedItem _carpismaIyonlasma(int a, int b, int k) {
   final m = const [1, 2, 4][b % 3], q = b ~/ 3; // q: 0 … 6
   final ei = _eDuzey[m]!;
   final kopan = (1 + a) / 10; // 0,1 … 2,5 eV
-  final kalan = (1 + q + 7 * k) / 10 + 0.05; // 0,15 … 2,15 eV
+  // 0,15 … 2,15 eV; a, b ve c'nin her biri yanıtı değiştirir.
+  final kalan = (15 + 10 * ((q + 7 * k + 3 * a) % 21)) / 100;
   final kin = _iki(ei + kopan + kalan);
   return _s(
     '${_duzeydeki(m)} bir hidrojen atomuna kinetik enerjisi ${_n(kin)} eV olan '
@@ -2543,12 +2641,6 @@ final _f10 = lmAile(
 
 // ───────────────────────── 11 · de Broglie dalga boyu ─────────────────────────
 
-const _parcacikAdi = [
-  'elektronun',
-  'protonun',
-  'nötronun',
-  'alfa parçacığının',
-];
 const _goreliDegil = '(Göreli etkiler önemsizdir.)';
 
 /// Tek parçacıkta hız, momentum ya da kinetik enerji değişince dalga boyu.
@@ -2566,10 +2658,17 @@ AdvancedItem _dalgaBoyuDegisimi(int a, int b, int k) {
     _ => u0,
   };
   if (v == 2 && _icinde(u / 100, [kat, kat * u / 100])) u += 130;
-  final ad = _parcacikAdi[(a + b) % 4];
   final buyur = v == 1; // dalga boyu büyür
   final ilk = buyur ? u / 100 : kat * u / 100,
       son = buyur ? kat * u / 100 : u / 100;
+  // Parçacık dalga boyuna göre seçilir: 0,3 nm üstü proton için, 3 nm üstü
+  // elektron için alışılmadık ölçüde yavaş bir hareket demektir; yavaş
+  // (soğuk) nötronlarda ise bu dalga boyları olağandır.
+  final enBuyuk = math.max(ilk, son);
+  final adlar = enBuyuk <= 0.3
+      ? const ['elektronun', 'protonun', 'nötronun']
+      : (enBuyuk <= 3 ? const ['elektronun', 'nötronun'] : const ['nötronun']);
+  final ad = adlar[(a + b) % adlar.length];
   final (degisim, neden) = switch (v) {
     0 => ('hızı $kat katına çıkarılırsa', 'hızla ters orantılıdır'),
     1 => (
@@ -2681,6 +2780,24 @@ const _enerjiKati = <(int, int)>[
   (5, 2),
 ];
 
+/// Elektron için (s onda bir eV, w pm): E₁ = p²·s, E₂ = q²·s (2 … 600 eV),
+/// λ₁ = q·w, λ₂ = p·w. Verilen λ₁, elektronun gerçek dalga boyunun
+/// (1226,4 / √E pm) %1 yakınındadır; yanıt kökteki sayılardan farklıdır.
+(int, int)? _elektronAdayi(int p, int q, int s10) {
+  final e1 = p * p * s10, e2 = q * q * s10; // onda bir eV
+  if (e1 < 20 || e2 < 20 || e1 > 6000 || e2 > 6000) return null;
+  final gercek = 1226.4 / (p * q * math.sqrt(s10 / 10));
+  final w = gercek.round();
+  if (w < 1 || (w - gercek).abs() > 0.01 * gercek) return null;
+  if (_icinde(p * w, [e1 / 10, e2 / 10, q * w])) return null;
+  return (s10, w);
+}
+
+final _elektronEnerji = [
+  for (final (p, q) in _enerjiKati)
+    [for (var s10 = 1; s10 <= 6000; s10++) ?_elektronAdayi(p, q, s10)],
+];
+
 AdvancedItem _dalgaBoyuOrani(int a, int b, int k) {
   final n = a + 25 * b + 500 * k; // 0 … 1499
   final (m1, m2, v1, v2) = _yay(_ikiParcacik, n, 1500);
@@ -2716,20 +2833,19 @@ AdvancedItem _dalgaBoyuEnerji(int a, int b, int k) {
     );
   }
   final (p, q) = _enerjiKati[b ~/ 2];
-  final s = 1 + a % 5 + 5 * k; // enerji birimi (eV)
-  final w = 1 + a + 25 * k; // dalga boyu birimi (0,01 nm)
-  final e1 = p * p * s, e2 = q * q * s;
-  final l1 = q * w / 100, l2 = p * w / 100;
+  final (s10, w) = _yay(_elektronEnerji[b ~/ 2], a + 25 * k, 75);
+  final e1 = _n(p * p * s10 / 10), e2 = _n(q * q * s10 / 10);
+  final l1 = q * w, l2 = p * w; // pm
   return _s(
-    'Kinetik enerjisi $e1 eV olan bir parçacığın de Broglie dalga boyu '
-        '${_n(l1)} nm olarak hesaplanıyor. Aynı parçacığın kinetik enerjisi $e2 eV '
-        'olursa de Broglie dalga boyu kaç nm olur? $_goreliDegil',
+    'Kinetik enerjisi $e1 eV olan bir elektronun de Broglie dalga boyu $l1 pm '
+        'olarak hesaplanıyor. Aynı elektronun kinetik enerjisi $e2 eV olursa de '
+        'Broglie dalga boyu kaç pm olur? (1 pm = 10⁻¹² m; göreli etkiler '
+        'önemsizdir.)',
     l2,
     [l1 * p * p / (q * q), l1 * q / p, l1],
     'λ = h / √(2·m·E) olduğundan dalga boyu kinetik enerjinin kareköküyle ters '
-        'orantılıdır: λ₂ = λ₁·√(E₁ / E₂) = ${_n(l1)}·√($e1 / $e2) = '
-        '${_n(l1)}·${kesir(p, q)} = ${_n(l2)} nm.',
-    unit: 'nm',
+        'orantılıdır: λ₂ = λ₁·√(E₁ / E₂) = $l1·√($e1 / $e2) = '
+        '$l1·${kesir(p, q)} = $l2 pm.',
   );
 }
 
@@ -2972,20 +3088,22 @@ bool _acUygun(int tur, int x10, int r) {
       if (pay % r != 0) return false;
       final y = pay / (100 * r);
       if (y < 0.1 || y > 20) return false;
+      // √2 = 1,4 alınan biçimde yanıt kökteki 1,4 sayısına eşit olmasın.
       return !_icinde(
         y,
         tur == 0
             ? [x, r, x / (2 * r), x * r]
-            : [x, r, x / r, x / (1.4 * r), 2 * x / r],
+            : [x, r, x / r, x / (1.4 * r), 2 * x / r, 1.4],
       );
     default:
       final y100 = tur == 2 ? 14 * x10 * r : 10 * x10 * r; // yanıt·100
       final y = y100 / 100;
-      if (y > 2000) return false;
+      // Direnç uçlarındaki gerilim şebeke gerilimleri düzeyinde kalsın.
+      if (y > 400) return false;
       return !_icinde(
         y,
         tur == 2
-            ? [x, r, x * r, x * r / 1.4, 2 * x * r]
+            ? [x, r, x * r, x * r / 1.4, 2 * x * r, 1.4]
             : [x, r, x * r / 2, x / r],
       );
   }
@@ -3448,7 +3566,8 @@ AdvancedItem _derinlikDegisimi(int a, int b, int k) {
             'hızları ${_n(v2)} cm/s oluyor. Dalgaların sığ bölgedeki dalga boyu kaç '
             'cm olur?',
         la2,
-        [la1 * v1 / v2, la1],
+        // Oranı ters kurmak, dalga boyunu değişmez sanmak, λ = v·f yazmak.
+        [la1 * v1 / v2, la1, v2 * f10 / 10],
         '$sabit: f = ${_n(v1)} / ${_n(la1)} = ${_n(f10 / 10)} Hz. Sığ bölgedeki '
             'dalga boyu λ = v / f = ${_n(v2)} / ${_n(f10 / 10)} = ${_n(la2)} cm olur.',
         unit: 'cm',
@@ -3719,7 +3838,7 @@ AdvancedItem _ozdesKureler(int a, int b, int k) {
   );
 }
 
-/// Farklı yarıçaplı iki küre: (r_K, r_L, q_K, q_L); yarıçap cm, yük µC.
+/// Farklı yarıçaplı iki küre: (r_K, r_L, q_K, q_L); yarıçap cm, yük nC.
 final _yaricapli = _tekil([
   for (var r1 = 1; r1 <= 8; r1++)
     for (var r2 = 1; r2 <= 8; r2++)
@@ -3782,37 +3901,39 @@ AdvancedItem _yaricapliKureler(int a, int b, int k, bool topraklama) {
   final (r1, r2, q1, q2) = t;
   final (y, yanlis) = _yaricapHesap(v, t);
   final yk = (q1 + q2) * r1 / (r1 + r2);
+  // Santimetre yarıçaplı kürelerde yükler nanocoulomb düzeyinde kalır
+  // (mikrocoulomb bu kürelerde havanın yalıtkanlığını aşan alanlar verirdi).
   final giris =
       'Yalıtkan ayaklar üzerindeki iletken K ve L kürelerinin yarıçapları '
-      'sırasıyla $r1 cm ve $r2 cm, yükleri sırasıyla ${_q(q1)} µC ve '
-      '${_q(q2)} µC olarak veriliyor.';
+      'sırasıyla $r1 cm ve $r2 cm, yükleri sırasıyla ${_q(q1)} nC ve '
+      '${_q(q2)} nC olarak veriliyor.';
   final paylasim =
       'Dokunan iletken kürelerin toplam yükü yarıçaplarla doğru orantılı '
-      'paylaşılır: toplam ${_q(q1)} + ${_qp(q2)} = ${_n(q1 + q2)} µC olduğundan '
-      'K küresi ${_n(q1 + q2)}·$r1 / ${r1 + r2} = ${_n(yk)} µC, L küresi '
-      '${_n(q1 + q2)}·$r2 / ${r1 + r2} = ${_n((q1 + q2) * r2 / (r1 + r2))} µC '
+      'paylaşılır: toplam ${_q(q1)} + ${_qp(q2)} = ${_n(q1 + q2)} nC olduğundan '
+      'K küresi ${_n(q1 + q2)}·$r1 / ${r1 + r2} = ${_n(yk)} nC, L küresi '
+      '${_n(q1 + q2)}·$r2 / ${r1 + r2} = ${_n((q1 + q2) * r2 / (r1 + r2))} nC '
       'alır.';
   final (soru, ek) = switch (v) {
     0 => (
-      'Küreler birbirine dokundurulup ayrıldıktan sonra K küresinin yükü kaç µC olur?',
+      'Küreler birbirine dokundurulup ayrıldıktan sonra K küresinin yükü kaç nC olur?',
       '',
     ),
     1 => (
-      'Küreler birbirine dokundurulup ayrıldıktan sonra L küresinin yükü kaç µC olur?',
+      'Küreler birbirine dokundurulup ayrıldıktan sonra L küresinin yükü kaç nC olur?',
       '',
     ),
     2 => (
       'Küreler birbirine dokundurulduğunda kürelerden birinden ötekine aktarılan '
-          'yükün büyüklüğü kaç µC olur?',
-      ' K küresinin yükü ${_q(q1)} µC değerinden ${_n(yk)} µC değerine geçtiğinden '
-          'aktarılan yük ${_n(y)} µC olur.',
+          'yükün büyüklüğü kaç nC olur?',
+      ' K küresinin yükü ${_q(q1)} nC değerinden ${_n(yk)} nC değerine geçtiğinden '
+          'aktarılan yük ${_n(y)} nC olur.',
     ),
     _ => (
       'Küreler dokundurulup ayrılıyor; L küresi topraklanıp toprak bağlantısı '
           'kesildikten sonra K ve L yeniden dokundurulup ayrılıyor. K küresinin '
-          'son yükü kaç µC olur?',
+          'son yükü kaç nC olur?',
       ' Topraklanan L küresinin yükü sıfırlanır; ikinci dokunmada K küresinin '
-          'yükü ${_n(yk)}·$r1 / ${r1 + r2} = ${_n(y)} µC olur.',
+          'yükü ${_n(yk)}·$r1 / ${r1 + r2} = ${_n(y)} nC olur.',
     ),
   };
   return _s('$giris $soru', y, yanlis, '$paylasim$ek', pozitif: false);
@@ -4138,17 +4259,20 @@ double _oranDeger((int, int) o) => o.$1 / o.$2;
     3 => e * e * devre.$3 / (devre.$2 * r),
     _ => degerler.first,
   };
+  final ilk = tur == 4 ? _devreler[_anahtarlar[d].$1] : devre;
   final yanlis = <double>[
     tam,
     anaGuc,
     tam / (n * n),
     if (tur < 3) ...degerler,
-    if (tur == 3) ...[n * tam, tam / n],
-    if (tur == 4)
-      _oranDeger(
-            _gucKatsayi(_devreler[_anahtarlar[d].$1], _lambaIlkSira(d, j)),
-          ) *
-          tam,
+    if (tur == 3) n * tam,
+    tam / n,
+    if (tur == 4) ...[
+      // Anahtardan önceki güç ve ilk devrenin ana kol akımını taşıdığını
+      // sanmak.
+      _oranDeger(_gucKatsayi(ilk, _lambaIlkSira(d, j))) * tam,
+      (ilk.$3 / ilk.$2) * (ilk.$3 / ilk.$2) * tam,
+    ],
   ];
   return (
     y,
@@ -4438,7 +4562,16 @@ AdvancedItem _ikiTelAlani(int a, int b, int k) {
         'sırasıyla $i1 A ve $i2 A şiddetinde akımlar geçiyor. Tellerin düzleminde, '
         '$konum noktada bileşke manyetik alanın büyüklüğü kaç µT olur? $_kNot',
     net,
-    [ayni == ara ? b1 + b2 : (b1 - b2).abs(), b1, b2],
+    // Alanları yanlış birleştirmek, tek telin alanını yazmak, iki telin
+    // alanını da verilen x uzaklığıyla hesaplamak.
+    [
+      ayni == ara ? b1 + b2 : (b1 - b2).abs(),
+      b1,
+      b2,
+      ara
+          ? _ikiTelNet(b1, 20 * i2 / x, ayni, ara)
+          : _ikiTelNet(20 * i1 / x, b2, ayni, ara),
+    ],
     'Noktanın X teline uzaklığı $d1 cm, Y teline uzaklığı $d2 cm olur. X telinin '
         'alanı 2·10⁻⁷·$i1 / ${_m(d1)} = ${_n(b1)} µT, Y telinin alanı '
         '2·10⁻⁷·$i2 / ${_m(d2)} = ${_n(b2)} µT bulunur. $yon',
@@ -4511,21 +4644,27 @@ AdvancedItem _cemberTelAlani(int a, int b, int k) {
   final b2 = b1 * sk * ap * rq / (aq * rp);
   final degisim = [
     if (sk > 1) 'sarım sayısı $sk katına',
-    if (ap != aq) 'akım ilk değerinin ${kesir(ap, aq)} katına',
-    if (rp != rq) 'yarıçap ilk değerinin ${kesir(rp, rq)} katına',
+    if (ap != aq) 'telden geçen akım ilk değerinin ${kesir(ap, aq)} katına',
+    if (rp != rq) 'çemberin yarıçapı ilk değerinin ${kesir(rp, rq)} katına',
   ];
   final metin = degisim.length == 1
       ? degisim.first
       : '${degisim.sublist(0, degisim.length - 1).join(', ')} ve ${degisim.last}';
+  // Açıklamada yalnız değişen nicelikler çarpan olarak yazılır.
+  final carpanlar = [
+    '$b1',
+    if (sk > 1) '$sk',
+    if (ap != aq) kesir(ap, aq),
+    if (rp != rq) kesir(rq, rp),
+  ].join('·');
   return _s(
     'Çembersel bir telden geçen akımın çemberin merkezinde oluşturduğu '
-        'manyetik alanın büyüklüğü $b1 µT olarak ölçülüyor. Aynı biçimdeki telde '
-        '$metin getirilirse merkezdeki manyetik alanın büyüklüğü kaç µT olur?',
+        'manyetik alanın büyüklüğü $b1 µT olarak ölçülüyor. ${_bas(metin)} '
+        'getirilirse merkezdeki manyetik alanın büyüklüğü kaç µT olur?',
     b2,
     [b1 * sk * ap * rp / (aq * rq), b1 * ap * rq / (aq * rp), b1 * sk],
     'Merkezdeki alan B = 2π·k·N·I / r olduğundan sarım sayısı ve akımla doğru, '
-        'yarıçapla ters orantılıdır: B₂ = $b1·$sk·${kesir(ap, aq)}·'
-        '${kesir(rq, rp)} = ${_n(b2)} µT.',
+        'yarıçapla ters orantılıdır: B₂ = $carpanlar = ${_n(b2)} µT.',
   );
 }
 
@@ -4546,12 +4685,12 @@ final _f18 = lmAile(
 
 // ───────────────────────── 19 · Bileşik kaplar ve U borusu ───────────────────────
 
-/// Sıvı yoğunlukları (yüzde bir g/cm³).
+/// Sıvı yoğunlukları (yüzde bir g/cm³): 0,70 … 3,00 g/cm³.
 const _yogunluklar = [
-  60,
   70,
   75,
   80,
+  85,
   90,
   100,
   120,
@@ -4601,7 +4740,8 @@ AdvancedItem _uBorusuDenge(int a, int b, int k) {
       'sıvısı borunun alt kısmını doldurmuş ve iki kola dağılmıştır; X sıvısı '
       'kollardan birinde Y sıvısının üzerindedir.';
   const duzey =
-      'X ile Y sıvılarının ayrılma yüzeyinden geçen yatay düzeye göre';
+      'Yükseklikler, X ile Y sıvılarının ayrılma yüzeyinden geçen yatay '
+      'düzeyden itibaren ölçülmektedir.';
   const denge =
       'Ayrılma yüzeyinden geçen yatay düzeyde iki koldaki basınçlar eşittir: '
       'h(X)·d(X) = h(Y)·d(Y).';
@@ -4620,7 +4760,7 @@ AdvancedItem _uBorusuDenge(int a, int b, int k) {
       return _s(
         '$duzen Y sıvısının yoğunluğu $r2 g/cm³ olarak veriliyor. $duzey X '
             'sıvısının yüksekliği $h1 cm, öbür koldaki Y sıvısının yüksekliği '
-            '${_n(h2)} cm olarak ölçülüyor. X sıvısının yoğunluğu kaç g/cm³ olur?',
+            '${_n(h2)} cm olduğuna göre X sıvısının yoğunluğu kaç g/cm³ olur?',
         d1 / 100,
         [h1 * d2 / (100 * h2), d2 / 100, h2 / h1],
         '$denge Buradan d(X) = ${_n(h2)}·$r2 / $h1 = $r1 g/cm³ bulunur.',
@@ -4695,7 +4835,9 @@ AdvancedItem _acikHava(int a, int b, int k) {
             'cm olarak ölçülüyor. Bu yerde açık hava basıncı kaç cmHg olur? '
             '$_civaNot',
         p0,
-        [h * d / 100, h / 13.6],
+        // Cıvanın yoğunluğuna bölmeyi ya da sıvının yoğunluğunu unutmak,
+        // santimetreyi milimetre sanmak.
+        [h * d / 100, h / 13.6, 10 * p0],
         '$esit P₀·13,6 = $hs·$ds. Buradan P₀ = $p0 cmHg bulunur.',
       ),
       _ => _s(
@@ -4704,7 +4846,9 @@ AdvancedItem _acikHava(int a, int b, int k) {
             'sütununun yüksekliği $hs cm olarak ölçülüyor. Bu sıvının '
             'yoğunluğu kaç g/cm³ olur? $_civaNot',
         d / 100,
-        [p0 / h],
+        // Cıvanın yoğunluğunu unutmak, oranı ters kurmak, açık hava basıncını
+        // 76 cmHg almak.
+        [p0 / h, h / (13.6 * p0), if (p0 != 76) 13.6 * 76 / h],
         '$esit $p0·13,6 = $hs·d. Buradan d = $ds g/cm³ bulunur.',
       ),
     };

@@ -102,7 +102,8 @@ String _ve(List<String> x) => x.length <= 1
 
 /// (bilgi, değer) çizelgesinden [sira] (verilmezse [i]) numaralı üçlü seçki.
 /// Değerler farklıysa (dört vakadan üçünde) sıralı eşleştirme, değilse
-/// öncüllü soru üretir; dizilim ve biçim [i] ile değişir.
+/// öncüllü soru üretir; dizilim ve biçim [i] ile değişir. [uclular]
+/// verilirse üçlü bu listeden (kombinasyon gibi yayılarak) seçilir.
 AdvancedItem _olgu(
   int i,
   List<(String, String)> tablo, {
@@ -110,8 +111,18 @@ AdvancedItem _olgu(
   required String Function(String deger) oncul,
   required String Function(List<(String, String)> x) aciklama,
   int? sira,
+  List<(int, int, int)>? uclular,
 }) {
-  final u = kombinasyon(tablo, 3, sira ?? i);
+  final s = sira ?? i;
+  final List<(String, String)> u;
+  if (uclular == null) {
+    u = kombinasyon(tablo, 3, s);
+  } else {
+    final (a, b, c) = uclular.length >= lmAileBoyu
+        ? uclular[s * uclular.length ~/ lmAileBoyu]
+        : uclular[s % uclular.length];
+    u = [tablo[a], tablo[b], tablo[c]];
+  }
   final d = ucluDizilimler[i % 6];
   final x = [for (final j in d) u[j]];
   final v = [for (final e in x) e.$2];
@@ -157,6 +168,28 @@ List<(int, int, int, int)> _adaylar(
   }
   return out;
 }
+
+/// Aynı olgu etiketini taşıyan iki öge aynı üçlüde yer almaz (etiketi null
+/// olan ögeler serbesttir). Aynı bilgiyi yineleyen ya da biri ötekinin özel
+/// örneği olan öncüller birlikte doğru ya da birlikte yanlış olmak zorunda
+/// kalır ve seçenekleri bilgi gerekmeden eletir; bu süzgeç bunu önler.
+bool Function(int, int, int) _olguAyri(String? Function(int oge) olgu) {
+  bool ayri(int x, int y) {
+    final p = olgu(x);
+    return p == null || p != olgu(y);
+  }
+
+  return (a, b, c) => ayri(a, b) && ayri(a, c) && ayri(b, c);
+}
+
+/// [n] ögeden [uygun] koşulunu sağlayan (a < b < c) üçlüleri, sözlük sırasıyla.
+List<(int, int, int)> _uygunUcluler(
+  int n,
+  bool Function(int, int, int) uygun,
+) => [
+  for (final (a, b, c) in _ucluler(n))
+    if (uygun(a, b, c)) (a, b, c),
+];
 
 /// [n] vakaya yayılmış seçki: [j] ∈ [0, n) için farklı ögeler verir.
 T _yay<T>(List<T> liste, int j, int n) {
@@ -206,7 +239,7 @@ const _organelGorev = <(String, String)>[
     'kromoplast',
   ),
   (
-    'Renksiz bir plastittir; patates yumrusu gibi kısımlarda nişasta depolar.',
+    'Renk maddesi taşımaz; patates yumrusu gibi bitki kısımlarında nişasta depolar.',
     'lökoplast',
   ),
   (
@@ -265,7 +298,7 @@ const _organelGorev = <(String, String)>[
     'çekirdek',
   ),
   (
-    'Çekirdek içinde bulunan ve ribozom alt birimlerinin üretildiği yoğun bölgedir.',
+    'Ökaryot hücrelerde ribozom alt birimlerinin üretildiği, zarsız ve yoğun yapıdır.',
     'çekirdekçik',
   ),
   (
@@ -400,7 +433,7 @@ final _organel = lmSirali(
         sira: j * 2,
         _organelGorev,
         eslestirme:
-            'Bu görevleri üstlenen hücre yapıları sırasıyla hangi seçenekte '
+            'Bu bilgilerin ait olduğu hücre yapıları sırasıyla hangi seçenekte '
             'doğru verilmiştir?',
         oncul: (y) => 'Bu bilgilerden hangileri “$y” için doğrudur?',
         aciklama: (x) =>
@@ -478,7 +511,7 @@ const _gecisOlay = <(String, int)>[
     2,
   ),
   (
-    'Tiroit bezi hücrelerinin kandaki iyotu kendi içlerinde yüksek derişimde biriktirmesi',
+    'Tiroit bezi hücrelerinin kandaki iyodu kendi içlerinde yüksek derişimde biriktirmesi',
     2,
   ),
   (
@@ -575,11 +608,34 @@ const _gecisSorulari = <(String, List<bool?>, String)>[
   ),
 ];
 
+/// Olay cümlesi sorulan özelliği doğrudan söylüyorsa (“taşıyıcı proteinlerle”,
+/// “derişim farkına karşı”, “kesecik hâlinde” gibi) o olay o soruda
+/// kullanılmaz; yoksa yanıt bilgi gerekmeden cümleden okunurdu.
+bool _gecisAcikSoyler(int q, String olay) => switch (q) {
+  2 =>
+    olay.contains('taşıyıcı protein') ||
+        olay.contains('kanal protein') ||
+        olay.contains('fosfolipitler arasından'),
+  3 =>
+    olay.contains('derişim farkı yönünde') ||
+        olay.contains('derişim farkına karşı'),
+  6 => olay.contains('kesecik'),
+  _ => false,
+};
+
 final _gecisAdaylari = _adaylar(
   _gecisOlay.length,
   _gecisSorulari.length,
-  (q, o) => _gecisSorulari[q].$2[_gecisOlay[o].$2],
+  (q, o) => _gecisAcikSoyler(q, _gecisOlay[o].$1)
+      ? null
+      : _gecisSorulari[q].$2[_gecisOlay[o].$2],
   sinif: (o) => _gecisAdi[_gecisOlay[o].$2],
+  // Endositozun genel tanımı (17), özel örnekleriyle (14–16: fagositoz ve
+  // pinositoz) aynı vakada yer almaz.
+  uygun: (a, b, c) {
+    final s = {a, b, c};
+    return !(s.contains(17) && s.any((k) => k >= 14 && k <= 16));
+  },
 );
 
 final _maddeGecisi = lmSirali(
@@ -1189,18 +1245,18 @@ const _canlilar = <(String, int, bool?, bool?, bool?)>[
   ('şapkalı mantar', 3, false, true, true),
   ('ekmek küfü', 3, false, null, true),
   ('penisilin elde edilen küf', 3, false, null, true),
-  ('kara yosunu', 4, true, true, false),
-  ('eğrelti otu', 4, true, true, false),
-  ('at kuyruğu', 4, true, true, false),
+  ('karayosunu', 4, true, true, false),
+  ('eğreltiotu', 4, true, true, false),
+  ('atkuyruğu', 4, true, true, false),
   ('çam ağacı', 4, true, true, false),
   ('buğday', 4, true, true, false),
   ('papatya', 4, true, true, false),
   ('sünger', 5, false, true, true),
-  ('deniz anası', 5, false, true, true),
+  ('denizanası', 5, false, true, true),
   ('toprak solucanı', 5, false, true, true),
   ('salyangoz', 5, false, true, true),
   ('bal arısı', 5, false, true, true),
-  ('deniz yıldızı', 5, false, true, true),
+  ('denizyıldızı', 5, false, true, true),
   ('kurbağa', 5, false, true, true),
   ('yarasa', 5, false, true, true),
   ('penguen', 5, false, true, true),
@@ -1530,7 +1586,7 @@ const _donguOlay = <(String, List<bool?>, int?, int?, String?, String)>[
         'döngüsü).',
   ),
   (
-    'Baklagillerin kök yumrularında yaşayan bakterilerin havadaki azotu bağlaması',
+    'Baklagillerin kök yumrularında havadaki azot gazının amonyağa dönüştürülmesi',
     [false, true, false],
     null,
     null,
@@ -1824,11 +1880,26 @@ bool? _donguDeger(int q, int k) {
   };
 }
 
+/// Aynı olguyu anlatan ya da biri ötekinin özel örneği olan olaylar (ör.
+/// canlıların solunumu ile hayvanların solunumu) aynı olgu adını taşır.
+String? _donguOlgu(int k) => switch (k) {
+  0 || 1 => 'azot bağlama',
+  3 || 4 => 'denitrifikasyon',
+  5 || 31 => 'azotlu atıkların amonyağa dönüşmesi',
+  8 || 18 => 'hayvanların bitkileri yemesi',
+  10 || 11 => 'fotosentez',
+  12 || 27 || 28 => 'oksijenli solunum',
+  13 || 29 => 'ölü kalıntıların çürümesi',
+  14 || 15 => 'yanma',
+  _ => null,
+};
+
 final _donguAdaylari = _adaylar(
   _donguOlay.length,
   _donguSorulari.length,
   _donguDeger,
   sinif: (k) => _donguOlay[k].$5,
+  uygun: _olguAyri(_donguOlgu),
 );
 
 final _maddeDongusu = lmSirali(
@@ -3551,7 +3622,10 @@ const _nefronGorev = <(String, String)>[
     'toplama kanalı',
   ),
   ('Böbrekte oluşan idrarı idrar kesesine taşıyan borudur.', 'üreter'),
-  ('Üreterlerle gelen idrarın biriktirildiği kaslı organdır.', 'idrar kesesi'),
+  (
+    'Üreterlerle gelen sıvının vücut dışına atılıncaya kadar biriktirildiği kaslı organdır.',
+    'idrar kesesi',
+  ),
   ('İdrarın vücut dışına atıldığı kanaldır.', 'üretra'),
   (
     'Toplama kanallarından gelen idrarın toplandığı, üretere açılan boşluktur.',
@@ -3856,7 +3930,8 @@ const _sinirGorev = <(String, String)>[
     'uç beyin',
   ),
   (
-    'Kıvrımlı yüzeyi gri maddeden oluşan beyin kabuğunu taşıyan, en büyük beyin bölümüdür.',
+    'Kıvrımlı yüzeyi gri maddeden oluşan kabukla örtülü, merkezî sinir sisteminin en büyük '
+        'bölümüdür.',
     'uç beyin',
   ),
   (
@@ -3895,8 +3970,8 @@ const _sinirGorev = <(String, String)>[
   ),
   ('Diz kapağı refleksi gibi basit reflekslerin merkezidir.', 'omurilik'),
   (
-    'Omurların oluşturduğu kanal içinde bulunur; vücut ile beyin arasında uyartı iletimini '
-        'sağlar.',
+    'Sırt boyunca uzanan kemik kanalın içinde bulunur; vücut ile beyin arasında uyartı '
+        'iletimini sağlar.',
     'omurilik',
   ),
   (
@@ -3921,7 +3996,7 @@ const _sinirGorev = <(String, String)>[
     'hücre gövdesi',
   ),
   (
-    'Akson ucunda bulunan ve sinaptik boşluğa nörotransmitter salgılayan şişkinliklerdir.',
+    'Akson uçlarında bulunan, nörotransmitter dolu kesecikler taşıyan şişkinliklerdir.',
     'sinaptik düğmecikler',
   ),
   (
@@ -3929,15 +4004,16 @@ const _sinirGorev = <(String, String)>[
     'Schwann hücreleri',
   ),
   (
-    'Uyartıyı almaçlardan merkezî sinir sistemine taşıyan nörondur.',
+    'Uyartıyı almaçlardan merkezî sinir sistemine taşıyan sinir hücresidir.',
     'duyu nöronu',
   ),
   (
-    'Merkezî sinir sisteminden aldığı emri kaslara ya da bezlere ileten nörondur.',
+    'Merkezî sinir sisteminden aldığı emri kaslara ya da bezlere ileten sinir hücresidir.',
     'motor nöron',
   ),
   (
-    'Merkezî sinir sistemi içinde bulunur; duyu nöronu ile motor nöron arasında bağlantı kurar.',
+    'Merkezî sinir sistemi içinde bulunan, duyu ve motor sinir hücreleri arasında bağlantı '
+        'kuran sinir hücresidir.',
     'ara nöron',
   ),
   (
@@ -3949,21 +4025,23 @@ const _sinirGorev = <(String, String)>[
     'tepki organı (efektör)',
   ),
   (
-    'Elini sıcak bir cisimden çeken bir kişide uyartıyı deriden omuriliğe getiren nörondur.',
+    'Elini sıcak bir cisimden çeken bir kişide uyartıyı deriden omuriliğe getiren sinir '
+        'hücresidir.',
     'duyu nöronu',
   ),
   (
-    'Elini sıcak bir cisimden çeken bir kişide emri omurilikten kol kaslarına götüren nörondur.',
+    'Elini sıcak bir cisimden çeken bir kişide emri omurilikten kol kaslarına götüren sinir '
+        'hücresidir.',
     'motor nöron',
   ),
   (
-    'Elini sıcak bir cisimden çeken bir kişide omurilikte duyu ve motor nöronları birbirine '
-        'bağlayan nörondur.',
+    'Elini sıcak bir cisimden çeken bir kişide omurilikte duyu ve motor sinir hücrelerini '
+        'birbirine bağlayan sinir hücresidir.',
     'ara nöron',
   ),
   (
-    'Sinaptik boşluğa salınarak uyartının bir nörondan diğerine geçmesini sağlayan kimyasal '
-        'maddedir.',
+    'Sinaptik boşluğa salınarak uyartının bir sinir hücresinden diğerine geçmesini sağlayan '
+        'kimyasal maddedir.',
     'nörotransmitter',
   ),
   (
@@ -3971,15 +4049,26 @@ const _sinirGorev = <(String, String)>[
     'beyin zarları',
   ),
   (
-    'İskelet kaslarını ve istemli hareketleri denetleyen çevresel sinir sistemi bölümüdür.',
+    'Beyin ve omurilik dışında kalan, iskelet kaslarını ve istemli hareketleri denetleyen '
+        'bölümdür.',
     'somatik sinir sistemi',
   ),
   (
-    'Kalbin, düz kasların ve bezlerin istem dışı çalışmasını düzenleyen; sempatik ve '
-        'parasempatik kısımlardan oluşan sistemdir.',
+    'Kalbin, düz kasların ve bezlerin istem dışı çalışmasını düzenler; sempatik ve '
+        'parasempatik kısımlardan oluşur.',
     'otonom sinir sistemi',
   ),
 ];
+
+// Nöron türlerinin genel tanımı ile refleks yayındaki örneği aynı bilgidir;
+// ikisi bir vakada birlikte yer almaz.
+final _sinirUcluleri = _uygunUcluler(
+  _sinirGorev.length,
+  _olguAyri((k) {
+    final ad = _sinirGorev[k].$2;
+    return ad.endsWith('nöron') || ad.endsWith('nöronu') ? ad : null;
+  }),
+);
 
 final _sinir = lmSirali(
   'bl_sinir',
@@ -3990,7 +4079,8 @@ final _sinir = lmSirali(
   (i) => _olgu(
     i,
     _sinirGorev,
-    eslestirme: 'Bu görevleri üstlenen yapılar sırasıyla hangi seçenekte doğru verilmiştir?',
+    uclular: _sinirUcluleri,
+    eslestirme: 'Bu bilgilerin ait olduğu yapılar sırasıyla hangi seçenekte doğru verilmiştir?',
     oncul: (y) => 'Bu bilgilerden hangileri “$y” için doğrudur?',
     aciklama: (x) =>
         'Birinci bilgi ${x[0].$2}, ikinci bilgi ${x[1].$2}, üçüncü bilgi '
@@ -4220,7 +4310,7 @@ final _endokrin = lmSirali(
 
 const _duyuGorev = <(String, String)>[
   (
-    'Gözün en dış tabakasının önde oluşturduğu, ışığı ilk kıran saydam bölümdür.',
+    'Gözün ön yüzünde bulunan, damar içermeyen ve ışığı ilk kıran bölümdür.',
     'kornea (saydam tabaka)',
   ),
   ('Göze rengini veren, göz bebeğinin çapını ayarlayan kaslı yapıdır.', 'iris'),
@@ -4237,7 +4327,8 @@ const _duyuGorev = <(String, String)>[
     'kirpiksi cisim',
   ),
   (
-    'Görme almaçlarının (çubuk ve koni hücrelerinin) bulunduğu en iç tabakadır.',
+    'Görme almaçlarını (çubuk ve koni hücrelerini) taşıyan, göz küresini en içten saran '
+        'yapıdır.',
     'ağ tabaka (retina)',
   ),
   (
@@ -4257,11 +4348,11 @@ const _duyuGorev = <(String, String)>[
     'kör nokta',
   ),
   (
-    'Gözü en dıştan saran, beyaz renkli, dayanıklı ve koruyucu tabakadır.',
+    'Göz küresini en dıştan sararak koruyan, beyaz renkli ve dayanıklı yapıdır.',
     'sert tabaka',
   ),
   (
-    'Bol pigment taşıyarak göz içinde ışığın yansımasını önleyen, gözü besleyen orta tabakadır.',
+    'Bol pigment taşıyarak göz içinde ışığın yansımasını önleyen ve gözü besleyen yapıdır.',
     'damar tabaka',
   ),
   (
@@ -4269,10 +4360,7 @@ const _duyuGorev = <(String, String)>[
         'yapıdır.',
     'camsı cisim',
   ),
-  (
-    'Ağ tabakadaki almaçlarda oluşan uyartıları beyne taşıyan sinirdir.',
-    'görme siniri',
-  ),
+  ('Ağ tabakadaki almaçlarda oluşan uyartıları beyne iletir.', 'görme siniri'),
   ('Ses dalgalarını toplayarak dış kulak yoluna yönlendirir.', 'kulak kepçesi'),
   (
     'Gelen ses dalgalarıyla titreşerek titreşimleri orta kulağa iletir.',
@@ -4294,10 +4382,7 @@ const _duyuGorev = <(String, String)>[
     'İşitme almaçlarını taşıyan, iç kulakta bulunan helezon biçimli yapıdır.',
     'salyangoz',
   ),
-  (
-    'Salyangozdaki almaçlarda oluşan uyartıları beyne taşıyan sinirdir.',
-    'işitme siniri',
-  ),
+  ('Salyangozdaki almaçlarda oluşan uyartıları beyne iletir.', 'işitme siniri'),
   (
     'Başın dönme hareketlerini algılayarak dengenin korunmasına yardım eder.',
     'yarım daire kanalları',
@@ -4310,12 +4395,9 @@ const _duyuGorev = <(String, String)>[
   ('Deride basınç ve titreşimi algılayan almaçlardır.', 'Pacini cisimcikleri'),
   ('Deride sıcaklığı algılayan almaçlardır.', 'Ruffini cisimcikleri'),
   ('Deride soğuğu algılayan almaçlardır.', 'Krause cisimcikleri'),
+  ('Deride acı (ağrı) duyusunu algılayan almaçlardır.', 'serbest sinir uçları'),
   (
-    'Deride acı (ağrı) duyusunu algılayan, uçları dallanmış almaçlardır.',
-    'serbest sinir uçları',
-  ),
-  (
-    'Üst derinin canlı ve bölünebilen hücrelerden oluşan, melanin pigmenti taşıyan tabakasıdır.',
+    'Üst derinin canlı ve bölünebilen hücrelerden oluşan, melanin pigmenti taşıyan bölümüdür.',
     'Malpighi tabakası',
   ),
   (
@@ -4332,8 +4414,8 @@ const _duyuGorev = <(String, String)>[
     'tat tomurcukları',
   ),
   (
-    'Burun boşluğunun üst kısmında bulunan, havadaki kimyasal maddeleri algılayan almaçları '
-        'taşıyan bölgedir.',
+    'Burun boşluğunun üst kısmında bulunur; havadaki kimyasal maddeleri algılayan almaçları '
+        'taşır.',
     'koku epiteli (sarı bölge)',
   ),
   (
@@ -4356,7 +4438,7 @@ final _duyu = lmSirali(
   (i) => _olgu(
     i,
     _duyuGorev,
-    eslestirme: 'Bu görevleri üstlenen yapılar sırasıyla hangi seçenekte doğru verilmiştir?',
+    eslestirme: 'Bu bilgilerin ait olduğu yapılar sırasıyla hangi seçenekte doğru verilmiştir?',
     oncul: (y) => 'Bu bilgilerden hangileri “$y” için doğrudur?',
     aciklama: (x) =>
         'Birinci bilgi ${x[0].$2}, ikinci bilgi ${x[1].$2}, üçüncü bilgi '
@@ -4571,7 +4653,7 @@ const _bagisiklikDurum = <(String, int)>[
     'Kızamık hastalığını geçiren bir çocuğun bu hastalığa karşı bağışıklık kazanması',
     0,
   ),
-  ('Su çiçeği geçiren bir kişinin bu hastalığa yeniden yakalanmaması', 0),
+  ('Suçiçeği geçiren bir kişinin bu hastalığa yeniden yakalanmaması', 0),
   (
     'Kabakulak geçiren bir çocukta bu hastalığa karşı hafıza hücrelerinin oluşması',
     0,
@@ -4633,6 +4715,12 @@ final _bagisiklikAdaylari = _adaylar(
   _bagisiklikSorulari.length,
   _bagisiklikDeger,
   sinif: (k) => _bagisiklikTuru[_bagisiklikDurum[k].$2],
+  // Hazır antikor verilmesinin genel tanımı (20), serum örnekleriyle (15–19)
+  // aynı vakada yer almaz; biri ötekinin özel örneğidir.
+  uygun: (a, b, c) {
+    final s = {a, b, c};
+    return !(s.contains(20) && s.any((k) => k >= 15 && k <= 19));
+  },
 );
 
 const _bagisiklikAciklama = [
@@ -5002,6 +5090,10 @@ final _destekAdaylari = () {
         }
         for (final t in turler) {
           final g = x.firstWhere((e) => e.$3 == t).$2;
+          // Eklem türü sorularında kemik adı (ör. “el bileği kemikleri”)
+          // öncül olmaz: kemiklerin aralarındaki eklemin türü sorulmuş gibi
+          // okunabilir ve kaynaklar bazı eklemleri farklı sınıflar.
+          if (g == 2 && x.any((e) => e.$2 == 1)) continue;
           final ng = x.where((e) => e.$2 == g).length;
           final nt = x.where((e) => e.$3 == t).length;
           if (ng >= 2) (nt == 1 ? tek : cok).add((a, b, c, t));
@@ -5057,6 +5149,15 @@ final _kasAdaylari = _adaylar(
   _kasOzellik.length,
   _kasSorulari.length,
   (q, k) => _kasSorulari[q].$2(_kasOzellik[k].$2),
+  // Birbirinin olumsuzu olan özellikler (istemli–istemsiz, somatik–otonom
+  // denetim) aynı vakada yer almaz; biri doğruysa öteki yanlış olur.
+  uygun: _olguAyri(
+    (k) => switch (k) {
+      0 || 1 => 'istem',
+      11 || 12 => 'denetim',
+      _ => null,
+    },
+  ),
 );
 
 final _destekHareket = lmSirali(
@@ -5203,16 +5304,17 @@ const _bitkiDoku = <(String, String)>[
   ),
   (
     'Yaprağın üst yüzeyine yakın, sık dizilmiş ve kloroplastça zengin silindirik hücrelerden '
-        'oluşan parankimadır.',
+        'oluşan dokudur.',
     'palizat parankiması',
   ),
   (
-    'Yaprakta palizat parankimasının altında bulunan, gevşek dizilmiş düzensiz hücrelerden '
-        'oluşan parankimadır.',
+    'Yaprakta palizat tabakasının altında bulunan, gevşek dizilmiş düzensiz hücrelerden oluşan '
+        'dokudur.',
     'sünger parankiması',
   ),
   (
-    'Patates yumrusu gibi organlarda nişasta depolayan parankimadır.',
+    'Patates yumrusunun etli kısmını oluşturan, lökoplastça zengin canlı hücrelerden oluşan '
+        'dokudur.',
     'besin depolayan parankima',
   ),
   (
@@ -5221,7 +5323,8 @@ const _bitkiDoku = <(String, String)>[
     'havalandırma parankiması',
   ),
   (
-    'Kaktüs gibi kurak ortam bitkilerinde su biriktiren parankimadır.',
+    'Kaktüs gibi kurak ortam bitkilerinin etli gövdesinde bulunan, büyük kofullu ve ince '
+        'çeperli canlı hücrelerden oluşan dokudur.',
     'su depolayan parankima',
   ),
   (
@@ -5233,7 +5336,7 @@ const _bitkiDoku = <(String, String)>[
     'ksilem (odun borusu)',
   ),
   (
-    'Odunsu bitkilerde yıllık halkaları oluşturan iletim dokusudur.',
+    'Ağaç gövdelerinde yıllık halkaları oluşturan iletim dokusudur.',
     'ksilem (odun borusu)',
   ),
   (
@@ -5265,7 +5368,7 @@ const _bitkiDoku = <(String, String)>[
     'stoma',
   ),
   (
-    'Kök epidermis hücrelerinin uzantılarıdır; su ve mineral emilim yüzeyini artırır.',
+    'Kök epidermis hücrelerinin uzantılarıdır; topraktan su ve mineral alınan yüzeyi genişletir.',
     'emici tüyler',
   ),
   (
@@ -5317,6 +5420,17 @@ const _bitkiDoku = <(String, String)>[
   ),
 ];
 
+// Uç meristemin iki bilgisi aynı konumu (kök ve gövde uçları), stomanın iki
+// bilgisi aynı bekçi hücrelerini anlatır; bu ikililer bir vakada birlikte
+// yer almaz.
+final _bitkiDokuUcluleri = _uygunUcluler(
+  _bitkiDoku.length,
+  _olguAyri((k) {
+    final ad = _bitkiDoku[k].$2;
+    return ad == 'uç meristem' || ad == 'stoma' ? ad : null;
+  }),
+);
+
 final _bitkiDokuAilesi = lmSirali(
   'bl_bitki_doku',
   'Bitki dokuları ve kök, gövde, yaprağın görevleri',
@@ -5326,6 +5440,7 @@ final _bitkiDokuAilesi = lmSirali(
   (i) => _olgu(
     i,
     _bitkiDoku,
+    uclular: _bitkiDokuUcluleri,
     eslestirme:
         'Bu bilgilerin ait olduğu bitki dokuları, yapıları ya da organları sırasıyla hangi '
         'seçenekte doğru verilmiştir?',
@@ -5340,124 +5455,196 @@ final _bitkiDokuAilesi = lmSirali(
 
 // ───────────────────────────── 19. Bitki hormonları ─────────────────────────────
 
-const _bitkiHormon = <(String, String)>[
+// (bilgi, hormon, olgu). Aynı olguyu anlatan ya da biri ötekinin özel örneği
+// olan bilgiler aynı olgu adını taşır ve bir vakada birlikte yer almaz; yoksa
+// iki öncül birlikte doğru ya da birlikte yanlış olmak zorunda kalırdı.
+const _bitkiHormonBilgi = <(String, String, String?)>[
   (
     'Işık alan taraftan gölge tarafa geçerek gövdenin ışığa doğru bükülmesine neden olur.',
     'oksin',
+    'fototropizma',
+  ),
+  (
+    'Gövdenin gölgede kalan tarafında daha çok birikerek o taraftaki hücrelerin daha fazla '
+        'uzamasını sağlar.',
+    'oksin',
+    'fototropizma',
   ),
   (
     'Tepe tomurcuğunda üretilerek yan tomurcukların gelişmesini baskılar (tepe baskınlığı).',
     'oksin',
+    'tepe baskınlığı',
   ),
-  ('Çeliklerin kesik ucunda kök oluşumunu uyarır.', 'oksin'),
+  (
+    'Çeliklerin kesik ucunda kök oluşumunu uyarır.',
+    'oksin',
+    'çelikte köklenme',
+  ),
   (
     'Çit bitkilerinin tepe tomurcukları budandığında yan dalların gelişmesi bu hormonun etkisinin '
         'kalkmasıyla açıklanır.',
     'oksin',
+    'tepe baskınlığı',
   ),
   (
     'Gül çeliklerinin kök salmasını hızlandırmak için çelik uçlarına uygulanır.',
     'oksin',
+    'çelikte köklenme',
   ),
   (
     'Yatay konuma getirilen bir fidenin kökünün aşağı, gövdesinin yukarı bükülmesinde dengesiz '
         'dağılımı etkilidir.',
     'oksin',
+    'gravitropizma',
   ),
   (
     'Yüksek derişimdeki sentetik biçimleri geniş yapraklı yabani otları öldürmek için '
         'kullanılır.',
     'oksin',
+    'yabani ot ilacı',
   ),
   (
     'Meyvelerin olgunlaşmadan dökülmesini geciktirmek için kullanılır.',
     'oksin',
+    'meyve dökümü',
   ),
-  ('Köklerde üretilir; meristemlerde hücre bölünmesini uyarır.', 'sitokinin'),
+  (
+    'Elma bahçelerinde meyvelerin hasattan önce dalından düşmesini önlemek için püskürtülür.',
+    'oksin',
+    'meyve dökümü',
+  ),
+  (
+    'Köklerde üretilir; meristemlerde hücre bölünmesini uyarır.',
+    'sitokinin',
+    null,
+  ),
   (
     'Koparılmış yaprakların sararmasını (yaşlanmasını) geciktirir.',
     'sitokinin',
+    'yaşlanmanın gecikmesi',
   ),
   (
     'Yan tomurcukların gelişmesini uyararak tepe baskınlığına karşı etki eder.',
     'sitokinin',
+    'yan tomurcuk',
   ),
   (
     'Yaprakta klorofil yıkımını yavaşlatarak yaprağın uzun süre yeşil kalmasını sağlar.',
     'sitokinin',
+    'yaşlanmanın gecikmesi',
   ),
   (
     'Kesme çiçeklerin ve yaprakların daha uzun süre taze kalmasını sağlar.',
     'sitokinin',
+    'yaşlanmanın gecikmesi',
   ),
   (
-    'Köklerde üretilip ksilemle yapraklara taşınır ve yaprakların yaşlanmasını geciktirir.',
+    'Marul gibi yapraklı sebzelerin hasattan sonra daha uzun süre taze kalmasını sağlar.',
     'sitokinin',
+    'yaşlanmanın gecikmesi',
   ),
   (
     'Yan tomurcuklara uygulandığında bu tomurcukların büyüyüp dal oluşturmasını sağlar.',
     'sitokinin',
+    'yan tomurcuk',
   ),
   (
     'Boğum aralarının uzamasını sağlayarak cüce bitkilerin boylanmasına neden olur.',
     'giberellin',
+    'boy uzaması',
   ),
   (
     'Tohumdaki uyku hâlini (dormansiyi) kırarak çimlenmeyi başlatır.',
     'giberellin',
+    'çimlenme',
   ),
   (
     'Çekirdeksiz üzüm tanelerinin irileşmesi için üzüm bağlarına püskürtülür.',
     'giberellin',
+    'çekirdeksiz üzüm',
+  ),
+  (
+    'Çekirdeksiz üzüm çeşitlerinde salkımların uzaması ve tanelerin büyümesi için kullanılır.',
+    'giberellin',
+    'çekirdeksiz üzüm',
   ),
   (
     'Arpa tohumlarının çimlenmesini hızlandırmak için malt üretiminde kullanılır.',
     'giberellin',
+    'çimlenme',
   ),
   (
     'Cüce bezelye fidelerine uygulandığında fidelerin normal boya ulaşmasını sağlar.',
     'giberellin',
+    'boy uzaması',
   ),
   (
     'Çimlenen tohumda nişastayı parçalayan amilaz enziminin üretimini uyarır.',
     'giberellin',
+    'çimlenme',
   ),
   (
     'Kuraklıkta yapraklarda miktarı artarak stomaların kapanmasını sağlar.',
     'absisik asit',
+    'su stresi',
   ),
   (
     'Tohum ve tomurcukların uyku (dormansi) hâline geçmesini sağlar.',
     'absisik asit',
+    'uyku hâli',
   ),
-  ('Sonbaharda tomurcukların kış uykusuna girmesini sağlar.', 'absisik asit'),
-  ('Uygun koşullar oluşmadan tohumun çimlenmesini engeller.', 'absisik asit'),
-  ('Su stresi sırasında büyümeyi yavaşlatan hormondur.', 'absisik asit'),
+  (
+    'Sonbaharda tomurcukların kış uykusuna girmesini sağlar.',
+    'absisik asit',
+    'uyku hâli',
+  ),
+  (
+    'Uygun koşullar oluşmadan tohumun çimlenmesini engeller.',
+    'absisik asit',
+    'uyku hâli',
+  ),
+  (
+    'Su stresi sırasında büyümeyi yavaşlatan hormondur.',
+    'absisik asit',
+    'su stresi',
+  ),
   (
     'Olumsuz çevre koşullarında tohum ve tomurcukların uyku hâlini sürdürmesini sağlar.',
     'absisik asit',
+    'uyku hâli',
   ),
-  ('Gaz hâlinde bulunan bitki hormonudur.', 'etilen'),
-  ('Meyvelerin olgunlaşmasını hızlandırır.', 'etilen'),
+  ('Gaz hâlinde bulunan bitki hormonudur.', 'etilen', null),
+  ('Meyvelerin olgunlaşmasını hızlandırır.', 'etilen', 'olgunlaşma'),
   (
     'Kapalı bir kapta olgun elmanın yanındaki ham muzların daha çabuk olgunlaşmasına neden '
         'olur.',
     'etilen',
+    'olgunlaşma',
   ),
   (
     'Yeşilken toplanıp depolanan muzları olgunlaştırmak için depoya verilir.',
     'etilen',
+    'olgunlaşma',
   ),
   (
     'Bir sepetteki tek bir çürük meyvenin diğer meyvelerin de çabuk olgunlaşmasına yol açmasında '
         'etkilidir.',
     'etilen',
+    'olgunlaşma',
   ),
   (
     'Ham toplanan domateslerin taşındıktan sonra kızarıp olgunlaşmasını sağlar.',
     'etilen',
+    'olgunlaşma',
   ),
 ];
+
+final _bitkiHormon = [for (final (b, h, _) in _bitkiHormonBilgi) (b, h)];
+
+final _bitkiHormonUcluleri = _uygunUcluler(
+  _bitkiHormonBilgi.length,
+  _olguAyri((k) => _bitkiHormonBilgi[k].$3),
+);
 
 final _bitkiHormonAilesi = lmSirali(
   'bl_bitki_hormon',
@@ -5468,6 +5655,7 @@ final _bitkiHormonAilesi = lmSirali(
   (i) => _olgu(
     i,
     _bitkiHormon,
+    uclular: _bitkiHormonUcluleri,
     eslestirme:
         'Bu bilgilerin ait olduğu bitki hormonları sırasıyla hangi seçenekte doğru '
         'verilmiştir?',
@@ -5541,14 +5729,14 @@ const _bitkiHareketi = <(String, int, int)>[
   ('Polen tüpünün dişicik borusu içinde yumurtalığa doğru büyümesi', 3, 1),
   ('Kökün topraktaki mineral bakımından zengin bölgeye doğru büyümesi', 3, 1),
   ('Kökün topraktaki zehirli bir maddeden uzaklaşacak yönde büyümesi', 3, -1),
-  ('Küstüm otu yapraklarının üzerine bir böcek konunca hızla kapanması', 4, 0),
+  ('Küstümotu yapraklarının üzerine bir böcek konunca hızla kapanması', 4, 0),
   (
-    'Küstüm otunun saksısı yere çarpınca yaprakçıklarının hızla katlanması',
+    'Küstümotunun saksısı yere çarpınca yaprakçıklarının hızla katlanması',
     4,
     0,
   ),
-  ('Küstüm otu yapraklarının üzerine su damlası düşünce kapanması', 4, 0),
-  ('Akşam sefası çiçeklerinin hava kararınca açılması', 5, 0),
+  ('Küstümotu yapraklarının üzerine su damlası düşünce kapanması', 4, 0),
+  ('Akşamsefası çiçeklerinin hava kararınca açılması', 5, 0),
   (
     'Gündüz açık olan bazı çiçeklerin karanlık bir odaya alınınca kapanması',
     5,
@@ -5591,6 +5779,14 @@ final _hareketAdaylari = _adaylar(
   _hareketSorulari.length,
   _hareketDeger,
   sinif: (k) => _hareketTuru[_bitkiHareketi[k].$2],
+  // Türü ve yönü aynı olan hareketler aynı olgunun örnekleridir (ör. fasulyenin
+  // sırığa sarılması ile sarılıcı bitkilerin desteğe dolanması); bir vakada
+  // en çok biri bulunur. Polen tüpünün ve kökün kimyasal maddeye yönelmesi
+  // ayrı olgulardır.
+  uygun: _olguAyri((k) {
+    final (_, t, y) = _bitkiHareketi[k];
+    return t == 3 && y == 1 ? null : '$t/$y';
+  }),
 );
 
 String _hareketCumle((String, int, int) e) {
