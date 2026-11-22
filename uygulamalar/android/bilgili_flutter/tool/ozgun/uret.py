@@ -24,18 +24,28 @@ def ekle(k):
 if mevcut:
     for l in open(mevcut,encoding='utf-8'):
         r=json.loads(l); gorulen.add(duz(r['soru'])); ekle(kume(r['soru']))
+NOT=re.compile(r'\s+\([^()]*\)\s*$')
+def notsuz(r):
+    # Yalnız bazı seçeneklerin sonundaki parantezli not, doğru yanıtı ele verir.
+    d=r['dogru']; w=list(r['yanlis'])
+    dn=bool(NOT.search(d)); wn=[bool(NOT.search(x)) for x in w]
+    if not dn and any(wn): w2=[NOT.sub('',x) if n else x for x,n in zip(w,wn)]; d2=d
+    elif dn and not any(wn): d2=NOT.sub('',d); w2=w
+    else: return r, 0
+    if len({x.lower() for x in [d2,*w2]})<4 or not all(x.strip() for x in [d2,*w2]): return r, 0
+    return {**r,'dogru':d2,'yanlis':w2}, 1
 ZOR={'kolay':'easy','orta':'medium','zor':'hard'}
 BLOOM={'hatirlama':'hatirlama','anlama':'anlama','uygulama':'uygulama','analiz':'analiz','degerlendirme':'degerlendirme'}
 def dq(s): return "'"+s.replace('\\','\\\\').replace("'","\\'").replace('$','\\$').replace('\n','\\n')+"'"
 cikti='lib/data/advanced/ozgun'; os.makedirs(cikti,exist_ok=True)
-aileler=[]; toplam=0; elenen=0; rapor=[]
+aileler=[]; toplam=0; elenen=0; duzeltilen=0; rapor=[]
 for a in ALAN:
     p=f'{kok_dir}/{a["id"]}/son.jsonl'
     if not os.path.exists(p): rapor.append(f'{a["id"]}: son.jsonl yok'); continue
     gruplar=collections.defaultdict(list)
     for l in open(p,encoding='utf-8'):
         if not l.strip(): continue
-        r=json.loads(l); k=kume(r['soru']); d=duz(r['soru'])
+        r,dz=notsuz(json.loads(l)); duzeltilen+=dz; k=kume(r['soru']); d=duz(r['soru'])
         if d in gorulen or benzer(k): elenen+=1; continue
         gorulen.add(d); ekle(k)
         gruplar[r.get('zorluk','orta')].append(r)
@@ -59,5 +69,6 @@ with open(f'{cikti}/ozgun.dart','w',encoding='utf-8') as f:
     for key,ad,a,zor,bloom,n in aileler:
         f.write(f"  _aile('{key}', {dq(a['alan'].split(' (')[0])}, Topic.{a['topic']}, Difficulty.{ZOR[zor]}, BloomLevel.{bloom}, {ad}),\n")
     f.write('];\n')
+print(f'parantez ipucu temizlenen {duzeltilen}')
 print(f'aile {len(aileler)}, soru {toplam}, benzer/yinelenen diye elenen {elenen}')
 for r in rapor: print(' -',r)
