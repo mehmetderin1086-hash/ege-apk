@@ -2263,13 +2263,13 @@ double _kesik(int pay, int payda, int basamak) {
   return (pay * olcek ~/ payda) / olcek;
 }
 
-/// Hafif çekirdeklerin füzyonunda toplam kütle (yüz binde bir u): kütle
-/// numarası 4 … 12 olan bir toplamın üstündeki fazlalık 0,005 … 0,033 u
-/// arasındadır (ör. ²H + ³H için 5,03015 u). Oluşan taneciklerin fazlalığı da
-/// en az 0,0026 u kalır (⁴He çekirdeği gibi).
+/// Hafif çekirdeklerin füzyonunda toplam kütle (yüz binde bir u): iki hafif
+/// çekirdeğin toplam kütlesi kütle numarasının (4 … 12) 0,015 … 0,033 u
+/// üstündedir (ör. ²H + ³H için 5,03015 u, ¹H + ¹¹B için 12,01714 u). Oluşan
+/// taneciklerin fazlalığı da en az 0,0026 u kalır (⁴He çekirdeği gibi).
 int _fuzyonKutlesi(int m, int dm) {
   final a = 4 + m % 9;
-  final alt = dm + 260, ust = 3300;
+  final alt = math.max(1500, dm + 260), ust = 3300;
   return a * 100000 + alt + (389 * m) % (ust - alt + 1);
 }
 
