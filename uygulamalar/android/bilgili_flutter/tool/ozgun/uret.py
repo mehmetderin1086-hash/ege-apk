@@ -41,6 +41,8 @@ for f in _g.glob(f'{kok_dir}/tekrar/*/sil.json'):
     for e in json.load(open(f,encoding='utf-8')): SIL.add(e['id'])
 for f in _g.glob(f'{kok_dir}/tekrar/*/secenek.json'):
     for e in json.load(open(f,encoding='utf-8')): SEC.setdefault(e['id'],[]).append((e['eski'],e['yeni']))
+_geri=f'{kok_dir}/tekrar/geri_al.json'
+if os.path.exists(_geri): SIL-=set(json.load(open(_geri,encoding='utf-8')))
 def secenek_duzelt(sid,r):
     for eski,yeni in SEC.get(sid,[]):
         w=[yeni if x==eski else x for x in r['yanlis']]
