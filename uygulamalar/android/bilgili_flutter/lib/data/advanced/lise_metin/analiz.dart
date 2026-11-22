@@ -1919,6 +1919,14 @@ final List<(int, int, int, int)> _sinusOzelVeri = () {
 }();
 
 AdvancedItem _sinusTeoremi(int a, int b, int c) {
+  final sira = hedefSira(_vaka(a, b, c));
+  // Kenar yanıtlı sorularda ek çeldiriciler: komşu değerler.
+  AdvancedItem kenar(AdvancedItem eski, int yanit, List<int?> aday) => _dengele(
+    eski,
+    yanit,
+    _tamAday([...aday, ..._komsuTam(yanit)], birim: 'cm', pozitif: true),
+    sira,
+  );
   if (c <= 1) {
     // Özel açılar: j → (çift, sunuş, ölçek).
     final (ax, by, sunus, t) = _sinusOzelVeri[a + 25 * b + 500 * c];
@@ -1938,7 +1946,7 @@ AdvancedItem _sinusTeoremi(int a, int b, int c) {
     };
     // Oranı ters kurma (a·sin A/sin B) rasyonel çıktığında çeldiricidir.
     final tersOran = _R(katsayi * katsayi * f, bKenar);
-    return _tam(
+    final eski = _tam(
       'ABC üçgeninde $acilar ve |BC| = $aYaz cm olduğuna göre |AC| kaç cm '
           'olur?',
       bKenar,
@@ -1955,6 +1963,13 @@ AdvancedItem _sinusTeoremi(int a, int b, int c) {
       birim: 'cm',
       pozitif: true,
     );
+    // Oranı ters kurma, kökü atma, iki katını ya da yarısını alma.
+    return kenar(eski, bKenar, [
+      if (tersOran.tam) tersOran.p,
+      katsayi,
+      2 * bKenar,
+      if (bKenar.isEven) bKenar ~/ 2,
+    ]);
   }
   if (c <= 5) {
     // Kenarlar p = |BC|, q = |AC|; sin B = sin A·q/p. c = 5 iken sin B
@@ -1979,7 +1994,7 @@ AdvancedItem _sinusTeoremi(int a, int b, int c) {
     final oran = '|BC|/sin A = |AC|/sin B';
     switch (c) {
       case 2:
-        return _tam(
+        final eski = _tam(
           'ABC üçgeninde sin A = $sa, sin B = $sb ve |BC| = $p cm olduğuna '
               'göre |AC| kaç cm olur?',
           q,
@@ -1994,8 +2009,16 @@ AdvancedItem _sinusTeoremi(int a, int b, int c) {
           birim: 'cm',
           pozitif: true,
         );
+        // Oranı ters kurma, yalnız bir sinüsle çarpma, toplama, iki katı,
+        // verilen kenarı yanıt sanma, yarısını alma.
+        return kenar(eski, q, [
+          if ((p * p) % q == 0) p * p ~/ q,
+          if ((p * sb.p) % sb.q == 0) p * sb.p ~/ sb.q,
+          ...[p + q, 2 * q, p, if (q.isEven) q ~/ 2],
+          if ((p * sa.p) % sa.q == 0) p * sa.p ~/ sa.q,
+        ]);
       case 3:
-        return _tam(
+        final eski = _tam(
           'ABC üçgeninde sin A = $sa, sin B = $sb ve |AC| = $q cm olduğuna '
               'göre |BC| kaç cm olur?',
           p,
@@ -2010,8 +2033,14 @@ AdvancedItem _sinusTeoremi(int a, int b, int c) {
           birim: 'cm',
           pozitif: true,
         );
+        return kenar(eski, p, [
+          if ((q * q) % p == 0) q * q ~/ p,
+          if ((q * sa.p) % sa.q == 0) q * sa.p ~/ sa.q,
+          ...[p + q, 2 * p, q, if (p.isEven) p ~/ 2],
+          if ((q * sb.p) % sb.q == 0) q * sb.p ~/ sb.q,
+        ]);
       case 4:
-        return _ras(
+        final eski = _ras(
           'ABC üçgeninde |BC| = $p cm, |AC| = $q cm ve sin A = $sa olduğuna '
               'göre sin B değeri kaçtır?',
           sb,
@@ -2023,8 +2052,22 @@ AdvancedItem _sinusTeoremi(int a, int b, int c) {
           // Kenar oranını sinüs sanma, sin B = sin A alma.
           yedek: [_R(p, q), sa],
         );
+        // Ek olarak yarısını ya da iki katını alma, tümleyeni 1 − sin A sanma.
+        return _dengele(
+          eski,
+          sb.p / sb.q,
+          _rAday(
+            [
+              ...[sa * _R(p, q), _R(q, p), sa * _R(q), _R(1) - sb, _R(p, q)],
+              ...[sa, sb / _R(2), sb * _R(2), _R(1) - sa],
+            ],
+            pozitif: true,
+            aralik: _sinusAraligi,
+          ),
+          sira,
+        );
       default:
-        return _ras(
+        final eski = _ras(
           'ABC üçgeninde |BC| = $p cm, |AC| = $q cm ve sin B = $sb olduğuna '
               'göre sin A değeri kaçtır?',
           sa,
@@ -2034,6 +2077,19 @@ AdvancedItem _sinusTeoremi(int a, int b, int c) {
           pozitif: true,
           aralik: _sinusAraligi,
           yedek: [_R(q, p), sb],
+        );
+        return _dengele(
+          eski,
+          sa.p / sa.q,
+          _rAday(
+            [
+              ...[sb * _R(q, p), _R(p, q), sb * _R(p), _R(1) - sa, _R(q, p)],
+              ...[sb, sa / _R(2), sa * _R(2), _R(1) - sb],
+            ],
+            pozitif: true,
+            aralik: _sinusAraligi,
+          ),
+          sira,
         );
     }
   }
@@ -2065,7 +2121,7 @@ AdvancedItem _sinusTeoremi(int a, int b, int c) {
         ? kenarAd[[ra, rb, rc].indexOf(y)]
         : (j.isEven ? 'en uzun kenar' : 'en kısa kenar');
     final carpan = yanit ~/ k;
-    return _tam(
+    final eski = _tam(
       'ABC üçgeninde sin A : sin B : sin C = $oranYaz ve üçgenin çevresi '
           '$cevre cm olduğuna göre $soru',
       yanit,
@@ -2082,6 +2138,14 @@ AdvancedItem _sinusTeoremi(int a, int b, int c) {
       birim: 'cm',
       pozitif: true,
     );
+    // Başka bir kenar, çevrenin üçte biri, kalan iki kenarın toplamı ya da
+    // orantı sabitini yanıt sanma.
+    return kenar(eski, yanit, [
+      for (final o in [x, y, z])
+        if (o != carpan) k * o,
+      if (cevre % 3 == 0) cevre ~/ 3,
+      ...[cevre - yanit, k],
+    ]);
   }
   // Çevrel çember.
   final (bicim, s, t, r) = _cevrelVeri[a + 25 * b + 500 * (c - 8)];
@@ -2089,7 +2153,7 @@ AdvancedItem _sinusTeoremi(int a, int b, int c) {
     final (n, d, kk) = _sinOzel[s]!;
     final aYaz = kk == 1 ? '$r' : (r == 1 ? '√$kk' : '$r√$kk');
     final cap = 2 * r * d ~/ (2 * n); // a/sin A = r·√k/(√k/2) = 2r
-    return _tam(
+    final eski = _tam(
       'ABC üçgeninde m(A) = $s° ve |BC| = $aYaz cm olduğuna göre ABC '
           'üçgeninin çevrel çemberinin çapı kaç cm olur?',
       cap,
@@ -2100,11 +2164,15 @@ AdvancedItem _sinusTeoremi(int a, int b, int c) {
       birim: 'cm',
       pozitif: true,
     );
+    return kenar(eski, cap, [
+      ...[r, 4 * r, if (kk == 1) 3 * r, if (kk != 1) r * kk],
+      if (cap.isEven) cap ~/ 2,
+    ]);
   }
   final sa = _R(s, t);
   final aKenar = 2 * r * s ~/ t;
   if (bicim == 0) {
-    return _tam(
+    final eski = _tam(
       'ABC üçgeninde sin A = $sa ve |BC| = $aKenar cm olduğuna göre ABC '
           'üçgeninin çevrel çemberinin yarıçapı kaç cm olur?',
       r,
@@ -2119,8 +2187,16 @@ AdvancedItem _sinusTeoremi(int a, int b, int c) {
       birim: 'cm',
       pozitif: true,
     );
+    // Çapı yarıçap sanma, iki kez yarıya bölme, sinüsle çarpma, kenarı verme.
+    return kenar(eski, r, [
+      2 * r,
+      if (r.isEven) r ~/ 2,
+      if ((aKenar * s) % t == 0) aKenar * s ~/ t,
+      aKenar,
+      if ((aKenar * s) % (2 * t) == 0) aKenar * s ~/ (2 * t),
+    ]);
   }
-  return _tam(
+  final eski = _tam(
     'Çevrel çemberinin yarıçapı $r cm olan ABC üçgeninde sin A = $sa '
         'olduğuna göre |BC| kaç cm olur?',
     aKenar,
@@ -2135,6 +2211,12 @@ AdvancedItem _sinusTeoremi(int a, int b, int c) {
     birim: 'cm',
     pozitif: true,
   );
+  return kenar(eski, aKenar, [
+    if ((r * s) % t == 0) r * s ~/ t,
+    if ((4 * r * s) % t == 0) 4 * r * s ~/ t,
+    if ((2 * r * t) % s == 0) 2 * r * t ~/ s,
+    ...[2 * r, r],
+  ]);
 }
 
 // ---------------------------------------------------------------------------
