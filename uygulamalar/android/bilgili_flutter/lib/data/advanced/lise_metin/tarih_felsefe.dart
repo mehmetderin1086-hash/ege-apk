@@ -452,10 +452,14 @@ const _ilkCag = <(String, int, int)>[
   (
     'ziggurat adı verilen ve gözlemevi olarak da kullanılan tapınaklar yapmışlardır.',
     0,
-    0,
+    1 << 2,
   ),
   ("Urkagina Kanunları'nı hazırlamışlardır.", 0, 0),
-  ('ay yılı esaslı takvimi bulmuşlardır.', 0, 1 << 2),
+  (
+    'ay yılı esaslı takvimi bulmuşlardır.',
+    0,
+    1 << 2 | 1 << 9 | 1 << 10 | 1 << 11 | 1 << 12,
+  ),
   ('Ur, Uruk ve Lagaş şehir devletlerini kurmuşlardır.', 0, 0),
   ('güneş yılı esaslı takvimi bulmuşlardır.', 1, 1 << 11),
   ('ölülerini mumyalayarak saklamışlardır.', 1, 0),
@@ -507,7 +511,7 @@ const _ilkCag = <(String, int, int)>[
     0,
   ),
   ('Zerdüşt dinini benimsemişlerdir.', 8, 0),
-  ('kâğıdı icat etmişlerdir.', 9, 0),
+  ('kâğıdı icat etmişlerdir.', 9, 1 << 1),
   ('pusulayı icat etmişlerdir.', 9, 0),
   ("Hun akınlarına karşı Çin Seddi'ni inşa etmişlerdir.", 9, 0),
   ("Konfüçyüs'ün ahlak öğretisini benimsemişlerdir.", 9, 0),
@@ -519,9 +523,9 @@ const _ilkCag = <(String, int, int)>[
   ('Latin alfabesini geliştirmişlerdir.', 11, 0),
   ("Kolezyum adlı büyük amfitiyatroyu Roma'da yapmışlardır.", 11, 0),
   ('senato ve konsüllerle yönetilen bir cumhuriyet kurmuşlardır.', 11, 1 << 5),
-  ('ilk olimpiyat oyunlarını düzenlemişlerdir.', 12, 0),
-  ("Atina'da doğrudan demokrasiyi uygulamışlardır.", 12, 0),
-  ("Sparta'da askerî bir yönetim kurmuşlardır.", 12, 0),
+  ('ilk olimpiyat oyunlarını düzenlemişlerdir.', 12, 1 << 6),
+  ("Atina'da doğrudan demokrasiyi uygulamışlardır.", 12, 1 << 6),
+  ("Sparta'da askerî bir yönetim kurmuşlardır.", 12, 1 << 6),
   ("Sokrates ve Platon'u yetiştirmişlerdir.", 12, 1 << 6),
 ];
 
@@ -590,6 +594,7 @@ final _islamOlgu = _Ozneli(
   _donem,
   const [0, 1, 2],
   donem: true,
+  kronolojik: true,
   sirali: 'İslam tarihine ait bu gelişmeler sırasıyla kimlerin döneminde gerçekleşmiştir?',
   hangileri: (s) =>
       'İslam tarihine ait bu gelişmelerden hangileri $s gerçekleşmiştir?',
@@ -634,7 +639,7 @@ const _emevi = <(String, int, int)>[
   (
     'tercüme faaliyetleriyle Antik Yunan eserlerini Arapçaya kazandırmıştır.',
     1,
-    1 << 2,
+    1 | 1 << 2,
   ),
   ('Arap olmayan Müslümanlara eşit davranmıştır.', 1, 1 << 2),
   ('Harun Reşid döneminde en parlak çağını yaşamıştır.', 1, 0),
@@ -797,13 +802,13 @@ const _divan = <(String, int, int)>[
   ('divan kararlarının kanunlara uygunluğunu denetler.', 3, 1 << 4),
   ('devlet işlerinin dinî kurallara uygunluğu konusunda fetva verir.', 4, 0),
   ('ilmiye sınıfının en üst düzeydeki görevlisidir.', 4, 1 << 1),
-  ('devletin dış yazışmalarını yürütür.', 5, 0),
+  ('devletin dış yazışmalarını yürütür.', 5, 1 << 3),
   ('divan kâtiplerinin başıdır.', 5, 1 << 3),
   ('görevi II. Mahmud döneminde Hariciye Nezaretine dönüştürülmüştür.', 5, 0),
   ('donanmanın komutanıdır.', 6, 0),
   ("Tersane-i Amire'nin yönetiminden sorumludur.", 6, 0),
   ("İstanbul'un güvenliğinden sorumludur.", 7, 1 | 1 << 6),
-  ('yeniçeri ocağının komutanıdır.', 7, 0),
+  ("Yeniçeri Ocağı'nın komutanıdır.", 7, 0),
 ];
 
 // Biçim döngüsü: 0–2 Divan-ı Hümayun görevleri (2.000 vaka), 3 dirlik türü ve
@@ -815,12 +820,12 @@ final _divanOlgu = _Ozneli(
   _divanUye,
   _osmanliDongu,
   sirali:
-      "Bu bilgilerin ait olduğu, Divan-ı Hümayun'da yer alan görevliler sırasıyla hangi "
+      'Bu bilgilerin ait olduğu Osmanlı merkez teşkilatı görevlileri sırasıyla hangi '
       'seçenekte doğru verilmiştir?',
   hangileri: (s) =>
-      "Divan-ı Hümayun'da yer alan görevlilerle ilgili bu bilgilerden hangileri "
+      'Osmanlı merkez teşkilatındaki görevlilerle ilgili bu bilgilerden hangileri '
       '$s aittir?',
-  onerme: "Divan-ı Hümayun'da yer alan görevlilerle ilgili bu bilgilerden hangileri doğrudur?",
+  onerme: 'Osmanlı merkez teşkilatındaki görevlilerle ilgili bu bilgilerden hangileri doğrudur?',
 );
 
 // Sınır değerlerinden (3000, 20000, 100000) uzak gelirler.
@@ -852,44 +857,155 @@ const _dirlikAd = ['Tımar', 'Zeamet', 'Has'];
 int _dirlikTuru(int gelir, [int alt = 20000, int ust = 100000]) =>
     gelir < alt ? 0 : (gelir < ust ? 1 : 2);
 
-/// Gelirleri yalnız büyüklüğe göre sıralamak ya da sınırları 10000–50000 veya
-/// 50000–200000 sanmak doğru yanıtı vermesin diye bu yolların hepsinin yanlış
-/// sonuç verdiği üçlüler kullanılır.
-bool _dirlikAyirtar(List<int> g) {
-  final d = [for (final x in g) _dirlikTuru(x)];
-  final sira = [...g]..sort();
-  bool farkli(List<int> w) =>
-      [for (var k = 0; k < 3; k++) w[k] != d[k]].any((y) => y);
-  return farkli([for (final x in g) sira.indexOf(x)]) &&
-      farkli([for (final x in g) _dirlikTuru(x, 10000, 50000)]) &&
-      farkli([for (final x in g) _dirlikTuru(x, 50000, 200000)]);
-}
-
-final _dirlikUclu = [
-  for (final t in _tumUcluler(_dirlikGelir.length))
-    if (_dirlikAyirtar([for (final k in t) _dirlikGelir[k]])) t,
+/// Dirlik türünü bulmada tipik yanlış yollar: gelirleri yalnız büyüklüğe göre
+/// sıralayıp türleri dağıtmak (0) ya da sınırları yanlış hatırlamak (1–4).
+const _dirlikYanlisSinir = [
+  (10000, 50000),
+  (50000, 200000),
+  (10000, 100000),
+  (20000, 200000),
 ];
 
+List<int> _dirlikYanlis(List<int> g, int yol) {
+  if (yol == 0) {
+    final sira = [...g]..sort();
+    return [for (final x in g) sira.indexOf(x)];
+  }
+  final (alt, ust) = _dirlikYanlisSinir[yol - 1];
+  return [for (final x in g) _dirlikTuru(x, alt, ust)];
+}
+
+/// Seçeneklerin birbirine benzerliği doğru yanıtı (0. seçenek) ele veriyor mu?
+/// Konum uyuşması, öge kümesi uyuşması ve küme örtüşmesi ölçülür; her ölçüde
+/// ya dört seçenek eşittir ya da doğru yanıt en büyük ve en küçük değerden
+/// farklıdır.
+bool _dengeli(List<List<int>> s) {
+  final kume = [for (final v in s) v.toSet()];
+  final evren = {for (final k in kume) ...k};
+  final olcu = [
+    [
+      for (var a = 0; a < 4; a++)
+        [
+          for (var b = 0; b < 4; b++)
+            if (b != a)
+              for (var p = 0; p < 3; p++)
+                if (s[a][p] == s[b][p]) 1.0,
+        ].fold<double>(0, (t, v) => t + v),
+    ],
+    [
+      for (var a = 0; a < 4; a++)
+        [
+          for (final e in evren)
+            for (var b = 0; b < 4; b++)
+              if (b != a && kume[b].contains(e) == kume[a].contains(e)) 1.0,
+        ].fold<double>(0, (t, v) => t + v),
+    ],
+    [
+      for (var a = 0; a < 4; a++)
+        [
+          for (var b = 0; b < 4; b++)
+            if (b != a)
+              kume[a].intersection(kume[b]).length /
+                  kume[a].union(kume[b]).length,
+        ].fold<double>(0, (t, v) => t + v),
+    ],
+  ];
+  for (final o in olcu) {
+    final enb = o.reduce((p, q) => p > q ? p : q);
+    final enk = o.reduce((p, q) => p < q ? p : q);
+    if (enb - enk < 1e-9) continue;
+    if ((o[0] - enb).abs() < 1e-9 || (o[0] - enk).abs() < 1e-9) return false;
+  }
+  return true;
+}
+
+/// Üç dirliğin olası tür dizileri (27) ve her doğru dizi için dengeli
+/// çeldirici üçlüleri (dizi sıra numaralarıyla).
+final _turDizisi = [
+  for (var a = 0; a < 3; a++)
+    for (var b = 0; b < 3; b++)
+      for (var c = 0; c < 3; c++) [a, b, c],
+];
+int _turNo(List<int> t) => t[0] * 9 + t[1] * 3 + t[2];
+int _turUzunluk(int no) =>
+    [for (final k in _turDizisi[no]) _dirlikAd[k].length]
+        .fold(0, (t, x) => t + x);
+final _dengeliUclu = <int, List<List<int>>>{};
+List<List<int>> _dengeliUcluIcin(int d) => _dengeliUclu.putIfAbsent(
+  d,
+  () => [
+    for (final u in _tumUcluler(27))
+      if (!u.contains(d) &&
+          _dengeli([_turDizisi[d], for (final k in u) _turDizisi[k]]))
+        u,
+  ],
+);
+
+/// Büyük gelirli dirliğe daha düşük bir tür veren seçenek, sınırlar bilinmeden
+/// elenebilir; çeldiriciler bu yüzden gelir sırasıyla uyumludur.
+bool _artan(List<int> g, List<int> t) {
+  for (var a = 0; a < 3; a++) {
+    for (var b = 0; b < 3; b++) {
+      if (g[a] < g[b] && t[a] > t[b]) return false;
+    }
+  }
+  return true;
+}
+
+/// Sorulabilir dirlik vakaları: (sıralı gelirler, çeldirici tür dizileri).
+/// Sıralama, 10000–50000 ve 50000–200000 yolları doğru yanıtı vermez;
+/// çeldiriciler dengeli, gelir sırasıyla uyumlu bir üçlüdür ve en az ikisi
+/// tipik yanlış yolların sonucudur. İlk liste, çeldiricilerden birinin doğru
+/// yanıttan uzun olduğu vakalardır; ikincide doğru yanıt en uzun seçenektir.
+/// Vakaların dörtte biri ikinci listeden alınır (seçenek uzunluğu ipucu
+/// vermesin).
+final _dirlikVaka = () {
+  final kisa = <(List<int>, List<List<int>>)>[];
+  final uzun = <(List<int>, List<List<int>>)>[];
+  for (final t in _tumUcluler(_dirlikGelir.length)) {
+    for (final p in ucluDizilimler) {
+      final g = [for (final k in p) _dirlikGelir[t[k]]];
+      final dn = _turNo([for (final x in g) _dirlikTuru(x)]);
+      final yol = [for (var y = 0; y < 5; y++) _turNo(_dirlikYanlis(g, y))];
+      if (yol.take(3).contains(dn)) continue;
+      List<int>? enKisa, enUzun;
+      var kisaSay = 1, uzunSay = 1;
+      for (final u in _dengeliUcluIcin(dn)) {
+        final say = u.where(yol.contains).length;
+        if (say < 2 || !u.every((k) => _artan(g, _turDizisi[k]))) continue;
+        if (u.every((k) => _turUzunluk(k) <= _turUzunluk(dn))) {
+          if (say > uzunSay) {
+            enUzun = u;
+            uzunSay = say;
+          }
+        } else if (say > kisaSay) {
+          enKisa = u;
+          kisaSay = say;
+        }
+      }
+      if (enKisa != null) {
+        kisa.add((g, [for (final k in enKisa) _turDizisi[k]]));
+      } else if (enUzun != null) {
+        uzun.add((g, [for (final k in enUzun) _turDizisi[k]]));
+      }
+    }
+  }
+  return (kisa, uzun);
+}();
+
 AdvancedItem _dirlik(int j) {
-  final u = _dilim(_dirlikUclu, j, 1500);
-  final g = [for (final k in ucluDizilimler[j % 6]) _dirlikGelir[u[k]]];
+  final (kisa, uzun) = _dirlikVaka;
+  final (g, celdirici) = j % 4 == 0
+      ? _dilim(uzun, j ~/ 4, 375)
+      : _dilim(kisa, j - j ~/ 4 - 1, 1125);
   String yaz(List<int> t) => [for (final k in t) _dirlikAd[k]].join(' – ');
   final d = [for (final x in g) _dirlikTuru(x)];
-  final sira = [...g]..sort();
   return secenekli(
     "Osmanlı Devleti'nde üç dirliğin yıllık gelirleri şöyledir:\n"
         '${_liste([for (final x in g) '$x akçe'])}'
         'Bu dirliklerin türleri sırasıyla hangi seçenekte doğru verilmiştir?',
     yaz(d),
-    [
-      // Gelirleri yalnız büyüklüğe göre sıralayıp türleri dağıtmak.
-      yaz([for (final x in g) sira.indexOf(x)]),
-      yaz([for (final x in g) _dirlikTuru(x, 10000, 50000)]),
-      yaz([for (final x in g) _dirlikTuru(x, 50000, 200000)]),
-      for (var k = 0; k < 3; k++)
-        for (final y in [1, 2])
-          yaz([for (var t = 0; t < 3; t++) t == k ? (d[t] + y) % 3 : d[t]]),
-    ],
+    [for (final c in celdirici) yaz(c)],
     'Yıllık geliri 3000 ile 20000 akçe arasında olan dirlik tımar, 20000 ile 100000 akçe '
         'arasında olan zeamet, 100000 akçeden fazla olan hastır. Buna göre '
         '${[for (var k = 0; k < 3; k++) '${g[k]} akçelik dirlik ${_dirlikAd[d[k]].toLowerCase()}'].join(', ')} '
@@ -1104,7 +1220,7 @@ const _islahatDonem = [
 // Hendesehane, çiçek aşısı, posta teşkilatı) alınmamıştır.
 const _islahat = <(String, int, int)>[
   ("İbrahim Müteferrika'nın ilk Türk matbaasını kurması", 0, 0),
-  ("Avrupa'ya ilk kez geçici elçilerin gönderilmesi", 0, 0),
+  ("Yirmisekiz Mehmet Çelebi'nin elçi olarak Paris'e gönderilmesi", 0, 0),
   ("Tulumbacı Ocağı'nın kurulması", 0, 0),
   (
     'Doğu ve Batı eserlerini çevirmek için bir tercüme heyetinin oluşturulması',
@@ -1168,6 +1284,7 @@ final _islahatOlgu = _Ozneli(
   _islahatDonem,
   const [0, 1, 2],
   donem: true,
+  kronolojik: true,
   sirali:
       'Osmanlı yenileşme hareketlerine ait bu gelişmelerin yaşandığı dönemler sırasıyla '
       'hangi seçenekte doğru verilmiştir?',
@@ -1316,6 +1433,7 @@ final _savasOlgu = _Ozneli(
   _savasYili,
   _olayDongu,
   donem: true,
+  kronolojik: true,
   sirali:
       'I. Dünya Savaşı sürecindeki bu gelişmelerin yılları sırasıyla hangi seçenekte doğru '
       'verilmiştir?',
@@ -1487,57 +1605,59 @@ const _ikinciOlay = <(String, int, int)>[
 ];
 
 const _orgAd = [
-  ('Birleşmiş Milletler', "Birleşmiş Milletler'e"),
+  ('Birleşmiş Milletler', 'Birleşmiş Milletlere'),
   ('UNESCO', "UNESCO'ya"),
   ('UNICEF', "UNICEF'e"),
-  ('Dünya Sağlık Örgütü', "Dünya Sağlık Örgütü'ne"),
-  ('Uluslararası Para Fonu', "Uluslararası Para Fonu'na"),
-  ('Dünya Bankası', "Dünya Bankası'na"),
-  ('Avrupa Konseyi', "Avrupa Konseyi'ne"),
-  ('Arap Birliği', "Arap Birliği'ne"),
-  ('Avrupa Ekonomik İş Birliği Örgütü', "Avrupa Ekonomik İş Birliği Örgütü'ne"),
-  ('Avrupa Kömür ve Çelik Topluluğu', "Avrupa Kömür ve Çelik Topluluğu'na"),
-  ('Avrupa Ekonomik Topluluğu', "Avrupa Ekonomik Topluluğu'na"),
+  ('Dünya Sağlık Örgütü', 'Dünya Sağlık Örgütüne'),
+  ('Uluslararası Para Fonu', 'Uluslararası Para Fonuna'),
+  ('Dünya Bankası', 'Dünya Bankasına'),
+  ('Avrupa Konseyi', 'Avrupa Konseyine'),
+  ('Arap Birliği', 'Arap Birliğine'),
+  ('Avrupa Ekonomik İş Birliği Örgütü', 'Avrupa Ekonomik İş Birliği Örgütüne'),
+  ('Avrupa Kömür ve Çelik Topluluğu', 'Avrupa Kömür ve Çelik Topluluğuna'),
+  ('Avrupa Ekonomik Topluluğu', 'Avrupa Ekonomik Topluluğuna'),
 ];
 
+// UNESCO, UNICEF, Dünya Sağlık Örgütü, Uluslararası Para Fonu ve Dünya Bankası
+// Birleşmiş Milletler sistemine bağlı olduğu için bilgileri BM'ye karşı maskelidir.
 const _org = <(String, int, int)>[
   (
     'uluslararası barış ve güvenliği korumak amacıyla 1945 yılında kurulmuştur.',
     0,
-    0,
+    1 << 1 | 1 << 7,
   ),
-  ("Güvenlik Konseyi'ndeki beş daimi üyeye veto hakkı tanımıştır.", 0, 0),
-  ("Milletler Cemiyeti'nin yerini almıştır.", 0, 0),
+  ('Güvenlik Konseyindeki beş daimi üyeye veto hakkı tanımıştır.', 0, 0),
+  ('Milletler Cemiyetinin yerini almıştır.', 0, 0),
   ("San Francisco Konferansı'nda imzalanan bir antlaşmayla kurulmuştur.", 0, 0),
   (
     'eğitim, bilim ve kültür alanlarında uluslararası iş birliğini geliştirmek amacıyla kurulmuştur.',
     1,
-    0,
+    1 | 1 << 6 | 1 << 7,
   ),
   (
     'dünyadaki çocukların sağlık, beslenme ve eğitim ihtiyaçlarını desteklemek amacıyla kurulmuştur.',
     2,
-    0,
+    1,
   ),
   (
     'uluslararası alanda halk sağlığını korumak ve salgın hastalıklarla mücadele etmek amacıyla kurulmuştur.',
     3,
-    1 << 2,
+    1 | 1 << 2,
   ),
   (
     'üye ülkelere ödemeler dengesi sorunlarında kısa vadeli kredi desteği vermek amacıyla kurulmuştur.',
     4,
-    0,
+    1,
   ),
   (
     "kuruluşu 1944 yılındaki Bretton Woods Konferansı'nda kararlaştırılmıştır.",
     4,
-    1 << 5,
+    1 | 1 << 5,
   ),
   (
     'savaşta yıkılan ülkelerin yeniden yapılanması ve kalkınması için uzun vadeli kredi vermek amacıyla kurulmuştur.',
     5,
-    0,
+    1 | 1 << 8,
   ),
   ("Avrupa İnsan Hakları Sözleşmesi'ni hazırlamıştır.", 6, 0),
   ("merkezi Strazburg'dadır.", 6, 0),
@@ -1581,6 +1701,7 @@ final _ikinciOlayOlgu = _Ozneli(
   _ikinciYil,
   _ikinciOlayDongu,
   donem: true,
+  kronolojik: true,
   sirali:
       'II. Dünya Savaşı sürecindeki bu gelişmelerin yılları sırasıyla hangi seçenekte '
       'doğru verilmiştir?',
@@ -1594,11 +1715,11 @@ final _orgOlgu = _Ozneli(
   _orgAd,
   _orgDongu,
   sirali:
-      'II. Dünya Savaşı sonrasında kurulan örgütlerle ilgili bu bilgilerin ait olduğu '
-      'örgütler sırasıyla hangi seçenekte doğru verilmiştir?',
+      'Bu bilgilerin ait olduğu uluslararası örgütler sırasıyla hangi seçenekte doğru '
+      'verilmiştir?',
   hangileri: (s) =>
-      'II. Dünya Savaşı sonrasında kurulan örgütlerle ilgili bu bilgilerden hangileri $s aittir?',
-  onerme: 'II. Dünya Savaşı sonrasında kurulan örgütlerle ilgili bu bilgilerden hangileri doğrudur?',
+      'Uluslararası örgütlerle ilgili bu bilgilerden hangileri $s aittir?',
+  onerme: 'Uluslararası örgütlerle ilgili bu bilgilerden hangileri doğrudur?',
 );
 
 // Savaş sırasında taraf değiştiren ya da kısa süre Mihver'e katılan devletler
@@ -1735,9 +1856,13 @@ const _ittifak = <(String, int, int)>[
   ("1952 yılında Türkiye ve Yunanistan'ı üyeliğe kabul etmiştir.", 0, 0),
   ('Kuzey Atlantik ülkelerinin ortak savunması amacıyla kurulmuştur.', 0, 0),
   ('1955 yılında SSCB önderliğinde kurulmuştur.', 1, 0),
-  ("Doğu Bloku ülkelerinin NATO'ya karşı oluşturduğu askerî ittifaktır.", 1, 0),
+  ("Doğu Bloku ülkelerinin NATO'ya karşı oluşturduğu askerî ittifaktır.", 1, 1),
   ('1991 yılında feshedilmiştir.', 1, 0),
-  ('Türkiye, Irak, İran, Pakistan ve İngiltere tarafından kurulmuştur.', 2, 0),
+  (
+    "Türkiye, Irak, İran, Pakistan ve İngiltere'nin katılımıyla oluşmuştur.",
+    2,
+    0,
+  ),
   ("Irak'ın ayrılmasından sonra CENTO adını almıştır.", 2, 0),
   (
     "Orta Doğu'da Sovyet yayılmacılığını önlemek amacıyla kurulmuştur.",
@@ -1759,13 +1884,13 @@ const _ittifak = <(String, int, int)>[
   (
     "Türkiye ve Yunanistan'a askerî ve ekonomik yardım yapılmasını öngörmüştür.",
     5,
-    1 << 6 | 1 << 7,
+    1 | 1 << 6 | 1 << 7,
   ),
   ('1947 yılında ABD Başkanı tarafından ilan edilmiştir.', 5, 1 << 6),
   (
     "SSCB'nin Boğazlar ve Doğu Anadolu üzerindeki isteklerine karşı Türkiye'ye destek sağlamıştır.",
     5,
-    1 << 6,
+    1 | 1 << 4 | 1 << 6,
   ),
   (
     'Avrupa ülkelerinin savaş sonrasında ekonomik olarak kalkınmasını amaçlamıştır.',
@@ -1773,7 +1898,7 @@ const _ittifak = <(String, int, int)>[
     1 << 5,
   ),
   (
-    "yardımların dağıtımı için Avrupa Ekonomik İş Birliği Örgütü'nün kurulmasına yol açmıştır.",
+    'yardımların dağıtımı için Avrupa Ekonomik İş Birliği Örgütünün kurulmasına yol açmıştır.',
     6,
     0,
   ),
@@ -1799,6 +1924,7 @@ final _sogukOlayOlgu = _Ozneli(
   _sogukYil,
   _sogukOlayDongu,
   donem: true,
+  kronolojik: true,
   sirali:
       'Soğuk Savaş dönemine ait bu gelişmelerin yılları sırasıyla hangi seçenekte doğru '
       'verilmiştir?',
@@ -1811,12 +1937,20 @@ final _ittifakOlgu = _Ozneli(
   _ittifak,
   _ittifakAd,
   _ittifakDongu,
+  // İttifaklar (0–4) ile doktrin ve planlar (5–7) ayrı öbeklerdir.
+  grup: const [0, 0, 0, 0, 0, 1, 1, 1],
   sirali:
-      'Soğuk Savaş dönemindeki ittifak ve doktrinlerle ilgili bu bilgilerin ait olduğu '
-      'ittifak ya da doktrinler sırasıyla hangi seçenekte doğru verilmiştir?',
+      'Soğuk Savaş dönemiyle ilgili bu bilgilerin ait olduğu ittifak, plan ya da '
+      'doktrinler sırasıyla hangi seçenekte doğru verilmiştir?',
+  siraliYaz: (d) =>
+      'Soğuk Savaş dönemiyle ilgili bu bilgilerin ait olduğu '
+      '${d.every((v) => v < 5) ? 'ittifaklar' : (d.every((v) => v >= 5) ? 'plan ya da doktrinler' : 'ittifak, plan ya da doktrinler')} '
+      'sırasıyla hangi seçenekte doğru verilmiştir?',
   hangileri: (s) =>
-      'Soğuk Savaş dönemindeki ittifak ve doktrinlerle ilgili bu bilgilerden hangileri $s aittir?',
-  onerme: 'Soğuk Savaş dönemindeki ittifak ve doktrinlerle ilgili bu bilgilerden hangileri doğrudur?',
+      'Soğuk Savaş dönemiyle ilgili bu bilgilerden hangileri $s aittir?',
+  onerme:
+      'Soğuk Savaş dönemindeki ittifak, plan ve doktrinlerle ilgili bu bilgilerden '
+      'hangileri doğrudur?',
 );
 
 AdvancedItem _sogukSavasSoru(int i) =>
@@ -1848,11 +1982,11 @@ const _dis = <(String, int, int)>[
     0,
   ),
   (
-    "Milletler Cemiyeti'ne götürülmüş ve Cemiyet bölgenin Irak'a bırakılmasına karar vermiştir.",
+    "Milletler Cemiyetine götürülmüş ve Cemiyet bölgenin Irak'a bırakılmasına karar vermiştir.",
     0,
     1 << 5,
   ),
-  ('Şeyh Sait İsyanı nedeniyle Türkiye aleyhine sonuçlanmıştır.', 0, 0),
+  ("Şeyh Sait İsyanı'nın da etkisiyle Türkiye aleyhine sonuçlanmıştır.", 0, 0),
   ('1926 Ankara Antlaşması ile çözülmüştür.', 0, 0),
   (
     'Lozan Konferansı sırasında Türkiye ile Yunanistan arasında imzalanan bir sözleşmeyle kararlaştırılmıştır.',
@@ -1878,11 +2012,15 @@ const _dis = <(String, int, int)>[
   (
     "İtalya'nın Balkanlara yönelik yayılmacı politikasına karşı oluşturulmuştur.",
     2,
+    1 << 3 | 1 << 4,
+  ),
+  (
+    "Bulgaristan ve Arnavutluk'un katılmadığı bir bölgesel ittifaktır.",
+    2,
     1 << 4,
   ),
-  ("Bulgaristan ve Arnavutluk'un katılmadığı bir bölgesel ittifaktır.", 2, 0),
   ('1936 yılında imzalanmıştır.', 3, 0),
-  ("Boğazlar Komisyonu'nun kaldırılmasını sağlamıştır.", 3, 0),
+  ('Boğazlar Komisyonunun kaldırılmasını sağlamıştır.', 3, 0),
   ('Boğazlar bölgesinin Türk askerî denetimine geçmesini sağlamıştır.', 3, 0),
   (
     "Lozan'da Boğazlarla ilgili alınan kararların Türkiye lehine değiştirilmesini sağlamıştır.",
@@ -1906,7 +2044,7 @@ const _dis = <(String, int, int)>[
     0,
   ),
   (
-    "Milletler Cemiyeti'nin hazırladığı bir statüyle bölgeye özerklik tanınmasıyla yeni bir aşamaya girmiştir.",
+    'Milletler Cemiyetinin hazırladığı bir statüyle bölgeye özerklik tanınmasıyla yeni bir aşamaya girmiştir.',
     5,
     1,
   ),
@@ -1930,6 +2068,8 @@ final _disOlgu = _Ozneli(
   _dis,
   _disKonu,
   const [0, 1, 2],
+  // Sorunlar (Musul, mübadele, Hatay, borçlar) ile antlaşmalar ayrı öbeklerdir.
+  grup: const [0, 0, 1, 1, 1, 0, 0],
   fiil: 'ilgilidir',
   sifat: 'ilgili olanlar',
   sirali:
@@ -1943,30 +2083,40 @@ final _disOlgu = _Ozneli(
 // ─────────────── 12 · Çok partili hayata geçiş denemeleri (1924–1950) ───────
 
 const _siyasiAd = [
-  ('Terakkiperver Cumhuriyet Fırkası', 'Terakkiperver Cumhuriyet Fırkası ile'),
-  ('Serbest Cumhuriyet Fırkası', 'Serbest Cumhuriyet Fırkası ile'),
-  ('Milli Kalkınma Partisi', 'Milli Kalkınma Partisi ile'),
-  ('Demokrat Parti', 'Demokrat Parti ile'),
-  ('Cumhuriyet Halk Partisi', 'Cumhuriyet Halk Partisi ile'),
-  ('Şeyh Sait İsyanı', 'Şeyh Sait İsyanı ile'),
-  ('Takrir-i Sükûn Kanunu', 'Takrir-i Sükûn Kanunu ile'),
-  ('İzmir Suikastı girişimi', 'İzmir Suikastı girişimi ile'),
-  ('Menemen Olayı', 'Menemen Olayı ile'),
-  ('Dörtlü Takrir', 'Dörtlü Takrir ile'),
-  ('12 Temmuz Beyannamesi', '12 Temmuz Beyannamesi ile'),
-  ('1946 seçimleri', '1946 seçimleri ile'),
-  ('1950 seçimleri', '1950 seçimleri ile'),
+  ('Terakkiperver Cumhuriyet Fırkası', 'Terakkiperver Cumhuriyet Fırkasına'),
+  ('Serbest Cumhuriyet Fırkası', 'Serbest Cumhuriyet Fırkasına'),
+  ('Millî Kalkınma Partisi', 'Millî Kalkınma Partisine'),
+  ('Demokrat Parti', 'Demokrat Partiye'),
+  ('Cumhuriyet Halk Partisi', 'Cumhuriyet Halk Partisine'),
+  ('Şeyh Sait İsyanı', "Şeyh Sait İsyanı'na"),
+  ('Takrir-i Sükûn Kanunu', "Takrir-i Sükûn Kanunu'na"),
+  ('İzmir Suikastı girişimi', 'İzmir Suikastı girişimine'),
+  ('Menemen Olayı', "Menemen Olayı'na"),
+  ('Dörtlü Takrir', "Dörtlü Takrir'e"),
+  ('12 Temmuz Beyannamesi', "12 Temmuz Beyannamesi'ne"),
+  ('1946 seçimleri', '1946 seçimlerine'),
+  ('1950 seçimleri', '1950 seçimlerine'),
 ];
 
-// Partiler (0–4) ve olaylar (5–12) ayrı öbeklerdir.
+// Partiler (0–4) ve olaylar (5–12) ayrı öbeklerdir. Maskeler, bilginin başka
+// bir parti ya da gelişmeyi anan ya da onunla doğrudan bağlantılı olduğu
+// durumları (ör. Dörtlü Takrir'i verenlerin kurduğu Demokrat Parti) işaretler.
 const _siyasi = <(String, int, int)>[
   (
     '1924 yılında Kâzım Karabekir, Ali Fuat Cebesoy ve Rauf Orbay gibi isimlerce kurulmuştur.',
     0,
     0,
   ),
-  ("Şeyh Sait İsyanı'yla ilişkilendirilerek 1925 yılında kapatılmıştır.", 0, 0),
-  ('programında dinî inançlara saygılı olduğunu belirtmiştir.', 0, 0),
+  (
+    "Şeyh Sait İsyanı'yla ilişkilendirilerek 1925 yılında kapatılmıştır.",
+    0,
+    1 << 5 | 1 << 6,
+  ),
+  (
+    'programında dinî inançlara saygılı olduğunu belirtmiştir.',
+    0,
+    1 << 1 | 1 << 2 | 1 << 3,
+  ),
   ('Cumhuriyet döneminin ilk muhalefet partisidir.', 0, 0),
   ('yerinden yönetim (adem-i merkeziyet) anlayışını savunmuştur.', 0, 0),
   (
@@ -1990,55 +2140,69 @@ const _siyasi = <(String, int, int)>[
     2,
     1 | 1 << 1,
   ),
-  ("Dörtlü Takrir'i veren milletvekillerince 1946 yılında kurulmuştur.", 3, 0),
-  ('1950 seçimlerini kazanarak iktidara gelmiştir.', 3, 0),
-  ('1946 seçimlerine katılarak Büyük Millet Meclisine girmiştir.', 3, 1 << 4),
+  (
+    "Dörtlü Takrir'i veren milletvekillerince 1946 yılında kurulmuştur.",
+    3,
+    1 << 9,
+  ),
+  ('1950 seçimlerini kazanarak iktidara gelmiştir.', 3, 1 << 12),
+  (
+    '1946 seçimlerine katılarak Büyük Millet Meclisine girmiştir.',
+    3,
+    1 << 4 | 1 << 11,
+  ),
   ('1923 yılında Halk Fırkası adıyla kurulmuştur.', 4, 0),
   ('1924 yılında adına Cumhuriyet sözcüğünü eklemiştir.', 4, 0),
   ('1931 kurultayında altı ilkeyi programına almıştır.', 4, 0),
-  ('1946 seçimlerinde iktidarını korumuştur.', 4, 0),
-  ("1950 seçimlerinde iktidarı Demokrat Parti'ye bırakmıştır.", 4, 1 << 3),
+  ('1946 seçimlerinde iktidarını korumuştur.', 4, 1 << 11),
+  (
+    '1950 seçimlerinde iktidarı Demokrat Partiye bırakmıştır.',
+    4,
+    1 << 3 | 1 << 12,
+  ),
   ("1925 yılında Doğu Anadolu'da çıkmıştır.", 5, 1 << 6),
-  ("Takrir-i Sükûn Kanunu'nun çıkarılmasına yol açmıştır.", 5, 0),
+  ("Takrir-i Sükûn Kanunu'nun çıkarılmasına yol açmıştır.", 5, 1 << 6),
   ("Musul Sorunu'nun Türkiye aleyhine sonuçlanmasında etkili olmuştur.", 5, 0),
   ('hükûmete olağanüstü yetkiler vermiştir.', 6, 1 << 5),
   ('1929 yılına kadar yürürlükte kalmıştır.', 6, 0),
   ('basın üzerinde sıkı bir denetim kurulmasına imkân vermiştir.', 6, 1 << 5),
   ("1926 yılında Mustafa Kemal'e karşı planlanmıştır.", 7, 0),
-  ('eski İttihatçıların yargılanmasına yol açmıştır.', 7, 0),
+  ('eski İttihatçıların yargılanmasına yol açmıştır.', 7, 1),
   (
     "1930 yılında yedek subay Kubilay'ın şehit edilmesiyle sonuçlanmıştır.",
     8,
     0,
   ),
-  ('Serbest Cumhuriyet Fırkası kapandıktan kısa süre sonra yaşanmıştır.', 8, 0),
+  ('Derviş Mehmet önderliğindeki bir grubun çıkardığı irtica olayıdır.', 8, 0),
   (
-    "1945 yılında Celal Bayar, Adnan Menderes, Refik Koraltan ve Fuat Köprülü tarafından "
-        "Cumhuriyet Halk Partisi'ne verilmiştir.",
+    '1945 yılında Celal Bayar, Adnan Menderes, Refik Koraltan ve Fuat Köprülü tarafından '
+        'Cumhuriyet Halk Partisi Meclis Grubuna verilmiştir.',
     9,
-    0,
+    1 << 3 | 1 << 4,
   ),
-  ('parti içi demokrasinin genişletilmesini istemiştir.', 9, 0),
-  ('1947 yılında İsmet İnönü tarafından yayımlanmıştır.', 10, 0),
-  ('iktidar ile muhalefete eşit davranılacağını duyurmuştur.', 10, 0),
+  ('parti içi demokrasinin genişletilmesini istemiştir.', 9, 1 << 4),
+  ('1947 yılında İsmet İnönü tarafından yayımlanmıştır.', 10, 1 << 4),
+  (
+    'iktidar ile muhalefete eşit davranılacağını duyurmuştur.',
+    10,
+    1 << 3 | 1 << 4,
+  ),
   ('açık oy, gizli sayım yöntemiyle yapılmıştır.', 11, 0),
   ('çok partili ilk genel seçimdir.', 11, 0),
   ('gizli oy, açık sayım yöntemiyle yapılmıştır.', 12, 0),
-  ("Demokrat Parti'nin iktidara gelmesini sağlamıştır.", 12, 0),
+  ('Demokrat Partinin iktidara gelmesini sağlamıştır.', 12, 1 << 3 | 1 << 4),
 ];
 
 final _siyasiOlgu = _Ozneli(
   _siyasi,
   _siyasiAd,
   const [0, 1, 2],
-  fiil: 'ilgilidir',
-  sifat: 'ilgili olanlar',
   grup: const [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
   sirali:
-      'Cumhuriyet döneminin siyasi gelişmelerine ait bu bilgilerin ilgili olduğu parti ya da '
+      'Cumhuriyet döneminin siyasi hayatıyla ilgili bu bilgilerin ait olduğu parti ya da '
       'gelişmeler sırasıyla hangi seçenekte doğru verilmiştir?',
   hangileri: (s) =>
-      'Cumhuriyet döneminin siyasi gelişmelerine ait bu bilgilerden hangileri $s ilgilidir?',
+      'Cumhuriyet döneminin siyasi hayatıyla ilgili bu bilgilerden hangileri $s aittir?',
   onerme: 'Cumhuriyet dönemindeki siyasi gelişmelerle ilgili bu bilgilerden hangileri doğrudur?',
 );
 
@@ -2108,7 +2272,7 @@ const _felsefeSoru = <(String, int, int)>[
   ('Devlet düzeninde adalet nasıl sağlanır?', 4, 1 << 2),
   ('Toplum sözleşmesi devletin temeli olabilir mi?', 4, 0),
   ('Halkın yönetime katılması neden önemlidir?', 4, 0),
-  ('Yurttaşlar devlete hangi koşullarda itaat etmelidir?', 4, 0),
+  ('Yurttaşlar devlete hangi koşullarda itaat etmelidir?', 4, 1 << 2),
   ("Tanrı'nın varlığı akılla kanıtlanabilir mi?", 5, 1),
   ('Ruh ölümsüz müdür?', 5, 1 << 1),
   (
@@ -2117,7 +2281,7 @@ const _felsefeSoru = <(String, int, int)>[
     1 << 2,
   ),
   ("Tanrı ile evren arasında nasıl bir ilişki vardır?", 5, 1 << 1),
-  ('Ölümden sonra yaşam var mıdır?', 5, 0),
+  ('Ölümden sonra yaşam var mıdır?', 5, 1 << 1),
   ('Dinî inanç ile akıl arasında nasıl bir ilişki vardır?', 5, 1),
   ("Tanrı'nın sıfatları nelerdir?", 5, 0),
   ('Bilimsel yöntemin özellikleri nelerdir?', 6, 0),
@@ -2300,11 +2464,10 @@ final _filozofOlgu = _Ozneli(
   _filozofGorus,
   _filozof,
   const [0, 1, 2],
-  oge: 'görüş',
   sirali:
-      'Bu görüş ve sözlerin sahibi olan filozoflar sırasıyla hangi seçenekte doğru '
+      'Bu bilgilerin ait olduğu filozoflar sırasıyla hangi seçenekte doğru '
       'verilmiştir?',
-  hangileri: (s) => 'Bu görüş ve sözlerden hangileri $s aittir?',
+  hangileri: (s) => 'Filozoflarla ilgili bu bilgilerden hangileri $s aittir?',
   onerme: 'Filozoflarla ilgili bu bilgilerden hangileri doğrudur?',
 );
 
@@ -2326,7 +2489,7 @@ const _bilgiAkim = [
 // a priori bilgi ve metafizik eleştirisi rasyonalizm ve pozitivizm görüşlerinde,
 // deneycilerin metafizik eleştirisi pozitivizm görüşlerinde maskelenmiştir.
 const _bilgiGorus = <(String, int, int)>[
-  ('doğru bilginin kaynağının akıl olduğunu savunur.', 0, 0),
+  ('doğru bilginin kaynağının akıl olduğunu savunur.', 0, 1 << 2),
   (
     'insan zihninde doğuştan getirilen ilkeler bulunduğunu kabul eder.',
     0,
@@ -2340,11 +2503,15 @@ const _bilgiGorus = <(String, int, int)>[
   (
     'matematiksel akıl yürütmeyi kesin bilginin örneği sayar.',
     0,
-    1 << 2 | 1 << 4,
+    1 << 1 | 1 << 2 | 1 << 4,
   ),
   ('Descartes, Spinoza ve Leibniz tarafından temsil edilir.', 0, 0),
-  ('bilginin kaynağının duyu deneyimi olduğunu savunur.', 1, 0),
-  ('insan zihninin doğuştan boş bir levha olduğunu kabul eder.', 1, 0),
+  (
+    'bilginin kaynağının duyu deneyimi olduğunu savunur.',
+    1,
+    1 << 2 | 1 << 4 | 1 << 5,
+  ),
+  ('insan zihninin doğuştan boş bir levha olduğunu kabul eder.', 1, 1 << 4),
   (
     'duyularda bulunmayan hiçbir şeyin akılda da bulunamayacağını ileri sürer.',
     1,
@@ -2356,11 +2523,15 @@ const _bilgiGorus = <(String, int, int)>[
     1 << 4,
   ),
   ('John Locke, George Berkeley ve David Hume tarafından temsil edilir.', 1, 0),
-  ('bilginin akıl ile deneyin birlikte çalışmasıyla oluştuğunu savunur.', 2, 0),
+  (
+    'bilginin akıl ile deneyin birlikte çalışmasıyla oluştuğunu savunur.',
+    2,
+    1 << 4,
+  ),
   (
     'kendinde şeyin bilinemeyeceğini, yalnızca bize görünen dünyanın bilinebileceğini ileri sürer.',
     2,
-    0,
+    1 << 1 | 1 << 4 | 1 << 6 | 1 << 7,
   ),
   (
     'duyuların sağladığı malzemenin aklın kategorileriyle düzenlendiğini savunur.',
@@ -2371,7 +2542,7 @@ const _bilgiGorus = <(String, int, int)>[
   (
     'gerçek bilgiye akıl ya da duyularla değil sezgi yoluyla ulaşılabileceğini savunur.',
     3,
-    0,
+    1 << 6,
   ),
   (
     'varlığın özünün ancak doğrudan ve aracısız bir kavrayışla bilinebileceğini ileri sürer.',
@@ -2389,7 +2560,11 @@ const _bilgiGorus = <(String, int, int)>[
     4,
     1 << 1,
   ),
-  ('metafizik konuları bilginin alanı dışında bırakır.', 4, 1 << 1 | 1 << 2),
+  (
+    'metafizik konuları bilginin alanı dışında bırakır.',
+    4,
+    1 << 1 | 1 << 2 | 1 << 7,
+  ),
   (
     'insanlığın teolojik, metafizik ve pozitif aşamalardan geçtiğini ileri sürer.',
     4,
@@ -2428,7 +2603,7 @@ const _bilgiGorus = <(String, int, int)>[
     1 << 3,
   ),
   ('Edmund Husserl tarafından geliştirilmiştir.', 6, 0),
-  ('kesin ve doğru bilginin mümkün olmadığını savunur.', 7, 0),
+  ('kesin ve doğru bilginin mümkün olmadığını savunur.', 7, 1 << 5),
   (
     'hiçbir konuda kesin yargıda bulunmamanın insanı huzura kavuşturacağını savunur.',
     7,
@@ -2441,11 +2616,11 @@ final _bilgiAkimOlgu = _Ozneli(
   _bilgiGorus,
   _bilgiAkim,
   const [0, 1, 2],
-  oge: 'görüş',
   sirali:
-      'Bu görüşlerin ait olduğu bilgi felsefesi akımları sırasıyla hangi seçenekte doğru '
+      'Bu bilgilerin ait olduğu bilgi felsefesi akımları sırasıyla hangi seçenekte doğru '
       'verilmiştir?',
-  hangileri: (s) => 'Bilgi felsefesine ait bu görüşlerden hangileri $s aittir?',
+  hangileri: (s) =>
+      'Bilgi felsefesindeki akımlarla ilgili bu bilgilerden hangileri $s aittir?',
   onerme: 'Bilgi felsefesindeki akımlarla ilgili bu bilgilerden hangileri doğrudur?',
 );
 
@@ -2462,7 +2637,9 @@ const _ahlakAkim = [
   ('Ahlaki görecelik', 'ahlaki göreceliğe'),
 ];
 
-// Haz, mutluluk ve fayda kavramlarının örtüştüğü yerler karşılıklı maskelidir.
+// Haz, mutluluk ve fayda kavramlarının örtüştüğü yerler karşılıklı maskelidir;
+// temsilci bilgileri de tartışılabilecek yaklaşımlara karşı maskelidir (ör.
+// Nietzsche varoluşçuluğun öncüsü sayılır, Bentham'ın faydacılığı hazcıdır).
 const _ahlakGorus = <(String, int, int)>[
   ('ahlaki eylemin amacının haz elde etmek olduğunu savunur.', 0, 1 << 2),
   ('iyiyi hazla, kötüyü acıyla özdeşleştirir.', 0, 1 << 2),
@@ -2471,12 +2648,12 @@ const _ahlakGorus = <(String, int, int)>[
     0,
     1 << 1,
   ),
-  ('Aristippos ve Epikuros tarafından temsil edilir.', 0, 0),
+  ('Aristippos ve Epikuros tarafından temsil edilir.', 0, 1 << 1),
   ('Kyrene okulunun ahlak anlayışının temelini oluşturur.', 0, 0),
   (
     'mutluluğa erdemli bir yaşam ve ölçülülükle ulaşılabileceğini savunur.',
     1,
-    0,
+    1,
   ),
   ('Aristoteles ve Farabi tarafından temsil edilir.', 1, 0),
   ('erdemi aşırılık ile eksiklik arasındaki orta yol olarak tanımlar.', 1, 0),
@@ -2490,7 +2667,11 @@ const _ahlakGorus = <(String, int, int)>[
     2,
     1 << 1,
   ),
-  ('Jeremy Bentham ve John Stuart Mill tarafından temsil edilir.', 2, 0),
+  (
+    'Jeremy Bentham ve John Stuart Mill tarafından temsil edilir.',
+    2,
+    1 | 1 << 1,
+  ),
   (
     'bir eylemin ahlaki değerini doğurduğu sonuçların topluma yararına göre belirler.',
     2,
@@ -2540,9 +2721,9 @@ const _ahlakGorus = <(String, int, int)>[
   (
     'geleneksel ahlak değerlerinin geçersiz olduğunu ve yeniden değerlendirilmesi gerektiğini savunur.',
     6,
-    0,
+    1 << 5,
   ),
-  ('Friedrich Nietzsche tarafından temsil edilir.', 6, 0),
+  ('Friedrich Nietzsche tarafından temsil edilir.', 6, 1 << 5 | 1 << 7),
   ('ahlakı efendi ahlakı ve köle ahlakı olarak ikiye ayırır.', 6, 0),
   (
     'evrensel ve mutlak bir ahlak yasasının bulunmadığını ileri sürer.',
@@ -2552,7 +2733,7 @@ const _ahlakGorus = <(String, int, int)>[
   (
     'ahlaki değerlerin kişiden kişiye ve toplumdan topluma değiştiğini savunur.',
     7,
-    0,
+    1 << 5 | 1 << 6,
   ),
   ('Protagoras gibi sofistler tarafından temsil edilir.', 7, 0),
 ];
@@ -2561,11 +2742,11 @@ final _ahlakOlgu = _Ozneli(
   _ahlakGorus,
   _ahlakAkim,
   const [0, 1, 2],
-  oge: 'görüş',
   sirali:
-      'Bu görüşlerin ait olduğu ahlak felsefesi yaklaşımları sırasıyla hangi seçenekte doğru '
+      'Bu bilgilerin ait olduğu ahlak felsefesi yaklaşımları sırasıyla hangi seçenekte doğru '
       'verilmiştir?',
-  hangileri: (s) => 'Ahlak felsefesine ait bu görüşlerden hangileri $s aittir?',
+  hangileri: (s) =>
+      'Ahlak felsefesindeki yaklaşımlarla ilgili bu bilgilerden hangileri $s aittir?',
   onerme: 'Ahlak felsefesindeki yaklaşımlarla ilgili bu bilgilerden hangileri doğrudur?',
 );
 
@@ -2606,11 +2787,15 @@ const _siyasetGorus = <(String, int, int)>[
     0,
     1 << 3 | 1 << 4,
   ),
-  ('insanın doğası gereği siyasal bir varlık olduğunu söylemiştir.', 1, 0),
+  (
+    'insanın doğası gereği siyasal bir varlık olduğunu söylemiştir.',
+    1,
+    1 << 2 | 1 << 13,
+  ),
   (
     'yönetim biçimlerini yönetenlerin sayısına ve kimin çıkarını gözettiklerine göre sınıflandırmıştır.',
     1,
-    0,
+    1,
   ),
   ('en iyi yönetimin orta sınıfa dayanan yönetim olduğunu savunmuştur.', 1, 0),
   ("El-Medinetü'l-Fazıla adlı eserinde erdemli bir şehir tasarlamıştır.", 2, 0),
@@ -2635,7 +2820,11 @@ const _siyasetGorus = <(String, int, int)>[
     6,
     0,
   ),
-  ("siyasi iktidarın meşruiyetini Tanrı'nın iradesine dayandırmıştır.", 6, 0),
+  (
+    "siyasi iktidarın meşruiyetini Tanrı'nın iradesine dayandırmıştır.",
+    6,
+    1 << 2,
+  ),
   ('Leviathan adlı eserinde güçlü ve mutlak bir devleti savunmuştur.', 7, 0),
   ('doğa durumunu herkesin herkese karşı savaşı olarak tanımlamıştır.', 7, 0),
   (
@@ -2653,7 +2842,11 @@ const _siyasetGorus = <(String, int, int)>[
     8,
     0,
   ),
-  ('yönetimin meşruiyetini yönetilenlerin rızasına dayandırmıştır.', 8, 1 << 9),
+  (
+    'yönetimin meşruiyetini yönetilenlerin rızasına dayandırmıştır.',
+    8,
+    1 << 7 | 1 << 9,
+  ),
   (
     'Toplum Sözleşmesi adlı eserinde egemenliğin genel iradeye, yani halka ait olduğunu savunmuştur.',
     9,
@@ -2673,7 +2866,7 @@ const _siyasetGorus = <(String, int, int)>[
   (
     'toplumların yasalarının iklim ve coğrafya gibi koşullara göre biçimlendiğini savunmuştur.',
     10,
-    0,
+    1 << 13,
   ),
   (
     'Hükümdar adlı eserinde devletin korunması için her yolun mubah olduğunu savunmuştur.',
@@ -2681,7 +2874,11 @@ const _siyasetGorus = <(String, int, int)>[
     0,
   ),
   ('siyaseti ahlak ve dinden ayırmıştır.', 11, 0),
-  ('sınıfsız bir toplumun kurulması gerektiğini savunmuştur.', 12, 0),
+  (
+    'sınıfsız bir toplumun kurulması gerektiğini savunmuştur.',
+    12,
+    1 << 3 | 1 << 4,
+  ),
   ('devleti egemen sınıfın baskı aracı olarak görmüştür.', 12, 0),
   (
     'devletlerin kuruluşunu ve yıkılışını asabiyet kavramıyla açıklamıştır.',
@@ -2754,7 +2951,7 @@ const _kavramTanim = <(String, int, int)>[
     1,
     1,
   ),
-  ('evrendeki değişimi yöneten akıl ve düzen ilkesidir.', 2, 1 << 21),
+  ('evrendeki değişimi yöneten akıl ve düzen ilkesidir.', 2, 1 << 21 | 1 << 29),
   (
     "Platon'a göre duyulur nesnelerin, duyular ötesi dünyadaki değişmez ve gerçek örneğidir.",
     3,
@@ -2793,7 +2990,7 @@ const _kavramTanim = <(String, int, int)>[
     0,
   ),
   ('doğru ya da yanlış olduğu söylenebilen, yargı bildiren cümledir.', 12, 0),
-  ('nesnelerin ortak özelliklerini kapsayan zihinsel tasarımdır.', 13, 0),
+  ('nesnelerin ortak özelliklerini kapsayan zihinsel tasarımdır.', 13, 1 << 3),
   ('bir kavramın dildeki karşılığı olan sözcük ya da sözcük grubudur.', 14, 0),
   ('tek tek olgulardan genel bir sonuca ulaşılan akıl yürütmedir.', 15, 0),
   ('genel bir yargıdan özel bir sonuca ulaşılan akıl yürütmedir.', 16, 0),
@@ -3382,8 +3579,7 @@ final lmTarihFelsefe = <AdvancedFamily>[
     Difficulty.hard,
     BloomLevel.analiz,
     _karsiOlumSoru,
-    exam: ExamKind.tyt,
-    lesson: 'Felsefe',
+    lesson: 'Mantık',
   ),
   lmSirali(
     'fl_kiyas',
@@ -3392,7 +3588,6 @@ final lmTarihFelsefe = <AdvancedFamily>[
     Difficulty.hard,
     BloomLevel.analiz,
     _kiyasSoru,
-    exam: ExamKind.tyt,
-    lesson: 'Felsefe',
+    lesson: 'Mantık',
   ),
 ];

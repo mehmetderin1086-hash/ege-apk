@@ -116,9 +116,11 @@ AdvancedItem _kesenAcisi(int a, int b, int j) {
       break;
     }
   }
+  // Kesen zaten k doğrusudur: "k doğrusunun oluşturduğu kesenin aynı
+  // tarafında" yerine açının yeri k doğrusuna göre söylenir.
   final tanim = butunler
-      ? 'kesenin aynı tarafında ve paralel doğruların arasında kalan karşı '
-            'durumlu iki açının'
+      ? 'açılardan, k doğrusunun aynı tarafında ve paralel doğruların '
+            'arasında kalan karşı durumlu iki açının'
       : '${_kesenAd[j]} iki açının';
   final veri =
       'd₁ ∥ d₂ olmak üzere bu iki doğruyu kesen k doğrusunun oluşturduğu '
@@ -700,6 +702,20 @@ bool _temizAralik(int pay, int payda, double alt, double ust) {
   return v != null && v >= alt && v <= ust;
 }
 
+/// Prizma biçimli kabın adı: taban ayrıtları eşitse "5 cm ve 5 cm" yazılmaz,
+/// kap kare dik prizma olarak adlandırılır.
+String _prizmaKap(int l, int w, {bool cumleBasi = true}) {
+  final t = cumleBasi ? 'Taban' : 'taban';
+  return l == w
+      ? '$t ayrıtı $l cm olan kare dik prizma'
+      : '$t ayrıtları $l cm ve $w cm olan dikdörtgenler prizması';
+}
+
+/// Metal bloğun adı: üç ayrıtı eşitse küp olarak adlandırılır.
+String _blokAd(int x, int y, int z) => x == y && y == z
+    ? 'bir ayrıtı $x cm olan küp'
+    : 'ayrıtları $x cm, $y cm ve $z cm olan dikdörtgenler prizması';
+
 /// Küp (ayrıt e) prizma kaba (taban L × W): yükselme e³ / (L·W).
 final _suKup = [
   for (var e = 3; e <= 25; e++)
@@ -928,6 +944,9 @@ const _kesisimKatsayi = [
   ((1, -1), (2, 3)),
   ((4, 1), (1, 2)),
   ((2, 5), (1, -3)),
+  // Yalnız a + b sorusunda, öteki altı çiftin hepsi yanıtı (±2) kökte yazılı
+  // bir katsayıyla verdiğinde kullanılır; % 8 ile seçilen biçimlere girmez.
+  ((3, -1), (1, 4)),
 ];
 const _egimler = [2, -1, 3, -2, 1, -3, 4, -4];
 const _yonler = [(1, 2), (2, 1), (1, -1), (3, 1), (1, 3), (2, -1)];
@@ -954,6 +973,44 @@ const _normaller = [
   (8, 15, 17),
   (15, -8, 17),
 ];
+
+/// Dış noktadan teğet vakaları (r, |PT|, dx, dy): yarıçap 2–40, merkezin P
+/// noktasına uzaklığı d ≤ 50 ve |PT| tam sayı; P − M = (dx, dy) tam sayılı
+/// ve uzunluğu d olan bir vektördür. Her (r, |PT|, d) üçlüsünün yönleri
+/// sırayla dağıtılır: komşu vakalar farklı üçlü, aynı üçlünün vakaları farklı
+/// yön kullanır. 500 vakanın her biri ayrı bir (r, dx, dy) taşır.
+final List<(int, int, int, int)> _tegetVakalari = () {
+  int? kok(int n) {
+    if (n < 0) return null;
+    var k = 0;
+    while ((k + 1) * (k + 1) <= n) {
+      k++;
+    }
+    return k * k == n ? k : null;
+  }
+
+  final gruplar = <List<(int, int, int, int)>>[];
+  for (var d = 5; d <= 50; d++) {
+    for (var r = 2; r <= 40; r++) {
+      final t = kok(d * d - r * r);
+      if (t == null || t < 2) continue;
+      gruplar.add([
+        for (var dx = -d; dx <= d; dx++)
+          if (kok(d * d - dx * dx) case final dy?) ...[
+            (r, t, dx, dy),
+            if (dy != 0) (r, t, dx, -dy),
+          ],
+      ]);
+    }
+  }
+  final sonuc = <(int, int, int, int)>[];
+  for (var k = 0; k < 64 && sonuc.length < lmAileBoyu ~/ 10; k++) {
+    for (final g in gruplar) {
+      if (k < g.length && sonuc.length < lmAileBoyu ~/ 10) sonuc.add(g[k]);
+    }
+  }
+  return sonuc;
+}();
 
 const _dogruKonum = [
   'Doğru çemberi iki noktada keser.',
@@ -1098,10 +1155,12 @@ final lmGeometriEk = <AdvancedFamily>[
             unit: 'cm',
             positive: true,
           ),
+          // Sınırı dahil etme, en çok değeri yanıt sanma ve ikisini birlikte
+          // yapma (yanıtın bir fazlası bir hata değildir).
           2 => sayisal(
             '$veri |BC| en az kaç cm olabilir?',
             lo,
-            [q - p, hi, lo + 1],
+            [q - p, hi, p + q],
             '$kural En küçük tam sayı değeri $lo cm olur.',
             unit: 'cm',
             positive: true,
@@ -1241,8 +1300,8 @@ final lmGeometriEk = <AdvancedFamily>[
               'olarak veriliyor. $soruKenar',
           dogru,
           yanlis,
-          'İç açılar toplamı 180° olduğundan 6x ${q1 + q2 + q3 < 0 ? '−' : '+'} '
-              '${(q1 + q2 + q3).abs()} = 180, x = $x bulunur. Açılar '
+          'İç açılar toplamı 180° olduğundan ${_dx(6, q1 + q2 + q3)} = 180, '
+              'x = $x bulunur. Açılar '
               '${_aciListesi(aci)} olur. Büyük açı karşısında büyük kenar '
               'bulunduğundan $dogru.',
         );
@@ -1271,7 +1330,10 @@ final lmGeometriEk = <AdvancedFamily>[
         return sayisal(
           '$veri |BC| en çok kaç cm olabilir?',
           enb,
-          [p + q - 1, kk + 1, if (tam) kk else kk - 1],
+          // Dar açı koşulunu unutma, eşitsizliği ≤ alma ya da kökü yukarı
+          // yuvarlama, en az değeri yanıt sanma (yanıtın bir altı bir hata
+          // değildir; çeldirici olarak kullanılmaz).
+          [p + q - 1, if (tam) kk else kk + 1, q - p + 1, kk + 1],
           'A açısı dar olduğundan |BC|² < $ab² + $ac² = $kare olur; $kok '
               'olduğundan |BC| en çok $enb cm olabilir. Bu değer üçgen '
               'eşitsizliğini de sağlar.',
@@ -1280,14 +1342,20 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       final adet = p + q - 1 - kk;
+      // A açısını dar sanan öğrencinin bulacağı değer sayısı.
+      final darAdet = (tam ? kk - 1 : kk) - (q - p);
       return sayisal(
         '$veri bu uzunluk kaç farklı değer alabilir?',
         adet,
-        [2 * p - 1, adet + 1, if (adet > 1) adet - 1, p + q - kk],
+        // Geniş açı koşulunu unutma, sınırı da sayma, dar açı koşulunu
+        // kullanma.
+        [2 * p - 1, adet + 1, darAdet],
         'A açısı geniş olduğundan |BC|² > $ab² + $ac² = $kare olur; $kok '
             'olduğundan |BC| ≥ ${kk + 1}. Üçgen eşitsizliğinden |BC| < ${p + q} '
-            'olur. Uygun tam sayılar en küçüğü ${kk + 1}, en büyüğü '
-            '${p + q - 1} olmak üzere $adet tanedir.',
+            'olur. ${adet == 1 ? 'Bu iki koşulu yalnız ${kk + 1} sayısı sağlar; '
+                      '|BC| tek bir değer alabilir.' : 'Uygun tam sayılar en '
+                      'küçüğü ${kk + 1}, en büyüğü ${p + q - 1} olmak üzere '
+                      '$adet tanedir.'}',
         positive: true,
       );
     },
@@ -2028,7 +2096,15 @@ final lmGeometriEk = <AdvancedFamily>[
           return sayisal(
             '$veri Buna göre x kaçtır?',
             x,
-            [be, ?_bol(180 - q - s, p + r)],
+            // m(ABD) değerini yanıt sanma, 2 katını almayı unutma, ABD'yi
+            // BCD'nin yarısı ya da ona eşit sanma (ABD 45° ve 60° olmadığından
+            // bu yollar doğru x değerini vermez).
+            [
+              be,
+              ?_bol(180 - q - s, p + r),
+              ?_bol(s - 2 * q, 2 * p - r),
+              ?_bol(s - q, p - r),
+            ],
             cozum,
             positive: true,
           );
@@ -2128,10 +2204,13 @@ final lmGeometriEk = <AdvancedFamily>[
         const giris = 'ABCD yamuğunda [AB] ∥ [DC] olup';
         const orta =
             '[AD] ve [BC] kenarlarının orta noktalarını birleştiren orta taban';
+        const ortaUzunluk =
+            '[AD] ve [BC] kenarlarının orta noktalarını birleştiren orta '
+            'tabanın uzunluğu';
         if (c == 0) {
           return ondalikli(
-            '$giris |AB| = $p cm ve |DC| = $q cm olarak veriliyor. $orta kaç '
-                'cm olur?',
+            '$giris |AB| = $p cm ve |DC| = $q cm olarak veriliyor. $ortaUzunluk '
+                'kaç cm olur?',
             (p + q) / 2,
             [(p + q).toDouble(), (p - q) / 2, (p - q).toDouble()],
             'Orta tabanın uzunluğu, tabanların uzunlukları toplamının '
@@ -2143,8 +2222,8 @@ final lmGeometriEk = <AdvancedFamily>[
         if (c == 1) {
           final m2 = p + q;
           return ondalikli(
-            '$giris |DC| = $q cm ve $orta ${tr(m2 / 2)} cm olarak veriliyor. '
-                'Buna göre |AB| kaç cm olur?',
+            'ABCD yamuğunda [AB] ∥ [DC] ve |DC| = $q cm olarak veriliyor. '
+                '$ortaUzunluk ${tr(m2 / 2)} cm olduğuna göre |AB| kaç cm olur?',
             p.toDouble(),
             [m2 / 2 + q, m2 / 2 - q, m2 / 2 + q / 2],
             'Orta taban (|AB| + |DC|) / 2 olduğundan |AB| = 2·${tr(m2 / 2)} − '
@@ -2749,11 +2828,12 @@ final lmGeometriEk = <AdvancedFamily>[
           int dilim(int rr) => (rr * rr - r * r) * aci ~/ 360;
           if ({aci, r, R}.contains(dilim(R))) R = r + 3 * adim;
           final fark = R * R - r * r, alan = fark * aci ~/ 360;
+          // İki ışın arasındaki açı 180°'yi aşamaz ve iki ışın halkayı iki
+          // dilime ayırır; dilim merkez açısıyla tek türlü belirtilir.
           return sayisal(
-            '$esMerkez $r cm ve $R cm olan iki çember veriliyor. Ortak merkezden '
-                'çıkan ve aralarındaki açının ölçüsü $aci° olan iki ışın, iki çember '
-                'arasındaki halkadan bir halka dilimi ayırıyor. Bu halka diliminin '
-                'alanı kaç π cm² olur?',
+            '$esMerkez $r cm ve $R cm olan iki çember arasındaki halkadan, '
+                'merkez açısının ölçüsü $aci° olan bir halka dilimi ayrılıyor. Bu '
+                'halka diliminin alanı kaç π cm² olur?',
             alan,
             [
               fark,
@@ -2984,8 +3064,9 @@ final lmGeometriEk = <AdvancedFamily>[
         return sayisal(
           'Bir kenarı $x cm olan düzgün sekizgen biçimindeki bir levhanın '
               'ortasından, kenarı $y cm olan ve kenarları levhanın kenarlarına '
-              'paralel düzgün sekizgen biçiminde bir parça çıkarılıyor. Kalan '
-              'çerçevenin alanı (m + n√2) cm² olduğuna göre m + n toplamı kaçtır?',
+              'paralel düzgün sekizgen biçiminde bir parça çıkarılıyor. m ve n '
+              'tam sayı olmak üzere kalan çerçevenin alanı (m + n√2) cm² olduğuna '
+              'göre m + n toplamı kaçtır?',
           2 * m,
           [m, 4 * (x - y) * (x - y), 4 * m],
           'Kenarı a olan düzgün sekizgenin alanı 2a²(1 + √2) olur. Çerçeve '
@@ -3035,7 +3116,9 @@ final lmGeometriEk = <AdvancedFamily>[
       const kare = 'kare dik piramidin';
       switch (c) {
         case 0:
-          final t = 3 + a, h = 3 + 3 * b, v = t * t * h ~/ 3;
+          // Taban b ile birlikte büyür: yükseklik tabanın en çok 2,8 katı olur
+          // (taban 3 cm, yükseklik 60 cm gibi şiş biçimli piramit çıkmaz).
+          final t = 3 + a + b, h = 3 + 3 * b, v = t * t * h ~/ 3;
           return sayisal(
             'Taban ayrıtı $t cm, yüksekliği $h cm olan bir $kare hacmi kaç cm³ '
                 'olur?',
@@ -3048,9 +3131,12 @@ final lmGeometriEk = <AdvancedFamily>[
           );
         case 1:
           // Yükseklik iki koordinatla değişir (taban yalnız hacmi ölçeklemesin).
-          final t = 4 + a;
-          var h = 3 + 3 * ((a + b) % 20);
-          if (h == t) h += 60;
+          // Taban en az 12 cm: yükseklik tabanın en çok 5,5 katı olur.
+          final t = 12 + a;
+          var h = 6 + 3 * ((a + b) % 20);
+          // Yanıt kökteki taban ayrıtına eşit çıkmasın; 66 cm bu tabanla başka
+          // vakada kullanılmaz.
+          if (h == t) h = 66;
           final v = t * t * h ~/ 3;
           return sayisal(
             'Taban ayrıtı $t cm olan bir kare dik piramidin hacmi $v cm³ '
@@ -3168,11 +3254,16 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 5 || 8:
-          final t = 6 + 2 * a;
-          // Yükseklik sorusunda yanıt iki koordinatla değişir.
-          var h = 3 + 3 * (c == 8 ? (a + b) % 20 : b);
-          // Yanıt kökteki bir sayıya eşit çıkmasın.
-          if (c == 8 ? h == t : {t, h}.contains(t * t * h ~/ 12)) h += 60;
+          // Taban a ve b ile birlikte büyür; yükseklik tabanın en çok 1,5 katı
+          // (c = 8'de kaydırılan tek değerde 5,75 katı) olur, şiş biçimli
+          // piramit çıkmaz. Taban çift, yükseklik 3'ün katı: t²·h / 12 tam.
+          final t = 6 + 2 * (a + b);
+          // Yükseklik sorusunda yanıt iki koordinatla değişir; (a + b) ve
+          // (a + 2b) mod 20 birlikte (a, b) ikilisini bire bir belirler.
+          var h = c == 8 ? 9 + 3 * ((a + 2 * b) % 20) : 6 + 3 * b;
+          // Yanıt kökteki taban ayrıtına eşit çıkmasın; 69 cm bu tabanla başka
+          // vakada kullanılmaz. (c = 5'te t²·h / 12 ne t ne h olabilir.)
+          if (c == 8 && h == t) h = 69;
           final k = t * t * h ~/ 12;
           const ucgen = 'düzgün üçgen piramidin';
           final taban =
@@ -3257,9 +3348,9 @@ final lmGeometriEk = <AdvancedFamily>[
           final d = _ondalik(e * e * e, l * w)!, h0 = e + 2 + (l + w) % 7;
           final yanit = sor ? d : h0 + d;
           return ondalikli(
-            'Taban ayrıtları $l cm ve $w cm olan dikdörtgenler prizması '
-                'biçimindeki bir kapta $h0 cm yüksekliğinde su vardır. Kaba bir '
-                'ayrıtı $e cm olan küp biçiminde bir demir parça bırakılıyor ve '
+            '${_prizmaKap(l, w)} biçimindeki bir kapta $h0 cm yüksekliğinde su '
+                'vardır. Kaba bir ayrıtı $e cm olan küp biçiminde bir demir parça '
+                'bırakılıyor ve '
                 'parça tamamen suya batıyor. Su taşmadığına göre '
                 '${sor ? 'su seviyesi kaç cm yükselir' : 'suyun son yüksekliği kaç cm olur'}?',
             yanit,
@@ -3321,10 +3412,9 @@ final lmGeometriEk = <AdvancedFamily>[
           final v = x * y * z, d = _ondalik(v, 3 * R * R)!;
           return ondalikli(
             'Taban yarıçapı $R cm olan dik dairesel silindir biçimindeki bir '
-                'kapta su vardır. Kaba, ayrıtları $x cm, $y cm ve $z cm olan '
-                'dikdörtgenler prizması biçiminde bir metal blok bırakılıyor; blok '
-                'tamamen suya batıyor ve su taşmıyor. Buna göre su seviyesi kaç cm '
-                'yükselir? (π = 3 alınız.)',
+                'kapta su vardır. Kaba, ${_blokAd(x, y, z)} biçiminde bir metal '
+                'blok bırakılıyor; blok tamamen suya batıyor ve su taşmıyor. Buna '
+                'göre su seviyesi kaç cm yükselir? (π = 3 alınız.)',
             d,
             [?_ondalik(v, R * R), ?_ondalik(v, 6 * R * R), ?_ondalik(v, 3 * R)],
             'Bloğun hacmi $x·$y·$z = $v cm³, kabın taban alanı 3·$R² = '
@@ -3379,11 +3469,11 @@ final lmGeometriEk = <AdvancedFamily>[
           );
           final d = _ondalik(h1 * l1 * w1, l2 * w2)!;
           return ondalikli(
-            'Taban ayrıtları $l1 cm ve $w1 cm olan dikdörtgenler prizması '
-                'biçimindeki bir kapta $h1 cm yüksekliğinde su vardır. Bu suyun '
-                'tamamı, taban ayrıtları $l2 cm ve $w2 cm olan dikdörtgenler '
-                'prizması biçimindeki boş bir kaba taşmadan boşaltılıyor. İkinci '
-                'kaptaki suyun yüksekliği kaç cm olur?',
+            '${_prizmaKap(l1, w1)} biçimindeki bir kapta $h1 cm yüksekliğinde '
+                'su vardır. Bu suyun tamamı, '
+                '${_prizmaKap(l2, w2, cumleBasi: false)} biçimindeki boş bir kaba '
+                'taşmadan boşaltılıyor. İkinci kaptaki suyun yüksekliği kaç cm '
+                'olur?',
             d,
             [
               ?_ondalik(h1 * l2 * w2, l1 * w1),
@@ -3433,11 +3523,10 @@ final lmGeometriEk = <AdvancedFamily>[
           });
           final d = _ondalik(x * y * z, l * w)!, h0 = z + 3 + (x + l) % 6;
           return ondalikli(
-            'Taban ayrıtları $l cm ve $w cm olan dikdörtgenler prizması '
-                'biçimindeki bir kapta, ayrıtları $x cm, $y cm ve $z cm olan '
-                'dikdörtgenler prizması biçiminde bir metal blok tamamen su içinde '
-                'durmaktadır ve suyun yüksekliği $h0 cm olarak ölçülmüştür. Blok '
-                'kaptan çıkarılırsa su seviyesi kaç cm düşer?',
+            '${_prizmaKap(l, w)} biçimindeki bir kapta, ${_blokAd(x, y, z)} '
+                'biçiminde bir metal blok tamamen su içinde durmaktadır ve suyun '
+                'yüksekliği $h0 cm olarak ölçülmüştür. Blok kaptan çıkarılırsa su '
+                'seviyesi kaç cm düşer?',
             d,
             [
               h0 - d,
@@ -3482,11 +3571,10 @@ final lmGeometriEk = <AdvancedFamily>[
           );
           final d = _ondalik(l * w * h, 3 * r * r)!;
           return ondalikli(
-            'Taban ayrıtları $l cm ve $w cm olan dikdörtgenler prizması '
-                'biçimindeki bir kapta $h cm yüksekliğinde su vardır. Bu suyun '
-                'tamamı, taban yarıçapı $r cm olan dik dairesel silindir biçimindeki '
-                'boş bir kaba taşmadan boşaltılıyor. Silindirdeki suyun yüksekliği '
-                'kaç cm olur? (π = 3 alınız.)',
+            '${_prizmaKap(l, w)} biçimindeki bir kapta $h cm yüksekliğinde su '
+                'vardır. Bu suyun tamamı, taban yarıçapı $r cm olan dik dairesel '
+                'silindir biçimindeki boş bir kaba taşmadan boşaltılıyor. '
+                'Silindirdeki suyun yüksekliği kaç cm olur? (π = 3 alınız.)',
             d,
             [
               ?_ondalik(l * w * h, r * r),
@@ -3513,10 +3601,10 @@ final lmGeometriEk = <AdvancedFamily>[
           final d = _ondalik(3 * r * r * h, l * w)!;
           return ondalikli(
             'Taban yarıçapı $r cm olan dik dairesel silindir biçimindeki bir '
-                'kapta $h cm yüksekliğinde su vardır. Bu suyun tamamı, taban '
-                'ayrıtları $l cm ve $w cm olan dikdörtgenler prizması biçimindeki '
-                'boş bir kaba taşmadan boşaltılıyor. İkinci kaptaki suyun '
-                'yüksekliği kaç cm olur? (π = 3 alınız.)',
+                'kapta $h cm yüksekliğinde su vardır. Bu suyun tamamı, '
+                '${_prizmaKap(l, w, cumleBasi: false)} biçimindeki boş bir kaba '
+                'taşmadan boşaltılıyor. İkinci kaptaki suyun yüksekliği kaç cm '
+                'olur? (π = 3 alınız.)',
             d,
             [
               ?_ondalik(r * r * h, l * w),
@@ -3608,7 +3696,15 @@ final lmGeometriEk = <AdvancedFamily>[
                 'olarak veriliyor. Küçük kabın yüksekliği ${m * h} cm olduğuna göre '
                 'büyük kabın yüksekliği kaç cm olur?',
             n * h,
-            [?_bol(n3 * h, m * m), ?_bol(n * n * h, m), n3 * h],
+            // Hacim ya da alan oranını uzunluk oranı sanma, oranın terimleri
+            // farkını yüksekliğe ekleme, oranı ters kullanma.
+            [
+              ?_bol(n3 * h, m * m),
+              ?_bol(n * n * h, m),
+              m * h + n - m,
+              ?_bol(m * m * h, n),
+              n3 * h,
+            ],
             'Hacimler oranı $m3/$n3 benzerlik oranının küpüdür; benzerlik oranı '
                 '$m/$n olur. Büyük kabın yüksekliği ${m * h}·$n / $m = ${n * h} '
                 'cm.',
@@ -3780,16 +3876,20 @@ final lmGeometriEk = <AdvancedFamily>[
         const toplamCiftleri = [1, 2, 4, 5, 6, 7];
         var ci = c == 2 ? toplamCiftleri[(a + b) % 6] : (a + b + c) % 8;
         if (c == 2) {
-          for (var j = 0; j < 6; j++) {
+          // Uygun çift yoksa (yanıt ±2 iken her çift 2 yazar) 3x − y, x + 4y
+          // çifti alınır; bu çift yanıtı hiçbir vakada kökte yazmaz.
+          var bulundu = false;
+          for (var j = 0; j < 6 && !bulundu; j++) {
             final aday = toplamCiftleri[(a + b + j) % 6];
             final ((u1, v1), (u2, v2)) = _kesisimKatsayi[aday];
             final yazilan = [u1, v1, u2, v2];
             yazilan.addAll([u1 * x0 + v1 * y0, u2 * x0 + v2 * y0]);
             if (!_yazili(x0 + y0, yazilan)) {
               ci = aday;
-              break;
+              bulundu = true;
             }
           }
+          if (!bulundu) ci = 8;
         }
         final ((p1, q1), (p2, q2)) = _kesisimKatsayi[ci];
         final c1 = p1 * x0 + q1 * y0, c2 = p2 * x0 + q2 * y0;
@@ -3971,7 +4071,16 @@ final lmGeometriEk = <AdvancedFamily>[
               'doğrularının kesişim noktasının apsisi ${_m(x0)} olduğuna göre m '
               'kaçtır?',
           m,
-          [?_bolIsaretli(d1 + y0, x0), -m, ?_bolIsaretli(d1, x0)],
+          // İkinci denklemde y yalnız bırakılırken r·x teriminin işaretini
+          // yanlış taşıma (y = (d₂ + r·x₀) / s) her zaman tam sayı verir:
+          // m − 2·r·s. Ardından y'nin işaretini karıştırma, işaret hatası ve
+          // y terimini unutma gelir.
+          [
+            m - 2 * r * s,
+            ?_bolIsaretli(d1 + y0, x0),
+            -m,
+            ?_bolIsaretli(d1, x0),
+          ],
           'x = ${_m(x0)} ikinci denklemde yerine yazılırsa y = ${_m(y0)} '
               'bulunur. Kesişim noktası ${_n(x0, y0)} birinci denklemi de '
               'sağlar: m·${_pz(x0)} + ${_pz(y0)} = ${_m(d1)}, m = ${_m(m)}.',
@@ -3993,8 +4102,8 @@ final lmGeometriEk = <AdvancedFamily>[
       final m = egim9[mi];
       final n = y0 - m * x0;
       return _tam(
-        'Analitik düzlemde $iki ile eğimi ${_m(m)} olan bir doğru üzerindedir. '
-            'Bu doğrunun y eksenini kestiği noktanın ordinatı kaçtır?',
+        'Analitik düzlemde ${iki}ndan geçen ve eğimi ${_m(m)} olan doğrunun y '
+            'eksenini kestiği noktanın ordinatı kaçtır?',
         n,
         [y0 + m * x0, m * x0 - y0, x0 - m * y0],
         '$kesisim Eğimi ${_m(m)} olan doğru y − ${_pz(y0)} = '
@@ -4346,19 +4455,14 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       if (c <= 4) {
-        final (l1, l2, w) = _yonluUclu(a);
-        final s = 1 + b % 4, yon = b ~/ 4;
-        final r = s * l1, uz = s * l2, d = s * w;
-        final (dx, dy) = switch (yon) {
-          0 => (d, 0),
-          1 => (0, -d),
-          2 => (-s * l1, s * l2),
-          3 => (s * l2, s * l1),
-          _ => (-d, 0),
-        };
+        // Yarıçap en çok 40, P noktası merkeze en çok 50 birim uzaklıkta
+        // ("(x + 2)² + y² = 48400" gibi ölçüsüz sayılar çıkmaz). Komşu vakalar
+        // farklı (r, |PT|, d) üçlüsü kullanır.
+        final (r, uz, dx, dy) = _tegetVakalari[a + 25 * b];
+        final d = _tamKok(dx * dx + dy * dy)!;
         // Merkez (a + b) ve (a + 2b) ile seçilir; |PT| kökte yazılı bir sayıya
         // eşit çıkarsa merkez 35 olası konum arasında sıradakine kaydırılır
-        // (yanıt merkeze bağlı değildir, kökün tekliğini üçlü ve yön sağlar).
+        // (yanıt merkeze bağlı değildir, kökün tekliğini r ve P − M sağlar).
         int sabitTerim(int x, int y) => x * x + y * y - r * r;
         var mx = (a + b) % 7 - 3, my = (a + 2 * b) % 5 - 2;
         for (var j = 0; j < 35; j++) {

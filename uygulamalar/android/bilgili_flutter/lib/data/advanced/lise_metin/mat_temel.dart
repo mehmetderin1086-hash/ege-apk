@@ -1,6 +1,7 @@
 // TYT temel matematik: sayılar, cebir ve sözel problemlerden oluşan 20 metin
 // ailesi. Her aile (a, b, c) koordinatlarından 5.000 ayrı soru üretir;
 // çeldiriciler tipik öğrenci hatalarından hesaplanır.
+import 'denge.dart';
 import 'ortak.dart';
 
 AdvancedFamily _mt(
@@ -191,42 +192,69 @@ const _asalCift = [
 
 AdvancedItem _ebobEkok(int a, int b, int c) {
   final (m, n) = _asalCift[a];
-  final k = c ~/ 3;
+  final k = c ~/ 3, sira = _sira(a, b, c);
   if (c % 3 == 0) {
     final g = b + 2, x = g * m, y = g * n, l = g * m * n;
     final ayir =
         '$x = $g · $m ve $y = $g · $n olup $m ile $n aralarında asaldır; '
         'EBOB = $g, EKOK = $g · $m · $n = $l olur.';
     if (k == 0) {
-      return sayisal(
+      return _tamSirali(
         '$x ile $y sayılarının en büyük ortak böleni (EBOB) ile en küçük ortak '
             'katının (EKOK) toplamı kaçtır?',
         g + l,
-        [l, l - g, x + y, g + m * n],
+        [
+          l, // EBOB eklenmemiş
+          l - g,
+          x + y,
+          g + m * n,
+          g + x * y, // EKOK yerine sayıların çarpımı
+          x + l, // EBOB yerine küçük sayı
+          y + l, // EBOB yerine büyük sayı
+        ],
         '$ayir Toplam $g + $l = ${g + l} bulunur.',
-        positive: true,
+        sira,
+        enAz: 1,
       );
     }
     if (k == 1) {
-      return sayisal(
+      return _tamSirali(
         'EKOK($x, $y) değerinin EBOB($x, $y) değerine bölümü kaçtır?',
         m * n,
-        [m + n, g, l, m * n + 1],
+        [
+          m + n,
+          g,
+          l, // EKOK yanıt sanılmış
+          l - g, // bölme yerine çıkarma
+          n, // ara sonuç: büyük sayının EBOB'a bölümü
+          l + g, // bölme yerine toplama
+          m, // ara sonuç: küçük sayının EBOB'a bölümü
+        ],
         '$ayir Bölüm $l / $g = ${m * n} bulunur.',
-        positive: true,
+        sira,
+        enAz: 1,
       );
     }
     final verilen = k == 2 ? x : y, diger = k == 2 ? y : x;
-    return sayisal(
+    return _tamSirali(
       'İki doğal sayının en büyük ortak böleni $g, en küçük ortak katı $l '
           'olarak veriliyor. Bu sayılardan biri $verilen olduğuna göre diğeri '
           'kaçtır?',
       diger,
-      [l ~/ verilen, l - verilen, l ~/ g, verilen + g],
+      [
+        l ~/ verilen, // çarpım EKOK sanılmış
+        l - verilen,
+        l ~/ g,
+        verilen + g,
+        g + l - verilen, // toplamlar eşit sanılmış
+        l, // EKOK yanıt sanılmış
+        g, // EBOB yanıt sanılmış
+      ],
       'İki sayının çarpımı, EBOB ile EKOK değerlerinin çarpımına eşittir: '
           '$verilen · x = $g · $l = ${g * l}. Buradan x = ${g * l} / $verilen = '
           '$diger bulunur.',
-      positive: true,
+      sira,
+      enAz: 1,
     );
   }
   final s = b ~/ 5;
@@ -234,30 +262,46 @@ AdvancedItem _ebobEkok(int a, int b, int c) {
     if (k == 0) {
       final g = 2 + b % 5, x = g * m, y = g * n, l = g * m * n;
       final t = (s + 2) * l + x;
-      return sayisal(
+      return _tamSirali(
         'Bir limandaki iki fenerden biri $x saniyede bir, diğeri $y saniyede '
             'bir yanmaktadır. İki fener aynı anda yandıktan sonraki $t saniye '
             'içinde kaç kez daha aynı anda yanar?',
         s + 2,
-        [s + 3, s + 1, t ~/ y, t ~/ x],
+        [
+          s + 3, // ilk yanış da sayılmış
+          s + 1,
+          t ~/ y, // yalnız bir fenerin yanışları
+          t ~/ x,
+          t ~/ (x * y), // EKOK yerine çarpım
+          t ~/ g, // EKOK yerine EBOB
+        ],
         'Fenerler EKOK($x, $y) = $l saniyede bir aynı anda yanar. $t saniyenin '
             'içinde $l sayısının ${s + 2} tam katı bulunduğundan ${s + 2} kez daha '
             'aynı anda yanarlar.',
-        positive: true,
+        sira,
+        enAz: 1,
       );
     }
     if (k == 1) {
       final g = 3 + b % 5, x = g * m, y = g * n, l = g * m * n, r = s + 1;
-      return sayisal(
+      return _tamSirali(
         'Bir atölyedeki vidalar, her biri $x vida alan kutulara doldurulduğunda '
             'da her biri $y vida alan kutulara doldurulduğunda da $r vida '
             'artmaktadır. Her iki durumda da en az bir kutu dolduğuna göre '
             'atölyede en az kaç vida vardır?',
         l + r,
-        [l, l - r, x * y + r, x + y + r],
+        [
+          l, // kalan eklenmemiş
+          l - r,
+          x * y + r, // EKOK yerine çarpım
+          x + y + r,
+          l + 2 * r, // kalan iki kez eklenmiş
+          g + r, // EKOK yerine EBOB
+        ],
         'Vida sayısının $r eksiği hem $x hem $y ile bölünür; en küçük değer '
             'EKOK($x, $y) = $l olur. Vida sayısı en az $l + $r = ${l + r} bulunur.',
-        positive: true,
+        sira,
+        enAz: 1,
       );
     }
     final g = 2 + b % 5, x = g * m, y = g * n, l = g * m * n;
@@ -267,54 +311,81 @@ AdvancedItem _ebobEkok(int a, int b, int c) {
       ('ikisinin attığı tur sayılarının toplamı kaç olur?', m + n),
       ('hızlı olan bisikletçi diğerinden kaç tur fazla atmış olur?', n - m),
     ][s];
-    return sayisal(
+    return _tamSirali(
       'Bir gölün çevresindeki parkurda aynı noktadan aynı anda ve aynı yönde '
           'yola çıkan iki bisikletçiden biri bir turu $x dakikada, diğeri $y '
           'dakikada tamamlamaktadır. İkisi başlangıç noktasında ilk kez yeniden '
           'buluştuğunda $soru',
       yanit,
-      [n, m, m + n, n - m, g, m * n],
+      [n, m, m + n, n - m, g, m * n, l], // l: buluşma süresi (dakika)
       'İkisi başlangıç noktasında EKOK($x, $y) = $l dakika sonra buluşur. Bu '
           'sürede hızlı olan $l / $x = $n, yavaş olan $l / $y = $m tur atar; '
           'istenen değer $yanit olur.',
-      positive: true,
+      sira,
+      enAz: 1,
     );
   }
   final g = b + 2, x = g * m, y = g * n;
   if (k == 0) {
-    return sayisal(
+    return _tamSirali(
       'Uzunlukları $x cm ve $y cm olan iki tahta çıta, hiç parça artmayacak '
           'biçimde eşit uzunlukta ve olabilecek en uzun parçalara kesilecektir. '
           'Buna göre toplam kaç parça elde edilir?',
       m + n,
-      [g, m * n, m + n - 2, 2 * (m + n)],
+      [
+        g, // parça uzunluğu yanıt sanılmış
+        m * n, // parça sayıları çarpılmış
+        m + n - 2, // kesim sayısı
+        2 * (m + n),
+        n, // yalnız uzun çıtanın parçaları
+        x + y, // toplam uzunluk
+        m, // yalnız kısa çıtanın parçaları
+      ],
       'Parça uzunluğu EBOB($x, $y) = $g cm olmalıdır. Parça sayısı $x / $g + '
           '$y / $g = $m + $n = ${m + n} bulunur.',
-      positive: true,
+      sira,
+      enAz: 1,
     );
   }
   if (k == 1) {
-    return sayisal(
+    return _tamSirali(
       'Kenar uzunlukları $x m ve $y m olan dikdörtgen biçimindeki bir arsanın '
           'çevresine, köşelere de birer tane gelecek şekilde eşit aralıklarla '
           'fidan dikilecektir. Bu iş için en az kaç fidan gerekir?',
       2 * (m + n),
-      [m + n, 2 * (m + n) + 4, 2 * (m + n) - 4, m * n],
+      [
+        m + n, // yalnız iki kenar sayılmış
+        2 * (m + n) + 4, // köşeler iki kez sayılmış
+        2 * (m + n) - 4, // köşeler sayılmamış
+        m * n,
+        2 * (m + n) + 1, // kapalı çevrede bir fazla
+        g, // aralık yanıt sanılmış
+        2 * (x + y), // çevre uzunluğu
+      ],
       'En az fidan için aralık EBOB($x, $y) = $g m seçilir. Çevre 2 · ($x + '
           '$y) = ${2 * (x + y)} m olduğundan fidan sayısı ${2 * (x + y)} / $g = '
           '${2 * (m + n)} bulunur.',
-      positive: true,
+      sira,
+      enAz: 1,
     );
   }
-  return sayisal(
+  return _tamSirali(
     'Kenar uzunlukları $x cm ve $y cm olan dikdörtgen biçimindeki bir karton, '
         'hiç parça artmayacak biçimde eş karelere ayrılacaktır. En az kaç kare '
         'elde edilir?',
     m * n,
-    [m + n, g, 2 * (m + n), m * n * g],
+    [
+      m + n, // kenar başına kare sayıları toplanmış
+      g, // kare kenarı yanıt sanılmış
+      2 * (m + n),
+      m * n * g, // alan kare kenarına bölünmüş
+      n, // yalnız uzun kenar boyunca
+      (m + 1) * (n + 1), // kareler yerine köşe noktaları
+    ],
     'En az sayıda kare için kare kenarı EBOB($x, $y) = $g cm seçilir. Kare '
         'sayısı ($x / $g) · ($y / $g) = $m · $n = ${m * n} bulunur.',
-    positive: true,
+    sira,
+    enAz: 1,
   );
 }
 
@@ -327,30 +398,49 @@ AdvancedItem _bolme(int a, int b, int c) {
   if (c.isEven) {
     final bolum = b + 3; // 3 … 22
     final bolunen = bolen * bolum + kalan, t = bolunen + bolen;
-    return sayisal(
+    return _tamSirali(
       'Bir bölme işleminde bölünen ile bölenin toplamı $t, bölüm $bolum ve '
           'kalan $kalan olduğuna göre bölünen kaçtır?',
       bolunen,
-      [bolen, bolen * bolum, t - kalan, t - bolum],
+      [
+        bolen, // bölen yanıt sanılmış
+        bolen * bolum, // kalan eklenmemiş
+        t - kalan, // (bölüm + 1) · x değeri yanıt sanılmış
+        t - bolum, // kalan yerine bölüm çıkarılmış
+        bolen * bolum - kalan, // kalan çıkarılmış
+        t, // verilen toplam
+      ],
       'Bölen x ise bölünen $bolum · x + $kalan olur. $bolum · x + $kalan + x = '
           '$t eşitliğinden ${bolum + 1} · x = ${t - kalan} ve x = $bolen bulunur. '
           'Bölünen $bolum · $bolen + $kalan = $bolunen olur.',
-      positive: true,
+      _sira(a, b, c),
+      enAz: 1,
     );
   }
   final d = 5 + b % 5, s = 1 + b ~/ 5; // ikinci bölen 5 … 9, kalan 1 … 4
   final yanit = bolen * s + kalan;
-  return sayisal(
+  return _tamSirali(
     'Bir A doğal sayısı $bolen ile bölündüğünde bölüm x, kalan $kalan oluyor. '
         'x sayısı $d ile bölündüğünde kalan $s olduğuna göre A sayısının '
         '${bolen * d} ile bölümünden kalan kaçtır?',
     yanit,
-    [d * kalan + s, kalan + s, bolen * s, kalan * s],
+    [
+      d * kalan + s, // bölenlerin rolü karıştırılmış
+      kalan + s, // kalanlar toplanmış
+      bolen * s, // ilk kalan eklenmemiş
+      kalan * s, // kalanlar çarpılmış
+      bolen * kalan + s, // kalanların rolü karıştırılmış
+      d * s + kalan, // yanlış bölenle çarpılmış
+      (bolen + kalan) * s, // ilk kalan da çarpılmış
+      bolen * (s + kalan), // kalanlar toplanıp bölenle çarpılmış
+    ],
     'A = $bolen · x + $kalan ve x = $d · y + $s yazılır. Yerine konursa '
         'A = ${bolen * d} · y + $bolen · $s + $kalan = ${bolen * d} · y + $yanit '
         'olur; $yanit sayısı ${bolen * d} sayısından küçük olduğundan kalan '
         '$yanit bulunur.',
-    positive: true,
+    _sira(a, b, c),
+    enAz: 1,
+    enCok: bolen * d - 1,
   );
 }
 
@@ -383,6 +473,64 @@ AdvancedItem _tam(
   );
 }
 
+/// (a, b, c) vakasının sıra numarası için hedef değer sırası (0 … 3): anahtardan
+/// küçük çeldirici sayısı vakadan vakaya dengeli değişir.
+int _sira(int a, int b, int c, [int tuz = 0]) =>
+    hedefSira(a + 25 * b + 500 * c, tuz);
+
+/// [_tam] gibi; anahtardan küçük çeldirici sayısı [sira] olur. [adaylar] önce
+/// tipik hata değerleridir; yetmezse anahtarın iki yanındaki komşu değerlerle
+/// tamamlanır. [enAz] ve [enCok] verilirse bu aralığın dışındaki adaylar
+/// elenir.
+AdvancedItem _tamSirali(
+  String kok,
+  int yanit,
+  Iterable<int> adaylar,
+  String aciklama,
+  int sira, {
+  int? enAz,
+  int? enCok,
+}) {
+  final adim = yanit.abs() >= 200 ? 10 : (yanit.abs() >= 40 ? 5 : 1);
+  final hepsi = [
+    ...adaylar,
+    for (var k = 1; k <= 6; k++) ...[yanit + k * adim, yanit - k * adim],
+  ].where((x) => (enAz == null || x >= enAz) && (enCok == null || x <= enCok));
+  return AdvancedItem(
+    kok,
+    _n(yanit),
+    siraliCeldiriciler(yanit, _n(yanit), [
+      for (final x in hepsi) (x, _n(x)),
+    ], sira),
+    aciklama,
+  );
+}
+
+/// İşaretli tam sayı yanıtı için ± tasarımı: çeldiriciler −yanıt, y ve −y
+/// olur (y bir tipik hata değeridir). Her seçeneğin ters işaretlisi de
+/// seçeneklerde bulunduğundan işaret, rakamlar ve uzunluk anahtarı göstermez.
+/// |y|, [sira] ile |yanıt| değerinin üstünden ya da altından seçilir; o yanda
+/// tipik hata yoksa komşu değer alınır. Yanıt sıfırsa [_tamSirali] kullanılır.
+AdvancedItem _isaretli(
+  String kok,
+  int yanit,
+  Iterable<int> adaylar,
+  String aciklama,
+  int sira,
+) {
+  if (yanit == 0) return _tamSirali(kok, yanit, adaylar, aciklama, sira);
+  final m = yanit.abs(), buyuk = sira < 2 || m == 1;
+  final tipik = [
+    for (final y in adaylar)
+      if (y != 0 && y.abs() != m) y.abs(),
+  ];
+  final y = [
+    ...tipik.where((v) => buyuk ? v > m : v < m),
+    buyuk ? m + 1 : m - 1,
+  ].first;
+  return AdvancedItem(kok, _n(yanit), [_n(-yanit), _n(y), _n(-y)], aciklama);
+}
+
 /// Sade kesir; işlemler tam sayılarla yapılır.
 class _K {
   final int n, d;
@@ -404,26 +552,40 @@ class _K {
   String toString() => d == 1 ? _n(n) : '${_n(n)}/$d';
 }
 
-AdvancedItem _kesirSoru(
+/// Sade kesir yanıtlı soru; anahtardan küçük çeldirici sayısı [sira] olur.
+/// Tipik hatalar yetmezse anahtarın iki yanındaki yakın kesirlerle tamamlanır.
+/// [pozitif] doğruysa sıfır ve negatif, [birdenKucuk] doğruysa 1 ve daha büyük
+/// adaylar elenir (işin ya da havuzun kesri gibi).
+AdvancedItem _kesirSirali(
   String kok,
   _K yanit,
   Iterable<_K> adaylar,
   String aciklama,
-) => secenekli(
-  kok,
-  '$yanit',
-  [
+  int sira, {
+  bool pozitif = false,
+  bool birdenKucuk = false,
+}) {
+  final n = yanit.n, d = yanit.d;
+  final hepsi = [
     ...adaylar,
-    _K(yanit.n + 1, yanit.d),
-    _K(yanit.n - 1, yanit.d),
-    _K(yanit.n, yanit.d + 1),
-    _K(yanit.n + 2, yanit.d),
-    _K(yanit.n + 3, yanit.d),
-    _K(yanit.n + 1, yanit.d + 1),
-    _K(yanit.n + 4, yanit.d),
-  ].map((k) => '$k'),
-  aciklama,
-);
+    _K(2 * n + 1, 2 * d),
+    _K(2 * n - 1, 2 * d),
+    _K(n + 1, d),
+    _K(n - 1, d),
+    _K(n + d, d),
+    _K(n - d, d),
+    _K(3 * n + 1, 3 * d),
+    _K(3 * n - 1, 3 * d),
+  ].where((k) => (!pozitif || k.n > 0) && (!birdenKucuk || k.n < k.d));
+  return AdvancedItem(
+    kok,
+    '$yanit',
+    siraliCeldiriciler(n / d, '$yanit', [
+      for (final k in hepsi) (k.n / k.d, '$k'),
+    ], sira),
+    aciklama,
+  );
+}
 
 // ---------------------------------------------------------------------------
 // 5. Rasyonel sayılarla işlem önceliği
@@ -447,35 +609,62 @@ AdvancedItem _rasyonel(int a, int b, int c) {
     final (m, t) = const [(1, 2), (1, 3), (2, 3), (1, 4)][kk];
     final z = _K(y.d * m, t);
     final p = y * z, r = x + p;
-    return _kesirSoru(
+    return _kesirSirali(
       '$x + $y · $z işleminin sonucu kaçtır?',
       r,
-      [(x + y) * z, x * z + y, x + y + z, x * y + z],
+      [
+        (x + y) * z, // önce toplama yapılmış
+        p, // ara sonuç yanıt sanılmış
+        _K(x.n + p.n, x.d + p.d), // paylar ve paydalar toplanmış
+        x * z + y,
+        x + y + z,
+        x * y + z,
+      ],
       'İşlem önceliği gereği önce çarpma yapılır: $y · $z = $p. Ardından '
           '$x + $p = $r bulunur.',
+      _sira(a, b, c),
+      pozitif: true,
     );
   }
   if (c % 3 == 1) {
     final q = _K(kk + 2);
     final z = _K(y.n, y.d * (kk + 2));
     final r = x - q;
-    return _kesirSoru(
+    return _kesirSirali(
       '$x − $y : $z işleminin sonucu kaçtır?',
       r,
-      [(x - y) / z, x - y * z, q - x, x + q],
+      [
+        (x - y) / z, // önce çıkarma yapılmış
+        x - y * z, // bölme yerine çarpma
+        q - x, // işaret hatası
+        x + q,
+        _K(x.n - q.n, x.d), // tam sayı paydayla genişletilmemiş
+        _K(0) - (x + q), // fark yerine toplamın ters işaretlisi
+        q, // ara sonuç yanıt sanılmış
+        x - _K(1) / q, // ters çevrilecek kesir karıştırılmış
+      ],
       'İşlem önceliği gereği önce bölme yapılır: $y : $z = $y · '
           '${_K(z.d, z.n)} = $q. Ardından $x − $q = $r bulunur.',
+      _sira(a, b, c),
     );
   }
   final (m, t) = const [(1, 2), (2, 3), (3, 4)][kk];
   final z = _K(y.n * m, y.d * t);
   final bol = x / y, r = bol * z;
-  return _kesirSoru(
+  return _kesirSirali(
     '$x : $y · $z işleminin sonucu kaçtır?',
     r,
-    [x / (y * z), x * y * z, x / y / z, x * z],
+    [
+      x / (y * z), // sağdan sola işlem yapılmış
+      x * y * z, // bölme yerine çarpma
+      x * z, // bölme atlanmış
+      bol, // ara sonuç yanıt sanılmış
+      y / x * z, // ters çevrilecek kesir karıştırılmış
+    ],
     'Çarpma ve bölme aynı önceliktedir; işlemler soldan sağa yapılır. '
         '$x : $y = $bol ve $bol · $z = $r bulunur.',
+    _sira(a, b, c),
+    pozitif: true,
   );
 }
 
@@ -492,13 +681,32 @@ AdvancedItem _ondalik(int a, int b, int c) {
     final xo = _K(xs, 100), yo = _K(ys, 100); // devri yok sayma
     final xd = _K(xs, 99), yd = _K(ys, 99); // paydayı 99 alma
     final xe = _K(xs, 90), ye = _K(ys, 90); // devretmeyeni çıkarmama
+    final x9 = _K(xs - t, 9), y9 = _K(ys - u, 9); // paydada 0 unutulmuş
+    final xn = _K(xs - t, 99), yn = _K(ys - u, 99); // çıkarılıp 99 alınmış
+    final xh = _K(xs - t, 100), yh = _K(ys - u, 100); // çıkarılıp 100 alınmış
     final (islem, r, yanlis) = switch (kk) {
-      0 => ('x + y', x + y, [xo + yo, xd + yd, xe + ye]),
-      1 => ('y − x', y - x, [yo - xo, yd - xd, ye - xe]),
-      2 => ('x : y', x / y, [xo / yo, y / x, _K(xs - t, ys)]),
-      _ => ('y : x', y / x, [yo / xo, x / y, _K(ys - u, xs)]),
+      0 => (
+        'x + y',
+        x + y,
+        [xo + yo, xd + yd, xe + ye, x9 + y9, xn + yn, xh + yh],
+      ),
+      1 => (
+        'y − x',
+        y - x,
+        [yo - xo, yd - xd, ye - xe, y9 - x9, yn - xn, yh - xh],
+      ),
+      2 => (
+        'x : y',
+        x / y,
+        [xo / yo, y / x, _K(xs - t, ys), _K(xs, ys - u), x9 / y, x / y9],
+      ),
+      _ => (
+        'y : x',
+        y / x,
+        [yo / xo, x / y, _K(ys - u, xs), _K(ys, xs - t), y9 / x, y / x9],
+      ),
     };
-    return _kesirSoru(
+    return _kesirSirali(
       'Son yazılan rakamı sonsuza kadar tekrar eden x = 0,$t$d$d$d… ve '
           'y = 0,$u$e$e$e… devirli ondalık sayıları veriliyor. Buna göre $islem '
           'işleminin sonucu kaçtır?',
@@ -506,6 +714,8 @@ AdvancedItem _ondalik(int a, int b, int c) {
       yanlis,
       'x = ($xs − $t)/90 = $x ve y = ($ys − $u)/90 = $y olur. Buna göre '
           '$islem = $r bulunur.',
+      _sira(a, b, c),
+      pozitif: true,
     );
   }
   if (c % 3 == 1) {
@@ -516,18 +726,21 @@ AdvancedItem _ondalik(int a, int b, int c) {
     final r = f(p1.toDouble(), p2.toDouble()).round();
     final isaret = const ['+', '−', '·'][kk];
     final ifade = kk == 2 ? '($u : $v) · ($w : $z)' : '$u : $v $isaret $w : $z';
-    return secenekli(
+    final adaylar = [
+      f(p1 / 10, p2.toDouble()), // virgül bir basamak kaydırılmış
+      f(p1 * 10.0, p2.toDouble()),
+      f(p1.toDouble(), p2 / 10),
+      f(p1.toDouble(), p2 * 10.0),
+      f(p1 / 10, p2 / 10), // iki bölmede de virgül kaydırılmış
+      if (kk != 2) f(p1 * 10.0, p2 * 10.0),
+      for (var k = 1; k <= 3; k++) ...[r + k.toDouble(), r - k.toDouble()],
+    ].where((s) => s > 0);
+    return AdvancedItem(
       '$ifade işleminin sonucu kaçtır?',
       '$r',
-      [
-        f(p1 / 10, p2.toDouble()),
-        f(p1 * 10.0, p2.toDouble()),
-        f(p1.toDouble(), p2 / 10),
-        f(p1.toDouble(), p2 * 10.0),
-        r + 1.0,
-        r - 1.0,
-        r + 2.0,
-      ].where((s) => s > 0).map(tr),
+      siraliCeldiriciler(r, '$r', [
+        for (final s in adaylar) (s, tr(s)),
+      ], _sira(a, b, c)),
       '$u : $v = $p1 ve $w : $z = $p2 olduğundan sonuç $p1 $isaret $p2 = $r '
           'bulunur.',
     );
@@ -539,14 +752,24 @@ AdvancedItem _ondalik(int a, int b, int c) {
   ][(b ~/ 10) * 3 + kk];
   final tum = 100 * a + 10 * t + d, on = 10 * a + t;
   final x = _K(tum - on, 90);
-  return _kesirSoru(
+  return _kesirSirali(
     'Son yazılan rakamı sonsuza kadar tekrar eden $a,$t$d$d$d… devirli ondalık '
         'sayısı en sade biçimde hangi kesre eşittir?',
     x,
-    [_K(tum - on, 99), _K(tum, 100), _K(tum, 90), _K(tum - on, 9)],
+    [
+      _K(tum - on, 99), // paydada 90 yerine 99
+      _K(tum, 100), // devir yok sayılmış
+      _K(tum, 90), // devretmeyen kısım çıkarılmamış
+      _K(tum - on, 9), // paydada 0 unutulmuş
+      _K(tum - a, 90), // yalnız tam kısım çıkarılmış
+      _K(tum - on, 100), // çıkarılıp 100 alınmış
+      _K(9 * a + d, 9), // ondalık kısmın tamamı devreden sanılmış
+    ],
     'Sayının virgülsüz yazılışından devretmeyen kısım çıkarılır; paydaya '
         'devreden basamak için 9, devretmeyen ondalık basamak için 0 yazılır: '
         '($tum − $on)/90 = $x.',
+    _sira(a, b, c),
+    pozitif: true,
   );
 }
 
@@ -564,14 +787,23 @@ AdvancedItem _uslu(int a, int b, int c) {
     final (r, p) = const [(2, 2), (3, 2), (5, 2), (2, 3), (3, 3)][kk];
     final m = a + 4, n = b + 3, r2 = r * r, r3 = r * r * r;
     final yanit = m + 2 * n - 3 * p;
-    return _tam(
+    return _tamSirali(
       '$r${_ust(m)} · $r2${_ust(n)} : $r3${_ust(p)} işleminin sonucu $r '
           'sayısının kaçıncı kuvvetidir?',
       yanit,
-      [m + n - p, m + 2 * n + 3 * p, m + 2 * n - p, m + n - 3 * p],
+      [
+        m + n - p, // tabanlar çevrilmemiş
+        m + 2 * n + 3 * p, // bölmede üsler toplanmış
+        m + 2 * n - p, // yalnız r² çevrilmiş
+        m + n - 3 * p, // yalnız r³ çevrilmiş
+        m + n - p - 1, // (aᵐ)ⁿ = aᵐ⁺ⁿ sanılmış
+        m + 2 * n, // bölme unutulmuş
+      ],
       '$r2 = $r² ve $r3 = $r³ olduğundan ifade $r${_ust(m)} · '
           '$r${_ust(2 * n)} : $r${_ust(3 * p)} biçiminde yazılır. Üsler toplanıp '
           'çıkarılır: $m + ${2 * n} − ${3 * p} = $yanit.',
+      _sira(a, b, c),
+      enAz: 1,
     );
   }
   final (r, k) = const [(2, 2), (3, 2), (2, 3), (5, 2), (3, 3)][kk];
@@ -581,13 +813,14 @@ AdvancedItem _uslu(int a, int b, int c) {
   String us(int taban, int kayma) =>
       kayma == 0 ? '$taban^x' : '$taban^(${_xArti(kayma)})';
   final sag = q == 0 ? '${k}x' : '$k · (${_xArti(-q)})';
-  return _tam(
+  return _tamSirali(
     '${us(r, p)} = ${us(buyuk, -q)} eşitliği veriliyor. Üsleri aynı tabana '
         'getirerek bu eşitliği sağlayan x gerçek sayısını bulunuz. x kaçtır?',
     x,
     [p + q, d, -x, k * d, x + q],
     '$buyuk = $r${_ust(k)} olduğundan iki taraf $r tabanında yazılır ve üsler '
         'eşitlenir: ${_xArti(p)} = $sag. Buradan x = ${_n(x)} bulunur.',
+    _sira(a, b, c),
   );
 }
 
@@ -624,17 +857,23 @@ AdvancedItem _koklu(int a, int b, int c) {
     final hesap =
         '${u == 1 ? '' : '$u · '}$q ${v < 0 ? '−' : '+'} '
         '${v.abs() == 1 ? '' : '${v.abs()} · '}$p ${w < 0 ? '−' : '+'} $s';
-    return _tam(
+    return _tamSirali(
       '$ifade işleminin sonucu a√$r biçiminde yazıldığında a kaçtır?',
       yanit,
       [
-        u * q * q + v * p * p + w * s,
-        u * q + v * p - w * s,
-        u * q + v * p,
-        u * q - v * p + w * s,
+        u * q * q + v * p * p + w * s, // kökler alınmamış
+        u * q + v * p - w * s, // son terimin işareti
+        u * q + v * p, // son terim unutulmuş
+        u * q - v * p + w * s, // ortadaki terimin işareti
+        if (u != 1 || v.abs() != 1) q + v.sign * p + w * s, // katsayılar
+        u * q * q + v * p + w * s, // yalnız ilk kök alınmamış
+        u * q + v * p * p + w * s, // yalnız ikinci kök alınmamış
+        if (s > 1) u * q + v * p + w, // son katsayı unutulmuş
+        u * q - v * p - w * s, // iki işaret hatası
       ],
       '$ka = $p√$r ve $kb = $q√$r yazılır. Katsayılar toplanır: $hesap = '
           '$yanit; sonuç ${_kat(yanit, kr)} olur.',
+      _sira(a, b, c),
     );
   }
   final (m, n) = _karesiz[a];
@@ -656,15 +895,30 @@ AdvancedItem _koklu(int a, int b, int c) {
   };
   final yanit = f(t, bb);
   final yon = arti ? '+' : '−', es = arti ? '−' : '+';
-  return _tam(
+  return _tamSirali(
     'a ve b rasyonel sayılar olmak üzere $pay/(√$m $yon √$n) = a√$m + b√$n '
         'eşitliği veriliyor. Buna göre $soru kaçtır?',
     yanit,
-    [f(t, -bb), f(pay, arti ? -pay : pay), t, kk == 4 ? t * t : -yanit, pay],
+    [
+      f(t, -bb), // eşlenik yanlış işaretle alınmış
+      f(pay, arti ? -pay : pay), // m − n ile bölünmemiş
+      t,
+      kk == 4 ? t * t : -yanit,
+      pay,
+      ...switch (kk) {
+        1 => [arti ? 0 : 2 * t], // çarpım yerine toplam
+        2 => [arti ? 2 * t : 0], // a − 2b yerine a − b
+        3 => [2 * t], // 2a yerine a
+        4 => [4 * t * t, 2 * t], // (a ± b)², kare alınmamış
+        _ => <int>[],
+      },
+    ],
     'Pay ve payda √$m $es √$n ile çarpılır; payda $m − $n = ${m - n} olur. '
         '$pay/${m - n} = $t olduğundan ifade ${_kat(t, '√$m')} $es '
         '${_kat(t, '√$n')} biçimine gelir. a = $t, b = ${_n(bb)} ve istenen değer '
         '${_n(yanit)} bulunur.',
+    _sira(a, b, c),
+    enAz: kk == 4 ? 1 : null,
   );
 }
 
@@ -694,6 +948,7 @@ int _tavan(int n, int d) => -_taban(-n, d);
 // ---------------------------------------------------------------------------
 AdvancedItem _mutlak(int a, int b, int c) {
   final kk = c ~/ 2, h = a - 12, w = b + 1, s = (a + b) % 3;
+  final sira = _sira(a, b, c);
   if (c.isEven) {
     final m = kk + 1, ic = _dogrusal(m, -m * h), sag = m * w;
     final denk = '|$ic| = $sag denklemini sağlayan x değerlerinin';
@@ -702,28 +957,55 @@ AdvancedItem _mutlak(int a, int b, int c) {
         '$ic = $sag ya da $ic = −$sag olmalıdır; kökler ${_n(k2)} ve '
         '${_n(k1)} bulunur.';
     if (s == 0) {
-      return _tam('$denk toplamı kaçtır?', 2 * h, [
-        k2,
-        -2 * h,
-        2 * m * h,
-        h,
-        2 * w,
-      ], '$coz Toplamları ${_n(2 * h)} olur.');
+      return _tamSirali(
+        '$denk toplamı kaçtır?',
+        2 * h,
+        [
+          k2, // yalnız bir kök
+          -2 * h, // işaret hatası
+          2 * m * h, // m ile bölünmemiş
+          h,
+          2 * w, // toplam yerine fark
+          k1,
+          0, // kaydırma unutulup kökler ± alınmış
+        ],
+        '$coz Toplamları ${_n(2 * h)} olur.',
+        sira,
+      );
     }
     if (s == 1) {
-      return _tam('$denk çarpımı kaçtır?', k1 * k2, [
-        h * h + w * w,
-        -(k1 * k2),
-        k2 * k2,
-        h * w,
-      ], '$coz Çarpımları ${_n(k1 * k2)} olur.');
+      return _tamSirali(
+        '$denk çarpımı kaçtır?',
+        k1 * k2,
+        [
+          h * h + w * w, // çarpımda işaret hatası
+          -(k1 * k2),
+          k2 * k2, // bir kökün karesi
+          h * w,
+          if (m > 1) m * m * k1 * k2, // m ile bölünmemiş
+          -w * w, // kökler ±w sanılmış
+          k1 * k1,
+          2 * h, // çarpım yerine toplam
+        ],
+        '$coz Çarpımları ${_n(k1 * k2)} olur.',
+        sira,
+      );
     }
-    return _tam(
+    return _tamSirali(
       '$denk büyük olanı ile küçük olanının farkı kaçtır?',
       2 * w,
-      [w, 2 * m * w, m * w, k2],
+      [
+        w,
+        2 * m * w, // m ile bölünmemiş
+        m * w,
+        k2, // büyük kök yanıt sanılmış
+        2 * h, // fark yerine toplam
+        k1,
+      ],
       '$coz Farkları ${_n(k2)} − ${k1 < 0 ? '(${_n(k1)})' : '$k1'} = ${2 * w} '
           'olur.',
+      sira,
+      enAz: 1,
     );
   }
   final (m, e, kesin) = const [
@@ -743,32 +1025,59 @@ AdvancedItem _mutlak(int a, int b, int c) {
                 'sağlayan tam sayılar ${_n(enK)} ile ${_n(enB)} arasındaki (uçlar '
                 'dâhil) $adet sayıdır'}';
   if (s == 0) {
-    return _tam('$esit kaç farklı x tam sayısı vardır?', adet, [
-      adet + 2,
-      if (adet > 2) adet - 2,
-      2 * w,
-      adet + 1,
-      w,
-    ], '$coz.');
+    return _tamSirali(
+      '$esit kaç farklı x tam sayısı vardır?',
+      adet,
+      [
+        adet + 2, // uç değerler yanlış dâhil edilmiş
+        if (adet > 2) adet - 2,
+        2 * w,
+        adet + 1,
+        w,
+        if (m > 1) 2 * q + 1, // m ile bölünmemiş
+        adet - 1, // merkez sayılmamış
+      ],
+      '$coz.',
+      sira,
+      enAz: 0,
+    );
   }
   if (s == 1) {
-    return _tam(
+    return _tamSirali(
       '$esit x tam sayılarının toplamı kaçtır?',
       h * adet,
-      [h * (adet + 2), h * (adet - 2), h, adet, -h * adet],
+      [
+        h * (adet + 2),
+        h * (adet - 2),
+        h,
+        adet, // toplam yerine sayı adedi
+        -h * adet, // işaret hatası
+        0, // çözümler 0 çevresinde sanılmış
+        2 * h, // yalnız uç değerler toplanmış
+        h * (adet + 1),
+      ],
       adet == 1
           ? '$coz; toplam ${_n(h)} olur.'
           : '$coz; bu sayılar ${_n(h)} çevresinde simetrik olduğundan toplamları '
                 '$adet · ${h < 0 ? '(${_n(h)})' : '$h'} = ${_n(h * adet)} olur.',
+      sira,
     );
   }
-  return _tam('$esit en büyük x tam sayısı kaçtır?', enB, [
-    enB + 1,
-    enB - 1,
-    h + q,
-    yari,
-    enK,
-  ], '$coz; en büyüğü ${_n(enB)} olur.');
+  return _tamSirali(
+    '$esit en büyük x tam sayısı kaçtır?',
+    enB,
+    [
+      enB + 1, // uç değer yanlış dâhil edilmiş
+      enB - 1,
+      h + q, // m ile bölünmemiş
+      yari, // kaydırma unutulmuş
+      enK, // en küçük çözüm
+      yari - h, // merkezin işareti yanlış
+      q,
+    ],
+    '$coz; en büyüğü ${_n(enB)} olur.',
+    sira,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -781,18 +1090,24 @@ AdvancedItem _denklem(int a, int b, int c) {
     final q = 1 + b % 5, s = 1 + b ~/ 5;
     final x = (3 * a + 7 * b + 5 * kk) % 19 - 9;
     final t = p * (x + q) - r * (x - s), f = p - r;
-    return _tam(
+    int? bol(int pay) => pay % f == 0 ? pay ~/ f : null;
+    return _isaretli(
       '$p(x + $q) − $r(x − $s) = ${_n(t)} denklemini sağlayan x değeri kaçtır?',
       x,
       [
-        if ((t - p * q + r * s) % f == 0) (t - p * q + r * s) ~/ f,
-        if ((t - q - s) % f == 0) (t - q - s) ~/ f,
-        -x,
+        bol(t - p * q + r * s), // −r · (−s) işareti yanlış
+        bol(t - q - s), // sabitler katsayıyla çarpılmamış
+        if (f > 1) f * x, // ara sonuç yanıt sanılmış
+        bol(t + p * q + r * s), // sabitler işaret değiştirmeden geçirilmiş
+        bol(t - p * q - s), // yalnız ilk parantez açılmış
+        bol(t - q - r * s), // yalnız ikinci parantez açılmış
         x + s,
         x - q,
-      ],
+        -x,
+      ].whereType<int>(),
       'Parantezler açılır: ${p}x + ${p * q} − ${r}x + ${r * s} = ${_n(t)}. '
           'Buradan ${_sonuc(f, t - p * q - r * s, x)} bulunur.',
+      _sira(a, b, c),
     );
   }
   final (m, n) = const [(2, 3), (3, 4), (2, 5), (3, 5), (4, 5)][kk];
@@ -804,20 +1119,26 @@ AdvancedItem _denklem(int a, int b, int c) {
   String carp(int kat, int kayma) =>
       kayma == 0 ? '${kat}x' : '$kat · (${_xArti(kayma)})';
   final sagTaraf = m * n * t;
-  return _tam(
+  int? bol(int pay) => pay % f == 0 ? pay ~/ f : null;
+  return _isaretli(
     '${ks(p, m)} − ${ks(-q, n)} = ${_n(t)} denklemini sağlayan x değeri '
         'kaçtır?',
     x,
     [
-      if ((sagTaraf - n * p + m * q) % f == 0) (sagTaraf - n * p + m * q) ~/ f,
-      if ((t - n * p - m * q) % f == 0) (t - n * p - m * q) ~/ f,
-      -x,
+      bol(sagTaraf - n * p + m * q), // ikinci payın işareti yanlış
+      bol(t - n * p - m * q), // sağ taraf paydalarla çarpılmamış
+      bol(sagTaraf + n * p + m * q), // sabitler işaret değiştirmeden geçirilmiş
+      if (f > 1) f * x, // ara sonuç yanıt sanılmış
+      bol(m * t - n * p - m * q), // sağ taraf yalnız bir paydayla çarpılmış
+      bol(n * t - n * p - m * q),
       x + 1,
       x - 1,
-    ],
+      -x,
+    ].whereType<int>(),
     'Denklemin iki tarafı ${m * n} ile çarpılır: ${carp(n, p)} − '
         '${carp(m, -q)} = ${_n(sagTaraf)}. Parantezler açılıp düzenlenirse '
         '${_sonuc(f, sagTaraf - n * p - m * q, x)} bulunur.',
+    _sira(a, b, c),
   );
 }
 
@@ -825,7 +1146,7 @@ AdvancedItem _denklem(int a, int b, int c) {
 // 11. Birinci dereceden eşitsizlikler
 // ---------------------------------------------------------------------------
 AdvancedItem _esitsizlik(int a, int b, int c) {
-  final kk = c ~/ 2;
+  final kk = c ~/ 2, sira = _sira(a, b, c);
   if (c.isEven) {
     final m = const [2, 3, -2, 5, -3][kk];
     final k = (a + 2 * b) % 9 - 4;
@@ -846,30 +1167,58 @@ AdvancedItem _esitsizlik(int a, int b, int c) {
         ': ${_n(xlo)} ${altDahil ? '≤' : '<'} x ${ustDahil ? '≤' : '<'} '
         '${_n(xhi)}.';
     if (b % 3 == 0) {
-      return _tam(
+      return _tamSirali(
         '$ifade kaç farklı x tam sayısı vardır?',
         adet,
-        [adet + 1, adet - 1, xhi - xlo + 2, sag - sol],
+        [
+          adet + 1, // bir uç değer yanlış dâhil edilmiş
+          adet - 1, // bir uç değer yanlış dışarıda bırakılmış
+          xhi - xlo + 2,
+          sag - sol, // katsayıya bölünmemiş
+          adet + 2, // iki uç değer yanlış dâhil edilmiş
+          adet - 2,
+          xhi - xlo, // aralığın uzunluğu
+        ],
         adet == 1
             ? '$coz Bu aralıktaki tek tam sayı ${_n(enK)} olduğundan yanıt 1 olur.'
             : '$coz Bu aralıktaki tam sayılar ${_n(enK)} ile ${_n(enB)} '
                   'arasındadır (uçlar dâhil); sayıları $adet olur.',
+        sira,
+        enAz: 0,
       );
     }
     if (b % 3 == 1) {
-      return _tam('$ifade en büyük x tam sayısı kaçtır?', enB, [
-        ustDahil ? xhi - 1 : xhi,
-        enK,
-        sag,
-        -enB,
-      ], '$coz Bu aralıktaki en büyük tam sayı ${_n(enB)} olur.');
+      return _tamSirali(
+        '$ifade en büyük x tam sayısı kaçtır?',
+        enB,
+        [
+          ustDahil ? xhi - 1 : xhi, // uç değer yanlış yorumlanmış
+          enK, // en küçük çözüm
+          sag, // katsayıya bölünmemiş
+          -enB, // işaret hatası
+          enB + 1,
+          enB - 1,
+          sol,
+        ],
+        '$coz Bu aralıktaki en büyük tam sayı ${_n(enB)} olur.',
+        sira,
+      );
     }
-    return _tam('$ifade en küçük x tam sayısı kaçtır?', enK, [
-      altDahil ? xlo + 1 : xlo,
-      enB,
-      sol,
-      -enK,
-    ], '$coz Bu aralıktaki en küçük tam sayı ${_n(enK)} olur.');
+    return _tamSirali(
+      '$ifade en küçük x tam sayısı kaçtır?',
+      enK,
+      [
+        altDahil ? xlo + 1 : xlo, // uç değer yanlış yorumlanmış
+        enB, // en büyük çözüm
+        sol, // katsayıya bölünmemiş
+        -enK, // işaret hatası
+        enK - 1,
+        enK + 1,
+        sag,
+      ],
+      '$coz Bu aralıktaki en küçük tam sayı ${_n(enK)} olur.',
+      sira,
+    );
   }
   final p = 4 + a % 5, r = p + const [-3, -2, -1, 1, 2][a ~/ 5];
   final u = 1 + b % 4, v = 3 + 2 * (b ~/ 4) + (kk == 4 ? 11 : 0);
@@ -880,23 +1229,34 @@ AdvancedItem _esitsizlik(int a, int b, int c) {
       : isaret;
   final dd = (p - r).abs(), nn = ters ? -(u + v) : u + v;
   final ustSinir = yon == '<' || yon == '≤';
-  final yanit = switch (yon) {
-    '<' => _tavan(nn, dd) - 1,
-    '≤' => _taban(nn, dd),
-    '>' => _taban(nn, dd) + 1,
-    _ => _tavan(nn, dd),
+  int cevap(String op, int pay, int payda) => switch (op) {
+    '<' => _tavan(pay, payda) - 1,
+    '≤' => _taban(pay, payda),
+    '>' => _taban(pay, payda) + 1,
+    _ => _tavan(pay, payda),
   };
+  final yanit = cevap(yon, nn, dd);
   final uc = ustSinir ? 'büyük' : 'küçük';
-  return _tam(
+  return _tamSirali(
     '${_dogrusal(p, -u)} $isaret ${_dogrusal(r, v)} eşitsizliğini sağlayan en '
         '$uc x tam sayısı kaçtır?',
     yanit,
-    [yanit + 1, yanit - 1, -yanit, u + v, yanit + 2],
+    [
+      yanit + 1, // sınır değer yanlış yorumlanmış
+      yanit - 1,
+      -yanit, // işaret hatası
+      u + v, // katsayıya bölünmemiş
+      cevap(yon, ters ? u - v : v - u, dd), // sabit karşıya geçerken işaret
+      cevap(isaret, u + v, p + r), // rx karşıya geçerken işaret
+      if (ters) cevap(isaret, nn, dd), // yön değiştirilmemiş
+      yanit + 2,
+    ],
     'Bilinmeyenler solda, sabitler sağda toplanır: ${_kx(p - r)} $isaret '
         '${u + v}. ${ters ? 'İki taraf negatif sayıya bölündüğünden eşitsizlik yön '
                   'değiştirir. ' : ''}'
         'Buradan x $yon ${_K(nn, dd)} olur; bu koşulu sağlayan en $uc tam sayı '
         '${_n(yanit)} bulunur.',
+    sira,
   );
 }
 
@@ -1447,7 +1807,7 @@ const _birlikteUclu = [
 ];
 
 AdvancedItem _isciHavuz(int a, int b, int c) {
-  final kk = c ~/ 3;
+  final kk = c ~/ 3, sira = _sira(a, b, c);
   final (m, n) = _asalCift[a];
   const bir = _K._(1, 1);
   if (c % 3 == 0) {
@@ -1463,39 +1823,78 @@ AdvancedItem _isciHavuz(int a, int b, int c) {
         'Usta günde işin 1/$x, kalfa 1/$y kadarını yapar. $d günde $d · '
         '(1/$x + 1/$y) = $biten kadarı biter.';
     if (kk == 0) {
-      return sayisal(
+      return _tamSirali(
         '$bas Kalan işi kalfa tek başına kaç günde bitirir?',
         kalanGun,
-        [n * (k - j), y - d, kalanGun + d, x - d],
+        [
+          n * (k - j), // kalfanın yaptığı kısım düşülmemiş
+          y - d, // ustanın yaptığı kısım düşülmemiş
+          kalanGun + d,
+          x - d,
+          (m + n) * j, // biten kısmın süresi
+          d,
+        ],
         '$coz Kalan $kalan kadarlık işi kalfa $y · $kalan = $kalanGun günde '
             'bitirir.',
-        positive: true,
+        sira,
+        enAz: 1,
       );
     }
     if (kk == 1) {
-      return sayisal(
+      return _tamSirali(
         '$bas Kalan işi kalfa tek başına tamamladığına göre işin tamamı kaç '
             'günde bitmiştir?',
         d + kalanGun,
-        [kalanGun, n * (k - j) + d, y - d, y],
+        [
+          kalanGun, // birlikte çalışılan günler eklenmemiş
+          n * (k - j) + d,
+          y - d,
+          y,
+          x,
+          (m + n) * j + d, // biten kısmın süresi eklenmiş
+          d,
+        ],
         '$coz Kalan $kalan kadarlık işi kalfa $y · $kalan = $kalanGun günde '
             'bitirir; iş toplam $d + $kalanGun = ${d + kalanGun} günde tamamlanır.',
-        positive: true,
+        sira,
+        enAz: 1,
       );
     }
     if (kk == 2) {
-      return _kesirSoru(
+      return _kesirSirali(
         '$bas Usta ayrıldığı anda işin kaçta kaçı bitmiştir?',
         biten,
-        [kalan, _K(d, x), _K(d, y), _K(d, x + y)],
+        [
+          kalan, // biten yerine kalan
+          _K(d, x), // yalnız ustanın yaptığı
+          _K(d, y),
+          _K(d, x + y), // günler toplanmış
+          _K(2 * d, x + y), // paylar ve paydalar toplanmış
+          bir - _K(d, y),
+          bir - _K(d, x),
+        ],
         coz,
+        sira,
+        pozitif: true,
+        birdenKucuk: true,
       );
     }
-    return _kesirSoru(
+    return _kesirSirali(
       '$bas Usta ayrıldığı anda işin kaçta kaçı kalmıştır?',
       kalan,
-      [biten, bir - _K(d, x), bir - _K(d, y), _K(d, x + y)],
+      [
+        biten, // kalan yerine biten
+        bir - _K(d, x), // yalnız ustanın yaptığı düşülmüş
+        bir - _K(d, y),
+        _K(d, x + y),
+        bir - _K(2 * d, x + y), // paylar ve paydalar toplanmış
+        _K(d, x),
+        _K(d, y),
+      ],
       '$coz Geriye 1 − $biten = $kalan kadarı kalır.',
+      sira,
+      pozitif: true,
+      birdenKucuk: true,
     );
   }
   if (c % 3 == 1) {
@@ -1507,14 +1906,22 @@ AdvancedItem _isciHavuz(int a, int b, int c) {
     if (kk == 2) {
       final d = n * j, yanit = m * (k - j);
       final biten = _K(d, y), kalan = bir - biten;
-      return sayisal(
+      return _tamSirali(
         '$bas Kalfa bu işte tek başına $d gün çalıştıktan sonra işi ustaya '
             'devrediyor. Kalan işi usta tek başına kaç günde bitirir?',
         yanit,
-        [n * (k - j), y - d, if (x > d) x - d, d],
+        [
+          n * (k - j), // kalan iş kalfanın hızıyla hesaplanmış
+          if (x > d) x - d, // ustanın süresinden kalfanın günleri düşülmüş
+          d,
+          x, // kalfanın yaptığı düşülmemiş
+          m * j, // biten kısmın usta süresi
+          yanit + d, // toplam süre
+        ],
         'Kalfa $d günde işin $d/$y = $biten kadarını yapar. Kalan $kalan '
             'kadarlık işi usta $x · $kalan = $yanit günde bitirir.',
-        positive: true,
+        sira,
+        enAz: 1,
       );
     }
     final d = m * j, kalanGun = n * (k - j);
@@ -1526,60 +1933,106 @@ AdvancedItem _isciHavuz(int a, int b, int c) {
         '$bas Usta bu işte tek başına $d gün çalıştıktan sonra işi kalfaya '
         'devrediyor.';
     if (kk == 0) {
-      return sayisal(
+      return _tamSirali(
         '$devir Kalan işi kalfa tek başına kaç günde bitirir?',
         kalanGun,
-        [m * (k - j), y - d, x - d, kalanGun + d],
+        [
+          m * (k - j), // kalan iş ustanın hızıyla hesaplanmış
+          y - d, // kalfanın süresinden ustanın günleri düşülmüş
+          kalanGun + d, // toplam süre
+          y, // ustanın yaptığı düşülmemiş
+          n * j, // biten kısmın kalfa süresi
+          d,
+        ],
         '$coz.',
-        positive: true,
+        sira,
+        enAz: 1,
       );
     }
-    return sayisal(
+    return _tamSirali(
       '$devir Buna göre işin tamamı kaç günde bitmiş olur?',
       d + kalanGun,
-      [kalanGun, y - d, x, y],
+      [
+        kalanGun, // ustanın günleri eklenmemiş
+        y - d,
+        x,
+        y,
+        d + y, // kalfa işin tamamını yapmış sanılmış
+        x + y, // iki süre toplanmış
+        d + m * (k - j), // kalan iş ustanın hızıyla hesaplanmış
+      ],
       '$coz; iş toplam $d + $kalanGun = ${d + kalanGun} günde tamamlanır.',
-      positive: true,
+      sira,
+      enAz: 1,
     );
   }
   if (kk == 1) {
     final (x, y, t) = _birlikteUclu[a];
     final adet = b + 2;
-    return sayisal(
+    return _tamSirali(
       'Bir duvarı usta tek başına $x saatte, kalfa tek başına $y saatte '
           'örebilmektedir. İkisi birlikte çalışarak aynı büyüklükteki $adet duvarı '
           'kaç saatte örer?',
       adet * t,
-      [t, adet * (x + y) ~/ 2, adet * x, adet * (y - x)],
+      [
+        t, // tek duvarın süresi
+        adet * (x + y) ~/ 2, // sürelerin ortalaması
+        adet * x, // usta tek başına
+        adet * (y - x),
+        if ((adet * x).isEven) adet * x ~/ 2, // iki kişi ustanın hızında sanılmış
+        if ((adet * y).isEven) adet * y ~/ 2, // iki kişi kalfanın hızında sanılmış
+        (adet - 1) * t,
+      ],
       'Birlikte bir saatte duvarın 1/$x + 1/$y = 1/$t kadarını örerler. Bir '
           'duvar $t saatte, $adet duvar $adet · $t = ${adet * t} saatte biter.',
-      positive: true,
+      sira,
+      enAz: 1,
     );
   }
   final k = 4 + b % 5, h = 1 + b ~/ 5;
   final x = m * k, y = n * k;
   final gx = _K(h, x), gy = _K(h, y);
   if (kk == 0) {
-    return _kesirSoru(
+    return _kesirSirali(
       'Bir işi usta tek başına $x günde, kalfa tek başına $y günde '
           'bitirebilmektedir. İkisi birlikte $h gün çalıştığında işin kaçta kaçı '
           'bitmiş olur?',
       gx + gy,
-      [gx, gy, _K(h, x + y), _K(2 * h, x + y)],
+      [
+        gx, // yalnız ustanın yaptığı
+        gy,
+        _K(h, x + y), // günler toplanmış
+        _K(2 * h, x + y), // paylar ve paydalar toplanmış
+        bir - (gx + gy), // biten yerine kalan
+        gx + gx, // ikisi de ustanın hızında sanılmış
+      ],
       'Usta günde işin 1/$x, kalfa 1/$y kadarını yapar. $h günde $h · (1/$x + '
           '1/$y) = $gx + $gy = ${gx + gy} kadarı biter.',
+      sira,
+      pozitif: true,
+      birdenKucuk: true,
     );
   }
-  return _kesirSoru(
+  return _kesirSirali(
     'Boş bir havuzu bir musluk $x saatte doldurmakta, havuzun dibindeki bir '
         'gider ise dolu havuzu $y saatte boşaltmaktadır. Havuz tamamen boşken '
         'musluk ve gider aynı anda açılırsa $h saat sonra havuzun kaçta kaçı '
         'dolmuş olur?',
     gx - gy,
-    [gx + gy, gx, gy, _K(h, y - x)],
+    [
+      gx + gy, // gider de dolduruyor sanılmış
+      gx, // gider hesaba katılmamış
+      gy,
+      _K(h, y - x), // süreler çıkarılmış
+      bir - (gx - gy), // dolan yerine boş kalan kısım
+      if (h > 1) _K(1, x) - _K(1, y), // bir saatlik değişim
+    ],
     'Musluk saatte havuzun 1/$x kadarını doldurur, gider 1/$y kadarını '
         'boşaltır. Başlangıçta boş olan havuzun $h saatte $h · (1/$x − 1/$y) = '
         '$gx − $gy = ${gx - gy} kadarı dolar.',
+    sira,
+    pozitif: true,
+    birdenKucuk: true,
   );
 }
 

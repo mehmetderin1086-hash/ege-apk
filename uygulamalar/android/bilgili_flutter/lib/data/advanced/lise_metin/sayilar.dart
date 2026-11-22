@@ -2342,8 +2342,6 @@ AdvancedItem _aralikSoru(int a, int b, int c) {
               0)
         (ilkTip + 7 * k) % 16,
   ];
-  // Önce, kapalı/açık uç ayrımının yanıtı değiştirdiği (tüm uçları kapalı
-  // sanan yolun yanlış sonuç verdiği) seçimler denenir.
   _Ar kapat(_Ar x) => (x.$1, true, x.$3, true);
   _Ar ac(_Ar x) => (x.$1, false, x.$3, false);
   // _aralikUret içindeki çeldirici yollarının (uç türü yanlışları, kesişim ile
@@ -2404,41 +2402,33 @@ AdvancedItem _aralikSoru(int a, int b, int c) {
     };
   }
 
-  // En önce, çeldirici yollarından hiçbirinin doğru sonucu vermediği seçimler.
-  for (final t in adaylar) {
-    final (x, y) = araliklar(t);
-    final r = _aralikUret(c, (x, y));
-    if (_yanitKokte(r)) continue;
-    if (uyarlamalar(x, y).any((v) => _n(v) == r.correct)) continue;
-    return r;
-  }
-  // Uymazsa aynı seçimler bütün uçlar 40 birim kaydırılarak denenir; bu kadar
-  // büyük uçlar başka hiçbir vakada kullanılmadığından kökler yine farklı kalır.
+  // Her seçim puanlanır: yanıt kökte yazılıysa 100, en yaygın yanlış (bütün
+  // uçları kapalı sanmak) doğru sonucu veriyorsa 3, öteki çeldirici yollarından
+  // doğru sonucu veren her biri için 1. En düşük puanlı seçim alınır (eşitlikte
+  // ilk sıradaki). Kaydırılmış uçlar (40 birim; bu kadar büyük uçlar başka hiçbir
+  // vakada kullanılmadığından kökler yine farklı kalır) yalnız puanı düşürürse
+  // kullanılır. (Tek uç çiftli farklarda üç uç yanlışından biri her zaman doğru
+  // sonucu verir; orada en az bir puan kaçınılmazdır.)
   _Ar kaydir(_Ar x) => (x.$1 + 40, x.$2, x.$3 + 40, x.$4);
-  for (final t in adaylar) {
-    final (x0, y0) = araliklar(t);
-    final (x, y) = (kaydir(x0), kaydir(y0));
+  (int, AdvancedItem) puanla(_Ar x, _Ar y) {
     final r = _aralikUret(c, (x, y));
-    if (_yanitKokte(r)) continue;
-    if (uyarlamalar(x, y).any((v) => _n(v) == r.correct)) continue;
-    return r;
+    var p = _yanitKokte(r) ? 100 : 0;
+    if (_aralikUret(c, (kapat(x), kapat(y))).correct == r.correct) p += 3;
+    p += uyarlamalar(x, y).where((v) => _n(v) == r.correct).length;
+    return (p, r);
   }
-  for (final t in adaylar) {
-    final (x, y) = araliklar(t);
-    final r = _aralikUret(c, (x, y));
-    if (_yanitKokte(r)) continue;
-    if (_aralikUret(c, (kapat(x), kapat(y))).correct != r.correct) return r;
+
+  (int, AdvancedItem)? enIyi;
+  for (final kaydirilmis in const [false, true]) {
+    for (final t in adaylar) {
+      final (x0, y0) = araliklar(t);
+      final (x, y) = kaydirilmis ? (kaydir(x0), kaydir(y0)) : (x0, y0);
+      final aday = puanla(x, y);
+      if (enIyi == null || aday.$1 < enIyi.$1) enIyi = aday;
+      if (enIyi.$1 == 0) return enIyi.$2;
+    }
   }
-  for (final t in adaylar) {
-    final r = _aralikUret(c, araliklar(t));
-    if (!_yanitKokte(r)) return r;
-  }
-  for (final t in adaylar) {
-    final (x, y) = araliklar(t);
-    final r = _aralikUret(c, (kaydir(x), kaydir(y)));
-    if (!_yanitKokte(r)) return r;
-  }
-  return _aralikUret(c, araliklar(adaylar.first));
+  return enIyi!.$2;
 }
 
 AdvancedItem _aralikUret(int c, (_Ar, _Ar) ikili) {

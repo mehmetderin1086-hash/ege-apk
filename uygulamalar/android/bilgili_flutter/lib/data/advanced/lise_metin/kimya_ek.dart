@@ -1,6 +1,7 @@
 // Lise kimya metin aileleri (2. tur): temel kanunlardan organik kimyaya 20
 // kazanım. Her aile 5.000 ayrı soru kökü üretir; veriler gerçek maddelerden ve
 // ders kitabı değerlerinden seçilir, anahtarlar koordinatlardan hesaplanır.
+import 'denge.dart';
 import 'ortak.dart';
 
 // ───────────────────────────── Ortak yardımcılar ─────────────────────────────
@@ -134,6 +135,95 @@ AdvancedItem _say(
     aciklama,
   );
 }
+
+/// `_say` ile aynı yazım; çeldiriciler anahtardan küçük olanların sayısı
+/// [sira] (0 … 3) olacak biçimde seçilir (`siraliCeldiriciler`). [adaylar]
+/// anahtarın iki yanındaki tipik hata değerleridir; bir yanda yetmezse o yana
+/// en çok [komsu] adım uzaklıktaki komşu değerler eklenir. [adim] verilmezse
+/// `_say`'daki komşu adımı kullanılır. [son] adayları (akla yatmayan
+/// büyüklükteki hata sonuçları) komşu değerlerden de sonra denenir.
+AdvancedItem _saySirali(
+  String kok,
+  num dogru,
+  Iterable<num> adaylar,
+  String aciklama,
+  int sira, {
+  String birim = '',
+  int basamak = 2,
+  bool arti = true,
+  num? adim,
+  int komsu = 2,
+  Iterable<num> son = const [],
+}) {
+  String yaz(num x) => birimli(_yz(x, basamak), birim);
+  double deger(num x) => double.parse(tr(x, basamak).replaceFirst(',', '.'));
+  final d = dogru.toDouble(), m = d.abs();
+  final tam = (d - d.roundToDouble()).abs() < 1e-9;
+  final enKucuk = 1 / _on(basamak);
+  var a =
+      adim ??
+      (tam
+          ? (m >= 200 ? 10.0 : (m >= 40 ? 5.0 : 1.0))
+          : (m >= 20
+                ? 1.0
+                : (m >= 2
+                      ? 0.5
+                      : (m >= 0.3 ? 0.1 : (m >= 0.03 ? 0.01 : 0.001)))));
+  if (a < enKucuk) a = enKucuk;
+  final esik = 0.5 / _on(basamak);
+  final havuz = <num>[
+    ...adaylar,
+    for (var k = 1; k <= komsu; k++) ...[d - k * a, d + k * a],
+    ...son,
+  ];
+  final yazim = birimli(_t(dogru, basamak), birim);
+  return AdvancedItem(
+    kok,
+    yazim,
+    siraliCeldiriciler(deger(d), yazim, [
+      for (final x in havuz)
+        if (x.isFinite && (!arti || x >= esik)) (deger(x), yaz(x)),
+    ], sira),
+    aciklama,
+  );
+}
+
+final _sozcukAyrac = RegExp(r'[^\p{L}\p{N}]+', unicode: true);
+
+/// Her seçeneğin öteki seçeneklerle sözcük kümesi (Jaccard) benzerliklerinin
+/// toplamı; `tool/lise_metin/ipucu.dart` içindeki “sözcük” ölçüsüyle aynıdır.
+List<double> _sozcukBenzerligi(List<String> se) {
+  final k = [
+    for (final x in se)
+      x.toLowerCase().split(_sozcukAyrac).where((w) => w.isNotEmpty).toSet(),
+  ];
+  return [
+    for (var a = 0; a < k.length; a++)
+      [
+        for (var b = 0; b < k.length; b++)
+          if (b != a)
+            k[a].union(k[b]).isEmpty
+                ? 0.0
+                : k[a].intersection(k[b]).length / k[a].union(k[b]).length,
+      ].fold<double>(0, (t, x) => t + x),
+  ];
+}
+
+/// Anahtar (ilk seçenek) sözcük benzerliğinde tek başına en düşük, yani
+/// seçenekler arasında “aykırı olan” ise doğru.
+bool _anahtarAykiri(List<String> se) {
+  final p = _sozcukBenzerligi(se);
+  for (var j = 1; j < p.length; j++) {
+    if (p[j] <= p[0] + 1e-9) return false;
+  }
+  return true;
+}
+
+/// İki bağımsız hedef sıradan 0 … 15 arasında eşit dağılımlı bir değer.
+int _onAlti(int i) => hedefSira(i) * 4 + hedefSira(i, 7);
+
+/// Üç sıradan (0, 1, 2) birini yaklaşık eşit sıklıkla verir.
+int _ucluSira(int i) => _onAlti(i) % 3;
 
 /// [x] değerini kesin yazmak için gereken ondalık basamak sayısı; iki basamakta
 /// kesin yazılamıyorsa 3.
@@ -356,7 +446,15 @@ bool _sabitOranTemiz(int p, int q, int k, int e, bool yFazla) {
       !kokSayilari.any((h) => ayni(h, e) || ayni(h, top));
 }
 
-AdvancedItem _katliOran(int a, int b, int w) {
+/// Katlı oran sorularında anahtarın hedef değer sırası: sabit oran
+/// sorularında anahtar en büyük seçenek olmadığından bu türde en büyük sıra
+/// daha sık seçilir; ailenin bütününde dört sıra dengeli kalır.
+int _katliSira(int i) {
+  final k = _onAlti(i);
+  return k < 3 ? 0 : (k < 6 ? 1 : (k < 10 ? 2 : 3));
+}
+
+AdvancedItem _katliOran(int a, int b, int w, int i) {
   final (xs, xa, ys, ya, f1, f2, x1, y1, x2, y2, ax2, ay2) = _katliOranlar[a];
   // Miktarlar onda bir mol birimiyle; kütleler (yarım atom kütlesiyle) yüzde
   // bir gram birimine çevrilir.
@@ -376,7 +474,7 @@ AdvancedItem _katliOran(int a, int b, int w) {
   final r = m1y / m1x, kat = y2 * x1 / (x2 * y1);
   final oranYazi = kesir(y1 * ay2, x1 * ax2);
   final katYazi = kesir(y2 * x1, x2 * y1);
-  return _say(
+  return _saySirali(
     '${_bas(xa)} ve $ya elementlerinden oluşan $f1 bileşiğinde ${_t(m1x)} g '
         '$xa ile ${_t(m1y)} g $ya birleşmektedir. Aynı iki elementten oluşan '
         '$f2 bileşiğinde ${_t(m2x)} g $xa ile kaç gram $ya birleşir?',
@@ -402,7 +500,9 @@ AdvancedItem _katliOran(int a, int b, int w) {
         '${kesir(y1, x1)}, $f2 bileşiğinde ${kesir(y2, x2)} olduğundan $f2 '
         'bileşiğinde aynı kütlede $xa ile $katYazi katı $ya birleşir: '
         '${_t(m2x)}·$oranYazi·$katYazi = ${_t(cevap)} g.',
+    _katliSira(i),
     birim: 'g',
+    komsu: 1,
   );
 }
 
@@ -413,7 +513,8 @@ final _f01 = lmAile(
   Difficulty.medium,
   BloomLevel.uygulama,
   (a, b, c) {
-    if (c >= 7) return _katliOran(a, b, c - 7);
+    final i = a + 25 * b + 500 * c;
+    if (c >= 7) return _katliOran(a, b, c - 7, i);
     final (f, ad, xs, xa, ys, ya, p, q, u) = _sabitOranlar[a];
     final artanSorusu = c < 4;
     final j = artanSorusu ? c : c - 4;
@@ -444,8 +545,12 @@ final _f01 = lmAile(
     final birlesme = yFazla
         ? '${g(mx)} g $xa ile ${g(mx)}·$q/$p = ${g(yTep)} g $ya birleşir.'
         : '${g(my)} g $ya ile ${g(my)}·$p/$q = ${g(xTep)} g $xa birleşir.';
+    // Anahtarın değer sırası vakadan vakaya değişir. Artan kütle tipik
+    // hataların çoğundan küçük olduğundan altında kalan çeldirici gerekirse
+    // verinin adımıyla (u/10 g) bir iki adım küçük değer alınır; artan
+    // sorularında anahtar en küçük, ikinci ya da üçüncü sırada olur.
     if (artanSorusu) {
-      return _say(
+      return _saySirali(
         '$giris artan maddenin kütlesi kaç gram olur?',
         e / 10,
         _ayrisik(
@@ -457,15 +562,23 @@ final _f01 = lmAile(
             yanlisArtan / 10, // sınırlayıcı elementi yanlış seçme
             (yFazla ? my : mx) / 10, // artan elementin başlangıç kütlesi
             (yFazla ? mx : my) / 10, // sınırlayıcı elementin kütlesi
+            (xTep - yTep).abs() / 10, // harcanan kütlelerin farkı
+            // artan elementin kütlesinden ötekinin harcanan kütlesini çıkarma
+            (yFazla ? my - xTep : mx - yTep) / 10,
           ], veriler),
         ),
         '$birlesme ${_bas(yFazla ? ya : xa)} elementinden '
             '${g(yFazla ? my : mx)} − ${g(yFazla ? yTep : xTep)} = ${g(e)} g '
             'artar.',
+        _ucluSira(i),
         birim: 'g',
+        adim: u / 10,
       );
     }
-    return _say(
+    // Oluşan bileşiğin kütlesi verilen kütlelerin toplamından küçük, artan ve
+    // harcanan kütlelerden büyüktür; anahtar ikinci, üçüncü ya da en büyük
+    // sırada olur.
+    return _saySirali(
       '$giris en çok kaç gram $f oluşur?',
       top / 10,
       _ayrisik(
@@ -480,7 +593,10 @@ final _f01 = lmAile(
       ),
       '$birlesme Kütlenin korunumuna göre ${g(xTep)} + ${g(yTep)} = ${g(top)} g '
           '$f oluşur; ${yFazla ? ya : xa} elementinden ${g(e)} g artar.',
+      1 + _ucluSira(i),
       birim: 'g',
+      adim: u / 10,
+      komsu: 1,
     );
   },
   exam: ExamKind.tyt,
@@ -3149,6 +3265,31 @@ final _f14 = lmAile(
         'Kırılan bağlar: ${_bagToplamYazi(kirilan)} = $bk kJ; oluşan bağlar: '
         '${_bagToplamYazi(olusan)} = $bo kJ. ΔH = $bk − $bo = ${_isaretli(dh)} kJ '
         'olur.';
+    // Bir maddenin katsayısını unutma hatası: o maddenin bağları bir kez
+    // sayılır; (kırılan, oluşan) bağ sayıları.
+    final katsayiUnutma = [
+      for (var t = 0; t < giren.length; t++)
+        if (giren[t].$1 > 1)
+          (
+            _bagSayilari([
+              for (var u = 0; u < giren.length; u++)
+                u == t ? (1, giren[u].$2) : giren[u],
+            ]),
+            olusan,
+          ),
+      for (var t = 0; t < urun.length; t++)
+        if (urun[t].$1 > 1)
+          (
+            kirilan,
+            _bagSayilari([
+              for (var u = 0; u < urun.length; u++)
+                u == t ? (1, urun[u].$2) : urun[u],
+            ]),
+          ),
+    ];
+    // Anahtarın değer sırası vakadan vakaya değişir (tipik hatalar çoğunlukla
+    // anahtardan büyük olduğundan küçük yanda gerekirse komşu değer alınır).
+    final i = a + 25 * b + 500 * c;
     if (c < 5) {
       final kutleli = c >= 3;
       final adaylar = kutleli
@@ -3167,7 +3308,7 @@ final _f14 = lmAile(
       final (_, mk, kut) = _molekulBagi[f]!;
       final miktar = kutleli ? '${_t(mol * mk)} gram $f' : '${_t(mol)} mol $f';
       final fiil = girenMi ? 'harcandığında' : 'oluştuğunda';
-      return _say(
+      return _saySirali(
         '$denklem tepkimesi için bağ enerjileri (kJ/mol): '
             '${[
               for (final e in {...kirilan.keys, ...olusan.keys}) '$e: ${_bagEnerjisi[e]}',
@@ -3181,11 +3322,18 @@ final _f14 = lmAile(
           bo * mol / k,
           yanlisDh.abs() * mol / k,
           dh.abs() / k,
+          // denklemdeki başka bir maddenin katsayısına bölme
+          for (final k2 in {for (final (kk, _, _) in turler) kk})
+            if (k2 != k) dh.abs() * mol / k2,
+          // bir maddenin katsayısını unutma
+          for (final (kir, olu) in katsayiUnutma)
+            (_bagToplami(kir) - _bagToplami(olu)).abs() * mol / k,
         ]),
         '$dhYol ${kutleli ? '${_t(mol * mk)} gram $f ${_t(mol)} mol eder. ' : ''}'
             'Bu değer denklemdeki $k mol $f içindir; ${_t(mol)} mol için '
             '${dh.abs()}·${_t(mol)}${k == 1 ? '' : '/$k'} = ${_t(q)} kJ ısı '
             '${ekzo ? 'açığa çıkar' : 'alınır'}.',
+        hedefSira(i),
         birim: 'kJ',
       );
     }
@@ -3226,6 +3374,15 @@ final _f14 = lmAile(
         if (k != 1)
           (dh / k - digerFark) / net, // ΔH'yi ölçülen maddenin 1 molü için alma
         (-isi - digerFark) / net, // ölçülen ısıyı ters işaretle kullanma
+        // ölçülen ısıyı denklemdeki miktara ters oranla ölçekleme
+        (isi * mol / k - digerFark) / net,
+        // bir maddenin katsayısını unutma (bağ sayıları bir kez sayılır)
+        for (final (kir, olu) in katsayiUnutma)
+          if ((kir[bilinmeyen] ?? 0) != (olu[bilinmeyen] ?? 0))
+            (dh -
+                    (_bagToplami(kir) - (kir[bilinmeyen] ?? 0) * x) +
+                    (_bagToplami(olu) - (olu[bilinmeyen] ?? 0) * x)) /
+                ((kir[bilinmeyen] ?? 0) - (olu[bilinmeyen] ?? 0)),
       ])
         y.abs().round(),
     ];
@@ -3244,20 +3401,28 @@ final _f14 = lmAile(
     final olusanYazi = kf == 0 || f0 == 0
         ? parca(f0, kf)
         : '(${parca(f0, kf)})';
-    return _say(
+    return _saySirali(
       '$denklem tepkimesinde ${_t(mol)} mol $f ${girenMi ? 'harcandığında' : 'oluştuğunda'} '
           '${_t(q)} kJ ısı ${ekzo ? 'açığa çıkmaktadır' : 'alınmaktadır'}. Bağ '
           'enerjileri (kJ/mol): ${digerleri.join(', ')}. Buna göre $bilinmeyen bağının '
           'enerjisi kaç kJ/mol olur?',
       coz(dh),
       // Bağ enerjisi için akla yatmayan küçük değerler (yanıtın %30'undan az)
-      // ancak başka aday kalmazsa kullanılır.
-      _ayrisik(yanlislar, enAz: 3, sona: (v) => v < 0.3 * x),
+      // komşu değerlerden de sonra, ancak başka aday kalmazsa kullanılır.
+      _ayrisik([
+        for (final v in yanlislar)
+          if (v >= 0.3 * x) v,
+      ], enAz: 3),
       'Denklemdeki $k mol $f için ΔH = ${_isaretli(dh)} kJ olur '
           '(${_t(q)}·$k/${_t(mol)}). $bilinmeyen bağının enerjisi x ile '
           'gösterilirse ΔH = Σ(kırılan) − Σ(oluşan) eşitliği '
           '${_isaretli(dh)} = ${parca(b0, kb)} − $olusanYazi olur; buradan '
           'x = $x kJ/mol bulunur.',
+      hedefSira(i),
+      son: [
+        for (final v in yanlislar)
+          if (v < 0.3 * x) v,
+      ],
     );
   },
   exam: ExamKind.ayt,
@@ -3835,6 +4000,9 @@ final _f17 = lmAile(
   Difficulty.medium,
   BloomLevel.uygulama,
   (a, b, c) {
+    // Anahtarın değer sırası vakadan vakaya değişir; komşu değerler yanıtın
+    // ızgarasında (0,05 mol ya da 0,05 molün kütlesi) alınır.
+    final sira = hedefSira(a + 25 * b + 500 * c);
     final (k, n) = _hidrokarbon(a);
     final h = _hSayisi(k, n), mk = 12 * n + h;
     final sinif = _hidrokarbonSinifi[k];
@@ -3879,13 +4047,15 @@ final _f17 = lmAile(
       ];
       final cakisir = kokSayilari.any((y) => (y - deger).abs() < 1e-9);
       if (!cakisir) {
-        return _say(
+        return _saySirali(
           '$kok kaç mol $nicelik ${nicelik == 'O₂' ? 'harcanır' : 'oluşur'}?'
           '${ekKutle.isEmpty ? '' : ' ($ekKutle)'}',
           deger,
           izgara(hatalar),
           cozum,
+          sira,
           birim: 'mol',
+          adim: 0.05,
         );
       }
       final g = deger * molKutle;
@@ -3895,13 +4065,15 @@ final _f17 = lmAile(
       final gramKutle = nicelik == 'H₂O'
           ? 'H: 1, O: 16'
           : (nicelik == 'CO₂' ? 'C: 12, O: 16' : 'O: 16');
-      return _say(
+      return _saySirali(
         '$kok kaç gram $nicelik ${nicelik == 'O₂' ? 'harcanır' : 'oluşur'}? '
             '(${molKutledenBulunur ? 'C: 12, H: 1, O: 16' : gramKutle})',
         g,
         [for (final e in izgara(hatalar)) e * molKutle],
         '$cozum Bu ${_t(deger)} mol $nicelik ${_t(g)} gram eder.',
+        sira,
         birim: 'g',
+        adim: 0.05 * molKutle,
       );
     }
 
@@ -4014,24 +4186,28 @@ final _f17 = lmAile(
         // Yanıt köke yazılan sayılardan (karbon sayısı, kütle, atom
         // kütleleri) biriyle çakışırsa CO₂ kütlesi sorulur.
         if (![n, m, 12, 1].any((y) => (y - co2).abs() < 1e-9)) {
-          return _say(
+          return _saySirali(
             '$kok kaç mol CO₂ oluşur? (C: 12, H: 1)',
             co2,
             hatalar,
             yol,
+            sira,
             birim: 'mol',
+            adim: 0.05,
           );
         }
-        return _say(
+        return _saySirali(
           '$kok kaç gram CO₂ oluşur? (C: 12, H: 1, O: 16)',
           co2 * 44,
           [for (final e in hatalar) e * 44],
           '$yol Bu ${_t(co2)} mol CO₂ ${_t(co2 * 44)} gram eder.',
+          sira,
           birim: 'g',
+          adim: 2.2,
         );
       case 5:
         final g = h2o * 18;
-        return _say(
+        return _saySirali(
           'Molekülünde $n karbon atomu bulunan bir $sinif bileşiğinin ${_t(x)} '
               'molü tamamen yakılıyor. Buna göre kaç gram H₂O oluşur? (H: 1, '
               'O: 16)',
@@ -4044,7 +4220,9 @@ final _f17 = lmAile(
           ]),
           '$bilgi bileşik $f olur. ${_t(x)} mol $f yanınca ${_t(x)}·${h ~/ 2} = '
               '${_t(h2o)} mol, yani ${_t(h2o)}·18 = ${_t(g)} gram H₂O oluşur.',
+          sira,
           birim: 'g',
+          adim: 0.9,
         );
       case 6:
         final kok =
@@ -4075,7 +4253,8 @@ final _f17 = lmAile(
           molKutledenBulunur: true,
         );
       case 7:
-        return _say(
+        // Hidrokarbonların mol kütlesi çifttir; komşu değerler 2'şer adımla.
+        return _saySirali(
           '${yanma('${_t(o2)} mol O₂ harcanıyor.')} Buna göre bu $sinif '
               'bileşiğinin mol kütlesi kaç g/mol olur? (C: 12, H: 1)',
           mk,
@@ -4089,7 +4268,9 @@ final _f17 = lmAile(
               '${k == 0 ? '(2n + 2)/4' : (k == 1 ? '2n/4' : '(2n − 2)/4')} = '
               '${_t(o2 / x)} eşitliğinden n = $n ($f), mol kütlesi '
               '12·$n + $h = $mk g/mol olur.',
+          sira,
           birim: 'g/mol',
+          adim: 2,
         );
       case 8:
         // Yanıt köke yazılan bir sayıyla çakışırsa sırayla karbon atomu ve
@@ -4105,7 +4286,7 @@ final _f17 = lmAile(
               orElse: () => ('toplam', x * (n + h), n + h),
             );
         final (tur, deger, tane) = secenek;
-        return _say(
+        return _saySirali(
           'Mol kütlesi $mk g/mol olan bir $sinif bileşiğinin ${_t(x)} molünde '
               'kaç mol ${tur == 'toplam' ? 'atom' : '$tur atomu'} bulunur? '
               '(C: 12, H: 1)',
@@ -4124,7 +4305,9 @@ final _f17 = lmAile(
               '$tane ${tur == 'toplam' ? 'atom' : '$tur atomu'} bulunduğundan '
               '${_t(x)} mol $f içinde ${_t(x)}·$tane = ${_t(deger)} mol '
               '${tur == 'toplam' ? 'atom' : '$tur atomu'} vardır.',
+          sira,
           birim: 'mol',
+          adim: 0.05,
         );
       default:
         final top = co2 + h2o;
@@ -4798,16 +4981,16 @@ final _f20 = lmSirali(
       final mol = _hibritMolekulleri[m];
       final h = _hibrit(mol, k);
       String yaz(int t, int a) => '${_hibritAdi[t]}, ${_bagAcisi[a]}';
+      // 2 × 2 düzen: hibritleşme türü ve açı ayrı ayrı doğru ya da yanlış;
+      // her tür ve her açı iki seçenekte geçer. sp³ için yanlış tür sp²
+      // alınır, böylece 109,5° içeren anahtar tek başına en uzun seçenek olmaz.
+      final h2 = h == 0 ? 1 : (hedefSira(i).isEven ? 0 : 3 - h);
       return secenekli(
         'Yoğun formülü ${_hibritFormul(mol)} olan molekülde ana zincirdeki '
             'soldan ${k + 1}. karbon atomunun hibritleşme türü ve bu atomun '
             'bağları arasındaki açı hangi seçenekte doğru verilmiştir?',
         yaz(h, h),
-        [
-          yaz((h + 1) % 3, (h + 1) % 3),
-          yaz((h + 2) % 3, (h + 2) % 3),
-          yaz(h, (h + 1 + i % 2) % 3),
-        ],
+        [yaz(h2, h), yaz(h, h2), yaz(h2, h2)],
         'Soldan ${k + 1}. karbon atomu ${_hibritNedeni[h]}; ${_hibritAdi[h]} '
             'hibritleşmesi yapar ve bağ açısı ${_bagAcisi[h]} olur.',
       );
@@ -4838,18 +5021,45 @@ final _f20 = lmSirali(
     final f = _hibritFormul(mol);
     if (tur == 0) {
       String yaz(int s, int p) => 'σ: $s, π: $p';
+      // 2 × 2 düzen: σ ve π sayısı ayrı ayrı doğru ya da tipik bir hatayla
+      // yanlış; her sayı iki seçenekte geçer. Dört sayı birbirinden farklı
+      // tutulur; yanlış σ sayısı olabildiğince doğru sayıyla aynı basamak
+      // sayısında seçilir (seçenek uzunlukları eşit kalsın).
+      final sAday = [
+        for (final v in [
+          cc, // yalnız C–C bağlarını sayma
+          sigma + pi, // π bağlarını σ olarak da sayma
+          sigma - coklu, // çoklu bağlardaki σ bağını saymama
+          hToplam, // C–C bağlarını unutma
+          cc + pi, // C–H bağlarını unutup π bağlarını da sayma
+          sigma + 1,
+          sigma - 1,
+        ])
+          if (v > 0 && v != sigma && v != pi) v,
+      ];
+      final sAyni = [
+        for (final v in sAday)
+          if ('$v'.length == '$sigma'.length) v,
+      ];
+      final sHavuz = {...(sAyni.isEmpty ? sAday : sAyni)}.toList();
+      final s2 = sHavuz[hedefSira(i) % (sHavuz.length < 3 ? sHavuz.length : 3)];
+      final pAday = {
+        for (final v in [
+          if (uclu > 0) coklu, // üçlü bağı tek π bağı sayma
+          pi + coklu, // çoklu bağdaki bütün bağları π sayma
+          pi + 1,
+          pi - 1,
+          2 * pi,
+          pi + 2,
+        ])
+          if (v > 0 && v != pi && v != sigma && v != s2) v,
+      }.toList();
+      final p2 = pAday[hedefSira(i, 1) % (pAday.length < 2 ? pAday.length : 2)];
       return secenekli(
         'Yoğun formülü $f olan molekülde kaç tane σ (sigma) ve kaç tane π '
             '(pi) bağı bulunur?',
         yaz(sigma, pi),
-        [
-          yaz(cc, pi),
-          yaz(sigma + pi, pi),
-          if (uclu > 0) yaz(sigma, coklu),
-          yaz(cc + pi, pi),
-          yaz(sigma, pi + 1),
-          yaz(sigma - 1, pi),
-        ],
+        [yaz(s2, pi), yaz(sigma, p2), yaz(s2, p2)],
         'Her tekli bağ bir σ, çift bağ bir σ ve bir π, üçlü bağ bir σ ve iki π '
             'bağından oluşur. Molekülde $cc karbon-karbon bağı ve $hToplam C–H '
             'bağı vardır: σ = $cc + $hToplam = $sigma, π = $pi.',
@@ -4861,21 +5071,44 @@ final _f20 = lmSirali(
     }
     say[0] += dalSay;
     String yaz(List<int> s) => 'sp³: ${s[0]}, sp²: ${s[1]}, sp: ${s[2]}';
+    // Her çeldirici iki sayıda yanlıştır: (a′, b′, c), (a′, b, c′),
+    // (a, b′, c′); her konumda doğru sayı iki seçenekte geçer, konum
+    // çoğunluğu anahtarı göstermez. Bir türün sayısı bir artırılıp öteki
+    // ikisininki bir azaltılır (ya da tersi): bir karbonun türünü yanlış
+    // belirleme. Böylece iki çeldiricide toplam karbon sayısı doğru kalır.
+    final degisimler = [
+      for (var t = 0; t < 3; t++)
+        for (final y in const [-1, 1])
+          if (say[t] + y >= 0 &&
+              [
+                for (var u = 0; u < 3; u++)
+                  if (u != t) say[u] - y,
+              ].every((v) => v >= 0))
+            (t, y),
+    ];
+    List<String> celdiriciler((int, int) d) {
+      final (tek, yon) = d;
+      final yanlis = [
+        for (var u = 0; u < 3; u++) u == tek ? say[u] + yon : say[u] - yon,
+      ];
+      return [
+        for (var k = 0; k < 3; k++)
+          yaz([for (var u = 0; u < 3; u++) u == k ? say[u] : yanlis[u]]),
+      ];
+    }
+
+    // Sayıların çakışması anahtarı sözcük benzerliğinde aykırı bırakabilir;
+    // böyle düzenler, başka düzen varsa kullanılmaz.
+    final uygun = [
+      for (final d in degisimler)
+        if (!_anahtarAykiri([yaz(say), ...celdiriciler(d)])) d,
+    ];
+    final havuz = uygun.isEmpty ? degisimler : uygun;
     return secenekli(
       'Yoğun formülü $f olan moleküldeki karbon atomlarından sp³, sp² ve sp '
           'hibritleşmesi yapanların sayıları hangi seçenekte doğru verilmiştir?',
       yaz(say),
-      [
-        if (say[2] > 0) yaz([say[0], say[1] + say[2], 0]),
-        if (say[1] != say[2]) yaz([say[0], say[2], say[1]]),
-        if (dalSay > 0) yaz([say[0] - dalSay, say[1], say[2]]),
-        if (say[1] > 0) yaz([say[0] + 1, say[1] - 1, say[2]]),
-        if (say[0] > 0) yaz([say[0] - 1, say[1] + 1, say[2]]),
-        yaz([say[0] + say[1], 0, say[2]]),
-        if (say[2] > 0) yaz([say[0] + say[2], say[1], 0]),
-        if (say[2] > 0) yaz([say[0] + 1, say[1], say[2] - 1]),
-        yaz([say[0], say[1] + 1, say[2]]),
-      ],
+      celdiriciler(havuz[_onAlti(i) % havuz.length]),
       'Üçlü bağa katılan karbonlar sp, çift bağa katılanlar sp², yalnız tekli '
           'bağ yapanlar sp³ hibritleşmesi yapar${dalSay > 0 ? ' (metil dalları da sp³)' : ''}: '
           '${yaz(say)}.',

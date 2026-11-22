@@ -1,6 +1,7 @@
 // Lise biyoloji (ikinci tur): hücre, biyomoleküller, sınıflandırma, madde
 // döngüleri, soyağacı, insan fizyolojisi ve bitki biyolojisi kazanımlarından
 // 20 metin ailesi; her aile 5.000 ayrı vaka üretir.
+import 'denge.dart';
 import 'ortak.dart';
 
 final lmBiyolojiEk = <AdvancedFamily>[
@@ -75,6 +76,24 @@ AdvancedItem _oncullu(String kok, List<bool> deger, int i, String aciklama) {
     ].map(_altkume),
     aciklama,
   );
+}
+
+/// Öncüllü soru ([_oncullu] gibi); çeldirici kümeler anahtardan bağımsız
+/// seçilir ([kumeCeldiricileri]), bu yüzden öge çoğunluğu anahtarı göstermez.
+AdvancedItem _onculluBagimsiz(
+  String kok,
+  List<bool> deger,
+  int i,
+  String aciklama,
+) {
+  var maske = 0;
+  for (var k = 0; k < 3; k++) {
+    if (deger[k]) maske |= 1 << k;
+  }
+  if (maske == 0) throw StateError('Boş yanıt: $kok');
+  return AdvancedItem(kok, _altkume(maske), [
+    for (final m in kumeCeldiricileri(maske, 3, i)) _altkume(m),
+  ], aciklama);
 }
 
 /// Sıralı eşleştirme: [v] üç farklı değerdir; çeldiriciler değerlerin başka
@@ -2040,23 +2059,157 @@ _K _tanimKosullu(int m, _Tanim t, int ga, int gb) {
   return _durumOlasilik(m, c == 2, d, ga, gb);
 }
 
-/// Olasılık yanıtlı soru: adaylardan (0, 1] aralığındakiler, gerekirse
-/// yaygın kesirler çeldirici olur.
+/// Olasılık yanıtlı soru. [adaylar] öncelik sırasıyla tipik hata değerleridir
+/// (anahtarın iki yanında da, sonda iki hatanın birleşimleri); (0, 1]
+/// dışındakiler ve paydası 2048'i aşanlar atlanır. Yaygın kesirler yalnız
+/// üçten az tipik hata kaldığında kullanılır. Üçlü [_olasilikUclusu] ile
+/// seçilir; anahtarın değer sırası vakadan vakaya [hedefSira] ile değişir.
 AdvancedItem _olasilikSorusu(
   String kok,
   _K dogru,
   Iterable<_K> adaylar,
   String aciklama,
+  int i,
 ) {
   const havuz = [
     (1, 4), (1, 2), (3, 4), (1, 8), (3, 8), (1, 16), (3, 16), (1, 3), (2, 3), //
     (1, 6), (1, 9), (5, 8), (1, 32), (9, 16), (1, 12),
   ];
-  final uygun = [
-    ...adaylar,
-    for (final (p, q) in havuz) _K(p, q),
-  ].where((x) => x.gecerli);
-  return secenekli(kok, dogru.s, uygun.map((x) => x.s), aciklama);
+  final aday = <_K>{
+    for (final x in adaylar)
+      if (x.gecerli && x.q <= 2048 && x != dogru) x,
+  };
+  if (aday.length < 3) {
+    for (final (p, q) in havuz) {
+      if (_K(p, q) != dogru) aday.add(_K(p, q));
+    }
+  }
+  return AdvancedItem(kok, dogru.s, [
+    for (final x in _olasilikUclusu(
+      dogru,
+      aday.take(20).toList(),
+      hedefSira(i),
+    ))
+      x.s,
+  ], aciklama);
+}
+
+/// Seçenekler içinde anahtarın en büyük ve en küçük puanlı seçenek olma
+/// payları (eşitlikte paylaştırılır).
+(double, double) _uctaPay(List<num> puan) {
+  final enb = puan.reduce((x, y) => x > y ? x : y);
+  final enk = puan.reduce((x, y) => x < y ? x : y);
+  final kb = puan.where((x) => (x - enb).abs() < 1e-9).length;
+  final kk = puan.where((x) => (x - enk).abs() < 1e-9).length;
+  return (
+    (puan.first - enb).abs() < 1e-9 ? 1 / kb : 0.0,
+    (puan.first - enk).abs() < 1e-9 ? 1 / kk : 0.0,
+  );
+}
+
+/// [aday] (öncelik sırasıyla) içinden üç çeldirici seçer. Sırasıyla şunlar
+/// gözetilir: anahtardan küçük çeldirici sayısının [sira] olması; anahtarın
+/// pay ve paydaları bakımından öbür seçeneklere en çok ya da en az benzeyen
+/// seçenek olarak öne çıkmaması (dördünün eşit benzediği üçlü en iyisidir);
+/// anahtarın biçimce tek kalmaması (paydası 3'ün katı olan, payı 1 olan ya da
+/// tam sayı olan tek seçenek); anahtarın en uzun ya da en kısa yazılı seçenek
+/// olarak öne çıkmaması; adayların önceliği.
+List<_K> _olasilikUclusu(_K dogru, List<_K> aday, int sira) {
+  if (aday.length < 3) throw StateError('Eksik çeldirici: ${dogru.s}');
+  // 0: anahtar, 1 … n: adaylar.
+  final hepsi = [dogru, ...aday];
+  final parca = [for (final x in hepsi) x.s.split('/').toSet()];
+  final n = hepsi.length;
+  final benzer = [
+    for (var x = 0; x < n; x++)
+      [
+        for (var y = 0; y < n; y++)
+          parca[x].intersection(parca[y]).length /
+              parca[x].union(parca[y]).length,
+      ],
+  ];
+  bool kucuk(_K x) => x.p * dogru.q < dogru.p * x.q;
+  // Biçim özellikleri: paydası 3'ün katı, payı 1, tam sayı.
+  final bicim = [
+    for (final x in hepsi) [x.q % 3 == 0, x.p == 1, x.q == 1],
+  ];
+  var enIyi = <int>[1, 2, 3];
+  var enAz = double.infinity;
+  for (var a = 1; a < n; a++) {
+    for (var b = a + 1; b < n; b++) {
+      for (var c = b + 1; c < n; c++) {
+        final u = [0, a, b, c];
+        final alt = [a, b, c].where((j) => kucuk(hepsi[j])).length;
+        final (bEn, bAz) = _uctaPay([
+          for (final x in u)
+            [
+              for (final y in u)
+                if (y != x) benzer[x][y],
+            ].reduce((s, t) => s + t),
+        ]);
+        final (uEn, uAz) = _uctaPay([for (final x in u) hepsi[x].s.length]);
+        var tek = 0;
+        for (var f = 0; f < 3; f++) {
+          if ([a, b, c].every((j) => bicim[j][f] != bicim[0][f])) tek++;
+        }
+        final maliyet =
+            1000.0 * (alt - sira).abs() +
+            10 * ((bEn - 0.25).abs() + (bAz - 0.25).abs()) +
+            6 * tek +
+            3 * ((uEn - 0.25).abs() + (uAz - 0.25).abs()) +
+            0.4 * (a + b + c);
+        if (maliyet < enAz - 1e-9) {
+          enAz = maliyet;
+          enIyi = [a, b, c];
+        }
+      }
+    }
+  }
+  return [for (final j in enIyi) hepsi[j]];
+}
+
+/// Fenotip sınıfındaki homozigot genotipin olasılığı (heterozigotu
+/// saymama hatası): otozomal çekinikte sağlıklı için yalnız AA, otozomal
+/// baskında hasta için yalnız AA, X'e bağlı kalıtımda sağlıklı kız için
+/// yalnız alel taşımayan kız sayılır.
+_K _durumHomozigot(int m, bool erkek, int durum, int ga, int gb) {
+  final d = _cocukDagilim(m, erkek, ga, gb);
+  if (durum == 2) return d[1];
+  if (m == 2 && erkek) return durum == 0 ? d[1] : d[0];
+  return durum == 0 ? d[2] : d[0];
+}
+
+/// Tanımın tipik bir hatayla bulunan olasılığı. [hata]: 1 cinsiyet çarpanını
+/// unutma, 2 cinsiyet belirtilmemişken de 1/2 ile çarpma, 3 fenotip
+/// sınıfında heterozigotu saymama, 4 hasta ile sağlıklıyı karıştırma,
+/// 5 Aa × Aa çaprazlamasında heterozigot için Punnett karesinin tek hücresini
+/// sayma (1/2 yerine 1/4), 6 X'e bağlı kalıtımda kız ve erkek çocukların
+/// olasılıklarını karıştırma.
+_K _tanimHatali(int m, _Tanim t, int ga, int gb, int hata) {
+  final (c, d) = t;
+  final dogru = _tanimOlasilik(m, t, ga, gb);
+  switch (hata) {
+    case 1:
+      return _tanimKosullu(m, t, ga, gb);
+    case 2:
+      return c == 0 && !(d == 2 && m == 2) ? _yarim * dogru : dogru;
+    case 3:
+      if (d == 2) return dogru;
+      if (c == 0) {
+        return _yarim * _durumHomozigot(m, false, d, ga, gb) +
+            _yarim * _durumHomozigot(m, true, d, ga, gb);
+      }
+      return _yarim * _durumHomozigot(m, c == 2, d, ga, gb);
+    case 4:
+      return d == 2 ? dogru : _tanimOlasilik(m, (c, 1 - d), ga, gb);
+    case 5:
+      return d == 2 && m < 2 && ga == 1 && gb == 1 ? _K(1, 4) : dogru;
+    case 6:
+      return m == 2 && c != 0 && d != 2
+          ? _yarim * _durumOlasilik(m, c != 2, d, ga, gb)
+          : dogru;
+  }
+  return dogru;
 }
 
 String _ebeveynYazi(int m, bool erkek, int g) {
@@ -2337,19 +2490,62 @@ AdvancedItem _ciftDizi(int c, List<_Tanim> dizi, bool sirasiz, int i) {
     else if (turetme.isEmpty)
       'İstenen olasılık ${dogru.s} olur.',
   ].join(' ');
-  final kosulluCarpim = k.reduce((x, y) => x * y) * (sirasiz ? _K(2) : _K(1));
-  return _olasilikSorusu('${_kalitimCumle[m]} $metin $soru', dogru, [
-    kosulluCarpim,
-    if (dizi.length > 1) p.first,
-    if (sirasiz) dogru * _yarim else dogru * _K(2),
-    _K(1) - dogru,
-    if (dizi.length > 1) p.reduce((x, y) => x + y),
-    dogru * _yarim,
-  ], aciklama);
+  // Her çocuğa aynı hatayla bulunan olasılıkların çarpımı.
+  _K hatali(int hata) {
+    final x = [for (final t in dizi) _tanimHatali(m, t, ga, gb, hata)]
+        .reduce((x, y) => x * y);
+    return sirasiz ? x * _K(2) : x;
+  }
+
+  // Cinsiyeti belirtilmiş çocuk sayısı (cinsiyet çarpanı bunlarda kullanılır).
+  final cinsiyetli = dizi
+      .where((t) => t.$1 != 0 || (t.$2 == 2 && m == 2))
+      .length;
+  // Genotipi kesin bilinen heterozigot ebeveyni olası heterozigot sayma
+  // hatası: otozomal kalıtımda heterozigot her ebeveyn için fazladan 2/3,
+  // X'e bağlı kalıtımda taşıyıcı anne için fazladan 1/2 çarpanı.
+  var olasi = dogru;
+  if (m < 2) {
+    if (ga == 1) olasi = olasi * _K(2, 3);
+    if (gb == 1) olasi = olasi * _K(2, 3);
+  } else if (ga == 1) {
+    olasi = olasi * _yarim;
+  }
+
+  return _olasilikSorusu(
+    '${_kalitimCumle[m]} $metin $soru',
+    dogru,
+    [
+      hatali(1), // cinsiyet çarpanını unutma
+      // İki sırayı hesaba katmama ya da sıra önemliyken gereksiz ×2.
+      if (sirasiz) dogru * _yarim else dogru * _K(2),
+      dogru * _yarim, // fazladan 1/2 çarpanı
+      hatali(3), // heterozigotu saymama
+      if (dizi.length > 1) p.first, // yalnız ilk çocuğu hesaplama
+      _K(1) - dogru, // tümleyen olay
+      hatali(2), // cinsiyet belirtilmemişken de 1/2 ile çarpma
+      if (dizi.length > 1) p.reduce((x, y) => x + y), // çarpmak yerine toplama
+      hatali(4), // hasta ile sağlıklıyı karıştırma
+      hatali(5), // heterozigot için tek Punnett hücresi
+      hatali(6), // kız ve erkek çocukların olasılıklarını karıştırma
+      olasi, // kesin heterozigot ebeveyni olası heterozigot sayma
+      dogru * _K(1, 4), // 1/2 çarpanını iki kez fazladan kullanma
+      // Her çocuk için fazladan 1/2 çarpanı (üç çocukta 1/8).
+      if (dizi.length == 3) dogru * _K(1, 8),
+      // İki hatanın birleşimi: yukarıdaki hatalardan biri ile birlikte
+      // cinsiyet çarpanını unutma ya da fazladan 1/2 çarpanı.
+      for (final x in [hatali(3), hatali(4), hatali(6), olasi]) ...[
+        if (cinsiyetli > 0) x * _K(1 << cinsiyetli),
+        x * _yarim,
+      ],
+    ],
+    aciklama,
+    i,
+  );
 }
 
 /// Çiftin yeni doğacak bir çocuğu belli cinsiyette olursa hasta olma olasılığı.
-AdvancedItem _ciftKosullu(int c, bool erkek) {
+AdvancedItem _ciftKosullu(int c, bool erkek, int i) {
   final (m, metin, _, ga, gb, cikarim) = _ciftler[c];
   final dogru = _durumOlasilik(m, erkek, 0, ga, gb);
   return _olasilikSorusu(
@@ -2357,18 +2553,22 @@ AdvancedItem _ciftKosullu(int c, bool erkek) {
         '${erkek ? 'erkek' : 'kız'} olursa bu çocuğun hasta olma olasılığı kaçtır?',
     dogru,
     [
-      dogru * _yarim,
-      _durumOlasilik(m, !erkek, 0, ga, gb),
-      _K(1) - dogru,
-      _tanimOlasilik(m, (0, 0), ga, gb),
+      dogru * _yarim, // cinsiyet verilmişken 1/2 ile çarpma
+      _durumOlasilik(m, !erkek, 0, ga, gb), // öbür cinsiyetin olasılığı
+      _K(1) - dogru, // tümleyen olay
+      _tanimOlasilik(m, (0, 0), ga, gb), // koşulsuz olasılık
+      _durumHomozigot(m, erkek, 0, ga, gb), // heterozigotu saymama
+      dogru * _K(2), // gereksiz ×2
+      dogru * _K(1, 4), // 1/2 çarpanını iki kez kullanma
     ],
     '$cikarim ${_cocukOrani(m, ga, gb)} Çocuğun cinsiyeti verildiğinden 1/2 çarpanı '
         'kullanılmaz; yanıt ${dogru.s} olur.',
+    i,
   );
 }
 
 /// Mevcut bir çocuğun heterozigot (taşıyıcı) olma olasılığı.
-AdvancedItem _ciftMevcut(int c, int k) {
+AdvancedItem _ciftMevcut(int c, int k, int i) {
   final (m, metin, cocuklar, ga, gb, cikarim) = _ciftler[c];
   final (erkek, hasta) = cocuklar[k];
   final d = _cocukDagilim(m, erkek, ga, gb);
@@ -2389,13 +2589,23 @@ AdvancedItem _ciftMevcut(int c, int k) {
     '${_kalitimCumle[m]} $metin Bu çiftin $durum olan ${_siraSifat[k]} çocuğunun $ad olma '
         'olasılığı kaçtır?',
     dogru,
-    [d[1], _yarim, _K(1) - dogru, _K(1, 4), _K(2, 3), _K(1, 3)],
+    [
+      d[1], // koşulu hesaba katmama
+      _yarim,
+      _K(1) - dogru, // tümleyen
+      _K(1, 4),
+      _K(2, 3),
+      _K(1, 3),
+      toplam, // görülen fenotipin olasılığı
+      _K(1), // kesin heterozigot sayma
+    ],
     '$cikarim Bu çaprazlamada ${erkek ? 'oğulların' : 'kızların'} genotip olasılıkları '
         '${[for (var g = 0; g < 3; g++)
           if (!d[g].sifir) '${_genotipAdi(m, erkek, g)} ${d[g].s}'].join(', ')} '
         'olur. Çocuğun $durum olduğu bilindiğinden yalnız ${_ve(kalan)} '
         '${kalan.length == 1 ? 'olasılığı' : 'olasılıkları'} kalır; $ad olma olasılığı '
         '${d[1].s} ÷ ${toplam.s} = ${dogru.s} olur.',
+    i,
   );
 }
 
@@ -2813,8 +3023,33 @@ const _tekTanimlar = <_Tanim>[
   return (dogru, kesinHet, yariHet, terimler);
 }
 
+/// Üç kuşak sorusunda çocuğun tanımı [hata] ile hesaplanınca bulunan
+/// olasılık (bkz. [_tanimHatali]); bireylerin genotip olasılıkları doğrudur.
+_K _ucKusakHatali(int h, int e, _Tanim t, int hata) {
+  final (m, erkek, _, dag, _) = _hedefTanim[h];
+  final (_, _, _, esDag, _) = _esTanim[e];
+  var x = _K(0);
+  for (final (g1, p1, q1) in dag) {
+    for (final (g2, p2, q2) in esDag) {
+      final ga = erkek ? g2 : g1, gb = erkek ? g1 : g2;
+      x = x + _K(p1, q1) * _K(p2, q2) * _tanimHatali(m, t, ga, gb, hata);
+    }
+  }
+  return x;
+}
+
+/// Üç kuşak sorusunda iki bireyin hastalık aleli taşıma olasılıklarının
+/// çarpımı (çocuğun Punnett oranını unutma hatası).
+_K _ucKusakTasiyici(int h, int e) {
+  final (_, _, _, dag, _) = _hedefTanim[h];
+  final (_, _, _, esDag, _) = _esTanim[e];
+  _K tasir(List<(int, int, int)> d) =>
+      d.fold(_K(0), (x, y) => y.$1 >= 1 ? x + _K(y.$2, y.$3) : x);
+  return tasir(dag) * tasir(esDag);
+}
+
 /// Üç kuşak sorusu: hedef birey ile eşinin doğacak çocuğu.
-AdvancedItem _ucKusak(int h, int e, _Tanim t) {
+AdvancedItem _ucKusak(int h, int e, _Tanim t, int i) {
   final (m, erkek, metin, _, ack) = _hedefTanim[h];
   final (_, _, esMetin, _, esAck) = _esTanim[e];
   final ad = erkek ? _erkekAd : _kadinAd;
@@ -2828,10 +3063,34 @@ AdvancedItem _ucKusak(int h, int e, _Tanim t) {
   return _olasilikSorusu(
     kok,
     dogru,
-    [kesinHet, yariHet, _K(1) - dogru, dogru * _K(2), dogru * _yarim],
+    [
+      kesinHet, // belirsiz bireyi kesin heterozigot sayma
+      yariHet, // belirsiz bireyin olasılığını 1/2 alma
+      _K(1) - dogru, // tümleyen olay
+      dogru * _yarim, // fazladan 1/2 çarpanı
+      dogru * _K(2), // 1/2 çarpanını unutma
+      _ucKusakHatali(h, e, t, 3), // heterozigotu saymama
+      _ucKusakHatali(h, e, t, 4), // hasta ile sağlıklıyı karıştırma
+      _ucKusakHatali(h, e, t, 5), // heterozigot için tek Punnett hücresi
+      _ucKusakHatali(h, e, t, 6), // kız ve erkek çocukları karıştırma
+      // Otozomal çekinikte hasta çocuk için yalnız iki bireyin a aleli
+      // taşıma olasılıklarını çarpıp Punnett oranını unutma.
+      if (m == 0 && t.$2 == 0) _ucKusakTasiyici(h, e),
+      dogru * _K(1, 4), // 1/2 çarpanını iki kez fazladan kullanma
+      // İki hatanın birleşimi: yukarıdaki hatalardan biri ile birlikte
+      // cinsiyet çarpanını unutma ya da fazladan 1/2 çarpanı.
+      for (final x in [
+        kesinHet,
+        yariHet,
+        _ucKusakHatali(h, e, t, 3),
+        _ucKusakHatali(h, e, t, 4),
+        _ucKusakHatali(h, e, t, 6),
+      ]) ...[if (t.$1 != 0 || (t.$2 == 2 && m == 2)) x * _K(2), x * _yarim],
+    ],
     '${ack.replaceAll('#', ad)} ${esAck.replaceAll('#', esAd)} Çocuğun $yazi olma olasılığı '
     '${terimler.length == 1 && terimler.first == dogru.s ? dogru.s : '${terimler.length == 1 ? terimler.first : terimler.map((x) => '($x)').join(' + ')} = ${dogru.s}'} '
     'olur.',
+    i,
   );
 }
 
@@ -2910,7 +3169,7 @@ AdvancedItem _bicimSorusu(
 ) {
   final (uygun, notlar) = _bicimUygun(aH, bH, cocuklar, bilinen);
   final anne = aH ? 'hasta' : 'sağlıklı', baba = bH ? 'hasta' : 'sağlıklı';
-  return _oncullu(
+  return _onculluBagimsiz(
     'Bir hastalığın tek bir genle kalıtıldığı ve mutasyon görülmediği biliniyor. ${_bas(anne)} bir '
     'anne ile $baba bir babanın ${_cocukListesi(cocuklar)}.'
     '${bilinen == 0 ? '' : ' ${bilinen == 1 ? 'Annenin' : 'Babanın'} hastalık alelini taşımadığı biliniyor.'}\n'
@@ -2955,7 +3214,7 @@ final _soyAdaylari = () {
       final (_, _, _, ga, gb, _) = _ciftler[c];
       final p = _durumOlasilik(m, erkek, 0, ga, gb);
       if (!p.bir && !p.sifir && p != _yarim) {
-        tek.add((i) => _ciftKosullu(c, erkek));
+        tek.add((i) => _ciftKosullu(c, erkek, i));
       }
     }
     for (var k = 0; k < cocuklar.length; k++) {
@@ -2965,8 +3224,8 @@ final _soyAdaylari = () {
         1 => hasta,
         _ => !erkek && !hasta,
       };
-      if (anlamli && _ciftMevcut(c, k).correct != _yarim.s) {
-        tek.add((i) => _ciftMevcut(c, k));
+      if (anlamli && _ciftMevcut(c, k, 0).correct != _yarim.s) {
+        tek.add((i) => _ciftMevcut(c, k, i));
       }
     }
     if (m < 2 && cocuklar.isNotEmpty) tek.add((i) => _ciftGenotip(c, i));
@@ -2999,7 +3258,7 @@ final _soyAdaylari = () {
         // yerine 1/2 alan hatalı yolun yanıtı verdiği vakalar alınmaz.
         if (p.sifir || p.bir || p == _yarim || p == kesinHet) continue;
         if (m < 2 && p == yariHet) continue;
-        kusak.add((i) => _ucKusak(h, e, t));
+        kusak.add((i) => _ucKusak(h, e, t, i));
       }
     }
   }
@@ -4580,6 +4839,109 @@ final _oksijenAdaylari = _adaylar(
       q == 0 ? _kanYapi[_oksijenYapi[k]]!.$2 : !_kanYapi[_oksijenYapi[k]]!.$2!,
 );
 
+/// [i] için 0 … 65535 arasında belirlenimci bir seçim sayısı ([hedefSira]
+/// karmasının sekiz bağımsız tuzundan).
+int _secim(int i, int tuz) {
+  var h = 0;
+  for (var t = 0; t < 8; t++) {
+    h = h * 4 + hedefSira(i, 1000 + 8 * tuz + t);
+  }
+  return h;
+}
+
+/// İki numara dizisinin aynı konumda aynı numarayı taşıdığı yer sayısı.
+int _uyusma(List<int> a, List<int> b) {
+  var u = 0;
+  for (var j = 0; j < a.length; j++) {
+    if (a[j] == b[j]) u++;
+  }
+  return u;
+}
+
+/// Dört ögeli sıralamada birim ve ters dizilim dışındaki her yazılı anahtar
+/// için (0 tabanlı numara dizisi; ör. "1302": II → IV → I → III) çeldirici
+/// üçlüleri. Dört seçenekten her birinin öbür üçüyle konum konum toplam
+/// uyuşması eşittir (2 ya da 3), bu yüzden konum çoğunluğu anahtarı
+/// göstermez; hiçbir konumda dört seçenek aynı numarayı taşımaz.
+final _dengeliSiralar = () {
+  final tum = _dizilimler(4);
+  final nt = [
+    for (final p in tum)
+      if (!_ayni(p, tum.first) && !_ayni(p, tum.last)) p,
+  ];
+  final out = <String, List<List<List<int>>>>{};
+  for (final k in nt) {
+    final d = [
+      for (final p in nt)
+        if (!_ayni(p, k)) p,
+    ];
+    final liste = <List<List<int>>>[];
+    for (var x = 0; x < d.length; x++) {
+      for (var y = x + 1; y < d.length; y++) {
+        for (var z = y + 1; z < d.length; z++) {
+          final s = [k, d[x], d[y], d[z]];
+          final top = [
+            for (var a = 0; a < 4; a++)
+              [
+                for (var b = 0; b < 4; b++)
+                  if (b != a) _uyusma(s[a], s[b]),
+              ].reduce((u, v) => u + v),
+          ];
+          if (top.every((t) => t == top.first) &&
+              (top.first == 2 || top.first == 3)) {
+            liste.add([d[x], d[y], d[z]]);
+          }
+        }
+      }
+    }
+    out[k.join()] = liste;
+  }
+  return out;
+}();
+
+/// Kanın yolu sıralaması: kök, anahtar ve açıklama [_siralama] ile aynıdır
+/// ([sira] listeleme dizilimini seçer); çeldiriciler anahtardan bağımsız
+/// seçilir. Yazılı anahtar hiçbir zaman "I → II → III" ya da tersi
+/// olmadığından bu iki dizilim çeldirici de yapılmaz. Üç ögede seçenekler
+/// kalan dört dizilimin tamamıdır; dört ögede [_dengeliSiralar] üçlülerinden
+/// biri vaka numarası [i] ile seçilir.
+AdvancedItem _kanSiralama(
+  List<String> dogru,
+  String soru,
+  int sira,
+  String aciklama,
+  int i,
+) {
+  final k = dogru.length;
+  final tum = _dizilimler(k);
+  final uygun = [
+    for (final p in tum)
+      if (!_ayni(p, tum.first) && !_ayni(p, tum.last)) p,
+  ];
+  final p = uygun[sira % uygun.length]; // p[t]: t. sıradaki gösterilen öge
+  final yer = List.filled(k, 0);
+  for (var t = 0; t < k; t++) {
+    yer[p[t]] = t;
+  }
+  String yaz(List<int> w) => [for (final r in w) _romen[r]].join(' → ');
+  final List<List<int>> celdirici;
+  if (k == 3) {
+    celdirici = [
+      for (final w in uygun)
+        if (!_ayni(w, yer)) w,
+    ];
+  } else {
+    final liste = _dengeliSiralar[yer.join()]!;
+    celdirici = liste[_secim(i, 0) % liste.length];
+  }
+  return AdvancedItem(
+    '${_liste([for (var t = 0; t < k; t++) dogru[p[t]]])}$soru',
+    yaz(yer),
+    [for (final w in celdirici) yaz(w)],
+    '$aciklama Numaralarla doğru sıra ${yaz(yer)} olur.',
+  );
+}
+
 final _kanYolu = lmSirali(
   'bl_kan_yolu',
   'Kalbin bölümleri ve kanın izlediği yol',
@@ -4599,13 +4961,13 @@ final _kanYolu = lmSirali(
       final yol = [
         for (var t = 0; t <= uzaklik; t++) dongu[(s + t) % dongu.length],
       ];
-      return _siralama(
-        '',
+      return _kanSiralama(
         [for (final c in konum) dongu[c]],
         'Sağlıklı bir insanda ${_kanYapi[bas]!.$1} çıkan kan bu yapılardan hangi sırayla '
             'geçer?',
         jj,
         'Kanın yolu: ${yol.join(' → ')}.',
+        i,
       );
     }
     final (a, b, c, q) = _yay(_oksijenAdaylari, j, n);
@@ -4621,11 +4983,11 @@ final _kanYolu = lmSirali(
       for (final y in x)
         if (!_kanYapi[y]!.$2!) y,
     ];
-    return _oncullu(
+    return _onculluBagimsiz(
       '${_liste(x)}Sağlıklı bir yetişkin insanda bu yapılardan hangilerinde oksijence '
       '${q == 0 ? 'zengin' : 'fakir'} kan bulunur?',
       [for (final y in x) q == 0 ? _kanYapi[y]!.$2! : !_kanYapi[y]!.$2!],
-      j,
+      i,
       [
         'Akciğerlerden dönen toplardamarlarda, sol kulakçık ve karıncıkta, aortta ve organlara '
             'giden atardamarlarda oksijence zengin; organlardan dönen toplardamarlarda, sağ '

@@ -66,63 +66,109 @@ List<String> _digerleri(
   ];
 }
 
-/// Sıralı üçlü yanıt. [yanlis] her konum için kesin yanlış adayları taşır;
-/// çeldiriciler bir ya da iki konumu bu adaylarla değiştirerek kurulur.
-/// [karistir] doğruysa doğru etiketlerin, en az bir konumu kesin yanlış olan
-/// dizilimleri de çeldirici adayıdır. [tekrarsiz] doğruysa aynı etiketi iki
-/// konumda taşıyan adaylar atılır (her konumun yanıtı ayrı bir eserse böyle
-/// bir seçenek kendi kendini eler).
+/// [i] ve [tuz] için belirlenimci 32 bitlik karma (murmur3 karıştırıcısı).
+/// Çeldirici seçimini vakanın tablo koordinatlarından bağımsız kılar;
+/// çarpımlar 2⁵³ altında kalacak biçimde 16 bitlik parçalarla yapılır.
+int _karma(int i, int tuz) {
+  var x = (i * 40503 + tuz * 2654435 + 0x2545F491) & 0xffffffff;
+  x ^= x >> 16;
+  x = _carp32(x, 0x85EBCA6B);
+  x ^= x >> 13;
+  x = _carp32(x, 0xC2B2AE35);
+  x ^= x >> 16;
+  return x;
+}
+
+int _carp32(int a, int b) =>
+    ((a & 0xffff) * b + (((a >> 16) * b & 0xffff) << 16)) & 0xffffffff;
+
+/// Sıralı üçlü yanıt. [yanlis] her konum için kesin yanlış adayları taşır
+/// (önce tipik karıştırmalar). Her konum için ilk [genislik] aday içinden
+/// bir yanlış etiket seçilir; her çeldirici anahtarın iki konumunu bu
+/// etiketlerle değiştirir (110, 101, 011 deseni). Böylece her iki seçenek
+/// tam iki konumda ayrışır ve her konumda doğru etiket iki seçenekte,
+/// yanlış etiket öteki iki seçenekte görünür: konum çoğunluğu, ortak öge ya
+/// da benzerlik anahtarı göstermez. [tekrarsiz] doğruysa aynı etiketi iki
+/// konumda taşıyan seçenek kurulmaz (her konumun yanıtı ayrı bir eserse böyle
+/// bir seçenek kendi kendini eler). [ornek] verilirse (ailenin tablosundaki
+/// doğru etiketler, sıklıklarıyla) yanlış etiket bütün aday listesinden, bu
+/// örneklemdeki sıklığıyla orantılı seçilir: bir etiket çeldiricide de doğru
+/// yanıttaki sıklığına yakın sıklıkla görünür, sık doğru çıkan etiket
+/// vakalar boyunca “genellikle doğru” olmaz. [boyDengeli] doğruysa yanlış etiketler,
+/// anahtardan uzun çeldirici sayısı vakadan vakaya 0 … 3 arasında eşit
+/// dağılacak biçimde seçilir (uzun yanlış biçimleri az olan ailelerde anahtar
+/// en uzun seçenek olmasın diye).
 AdvancedItem _sirali(
   String kok,
   List<String> dogru,
   List<List<String>> yanlis,
   String aciklama,
   int i, {
-  bool karistir = false,
   bool tekrarsiz = false,
-  bool Function(int konum, String etiket)? kesinYanlis,
+  int genislik = 3,
+  bool boyDengeli = false,
+  List<String>? ornek,
 }) {
   String yaz(List<String> v) => v.join(' – ');
-  final yanlisMi = kesinYanlis ?? (int p, String s) => yanlis[p].contains(s);
-  List<String> degis(Map<int, int> secim) => [
-    for (var p = 0; p < 3; p++)
-      secim.containsKey(p) ? yanlis[p][secim[p]! % yanlis[p].length] : dogru[p],
+  List<String> secenekler(List<String> w) => [
+    yaz([w[0], w[1], dogru[2]]),
+    yaz([w[0], dogru[1], w[2]]),
+    yaz([dogru[0], w[1], w[2]]),
   ];
-  final dizilimler = <List<String>>[];
-  if (karistir) {
-    for (var r = 1; r < 6; r++) {
-      final d = ucluDizilimler[1 + (i + r) % 5];
-      final v = [for (final j in d) dogru[j]];
-      var birYanlis = false;
-      for (var p = 0; p < 3; p++) {
-        if (v[p] != dogru[p] && yanlisMi(p, v[p])) birYanlis = true;
+  if (boyDengeli) {
+    final aday = [
+      for (var p = 0; p < 3; p++)
+        [
+          for (final s in yanlis[p])
+            if (s != dogru[p] && (!tekrarsiz || !dogru.contains(s))) s,
+        ].take(genislik).toList(),
+    ];
+    final hedef = _karma(i, 17) % 4, boy = yaz(dogru).length;
+    var enIyi = <List<String>>[], fark = 4;
+    for (final a in aday[0]) {
+      for (final b in aday[1]) {
+        for (final c in aday[2]) {
+          if (tekrarsiz && (a == b || a == c || b == c)) continue;
+          final w = [a, b, c];
+          final uzun = secenekler(w).where((x) => x.length > boy).length;
+          final f = (uzun - hedef).abs();
+          if (f < fark) {
+            fark = f;
+            enIyi = [];
+          }
+          if (f == fark) enIyi.add(w);
+        }
       }
-      if (birYanlis) dizilimler.add(v);
     }
+    if (enIyi.isEmpty) throw StateError('Yanlış aday yok: $kok');
+    return secenekli(
+      kok,
+      yaz(dogru),
+      secenekler(enIyi[_karma(i, 18) % enIyi.length]),
+      aciklama,
+    );
   }
-  final tekli = [
-    for (var r = 0; r < 3; r++) degis({(i + r) % 3: i ~/ 3 + r}),
-  ];
-  final adaylar = <List<String>>[
-    if (dizilimler.isNotEmpty) dizilimler[0],
-    tekli[0],
-    if (dizilimler.length > 1 && i.isOdd) dizilimler[1],
-    tekli[1],
-    tekli[2],
-    for (var r = 0; r < 3; r++)
-      degis({(i + r) % 3: i ~/ 7 + r, (i + r + 1) % 3: i ~/ 11 + r + 1}),
-    for (var r = 0; r < 3; r++) degis({(i + r) % 3: i ~/ 3 + r + 1}),
-    for (var r = 0; r < 3; r++) degis({(i + r) % 3: i ~/ 3 + r + 2}),
-  ];
-  return secenekli(
-    kok,
-    yaz(dogru),
-    [
-      for (final v in adaylar)
-        if (!tekrarsiz || v.toSet().length == v.length) yaz(v),
-    ],
-    aciklama,
-  );
+  final w = <String>[];
+  for (var p = 0; p < 3; p++) {
+    final aday = [
+      for (final s in yanlis[p])
+        if (s != dogru[p] &&
+            (!tekrarsiz || (!dogru.contains(s) && !w.contains(s))))
+          s,
+    ];
+    if (aday.isEmpty) throw StateError('Yanlış aday yok: $kok');
+    String? secilen;
+    for (var r = 0; ornek != null && secilen == null && r < 64; r++) {
+      final s = ornek[_karma(i, 11 + p + 8 * r) % ornek.length];
+      if (aday.contains(s)) secilen = s;
+    }
+    w.add(
+      secilen ??
+          aday[_karma(i, 11 + p) %
+              (aday.length < genislik ? aday.length : genislik)],
+    );
+  }
+  return secenekli(kok, yaz(dogru), secenekler(w), aciklama);
 }
 
 const _kumeAdi = {
@@ -135,20 +181,81 @@ const _kumeAdi = {
   7: 'I, II ve III',
 };
 
+/// Dört seçenekteki (tek öncüllü, iki öncüllü, üç öncüllü) küme sayıları.
+const _desenler = [
+  (3, 1, 0),
+  (3, 0, 1),
+  (2, 2, 0),
+  (2, 1, 1),
+  (1, 3, 0),
+  (1, 2, 1),
+  (0, 3, 1),
+];
+
+/// Anahtar yedi kümeye eşit dağılıyorsa: dört seçenek yedi kümeden rastgele
+/// seçilmiş gibi dağılır (desen sıklıkları C(3, a)·C(3, b)·C(1, c)).
+const _desenEsit = [3, 1, 9, 9, 3, 9, 1];
+
 /// “Hangileri?” sorusu. [maske] doğru numaraları bit olarak taşır (bit 0 = I).
-AdvancedItem _hangileri(String kok, int maske, String aciklama, int i) {
+/// Dört seçeneğin desen dağılımı ([agirlik], [_desenler] sırasıyla) ailedeki
+/// anahtar boylarına göre seçilir: önce anahtarın boyunu içeren bir desen
+/// (ağırlığı × o boydaki seçenek sayısı), sonra her boyda kümeler karma ile.
+/// Ağırlıklar, desende her boydan beklenen seçenek sayısı anahtarın o boyda
+/// olma olasılığının dört katı olacak biçimde kurulduğundan seçeneklerin boyu,
+/// öge çoğunluğu ya da benzerliği anahtarı göstermez.
+AdvancedItem _hangileri(
+  String kok,
+  int maske,
+  String aciklama,
+  int i, [
+  List<int> agirlik = _desenEsit,
+]) {
   assert(maske >= 1 && maske <= 7);
-  final adaylar = [
-    for (var r = 0; r < 3; r++) maske ^ (1 << ((i + r) % 3)),
-    maske ^ 7,
-    for (var m = 0; m < 7; m++) (m + i) % 7 + 1,
-  ].where((m) => m != 0 && m != maske);
-  return secenekli(
-    kok,
-    _kumeAdi[maske]!,
-    adaylar.map((m) => _kumeAdi[m]!),
-    aciklama,
-  );
+  const sinif = [
+    <int>[],
+    [1, 2, 4],
+    [3, 5, 6],
+    [7],
+  ];
+  int adet((int, int, int) d, int b) => b == 1 ? d.$1 : (b == 2 ? d.$2 : d.$3);
+  final boy = (maske & 1) + (maske >> 1 & 1) + (maske >> 2 & 1);
+  final pay = [
+    for (var k = 0; k < _desenler.length; k++)
+      agirlik[k] * adet(_desenler[k], boy),
+  ];
+  var r = _karma(i, 21) % pay.fold<int>(0, (t, x) => t + x);
+  var k = 0;
+  while (r >= pay[k]) {
+    r -= pay[k];
+    k++;
+  }
+  final secilen = <int>[];
+  for (var b = 1; b <= 3; b++) {
+    final aday = [
+      for (final m in sinif[b])
+        if (m != maske) m,
+    ];
+    final gerek = adet(_desenler[k], b) - (b == boy ? 1 : 0);
+    final bas = aday.isEmpty ? 0 : _karma(i, 30 + b) % aday.length;
+    for (var j = 0; j < gerek; j++) {
+      secilen.add(aday[(bas + j) % aday.length]);
+    }
+  }
+  return secenekli(kok, _kumeAdi[maske]!, [
+    for (final m in secilen) _kumeAdi[m]!,
+  ], aciklama);
+}
+
+/// Tek seçenekli sorularda aday çeldirici üçlülerinden (her biri anahtarla
+/// birlikte bir etmen deseni kurar) birini seçer: anahtarın tek başına en uzun
+/// seçenek olmadığı üçlüler önceliklidir, aralarından biri karma ile seçilir.
+List<String> _desenSec(String dogru, List<List<String>> desenler, int i) {
+  final uygun = [
+    for (final d in desenler)
+      if (d.any((x) => x.length >= dogru.length)) d,
+  ];
+  final havuz = uygun.isEmpty ? desenler : uygun;
+  return havuz[_karma(i, 41) % havuz.length];
 }
 
 /// Üç ögeden [hedef] etiketini taşıyanların maskesi.
@@ -246,6 +353,11 @@ const _sesOlaylari = [
 ];
 
 final _sesSerpik = _serpistir(_sesOlaylari, 5);
+final _sesOrnek = [for (final e in _sesOlaylari) e.$2];
+
+// “Hangileri” sorularında anahtarın üçte ikisi tek öncüllüdür; desen
+// ağırlıkları seçeneklerin boy dağılımını buna göre kurar (bkz. _hangileri).
+const _desenSes = [72, 7, 31, 8, 1, 1, 0];
 
 const _sesKarisan = {
   _yum: [_ben],
@@ -275,6 +387,8 @@ final _sesOlayi = lmSirali(
         _maske(etiket, hedef),
         aciklama,
         i,
+
+        _desenSes,
       );
     }
     return _sirali(
@@ -287,7 +401,7 @@ final _sesOlayi = lmSirali(
       ],
       aciklama,
       i,
-      karistir: true,
+      ornek: _sesOrnek,
     );
   },
   exam: ExamKind.tyt,
@@ -459,6 +573,7 @@ const _sozcukTurleri = [
 ];
 
 final _turSerpik = _serpistir(_sozcukTurleri, 7);
+final _turOrnek = [for (final e in _sozcukTurleri) e.$2];
 
 const _turKarisan = {
   'isim': ['zamir', 'sıfat'],
@@ -489,7 +604,7 @@ final _sozcukTuru = lmSirali(
       ],
       '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${x[p].$2}: ${x[p].$3}'].join('; ')}.',
       i,
-      karistir: true,
+      ornek: _turOrnek,
     );
   },
   exam: ExamKind.tyt,
@@ -546,6 +661,8 @@ final _cekimler = _serpistir([
     for (var j = 0; j < t.$3.length; j++)
       (t.$3[j], _kipHavuzu[t.$1], _kisiHavuzu[t.$2[j]]),
 ], 9);
+final _kipOrnek = [for (final e in _cekimler) e.$2];
+final _kisiOrnek = [for (final e in _cekimler) e.$3];
 
 const _kipKarisan = {
   'görülen geçmiş zaman': ['duyulan geçmiş zaman'],
@@ -592,7 +709,7 @@ final _fiilCekimi = lmSirali(
         ],
         aciklama,
         i,
-        karistir: true,
+        ornek: _kisiOrnek,
       );
     }
     final kip = [for (final e in x) e.$2];
@@ -614,7 +731,7 @@ final _fiilCekimi = lmSirali(
       ],
       aciklama,
       i,
-      karistir: true,
+      ornek: _kipOrnek,
     );
   },
   exam: ExamKind.tyt,
@@ -694,6 +811,10 @@ const _yapilar = [
 ];
 
 final _yapiSerpik = _serpistir(_yapilar, 3);
+final _yapiOrnek = [for (final e in _yapilar) e.$2];
+
+// “Hangileri” sorularındaki anahtar boylarına göre desen ağırlıkları.
+const _desenYapi = [15, 3, 40, 25, 12, 22, 2];
 
 final _yapi = lmSirali(
   'tde_yapi',
@@ -715,6 +836,8 @@ final _yapi = lmSirali(
         _maske(etiket, hedef),
         aciklama,
         i,
+
+        _desenYapi,
       );
     }
     return _sirali(
@@ -724,7 +847,7 @@ final _yapi = lmSirali(
       [for (var p = 0; p < 3; p++) _digerleri(_yapiHavuzu, etiket[p], i + p)],
       aciklama,
       i,
-      karistir: true,
+      ornek: _yapiOrnek,
     );
   },
   exam: ExamKind.tyt,
@@ -834,7 +957,6 @@ final _cumleTuru = lmSirali(
       ],
       '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${gerekce(x[p])}'].join('; ')}.',
       i,
-      karistir: true,
     );
   },
   exam: ExamKind.tyt,
@@ -1038,6 +1160,7 @@ const _sanatlar = [
 ];
 
 final _sanatSerpik = _serpistir(_sanatlar, 7);
+final _sanatOrnek = [for (final e in _sanatlar) e.$2];
 
 final _sozSanati = lmSirali(
   'tde_soz_sanati',
@@ -1067,7 +1190,7 @@ final _sozSanati = lmSirali(
       ],
       '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${etiket[p]}: ${_sanatGerekce[etiket[p]]}'].join('; ')}.',
       i,
-      karistir: true,
+      ornek: _sanatOrnek,
     );
   },
   exam: ExamKind.ayt,
@@ -1186,9 +1309,7 @@ final _yazarEser = lmSirali(
       [for (final t in sira) _yakinYazarlar[t].sublist(0, 6)],
       aciklama,
       i,
-      karistir: true,
-      // Her eserin tek yazarı vardır; farklı her ad o konumda yanlıştır.
-      kesinYanlis: (p, s) => s != dogru[p],
+      ornek: _yazarAdlari,
     );
   },
   exam: ExamKind.ayt,
@@ -1340,6 +1461,7 @@ final _yakinIlkler = [
 ];
 
 final _temsilciSerpik = _serpistir(_temsilciler, 9);
+final _toplulukOrnek = [for (final e in _temsilciler) e.$2];
 
 final _donem = lmSirali(
   'tde_donem',
@@ -1370,9 +1492,8 @@ final _donem = lmSirali(
         ],
         '${[for (final e in x) '${e.$1}: ${e.$2} (${e.$3})'].join('; ')}.',
         i,
-        karistir: true,
         tekrarsiz: true,
-        kesinYanlis: (p, s) => s != dogru[p] && !disi(p).contains(s),
+        ornek: _ilkEserleri,
       );
     }
     final x = _yayili(_temsilciSerpik, j, 2500);
@@ -1399,7 +1520,7 @@ final _donem = lmSirali(
       ],
       '${[for (final e in x) '${e.$1}: ${e.$2}'].join('; ')}.',
       i,
-      karistir: true,
+      ornek: _toplulukOrnek,
     );
   },
   exam: ExamKind.ayt,
@@ -1482,10 +1603,11 @@ final _simplePresent = lmSirali(
     switch (tur) {
       case 0:
         dogru = '${o.$1} ${ucuncu ? f.$2 : f.$1} $son.';
+        // Yardımcı fiil (yok / be) × fiil biçimi (yalın / -s) deseni.
         yanlis = [
           '${o.$1} ${ucuncu ? f.$1 : f.$2} $son.',
           '${o.$1} $be ${f.$1} $son.',
-          '${o.$1} does ${ucuncu ? f.$2 : f.$1} $son.',
+          '${o.$1} $be ${f.$2} $son.',
         ];
         aciklama = ucuncu
             ? 'Özne üçüncü tekil kişidir; olumlu cümlede fiil üçüncü tekil '
@@ -1494,10 +1616,12 @@ final _simplePresent = lmSirali(
                   'kalır (${f.$1}) ve yardımcı fiil kullanılmaz.';
       case 1:
         dogru = '${o.$1} ${ucuncu ? 'doesn\'t' : 'don\'t'} ${f.$1} $son.';
+        // Yardımcı fiilin uyumu × fiil biçimi deseni: her iki seçenek bir
+        // ya da iki sözcükte ayrışır, anahtar ortada kalmaz.
         yanlis = [
           '${o.$1} ${ucuncu ? 'don\'t' : 'doesn\'t'} ${f.$1} $son.',
           '${o.$1} ${ucuncu ? 'doesn\'t' : 'don\'t'} ${f.$2} $son.',
-          '${o.$1} ${be}n\'t ${f.$1} $son.',
+          '${o.$1} ${ucuncu ? 'don\'t' : 'doesn\'t'} ${f.$2} $son.',
         ];
         aciklama =
             'Özne üçüncü tekil kişi${ucuncu ? 'dir' : ' değildir'}; olumsuz '
@@ -1508,7 +1632,7 @@ final _simplePresent = lmSirali(
         yanlis = [
           '${ucuncu ? 'Do' : 'Does'} ${o.$2} ${f.$1} $son?',
           '${ucuncu ? 'Does' : 'Do'} ${o.$2} ${f.$2} $son?',
-          '${ucuncu ? 'Is' : 'Are'} ${o.$2} ${f.$1} $son?',
+          '${ucuncu ? 'Do' : 'Does'} ${o.$2} ${f.$2} $son?',
         ];
         aciklama =
             'Özne üçüncü tekil kişi${ucuncu ? 'dir' : ' değildir'}; soru '
@@ -1600,25 +1724,28 @@ final _presentContinuous = lmSirali(
     final ip = _pcIpuclari[idx ~/ 30 % 7];
     final be = o.$3;
     final yanlisBe = be == 'is' ? 'are' : 'is';
+    // Özneye uyan ve uymayan do biçimi (yardımcı fiil türü hatası için).
+    final uyanDo = be == 'is' ? 'does' : 'do';
+    final uymayanDo = be == 'is' ? 'do' : 'does';
     final ozne = ip.$3 ? o.$1 : o.$2;
-    final String cumle, dogru, aciklama;
-    final List<String> yanlis;
+    final String cumle, aciklama;
+    // Yardımcı fiil: [doğru, uyumsuz be, uyan do, uymayan do].
+    final List<String> yardimci;
     switch (tur) {
       case 0:
         cumle = '${ip.$1}$ozne ___ (${f.$1}) ${f.$4}${ip.$2}.';
-        dogru = '$be ${f.$2}';
-        yanlis = ['$yanlisBe ${f.$2}', '$be ${f.$3}', '$be ${f.$1}'];
+        yardimci = [be, yanlisBe, uyanDo, uymayanDo];
         aciklama =
             'Özne “${o.$2}” ile “$be” kullanılır; fiil -ing eki alırken '
             '${f.$1} → ${f.$2} biçiminde yazılır.';
       case 1:
         cumle = '${ip.$1}$ozne ___ (not / ${f.$1}) ${f.$4}${ip.$2}.';
         final olumsuz = be == 'am' ? 'am not' : '${be}n\'t';
-        dogru = '$olumsuz ${f.$2}';
-        yanlis = [
-          '${yanlisBe}n\'t ${f.$2}',
-          '$olumsuz ${f.$3}',
-          '${be == 'is' ? 'doesn\'t' : 'don\'t'} ${f.$2}',
+        yardimci = [
+          olumsuz,
+          '${yanlisBe}n\'t',
+          '${uyanDo}n\'t',
+          '${uymayanDo}n\'t',
         ];
         aciklama =
             'Özne “${o.$2}” ile olumsuzda “$olumsuz” kullanılır; fiil -ing '
@@ -1628,22 +1755,41 @@ final _presentContinuous = lmSirali(
         // İlk boşluk “At the moment, …” gibi bir girişten sonra geliyorsa
         // yardımcı fiil küçük harfle yazılır.
         String bas(String s) => ip.$3 ? _buyuk(s) : s;
-        dogru = '${bas(be)} / ${f.$2}';
-        yanlis = [
-          '${bas(yanlisBe)} / ${f.$2}',
-          '${bas(be)} / ${f.$3}',
-          '${bas(be == 'is' ? 'does' : 'do')} / ${f.$2}',
+        yardimci = [
+          for (final y in [be, yanlisBe, uyanDo, uymayanDo]) bas(y),
         ];
         aciklama =
             'Soru, özneye uygun yardımcı fiilin (“${o.$2}” için “$be”) başa '
             'alınmasıyla kurulur; fiil ${f.$1} → ${f.$2} biçiminde yazılır.';
     }
+    String secenek(String yard, String fiil) =>
+        tur == 2 ? '$yard / $fiil' : '$yard $fiil';
+    // 2 × 2 desenlerden biri: yardımcı fiilin uyumu × (-ing yazım hatası,
+    // yalın fiil ya da be yerine do). Anahtarın en uzun seçenek olmadığı
+    // desenler önce gelir. Olumlu cümlede “do running” gibi bir dizi “koşu
+    // yapmak” anlamında okunabileceği için do deseni yalnız olumsuz ve soru
+    // cümlelerinde (“don't running”, “Do … running?”) kullanılır.
+    final desenler = [
+      for (final ikinci in [f.$3, f.$1])
+        [
+          secenek(yardimci[1], f.$2),
+          secenek(yardimci[0], ikinci),
+          secenek(yardimci[1], ikinci),
+        ],
+      if (tur != 0)
+        [
+          secenek(yardimci[1], f.$2),
+          secenek(yardimci[2], f.$2),
+          secenek(yardimci[3], f.$2),
+        ],
+    ];
+    final dogru = secenek(yardimci[0], f.$2);
     return secenekli(
       '$cumle\nBu cümlede boş bırakılan '
       '${tur == 2 ? 'yerlere sırasıyla' : 'yere'} “present continuous tense” '
       'kuralına göre aşağıdakilerden hangisi getirilmelidir?',
       dogru,
-      yanlis,
+      _desenSec(dogru, desenler, i),
       aciklama,
     );
   },
@@ -1726,10 +1872,12 @@ final _simplePast = lmSirali(
         verilen = olumlu;
         istenen = 'olumsuz';
         dogru = olumsuz;
+        // Yardımcı fiil (didn't / don't ya da wasn't) × fiil biçimi deseni.
+        final yard = _karma(i, 51).isEven ? 'don\'t' : '${o.$3}n\'t';
         yanlis = [
+          '${o.$1} $yard ${f.$1} $son.',
           '${o.$1} didn\'t ${f.$2} $son.',
-          '${o.$1} ${o.$3}n\'t ${f.$1} $son.',
-          '${o.$1} don\'t ${f.$2} $son.',
+          '${o.$1} $yard ${f.$2} $son.',
         ];
         aciklama =
             'Geçmiş zamanda olumsuz cümle “didn\'t” ile kurulur ve fiil yalın '
@@ -1738,10 +1886,12 @@ final _simplePast = lmSirali(
         verilen = olumlu;
         istenen = 'soru';
         dogru = 'Did ${o.$2} ${f.$1} $son?';
+        // Yardımcı fiil (Did / Do ya da Was) × fiil biçimi deseni.
+        final yard = _karma(i, 51).isEven ? 'Do' : _buyuk(o.$3);
         yanlis = [
+          '$yard ${o.$2} ${f.$1} $son?',
           'Did ${o.$2} ${f.$2} $son?',
-          '${_buyuk(o.$3)} ${o.$2} ${f.$1} $son?',
-          'Do ${o.$2} ${f.$2} $son?',
+          '$yard ${o.$2} ${f.$2} $son?',
         ];
         aciklama =
             'Geçmiş zamanda soru “Did” ile kurulur ve fiil yalın hâline döner '
@@ -1750,9 +1900,11 @@ final _simplePast = lmSirali(
         verilen = olumsuz;
         istenen = 'olumlu';
         dogru = olumlu;
+        // Düzenli sanılan biçim, yalın biçim ve was/were + yalın biçim:
+        // anahtar, öteki seçeneklerin ortak sözcüklerini toplamaz.
         yanlis = [
           '${o.$1} ${f.$3} $son.',
-          '${o.$1} did ${f.$2} $son.',
+          '${o.$1} ${f.$1} $son.',
           '${o.$1} ${o.$3} ${f.$1} $son.',
         ];
         aciklama =
@@ -1867,6 +2019,17 @@ const _ppSonuc = [
   ('call', 'called', 'the dentist'),
 ];
 
+/// Üç hata boyutlu (bit 1, 2, 4) tek seçenekli sorularda çeldirici desenleri:
+/// iki boyutun 2 × 2 deseni (anahtar, A, B, A+B) ya da üç boyutta ikişer hata
+/// (A+B, A+C, B+C). Her desende seçenekler birbirinden eşit uzaklıktadır ya da
+/// 2 × 2 düzeninde simetriktir; anahtar ortada kalmaz.
+const _ucBoyutDesen = [
+  [1, 2, 3],
+  [1, 4, 5],
+  [2, 4, 6],
+  [3, 5, 6],
+];
+
 final _presentPerfect = lmSirali(
   'ing_present_perfect',
   'Present perfect: have/has, since/for, already/yet/just',
@@ -1885,14 +2048,16 @@ final _presentPerfect = lmSirali(
       final z = _ppZamanlar[j ~/ 144];
       final aux = o.$3 ? 'has' : 'have', ters = o.$3 ? 'have' : 'has';
       final baglac = z.$2 ? 'since' : 'for', diger = z.$2 ? 'for' : 'since';
+      // Hata boyutları: 1 yardımcı fiil, 2 fiil biçimi, 4 since/for.
+      String yaz(int h) =>
+          '${h & 1 == 0 ? aux : ters} ${h & 2 == 0 ? f.$2 : f.$1} / '
+          '${h & 4 == 0 ? baglac : diger}';
       return secenekli(
         '${o.$1} ___ (${f.$1}) ${f.$3} ___ ${z.$1}.\n$soru',
-        '$aux ${f.$2} / $baglac',
-        [
-          '$aux ${f.$2} / $diger',
-          '$ters ${f.$2} / $baglac',
-          '$aux ${f.$1} / $baglac',
-        ],
+        yaz(0),
+        _desenSec(yaz(0), [
+          for (final d in _ucBoyutDesen) [for (final h in d) yaz(h)],
+        ], i),
         'Özne “${o.$2}” ile “$aux” kullanılır ve fiil üçüncü hâlini alır '
         '(${f.$1} → ${f.$2}). “${z.$1}” '
         '${z.$2 ? 'bir başlangıç noktası bildirdiği için “since”' : 'bir süre bildirdiği için “for”'} '
@@ -1908,14 +2073,16 @@ final _presentPerfect = lmSirali(
     final aux = o.$3 ? 'has' : 'have', ters = o.$3 ? 'have' : 'has';
     switch (tur) {
       case 0:
+        // Hata boyutları: 1 yardımcı fiil, 2 fiil biçimi, 4 yet/already.
+        String yaz(int h) =>
+            '${h & 1 == 0 ? aux : ters}n\'t ${h & 2 == 0 ? f.$2 : f.$1} / '
+            '${h & 4 == 0 ? 'yet' : 'already'}';
         return secenekli(
           '${o.$1} ___ (not / ${f.$1}) ${f.$3} ___.\n$soru',
-          '${aux}n\'t ${f.$2} / yet',
-          [
-            '${ters}n\'t ${f.$2} / yet',
-            '${aux}n\'t ${f.$2} / already',
-            '${aux}n\'t ${f.$1} / yet',
-          ],
+          yaz(0),
+          _desenSec(yaz(0), [
+            for (final d in _ucBoyutDesen) [for (final h in d) yaz(h)],
+          ], i),
           'Özne “${o.$2}” ile olumsuzda “${aux}n\'t” kullanılır ve fiil '
           'üçüncü hâlini alır (${f.$1} → ${f.$2}). Olumsuz cümlenin sonuna '
           '“yet” gelir; “already” olumsuz cümlede kullanılmaz.',
@@ -1924,10 +2091,12 @@ final _presentPerfect = lmSirali(
         return secenekli(
           '___ ${o.$2} ___ (${f.$1}) ${f.$3} yet?\n$soru',
           '${_buyuk(aux)} / ${f.$2}',
+          // Yardımcı fiilin uyumu × fiil biçimi deseni. “Did / yalın fiil”
+          // Amerikan İngilizcesinde doğru sayılabileceği için kullanılmaz.
           [
             '${_buyuk(ters)} / ${f.$2}',
             '${_buyuk(aux)} / ${f.$1}',
-            'Did / ${f.$2}',
+            '${_buyuk(ters)} / ${f.$1}',
           ],
           'Soru, özneye uygun yardımcı fiille (“${o.$2}” için “$aux”) başlar '
           've fiil üçüncü hâlini alır (${f.$1} → ${f.$2}).',
@@ -1937,7 +2106,8 @@ final _presentPerfect = lmSirali(
         return secenekli(
           '${o.$1} ___ $zarf ___ (${f.$1}) ${f.$3}.\n$soru',
           '$aux / ${f.$2}',
-          ['$ters / ${f.$2}', '$aux / ${f.$1}', 'did / ${f.$2}'],
+          // Yardımcı fiilin uyumu × fiil biçimi deseni.
+          ['$ters / ${f.$2}', '$aux / ${f.$1}', '$ters / ${f.$1}'],
           'Özne “${o.$2}” ile “$aux” kullanılır; “$zarf” yardımcı fiil ile '
           'fiilin üçüncü hâli (${f.$1} → ${f.$2}) arasına girer.',
         );
@@ -2042,7 +2212,6 @@ final _futureConditional = lmSirali(
         [for (final e in etiket) _gelecekYanlis[e]!],
         '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${_gelecekGerekce[etiket[p]]}'].join('; ')}.',
         i,
-        karistir: true,
       );
     }
     // Koşul cümleleri: 24 çiftten üçlü seçki (2.024) × iki boşluk düzeni.
@@ -2252,6 +2421,7 @@ final _comparative = lmSirali(
       [for (final e in x) e.$3],
       '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${x[p].$4 ? 'bir kümenin en üstünü anlatıldığı için üstünlük biçimi (superlative)' : 'iki şey karşılaştırıldığı için karşılaştırma biçimi (comparative)'} gelir: ${x[p].$2}'].join('; ')}.',
       i,
+      boyDengeli: true,
     );
   },
   lesson: 'İngilizce',
@@ -2312,6 +2482,9 @@ const _edatlar = [
 
 final _edatSerpik = _serpistir(_edatlar, 3);
 
+// “Hangileri” sorularındaki anahtar boylarına göre desen ağırlıkları.
+const _desenEdat = [15, 2, 43, 22, 14, 21, 2];
+
 final _preposition = lmSirali(
   'ing_preposition',
   'Prepositions of time and place: in, on, at',
@@ -2332,6 +2505,8 @@ final _preposition = lmSirali(
         _maske(etiket, hedef),
         aciklama,
         i,
+
+        _desenEdat,
       );
     }
     return _sirali(
@@ -2341,7 +2516,6 @@ final _preposition = lmSirali(
       [for (var p = 0; p < 3; p++) _digerleri(_edatHavuzu, etiket[p], i + p)],
       aciklama,
       i,
-      karistir: true,
     );
   },
   lesson: 'İngilizce',
@@ -2451,6 +2625,7 @@ final _passive = lmSirali(
       [for (final e in x) _edilgenYanlis(e)],
       '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede özne “${x[p].$1}” ile “${x[p].$3}” kullanılır, fiil üçüncü hâlini alır (${x[p].$2} → ${x[p].$4})'].join('; ')}.',
       i,
+      boyDengeli: true,
     );
   },
   lesson: 'İngilizce',

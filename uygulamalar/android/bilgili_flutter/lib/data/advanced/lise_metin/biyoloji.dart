@@ -1,6 +1,7 @@
 // Lise biyoloji: hesap ve akıl yürütme gerektiren 20 metin ailesi.
 // Kalıtım, hücre bölünmesi, nükleik asitler, madde alışverişi, ekoloji ve
 // sistemlerle ilgili kazanımlar; her aile 5.000 ayrı vaka üretir.
+import 'denge.dart';
 import 'ortak.dart';
 
 final lmBiyoloji = <AdvancedFamily>[
@@ -105,6 +106,217 @@ List<int> _dort(int p, int q) {
     }
   }
   return s;
+}
+
+// ───────────────────────── Çeldirici dengesi ─────────────────────────
+// Bilgisiz bir öğrenci anahtarı seçeneklerin değer sırasından bulamamalıdır.
+// Aşağıdaki yardımcılar tipik hata adaylarını anahtardan küçük ve büyük
+// olanlar diye ayırır; anahtardan küçük çeldiricilerin sayısını, bu
+// adaylarla kurulabilen sıralar arasından vakadan vakaya değiştirir.
+
+/// lmAile koordinatlarından vakanın sıra numarası (0 … 4999).
+int _no(int a, int b, int c) => a + 25 * b + 500 * c;
+
+final _sozcukAyraci = RegExp(r'[^\p{L}\p{N}]+', unicode: true);
+
+/// Seçeneklerin sözcük kümeleri bakımından ötekilere en çok benzeyeni ve en
+/// uzunu birer kestirimdir. İlk seçeneğin (anahtarın) bu kestirimlerde
+/// aldığı pay (eşitlikte eşit bölünür) ya 1/4 (dört seçenek eşit) ya da
+/// vakanın hedef payı ([hedef]: 0 ya da 1) olmalıdır; dönen değer bu iki
+/// değerden yakın olanına uzaklıkların toplamıdır. Hedef paylar vakaların
+/// dörtte birinde 1 olduğundan anahtar bu kestirimlerde ne öne çıkar ne de
+/// hep geride kalır. Anahtardan uzun her çeldirici küçük bir ceza alır;
+/// böylece anahtar kısa seçenekler arasında yalnız kalmaz.
+double _ipucuUzakligi(List<String> se, List<int> hedef) {
+  final soz = [
+    for (final x in se)
+      x.toLowerCase().split(_sozcukAyraci).where((w) => w.isNotEmpty).toSet(),
+  ];
+  double pay(List<num> puan) {
+    var enb = puan[0];
+    for (final p in puan) {
+      if (p > enb) enb = p;
+    }
+    if ((puan[0] - enb).abs() > 1e-9) return 0;
+    return 1 / puan.where((p) => (p - enb).abs() < 1e-9).length;
+  }
+
+  final benzerlik = [
+    for (var a = 0; a < se.length; a++)
+      [
+        for (var b = 0; b < se.length; b++)
+          if (b != a)
+            soz[a].intersection(soz[b]).length /
+                soz[a].union(soz[b]).length,
+      ].fold<double>(0, (t, x) => t + x),
+  ];
+  double uzaklik(double p, int hedef) {
+    final x = (p - 0.25).abs(), y = (p - hedef).abs();
+    return x < y ? x : y;
+  }
+
+  return uzaklik(pay(benzerlik), hedef[0]) +
+      uzaklik(pay([for (final x in se) x.length]), hedef[1]) +
+      0.1 * se.where((x) => x.length > se[0].length).length;
+}
+
+/// Üç çeldirici seçer. [hatalar] öncelik sırasıyla tipik hata adaylarıdır;
+/// anahtarla ya da birbiriyle aynı olanlar atlanır. Anahtardan küçük
+/// çeldirici sayısı, bu adaylarla kurulabilen sıralardan biri olur ve [no]
+/// ile değişir. Tipik hatalar [genislik] kadar farklı sıra kuramıyorsa
+/// [komsular] da kullanılır. [yansiz] doğruysa, bu sırayı veren üçlüler
+/// arasından anahtarı sözcük benzerliği ve uzunluk bakımından öne
+/// çıkarmayanı (eşitlikte öncelikli adaylardan kurulanı) seçilir.
+List<String> _dengeli(
+  num anahtar,
+  String yazim,
+  Iterable<(num, String)> hatalar,
+  Iterable<(num, String)> komsular,
+  int no, {
+  int genislik = 3,
+  bool yansiz = false,
+  List<int> agirlik = const [1, 1, 1, 1],
+}) {
+  final alt = <String>[], ust = <String>[];
+  void ekle((num, String) x) {
+    final (v, s) = x;
+    if (s.trim().isEmpty || ayniSecenek(s, yazim)) return;
+    if (alt.any((w) => ayniSecenek(w, s))) return;
+    if (ust.any((w) => ayniSecenek(w, s))) return;
+    (v < anahtar ? alt : ust).add(s);
+  }
+
+  List<int> kurulabilir() => [
+    for (var r = 0; r <= 3; r++)
+      if (r <= alt.length && 3 - r <= ust.length) r,
+  ];
+  hatalar.forEach(ekle);
+  var f = kurulabilir();
+  if (f.length < genislik) {
+    komsular.forEach(ekle);
+    f = kurulabilir();
+  }
+  if (f.isEmpty) throw StateError('Eksik çeldirici: $yazim → $alt $ust');
+  // Sıra, kurulabilen sıralar arasından [agirlik] oranında seçilir.
+  final pay = [for (final r in f) agirlik[r]];
+  final toplam = pay.fold<int>(0, (t, x) => t + x);
+  var h =
+      (64 * hedefSira(no) +
+          16 * hedefSira(no, 1) +
+          4 * hedefSira(no, 2) +
+          hedefSira(no, 3)) %
+      toplam;
+  var r = f.last;
+  for (var j = 0; j < f.length; j++) {
+    if (h < pay[j]) {
+      r = f[j];
+      break;
+    }
+    h -= pay[j];
+  }
+  if (!yansiz) return [...alt.take(r), ...ust.take(3 - r)];
+  // Her yandan en çok altı öncelikli aday denenir.
+  List<List<int>> secimler(int n, int k) {
+    if (k == 0) return [[]];
+    return [
+      for (var j = k - 1; j < n; j++)
+        for (final s in secimler(j, k - 1)) [...s, j],
+    ];
+  }
+
+  List<String>? enIyi;
+  var enIyiPuan = double.infinity;
+  for (final x in secimler(alt.length.clamp(0, 6), r)) {
+    for (final y in secimler(ust.length.clamp(0, 6), 3 - r)) {
+      final uclu = [for (final j in x) alt[j], for (final j in y) ust[j]];
+      final puan =
+          _ipucuUzakligi([yazim, ...uclu], [
+            for (var t = 5; t <= 6; t++) hedefSira(no, t) == 0 ? 1 : 0,
+          ]) +
+          1e-4 * [...x, ...y].fold<int>(0, (t, j) => t + j);
+      if (puan < enIyiPuan - 1e-12) {
+        enIyiPuan = puan;
+        enIyi = uclu;
+      }
+    }
+  }
+  return enIyi!;
+}
+
+/// Tam sayı yanıtlı soru; çeldiriciler [_dengeli] ile seçilir. Adaylar ve
+/// anahtarın [adim] uzaklığındaki komşuları [enAz] … [enCok] aralığında kalır.
+AdvancedItem _sayiDengeli(
+  String kok,
+  int anahtar,
+  Iterable<int> hatalar,
+  String aciklama,
+  int no, {
+  int adim = 1,
+  int komsu = 1,
+  int enAz = 1,
+  int? enCok,
+  String birim = '',
+  int genislik = 3,
+  List<int> agirlik = const [1, 1, 1, 1],
+}) {
+  bool uygun(int x) => x >= enAz && (enCok == null || x <= enCok);
+  (num, String) yaz(int x) => (x, birimli('$x', birim));
+  final yazim = birimli('$anahtar', birim);
+  return AdvancedItem(
+    kok,
+    yazim,
+    _dengeli(
+      anahtar,
+      yazim,
+      hatalar.where(uygun).map(yaz),
+      [
+        for (var k = 1; k <= komsu; k++) ...[
+          anahtar + k * adim,
+          anahtar - k * adim,
+        ],
+      ].where(uygun).map(yaz),
+      no,
+      genislik: genislik,
+      agirlik: agirlik,
+    ),
+    aciklama,
+  );
+}
+
+/// Kesir yanıtlı olasılık sorusu; çeldiriciler [_dengeli] ile seçilir ve
+/// (0, 1) aralığında kalır ([birDahil] doğruysa 1 de olabilir). Komşular
+/// paydası aynı, payı bir fazla ya da bir eksik olan kesirlerdir.
+AdvancedItem _olasilikDengeli(
+  String kok,
+  int n,
+  int d,
+  Iterable<(int, int)> adaylar,
+  String aciklama,
+  int no, {
+  int genislik = 1,
+  bool yansiz = true,
+  bool birDahil = false,
+  List<int> agirlik = const [1, 1, 1, 1],
+}) {
+  bool uygun((int, int) x) =>
+      x.$1 > 0 && x.$2 > 0 && (x.$1 < x.$2 || birDahil && x.$1 == x.$2);
+  (num, String) yaz((int, int) x) => (x.$1 / x.$2, kesir(x.$1, x.$2));
+  final yazim = kesir(n, d);
+  return AdvancedItem(
+    kok,
+    yazim,
+    _dengeli(
+      n / d,
+      yazim,
+      adaylar.where(uygun).map(yaz),
+      [(n + 1, d), (n - 1, d)].where(uygun).map(yaz),
+      no,
+      genislik: genislik,
+      yansiz: yansiz,
+      agirlik: agirlik,
+    ),
+    aciklama,
+  );
 }
 
 // ───────────────────────── 1. Monohibrit çaprazlama ─────────────────────────
@@ -339,7 +551,19 @@ final _f02 = lmAile(
     final cap2 = '${_gt(h2, p2)} × ${_gt(h2, q2)}';
     // (hedef, 16 üzerinden pay, açıklama, çeldirici adayları)
     final hedefler = <(String, int, String, List<(int, int)>)>[];
-    void carpim(String hedef, String ad1, int n1, String ad2, int n2) {
+    // Ezber 9 : 3 : 3 : 1 oranından gelen olasılıklar.
+    const ezber = [(1, 16), (3, 16), (9, 16)];
+    // [diger1] ve [diger2], karakterlerde istenenle karıştırılabilecek öteki
+    // sonuçların (4 üzerinden) olasılıklarıdır.
+    void carpim(
+      String hedef,
+      String ad1,
+      int n1,
+      String ad2,
+      int n2,
+      List<int> diger1,
+      List<int> diger2,
+    ) {
       final n = n1 * n2;
       if (n <= 0 || n >= 16) return;
       hedefler.add((
@@ -349,19 +573,46 @@ final _f02 = lmAile(
             'olasılığı ${kesir(n1, 4)}, $cap2 çaprazlamasında $ad2 olasılığı '
             '${kesir(n2, 4)} olur. Bağımsız olayların olasılıkları çarpılır: '
             '${kesir(n, 16)}.',
-        [(n1, 4), (n2, 4), (n1 + n2, 8), (16 - n, 16)],
+        [
+          // Bir karakteri unutma, ortalama alma, tümleyen, toplama.
+          (n1, 4), (n2, 4), (n1 + n2, 8), (16 - n, 16), (n1 + n2, 4),
+          // Bir karakterde öteki sonucun olasılığını alma.
+          for (final x in diger1) (x * n2, 16),
+          for (final y in diger2) (n1 * y, 16),
+          // Bir karakterde çaprazlama türünü karıştırıp 1/4, 1/2 ya da 3/4
+          // oranlarından yanlış olanını kullanma.
+          for (var x = 1; x <= 3; x++)
+            if (x != n1) (x * n2, 16),
+          for (var y = 1; y <= 3; y++)
+            if (y != n2) (n1 * y, 16),
+          ...ezber,
+        ],
       ));
     }
 
     for (var i = 0; i < 3; i++) {
       for (var j = 0; j < 3; j++) {
         final g1 = _gt(h1, i), g2 = _gt(h2, j);
-        carpim(tanim(i, j), g1, s1[i], g2, s2[j]);
+        carpim(tanim(i, j), g1, s1[i], g2, s2[j], [
+          for (var x = 0; x < 3; x++)
+            if (x != i) s1[x],
+        ], [
+          for (var y = 0; y < 3; y++)
+            if (y != j) s2[y],
+        ]);
       }
     }
     for (final x in [(k1.$4, d1), (k1.$5, 4 - d1)]) {
       for (final y in [(k2.$4, d2), (k2.$5, 4 - d2)]) {
-        carpim('${x.$1} ve ${y.$1}', '${x.$1} olma', x.$2, '${y.$1} olma', y.$2);
+        carpim(
+          '${x.$1} ve ${y.$1}',
+          '${x.$1} olma',
+          x.$2,
+          '${y.$1} olma',
+          y.$2,
+          [4 - x.$2],
+          [4 - y.$2],
+        );
       }
     }
     final hom1 = 4 - s1[1], hom2 = 4 - s2[1];
@@ -375,7 +626,10 @@ final _f02 = lmAile(
       'Homozigot olma olasılığı $cap1 çaprazlamasında ${kesir(hom1, 4)}, '
           '$cap2 çaprazlamasında ${kesir(hom2, 4)} olur. Çarpım: '
           '${kesir(hom1 * hom2, 16)}.',
-      [(hom1, 4), (hom2, 4), (hom1 + hom2, 8), (16 - hom1 * hom2, 16)],
+      [
+        (hom1, 4), (hom2, 4), (hom1 + hom2, 8), (16 - hom1 * hom2, 16),
+        (s1[1] * s2[1], 16), (hom1 + hom2, 4), ...ezber,
+      ],
     );
     bilesik(
       'her iki karakter bakımından heterozigot',
@@ -383,7 +637,10 @@ final _f02 = lmAile(
       'Heterozigot olma olasılığı $cap1 çaprazlamasında ${kesir(s1[1], 4)}, '
           '$cap2 çaprazlamasında ${kesir(s2[1], 4)} olur. Çarpım: '
           '${kesir(s1[1] * s2[1], 16)}.',
-      [(s1[1], 4), (s1[1] + s2[1], 8), (16 - s1[1] * s2[1], 16), (hom1 * hom2, 16)],
+      [
+        (s1[1], 4), (s1[1] + s2[1], 8), (16 - s1[1] * s2[1], 16),
+        (hom1 * hom2, 16), (s2[1], 4), (s1[1] + s2[1], 4), ...ezber,
+      ],
     );
     final tekHet = s1[1] * hom2 + hom1 * s2[1];
     bilesik(
@@ -393,7 +650,10 @@ final _f02 = lmAile(
           'ikincide ${kesir(s2[1], 4)} olur. Yalnız birinde heterozigot: '
           '${kesir(s1[1], 4)} · ${kesir(hom2, 4)} + ${kesir(hom1, 4)} · '
           '${kesir(s2[1], 4)} = ${kesir(tekHet, 16)}.',
-      [(s1[1] * s2[1], 16), (s1[1] * hom2, 16), (16 - tekHet, 16), (s1[1], 4)],
+      [
+        (s1[1] * s2[1], 16), (s1[1] * hom2, 16), (16 - tekHet, 16),
+        (s1[1], 4), (hom1 * s2[1], 16), (s2[1], 4), ...ezber,
+      ],
     );
     bilesik(
       'en az bir karakter bakımından çekinik fenotipli',
@@ -402,14 +662,17 @@ final _f02 = lmAile(
           '${kesir(d1, 4)} · ${kesir(d2, 4)} = ${kesir(d1 * d2, 16)} olur. '
           'İstenen olasılık 1 − ${kesir(d1 * d2, 16)} = '
           '${kesir(16 - d1 * d2, 16)} bulunur.',
-      [(d1 * d2, 16), ((4 - d1) * (4 - d2), 16), (8 - d1 - d2, 8), (8 - d1 - d2, 4)],
+      [
+        (d1 * d2, 16), ((4 - d1) * (4 - d2), 16), (8 - d1 - d2, 8),
+        (8 - d1 - d2, 4), ((4 - d1) * d2 + d1 * (4 - d2), 16), ...ezber,
+      ],
     );
     final (hedef, n, aciklama, aday) = hedefler[(c + a) % hedefler.length];
     // Ebeveynler aynı genotipteyse tanım yinelenmez.
     final ebeveynler = p1 == q1 && p2 == q2
         ? '${tanim(p1, p2)} iki birey'
         : '${tanim(p1, p2)} bir birey ile ${tanim(q1, q2)} bir birey';
-    return _olasilik(
+    return _olasilikDengeli(
       '$org ${k1.$1} aleli ($h1) ${k1.$2} aleline (${h1.toLowerCase()}), '
       '${k2.$1} aleli ($h2) ${k2.$2} aleline (${h2.toLowerCase()}) baskındır '
       've bu iki gen farklı kromozomlarda bulunur. Bu türden $ebeveynler '
@@ -419,6 +682,7 @@ final _f02 = lmAile(
       16,
       aday,
       aciklama,
+      _no(a, b, c),
     );
   },
   exam: ExamKind.tyt,
@@ -691,6 +955,18 @@ const _rhDurumlar = [
   ('', '', '', 4), ('Rr', 'Rr', _rhCekinik, 1),
 ];
 
+/// İki Rh genotipinin çaprazlamasında RR, Rr, rr, Rh(+) ve Rh(−) sonuçlarının
+/// 4 üzerinden payları (sıfır olanlar atılır).
+List<int> _rhSonuclari(String anne, String baba) {
+  int kod(String g) => switch (g) {
+    'RR' => 0,
+    'Rr' => 1,
+    _ => 2,
+  };
+  final s = _dort(kod(anne), kod(baba));
+  return [...s, s[0] + s[1], s[2]].where((x) => x > 0).toList();
+}
+
 /// Rh genotipinin harf büyüklüğünden bağımsız okunabilen yazımı.
 String _rhYaz(String g) => switch (g) {
   'RR' => 'RR (homozigot Rh pozitif)',
@@ -729,19 +1005,34 @@ final _f04 = lmAile(
               'bir babanın'
         : 'Kan grubu genotipi $anneTanim olan bir anne ile $babaTanim olan '
               'bir babanın';
-    return _olasilik(
+    return _olasilikDengeli(
       'AB0 kan grubu sisteminde A ve B alelleri eş baskın, 0 aleli '
       'çekiniktir${rhVar ? '; Rh(+) aleli (R), Rh(−) aleline (r) baskındır' : ''}. '
       '$ebeveynler doğacak bir çocuğunun $hedef olma olasılığı kaçtır?',
       n,
       d,
       [
-        (aboPay * rhPay, 16),
-        (aboPay, cins == 0 ? 4 : 8),
-        (aboPay, 4),
+        // Bir çarpanı (cinsiyet, Rh ya da AB0) unutma.
+        if (cins != 0) (aboPay * rhPay, 16),
+        if (rhVar) (aboPay, cins == 0 ? 4 : 8),
+        if (rhVar) (rhPay, cins == 0 ? 4 : 8),
+        if (rhVar && cins != 0) (aboPay, 4),
+        // Tümleyen olay, çarpmak yerine toplama ya da ortalama alma,
+        // fazladan ya da eksik 1/2.
         (d - n, d),
-        (aboPay + rhPay, 8),
-        (rhPay, 8),
+        if (rhVar) (aboPay + rhPay, 4),
+        if (rhVar) (aboPay + rhPay, 8),
+        if (!rhVar && cins != 0) ...[(aboPay + 2, 4), (aboPay + 2, 8)],
+        (n, 2 * d),
+        (2 * n, d),
+        // AB0 ya da Rh bakımından başka bir sonucun olasılığını alma.
+        for (final (_, x) in hedefler)
+          if (x != aboPay) (x * rhPay, d),
+        if (rhVar)
+          for (final x in _rhSonuclari(anneRh, babaRh))
+            if (x != rhPay) (aboPay * x, d),
+        // Ezber oranları (9 : 3 : 3 : 1 ya da 3 : 1 ve 1 : 2 : 1) uygulama.
+        if (rhVar) ...[(1, d), (3, d), (9, d)] else ...[(4, d), (12, d), (8, d)],
       ],
       '$anne × $baba çaprazlamasında istenen AB0 sonucunun olasılığı '
       '${kesir(aboPay, 4)} olur'
@@ -749,6 +1040,10 @@ final _f04 = lmAile(
       '${cins != 0 ? '; istenen cinsiyetin olasılığı 1/2 olur' : ''}. '
       '${carpanlar.length == 1 ? 'İstenen olasılık' : 'Bağımsız olasılıklar çarpılır: ${carpanlar.join(' · ')} ='} '
       '${kesir(n, d)}${carpanlar.length == 1 ? ' bulunur' : ''}.',
+      _no(a, b, c),
+      // Küçük anahtarlarda anahtardan küçük tipik hata az olduğundan bu
+      // sıralar kurulabildiğinde öne alınır.
+      agirlik: const [2, 2, 3, 3],
     );
   },
   exam: ExamKind.tyt,
@@ -848,7 +1143,7 @@ final _f05 = lmAile(
             'erkeklerinin tümü sağlam olur',
     };
     final n = xPay * aboPay, d = xPayda * 4;
-    return _olasilik(
+    return _olasilikDengeli(
       '$ad, X kromozomunda taşınan çekinik bir alelle kalıtılır. AB0 kan '
       'grubu sisteminde A ve B alelleri eş baskın, 0 aleli çekiniktir. Kan '
       'grubu genotipi $anne olan, $anneSoz bir anne ile kan grubu genotipi '
@@ -856,17 +1151,30 @@ final _f05 = lmAile(
       n,
       d,
       [
+        // Bir çarpanı unutma, fazladan 1/2 ile çarpma ya da 1/2'yi unutma,
+        // çarpmak yerine ortalama alma ya da toplama, tümleyen olay.
         (xPay, xPayda),
         (aboPay, 4),
         (n, 2 * d),
         (2 * n, d),
         (xPay * 4 + aboPay * xPayda, 2 * d),
         (d - n, d),
+        (xPay * 4 + aboPay * xPayda, d),
+        // Bir karakterde istenen sonucun karşıtını alma.
+        ((xPayda - xPay) * aboPay, d),
+        (xPay * (4 - aboPay), d),
+        (n, 4 * d),
+        // İki karakterli soruya ezber 9 : 3 : 3 : 1 oranını uygulama.
+        (1, 16),
+        (3, 16),
+        (9, 16),
       ],
       '$xAciklama; X kromozomuna bağlı özellik için istenen sonucun olasılığı '
       '${kesir(xPay, xPayda)} olur. $anne × $baba çaprazlamasında istenen kan '
       'grubu sonucunun olasılığı ${kesir(aboPay, 4)} olur. Çarpım: '
       '${kesir(xPay, xPayda)} · ${kesir(aboPay, 4)} = ${kesir(n, d)}.',
+      _no(a, b, c),
+      agirlik: const [2, 2, 2, 5],
     );
   },
   exam: ExamKind.tyt,

@@ -1,9 +1,22 @@
 // Lise coğrafya (12 hesap ailesi) ve tarih (8 olgu ailesi) metin soruları.
 // Coğrafya aileleri sayısal koordinatlarla, tarih aileleri olgu çizelgelerinden
 // seçilen üçlülerle üretilir; her aile 5.000 ayrı kök verir.
+import 'denge.dart';
 import 'ortak.dart';
 
 // ───────────────────────── Ortak küçük yardımcılar ─────────────────────────
+
+/// lmAile koordinatlarından vaka numarası (hedef sıra seçimi için).
+int _vaka(int a, int b, int c) => a + 25 * b + 500 * c;
+
+/// Uç sıralara ağırlık veren hedef sıra (0 ve 3: 5/16, 1 ve 2: 3/16). Anahtarı
+/// yalnız ortada kalabilen bir biçimle aynı ailede bulunan biçimlerde, ailenin
+/// sıra dağılımını dengelemek için kullanılır.
+int _ucaYakinSira(int i) {
+  final s = hedefSira(i);
+  if ((s == 1 || s == 2) && hedefSira(i, 7) == 0) return s == 1 ? 0 : 3;
+  return s;
+}
 
 /// Dakikayı 24 saatlik gösterime çevirir: 574 → 09:34.
 String _saat(int dk) =>
@@ -29,6 +42,7 @@ String _derece(num x) => '${_n(x)} °C';
 
 AdvancedItem _yerelSaat(int a, int b, int c) {
   final k = c ~/ 2;
+  final sira = hedefSira(_vaka(a, b, c));
   if (c.isEven) {
     // Yerel saat: K ve L boylamları (doğu artı), saati verilen ve sorulan merkez.
     final (lonK, lonL, kVerilir, taban) = switch (k) {
@@ -46,10 +60,18 @@ AdvancedItem _yerelSaat(int a, int b, int c) {
     final diger = ayni ? lonK.abs() + lonL.abs() : (lonK.abs() - lonL.abs()).abs();
     final yon = lonS > lonV ? 1 : -1;
     final dogru = t + yon * 4 * fark;
+    // Tipik hatalar anahtarın iki yanından seçilir; anahtarın saat sırasındaki
+    // yeri vakadan vakaya değişir: ters yön, 4 ile çarpmayı unutma, boylam farkını
+    // yanlış alma, sorulan merkezin boylamını fark sanma, 4 yerine 15 ile çarpma,
+    // bunların ters yönlü biçimleri ve en sonda bir saatlik ya da yarım saatlik kayma.
     final adaylar = [
       t - yon * 4 * fark,
       t + yon * fark,
       t + yon * 4 * diger,
+      t + yon * 4 * lonS.abs(),
+      t + yon * 15 * fark,
+      t - yon * fark,
+      t - yon * 4 * diger,
       dogru + 60,
       dogru - 60,
       dogru + 30,
@@ -61,12 +83,14 @@ AdvancedItem _yerelSaat(int a, int b, int c) {
         ? 'Merkezler aynı yarım kürede olduğundan boylam farkı $buyuk − $kucuk = $fark° olur'
         : 'Merkezler başlangıç meridyeninin farklı yanlarında olduğundan boylam farkı '
             '${lonK.abs()} + ${lonL.abs()} = $fark° olur';
-    return secenekli(
+    return AdvancedItem(
       'K merkezi ${_boylam(lonK)}, L merkezi ${_boylam(lonL)} boylamı üzerindedir. '
       'Bir boylam derecesi 4 dakikalık yerel saat farkı oluşturmaktadır. '
       '$verilen merkezinde yerel saat ${_saat(t)} iken $sorulan merkezinde yerel saat kaçtır?',
       _saat(dogru),
-      adaylar.map(_saat),
+      siraliCeldiriciler(dogru, _saat(dogru), [
+        for (final x in adaylar) (x, _saat(x)),
+      ], sira),
       '$farkYazi; zaman farkı $fark × 4 = ${4 * fark} dakikadır (${_sure(4 * fark)}). '
       '$sorulan merkezi daha ${yon > 0 ? 'doğuda' : 'batıda'} olduğundan yerel saati '
       '${yon > 0 ? 'ileridir' : 'geridir'}: ${_saat(t)} ${yon > 0 ? '+' : '−'} ${_sure(4 * fark)} = ${_saat(dogru)}.',
@@ -85,17 +109,30 @@ AdvancedItem _yerelSaat(int a, int b, int c) {
   final diger = ayni ? lonK.abs() + lonL.abs() : (lonK.abs() - lonL.abs()).abs();
   final buyuk = lonK.abs() > lonL.abs() ? lonK.abs() : lonL.abs();
   final kucuk = lonK.abs() > lonL.abs() ? lonL.abs() : lonK.abs();
-  return sayisal(
+  return sayisalSirali(
     'K merkezi ${_boylam(lonK)}, L merkezi ${_boylam(lonL)} boylamındadır. '
     'Ardışık iki boylam arasında 4 dakikalık yerel saat farkı bulunduğuna göre '
     'bu iki merkezin yerel saatleri arasındaki fark kaç dakikadır?',
     4 * fark,
-    [4 * diger, fark, 15 * fark, 2 * fark],
+    // Tipik hatalar: boylam farkını yanlış alma, 4 ile çarpmayı unutma, 4 yerine
+    // 15 ile çarpma, iki merkez arasındaki boylam sayısını fark sanma (bir eksik ya da
+    // bir fazla), "ardışık iki boylam" ifadesini iki derecede 4 dakika sanma.
+    [
+      4 * diger,
+      fark,
+      15 * fark,
+      4 * (fark + 1),
+      4 * (fark - 1),
+      2 * fark,
+      4 * (fark + 2),
+      4 * (fark - 2),
+    ],
     ayni
         ? 'İki merkez aynı yarım kürede olduğundan boylam farkı $buyuk − $kucuk = $fark° olur. '
             'Yerel saat farkı $fark × 4 = ${4 * fark} dakikadır.'
         : 'İki merkez başlangıç meridyeninin farklı yanlarında olduğundan boylam farkı '
             '${lonK.abs()} + ${lonL.abs()} = $fark° olur. Yerel saat farkı $fark × 4 = ${4 * fark} dakikadır.',
+    sira,
     unit: 'dakika',
     positive: true,
   );
@@ -115,15 +152,22 @@ AdvancedItem _boylamBul(int a, int b, int c) {
   final tL = tK + s * 4 * d;
   final lonL = lonK + s * d;
   String ad(int x) => '${_boylam(x)} boylamı';
-  final adaylar = [
-    lonK - s * d,
-    -lonL,
-    s * d,
-    lonK + s * 4 * d,
-    lonL + 15,
-    lonL - 15,
-    lonL + 10,
-  ].where((x) => x != 0 && x.abs() <= 180);
+  // Çeldiriciler 2 × 2 düzenindedir: doğru derece öbür yarım kürede (yönü
+  // karıştırma) ve tipik bir hatadan gelen derece iki yarım kürede de verilir.
+  // Böylece her derece ve her yön ikişer seçenekte görünür; ne sözcük benzerliği
+  // ne yön çoğunluğu anahtarı gösterir. Hatalı derecenin doğru dereceden büyük ya
+  // da küçük olması vakadan vakaya değişir.
+  final dogru = lonL.abs();
+  bool gecerli(int x) => x > 0 && x < 180 && x != dogru;
+  final tipik = [
+    (lonK - s * d).abs(), // gidiş yönünü ters alma
+    d, // yalnız boylam farkını yanıt sanma
+    (lonK + s * 4 * d).abs(), // dakika farkını derece farkı sanma
+  ].where(gecerli).toList();
+  final kucukIste = hedefSira(_vaka(a, b, c)) != 0;
+  final m = tipik.isEmpty
+      ? [dogru + 10, dogru + 15, dogru - 10].firstWhere(gecerli)
+      : tipik.firstWhere((x) => (x < dogru) == kucukIste, orElse: () => tipik.first);
   final String yer;
   if ((lonL > 0) != (lonK > 0)) {
     yer = 'K merkezinden $d° ${ileri ? 'doğuya' : 'batıya'} gidilirken başlangıç meridyeni '
@@ -139,7 +183,7 @@ AdvancedItem _boylamBul(int a, int b, int c) {
     'L merkezinde yerel saat ${_saat(tL)} olarak belirlenmiştir. Her boylam derecesi '
     '4 dakikalık yerel saat farkı oluşturduğuna göre L merkezi hangi boylam üzerindedir?',
     ad(lonL),
-    adaylar.map(ad),
+    [ad(-lonL), ad(m), ad(-m)],
     'Yerel saat farkı ${_saat(sonra)} − ${_saat(once)} = ${4 * d} dakikadır; ${4 * d} / 4 = $d° '
     'boylam farkı eder. L merkezinin yerel saati ${ileri ? 'ileri' : 'geri'} olduğundan L, '
     'K merkezinin ${ileri ? 'doğusundadır' : 'batısındadır'}. $yer; yanıt ${ad(lonL)} olur.',
@@ -159,16 +203,22 @@ AdvancedItem _olcekUzunluk(int a, int b, int c) {
   final payda = 20000 * (6 + a); // 1/120000 … 1/600000
   final s = (6 + a) / 5; // 1 cm kaç km
   final baglam = sec(_uzaklikBaglam, a + b + k);
+  final sira = hedefSira(_vaka(a, b, c));
   if (c.isEven) {
     final cm10 = 20 + b + 20 * k; // 2,0 … 11,9 cm
     final km = cm10 * (6 + a) * 2 / 100;
-    return ondalikli(
+    final ters = cm10 / 10 / s;
+    return ondalikliSirali(
       '1/$payda ölçekli bir haritada $baglam ${tr(cm10 / 10)} cm olarak ölçülmüştür. '
       'Bu uzaklık gerçekte kaç kilometredir?',
       km,
-      [km * 10, km / 10, km * 100],
+      // Tipik hatalar anahtarın iki yanında: çarpmak yerine bölme, km'ye çevirirken
+      // bir ya da iki basamak kaydırma (×10, ÷10, ×100, ÷100) ve bölme hatasının
+      // basamak kaymalı biçimleri. Anahtarın değer sırası vakadan vakaya değişir.
+      [ters, km * 10, km / 10, km * 100, km / 100, ters * 10, ters * 100],
       'Haritadaki 1 cm gerçekte $payda cm, yani ${tr(s)} km eder. '
       '${tr(cm10 / 10)} × ${tr(s)} = ${tr(km)} km bulunur.',
+      sira,
       unit: 'km',
       digits: 3,
       positive: true,
@@ -177,13 +227,16 @@ AdvancedItem _olcekUzunluk(int a, int b, int c) {
   final cm10 = 15 + b + 20 * k; // 1,5 … 11,4 cm
   final km = cm10 * (6 + a) * 2 / 100;
   final cm = cm10 / 10;
-  return ondalikli(
+  return ondalikliSirali(
     'Gerçekte ${tr(km)} km olan $baglam, 1/$payda ölçekli bir haritada kaç santimetre '
     'ile gösterilir?',
     cm,
-    [(km * s * 10).round() / 10, cm * 10, cm / 10],
+    // Tipik hatalar: bölmek yerine çarpma, cm'ye çevirirken basamak kaydırma ve
+    // orantıyı ters kurma (ölçek değerini uzunluğa bölme).
+    [(km * s * 10).round() / 10, cm * 10, cm / 10, cm * 100, cm / 100, s / km],
     'Bu ölçekte haritadaki 1 cm gerçekte $payda cm, yani ${tr(s)} km eder. '
     '${tr(km)} / ${tr(s)} = ${tr(cm)} cm bulunur.',
+    sira,
     unit: 'cm',
     digits: 3,
     positive: true,
@@ -209,15 +262,22 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
   final bicim = c % 3, q = c ~/ 3;
   final payda = 50000 * (a + 3); // 1/150000 … 1/1350000
   final s = (a + 3) / 2; // 1 cm kaç km
+  final i = _vaka(a, b, c);
   if (bicim == 0) {
     final cm10 = 20 + b + 20 * q; // 2,0 … 9,9 cm
     final km = cm10 * (a + 3) / 20;
     final gercekCm = cm10 * (a + 3) * 5000;
-    return secenekli(
+    // Ölçek bulmada tipik hata paydada basamak kaydırmadır (×10, ÷10, ×100, ÷100).
+    // Anahtar bu yüzden ikinci ya da üçüncü büyük ölçek olur; iki durum eşit
+    // sıklıktadır. Alan biçimleri uç sıraları daha sık alarak ailede dengeyi kurar.
+    final adaylar = [payda * 10, payda ~/ 10, payda * 100, payda ~/ 100];
+    return AdvancedItem(
       'Gerçekte ${tr(km)} km uzunluğundaki ${sec(_hatBaglam, a + b + q)}, bir haritada '
       '${tr(cm10 / 10)} cm uzunluğunda gösterilmiştir. Bu haritanın ölçeği nedir?',
       '1/$payda',
-      ['1/${payda * 10}', '1/${payda ~/ 10}', '1/${payda * 100}'],
+      siraliCeldiriciler(1 / payda, '1/$payda', [
+        for (final x in adaylar) (1 / x, '1/$x'),
+      ], hedefSira(i)),
       '${tr(km)} km = $gercekCm cm eder. Ölçek = harita uzunluğu / gerçek uzunluk = '
       '${tr(cm10 / 10)} / $gercekCm = 1/$payda.',
     );
@@ -226,13 +286,27 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
   if (bicim == 1) {
     final harita = 2 + b + 20 * q; // cm²
     final gercek = harita * (a + 3) * (a + 3) / 4;
-    return ondalikli(
+    final unut = harita * s; // ölçeğin karesini almayı unutma
+    return ondalikliSirali(
       '1/$payda ölçekli bir haritada $harita cm² yer kaplayan ${yer.$1} gerçek alanı '
       'kaç kilometrekaredir?',
       gercek,
-      [harita * s, gercek * 10, gercek / 10],
+      // Tipik hatalar: kareyi almayı unutma, kare yerine 2 ile çarpma, birim
+      // çevirmede basamak kaydırma (uzunlukta bir basamak alanda ×100 / ÷100 eder)
+      // ve kareyi unutmanın basamak kaymalı biçimleri.
+      [
+        unut,
+        gercek * 10,
+        gercek / 10,
+        gercek * 100,
+        gercek / 100,
+        harita * 2 * s,
+        unut * 10,
+        unut * 100,
+      ],
       'Haritadaki 1 cm gerçekte ${tr(s)} km olduğundan 1 cm² gerçekte ${tr(s)} × ${tr(s)} = '
       '${tr(s * s)} km² eder. $harita × ${tr(s * s)} = ${tr(gercek)} km² bulunur.',
+      _ucaYakinSira(i),
       unit: 'km²',
       digits: 3,
       positive: true,
@@ -240,13 +314,26 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
   }
   final harita = 3 + b + 20 * q; // cm²
   final gercek = harita * (a + 3) * (a + 3) / 4;
-  return ondalikli(
+  final unut = harita * s; // ölçeğin karesi yerine kendisine bölme
+  return ondalikliSirali(
     'Gerçek alanı ${tr(gercek)} km² olan ${yer.$2}, 1/$payda ölçekli bir haritada kaç '
     'santimetrekarelik yer kaplar?',
     harita.toDouble(),
-    [harita * s, harita * 10, harita / 10],
+    // Tipik hatalar: kare yerine ölçeğin kendisine ya da iki katına bölme, birim
+    // çevirmede basamak kaydırma ve kareyi unutmanın basamak kaymalı biçimleri.
+    [
+      unut,
+      harita * 10.0,
+      harita / 10,
+      harita * 100.0,
+      harita / 100,
+      harita * s / 2,
+      unut / 10,
+      unut / 100,
+    ],
     'Haritadaki 1 cm gerçekte ${tr(s)} km olduğundan 1 cm² gerçekte ${tr(s * s)} km² eder. '
     '${tr(gercek)} / ${tr(s * s)} = $harita cm² bulunur.',
+    _ucaYakinSira(i),
     unit: 'cm²',
     digits: 3,
     positive: true,

@@ -1,6 +1,7 @@
 // AYT Matematik metin aileleri: fonksiyon, polinom, ikinci derece, logaritma,
 // dizi, trigonometri, limit, türev, integral ve toplam sembolü.
 // Her aile (a, b, c) koordinatlarından 5.000 ayrı soru kökü üretir.
+import 'denge.dart';
 import 'ortak.dart';
 
 // ---------------------------------------------------------------------------
@@ -11,10 +12,12 @@ const _ustRakam = ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '
 const _altRakam = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'];
 
 /// Üst simge: `_ust(12)` → `¹²`.
-String _ust(int n) => [for (final r in '$n'.codeUnits) _ustRakam[r - 48]].join();
+String _ust(int n) =>
+    [for (final r in '$n'.codeUnits) _ustRakam[r - 48]].join();
 
 /// Alt simge: `_alt(12)` → `₁₂`.
-String _alt(int n) => [for (final r in '$n'.codeUnits) _altRakam[r - 48]].join();
+String _alt(int n) =>
+    [for (final r in '$n'.codeUnits) _altRakam[r - 48]].join();
 
 /// İşaretli tam sayı: `_n(-3)` → `−3`.
 String _n(int x) => x < 0 ? '−${-x}' : '$x';
@@ -152,13 +155,164 @@ AdvancedItem _kes(
     (n + 4 * d, d),
     (n + 5 * d, d),
   ].where((x) => x.$2 != 0 && (!pozitif || x.$1 * x.$2 > 0));
-  return secenekli(
+  return secenekli(kok, _q(n, d), havuz.map((x) => _q(x.$1, x.$2)), aciklama);
+}
+
+/// Seçeneklerin biçiminden ipucu çıkmasın diye vakanın hedef sırası
+/// (`hedefSira`); [tuz] ikinci bağımsız seçim içindir.
+int _hs(int a, int b, int c, [int tuz = 0]) =>
+    hedefSira(a + 25 * b + 500 * c, tuz);
+
+/// [_tam] gibi; ama anahtardan küçük çeldirici sayısı [sira] olur. Adaylar
+/// öncelik sırasıyla verilir (iki yandan da tipik hatalar); bir yan eksik
+/// kalırsa anahtara yakın komşu değerler kullanılır.
+AdvancedItem _tamS(
+  String kok,
+  int yanit,
+  Iterable<int> adaylar,
+  String aciklama,
+  int sira, {
+  String birim = '',
+  bool pozitif = false,
+}) {
+  final adim = yanit.abs() >= 200 ? 10 : (yanit.abs() >= 40 ? 5 : 1);
+  final havuz = [
+    ...adaylar,
+    for (var k = 1; k <= 6; k++) ...[yanit + k * adim, yanit - k * adim],
+  ].where((x) => !pozitif || x > 0);
+  final yazim = birimli(_n(yanit), birim);
+  return AdvancedItem(
     kok,
-    _q(n, d),
-    havuz.map((x) => _q(x.$1, x.$2)),
+    yazim,
+    siraliCeldiriciler(yanit, yazim, [
+      for (final x in havuz) (x, birimli(_n(x), birim)),
+    ], sira),
     aciklama,
   );
 }
+
+/// [_kes] gibi; ama anahtardan küçük çeldirici sayısı [sira] olur. Son çare
+/// komşular tam sayı yanıtta ±1, ±2 …; kesirli yanıtta önce payı ve paydası
+/// birlikte, sonra yalnız biri değişen kesirlerdir. [komsuPozitif] yalnız
+/// komşuları pozitif tutar ([pozitif] tüm adayları).
+AdvancedItem _kesS(
+  String kok,
+  int n,
+  int d,
+  Iterable<(int, int)> adaylar,
+  String aciklama,
+  int sira, {
+  bool pozitif = false,
+  bool komsuPozitif = false,
+}) {
+  bool arti((int, int) x) => x.$1 * x.$2 > 0;
+  final tam = n % d == 0;
+  final komsu = [
+    if (tam)
+      for (var k = 1; k <= 6; k++) ...[(n + k * d, d), (n - k * d, d)]
+    else ...[
+      (n + 1, d + 1), (n - 1, d - 1), (n + 1, d), (n - 1, d), (n, d + 1), //
+      (n, d - 1), (n + 2, d), (n - 2, d), (n + 3, d), (n - 3, d),
+    ],
+  ].where((x) => !komsuPozitif || arti(x));
+  final havuz = [
+    ...adaylar,
+    ...komsu,
+  ].where((x) => x.$2 != 0 && (!pozitif || arti(x)));
+  final yazim = _q(n, d);
+  return AdvancedItem(
+    kok,
+    yazim,
+    siraliCeldiriciler(n / d, yazim, [
+      for (final x in havuz) (x.$1 / x.$2, _q(x.$1, x.$2)),
+    ], sira),
+    aciklama,
+  );
+}
+
+/// Anahtarla (n/d) birlikte dengeli bir takım kuran aday üçlülerden (ör. iki
+/// hata boyutunun bileşimi: A, B, A + B) anahtardan küçük öge sayısı [sira]
+/// olan, değerleri birbirinden ve anahtardan farklı ilkini verir; uygun üçlü
+/// yoksa boş liste. Sonuç [_kesS] ya da [_tamS] adaylarının başına konur.
+List<(int, int)> _uclu(
+  int n,
+  int d,
+  Iterable<List<(int, int)>> ucluler,
+  int sira, {
+  bool pozitif = false,
+}) {
+  final k = n / d;
+  for (final u in ucluler) {
+    if (u.any((x) => x.$2 == 0 || (pozitif && x.$1 * x.$2 <= 0))) continue;
+    final v = [k, for (final x in u) x.$1 / x.$2];
+    var farkli = true;
+    for (var i = 0; i < 4; i++) {
+      for (var j = i + 1; j < 4; j++) {
+        if ((v[i] - v[j]).abs() < 1e-9) farkli = false;
+      }
+    }
+    if (farkli && v.skip(1).where((x) => x < k).length == sira) return u;
+  }
+  return const [];
+}
+
+/// [adaylar] içinden üçlü seçkiler; öncelik sırası korunur (sözlük sırası).
+/// [kosul] verilirse yalnız onu sağlayan üçlüler gelir.
+Iterable<List<T>> _seckiler<T>(
+  List<T> adaylar, [
+  bool Function(List<T>)? kosul,
+]) sync* {
+  for (var i = 0; i < adaylar.length; i++) {
+    for (var j = i + 1; j < adaylar.length; j++) {
+      for (var k = j + 1; k < adaylar.length; k++) {
+        final u = [adaylar[i], adaylar[j], adaylar[k]];
+        if (kosul == null || kosul(u)) yield u;
+      }
+    }
+  }
+}
+
+/// Tam sayı yanıtlar için [_uclu].
+List<int> _ucluTam(
+  int yanit,
+  Iterable<List<int>> ucluler,
+  int sira, {
+  bool pozitif = false,
+}) => [
+  for (final x in _uclu(
+    yanit,
+    1,
+    [
+      for (final u in ucluler) [for (final x in u) (x, 1)],
+    ],
+    sira,
+    pozitif: pozitif,
+  ))
+    x.$1,
+];
+
+/// Üçlüde anahtarla aynı işaretli (negatif ya da negatif olmayan) çeldirici
+/// sayısı 1 ya da 3 mü? Böylece ne anahtar ne de bir çeldirici işaretiyle
+/// tek kalır.
+bool _isaretDengeli(int yanit, List<int> u) {
+  final ayni = u.where((x) => (x < 0) == (yanit < 0)).length;
+  return ayni == 1 || ayni == 3;
+}
+
+/// Üçlü, anahtarla (n/d) birlikte işaretçe (negatif / negatif olmayan) ve
+/// biçimce (tam sayı / kesir) dengeli mi? Her özellikte anahtarla aynı olan
+/// çeldirici sayısı 1 ya da 3 olmalı: ne anahtar ne de bir çeldirici tek
+/// kalır.
+bool _dengeli(int n, int d, List<(int, int)> u) {
+  bool neg((int, int) x) => x.$1 != 0 && (x.$1 < 0) != (x.$2 < 0);
+  bool tam((int, int) x) => x.$1 % x.$2 == 0;
+  final isaret = u.where((x) => neg(x) == neg((n, d))).length;
+  final bicim = u.where((x) => tam(x) == tam((n, d))).length;
+  return (isaret == 1 || isaret == 3) && (bicim == 1 || bicim == 3);
+}
+
+/// Üçlüde değeri tam sayı olan bir kesir var mı?
+bool _tamVar(List<(int, int)> u) => u.any((x) => x.$2 != 0 && x.$1 % x.$2 == 0);
 
 AdvancedFamily _aile(
   String key,
@@ -185,107 +339,311 @@ AdvancedFamily _aile(
 
 /// (a, c, t): a·c = t² olan katsayı çiftleri; çakışık kök soruları için.
 const _tamKareCiftleri = [
-  (1, 1, 1), (1, 4, 2), (1, 9, 3), (1, 16, 4), (1, 25, 5),
-  (2, 2, 2), (2, 8, 4), (2, 18, 6), (3, 3, 3), (3, 12, 6),
-  (4, 1, 2), (4, 4, 4), (4, 9, 6), (9, 1, 3), (9, 4, 6),
-  (8, 2, 4), (5, 5, 5), (1, 36, 6), (1, 49, 7), (3, 27, 9),
+  (1, 1, 1),
+  (1, 4, 2),
+  (1, 9, 3),
+  (1, 16, 4),
+  (1, 25, 5),
+  (2, 2, 2),
+  (2, 8, 4),
+  (2, 18, 6),
+  (3, 3, 3),
+  (3, 12, 6),
+  (4, 1, 2),
+  (4, 4, 4),
+  (4, 9, 6),
+  (9, 1, 3),
+  (9, 4, 6),
+  (8, 2, 4),
+  (5, 5, 5),
+  (1, 36, 6),
+  (1, 49, 7),
+  (3, 27, 9),
 ];
 
 /// (taban, üs): log_t(t^m) = m.
 const _logTanim = [
-  (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9), (2, 10),
-  (3, 2), (3, 3), (3, 4), (3, 5), (3, 6),
-  (4, 2), (4, 3), (4, 4), (4, 5),
-  (5, 2), (5, 3), (5, 4),
-  (6, 2), (6, 3),
-  (7, 2), (7, 3),
+  (2, 2),
+  (2, 3),
+  (2, 4),
+  (2, 5),
+  (2, 6),
+  (2, 7),
+  (2, 8),
+  (2, 9),
+  (2, 10),
+  (3, 2),
+  (3, 3),
+  (3, 4),
+  (3, 5),
+  (3, 6),
+  (4, 2),
+  (4, 3),
+  (4, 4),
+  (4, 5),
+  (5, 2),
+  (5, 3),
+  (5, 4),
+  (6, 2),
+  (6, 3),
+  (7, 2),
+  (7, 3),
 ];
 
 /// (taban, k, y): log_t(t^k·y) − log_t(y) = k.
 const _logBolum = [
-  (2, 3, 3), (2, 2, 5), (2, 4, 3), (2, 3, 5), (2, 5, 3), (2, 2, 7), (2, 4, 5),
-  (2, 3, 7), (3, 2, 2), (3, 3, 2), (3, 2, 5), (3, 3, 4), (3, 2, 4), (3, 4, 2),
-  (3, 2, 7), (5, 2, 2), (5, 2, 3), (5, 3, 2), (5, 2, 4), (5, 3, 4), (6, 2, 2),
-  (6, 2, 5), (7, 2, 2), (7, 2, 3), (4, 2, 3),
+  (2, 3, 3),
+  (2, 2, 5),
+  (2, 4, 3),
+  (2, 3, 5),
+  (2, 5, 3),
+  (2, 2, 7),
+  (2, 4, 5),
+  (2, 3, 7),
+  (3, 2, 2),
+  (3, 3, 2),
+  (3, 2, 5),
+  (3, 3, 4),
+  (3, 2, 4),
+  (3, 4, 2),
+  (3, 2, 7),
+  (5, 2, 2),
+  (5, 2, 3),
+  (5, 3, 2),
+  (5, 2, 4),
+  (5, 3, 4),
+  (6, 2, 2),
+  (6, 2, 5),
+  (7, 2, 2),
+  (7, 2, 3),
+  (4, 2, 3),
 ];
 
 /// (u, w, k): log_{uw}(u^k) + log_{uw}(w^k) = k.
 const _logCarpim = [
-  (2, 3, 2), (2, 3, 3), (2, 7, 2), (3, 4, 2), (3, 5, 2),
-  (2, 9, 2), (4, 5, 2), (3, 7, 2), (3, 4, 3), (3, 5, 3),
-  (2, 3, 4), (2, 7, 3), (2, 11, 2), (3, 8, 2), (4, 5, 3),
-  (5, 6, 2), (2, 13, 2), (4, 7, 2), (2, 9, 3), (3, 10, 2),
-  (2, 15, 2), (3, 11, 2), (5, 7, 2), (3, 13, 2), (2, 17, 2),
+  (2, 3, 2),
+  (2, 3, 3),
+  (2, 7, 2),
+  (3, 4, 2),
+  (3, 5, 2),
+  (2, 9, 2),
+  (4, 5, 2),
+  (3, 7, 2),
+  (3, 4, 3),
+  (3, 5, 3),
+  (2, 3, 4),
+  (2, 7, 3),
+  (2, 11, 2),
+  (3, 8, 2),
+  (4, 5, 3),
+  (5, 6, 2),
+  (2, 13, 2),
+  (4, 7, 2),
+  (2, 9, 3),
+  (3, 10, 2),
+  (2, 15, 2),
+  (3, 11, 2),
+  (5, 7, 2),
+  (3, 13, 2),
+  (2, 17, 2),
 ];
 
 /// (r, p, q): log_{r^p}(r^q) = q/p, tam sayı olmayan değerler.
 const _logKesir = [
-  (2, 2, 3), (2, 2, 5), (2, 2, 1), (2, 3, 2), (2, 3, 4),
-  (2, 3, 5), (2, 3, 1), (3, 2, 3), (3, 2, 1), (3, 2, 5),
-  (3, 3, 2), (3, 3, 1), (3, 3, 4), (2, 4, 3), (2, 4, 1),
-  (2, 4, 5), (2, 4, 2), (2, 5, 2), (2, 5, 3), (2, 5, 4),
-  (5, 2, 3), (5, 2, 1), (5, 3, 2), (3, 4, 3), (2, 6, 4),
+  (2, 2, 3),
+  (2, 2, 5),
+  (2, 2, 1),
+  (2, 3, 2),
+  (2, 3, 4),
+  (2, 3, 5),
+  (2, 3, 1),
+  (3, 2, 3),
+  (3, 2, 1),
+  (3, 2, 5),
+  (3, 3, 2),
+  (3, 3, 1),
+  (3, 3, 4),
+  (2, 4, 3),
+  (2, 4, 1),
+  (2, 4, 5),
+  (2, 4, 2),
+  (2, 5, 2),
+  (2, 5, 3),
+  (2, 5, 4),
+  (5, 2, 3),
+  (5, 2, 1),
+  (5, 3, 2),
+  (3, 4, 3),
+  (2, 6, 4),
 ];
 
 /// (taban, ara taban, k): log_t(s)·log_s(t^k) = k.
 const _logZincir = [
-  (2, 3, 3), (2, 3, 4), (2, 5, 2), (2, 5, 3), (3, 2, 2),
-  (3, 2, 3), (3, 5, 2), (3, 5, 4), (5, 2, 2), (5, 3, 3),
-  (2, 7, 5), (2, 7, 2), (3, 7, 3), (7, 2, 2), (5, 7, 2),
-  (2, 3, 5), (2, 5, 6), (3, 4, 2), (5, 4, 3), (7, 3, 2),
-  (2, 6, 4), (3, 11, 2), (6, 5, 2), (2, 11, 3), (3, 2, 4),
+  (2, 3, 3),
+  (2, 3, 4),
+  (2, 5, 2),
+  (2, 5, 3),
+  (3, 2, 2),
+  (3, 2, 3),
+  (3, 5, 2),
+  (3, 5, 4),
+  (5, 2, 2),
+  (5, 3, 3),
+  (2, 7, 5),
+  (2, 7, 2),
+  (3, 7, 3),
+  (7, 2, 2),
+  (5, 7, 2),
+  (2, 3, 5),
+  (2, 5, 6),
+  (3, 4, 2),
+  (5, 4, 3),
+  (7, 3, 2),
+  (2, 6, 4),
+  (3, 11, 2),
+  (6, 5, 2),
+  (2, 11, 3),
+  (3, 2, 4),
 ];
 
 /// (taban, n): log_t(1/t^n) = −n.
 const _logTers = [
-  (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6),
-  (3, 1), (3, 2), (3, 3), (3, 4),
-  (4, 1), (4, 2), (4, 3),
-  (5, 1), (5, 2), (5, 3),
-  (6, 1), (6, 2),
-  (7, 1), (7, 2),
+  (2, 1),
+  (2, 2),
+  (2, 3),
+  (2, 4),
+  (2, 5),
+  (2, 6),
+  (3, 1),
+  (3, 2),
+  (3, 3),
+  (3, 4),
+  (4, 1),
+  (4, 2),
+  (4, 3),
+  (5, 1),
+  (5, 2),
+  (5, 3),
+  (6, 1),
+  (6, 2),
+  (7, 1),
+  (7, 2),
 ];
 
 /// (taban, üs): üstel denklemin sağ tarafı t^m ya da 1/t^m.
 const _ustelTaban = [
-  (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8),
-  (3, 2), (3, 3), (3, 4), (3, 5),
-  (4, 2), (4, 3), (4, 4),
-  (5, 2), (5, 3), (5, 4),
-  (6, 2), (6, 3),
-  (7, 2), (7, 3),
-  (8, 2), (8, 3),
-  (9, 2), (9, 3),
+  (2, 2),
+  (2, 3),
+  (2, 4),
+  (2, 5),
+  (2, 6),
+  (2, 7),
+  (2, 8),
+  (3, 2),
+  (3, 3),
+  (3, 4),
+  (3, 5),
+  (4, 2),
+  (4, 3),
+  (4, 4),
+  (5, 2),
+  (5, 3),
+  (5, 4),
+  (6, 2),
+  (6, 3),
+  (7, 2),
+  (7, 3),
+  (8, 2),
+  (8, 3),
+  (9, 2),
+  (9, 3),
 ];
 
 /// (r, i, j): r^i ve r^j tabanlı üstel denklemler, i ≠ j.
 const _ustelCift = [
-  (2, 1, 2), (2, 1, 3), (2, 1, 4), (2, 2, 3), (2, 2, 5),
-  (2, 3, 4), (2, 3, 5), (2, 4, 5), (2, 2, 4), (2, 1, 5),
-  (3, 1, 2), (3, 1, 3), (3, 1, 4), (3, 2, 3), (3, 2, 4),
-  (3, 3, 4), (3, 2, 5), (5, 1, 2), (5, 1, 3), (5, 2, 3),
-  (5, 2, 4), (7, 1, 2), (7, 1, 3), (7, 2, 3), (6, 1, 2),
+  (2, 1, 2),
+  (2, 1, 3),
+  (2, 1, 4),
+  (2, 2, 3),
+  (2, 2, 5),
+  (2, 3, 4),
+  (2, 3, 5),
+  (2, 4, 5),
+  (2, 2, 4),
+  (2, 1, 5),
+  (3, 1, 2),
+  (3, 1, 3),
+  (3, 1, 4),
+  (3, 2, 3),
+  (3, 2, 4),
+  (3, 3, 4),
+  (3, 2, 5),
+  (5, 1, 2),
+  (5, 1, 3),
+  (5, 2, 3),
+  (5, 2, 4),
+  (7, 1, 2),
+  (7, 1, 3),
+  (7, 2, 3),
+  (6, 1, 2),
 ];
 
 /// (taban, m): log_t(…) = m denklemleri. (2, 2) yoktur: 2² = 2·2 olduğundan
 /// üs almak yerine çarpan da aynı sonucu bulurdu.
 const _logDenklemTaban = [
-  (10, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7),
-  (3, 2), (3, 3), (3, 4),
-  (4, 2), (4, 3),
-  (5, 2), (5, 3),
-  (6, 2), (7, 2), (8, 2), (9, 2), (11, 2),
-  (2, 1), (3, 1), (5, 1), (7, 1), (6, 1), (4, 1), (11, 1),
+  (10, 2),
+  (2, 3),
+  (2, 4),
+  (2, 5),
+  (2, 6),
+  (2, 7),
+  (3, 2),
+  (3, 3),
+  (3, 4),
+  (4, 2),
+  (4, 3),
+  (5, 2),
+  (5, 3),
+  (6, 2),
+  (7, 2),
+  (8, 2),
+  (9, 2),
+  (11, 2),
+  (2, 1),
+  (3, 1),
+  (5, 1),
+  (7, 1),
+  (6, 1),
+  (4, 1),
+  (11, 1),
 ];
 
 /// (taban, i, p): p·t^(x + i) + q·t^x biçimli toplamlar.
 const _ustelToplam = [
-  (2, 1, 1), (2, 1, 2), (2, 1, 3), (2, 1, 4), (2, 1, 5),
-  (2, 2, 1), (2, 2, 2), (2, 2, 3), (2, 2, 4), (2, 2, 5),
-  (2, 3, 1), (2, 3, 2), (2, 3, 3), (2, 3, 4),
-  (2, 4, 1), (2, 4, 2),
-  (3, 1, 1), (3, 1, 2), (3, 1, 3), (3, 1, 4), (3, 1, 5),
-  (3, 2, 1), (3, 2, 2), (3, 2, 3),
+  (2, 1, 1),
+  (2, 1, 2),
+  (2, 1, 3),
+  (2, 1, 4),
+  (2, 1, 5),
+  (2, 2, 1),
+  (2, 2, 2),
+  (2, 2, 3),
+  (2, 2, 4),
+  (2, 2, 5),
+  (2, 3, 1),
+  (2, 3, 2),
+  (2, 3, 3),
+  (2, 3, 4),
+  (2, 4, 1),
+  (2, 4, 2),
+  (3, 1, 1),
+  (3, 1, 2),
+  (3, 1, 3),
+  (3, 1, 4),
+  (3, 1, 5),
+  (3, 2, 1),
+  (3, 2, 2),
+  (3, 2, 3),
   (4, 1, 1),
 ];
 
@@ -293,25 +651,59 @@ const _ustelToplam = [
 /// (2, 3) yoktur: 2² = 2·2 olduğundan r^(n − 1) yerine r·(n − 1) alan da aynı
 /// terimi bulurdu.
 const _geoOranSira = [
-  (2, 10), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9),
-  (3, 3), (3, 4), (3, 5), (3, 6),
-  (4, 3), (4, 4), (4, 5),
-  (5, 3), (5, 4),
-  (6, 3), (6, 4),
-  (7, 3), (8, 3), (9, 3), (11, 3), (12, 3),
-  (10, 3), (10, 4),
+  (2, 10),
+  (2, 4),
+  (2, 5),
+  (2, 6),
+  (2, 7),
+  (2, 8),
+  (2, 9),
+  (3, 3),
+  (3, 4),
+  (3, 5),
+  (3, 6),
+  (4, 3),
+  (4, 4),
+  (4, 5),
+  (5, 3),
+  (5, 4),
+  (6, 3),
+  (6, 4),
+  (7, 3),
+  (8, 3),
+  (9, 3),
+  (11, 3),
+  (12, 3),
+  (10, 3),
+  (10, 4),
 ];
 
 /// (ortak çarpan, sıra farkı): iki terimden ortak çarpan bulma.
 const _geoOran1 = [
-  (2, 2), (2, 3), (2, 4), (2, 5), (3, 2),
-  (3, 3), (3, 4), (4, 2), (4, 3), (5, 2),
+  (2, 2),
+  (2, 3),
+  (2, 4),
+  (2, 5),
+  (3, 2),
+  (3, 3),
+  (3, 4),
+  (4, 2),
+  (4, 3),
+  (5, 2),
 ];
 
 /// (ortak çarpan, sıra farkı): iki terimden üçüncü terimi bulma.
 const _geoOran3 = [
-  (2, 2), (2, 3), (2, 4), (3, 2), (3, 3),
-  (4, 2), (5, 2), (2, 5), (4, 3), (6, 2),
+  (2, 2),
+  (2, 3),
+  (2, 4),
+  (3, 2),
+  (3, 3),
+  (4, 2),
+  (5, 2),
+  (2, 5),
+  (4, 3),
+  (6, 2),
 ];
 
 /// Bölüm yazımı; sadeleşiyorsa sade biçimi de verir: `_oranYaz(8, 2)` →
@@ -352,18 +744,40 @@ String _polArtan(List<int> k, [String v = 'x']) {
 
 /// sin değerleri: açı → (pay, payda, kök içi); değer = pay·√kök/payda.
 const _sinTablo = {
-  0: (0, 1, 1), 30: (1, 2, 1), 45: (1, 2, 2), 60: (1, 2, 3),
-  90: (1, 1, 1), 120: (1, 2, 3), 135: (1, 2, 2), 150: (1, 2, 1),
-  180: (0, 1, 1), 210: (-1, 2, 1), 225: (-1, 2, 2), 240: (-1, 2, 3),
-  270: (-1, 1, 1), 300: (-1, 2, 3), 315: (-1, 2, 2), 330: (-1, 2, 1),
+  0: (0, 1, 1),
+  30: (1, 2, 1),
+  45: (1, 2, 2),
+  60: (1, 2, 3),
+  90: (1, 1, 1),
+  120: (1, 2, 3),
+  135: (1, 2, 2),
+  150: (1, 2, 1),
+  180: (0, 1, 1),
+  210: (-1, 2, 1),
+  225: (-1, 2, 2),
+  240: (-1, 2, 3),
+  270: (-1, 1, 1),
+  300: (-1, 2, 3),
+  315: (-1, 2, 2),
+  330: (-1, 2, 1),
 };
 
 /// tan değerleri (tanımsız açılar tabloda yoktur).
 const _tanTablo = {
-  0: (0, 1, 1), 30: (1, 3, 3), 45: (1, 1, 1), 60: (1, 1, 3),
-  120: (-1, 1, 3), 135: (-1, 1, 1), 150: (-1, 3, 3), 180: (0, 1, 1),
-  210: (1, 3, 3), 225: (1, 1, 1), 240: (1, 1, 3),
-  300: (-1, 1, 3), 315: (-1, 1, 1), 330: (-1, 3, 3),
+  0: (0, 1, 1),
+  30: (1, 3, 3),
+  45: (1, 1, 1),
+  60: (1, 1, 3),
+  120: (-1, 1, 3),
+  135: (-1, 1, 1),
+  150: (-1, 3, 3),
+  180: (0, 1, 1),
+  210: (1, 3, 3),
+  225: (1, 1, 1),
+  240: (1, 1, 3),
+  300: (-1, 1, 3),
+  315: (-1, 1, 1),
+  330: (-1, 3, 3),
 };
 
 /// Özel açının trigonometrik değeri: (pay, payda, kök içi).
@@ -409,36 +823,108 @@ String _indirge((String, int) t) {
 
 /// Değeri ±1/2 ya da ±1 olan terimler.
 const _trigA = [
-  ('sin', 30), ('sin', 150), ('sin', 210), ('sin', 330), ('sin', 270),
-  ('cos', 60), ('cos', 120), ('cos', 240), ('cos', 300), ('cos', 180),
-  ('tan', 45), ('tan', 135), ('tan', 225), ('tan', 315), ('cot', 135),
-  ('cot', 225), ('cot', 315), ('sin', 390), ('sin', 510), ('cos', 420),
-  ('cos', 480), ('tan', 405), ('sin', 570), ('cos', 600), ('tan', 495),
+  ('sin', 30),
+  ('sin', 150),
+  ('sin', 210),
+  ('sin', 330),
+  ('sin', 270),
+  ('cos', 60),
+  ('cos', 120),
+  ('cos', 240),
+  ('cos', 300),
+  ('cos', 180),
+  ('tan', 45),
+  ('tan', 135),
+  ('tan', 225),
+  ('tan', 315),
+  ('cot', 135),
+  ('cot', 225),
+  ('cot', 315),
+  ('sin', 390),
+  ('sin', 510),
+  ('cos', 420),
+  ('cos', 480),
+  ('tan', 405),
+  ('sin', 570),
+  ('cos', 600),
+  ('tan', 495),
 ];
 
 /// Negatif ya da 360° üstü açılı, değeri ±1/2 ya da ±1 olan terimler.
 const _trigB = [
-  ('sin', -30), ('sin', -150), ('sin', -210), ('sin', -330), ('cos', -60),
-  ('cos', -120), ('cos', -240), ('cos', -300), ('tan', -45), ('tan', -135),
-  ('tan', -225), ('tan', -315), ('cot', -45), ('cot', -135), ('sin', 750),
-  ('cos', 780), ('sin', 690), ('cos', 660), ('tan', 585), ('tan', 675),
+  ('sin', -30),
+  ('sin', -150),
+  ('sin', -210),
+  ('sin', -330),
+  ('cos', -60),
+  ('cos', -120),
+  ('cos', -240),
+  ('cos', -300),
+  ('tan', -45),
+  ('tan', -135),
+  ('tan', -225),
+  ('tan', -315),
+  ('cot', -45),
+  ('cot', -135),
+  ('sin', 750),
+  ('cos', 780),
+  ('sin', 690),
+  ('cos', 660),
+  ('tan', 585),
+  ('tan', 675),
 ];
 
 /// Değeri √3 içeren terimler.
 const _trigR = [
-  ('sin', 60), ('sin', 120), ('sin', 240), ('sin', 300), ('cos', 30),
-  ('cos', 150), ('cos', 210), ('cos', 330), ('tan', 30), ('tan', 60),
-  ('tan', 120), ('tan', 150), ('tan', 210), ('tan', 240), ('tan', 300),
-  ('tan', 330), ('cot', 30), ('cot', 60), ('cot', 120), ('cot', 150),
-  ('cot', 210), ('cot', 240), ('cot', 300), ('cot', 330), ('sin', 420),
+  ('sin', 60),
+  ('sin', 120),
+  ('sin', 240),
+  ('sin', 300),
+  ('cos', 30),
+  ('cos', 150),
+  ('cos', 210),
+  ('cos', 330),
+  ('tan', 30),
+  ('tan', 60),
+  ('tan', 120),
+  ('tan', 150),
+  ('tan', 210),
+  ('tan', 240),
+  ('tan', 300),
+  ('tan', 330),
+  ('cot', 30),
+  ('cot', 60),
+  ('cot', 120),
+  ('cot', 150),
+  ('cot', 210),
+  ('cot', 240),
+  ('cot', 300),
+  ('cot', 330),
+  ('sin', 420),
 ];
 
 /// Negatif ya da 360° üstü açılı, değeri √3 içeren terimler.
 const _trigS = [
-  ('sin', -60), ('sin', -120), ('cos', -30), ('cos', -150), ('tan', -30),
-  ('tan', -60), ('tan', -120), ('tan', -150), ('cot', -30), ('cot', -60),
-  ('sin', 480), ('cos', 390), ('cos', 510), ('tan', 390), ('tan', 420),
-  ('tan', 480), ('tan', 510), ('cot', 390), ('cot', 420), ('sin', 600),
+  ('sin', -60),
+  ('sin', -120),
+  ('cos', -30),
+  ('cos', -150),
+  ('tan', -30),
+  ('tan', -60),
+  ('tan', -120),
+  ('tan', -150),
+  ('cot', -30),
+  ('cot', -60),
+  ('sin', 480),
+  ('cos', 390),
+  ('cos', 510),
+  ('tan', 390),
+  ('tan', 420),
+  ('tan', 480),
+  ('tan', 510),
+  ('cot', 390),
+  ('cot', 420),
+  ('sin', 600),
 ];
 
 // Radyan -------------------------------------------------------------------
@@ -451,24 +937,80 @@ String _pili(int p, int q) {
 
 /// (p, q): pπ/q radyanlık üçgen açıları; derece karşılıkları tam sayıdır.
 const _ucgenRadyan = [
-  (1, 3), (1, 4), (1, 5), (1, 6), (1, 9), (1, 10), (1, 12), (2, 5), (2, 9),
-  (3, 10), (5, 12), (5, 18), (7, 18), (4, 9), (1, 2), (5, 9), (7, 12),
-  (1, 15), (1, 18), (7, 36),
+  (1, 3),
+  (1, 4),
+  (1, 5),
+  (1, 6),
+  (1, 9),
+  (1, 10),
+  (1, 12),
+  (2, 5),
+  (2, 9),
+  (3, 10),
+  (5, 12),
+  (5, 18),
+  (7, 18),
+  (4, 9),
+  (1, 2),
+  (5, 9),
+  (7, 12),
+  (1, 15),
+  (1, 18),
+  (7, 36),
 ];
 
 /// (p, q): pπ/q radyanlık merkez açılar. π/3 yoktur: π = 3 alındığında yay
 /// uzunluğu yarıçapa eşit çıkar ve yanıt kökte verilen sayı olur.
 const _yayAcilari = [
-  (1, 6), (1, 4), (17, 12), (1, 2), (2, 3), (3, 4), (5, 6), (1, 1), (7, 6),
-  (5, 4), (4, 3), (3, 2), (5, 3), (7, 4), (11, 6), (1, 12), (5, 12),
-  (7, 12), (11, 12), (13, 12),
+  (1, 6),
+  (1, 4),
+  (17, 12),
+  (1, 2),
+  (2, 3),
+  (3, 4),
+  (5, 6),
+  (1, 1),
+  (7, 6),
+  (5, 4),
+  (4, 3),
+  (3, 2),
+  (5, 3),
+  (7, 4),
+  (11, 6),
+  (1, 12),
+  (5, 12),
+  (7, 12),
+  (11, 12),
+  (13, 12),
 ];
 
 /// (q, m): esas ölçüsü mπ/q olan açılar; m ile q aralarında asaldır.
 const _radyanEsas = [
-  (3, 1), (3, 2), (3, 4), (3, 5), (4, 1), (4, 3), (4, 5), (4, 7), (6, 1),
-  (6, 5), (6, 7), (6, 11), (5, 1), (5, 3), (5, 4), (5, 7), (5, 9), (2, 1),
-  (2, 3), (9, 2), (9, 5), (9, 8), (9, 13), (12, 5), (12, 7),
+  (3, 1),
+  (3, 2),
+  (3, 4),
+  (3, 5),
+  (4, 1),
+  (4, 3),
+  (4, 5),
+  (4, 7),
+  (6, 1),
+  (6, 5),
+  (6, 7),
+  (6, 11),
+  (5, 1),
+  (5, 3),
+  (5, 4),
+  (5, 7),
+  (5, 9),
+  (2, 1),
+  (2, 3),
+  (9, 2),
+  (9, 5),
+  (9, 8),
+  (9, 13),
+  (12, 5),
+  (12, 7),
 ];
 
 // ---------------------------------------------------------------------------
@@ -483,8 +1025,15 @@ final lmMatIleri = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.uygulama,
     (a, b, c) {
-      final f = [const [2, 3, -2, 4, -3][a % 5], const [-3, -1, 1, 2, 4][a ~/ 5]];
-      final g = [1, const [-2, -1, 1, 2, 3][b % 5], const [-1, 1, 2, 3][b ~/ 5]];
+      final f = [
+        const [2, 3, -2, 4, -3][a % 5],
+        const [-3, -1, 1, 2, 4][a ~/ 5],
+      ];
+      final g = [
+        1,
+        const [-2, -1, 1, 2, 3][b % 5],
+        const [-1, 1, 2, 3][b ~/ 5],
+      ];
       final fog = c.isEven;
       // Bileşke sırasını karıştıran, değerleri çarpan ya da toplayan, iç
       // değerde duran yolların da doğru yanıtı verdiği noktalar atlanır.
@@ -540,12 +1089,12 @@ final lmMatIleri = <AdvancedFamily>[
         final k = p * t + q;
         return _kes(
           'Gerçek sayılarda tanımlı f(x) = ${_pol([p, q])} fonksiyonunun tersi '
-          'f⁻¹ olduğuna göre f⁻¹(${_n(k)}) değeri kaçtır?',
+              'f⁻¹ olduğuna göre f⁻¹(${_n(k)}) değeri kaçtır?',
           t,
           1,
           [(k + q, p), (k - q, 1), (p * k + q, 1)],
           'f⁻¹(${_n(k)}) = t ise f(t) = ${_n(k)} olur. ${_pol([p, q], 't')} = '
-          '${_n(k)} eşitliğinden ${p}t = ${_n(k - q)} ve t = ${_n(t)} bulunur.',
+              '${_n(k)} eşitliğinden ${p}t = ${_n(k - q)} ve t = ${_n(t)} bulunur.',
         );
       }
       // p = d olsaydı f kendi tersine eşit olur, f⁻¹(k) yerine f(k) hesaplayan
@@ -559,18 +1108,14 @@ final lmMatIleri = <AdvancedFamily>[
       String pay(String h) => q == 0 ? _pol([p, 0], h) : '(${_pol([p, q], h)})';
       return _kes(
         'x ≠ ${_n(d)} için tanımlı f(x) = ${pay('x')}/(${_pol([1, -d])}) '
-        'fonksiyonunun tersi f⁻¹ olduğuna göre f⁻¹(${_n(k)}) değeri kaçtır?',
+            'fonksiyonunun tersi f⁻¹ olduğuna göre f⁻¹(${_n(k)}) değeri kaçtır?',
         t,
         1,
-        [
-          if (k != d) (p * k + q, k - d),
-          (k * d - q, k - p),
-          (-t, 1),
-        ],
+        [if (k != d) (p * k + q, k - d), (k * d - q, k - p), (-t, 1)],
         'f⁻¹(${_n(k)}) = t ise f(t) = ${_n(k)} olur. '
-        '${pay('t')}/(${_pol([1, -d], 't')}) = ${_n(k)} eşitliğinden '
-        '${_pol([p, q], 't')} = ${_pol([k, -k * d], 't')} ve t = ${_n(t)} '
-        'bulunur.',
+            '${pay('t')}/(${_pol([1, -d], 't')}) = ${_n(k)} eşitliğinden '
+            '${_pol([p, q], 't')} = ${_pol([k, -k * d], 't')} ve t = ${_n(t)} '
+            'bulunur.',
       );
     },
   ),
@@ -612,7 +1157,7 @@ final lmMatIleri = <AdvancedFamily>[
             2 * d,
             [d, d + 2, 2 * t],
             '$temel x yerine x² yazılınca derece iki katına çıkar: 2·$d = '
-            '${2 * d}.',
+                '${2 * d}.',
             pozitif: true,
           ),
           _ => _tam(
@@ -640,12 +1185,12 @@ final lmMatIleri = <AdvancedFamily>[
         final sag = [1, u, w];
         return _tam(
           'P(${_pol([1, -m])}) = ${_pol(sag)} olduğuna göre P(x) polinomunun '
-          'katsayılar toplamı kaçtır?',
+              'katsayılar toplamı kaçtır?',
           _deg(sag, x0),
           [_deg(sag, 1), _deg(sag, m), _deg(sag, 1 - m)],
           'Katsayılar toplamı P(1) değeridir. ${_pol([1, -m])} = 1 için '
-          'x = ${_n(x0)} alınır: P(1) = ${_yerine(sag, x0)} = '
-          '${_n(_deg(sag, x0))}.',
+              'x = ${_n(x0)} alınır: P(1) = ${_yerine(sag, x0)} = '
+              '${_n(_deg(sag, x0))}.',
         );
       }
       final (kat, kay) = const [(2, -4), (3, 3), (2, 6)][v];
@@ -659,12 +1204,12 @@ final lmMatIleri = <AdvancedFamily>[
       final sag = [1, u, w];
       return _tam(
         'P(${_pol([kat, kay])}) = ${_pol(sag)} olduğuna göre P(x) polinomunun '
-        'sabit terimi kaçtır?',
+            'sabit terimi kaçtır?',
         _deg(sag, x0),
         [w, _deg(sag, -x0), _deg(sag, 1)],
         'Sabit terim P(0) değeridir. ${_pol([kat, kay])} = 0 için '
-        'x = ${_n(x0)} alınır: P(0) = ${_yerine(sag, x0)} = '
-        '${_n(_deg(sag, x0))}.',
+            'x = ${_n(x0)} alınır: P(0) = ${_yerine(sag, x0)} = '
+            '${_n(_deg(sag, x0))}.',
       );
     },
   ),
@@ -682,7 +1227,9 @@ final lmMatIleri = <AdvancedFamily>[
         final c2 = const [-3, -2, 1, 2, 4][a % 5];
         // x = −k yazan (işaret hatası) ya da sabit terimi kalan sanan yolların
         // da doğru kalanı verdiği katsayılar atlanır.
-        final c1 = _uygun(const [-4, -1, 2, 3, 5, -5, 6, -2, 7, -6], a ~/ 5, (x) {
+        final c1 = _uygun(const [-4, -1, 2, 3, 5, -5, 6, -2, 7, -6], a ~/ 5, (
+          x,
+        ) {
           final y = _deg([1, c2, x, 0], k);
           return y != 0 && y != _deg([1, c2, x, 0], -k);
         });
@@ -690,11 +1237,11 @@ final lmMatIleri = <AdvancedFamily>[
         final kalan = _deg(pol, k);
         return _tam(
           'P(x) = ${_pol(pol)} polinomunun ${_pol([1, -k])} ile bölümünden '
-          'kalan kaçtır?',
+              'kalan kaçtır?',
           kalan,
           [_deg(pol, -k), w, kalan - w],
           'Kalan teoremine göre kalan P(${_n(k)}) değeridir: '
-          'P(${_n(k)}) = ${_yerine(pol, k)} = ${_n(kalan)}.',
+              'P(${_n(k)}) = ${_yerine(pol, k)} = ${_n(kalan)}.',
         );
       }
       final (m, k) = const [(2, 1), (3, -1), (-1, 3), (-2, -2), (1, 2)][c ~/ 2];
@@ -713,12 +1260,12 @@ final lmMatIleri = <AdvancedFamily>[
       final kalan = _deg(pol, x0);
       return _tam(
         'P(x) = ${_pol(pol)} polinomu veriliyor. P(${_pol([1, m])}) '
-        'polinomunun ${_pol([1, -k])} ile bölümünden kalan kaçtır?',
+            'polinomunun ${_pol([1, -k])} ile bölümünden kalan kaçtır?',
         kalan,
         [_deg(pol, k), _deg(pol, k - m), _deg(pol, m)],
         'Q(x) = P(${_pol([1, m])}) polinomunun ${_pol([1, -k])} ile '
-        'bölümünden kalan Q(${_n(k)}) = P(${_n(x0)}) değeridir: '
-        'P(${_n(x0)}) = ${_yerine(pol, x0)} = ${_n(kalan)}.',
+            'bölümünden kalan Q(${_n(k)}) = P(${_n(x0)}) değeridir: '
+            'P(${_n(x0)}) = ${_yerine(pol, x0)} = ${_n(kalan)}.',
       );
     },
   ),
@@ -830,8 +1377,8 @@ final lmMatIleri = <AdvancedFamily>[
           delta,
           [b2 + 4 * bas * kc, b2 - bas * kc, kb - 4 * bas * kc, b2 - 4 * kc],
           'Δ = b² − 4ac formülünde a = ${_n(bas)}, b = ${_n(kb)}, '
-          'c = ${_n(kc)} alınır: Δ = ${_p(kb)}² − 4·${_p(bas)}·${_p(kc)} = '
-          '${_n(delta)}.',
+              'c = ${_n(kc)} alınır: Δ = ${_p(kb)}² − 4·${_p(bas)}·${_p(kc)} = '
+              '${_n(delta)}.',
         );
       }
       if (c % 3 == 1) {
@@ -848,25 +1395,25 @@ final lmMatIleri = <AdvancedFamily>[
         return switch (v) {
           0 => _tam(
             '$denklem denkleminin çakışık iki kökü olduğuna göre m sayısının '
-            'alabileceği en büyük değer kaçtır?',
+                'alabileceği en büyük değer kaçtır?',
             p + 2 * t,
             [p + t, p - 2 * t, 2 * t, p + 4 * t],
             '$giris En büyük değer ${_n(p + 2 * t)} olur.',
           ),
           1 => _tam(
             '$denklem denkleminin çakışık iki kökü olduğuna göre m sayısının '
-            'alabileceği en küçük değer kaçtır?',
+                'alabileceği en küçük değer kaçtır?',
             p - 2 * t,
             [p - t, p + 2 * t, -2 * t, p - 4 * t],
             '$giris En küçük değer ${_n(p - 2 * t)} olur.',
           ),
           _ => _tam(
             '$denklem denkleminin çakışık iki kökü olduğuna göre m sayısının '
-            'alabileceği değerlerin çarpımı kaçtır?',
+                'alabileceği değerlerin çarpımı kaçtır?',
             p * p - 4 * t * t,
             [p * p - t * t, p * p + 4 * t * t, 4 * t * t - p * p, 2 * p],
             '$giris Çarpımları ${_p(p + 2 * t)}·${_p(p - 2 * t)} = '
-            '${_n(p * p - 4 * t * t)} olur.',
+                '${_n(p * p - 4 * t * t)} olur.',
           ),
         };
       }
@@ -882,30 +1429,30 @@ final lmMatIleri = <AdvancedFamily>[
           final yanit = kb.isEven ? taban - 1 : taban;
           return _tam(
             '$denklem denkleminin birbirinden farklı iki gerçek kökü olduğuna '
-            'göre m sayısının alabileceği en büyük tam sayı değeri kaçtır?',
+                'göre m sayısının alabileceği en büyük tam sayı değeri kaçtır?',
             yanit,
             [yanit + 1, yanit - 2 * q, b2 + q - 1],
             '$delta İki farklı gerçek kök için Δ > 0, yani m < $sinir '
-            'olmalıdır. Bu koşulu sağlayan en büyük tam sayı ${_n(yanit)} olur.',
+                'olmalıdır. Bu koşulu sağlayan en büyük tam sayı ${_n(yanit)} olur.',
           );
         case 1:
           final yanit = taban + 1;
           return _tam(
             '$denklem denkleminin gerçek kökü olmadığına göre m sayısının '
-            'alabileceği en küçük tam sayı değeri kaçtır?',
+                'alabileceği en küçük tam sayı değeri kaçtır?',
             yanit,
             [yanit - 1, yanit - 2 * q, b2 + q + 1],
             '$delta Gerçek kök olmaması için Δ < 0, yani m > $sinir '
-            'olmalıdır. Bu koşulu sağlayan en küçük tam sayı ${_n(yanit)} olur.',
+                'olmalıdır. Bu koşulu sağlayan en küçük tam sayı ${_n(yanit)} olur.',
           );
         default:
           return _tam(
             '$denklem denkleminin en az bir gerçek kökü olduğuna göre m '
-            'sayısının alabileceği en büyük tam sayı değeri kaçtır?',
+                'sayısının alabileceği en büyük tam sayı değeri kaçtır?',
             taban,
             [taban + 1, taban - 1, taban - 2 * q, b2 + q],
             '$delta En az bir gerçek kök için Δ ≥ 0, yani m ≤ $sinir '
-            'olmalıdır. Bu koşulu sağlayan en büyük tam sayı ${_n(taban)} olur.',
+                'olmalıdır. Bu koşulu sağlayan en büyük tam sayı ${_n(taban)} olur.',
           );
       }
     },
@@ -943,41 +1490,41 @@ final lmMatIleri = <AdvancedFamily>[
         case 1:
           return _tam(
             'f(x) = ${_pol(pol)} fonksiyonunun alabileceği en '
-            '${bas > 0 ? 'küçük' : 'büyük'} değer kaçtır?',
+                '${bas > 0 ? 'küçük' : 'büyük'} değer kaçtır?',
             k,
             [kc, _deg(pol, -r), r, -k],
             '$apsis Fonksiyon en ${bas > 0 ? 'küçük' : 'büyük'} değerini tepe '
-            'noktasında alır: f(${_n(r)}) = ${_yerine(pol, r)} = ${_n(k)}.',
+                'noktasında alır: f(${_n(r)}) = ${_yerine(pol, r)} = ${_n(k)}.',
           );
         case 2:
           return _tam(
             'y = ${_pol(pol)} parabolünün tepe noktası T(r, k) olduğuna göre '
-            'r + k toplamı kaçtır?',
+                'r + k toplamı kaçtır?',
             r + k,
             [k - r, r + kc, r - k, r + _deg(pol, -r)],
             '$apsis Ordinatı k = ${_yerine(pol, r)} = ${_n(k)} olduğundan '
-            'r + k = ${_n(r)} + ${_p(k)} = ${_n(r + k)} bulunur.',
+                'r + k = ${_n(r)} + ${_p(k)} = ${_n(r + k)} bulunur.',
           );
         case 3:
           final sabit = kc == 0 ? '' : (kc < 0 ? ' − ${-kc}' : ' + $kc');
           return _tam(
             'y = ${_pol([bas, 0, 0])} + mx$sabit parabolünün simetri ekseni '
-            'x = ${_n(r)} doğrusu olduğuna göre m kaçtır?',
+                'x = ${_n(r)} doğrusu olduğuna göre m kaçtır?',
             kb,
             [-kb, -bas * r, bas * r, -2 * r],
             'Simetri ekseni x = −b/(2a) doğrusudur. −m/(2·${_p(bas)}) = '
-            '${_n(r)} eşitliğinden m = −2·${_p(bas)}·${_p(r)} = ${_n(kb)} '
-            'bulunur.',
+                '${_n(r)} eşitliğinden m = −2·${_p(bas)}·${_p(r)} = ${_n(kb)} '
+                'bulunur.',
           );
         default:
           return _tam(
             'y = ${_pol([bas, kb, 0])} + m parabolünün tepe noktasının '
-            'ordinatı ${_n(k)} olduğuna göre m kaçtır?',
+                'ordinatı ${_n(k)} olduğuna göre m kaçtır?',
             kc,
             [k, k - bas * r * r, bas * r * r, k + kb],
             '$apsis Tepe noktasının ordinatı ${_yerine([bas, kb, 0], r)} + m = '
-            '${_n(k - kc)} + m olur. ${_n(k - kc)} + m = ${_n(k)} eşitliğinden '
-            'm = ${_n(kc)} bulunur.',
+                '${_n(k - kc)} + m olur. ${_n(k - kc)} + m = ${_n(k)} eşitliğinden '
+                'm = ${_n(kc)} bulunur.',
           );
       }
     },
@@ -1091,54 +1638,129 @@ final lmMatIleri = <AdvancedFamily>[
       final s2 = s * s, s3 = s * s * s;
       final kare = s2 + 2 * i * p, kup = s3 + 3 * i * p * s;
       final bas = 'a ve b gerçek sayıları için $verilen = ${_n(s)} ve';
+      final hs = _hs(a, b, c);
       switch (c % 5) {
         case 0:
-          return _tam(
+          return _tamS(
             '$bas a·b = ${_n(p)} olduğuna göre a² + b² ifadesinin değeri '
-            'kaçtır?',
+                'kaçtır?',
             kare,
-            [s2 - 2 * i * p, s2 + i * p, s2],
+            // İşaret hatası, 2'yi unutma, çarpımı atma, (a ∓ b)²'deki 4'ü ya
+            // da küp özdeşliğindeki 3'ü kullanma, işaret ve katsayı birlikte
+            // (kareler toplamı pozitif).
+            [
+              s2 - 2 * i * p,
+              s2 + i * p,
+              s2,
+              s2 + 4 * i * p,
+              s2 + 3 * i * p,
+              s2 - i * p,
+            ],
             'a² + b² = ($verilen)² $imi 2·a·b = ${_p(s)}² $imi 2·${_p(p)} = '
-            '${_n(kare)}.',
+                '${_n(kare)}.',
+            hs,
+            pozitif: true,
           );
         case 1:
           final diger = farkli ? 'a + b' : 'a − b';
-          return _tam(
+          return _tamS(
             '$bas a·b = ${_n(p)} olduğuna göre ($diger)² ifadesinin değeri '
-            'kaçtır?',
+                'kaçtır?',
             s2 + 4 * i * p,
-            [kare, s2 - 4 * i * p, s2],
+            // 4 yerine 2 (a² + b² ile karıştırma) ya da 8 (iki katı), işaret,
+            // çarpımı atma, 2(a² + b²)'den (a ± b)²'yi çıkarmayı unutma,
+            // işaret ve katsayı birlikte, katsayıyı 1 alma (kare pozitif).
+            [
+              kare,
+              s2 - 4 * i * p,
+              s2,
+              s2 + 8 * i * p,
+              2 * kare,
+              s2 - 2 * i * p,
+              s2 + i * p,
+            ],
             '($diger)² = ($verilen)² $imi 4·a·b = ${_p(s)}² $imi 4·${_p(p)} = '
-            '${_n(s2 + 4 * i * p)}.',
+                '${_n(s2 + 4 * i * p)}.',
+            hs,
+            pozitif: true,
           );
         case 2:
           final kupler = farkli ? 'a³ − b³' : 'a³ + b³';
-          return _tam(
+          return _tamS(
             '$bas a·b = ${_n(p)} olduğuna göre $kupler ifadesinin değeri '
-            'kaçtır?',
+                'kaçtır?',
             kup,
-            [s3 - 3 * i * p * s, s3 + i * p * s, s3],
+            // İşaret, 3'ü unutma ya da iki kez alma, çarpımı atma, (a ± b)
+            // çarpanını unutma, karedeki 2'yi kullanma; çarpanlara ayrılmış
+            // biçimde (a ± b) ile çarpmayı unutma, küp yerine kare alma.
+            [
+              s3 - 3 * i * p * s,
+              s3 + i * p * s,
+              s3,
+              s3 + 6 * i * p * s,
+              s3 + 3 * i * p,
+              s3 + 2 * i * p * s,
+              s2 + 3 * i * p,
+              s2 + 3 * i * p * s,
+              s3 - i * p * s,
+            ],
             '$kupler = ($verilen)³ $imi 3·a·b·($verilen) = ${_p(s)}³ $imi '
-            '3·${_p(p)}·${_p(s)} = ${_n(kup)}.',
+                '3·${_p(p)}·${_p(s)} = ${_n(kup)}.',
+            hs,
           );
         case 3:
-          return _tam(
+          // İşaret × 2'ye bölme hatası (bölmeyi unutma, iki kez bölme, 2 ile
+          // çarpma) bileşik üçlüleri: her biri anahtarla iki ikiz çift kurar.
+          // Gerekirse çıkarma yerine toplama ((s² ± kare)/2) da kullanılır.
+          final ciftler = [
+            [2 * p, -p, -2 * p],
+            if (p.isEven) [p ~/ 2, -p, -p ~/ 2],
+            [4 * p, -p, -4 * p],
+          ];
+          final tekler = [
+            2 * p, -p, s2 + i * p, 4 * p, if (p.isEven) p ~/ 2, //
+            -2 * p, p + 1, p - 1,
+          ];
+          return _tamS(
             '$bas a² + b² = ${_n(kare)} olduğuna göre a·b çarpımı kaçtır?',
             p,
-            [2 * p, -p, -2 * p],
+            [
+              ..._ucluTam(p, [
+                ...ciftler,
+                ..._seckiler(tekler, (u) => _isaretDengeli(p, u)),
+              ], hs),
+              ...tekler,
+            ],
             '($verilen)² = a² + b² ${farkli ? '−' : '+'} 2·a·b olduğundan '
-            '${_p(s)}² = ${_n(kare)} ${farkli ? '−' : '+'} 2·a·b, yani '
-            '2·a·b = ${_n(2 * p)} ve a·b = ${_n(p)} bulunur.',
+                '${_p(s)}² = ${_n(kare)} ${farkli ? '−' : '+'} 2·a·b, yani '
+                '2·a·b = ${_n(2 * p)} ve a·b = ${_n(p)} bulunur.',
+            hs,
           );
         default:
           final kupler = farkli ? 'a³ − b³' : 'a³ + b³';
-          return _tam(
+          // İşaret × bölme hatası (3'e, (a ± b) değerine ya da ikisine
+          // birden bölmeyi unutma) bileşik üçlüleri önce denenir.
+          // Seçenekler işaretçe dengeli tutulur; gerekirse anahtara bir
+          // yakın değer eklenir.
+          final ps = p * s;
+          final tekler = [3 * p, -p, 3 * ps, ps, -3 * p, -ps, p + 1, p - 1];
+          return _tamS(
             '$bas $kupler = ${_n(kup)} olduğuna göre a·b çarpımı kaçtır?',
             p,
-            [3 * p, -p, 3 * p * s],
+            [
+              ..._ucluTam(p, [
+                [3 * p, -p, -3 * p],
+                [ps, -p, -ps],
+                [3 * ps, -p, -3 * ps],
+                [3 * p, ps, 3 * ps],
+                ..._seckiler(tekler, (u) => _isaretDengeli(p, u)),
+              ], hs),
+              ...tekler,
+            ],
             '$kupler = ($verilen)³ $imi 3·a·b·($verilen) olduğundan '
-            '${_n(kup)} = ${_p(s)}³ $imi 3·${_p(s)}·a·b, yani '
-            '${_n(3 * s)}·a·b = ${_n(3 * s * p)} ve a·b = ${_n(p)} bulunur.',
+                '${_n(kup)} = ${_p(s)}³ $imi 3·${_p(s)}·a·b, yani '
+                '${_n(3 * s)}·a·b = ${_n(3 * s * p)} ve a·b = ${_n(p)} bulunur.',
+            hs,
           );
       }
     },
@@ -1152,25 +1774,27 @@ final lmMatIleri = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.uygulama,
     (a, b, c) {
-      final arti = c < 5;
+      final arti = c < 5, hs = _hs(a, b, c);
       final (tb, tn) = _logTers[b];
       final ikinci = 'log${_alt(tb)}(1/${_us(tb, tn)})';
       // Birinci terim: yazımı, değeri (pay/payda), çözüm adımı ve tipik
-      // yanlış değer.
+      // yanlış değerleri (biri anahtarın altında, biri üstünde olabilir).
       late final String ilk, adim;
-      late final int pay, payda, ypay, ypayda;
+      late final int pay, payda;
+      late final List<(int, int)> ilkY;
       switch (c % 5) {
         case 0:
           final (t, m) = _logTanim[a];
           ilk = 'log${_alt(t)} ${_us(t, m)}';
           adim = '${_us(t, m)} = $t${_ust(m)} olduğundan $ilk = $m';
-          (pay, payda, ypay, ypayda) = (m, 1, m + 1, 1);
+          (pay, payda, ilkY) = (m, 1, [(m + 1, 1), (m - 1, 1)]);
         case 1:
           final (t, k, y) = _logBolum[a];
           final x = _us(t, k) * y;
           ilk = 'log${_alt(t)} $x − log${_alt(t)} $y';
-          adim = '$ilk = log${_alt(t)}($x/$y) = log${_alt(t)} ${_us(t, k)} = $k';
-          (pay, payda, ypay, ypayda) = (k, 1, k + 1, 1);
+          adim =
+              '$ilk = log${_alt(t)}($x/$y) = log${_alt(t)} ${_us(t, k)} = $k';
+          (pay, payda, ilkY) = (k, 1, [(k + 1, 1), (k - 1, 1)]);
         case 2:
           final (u, w, k) = _logCarpim[a];
           final t = u * w;
@@ -1178,7 +1802,8 @@ final lmMatIleri = <AdvancedFamily>[
           adim =
               '$ilk = log${_alt(t)}(${_us(u, k)}·${_us(w, k)}) = '
               'log${_alt(t)} ${_us(t, k)} = $k';
-          (pay, payda, ypay, ypayda) = (k, 1, 2 * k, 1);
+          // Üsleri toplama (2k) ya da üssü unutma (1).
+          (pay, payda, ilkY) = (k, 1, [(2 * k, 1), (1, 1)]);
         case 3:
           final (r, p, q) = _logKesir[a];
           ilk = 'log${_alt(_us(r, p))} ${_us(r, q)}';
@@ -1186,27 +1811,62 @@ final lmMatIleri = <AdvancedFamily>[
               '${_us(r, p)} = $r${_ust(p)} ve ${_us(r, q)} = '
               '${q == 1 ? '$r' : '$r${_ust(q)}'} olduğundan $ilk = '
               '${_q(q, p)}';
-          (pay, payda, ypay, ypayda) = (q, p, p, q);
+          // Oranı ters çevirme, üsleri çarpma; argümanın üssünü unutma
+          // (1/p), üsleri çıkarma.
+          (pay, payda, ilkY) = (
+            q,
+            p,
+            [(p, q), (p * q, 1), (1, p), if (q != p) (q - p, 1)],
+          );
         default:
           final (t, ara, k) = _logZincir[a];
           ilk = 'log${_alt(t)} $ara · log${_alt(ara)} ${_us(t, k)}';
           adim = '$ilk = log${_alt(t)} ${_us(t, k)} = $k';
-          (pay, payda, ypay, ypayda) = (k, 1, k + 1, 1);
+          (pay, payda, ilkY) = (k, 1, [(k + 1, 1), (k - 1, 1)]);
       }
       final i = arti ? -1 : 1; // ikinci terimin katkısı: i·tn
       final deger = _q(pay, payda);
-      return _kes(
+      (int, int) top((int, int) x, (int, int) y) =>
+          (x.$1 * y.$2 + y.$1 * x.$2, x.$2 * y.$2);
+      // İkinci terimin tipik yanlış değerleri: işaret (+n) ve log_t 1 = 1
+      // sanma (1 − n); katkıları işleme göre işaretlenir.
+      final dogruK = (i * tn, 1), ilkD = (pay, payda);
+      final ikinciY = [
+        for (final y in [tn, 1 - tn]) (arti ? y : -y, 1),
+      ];
+      // Birinci terim × ikinci terim hataları: bileşik (2 × 2) üçlüler önce,
+      // sonra ızgaranın öteki üçlüleri.
+      final izgara = [
+        for (final e in ikinciY) top(ilkD, e),
+        for (final y in ilkY) top(y, dogruK),
+        for (final y in ilkY)
+          for (final e in ikinciY) top(y, e),
+      ];
+      final n0 = pay + i * tn * payda;
+      return _kesS(
         '$ilk ${arti ? '+' : '−'} $ikinci işleminin sonucu kaçtır?',
-        pay + i * tn * payda,
+        n0,
         payda,
         [
-          (pay - i * tn * payda, payda),
-          (ypay + i * tn * ypayda, ypayda),
-          (ypay - i * tn * ypayda, ypayda),
+          ..._uclu(n0, payda, [
+            for (final u in [
+              for (final y in ilkY)
+                for (final e in ikinciY)
+                  [top(ilkD, e), top(y, dogruK), top(y, e)],
+            ])
+              if (_dengeli(n0, payda, u)) u,
+            ..._seckiler(izgara, (u) => _dengeli(n0, payda, u)),
+            for (final y in ilkY)
+              for (final e in ikinciY)
+                [top(ilkD, e), top(y, dogruK), top(y, e)],
+            ..._seckiler(izgara),
+          ], hs),
+          ...izgara,
         ],
         '$adim; 1/${_us(tb, tn)} = $tb^(−$tn) olduğundan $ikinci = −$tn '
-        'olur. Sonuç $deger ${arti ? '+' : '−'} (−$tn) = '
-        '${_q(pay + i * tn * payda, payda)}.',
+            'olur. Sonuç $deger ${arti ? '+' : '−'} (−$tn) = '
+            '${_q(pay + i * tn * payda, payda)}.',
+        hs,
       );
     },
   ),
@@ -1218,7 +1878,7 @@ final lmMatIleri = <AdvancedFamily>[
     Difficulty.hard,
     BloomLevel.analiz,
     (a, b, c) {
-      final v = c ~/ 5;
+      final v = c ~/ 5, hs = _hs(a, b, c);
       const soru = 'denklemini sağlayan x değeri kaçtır?';
       switch (c % 5) {
         case 0:
@@ -1228,14 +1888,35 @@ final lmMatIleri = <AdvancedFamily>[
           final us = v == 0 ? m : -m;
           final q = us - p * x;
           final sag = v == 0 ? '${_us(t, m)}' : '1/${_us(t, m)}';
-          return _kes(
+          // p'ye bölmeyi unutma, q'yu işaretiyle taşıma, 1/t^m'yi t^m sanma
+          // (ya da tersi), q'yu atma; üssü sayının kendisine eşitleme. En az
+          // bir tam sayı yanlış bulunur (anahtar tek tam sayı seçenek
+          // kalmasın); son adımdaki işaret hatası (−x, anahtarla aynı
+          // rakamlar) yalnız gerekince kullanılır.
+          final adaylar = [
+            (us - q, 1),
+            (us + q, p),
+            (-us - q, p),
+            (us, p),
+            if (v == 0) (_us(t, m) - q, p),
+          ];
+          final isaret = (-x, 1);
+          return _kesS(
             '${_ustlu(t, _pol([p, q]))} = $sag $soru',
             x,
             1,
-            [(us + q, p), (us - q, 1), (-x, 1), (-us - q, p)],
+            [
+              ..._uclu(x, 1, [
+                ..._seckiler(adaylar, _tamVar),
+                ..._seckiler([...adaylar, isaret], (u) => u.contains(isaret)),
+              ], hs),
+              ...adaylar,
+              isaret,
+            ],
             '$sag = ${_kuvvet(t, us)} olduğundan üsler eşitlenir: '
-            '${_pol([p, q])} = ${_n(us)}. Buradan '
-            '${q == 0 ? '' : '${p}x = ${_n(us - q)} ve '}x = ${_n(x)} bulunur.',
+                '${_pol([p, q])} = ${_n(us)}. Buradan '
+                '${q == 0 ? '' : '${p}x = ${_n(us - q)} ve '}x = ${_n(x)} bulunur.',
+            hs,
           );
         case 1:
           // Tabanlar aynı sayının kuvvetleri: A^(x + u) = C^(x + w).
@@ -1252,13 +1933,16 @@ final lmMatIleri = <AdvancedFamily>[
           final acik = solUs == _pol([i, i * u]) && sagUs == _pol([j, j * w])
               ? ''
               : ', yani ${_pol([i, i * u])} = ${_pol([j, j * w])}';
-          return _tam(
+          return _tamS(
             '${_ustlu(sol, _pol([1, u]))} = ${_ustlu(sag, _pol([1, w]))} $soru',
             x,
-            [k, -x, x + k, x - k],
+            // Üs katsayısını yalnız x'e dağıtma (k), üs katsayılarını iki
+            // tarafta yer değiştirme, işaret hatası.
+            [k, x - (i + j) * k, x + k, x - k, -x],
             '${i == 1 ? '' : '$sol = $r${_ust(i)} ve '}$sag = $r${_ust(j)} '
-            'olduğundan iki taraf $r tabanında yazılır ve üsler eşitlenir: '
-            '$solUs = $sagUs$acik. Buradan x = ${_n(x)} bulunur.',
+                'olduğundan iki taraf $r tabanında yazılır ve üsler eşitlenir: '
+                '$solUs = $sagUs$acik. Buradan x = ${_n(x)} bulunur.',
+            hs,
           );
         case 2:
           // log_t(px + q) = m.
@@ -1269,15 +1953,37 @@ final lmMatIleri = <AdvancedFamily>[
             [-1, -2, -3, 5, 7],
           ][v][b % 5];
           final deger = _us(t, m), q = deger - p * x;
-          return _kes(
+          // Taban ile üssü yer değiştirme (m^t), yakın değerliyse.
+          final takas = m >= 2 && _us(m, t) <= 2 * deger ? _us(m, t) : null;
+          // p'ye bölmeyi unutma, t^m yerine t·m, işaret hatası, logaritmayı
+          // atma (px + q = m), q'yu atma. En az bir tam sayı yanlış bulunur;
+          // son adımdaki işaret hatası (−x) yalnız gerekince kullanılır.
+          final adaylar = [
+            (deger - q, 1),
+            (t * m - q, p),
+            (deger + q, p),
+            (m - q, p),
+            if (takas != null) (takas - q, p),
+            (deger, p),
+          ];
+          final isaret = (-x, 1);
+          return _kesS(
             'log${_alt(t)}(${_pol([p, q])}) = $m $soru',
             x,
             1,
-            [(t * m - q, p), (deger + q, p), (deger - q, 1), (m - q, p)],
+            [
+              ..._uclu(x, 1, [
+                ..._seckiler(adaylar, _tamVar),
+                ..._seckiler([...adaylar, isaret], (u) => u.contains(isaret)),
+              ], hs),
+              ...adaylar,
+              isaret,
+            ],
             'Logaritmanın tanımından ${_pol([p, q])} = '
-            '${m == 1 ? '' : '${_kuvvet(t, m)} = '}$deger olur. Buradan '
-            '${q == 0 ? '' : '${p}x = ${_n(deger - q)} ve '}x = ${_n(x)} '
-            'bulunur.',
+                '${m == 1 ? '' : '${_kuvvet(t, m)} = '}$deger olur. Buradan '
+                '${q == 0 ? '' : '${p}x = ${_n(deger - q)} ve '}x = ${_n(x)} '
+                'bulunur.',
+            hs,
           );
         case 3:
           // log_t(x + u) − log_t(x + w) = m.
@@ -1285,24 +1991,37 @@ final lmMatIleri = <AdvancedFamily>[
           final k = 1 + a ~/ 5, x = b - 9;
           final oran = _us(t, m);
           final u = oran * k - x, w = k - x;
-          String lg(int kay) => kay == 0
-              ? 'log${_alt(t)} x'
-              : 'log${_alt(t)}(${_pol([1, kay])})';
+          String lg(int kay) =>
+              kay == 0 ? 'log${_alt(t)} x' : 'log${_alt(t)}(${_pol([1, kay])})';
           String par(int kay) => kay == 0 ? 'x' : '(${_pol([1, kay])})';
           final denklem = v == 0
               ? '${lg(u)} − ${lg(w)} = $m'
               : '${lg(u)} = $m + ${lg(w)}';
-          return _tam(
+          // x + A = r·(x + B) denkleminin tam sayı kökü: t^m yerine m ya da
+          // t·m alma, bölümü ters kurma.
+          final yanlis = [
+            for (final (r, sol, sagK) in [
+              (m, u, w),
+              (t * m, u, w),
+              (oran, w, u),
+            ])
+              if (r != 1 && (r * sagK - sol) % (1 - r) == 0)
+                (r * sagK - sol) ~/ (1 - r),
+          ];
+          return _tamS(
             '$denklem $soru',
             x,
-            [k, oran * k, -x, u - w],
+            // Ara sonucu yanıt sanma (x + w = k, x + u = oran·k), bölüm
+            // yerine fark, işaret.
+            [k, oran * k, u - w, ...yanlis, -x],
             '${v == 0 ? '' : 'Denklem ${lg(u)} − ${lg(w)} = $m biçiminde '
-                      'yazılır. '}'
-            'Bölüm kuralından ${par(u)}/${par(w)} = '
-            '${m == 1 ? '' : '${_kuvvet(t, m)} = '}$oran olur. '
-            '${_pol([1, u])} = '
-            '${_pol([oran, oran * w])} eşitliğinden x = ${_n(x)} bulunur; bu '
-            'değer için logaritması alınan ifadeler pozitiftir.',
+                          'yazılır. '}'
+                'Bölüm kuralından ${par(u)}/${par(w)} = '
+                '${m == 1 ? '' : '${_kuvvet(t, m)} = '}$oran olur. '
+                '${_pol([1, u])} = '
+                '${_pol([oran, oran * w])} eşitliğinden x = ${_n(x)} bulunur; bu '
+                'değer için logaritması alınan ifadeler pozitiftir.',
+            hs,
           );
         default:
           // p·t^(x + i) + q·t^x = N; v = 1 iken üsler bir azaltılır.
@@ -1318,16 +2037,28 @@ final lmMatIleri = <AdvancedFamily>[
           final sol =
               '${p == 1 ? '' : '$p·'}$buyukUs ${q < 0 ? '−' : '+'} '
               '${qm == 1 ? '' : '$qm·'}$kucukUs';
-          return _tam(
+          return _tamS(
             '$sol = $sag $soru',
             x,
-            [x + i, x - 1, x + 1, s + i + 1],
+            // Büyük üssün kaymasını yanıta ekleme, bir eksik ya da fazla;
+            // üs kaymasını geri eklemeyi unutma ya da ters ekleme.
+            [
+              x + i,
+              x - 1,
+              x + 1,
+              s + i + 1,
+              if (v == 1) s - 1,
+              x - i,
+              x + 2,
+              x - 2,
+            ],
             '$buyukUs = $ti·$kucukUs olduğundan denklem '
-            '(${p == 1 ? '' : '$p·'}$ti ${q < 0 ? '−' : '+'} $qm)·$kucukUs = '
-            '$sag biçimine gelir. ${kat == 1 ? '' : '$kat·$kucukUs = $sag, '
-                      'yani '}'
-            '$kucukUs = ${_us(t, s)} = ${_kuvvet(t, s)} olduğundan '
-            'x = $x bulunur.',
+                '(${p == 1 ? '' : '$p·'}$ti ${q < 0 ? '−' : '+'} $qm)·$kucukUs = '
+                '$sag biçimine gelir. ${kat == 1 ? '' : '$kat·$kucukUs = $sag, '
+                          'yani '}'
+                '$kucukUs = ${_us(t, s)} = ${_kuvvet(t, s)} olduğundan '
+                'x = $x bulunur.',
+            hs,
           );
       }
     },
@@ -1350,24 +2081,24 @@ final lmMatIleri = <AdvancedFamily>[
           final an = ilk + (n - 1) * d;
           return _tam(
             'İlk terimi ${_n(ilk)} ve ortak farkı ${_n(d)} olan bir aritmetik '
-            'dizinin $n. terimi kaçtır?',
+                'dizinin $n. terimi kaçtır?',
             an,
             [ilk + n * d, ilk + (n - 2) * d, (n - 1) * d],
             'a${_alt(n)} = a₁ + ${n - 1}·d = ${_n(ilk)} + ${n - 1}·${_p(d)} = '
-            '${_n(an)}.',
+                '${_n(an)}.',
           );
         case 1:
           final (m, n) = const [(3, 7), (4, 9), (2, 8), (5, 11), (6, 13)][i5];
           final am = ilk, an = am + (n - m) * d;
           return _kes(
             'Bir aritmetik dizide a${_alt(m)} = ${_n(am)} ve a${_alt(n)} = '
-            '${_n(an)} olduğuna göre bu dizinin ortak farkı kaçtır?',
+                '${_n(an)} olduğuna göre bu dizinin ortak farkı kaçtır?',
             d,
             1,
             [(an - am, n - m + 1), (an - am, 1), (-d, 1), (an - am, n)],
             'a${_alt(n)} − a${_alt(m)} = ${n - m}·d olduğundan ${_n(an)} − '
-            '${_p(am)} = ${n - m}·d, yani d = ${_n(an - am)}/${n - m} = '
-            '${_n(d)} bulunur.',
+                '${_p(am)} = ${n - m}·d, yani d = ${_n(an - am)}/${n - m} = '
+                '${_n(d)} bulunur.',
           );
         case 2:
           final n = const [10, 12, 15, 20, 9][i5];
@@ -1382,12 +2113,12 @@ final lmMatIleri = <AdvancedFamily>[
           final toplam = n * (ilk + an) ~/ 2;
           return _tam(
             'İlk terimi ${_n(ilk)} ve ortak farkı ${_n(d)} olan bir aritmetik '
-            'dizinin ilk $n teriminin toplamı kaçtır?',
+                'dizinin ilk $n teriminin toplamı kaçtır?',
             toplam,
             [2 * toplam, n * an, an, toplam - an],
             'a${_alt(n)} = ${_n(ilk)} + ${n - 1}·${_p(d)} = ${_n(an)} olur. '
-            'İlk $n terimin toplamı $n·(a₁ + a${_alt(n)})/2 = '
-            '$n·(${_n(ilk)} + ${_p(an)})/2 = ${_n(toplam)} bulunur.',
+                'İlk $n terimin toplamı $n·(a₁ + a${_alt(n)})/2 = '
+                '$n·(${_n(ilk)} + ${_p(an)})/2 = ${_n(toplam)} bulunur.',
           );
         case 3:
           final (m, n, k) = const [
@@ -1400,12 +2131,17 @@ final lmMatIleri = <AdvancedFamily>[
           final am = ilk, an = am + (n - m) * d, ak = am + (k - m) * d;
           return _tam(
             'Bir aritmetik dizide a${_alt(m)} = ${_n(am)} ve a${_alt(n)} = '
-            '${_n(an)} olduğuna göre a${_alt(k)} kaçtır?',
+                '${_n(an)} olduğuna göre a${_alt(k)} kaçtır?',
             ak,
-            [an + (k - n + 1) * d, am + k * d, an + (k - m) * d, an + (an - am)],
+            [
+              an + (k - n + 1) * d,
+              am + k * d,
+              an + (k - m) * d,
+              an + (an - am),
+            ],
             'Ortak fark d = (${_n(an)} − ${_p(am)})/${n - m} = ${_n(d)} olur. '
-            'a${_alt(k)} = a${_alt(n)} + ${k - n}·d = ${_n(an)} + '
-            '${k - n}·${_p(d)} = ${_n(ak)}.',
+                'a${_alt(k)} = a${_alt(n)} + ${k - n}·d = ${_n(an)} + '
+                '${k - n}·${_p(d)} = ${_n(ak)}.',
           );
         default:
           final n = const [8, 10, 12, 15, 20][i5];
@@ -1418,12 +2154,12 @@ final lmMatIleri = <AdvancedFamily>[
           final toplam = n * (a1 + an) ~/ 2;
           return _tam(
             'Genel terimi ${_pol([d, q], 'n')} olan aritmetik dizinin ilk $n '
-            'teriminin toplamı kaçtır?',
+                'teriminin toplamı kaçtır?',
             toplam,
             [n * an, an, toplam - n * d, 2 * toplam],
             'İlk terim ${_yerine([d, q], 1)} = ${_n(a1)}, $n. terim '
-            '${_yerine([d, q], n)} = ${_n(an)} olur. Toplam '
-            '$n·(${_n(a1)} + ${_p(an)})/2 = ${_n(toplam)} bulunur.',
+                '${_yerine([d, q], n)} = ${_n(an)} olur. Toplam '
+                '$n·(${_n(a1)} + ${_p(an)})/2 = ${_n(toplam)} bulunur.',
           );
       }
     },
@@ -1453,14 +2189,14 @@ final lmMatIleri = <AdvancedFamily>[
           final (yp, yq) = azalan ? (1, r) : (r, 1);
           return _kes(
             'Tüm terimleri pozitif olan bir geometrik dizide a${_alt(m)} = '
-            '$am ve a${_alt(n)} = $an olduğuna göre bu dizinin ortak çarpanı '
-            'kaçtır?',
+                '$am ve a${_alt(n)} = $an olduğuna göre bu dizinin ortak çarpanı '
+                'kaçtır?',
             yp,
             yq,
             [(an, am), (yq, yp), (an - am, e), (yp, yq * e)],
             'a${_alt(n)} = a${_alt(m)}·r${_ust(e)} olduğundan r${_ust(e)} = '
-            '${_oranYaz(an, am)} olur. Terimler pozitif olduğundan '
-            'r = ${_q(yp, yq)} bulunur.',
+                '${_oranYaz(an, am)} olur. Terimler pozitif olduğundan '
+                'r = ${_q(yp, yq)} bulunur.',
             pozitif: true,
           );
         }
@@ -1474,7 +2210,7 @@ final lmMatIleri = <AdvancedFamily>[
         final oran = azalan ? '1/$r' : '$r';
         return _kes(
           'Tüm terimleri pozitif olan bir geometrik dizide a${_alt(m)} = $am '
-          've a${_alt(n)} = $an olduğuna göre a${_alt(k)} kaçtır?',
+              've a${_alt(n)} = $an olduğuna göre a${_alt(k)} kaçtır?',
           ak,
           1,
           ikinci
@@ -1489,9 +2225,9 @@ final lmMatIleri = <AdvancedFamily>[
                   azalan ? (ak, r) : (ak * r, 1),
                 ],
           'a${_alt(n)} = a${_alt(m)}·r${_ust(e)} olduğundan r${_ust(e)} = '
-          '${_oranYaz(an, am)} ve terimler pozitif olduğundan r = $oran '
-          'olur. a${_alt(k)} = a${_alt(ikinci ? m : n)}·r = '
-          '${ikinci ? am : an}·${_sar(oran)} = $ak.',
+              '${_oranYaz(an, am)} ve terimler pozitif olduğundan r = $oran '
+              'olur. a${_alt(k)} = a${_alt(ikinci ? m : n)}·r = '
+              '${ikinci ? am : an}·${_sar(oran)} = $ak.',
           pozitif: true,
         );
       }
@@ -1503,36 +2239,36 @@ final lmMatIleri = <AdvancedFamily>[
       if (tur == 0) {
         return _tam(
           'İlk terimi ${_n(a1)} ve ortak çarpanı ${_n(r)} olan bir geometrik '
-          'dizinin $n. terimi kaçtır?',
+              'dizinin $n. terimi kaçtır?',
           an,
           [an * r, a1 * r * (n - 1), -an, a1 + (n - 1) * r],
           'a${_alt(n)} = a₁·r${_ust(n - 1)} = ${_n(a1)}·${_p(r)}${_ust(n - 1)} '
-          '= ${_n(a1)}·${_p(kuvvet)} = ${_n(an)}.',
+              '= ${_n(a1)}·${_p(kuvvet)} = ${_n(an)}.',
         );
       }
       if (tur == 4) {
         return _kes(
           'Ortak çarpanı ${_n(r)} ve $n. terimi ${_n(an)} olan bir geometrik '
-          'dizinin ilk terimi kaçtır?',
+              'dizinin ilk terimi kaçtır?',
           a1,
           1,
           [(an, kuvvet * r), (an, r * (n - 1)), (-a1, 1), (a1 * r, 1)],
           'a${_alt(n)} = a₁·r${_ust(n - 1)} olduğundan ${_n(an)} = '
-          'a₁·${_p(r)}${_ust(n - 1)} = a₁·${_p(kuvvet)} olur. Buradan '
-          'a₁ = ${_n(an)}/${_p(kuvvet)} = ${_n(a1)} bulunur.',
+              'a₁·${_p(r)}${_ust(n - 1)} = a₁·${_p(kuvvet)} olur. Buradan '
+              'a₁ = ${_n(an)}/${_p(kuvvet)} = ${_n(a1)} bulunur.',
         );
       }
       final rn = kuvvet * r;
       final toplam = a1 * (rn - 1) ~/ (r - 1);
       return _tam(
         'İlk terimi ${_n(a1)} ve ortak çarpanı ${_n(r)} olan bir geometrik '
-        'dizinin ilk $n teriminin toplamı kaçtır?',
+            'dizinin ilk $n teriminin toplamı kaçtır?',
         toplam,
         [a1 * (rn - 1), an, a1 * (kuvvet - 1) ~/ (r - 1), -toplam],
         'İlk $n terimin toplamı a₁·(r${_ust(n)} − 1)/(r − 1) = '
-        '${_n(a1)}·(${_p(r)}${_ust(n)} − 1)/(${_p(r)} − 1) = '
-        '${_n(a1)}·${_p(rn - 1)}${r == 2 ? '' : '/${_p(r - 1)}'} = '
-        '${_n(toplam)} bulunur.',
+            '${_n(a1)}·(${_p(r)}${_ust(n)} − 1)/(${_p(r)} − 1) = '
+            '${_n(a1)}·${_p(rn - 1)}${r == 2 ? '' : '/${_p(r - 1)}'} = '
+            '${_n(toplam)} bulunur.',
       );
     },
   ),
@@ -1561,13 +2297,13 @@ final lmMatIleri = <AdvancedFamily>[
         final x = p * n1 * d2, y = i * q * n2 * d1;
         return _kes(
           '$p·${_trigYaz(t1)} ${i > 0 ? '+' : '−'} $q·${_trigYaz(t2)} '
-          'ifadesinin değeri kaçtır?',
+              'ifadesinin değeri kaçtır?',
           x + y,
           payda,
           [(y - x, payda), (x - y, payda), (-x - y, payda)],
           '${_indirge(t1)} ve ${_indirge(t2)} olduğundan '
-          '$p·${_sar(_q(n1, d1))} ${i > 0 ? '+' : '−'} '
-          '$q·${_sar(_q(n2, d2))} = ${_q(x + y, payda)} bulunur.',
+              '$p·${_sar(_q(n1, d1))} ${i > 0 ? '+' : '−'} '
+              '$q·${_sar(_q(n2, d2))} = ${_q(x + y, payda)} bulunur.',
         );
       }
       final kat = const [2, 4, 6, 8, 12][c ~/ 2];
@@ -1581,8 +2317,8 @@ final lmMatIleri = <AdvancedFamily>[
         payda,
         [(-pay, payda), (pay, 3 * payda), (3 * pay, payda), (-pay, 3 * payda)],
         '${_indirge(t1)} ve ${_indirge(t2)} olduğundan '
-        '$kat·${_sar(_trigDeger(v1))}·${_sar(_trigDeger(v2))} = '
-        '${_q(pay, payda)} bulunur.',
+            '$kat·${_sar(_trigDeger(v1))}·${_sar(_trigDeger(v2))} = '
+            '${_q(pay, payda)} bulunur.',
       );
     },
   ),
@@ -1595,7 +2331,7 @@ final lmMatIleri = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.anlama,
     (a, b, c) {
-      final v = c ~/ 5;
+      final v = c ~/ 5, hs = _hs(a, b, c);
       switch (c % 5) {
         case 0:
           final (p, q) = _ucgenRadyan[b];
@@ -1616,23 +2352,53 @@ final lmMatIleri = <AdvancedFamily>[
           final cevir =
               '${_pili(p, q)} radyan = ${p == 1 ? '' : '$p·'}180°/$q = $r° '
               'olur. Üçüncü açı 180° − $aci° − $r° = $ucuncu° bulunur.';
+          // İki açıyı toplayıp bırakma, bir açıyı unutma, π'yi 360° ya da
+          // 90° alma, iç açılar toplamını 360° sanma.
+          final hatalar = [
+            aci + r,
+            180 - r,
+            180 - aci - 2 * r,
+            360 - aci - r,
+            180 - aci,
+            if (r.isEven) 180 - aci - r ~/ 2,
+          ];
           if (v == 0) {
-            return _tam(
+            return _tamS(
               '$bas Bu üçgenin üçüncü iç açısının ölçüsü kaç derecedir?',
               ucuncu,
-              [aci + r, 180 - r, 180 - aci - 2 * r, 360 - aci - r],
+              hatalar,
               cevir,
+              hs,
               pozitif: true,
             );
           }
-          return _kes(
+          // Pay hatası × payda hatası (π'yi 360° ya da 90° alma): anahtar
+          // her yazım ögesini iki seçenekle paylaşır.
+          return _kesS(
             '$bas Bu üçgenin üçüncü iç açısının ölçüsü k·π radyan olduğuna '
-            'göre k kaçtır?',
+                'göre k kaçtır?',
             ucuncu,
             180,
-            [(aci + r, 180), (ucuncu, 360), (ucuncu, 90), (180 - r, 180)],
+            [
+              ..._uclu(
+                ucuncu,
+                180,
+                [
+                  for (final e in hatalar)
+                    for (final p in const [360, 90])
+                      [(e, 180), (ucuncu, p), (e, p)],
+                ],
+                hs,
+                pozitif: true,
+              ),
+              (aci + r, 180),
+              (ucuncu, 360),
+              (ucuncu, 90),
+              (180 - r, 180),
+            ],
             '$cevir Radyan cinsinden $ucuncu·π/180 = '
-            '${_pili(ucuncu, 180)} olduğundan k = ${_q(ucuncu, 180)} olur.',
+                '${_pili(ucuncu, 180)} olduğundan k = ${_q(ucuncu, 180)} olur.',
+            hs,
             pozitif: true,
           );
         case 1 || 4:
@@ -1646,54 +2412,82 @@ final lmMatIleri = <AdvancedFamily>[
               : 'Yay uzunluğu 2πr·($derece/360) bağıntısıyla bulunur; π = 3 '
                     'için bu değer r·${_sar(_q(derece, 60))} olur.';
           if (c % 5 == 1) {
-            return _tam(
+            return _tamS(
               'Yarıçapı $r cm olan bir çemberde, ölçüsü $aci olan merkez '
-              'açının gördüğü yayın uzunluğu kaç cm olur? (π = 3 alınız.)',
+                  'açının gördüğü yayın uzunluğu kaç cm olur? (π = 3 alınız.)',
               yay,
-              // Çap alma, yayın tümleyenini bulma, π'yi unutma, yarıya bölme.
+              // Çap alma, yayın tümleyenini bulma, π'yi unutma, yarıya bölme,
+              // açıyı unutup çemberin tamamını ya da yarısını alma.
               [
                 2 * yay,
                 6 * r - yay,
                 if (r * p % q == 0) r * p ~/ q,
                 if (yay.isEven) yay ~/ 2,
+                6 * r,
+                3 * r,
               ],
               '$hesap Yay uzunluğu $r·${_sar(_q(3 * p, q))} = $yay cm '
-              'bulunur.',
+                  'bulunur.',
+              hs,
               birim: 'cm',
               pozitif: true,
             );
           }
-          return _tam(
+          return _tamS(
             'Bir çemberde ölçüsü $aci olan merkez açının gördüğü yayın '
-            'uzunluğu $yay cm olduğuna göre bu çemberin yarıçapı kaç cm '
-            'olur? (π = 3 alınız.)',
+                'uzunluğu $yay cm olduğuna göre bu çemberin yarıçapı kaç cm '
+                'olur? (π = 3 alınız.)',
             r,
-            [3 * r, 2 * r, r ~/ 2, yay],
+            // π'yi unutma, çap verme, bulunanı çap sanma, yayı yanıt sanma,
+            // yalnız π'ye ya da 2π'ye bölme.
+            [
+              3 * r,
+              2 * r,
+              r ~/ 2,
+              yay,
+              if (yay % 3 == 0) yay ~/ 3,
+              if (yay % 6 == 0) yay ~/ 6,
+            ],
             '$hesap r·${_sar(_q(3 * p, q))} = $yay eşitliğinden r = $r cm '
-            'bulunur.',
+                'bulunur.',
+            hs,
             birim: 'cm',
             pozitif: true,
           );
         case 2:
           final esas = 2 * (5 * a + b % 5) + 11;
           final tur = b ~/ 5 + 2;
+          // Tümleyen (360° − x), ters yön (x + 180°), bütünler, onlar
+          // basamağında işlem hatası (yanıt tek sayı; ±10 teklik bozmaz).
+          final ortak = [
+            360 - esas,
+            (esas + 180) % 360,
+            if (esas < 180) 180 - esas,
+            esas - 10,
+            esas + 10,
+            if (esas > 20) esas - 20,
+          ];
           if (v == 0) {
             final aci = 360 * tur + esas;
-            return _tam(
+            return _tamS(
               'Ölçüsü $aci° olan açının esas ölçüsü kaç derecedir?',
               esas,
-              [360 - esas, (esas + 180) % 360, tur],
+              // Tur sayısını yanıt sanma, bir tur eksik çıkarma.
+              [ortak[0], ortak[1], tur, esas + 360, ...ortak.skip(2)],
               '$aci° = $tur·360° + $esas° olduğundan esas ölçü $esas° olur.',
+              hs,
               pozitif: true,
             );
           }
           final aci = esas - 360 * (tur - 1);
-          return _tam(
+          return _tamS(
             'Ölçüsü ${_n(aci)}° olan açının esas ölçüsü kaç derecedir?',
             esas,
-            [360 - esas, (esas + 180) % 360, esas - 360],
+            // Bir tur eksik ya da fazla ekleme.
+            [ortak[0], ortak[1], esas - 360, esas + 360, ...ortak.skip(2)],
             'Esas ölçü 0° ile 360° arasındadır (0° dâhil). ${_n(aci)}° + '
-            '${tur - 1}·360° = $esas° olduğundan esas ölçü $esas° olur.',
+                '${tur - 1}·360° = $esas° olduğundan esas ölçü $esas° olur.',
+            hs,
           );
         default:
           final (q, m) = _radyanEsas[a];
@@ -1705,24 +2499,54 @@ final lmMatIleri = <AdvancedFamily>[
               : '$aci + $tur·2π = ${_pili(m, q)}';
           if (b >= 10) {
             final derece = 180 * m ~/ q;
-            return _tam(
+            return _tamS(
               'Ölçüsü $aci radyan olan açının esas ölçüsü kaç derecedir?',
               derece,
-              [360 - derece, (derece + 180) % 360, derece ~/ 2],
+              // Tümleyen, ters yön, π'yi 90° ya da 360° alma, bütünler, bir
+              // tur eksik çıkarma.
+              [
+                360 - derece,
+                (derece + 180) % 360,
+                if (derece.isEven) derece ~/ 2,
+                if (2 * derece < 360) 2 * derece,
+                if (derece < 180) 180 - derece,
+                derece + 360,
+              ],
               '$indir olduğundan esas ölçü ${_pili(m, q)} radyandır. Bu da '
-              '${m == 1 ? '' : '$m·'}180°/$q = $derece° eder.',
+                  '${m == 1 ? '' : '$m·'}180°/$q = $derece° eder.',
+              hs,
               pozitif: true,
             );
           }
-          return _kes(
+          // Ters yön (2π − x), π kadar kayma, bir tur eksik ya da fazla
+          // çıkarma (negatif kalma); payda hatası (2q, π ile 2π'yi
+          // karıştırma) ile bileşik üçlüler önce denenir.
+          final ters = 2 * q - m, kay = (m + q) % (2 * q);
+          final eksik = m + 2 * q, fazla = m - 2 * q;
+          return _kesS(
             'Ölçüsü $aci radyan olan açının esas ölçüsü k·π radyan olduğuna '
-            'göre k kaçtır?',
+                'göre k kaçtır?',
             m,
             q,
-            [(2 * q - m, q), ((m + q) % (2 * q), q), (m, 2 * q)],
+            [
+              ..._uclu(m, q, [
+                for (final e in [ters, kay, eksik, fazla])
+                  [(e, q), (m, 2 * q), (e, 2 * q)],
+                [(ters, q), (kay, q), (eksik, q)],
+                [(fazla, q), (m, 2 * q), (ters, q)],
+                [(fazla, q), (m, 2 * q), (eksik, q)],
+                [(fazla, q), (ters, q), (eksik, q)],
+              ], hs),
+              (ters, q),
+              (kay, q),
+              (m, 2 * q),
+              (eksik, q),
+              (fazla, q),
+            ],
             '$indir olduğundan esas ölçü ${_pili(m, q)} radyandır; '
-            'k = ${_q(m, q)} olur.',
-            pozitif: true,
+                'k = ${_q(m, q)} olur.',
+            hs,
+            komsuPozitif: true,
           );
       }
     },
@@ -1757,8 +2581,8 @@ final lmMatIleri = <AdvancedFamily>[
             deger,
             [_deg(pol, -k), deger - w, w, deger - 2 * w],
             'Polinom fonksiyonlar sürekli olduğundan limit, x = ${_n(k)} '
-            'için ifadenin değerine eşittir: ${_yerine(pol, k)} = '
-            '${_n(deger)}.',
+                'için ifadenin değerine eşittir: ${_yerine(pol, k)} = '
+                '${_n(deger)}.',
           );
         case 1:
           final i = v == 0 ? 1 : -1;
@@ -1779,10 +2603,10 @@ final lmMatIleri = <AdvancedFamily>[
             n,
             [(p * k + m, 1), (m - p * k, n), (0, 1), (p * k + m, n * k)],
             'x = ${_n(k)} için pay ve payda sıfır olur. Pay ($kok)·'
-            '(${_pol([p, m])}), payda ${n == 1 ? kok : '$n·($kok)'} biçiminde '
-            'yazılıp sadeleştirilir: (${_pol([p, m])})'
-            '${n == 1 ? '' : '/$n'} ifadesinin x = ${_n(k)} için değeri '
-            '${_q(p * k + m, n)} olur.',
+                '(${_pol([p, m])}), payda ${n == 1 ? kok : '$n·($kok)'} biçiminde '
+                'yazılıp sadeleştirilir: (${_pol([p, m])})'
+                '${n == 1 ? '' : '/$n'} ifadesinin x = ${_n(k)} için değeri '
+                '${_q(p * k + m, n)} olur.',
           );
         case 2:
           // p ≠ q olduğundan oranı ters çeviren (q/p) aynı değeri bulamaz.
@@ -1809,8 +2633,8 @@ final lmMatIleri = <AdvancedFamily>[
             q,
             [(q, p), (u, s), (w, t), (0, 1)],
             'Pay ve paydanın dereceleri eşit (2) olduğundan limit, en büyük '
-            'dereceli terimlerin katsayıları oranıdır: $p/$q'
-            '${_q(p, q) == '$p/$q' ? '' : ' = ${_q(p, q)}'}.',
+                'dereceli terimlerin katsayıları oranıdır: $p/$q'
+                '${_q(p, q) == '$p/$q' ? '' : ' = ${_q(p, q)}'}.',
           );
         case 3:
           // q ≥ 3 olduğundan baş katsayıları çarpmak yerine toplayan (p + q)
@@ -1820,11 +2644,7 @@ final lmMatIleri = <AdvancedFamily>[
           final q = const [3, 4, 5, 6][b ~/ 5];
           // r = p·q olursa limit 1 çıkar ve “∞/∞ = 1” diyen de doğru yanıtı
           // bulur; bu katsayı atlanır.
-          final r = _uygun(
-            const [2, 3, 5, 7, 9, 11],
-            b % 5,
-            (x) => x != p * q,
-          );
+          final r = _uygun(const [2, 3, 5, 7, 9, 11], b % 5, (x) => x != p * q);
           final e = const [1, -2, 3, -1, 2][(a + b) % 5];
           final w0 = const [3, -4, 1, 5, -2][(a ~/ 5 + b ~/ 5) % 5];
           final w = u * e * r == p * q * w0 ? -w0 : w0;
@@ -1841,8 +2661,8 @@ final lmMatIleri = <AdvancedFamily>[
               r,
               [(p, r), (q, r), (p + q, r), (u * e, w)],
               '$acilim Limit, en büyük dereceli terimlerin katsayıları '
-              'oranıdır: ${p * q}/$r'
-              '${_q(p * q, r) == '${p * q}/$r' ? '' : ' = ${_q(p * q, r)}'}.',
+                  'oranıdır: ${p * q}/$r'
+                  '${_q(p * q, r) == '${p * q}/$r' ? '' : ' = ${_q(p * q, r)}'}.',
             );
           }
           return _kes(
@@ -1851,8 +2671,8 @@ final lmMatIleri = <AdvancedFamily>[
             p * q,
             [(r, p), (r, q), (r, p + q), (w, u * e)],
             '$acilim Limit, en büyük dereceli terimlerin katsayıları '
-            'oranıdır: $r/${p * q}'
-            '${_q(r, p * q) == '$r/${p * q}' ? '' : ' = ${_q(r, p * q)}'}.',
+                'oranıdır: $r/${p * q}'
+                '${_q(r, p * q) == '$r/${p * q}' ? '' : ' = ${_q(r, p * q)}'}.',
           );
         default:
           final i = v == 0 ? 1 : -1;
@@ -1875,17 +2695,12 @@ final lmMatIleri = <AdvancedFamily>[
             'lim (x → ${_n(k)}) (${_pol(pay)})/(${_pol(payda)}) $son',
             p * k + m,
             k + n,
-            [
-              (m, n),
-              (p, 1),
-              if (n != k) (m - p * k, n - k),
-              (p * k + m, 1),
-            ],
+            [(m, n), (p, 1), if (n != k) (m - p * k, n - k), (p * k + m, 1)],
             'x = ${_n(k)} için pay ve payda sıfır olur. Pay ($kok)·'
-            '(${_pol([p, m])}), payda ($kok)·(${_pol([1, n])}) biçiminde '
-            'yazılıp sadeleştirilir: (${_pol([p, m])})/(${_pol([1, n])}) '
-            'ifadesinin x = ${_n(k)} için değeri '
-            '$ham${ham == sade ? '' : ' = $sade'} olur.',
+                '(${_pol([p, m])}), payda ($kok)·(${_pol([1, n])}) biçiminde '
+                'yazılıp sadeleştirilir: (${_pol([p, m])})/(${_pol([1, n])}) '
+                'ifadesinin x = ${_n(k)} için değeri '
+                '$ham${ham == sade ? '' : ' = $sade'} olur.',
           );
       }
     },
@@ -1937,7 +2752,7 @@ final lmMatIleri = <AdvancedFamily>[
               _deg(turev, -k),
             ],
             'f′(x) = ${_pol(turev)} olduğundan f′(${_n(k)}) = '
-            '${_yerine(turev, k)} = ${_n(deger)}.',
+                '${_yerine(turev, k)} = ${_n(deger)}.',
           );
         case 1:
           final p = 1 + a % 5;
@@ -1954,7 +2769,9 @@ final lmMatIleri = <AdvancedFamily>[
           final u = p * k + q;
           // Türevleri çarpan (f′·g′) ya da türev almadan f(k) hesaplayan
           // yolların da doğru değeri verdiği sabitler atlanır.
-          final s = _uygun(const [-4, -1, 2, 3, 5, -5, 1, 4, 6, -2], b % 5, (x) {
+          final s = _uygun(const [-4, -1, 2, 3, 5, -5, 1, 4, 6, -2], b % 5, (
+            x,
+          ) {
             final y = p * (r * k * k + x) + u * wt;
             return y != p * wt && y != u * (r * k * k + x);
           });
@@ -1962,12 +2779,12 @@ final lmMatIleri = <AdvancedFamily>[
           final deger = p * w + u * wt;
           return _tam(
             'f(x) = (${_pol([p, q])})·(${_pol([r, 0, s])}) fonksiyonu için '
-            'f′($k) değeri kaçtır?',
+                'f′($k) değeri kaçtır?',
             deger,
             [p * wt, p * w - u * wt, p * w, u * w],
             'Çarpım kuralından f′(x) = $p·(${_pol([r, 0, s])}) + '
-            '(${_pol([p, q])})·(${_pol([2 * r, 0])}) olur. f′($k) = '
-            '$p·${_p(w)} + ${_p(u)}·${_p(wt)} = ${_n(deger)}.',
+                '(${_pol([p, q])})·(${_pol([2 * r, 0])}) olur. f′($k) = '
+                '$p·${_p(w)} + ${_p(u)}·${_p(wt)} = ${_n(deger)}.',
           );
         case 2:
           final p = 1 + a % 5;
@@ -1978,21 +2795,23 @@ final lmMatIleri = <AdvancedFamily>[
           // Pay ve paydanın türevlerini oranlayan (p/r) yolun da doğru değeri
           // verdiği sabitler atlanır.
           final q = _uygun(
-            [for (final x in const [1, 2, 3, 5, 7, 4, 6]) v == 0 ? -x : x],
+            [
+              for (final x in const [1, 2, 3, 5, 7, 4, 6]) v == 0 ? -x : x,
+            ],
             a ~/ 5,
             (x) => (p * s - x * r) * r != p * alt * alt,
           );
           final pay = p * s - q * r;
           return _kes(
             'f(x) = (${_pol([p, q])})/(${_pol([r, s])}) fonksiyonu için '
-            'f′(${_n(k)}) değeri kaçtır?',
+                'f′(${_n(k)}) değeri kaçtır?',
             pay,
             alt * alt,
             [(p * s + q * r, alt * alt), (p, r), (pay, alt), (-pay, alt * alt)],
             'Bölüm kuralından f′(x) = [$p·(${_pol([r, s])}) − '
-            '(${_pol([p, q])})·$r]/(${_pol([r, s])})² = ${_n(pay)}/'
-            '(${_pol([r, s])})² olur. f′(${_n(k)}) = ${_n(pay)}/${_p(alt)}² = '
-            '${_q(pay, alt * alt)}.',
+                '(${_pol([p, q])})·$r]/(${_pol([r, s])})² = ${_n(pay)}/'
+                '(${_pol([r, s])})² olur. f′(${_n(k)}) = ${_n(pay)}/${_p(alt)}² = '
+                '${_q(pay, alt * alt)}.',
           );
         default:
           // f çift, f′ ve g tek seçilir: f′·g tek, f·g′ çift olduğundan
@@ -2004,7 +2823,9 @@ final lmMatIleri = <AdvancedFamily>[
           final fa = const [2, 4, -2, 6, -4][a % 5];
           final ft = const [-3, -1, 1, 3, 5][a ~/ 5];
           final ga = const [3, -3, -1, 5][b ~/ 5];
-          final gt = _uygun(const [-4, -1, 2, 3, 5, -2, 4, -5, 1, 6], b % 5, (x) {
+          final gt = _uygun(const [-4, -1, 2, 3, 5, -2, 4, -5, 1, 6], b % 5, (
+            x,
+          ) {
             if (c % 5 == 3) {
               final ht = ft * ga + fa * x;
               return ht != ft * x && ht != fa * ft + ga * x;
@@ -2022,30 +2843,30 @@ final lmMatIleri = <AdvancedFamily>[
             if (v == 0) {
               return _tam(
                 '$veri ve g′($k) = ${_n(gt)} veriliyor. h(x) = f(x)·g(x) '
-                'olduğuna göre h′($k) değeri kaçtır?',
+                    'olduğuna göre h′($k) değeri kaçtır?',
                 ht,
                 [ft * gt, ft * ga - fa * gt, fa * ga, fa * ft + ga * gt],
                 'Çarpım kuralından h′($k) = f′($k)·g($k) + f($k)·g′($k) = '
-                '${_p(ft)}·${_p(ga)} + ${_p(fa)}·${_p(gt)} = ${_n(ht)}.',
+                    '${_p(ft)}·${_p(ga)} + ${_p(fa)}·${_p(gt)} = ${_n(ht)}.',
               );
             }
             return _kes(
               '$veri veriliyor. h(x) = f(x)·g(x) ve h′($k) = ${_n(ht)} '
-              'olduğuna göre g′($k) değeri kaçtır?',
+                  'olduğuna göre g′($k) değeri kaçtır?',
               gt,
               1,
               [(ht, ft), (ht - ft * ga, 1), (ht + ft * ga, fa), (-gt, 1)],
               'Çarpım kuralından h′($k) = f′($k)·g($k) + f($k)·g′($k), yani '
-              '${_n(ht)} = ${_p(ft)}·${_p(ga)} + ${_p(fa)}·g′($k) olur. '
-              'Buradan ${_n(fa)}·g′($k) = ${_n(ht - ft * ga)} ve g′($k) = '
-              '${_n(gt)} bulunur.',
+                  '${_n(ht)} = ${_p(ft)}·${_p(ga)} + ${_p(fa)}·g′($k) olur. '
+                  'Buradan ${_n(fa)}·g′($k) = ${_n(ht - ft * ga)} ve g′($k) = '
+                  '${_n(gt)} bulunur.',
             );
           }
           if (v == 0) {
             final pay = ft * ga - fa * gt;
             return _kes(
               '$veri ve g′($k) = ${_n(gt)} veriliyor. h(x) = f(x)/g(x) '
-              'olduğuna göre h′($k) değeri kaçtır?',
+                  'olduğuna göre h′($k) değeri kaçtır?',
               pay,
               ga * ga,
               [
@@ -2055,14 +2876,14 @@ final lmMatIleri = <AdvancedFamily>[
                 (-pay, ga * ga),
               ],
               'Bölüm kuralından h′($k) = [f′($k)·g($k) − f($k)·g′($k)]/'
-              '[g($k)]² = [${_p(ft)}·${_p(ga)} − ${_p(fa)}·${_p(gt)}]/'
-              '${_p(ga)}² = ${_q(pay, ga * ga)}.',
+                  '[g($k)]² = [${_p(ft)}·${_p(ga)} − ${_p(fa)}·${_p(gt)}]/'
+                  '${_p(ga)}² = ${_q(pay, ga * ga)}.',
             );
           }
           final pay = gt * fa - ga * ft;
           return _kes(
             '$veri ve g′($k) = ${_n(gt)} veriliyor. h(x) = g(x)/f(x) '
-            'olduğuna göre h′($k) değeri kaçtır?',
+                'olduğuna göre h′($k) değeri kaçtır?',
             pay,
             fa * fa,
             [
@@ -2072,8 +2893,8 @@ final lmMatIleri = <AdvancedFamily>[
               (-pay, fa * fa),
             ],
             'Bölüm kuralından h′($k) = [g′($k)·f($k) − g($k)·f′($k)]/'
-            '[f($k)]² = [${_p(gt)}·${_p(fa)} − ${_p(ga)}·${_p(ft)}]/'
-            '${_p(fa)}² = ${_q(pay, fa * fa)}.',
+                '[f($k)]² = [${_p(gt)}·${_p(fa)} − ${_p(ga)}·${_p(ft)}]/'
+                '${_p(fa)}² = ${_q(pay, fa * fa)}.',
           );
       }
     },
@@ -2103,24 +2924,24 @@ final lmMatIleri = <AdvancedFamily>[
           if (v == 0) {
             return _tam(
               'y = ${_pol(pol)} parabolüne x = ${_n(k)} apsisli noktasından '
-              'çizilen teğetin eğimi kaçtır?',
+                  'çizilen teğetin eğimi kaçtır?',
               egim,
               [p * k + q, 2 * p * k, _deg(pol, k), 2 * p * k - q],
               'Teğetin eğimi türevin o noktadaki değeridir. y′ = '
-              '${_pol(turev)} olduğundan eğim ${_yerine(turev, k)} = '
-              '${_n(egim)} olur.',
+                  '${_pol(turev)} olduğundan eğim ${_yerine(turev, k)} = '
+                  '${_n(egim)} olur.',
             );
           }
           return _kes(
             'y = ${_pol(pol)} parabolüne üzerindeki bir noktadan çizilen '
-            'teğetin eğimi ${_n(egim)} olduğuna göre bu noktanın apsisi '
-            'kaçtır?',
+                'teğetin eğimi ${_n(egim)} olduğuna göre bu noktanın apsisi '
+                'kaçtır?',
             k,
             1,
             [(egim + q, 2 * p), (egim - q, p), (egim - q, 1), (-k, 1)],
             'Teğetin eğimi türevin o noktadaki değeridir. y′ = '
-            '${_pol(turev)} = ${_n(egim)} eşitliğinden ${_pol([2 * p, 0])} = '
-            '${_n(egim - q)} ve x = ${_n(k)} bulunur.',
+                '${_pol(turev)} = ${_n(egim)} eşitliğinden ${_pol([2 * p, 0])} = '
+                '${_n(egim - q)} ve x = ${_n(k)} bulunur.',
           );
         case 1:
           final k = const [-2, -1, 1, 2, 3][b % 5];
@@ -2136,20 +2957,25 @@ final lmMatIleri = <AdvancedFamily>[
           final r0 = const [5, -3, 2, -7, 4, 1, -6][(a + b) % 7];
           final pol = v == 0
               ? [p0, q, r0 == p0 * k * k ? -r0 : r0]
-              : [1, 0, q, const [-6, -3, 3, 7][b ~/ 5]];
+              : [
+                  1,
+                  0,
+                  q,
+                  const [-6, -3, 3, 7][b ~/ 5],
+                ];
           final n = pol.length - 1;
           final turev = [for (var j = 0; j < n; j++) pol[j] * (n - j)];
           final m = _deg(turev, k), yk = _deg(pol, k), kesen = yk - m * k;
           return _tam(
             'f(x) = ${_pol(pol)} eğrisine x = ${_n(k)} apsisli noktasından '
-            'çizilen teğetin denklemi y = mx + n olduğuna göre m + n toplamı '
-            'kaçtır?',
+                'çizilen teğetin denklemi y = mx + n olduğuna göre m + n toplamı '
+                'kaçtır?',
             m + kesen,
             [m, m + yk, m - kesen, kesen],
             'f′(x) = ${_pol(turev)} olduğundan m = f′(${_n(k)}) = ${_n(m)} '
-            'olur. Değme noktası (${_n(k)}, ${_n(yk)}) olduğundan ${_n(yk)} = '
-            '${_p(m)}·${_p(k)} + n, yani n = ${_n(kesen)} bulunur. m + n = '
-            '${_n(m + kesen)}.',
+                'olur. Değme noktası (${_n(k)}, ${_n(yk)}) olduğundan ${_n(yk)} = '
+                '${_p(m)}·${_p(k)} + n, yani n = ${_n(kesen)} bulunur. m + n = '
+                '${_n(m + kesen)}.',
           );
         case 2 || 4:
           // f(x) = ±(x³ − 3c₀x² + 3(c₀² − g²)x) + d; kritik noktalar c₀ ∓ g.
@@ -2163,7 +2989,10 @@ final lmMatIleri = <AdvancedFamily>[
                   [
                     for (var h = 1; h <= 5; h++)
                       for (var s = -2; s <= 2; s++) (s, h),
-                    (-3, 1), (3, 1), (-3, 2), (3, 2),
+                    (-3, 1),
+                    (3, 1),
+                    (-3, 2),
+                    (3, 2),
                   ],
                   a,
                   (t) {
@@ -2197,21 +3026,21 @@ final lmMatIleri = <AdvancedFamily>[
             final aranan = v == 0 ? min : maks;
             return _tam(
               'f(x) = ${_pol(pol)} fonksiyonunun yerel '
-              '${v == 0 ? 'minimum' : 'maksimum'} noktasının apsisi kaçtır?',
+                  '${v == 0 ? 'minimum' : 'maksimum'} noktasının apsisi kaçtır?',
               aranan,
               [v == 0 ? maks : min, -aranan, c0, 2 * c0],
               '$kritik $isaret Yerel ${v == 0 ? 'minimum' : 'maksimum'} '
-              'noktasının apsisi ${_n(aranan)} olur.',
+                  'noktasının apsisi ${_n(aranan)} olur.',
             );
           }
           final x0 = v == 0 ? maks : min, diger = v == 0 ? min : maks;
           return _tam(
             'f(x) = ${_pol(pol)} fonksiyonunun yerel '
-            '${v == 0 ? 'maksimum' : 'minimum'} değeri kaçtır?',
+                '${v == 0 ? 'maksimum' : 'minimum'} değeri kaçtır?',
             _deg(pol, x0),
             [_deg(pol, diger), d, _deg(pol, c0), x0],
             '$kritik $isaret Yerel ${v == 0 ? 'maksimum' : 'minimum'} değeri '
-            'f(${_n(x0)}) = ${_yerine(pol, x0)} = ${_n(_deg(pol, x0))} olur.',
+                'f(${_n(x0)}) = ${_yerine(pol, x0)} = ${_n(_deg(pol, x0))} olur.',
           );
         default:
           // f(x) = ±(2x³ − 3(r₁ + r₂)x² + 6r₁r₂x) + d.
@@ -2233,19 +3062,19 @@ final lmMatIleri = <AdvancedFamily>[
               'f(x) = ${_pol(pol)} fonksiyonunun $yon olduğu en geniş aralık '
               '(m, n) olduğuna göre';
           if (v == 0) {
-            return _tam(
-              '$kok n − m farkı kaçtır?',
-              r2 - r1,
-              [r1 + r2, 2 * (r2 - r1), r1 * r2, r2 - r1 + 1],
-              '$giris n − m = ${_n(r2)} − ${_p(r1)} = ${r2 - r1}.',
-            );
+            return _tam('$kok n − m farkı kaçtır?', r2 - r1, [
+              r1 + r2,
+              2 * (r2 - r1),
+              r1 * r2,
+              r2 - r1 + 1,
+            ], '$giris n − m = ${_n(r2)} − ${_p(r1)} = ${r2 - r1}.');
           }
-          return _tam(
-            '$kok m + n toplamı kaçtır?',
-            r1 + r2,
-            [r2 - r1, -(r1 + r2), r1 * r2, 2 * (r1 + r2)],
-            '$giris m + n = ${_n(r1)} + ${_p(r2)} = ${_n(r1 + r2)}.',
-          );
+          return _tam('$kok m + n toplamı kaçtır?', r1 + r2, [
+            r2 - r1,
+            -(r1 + r2),
+            r1 * r2,
+            2 * (r1 + r2),
+          ], '$giris m + n = ${_n(r1)} + ${_p(r2)} = ${_n(r1 + r2)}.');
       }
     },
   ),
@@ -2258,7 +3087,7 @@ final lmMatIleri = <AdvancedFamily>[
     Difficulty.hard,
     BloomLevel.uygulama,
     (a, b, c) {
-      final v = c ~/ 5;
+      final v = c ~/ 5, hs = _hs(a, b, c);
       // (0, 3) yoktur: 3³ = 3·3² olduğundan parametre sorusunda ilkel yerine
       // integrandı kullanan da aynı sonucu bulurdu.
       const sinirlar = [
@@ -2271,20 +3100,34 @@ final lmMatIleri = <AdvancedFamily>[
           final (alt, ust) = sinirlar[v][b ~/ 5];
           // İntegralin 0 çıktığı ya da integral almadan f(üst) − f(alt)
           // hesaplayan yolun da doğru değeri verdiği sabitler atlanır.
-          final r = _uygun(const [-4, -1, 2, 5, 7, -7, 1, 4, -2, 8], b % 5, (x) {
+          final r = _uygun(const [-4, -1, 2, 5, 7, -7, 1, 4, -2, 8], b % 5, (
+            x,
+          ) {
             final y = _deg([p, q, x, 0], ust) - _deg([p, q, x, 0], alt);
             return y != 0 &&
-                y != _deg([3 * p, 2 * q, x], ust) - _deg([3 * p, 2 * q, x], alt);
+                y !=
+                    _deg([3 * p, 2 * q, x], ust) - _deg([3 * p, 2 * q, x], alt);
           });
           final f = [3 * p, 2 * q, r], ilkel = [p, q, r, 0];
           final fu = _deg(ilkel, ust), fa = _deg(ilkel, alt);
-          return _tam(
+          return _tamS(
             '∫${_alt(alt)}${_ust(ust)} (${_pol(f)}) dx belirli integralinin '
-            'değeri kaçtır?',
+                'değeri kaçtır?',
             fu - fa,
-            [fu + fa, _deg(f, ust) - _deg(f, alt), fu, fa - fu],
+            [
+              fu + fa,
+              _deg(f, ust) - _deg(f, alt),
+              fu,
+              // Üssü artırıp yeni üsse bölmeyi unutma (x·f(x)) ve sabitin
+              // ilkelini x'siz bırakma; sınırları ters alma en sonda (yanıtın
+              // ters işaretlisi, anahtarla sözcük ortaklığı kurar).
+              ust * _deg(f, ust) - alt * _deg(f, alt),
+              fu - fa - r * (ust - alt),
+              fa - fu,
+            ],
             'İlkel fonksiyon F(x) = ${_pol(ilkel)} olur. F($ust) − F($alt) = '
-            '${_n(fu)} − ${_p(fa)} = ${_n(fu - fa)}.',
+                '${_n(fu)} − ${_p(fa)} = ${_n(fu - fa)}.',
+            hs,
           );
         case 1:
           final p = 1 + a % 5, r = 1 + a ~/ 5;
@@ -2296,8 +3139,18 @@ final lmMatIleri = <AdvancedFamily>[
             [
               for (var boy = 1; boy <= 4; boy++)
                 for (var x = -2; x <= 2; x++) (x, x + boy),
-              (-3, -2), (3, 4), (-3, -1), (3, 5), (-3, 0), (-3, 1),
-              (-3, 2), (-2, 3), (-3, 3), (-4, -3), (4, 5), (-1, 4),
+              (-3, -2),
+              (3, 4),
+              (-3, -1),
+              (3, 5),
+              (-3, 0),
+              (-3, 1),
+              (-3, 2),
+              (-2, 3),
+              (-3, 3),
+              (-4, -3),
+              (4, 5),
+              (-1, 4),
             ],
             b,
             (s) {
@@ -2310,22 +3163,28 @@ final lmMatIleri = <AdvancedFamily>[
           );
           final fu = _deg(ilkel, ust), fa = _deg(ilkel, alt);
           final boy = ust - alt, ya = _deg(f, alt), yu = _deg(f, ust);
-          return _tam(
+          return _tamS(
             'y = ${_pol(f)} eğrisi, x ekseni, x = ${_n(alt)} ve x = ${_n(ust)} '
-            'doğruları ile sınırlanan bölgenin alanı kaç birimkaredir?',
+                'doğruları ile sınırlanan bölgenin alanı kaç birimkaredir?',
             fu - fa,
-            // Yamuk ya da dikdörtgen sanma, integral almadan fark alma.
+            // Yamuk ya da dikdörtgen sanma, integral almadan fark alma;
+            // yeni üsse bölmeyi unutma (x·f(x)), sabitin ilkelini x'siz
+            // bırakma, alt sınırı unutma.
             [
               if ((ya + yu) * boy % 2 == 0) (ya + yu) * boy ~/ 2,
               (yu - ya).abs(),
               yu * boy,
               ya * boy,
               (fu + fa).abs(),
+              ust * yu - alt * ya,
+              fu - fa - r * boy,
+              fu,
             ],
             'Eğri x ekseninin üstünde kaldığından alan, fonksiyonun '
-            'x = ${_n(alt)} ile x = ${_n(ust)} arasındaki belirli '
-            'integralidir. F(x) = ${_pol(ilkel)} için F(${_n(ust)}) − '
-            'F(${_n(alt)}) = ${_n(fu)} − ${_p(fa)} = ${fu - fa}.',
+                'x = ${_n(alt)} ile x = ${_n(ust)} arasındaki belirli '
+                'integralidir. F(x) = ${_pol(ilkel)} için F(${_n(ust)}) − '
+                'F(${_n(alt)}) = ${_n(fu)} − ${_p(fa)} = ${fu - fa}.',
+            hs,
             pozitif: true,
           );
         case 2:
@@ -2336,16 +3195,27 @@ final lmMatIleri = <AdvancedFamily>[
           final alan = 4 * k * t * t * t;
           final fark = [-3 * k, 0, 3 * k * t * t];
           final ilkel = [-k, 0, 3 * k * t * t, 0];
-          return _tam(
+          final kt3 = k * t * t * t;
+          return _tamS(
             'y = ${_pol([3 * k * i, 0, sabit])} parabolü ile y = ${_n(dogru)} '
-            'doğrusu arasında kalan sınırlı bölgenin alanı kaç birimkaredir?',
+                'doğrusu arasında kalan sınırlı bölgenin alanı kaç birimkaredir?',
             alan,
-            [alan ~/ 2, 6 * k * t * t * t, 2 * alan, 3 * k * t * t * t],
+            // Yarım aralık, dikdörtgen, iki kat, üçgen; farkı almadan yalnız
+            // parabolün ya da yalnız doğrunun [−t, t] integrali.
+            [
+              alan ~/ 2,
+              6 * kt3,
+              2 * alan,
+              3 * kt3,
+              (2 * i * kt3 + 2 * sabit * t).abs(),
+              (2 * t * dogru).abs(),
+            ],
             '${_pol([3 * k * i, 0, sabit])} = ${_n(dogru)} eşitliğinden '
-            'x² = ${t * t}, yani x = −$t ve x = $t bulunur. Bu aralıkta '
-            'üstteki eğri ile alttaki eğrinin farkı ${_pol(fark)} olur; '
-            'ilkeli F(x) = ${_pol(ilkel)} için alan F($t) − F(−$t) = '
-            '${alan ~/ 2} − (−${alan ~/ 2}) = $alan.',
+                'x² = ${t * t}, yani x = −$t ve x = $t bulunur. Bu aralıkta '
+                'üstteki eğri ile alttaki eğrinin farkı ${_pol(fark)} olur; '
+                'ilkeli F(x) = ${_pol(ilkel)} için alan F($t) − F(−$t) = '
+                '${alan ~/ 2} − (−${alan ~/ 2}) = $alan.',
+            hs,
             pozitif: true,
           );
         case 3:
@@ -2356,22 +3226,27 @@ final lmMatIleri = <AdvancedFamily>[
           final mm = m.abs();
           final alan = mm * (u * u + w * w);
           final net = mm * (w * w - u * u).abs();
-          return _tam(
+          return _tamS(
             'y = ${_pol([2 * m, -2 * m * z])} doğrusu, x ekseni, '
-            'x = ${_n(alt)} ve x = ${_n(ust)} doğruları arasında kalan '
-            'bölgelerin alanları toplamı kaç birimkaredir?',
+                'x = ${_n(alt)} ve x = ${_n(ust)} doğruları arasında kalan '
+                'bölgelerin alanları toplamı kaç birimkaredir?',
             alan,
+            // Net integral, üçgende 1/2'yi unutma, tek büyük üçgen, yarım;
+            // yalnız eksenin üstündeki parça, uç yükseklikli dikdörtgen.
             [
               net,
               2 * alan,
               mm * (u + w) * (u + w),
               if (alan.isEven) alan ~/ 2,
+              m > 0 ? mm * w * w : mm * u * u,
+              2 * mm * (m > 0 ? w : u) * (u + w),
             ],
             'Doğru x eksenini x = ${_n(z)} noktasında keser ve bu noktada '
-            'işaret değiştirir. [${_n(alt)}, ${_n(z)}] aralığındaki üçgenin '
-            'alanı $u·${2 * mm * u}/2 = ${mm * u * u}, [${_n(z)}, ${_n(ust)}] '
-            'aralığındaki üçgenin alanı $w·${2 * mm * w}/2 = ${mm * w * w} '
-            'olur. Toplam alan $alan.',
+                'işaret değiştirir. [${_n(alt)}, ${_n(z)}] aralığındaki üçgenin '
+                'alanı $u·${2 * mm * u}/2 = ${mm * u * u}, [${_n(z)}, ${_n(ust)}] '
+                'aralığındaki üçgenin alanı $w·${2 * mm * w}/2 = ${mm * w * w} '
+                'olur. Toplam alan $alan.',
+            hs,
             pozitif: true,
           );
         default:
@@ -2381,22 +3256,26 @@ final lmMatIleri = <AdvancedFamily>[
           final kup = p * (ust * ust * ust - alt * alt * alt);
           final boy = ust - alt;
           final deger = kup + m * boy;
-          return _kes(
+          return _kesS(
             '∫${_alt(alt)}${_ust(ust)} (${_pol([3 * p, 0, 0])} + m) dx = '
-            '${_n(deger)} olduğuna göre m kaçtır?',
+                '${_n(deger)} olduğuna göre m kaçtır?',
             m,
             1,
+            // m'nin ilkelini x'siz alma, ilkel yerine integrandı kullanma,
+            // işaret hatası, x² terimini atma, 3'e bölmeyi unutma.
             [
               (deger - kup, 1),
               (deger - 3 * p * (ust * ust - alt * alt), boy),
               (deger + kup, boy),
               (deger, boy),
+              (deger - 3 * kup, boy),
             ],
             'İlkel fonksiyon F(x) = ${_pol([p, 0, 0, 0])} + mx olur. '
-            'F($ust) − F($alt) = $kup + ${boy == 1 ? '' : boy}m = '
-            '${_n(deger)} eşitliğinden '
-            '${boy == 1 ? '' : '${boy}m = ${_n(deger - kup)} ve '}'
-            'm = ${_n(m)} bulunur.',
+                'F($ust) − F($alt) = $kup + ${boy == 1 ? '' : boy}m = '
+                '${_n(deger)} eşitliğinden '
+                '${boy == 1 ? '' : '${boy}m = ${_n(deger - kup)} ve '}'
+                'm = ${_n(m)} bulunur.',
+            hs,
           );
       }
     },
@@ -2410,7 +3289,7 @@ final lmMatIleri = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.uygulama,
     (a, b, c) {
-      final v = c ~/ 5;
+      final v = c ~/ 5, hs = _hs(a, b, c);
       String sigma(int alt, int ust, String ifade) =>
           'Alt sınırı k = $alt ve üst sınırı $ust olan Σ $ifade toplamının '
           'değeri kaçtır?';
@@ -2426,13 +3305,27 @@ final lmMatIleri = <AdvancedFamily>[
             (x) => p * t + x * n != p * n + x,
           );
           final toplam = p * t + q * n;
-          return _tam(
-            sigma(1, n, '(${v == 0 ? _pol([p, q], 'k') : _polArtan([q, p], 'k')})'),
+          return _tamS(
+            sigma(
+              1,
+              n,
+              '(${v == 0 ? _pol([p, q], 'k') : _polArtan([q, p], 'k')})',
+            ),
             toplam,
-            [p * t + q, n * (p * n + q), p * (t - n) + q * n, p * n + q],
+            // Sabiti bir kez alma, son terimi n kez alma, Σ k için n(n − 1)/2,
+            // yalnız son terim, 2'ye bölmeyi unutma, sabiti k ile ortak alma.
+            [
+              p * t + q,
+              n * (p * n + q),
+              p * (t - n) + q * n,
+              p * n + q,
+              2 * p * t + q * n,
+              (p + q) * t,
+            ],
             'k = 1 için başlayan toplamda Σ k = $n·${n + 1}/2 = $t olur; '
             'sabit terim $n kez toplanır. Sonuç ${_p(p)}·$t + '
             '$n·${_p(q)} = ${_n(toplam)}.',
+            hs,
           );
         case 1:
           final p = 1 + b ~/ 5;
@@ -2448,23 +3341,51 @@ final lmMatIleri = <AdvancedFamily>[
                 : p * k2 + x * k1 != p * n * n + x * n,
           );
           final kareler = 'Σ k² = $n·${n + 1}·${2 * n + 1}/6 = $k2';
+          // Yanlış Σ k² formülleri: (Σ k)², Σ k, n(n + 1)(2n + 1)/3 ve
+          // n(n + 1)(n + 2)/6.
+          final k2b = n * (n + 1) * (n + 2) ~/ 6;
           if (v == 0) {
             final toplam = p * k2 + q * n;
-            return _tam(
+            return _tamS(
               sigma(1, n, '(${_pol([p, 0, q], 'k')})'),
               toplam,
-              [p * k1 * k1 + q * n, p * k2 + q, p * k1 + q * n, p * k2],
+              // Sabiti bir kez alma ya da atma, son terimi n kez alma, yalnız
+              // son terim.
+              [
+                p * k1 * k1 + q * n,
+                p * k2 + q,
+                p * k1 + q * n,
+                p * k2,
+                2 * p * k2 + q * n,
+                p * k2b + q * n,
+                n * (p * n * n + q),
+                p * n * n + q,
+              ],
               '$kareler olur; sabit terim $n kez toplanır. Sonuç '
               '${p == 1 ? '' : '$p·'}$k2 + $n·${_p(q)} = ${_n(toplam)}.',
+              hs,
             );
           }
           final toplam = p * k2 + q * k1;
-          return _tam(
+          return _tamS(
             sigma(1, n, '(${_pol([p, q, 0], 'k')})'),
             toplam,
-            [p * k1 * k1 + q * k1, p * k2 + q * n, p * k2 + q, p * k2],
+            // Σ k yerine n ya da 1 alma, k²'yi atma; iki terimde de aynı
+            // toplamı kullanma, son terimi n kez alma.
+            [
+              p * k1 * k1 + q * k1,
+              p * k2 + q * n,
+              p * k2 + q,
+              p * k2,
+              2 * p * k2 + q * k1,
+              p * k2b + q * k1,
+              (p + q) * k2,
+              (p + q) * k1,
+              n * (p * n * n + q * n),
+            ],
             '$kareler ve Σ k = $n·${n + 1}/2 = $k1 olur. Sonuç '
             '${p == 1 ? '' : '$p·'}$k2 + ${_p(q)}·$k1 = ${_n(toplam)}.',
+            hs,
           );
         case 2:
           final m = 3 + a % 5;
@@ -2480,18 +3401,24 @@ final lmMatIleri = <AdvancedFamily>[
           );
           final kt = (m + n) * adet ~/ 2;
           final toplam = p * kt + q * adet;
-          return _tam(
+          return _tamS(
             sigma(m, n, '(${_pol([p, q], 'k')})'),
             toplam,
+            // Son terimi eksik ya da fazla alma, 1'den başlatma, ilk terimi
+            // atma, sabiti bir kez ya da n kez alma, 2'ye bölmeyi unutma.
             [
               toplam - (p * n + q),
               p * n * (n + 1) ~/ 2 + q * n,
               toplam - (p * m + q),
               p * kt + q,
+              toplam + p * (n + 1) + q,
+              p * kt + q * n,
+              2 * p * kt + q * adet,
             ],
             'Terim sayısı $n − $m + 1 = $adet olur. Σ k = ($m + $n)·$adet/2 '
             '= $kt ve sabit terim $adet kez toplanır. Sonuç $p·$kt + '
             '$adet·${_p(q)} = ${_n(toplam)}.',
+            hs,
           );
         case 3:
           final sabit = 2 + a;
@@ -2501,13 +3428,24 @@ final lmMatIleri = <AdvancedFamily>[
           ][v][b ~/ 5];
           final adet = const [5, 7, 9, 12, 16][b % 5];
           final n = m + adet - 1;
-          return _tam(
+          return _tamS(
             sigma(m, n, '$sabit'),
             sabit * adet,
-            [sabit * (n - m), sabit * n, sabit * (n + m), sabit],
+            // Terim sayısını n − m, n, n + m ya da n − m + 2 alma; yalnız
+            // terim sayısını verme, sabiti bir kez alma (kökteki sayı olduğu
+            // için en sonda).
+            [
+              sabit * (n - m),
+              sabit * n,
+              sabit * (n + m),
+              sabit * (adet + 1),
+              adet,
+              sabit,
+            ],
             'Sabit terim, terim sayısı kadar toplanır. Terim sayısı '
             '$n − $m + 1 = $adet olduğundan toplam $adet·$sabit = '
             '${sabit * adet} olur.',
+            hs,
             pozitif: true,
           );
         default:
@@ -2519,18 +3457,38 @@ final lmMatIleri = <AdvancedFamily>[
               ? [for (var k = m; k <= n; k++) carpan(k)].join('·')
               : '${carpan(m)}·${carpan(m + 1)}·…·${carpan(n)}';
           final sade = _q(pay, payda);
-          return _kes(
+          // Pay ve paydada birer sınır kaydırma hatası (bir eksik ya da bir
+          // fazla) bileşik üçlüler kurar: anahtar her ögeyi iki seçenekle
+          // paylaşır.
+          final (p0, p1, p2) = v == 0 ? (n, n + 1, n + 2) : (m - 1, m, m + 1);
+          final (d0, d1, d2) = v == 0 ? (m - 1, m, m + 1) : (n, n + 1, n + 2);
+          return _kesS(
             'Alt sınırı k = $m ve üst sınırı $n olan Π [$ifade] çarpımının '
-            'değeri kaçtır?',
+                'değeri kaçtır?',
             pay,
             payda,
-            v == 0
-                ? [(n, m), (n + 1, m + 1), (n + 1, 1), (m, n + 1)]
-                : [(m, n), (m + 1, n + 1), (1, n + 1), (n + 1, m)],
+            [
+              ..._uclu(
+                pay,
+                payda,
+                [
+                  for (final (x, y) in [(p0, d2), (p2, d0), (p0, d0), (p2, d2)])
+                    [(x, d1), (p1, y), (x, y)],
+                ],
+                hs,
+                pozitif: true,
+              ),
+              (p0, d1),
+              (p1, d2),
+              (p2, d1),
+              (p1, d0),
+              ...(v == 0 ? [(n + 1, 1), (m, n + 1)] : [(1, n + 1), (n + 1, m)]),
+            ],
             'Çarpım açık yazılırsa $acik olur. Ardışık çarpanlarda bir '
-            'kesrin ${v == 0 ? 'payı' : 'paydası'} sonraki kesrin '
-            '${v == 0 ? 'paydasıyla' : 'payıyla'} sadeleşir; geriye '
-            '$pay/$payda${sade == '$pay/$payda' ? '' : ' = $sade'} kalır.',
+                'kesrin ${v == 0 ? 'payı' : 'paydası'} sonraki kesrin '
+                '${v == 0 ? 'paydasıyla' : 'payıyla'} sadeleşir; geriye '
+                '$pay/$payda${sade == '$pay/$payda' ? '' : ' = $sade'} kalır.',
+            hs,
             pozitif: true,
           );
       }

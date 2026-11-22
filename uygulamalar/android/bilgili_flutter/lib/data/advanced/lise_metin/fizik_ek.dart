@@ -16,9 +16,15 @@ String _n(num x, [int d = 2]) => tr(x, d).replaceFirst('-', '−');
 /// İki ondalığa yuvarlar.
 double _iki(num x) => (x * 100).roundToDouble() / 100;
 
+/// Sayıyı tam [d] ondalıkla yazar: kök “en yakın onda birliğe
+/// yuvarlayınız” diyorsa 12 değil 12,0 yazılır.
+String _sabit(num x, int d) =>
+    x.toStringAsFixed(d).replaceFirst('.', ',').replaceFirst('-', '−');
+
 /// Sayısal yanıtlı soru. Anahtar iki ondalıkta kesin olmalıdır. [hatalar]
 /// tipik hatalardan gelen sayılar ya da hazır yazılmış seçeneklerdir
 /// (ör. `12√3 N`); yetmezse anahtarın komşu değerleriyle tamamlanır.
+/// [basamak] verilirse bütün sayılar o kadar ondalıkla yazılır.
 AdvancedItem _s(
   String kok,
   num dogru,
@@ -26,6 +32,7 @@ AdvancedItem _s(
   String aciklama, {
   String unit = '',
   bool pozitif = true,
+  int? basamak,
 }) {
   final k = _iki(dogru);
   if ((dogru - k).abs() > 1e-7) {
@@ -33,10 +40,18 @@ AdvancedItem _s(
   }
   if (pozitif && k <= 0) throw StateError('Pozitif olmayan anahtar $k: $kok');
   final tam = k == k.roundToDouble();
-  final num adim = tam
+  num adim = tam
       ? (k.abs() >= 200 ? 10 : (k.abs() >= 40 ? 5 : 1))
       : (k.abs() >= 20 ? 1 : (k.abs() >= 2 ? 0.5 : 0.1));
-  String yaz(num x) => birimli(_n(x), unit);
+  // Büyük anahtarlarda sabit adım anahtarın binde birkaçına iner; komşu
+  // seçenek anahtardan yalnız son basamağıyla ayrılır ve fizik değil rakam
+  // okuma sınanırdı (ör. 1975000 ile 1974990 kWh). Adım bu yüzden 1-2-5
+  // dizisinde anahtarın %2,5'inden küçük olmayan ilk değere büyütülür.
+  for (var j = 0; 40 * adim < k.abs(); j++) {
+    adim *= const [2, 2.5, 2][j % 3];
+  }
+  String yaz(num x) =>
+      birimli(basamak == null ? _n(x) : _sabit(x, basamak), unit);
   // Komşu değerler anahtarın iki yanına simetrik eklenirse anahtar, eşit
   // aralıklı seçeneklerin ortasındaki değer olarak sezilir. Komşular bu
   // yüzden önce tek yönde eklenir; yön anahtarın değerine bağlıdır.
@@ -594,8 +609,8 @@ AdvancedItem _yatayKuvvet(int a, int b, int k) {
       final (w, f) = n.isEven ? (f2, f1) : (f1, f2);
       return _s(
         'Ağırlığı $w N olan ${ad(w)}, $asili Cisme yatay doğrultuda $f N '
-            'büyüklüğünde bir kuvvet uygulandığında cisim, ip düşey doğrultudan '
-            'saparak dengede kalıyor. $tSoru',
+            'büyüklüğünde bir kuvvet uygulandığında cisim, ip düşeyle bir açı '
+            'yapacak biçimde dengede kalıyor. $tSoru',
         r,
         [w + f, (w - f).abs(), math.max(w, f)],
         'Cisim üç kuvvetin etkisinde dengede olduğundan ipteki gerilme, ağırlık '
@@ -1992,7 +2007,10 @@ AdvancedItem _keplerIkinci(int a, int b, int k) {
           'periyodu $t gündür. Gezegeni yıldıza birleştiren doğru parçası, '
           'yörüngenin sınırladığı alanın $p/$q kadarını kaç günde tarar?',
       cevap,
-      [t * (q - p) / q, t * p / (2 * q)],
+      // Kalan alanın süresi, süreyi yarıya bölmek ya da iki katına çıkarmak.
+      // 1/3 ve 2/3 kesirlerinde bunlardan ikisi aynı çıktığından son aday
+      // taranan alanı kalan alana oranlamaktır (t·p / (q − p)).
+      [t * (q - p) / q, t * p / (2 * q), 2 * cevap, t * p / (q - p)],
       'Kepler yasasına göre gezegeni yıldıza birleştiren doğru parçası eşit '
           'sürelerde eşit alanlar tarar; taranan alan geçen süreyle doğru '
           'orantılıdır. Alanın tamamı $t günde tarandığından $p/$q kadarı '
@@ -2310,7 +2328,8 @@ AdvancedItem _tepkimeEnerjisi(int a, int b, int k) {
     ],
     'Kütle farkı Δm = ${kutle(x)} − ${kutle(y)} = ${kutle(dm)} u olur. Açığa '
         'çıkan enerji E = Δm·931 = ${kutle(dm)}·931 = ${_n(tam, 5)} MeV, yani '
-        'yaklaşık ${_n(e)} MeV bulunur.',
+        'yaklaşık ${_sabit(e, basamak)} MeV bulunur.',
+    basamak: basamak,
   );
 }
 
@@ -2346,7 +2365,8 @@ AdvancedItem _fuzyonKinetik(int a, int b, int k) {
     'Kütle farkı Δm = ${_u5(x)} − ${_u5(y)} = ${_u5(dm)} u olup Δm·931 = '
         '${_n(q, 5)} MeV enerjiye karşılık gelir. Enerji korunumundan oluşan '
         'taneciklerin toplam kinetik enerjisi ${_n(kin)} + ${_n(q, 5)} = '
-        '${_n(kin + q, 5)} MeV, yani yaklaşık ${_n(son)} MeV olur.',
+        '${_n(kin + q, 5)} MeV, yani yaklaşık ${_sabit(son, 1)} MeV olur.',
+    basamak: 1,
   );
 }
 
@@ -2361,7 +2381,9 @@ AdvancedItem _kutleEnerji(int a, int b, int k) {
         'Kütlesi ${_n(mg)} mg olan bir maddenin tamamı enerjiye dönüşebilseydi '
             'açığa çıkacak enerji kaç kWh olurdu? $sabit',
         e,
-        [e * 1000, e / 1000],
+        // mg → kg çevirisinde 10⁻³ ya da 10⁻⁹ almak, E = ½·m·c² yazmak;
+        // 1 kWh'ı 10⁶ J sanmak (3,6 çarpanını unutmak) yedektir.
+        [e * 1000, e / 1000, e / 2, 3.6 * e],
         'E = m·c² = ${_n(mg)}·10⁻⁶ kg·(3·10⁸ m/s)² = ${_n(9 * mg)}·10¹⁰ J '
             'olur. 1 kWh = 3,6·10⁶ J olduğundan E = ${_n(9 * mg)}·10¹⁰ / '
             '(3,6·10⁶) = $e kWh bulunur.',
@@ -2393,7 +2415,10 @@ AdvancedItem _kutleEnerji(int a, int b, int k) {
         'Bir maddenin tamamının enerjiye dönüşmesiyle $e kWh enerji elde '
             'edilebilmesi için bu maddenin kütlesi kaç mg olmalıdır? $sabit',
         mg,
-        [mg * 1000, mg / 1000],
+        // kg → mg çevirisinde 10⁹ ya da 10³ ile çarpmak (bin kat küçüğü iki
+        // ondalığa yuvarlanmadan, tam değeriyle yazılır), E = ½·m·c² yazmak;
+        // c²'yi 3·10¹⁶ almak yedektir.
+        [mg * 1000, '${_n(mg / 1000, 5)} mg', 2 * mg, 3 * mg],
         '$e kWh = $e·3,6·10⁶ J = ${9 * n}·10⁹ J olur. E = m·c² bağıntısından '
             'm = ${9 * n}·10⁹ / (9·10¹⁶) = $n·10⁻⁷ kg = ${_n(mg)} mg bulunur.',
         unit: 'mg',
@@ -2440,7 +2465,6 @@ AdvancedItem _baglanmaEnerjisi(int a, int b, int k) {
   final toplam = 10080 * kutle + kutle ~/ 8 + (13 * j) % 97;
   final cekirdek = toplam - dm;
   final tam = 931 * dm / 10000;
-  final toplamYuvarlak = _yukari(931 * dm, 10000, 0);
   final giris =
       'Kütle numarası $kutle olan bir çekirdeği oluşturan proton ve nötronların '
       'serbest hâldeki toplam kütlesi ${_u(toplam)} u, çekirdeğin kütlesi ise '
@@ -2453,15 +2477,17 @@ AdvancedItem _baglanmaEnerjisi(int a, int b, int k) {
       '$giris Bu çekirdeğin nükleon başına bağlanma enerjisi yaklaşık kaç MeV '
           'olur? ${_u931Yuvarla('sonucu en yakın yüzde birliğe yuvarlayınız.')}',
       e,
-      // Nükleon sayısına bölmeyi unutmak, kütle eksikliğini bir basamak
-      // kaydırmak; hepsi kökün istediği basamakla.
+      // Nükleon sayısına bölmeyi unutmak (toplam enerji de kökün istediği
+      // gibi yüzde birliğe yuvarlanır), kütle eksikliğini bir basamak
+      // kaydırmak; hepsi kökün istediği basamakla yazılır.
       [
-        toplamYuvarlak,
+        _yukari(931 * dm, 10000, 2),
         _yukari(9310 * dm, 10000 * kutle, 2),
         _yukari(931 * dm, 100000 * kutle, 2),
       ],
       '$eksik bulunur. Nükleon başına düşen bağlanma enerjisi '
-          '${_n(tam, 4)} / $kutle ≈ ${_n(e)} MeV olur.',
+          '${_n(tam, 4)} / $kutle ≈ ${_sabit(e, 2)} MeV olur.',
+      basamak: 2,
     );
   }
   return _s(
@@ -2527,7 +2553,10 @@ AdvancedItem _carpismaUyarma(int a, int b, int k) {
           'yayımlıyor. Çarpışmadan sonraki elektronun kinetik enerjisi ile '
           'yayımlanan fotonun enerjisinin toplamı kaç eV olur? $_eForm',
       cevap,
-      [d, _iki(kin - 2.55), _iki(d + 10.2)],
+      // Fotonu unutmak; fotonun enerjisini 10,2 eV almak (gelen enerjiden
+      // yalnız 2,55 eV'u çıkarmakla aynı sonuç); atomun n = 2 düzeyinde
+      // kaldığını unutup toplamı gelen enerjiye eşit sanmak.
+      [d, _iki(d + 10.2), kin],
       'Uyarma için E₄ − E₁ = −0,85 − (−13,6) = 12,75 eV harcanır; elektronun '
           'kinetik enerjisi ${_n(kin)} − 12,75 = ${_n(d)} eV olur. Fotonun enerjisi '
           'E₄ − E₂ = −0,85 − (−3,4) = 2,55 eV olduğundan toplam ${_n(d)} + 2,55 = '
@@ -2574,6 +2603,8 @@ AdvancedItem _fotonIyonlasma(int a, int b, int k) {
         if (m == 2) _iki(foton - 6.8),
         _iki(foton + ei),
         ei,
+        // İyonlaşma enerjisini çıkarmayı unutmak.
+        foton,
       ],
       '$aciklama Kopan elektronun kinetik enerjisi ${_n(foton)} − ${_n(ei)} = '
           '${_n(d)} eV bulunur.',
@@ -2616,7 +2647,11 @@ AdvancedItem _carpismaIyonlasma(int a, int b, int k) {
       _iki(kin - kopan),
       _iki(kin - ei),
       if (m != 1 && kin - 13.6 - kopan > 0) _iki(kin - 13.6 - kopan),
-      _iki(kopan + kalan),
+      // kopan + kalan, kin − ei ile aynı olduğundan yerine iki elektronu
+      // karıştırıp kopan elektronun enerjisini yazmak; o da çakışırsa
+      // iyonlaşma enerjisinin kendisi.
+      kopan,
+      ei,
     ],
     'n = $m düzeyindeki elektronu atomdan koparmak için ${_n(ei)} eV gerekir. '
         'Enerji korunumundan ${_n(kin)} = ${_n(ei)} + ${_n(kopan)} + K olur; '
@@ -2924,13 +2959,13 @@ AdvancedItem _cubukEmk(int a, int b, int k) {
   final (b10, l10, v) = _yay(_cubuk, a + 25 * b + 500 * k, 2000);
   final e = b10 * l10 * v / 100;
   return _s(
-    '${_rayDuzeni(b10, l10, v, null)} Çubuğun uçları arasında oluşan '
-        'indüksiyon emk değeri kaç V olur?',
+    '${_rayDuzeni(b10, l10, v, null)} Çubuğun raylar arasında kalan kısmında '
+        'oluşan indüksiyon emk değeri kaç V olur?',
     e,
     [e * 100, b10 * v / 10, l10 * v / 10],
-    'Hareketli çubukta oluşan emk ε = B·L·v bağıntısıyla bulunur. Uzunluk '
-        '${_n(l10 / 10)} m olduğundan ε = ${_n(b10 / 10)}·${_n(l10 / 10)}·$v = '
-        '${_n(e)} V olur.',
+    'Hareketli çubukta oluşan emk ε = B·L·v bağıntısıyla bulunur; L, çubuğun '
+        'raylar arasında kalan uzunluğudur. L = ${_n(l10 / 10)} m olduğundan '
+        'ε = ${_n(b10 / 10)}·${_n(l10 / 10)}·$v = ${_n(e)} V olur.',
     unit: 'V',
   );
 }

@@ -3,6 +3,7 @@
 // görünen veriler a, b ve c ile birebir belirlenir.
 import 'dart:math' as math;
 
+import 'denge.dart';
 import 'ortak.dart';
 
 const _tyt = ExamKind.tyt, _ayt = ExamKind.ayt;
@@ -45,6 +46,76 @@ AdvancedItem _s(
   );
 }
 
+/// Vaka numarasından (i = a + 25·b + 500·c) anahtarın hedef değer sırası.
+int _hs(int a, int b, int c, [int tuz = 0]) =>
+    hedefSira(a + 25 * b + 500 * c, tuz);
+
+/// Anahtarın yazım duyarlığında (tam sayı, bir ya da iki ondalık) ve değerinin
+/// en az %10'u kadar olan en küçük yuvarlak komşu adımı.
+num _komsuAdim(num k) {
+  final y = (k * 100).round();
+  final taban = y % 100 == 0 ? 1 : (y % 10 == 0 ? 0.1 : 0.01);
+  for (final s in const [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000]) {
+    if (s * taban >= 0.1 * k - 1e-9) return s * taban;
+  }
+  return 2000 * taban;
+}
+
+/// Değer sırası dengeli pozitif sayısal soru. Anahtardan küçük çeldirici
+/// sayısı [sira] olur (`hedefSira`). [hatalar] öncelik sırasıyla tipik hata
+/// değerleridir (anahtarın iki yanında da); bir yanda yetmezse anahtarın
+/// [adim] (verilmezse `_komsuAdim`) aralıklı komşularıyla tamamlanır.
+AdvancedItem _sd(
+  String kok,
+  num dogru,
+  Iterable<num> hatalar,
+  String aciklama,
+  int sira, {
+  String unit = '',
+  bool yuzde = false,
+  num? adim,
+}) {
+  final k = (dogru * 100).roundToDouble() / 100;
+  if ((dogru - k).abs() > 1e-7 || k <= 0) {
+    throw StateError('Kesin olmayan anahtar $dogru: $kok');
+  }
+  final s = adim ?? _komsuAdim(k);
+  final aday = [
+    for (final x in [
+      ...hatalar,
+      for (var j = 1; j <= 6; j++) ...[k + j * s, k - j * s],
+    ])
+      if (x.isFinite && x > 0 && (!yuzde || x < 100) && _yuvarla(x) > 0)
+        (_yuvarla(x), _yaz(_yuvarla(x), unit, yuzde)),
+  ];
+  final yazim = _yaz(k, unit, yuzde);
+  // Anahtar iki çeldiricinin aritmetik ya da geometrik ortası olursa
+  // (k/10 ile 10k, k − d ile k + d gibi) "ortadakini seç" ipucu doğar; o
+  // çiftin sonraki öncelikli adayı atılıp aynı sırayla yeniden seçilir.
+  var secilen = siraliCeldiriciler(k, yazim, aday, sira);
+  for (var deneme = 0; deneme < 8; deneme++) {
+    final sira0 = [
+      for (final w in secilen) aday.indexWhere((x) => x.$2 == w),
+    ];
+    int? at;
+    for (var p = 0; p < 3 && at == null; p++) {
+      for (var q = p + 1; q < 3 && at == null; q++) {
+        final x = aday[sira0[p]].$1, y = aday[sira0[q]].$1;
+        final pay = 0.01 * k;
+        if (((x + y) / 2 - k).abs() <= pay ||
+            (math.sqrt(x * y) - k).abs() <= pay) {
+          at = math.max(sira0[p], sira0[q]);
+        }
+      }
+    }
+    if (at == null) break;
+    final atilan = aday[at].$2;
+    aday.removeWhere((x) => x.$2 == atilan);
+    secilen = siraliCeldiriciler(k, yazim, aday, sira);
+  }
+  return AdvancedItem(kok, yazim, secilen, aciklama);
+}
+
 const _g = 'Sürtünmeler önemsizdir; g = 10 m/s² alınız.';
 
 // 1 · Düzgün doğrusal hareket ve km/sa ↔ m/s dönüşümü.
@@ -62,32 +133,50 @@ final _f01 = lmAile(
     final yol = (vm * t).round(); // 10 … 10400 m
     final cevir = '$vk km/sa = $vk / 3,6 = ${tr(vm)} m/s';
     if (c % 3 == 0) {
-      return _s(
+      return _sd(
         'Düz bir yolda $vk km/sa sabit hızla ilerleyen bir $arac, $t saniyede '
         'kaç metre yol alır?',
         yol,
-        [vk * t, vk * 3.6 * t, vk * t / 60],
+        [
+          vk * t, // birimi çevirmeme
+          vk * t / 60, // saniyeyi dakika sanma
+          vk * 3.6 * t, // 3,6 ile çarpma
+          yol / 10, // 3,6 yerine 36 ile bölme
+        ],
         '$cevir olur. Alınan yol ${tr(vm)} · $t = $yol m bulunur.',
+        _hs(a, b, c),
         unit: 'm',
       );
     }
     if (c % 3 == 1) {
-      return _s(
+      return _sd(
         'Düz bir yolda sabit hızla ilerleyen bir $arac, $yol metrelik bölümü '
         '$t saniyede geçiyor. Buna göre sürat kaç km/sa olur?',
         vk,
-        [vm, vm / 3.6, vm * 6],
+        [
+          vm, // m/s değerini çevirmeme
+          vm * 6, // 3,6 yerine 6 ile çarpma
+          vm / 3.6, // 3,6 ile bölme
+        ],
         'Sürat $yol / $t = ${tr(vm)} m/s olur. km/sa birimine çevirmek için 3,6 '
         'ile çarpılır: ${tr(vm)} · 3,6 = $vk km/sa.',
+        _hs(a, b, c),
         unit: 'km/sa',
       );
     }
-    return _s(
+    return _sd(
       'Düz bir yolda $vk km/sa sabit hızla ilerleyen bir $arac, uzunluğu '
       '$yol m olan bir bölümü kaç saniyede geçer?',
       t,
-      [yol / vk, t * 3.6, yol / (vk * 3.6)],
+      [
+        yol / vk, // birimi çevirmeme
+        10 * t, // 3,6 yerine 36 ile bölme
+        t * 3.6, // km/sa değerini 3,6 ile çarpma
+        yol / (vk * 3.6), // 3,6 ile çarpılmış hızla bölme
+        t * 60 / 3.6, // dakika ile saniyeyi karıştırma
+      ],
       '$cevir olur. Geçiş süresi $yol / ${tr(vm)} = $t s bulunur.',
+      _hs(a, b, c),
       unit: 's',
     );
   },
@@ -108,14 +197,20 @@ final _f02 = lmAile(
       final v2 = 6 + a, dv = 2 + b % 4, v1 = v2 + dv; // 6 … 35 m/s
       final t = 10 * (b ~/ 4 + 1) + 50 * k; // 10 … 200 s, yol 20 … 1000 m
       final d = dv * t;
-      return _s(
+      return _sd(
         'Doğrusal bir yolda aynı yönde ilerleyen iki araçtan arkadaki $v1 m/s, '
         'öndeki $v2 m/s sabit hızla gitmektedir. Aralarındaki uzaklığın $d m '
         'olduğu andan kaç saniye sonra arkadaki araç öndekine yetişir?',
         t,
-        [d / (v1 + v2), d / v1, d / v2],
+        [
+          d / (v1 + v2), // hızları toplama
+          d / v1, // yalnız arkadaki aracın hızı
+          d / v2, // yalnız öndeki aracın hızı
+          d / v2 - d / v1, // iki sürenin farkı
+        ],
         'Arkadaki araç öndekine her saniye $v1 − $v2 = $dv m yaklaşır. '
         'Yetişme süresi $d / $dv = $t s olur.',
+        _hs(a, b, c),
         unit: 's',
       );
     }
@@ -123,15 +218,24 @@ final _f02 = lmAile(
       final v1 = 6 + a, v2 = 5 + 3 * (b % 4); // 6 … 30 ve 5 … 14 m/s
       final t = 5 * (b ~/ 4 + 1) + 25 * k; // 5 … 75 s
       final d = (v1 + v2) * t;
-      return _s(
+      return _sd(
         'Doğrusal bir yolun iki ucundan aynı anda birbirine doğru harekete geçen '
         'iki araçtan biri $v1 m/s, diğeri $v2 m/s sabit hızla ilerlemektedir. '
         'Başlangıçta aralarındaki uzaklık $d m olduğuna göre araçlar kaç saniye '
         'sonra karşılaşır?',
         t,
-        [if (v1 != v2) d / (v1 - v2).abs(), d / v1, d / v2, 2 * t],
+        [
+          2 * t, // hızların toplamı yerine ortalaması
+          t / 2, // yarı yolu toplam hızla bölme
+          if (v1 != v2) d / (v1 - v2).abs(), // hızların farkı
+          d / (2 * math.max(v1, v2)), // karşılaşmayı yolun ortasında sanma
+          d / v1, // yalnız bir aracın hızı
+          d / v2, // yalnız diğer aracın hızı
+          d / (2 * math.min(v1, v2)), // karşılaşmayı yolun ortasında sanma
+        ],
         'Zıt yönlü araçlar birbirine her saniye $v1 + $v2 = ${v1 + v2} m yaklaşır. '
         'Karşılaşma süresi $d / ${v1 + v2} = $t s olur.',
+        _hs(a, b, c),
         unit: 's',
       );
     }
@@ -144,15 +248,20 @@ final _f02 = lmAile(
     final hiz = ileri ? vt + va : vt - va;
     final t = 10 * (b ~/ 2 + 1) + 100 * k; // 10 … 300 s
     final d = hiz * t;
-    return _s(
+    return _sd(
       'Akıntı hızının $va m/s olduğu bir nehirde, suya göre hızı $vt m/s olan '
       'bir motorlu tekne kıyıya paralel olarak '
       '${ileri ? 'akıntıyla aynı yönde' : 'akıntıya karşı'} ilerliyor. Tekne, '
       'kıyıda duran bir gözlemciye göre $d metrelik yolu kaç saniyede alır?',
       t,
-      [d / vt, d / (ileri ? vt - va : vt + va), d / va],
+      [
+        d / vt, // akıntıyı yok sayma
+        d / (ileri ? vt - va : vt + va), // akıntının yönünü ters alma
+        d / va, // yalnız akıntı hızı
+      ],
       'Teknenin kıyıya göre hızı $vt ${ileri ? '+' : '−'} $va = $hiz m/s olur. '
       'Süre $d / $hiz = $t s bulunur.',
+      _hs(a, b, c),
       unit: 's',
     );
   },
@@ -175,37 +284,63 @@ final _f03 = lmAile(
     final x = v0 * t + 0.5 * ivme * t * t;
     final arac = v <= 40 ? 'otomobil' : 'yarış otomobili';
     if (c % 3 == 0) {
-      return _s(
+      return _sd(
         'Doğrusal bir yolda $v0 m/s hızla ilerleyen bir $arac, ${tr(ivme)} m/s² '
         'büyüklüğünde sabit ivmeyle $t saniye boyunca hızlanıyor. Bu sürenin '
         'sonunda hız kaç m/s olur?',
         v,
-        [ivme * t, v0 + ivme, v0 + ivme * t / 2, v0 + ivme * t * 2],
+        [
+          ivme * t, // ilk hızı unutma
+          v0 + ivme * t * 2, // a·t değerini iki kez ekleme
+          v0 + ivme, // süreyi unutma
+          v0 + ivme * t * t, // a·t² ile hesaplama
+          v0 + ivme * t / 2, // ½·a·t ile hesaplama
+          (v0 + ivme) * t, // işlem önceliği
+        ],
         'v = v₀ + a·t bağıntısından v = $v0 + ${tr(ivme)} · $t = ${tr(v)} m/s olur.',
+        _hs(a, b, c),
         unit: 'm/s',
       );
     }
     if (c % 3 == 1) {
-      return _s(
+      return _sd(
         'Doğrusal bir yolda $v0 m/s hızla ilerleyen bir $arac, ${tr(ivme)} m/s² '
         'büyüklüğünde sabit ivmeyle $t saniye boyunca hızlanıyor. Hızlanma '
         'süresince alınan yol kaç metredir?',
         x,
-        [v0 * t + ivme * t * t, 0.5 * ivme * t * t, v0 * t, v * t],
+        [
+          v0 * t + ivme * t * t, // ½ çarpanını unutma
+          0.5 * ivme * t * t, // ilk hızı unutma
+          v * t, // son hızla sabit hareket
+          v0 * t, // ivmeyi unutma
+          v * v / (2 * ivme), // durgun hâlden başladığını sanma
+          v0 * t + 0.5 * ivme * t, // t² yerine t
+        ],
         'x = v₀·t + ½·a·t² bağıntısından x = $v0 · $t + ½ · ${tr(ivme)} · $t² = '
         '${v0 * t} + ${tr(0.5 * ivme * t * t)} = ${tr(x)} m olur.',
+        _hs(a, b, c),
         unit: 'm',
       );
     }
-    return _s(
+    return _sd(
       'Doğrusal bir yolda ilerleyen bir $arac, sabit ivmeyle hızlanarak hızını '
       '$t saniyede $v0 m/s değerinden ${tr(v)} m/s değerine çıkarıyor. Bu '
       '$t saniyelik sürede alınan yol kaç metredir?',
       x,
-      [v * t, v0 * t, (v - v0) * t / 2, (v0 + v) * t],
+      [
+        v * t, // son hızla sabit hareket
+        (v - v0) * t / 2, // yalnız ½·a·t²
+        v0 * t, // ilk hızla sabit hareket
+        v * t + (v - v0) * t / 2, // x = v·t + ½·a·t²
+        v0 * t + (v - v0) / 2, // ½·a·t² yerine ½·a·t
+        (v0 + v) * t, // ortalamada 2'ye bölmeyi unutma
+        v * t / 2, // ilk hızı yok sayma
+        (v - v0) * t, // hız farkıyla hesaplama
+      ],
       'Sabit ivmeli harekette ortalama hız ($v0 + ${tr(v)}) / 2 = '
       '${tr((v0 + v) / 2)} m/s olur. Alınan yol ${tr((v0 + v) / 2)} · $t = '
       '${tr(x)} m bulunur.',
+      _hs(a, b, c),
       unit: 'm',
     );
   },
@@ -237,16 +372,23 @@ final _f04 = lmAile(
       final pay0 = b + 1 + 20 * k; // 1 … 80 m
       final pay = pay0 >= fren ? pay0 + 1 : pay0; // 1 … 81 m, fren mesafesi atlanır
       final engel = fren + pay;
-      return _s(
+      return _sd(
         'Düz bir yolda $v0 m/s hızla ilerleyen bir otomobilin sürücüsü, '
         '${tr(engel)} m ilerideki engeli gördüğü anda frene basıyor ve otomobil '
         '${tr(ivme)} m/s² büyüklüğünde sabit ivmeyle yavaşlıyor. Otomobil engele '
         'kaç metre kala durur?',
         pay,
-        [fren, engel - fren / 2, engel - 2 * fren, engel],
+        [
+          fren, // fren mesafesini yanıt sanma
+          engel - fren / 2, // v₀² / (4·a)
+          engel - 2 * fren, // v₀² / a
+          engel, // çıkarmayı unutma
+          engel - v0 / ivme, // durma süresini yol sanma
+        ],
         'v² = v₀² − 2·a·x bağıntısında v = 0 alınırsa fren mesafesi '
         '$v0² / (2 · ${tr(ivme)}) = ${tr(fren)} m olur. Engele kalan uzaklık '
         '${tr(engel)} − ${tr(fren)} = $pay m bulunur.',
+        _hs(a, b, c),
         unit: 'm',
       );
     }
@@ -268,31 +410,54 @@ final _f04 = lmAile(
           'Frene basıldığı anda v² = 2 · ${tr(a1)} · $x1 = $kare olur. Fren '
           'mesafesi v² / (2 · $a2) = $kare / ${2 * a2} = ${tr(x2)} m bulunur.';
       if (k == 0) {
-        return _s(
+        return _sd(
           '$giris Otomobilin frene basıldıktan sonra durana kadar aldığı yol '
           'kaç metredir?',
           x2,
-          [x1 * a2 / a1, x1, 2 * x2, x1 + x2],
+          [
+            x1 * a2 / a1, // ivmelerin oranını ters alma
+            x2 / 2, // v² / (4·a)
+            x1, // iki yolu eşit sanma
+            2 * x2, // v² / a
+            x1 + x2, // toplam yolu bulma
+          ],
           cozum,
+          _hs(a, b, c),
           unit: 'm',
         );
       }
       if (k == 1) {
-        return _s(
+        return _sd(
           '$giris Otomobilin kalkıştan durana kadar aldığı toplam yol kaç '
           'metredir?',
           x1 + x2,
-          [x1 + x1 * a2 / a1, 2 * x1, x2, x1 + 2 * x2],
+          [
+            x1 + x1 * a2 / a1, // ivmelerin oranını ters alma
+            x1, // fren mesafesini unutma
+            2 * x1, // iki yolu eşit sanma
+            x1 + x2 / 2, // v² / (4·a)
+            x1 + 2 * x2, // v² / a
+            x2, // yalnız fren mesafesi
+          ],
           '$cozum Toplam yol $x1 + ${tr(x2)} = ${tr(x1 + x2)} m olur.',
+          _hs(a, b, c),
           unit: 'm',
         );
       }
-      return _s(
+      return _sd(
         '$giris Otomobilin fren mesafesi, hızlanırken aldığı yoldan kaç metre '
         'kısadır?',
         x1 - x2,
-        [x2, x1 + x2, x1 * a2 / a1 - x1, x1 - 2 * x2],
+        [
+          x2, // yalnız fren mesafesi
+          x1 + x2, // toplam yolu bulma
+          x1 - 2 * x2, // v² / a
+          x1 * a2 / a1 - x1, // ivmelerin oranını ters alma
+          x1 - x2 / 2, // v² / (4·a)
+          x1, // çıkarmayı unutma
+        ],
         '$cozum Aradaki fark $x1 − ${tr(x2)} = ${tr(x1 - x2)} m olur.',
+        _hs(a, b, c),
         unit: 'm',
       );
     }
@@ -300,20 +465,24 @@ final _f04 = lmAile(
     final v = v0 - (1 + b ~/ 4 + 5 * k); // en az 1 m/s
     final ivme = const [1.0, 2.0, 2.5, 5.0][b % 4];
     final x = (v0 * v0 - v * v) / (2 * ivme);
-    return _s(
+    return _sd(
       'Otoyolda $v0 m/s hızla ilerleyen bir otomobilin sürücüsü, ilerideki '
       'araçların yavaşladığını fark edip frene basıyor. Otomobil ${tr(ivme)} m/s² '
       'büyüklüğünde sabit ivmeyle yavaşlayarak hızını $v m/s değerine '
       'düşürüyor. Otomobil bu yavaşlama süresince kaç metre yol alır?',
       x,
       [
-        (v0 - v) * (v0 - v) / (2 * ivme),
-        (v0 * v0 - v * v) / ivme,
-        v0 * v0 / (2 * ivme),
-        (v0 - v) / ivme,
+        (v0 - v) * (v0 - v) / (2 * ivme), // hız farkının karesi
+        (v0 * v0 - v * v) / ivme, // 2 çarpanını unutma
+        (v0 - v) / ivme, // yavaşlama süresini yol sanma
+        v0 * v0 / (2 * ivme), // durana kadarki yol
+        v * (v0 - v) / ivme, // son hızla sabit hareket
+        (v0 * v0 + v * v) / (2 * ivme), // işaret hatası
+        v0 * (v0 - v) / ivme, // ilk hızla sabit hareket
       ],
       'v² = v₀² − 2·a·x bağıntısından x = ($v0² − $v²) / (2 · ${tr(ivme)}) = '
       '(${v0 * v0} − ${v * v}) / ${tr(2 * ivme)} = ${tr(x)} m olur.',
+      _hs(a, b, c),
       unit: 'm',
     );
   },
@@ -407,15 +576,23 @@ final _f06 = lmAile(
       final t = 1 + b % 2; // 1 ya da 2 s
       final h = 3 + 2 * (b ~/ 2) + 20 * k; // 3 … 81 m
       final y = h + v0 * t - 5 * t * t;
-      return _s(
+      return _sd(
         'Yerden $h m yükseklikteki bir platformda bulunan fırlatıcı, bir topu '
         '$v0 m/s hızla düşey yukarı doğru fırlatıyor. Top, fırlatıldıktan '
         '$t saniye sonra yerden kaç metre yüksekte olur? ($_g)',
         y,
-        [v0 * t - 5 * t * t, h + v0 * t, h + v0 * t - 10 * t * t, h + v0 * t + 5 * t * t],
+        [
+          v0 * t - 5 * t * t, // platform yüksekliğini unutma
+          h + v0 * t, // yer çekimini unutma
+          h + v0 * t - 10 * t * t, // ½·g·t² yerine g·t²
+          h + v0 * t + 5 * t * t, // işaret hatası
+          h + v0 * t - 10 * t, // ½·g·t² yerine g·t
+          h + v0 * v0 / 20, // en büyük yüksekliği bulma
+        ],
         'Topun platforma göre yer değiştirmesi v₀·t − ½·g·t² = $v0 · $t − 5 · $t² = '
         '${v0 * t - 5 * t * t} m olur. Yerden yükseklik $h + ${v0 * t - 5 * t * t} = '
         '$y m bulunur.',
+        _hs(a, b, c),
         unit: 'm',
       );
     }
@@ -423,15 +600,22 @@ final _f06 = lmAile(
       final v0 = 12 + 2 * a; // 12 … 60 m/s
       final h = 2 + b + 20 * k; // 2 … 61 m
       final tepe = v0 * v0 / 20; // 7,2 … 180 m
-      return _s(
+      return _sd(
         'Yerden $h m yükseklikteki bir terasa kurulan fırlatıcı, bir bilyeyi '
         '$v0 m/s hızla düşey yukarı doğru fırlatıyor. Bilyenin yerden '
         'çıkabildiği en büyük yükseklik kaç metredir? ($_g)',
         h + tepe,
-        [tepe, h + 2 * tepe, h + tepe / 2, h + v0],
+        [
+          tepe, // teras yüksekliğini unutma
+          h + 2 * tepe, // v₀² / g
+          h + tepe / 2, // v₀² / (4·g)
+          h + v0, // hızı yükseklik sanma
+          tepe - h, // teras yüksekliğini çıkarma
+        ],
         'Bilye fırlatıldığı noktadan v₀² / (2·g) = $v0² / 20 = ${tr(tepe)} m '
         'yükselir. Yerden en büyük yükseklik $h + ${tr(tepe)} = ${tr(h + tepe)} m '
         'olur.',
+        _hs(a, b, c),
         unit: 'm',
       );
     }
@@ -448,31 +632,52 @@ final _f06 = lmAile(
         'v = v₀ − g·t bağıntısından fırlatma hızı v₀ = $v + 10 · ${tr(t)} = $v0 m/s '
         'olur.';
     if (k == 0) {
-      return _s(
+      return _sd(
         '$giris Cisim, fırlatıldıktan kaç saniye sonra en yüksek noktaya '
         'ulaşır? ($_g)',
         v0 / 10,
-        [v / 10, v0 / 5, v0 / 10 + t, v0 / 20],
+        [
+          v / 10, // verilen anın hızıyla hesaplama
+          v0 / 5, // uçuş süresini bulma
+          v0 / 10 + t, // geçen süreyi ekleme
+          v0 / 20, // ½ çarpanı
+        ],
         '$cozum Çıkış süresi v₀ / g = $v0 / 10 = ${tr(v0 / 10)} s bulunur.',
+        _hs(a, b, c),
         unit: 's',
       );
     }
     if (k == 1) {
-      return _s(
+      return _sd(
         '$giris Cisim, fırlatıldıktan kaç saniye sonra yere geri döner? ($_g)',
         v0 / 5,
-        [v0 / 10, v / 5, v / 5 + t, v0 / 2.5],
+        [
+          v0 / 10, // yalnız çıkış süresi
+          v / 5, // verilen anın hızıyla hesaplama
+          v0 / 2.5, // iki katını iki kez alma
+          v / 5 + t, // verilen andan sonraki süreye geçen süreyi ekleme
+          v0 / 5 + t, // geçen süreyi ekleme
+        ],
         '$cozum Çıkış süresi $v0 / 10 = ${tr(v0 / 10)} s, uçuş süresi bunun iki '
         'katı olan ${tr(v0 / 5)} s bulunur.',
+        _hs(a, b, c),
         unit: 's',
       );
     }
-    return _s(
+    return _sd(
       '$giris Cismin yerden çıkabildiği en büyük yükseklik kaç metredir? ($_g)',
       v0 * v0 / 20,
-      [v * v / 20, v0 * v0 / 10, v0 * t, v0 * v0 / 40],
+      [
+        v * v / 20, // verilen anın hızıyla hesaplama
+        v0 * v0 / 10, // v₀² / g
+        v0 * t, // sabit hızla yol
+        v0 * v0 / 40, // v₀² / (4·g)
+        v0 * t - 5 * t * t, // verilen andaki yüksekliği bulma
+        3 * v0 * v0 / 20, // işaret hatası: v₀·t + ½·g·t²
+      ],
       '$cozum En büyük yükseklik v₀² / (2·g) = $v0² / 20 = ${tr(v0 * v0 / 20)} m '
       'bulunur.',
+      _hs(a, b, c),
       unit: 'm',
     );
   },
@@ -500,18 +705,25 @@ final _f07 = lmAile(
       final fark = !zit && fark0 == v1 ? 17 : fark0;
       final v2 = v1 + fark;
       final ara = zit ? (v1 + v2) * t : fark * t;
-      return _s(
+      return _sd(
         'Yerden $h m yükseklikteki bir kulenin tepesinden K ve L topları aynı '
         'anda, ${zit ? 'birbirine zıt yönlerde' : 'aynı yönde'} yatay olarak '
         'atılıyor. K topunun atılma hızı $v1 m/s, L topunun atılma hızı $v2 m/s '
         'olduğuna göre topların yere düştüğü noktalar arasındaki uzaklık kaç '
         'metredir? ($_g)',
         ara,
-        [zit ? fark * t : (v1 + v2) * t, v2 * t, v1 * t, zit ? v1 + v2 : fark],
+        [
+          zit ? fark * t : (v1 + v2) * t, // yönü karıştırma
+          v2 * t, // yalnız L topunun menzili
+          ara * t, // t yerine t² (karekökü unutma)
+          v1 * t, // yalnız K topunun menzili
+          zit ? v1 + v2 : fark, // süreyle çarpmayı unutma
+        ],
         '$h = 5·t² eşitliğinden uçuş süresi $t s olur. Menziller $v1 · $t = '
         '${v1 * t} m ve $v2 · $t = ${v2 * t} m bulunur. Toplar '
         '${zit ? 'zıt yönlerde atıldığından uzaklık ${v1 * t} + ${v2 * t}' : 'aynı yönde atıldığından uzaklık ${v2 * t} − ${v1 * t}'} = '
         '$ara m olur.',
+        _hs(a, b, c),
         unit: 'm',
       );
     }
@@ -524,14 +736,21 @@ final _f07 = lmAile(
       final kalan = kalan0 == dusme ? 16 : kalan0;
       final h = dusme + kalan;
       final d = v0 * t;
-      return _s(
+      return _sd(
         'Yerden $h m yükseklikteki bir noktadan $v0 m/s hızla yatay olarak '
         'atılan bir top, atış noktasından yatayda $d m uzakta bulunan düşey bir '
         'duvara çarpıyor. Top duvara yerden kaç metre yükseklikte çarpar? ($_g)',
         kalan,
-        [dusme, h - 5 * t, h - 10 * t, h - dusme / 2, h - 2 * dusme],
+        [
+          dusme, // düşülen yolu yanıt sanma
+          h - 5 * t, // t² yerine t
+          h - 10 * t, // ½·g·t² yerine g·t
+          h - dusme / 2, // ½ çarpanını iki kez alma
+          h - 2 * dusme, // ½ çarpanını unutma
+        ],
         'Top duvara $d / $v0 = $t s sonra ulaşır. Bu sürede düşeyde 5 · $t² = '
         '$dusme m düşer. Çarpma yüksekliği $h − $dusme = $kalan m olur.',
+        _hs(a, b, c),
         unit: 'm',
       );
     }
@@ -546,35 +765,55 @@ final _f07 = lmAile(
     final sure =
         'h = ½·g·t² bağıntısından t² = ${tr(h)} / 5 = ${tr(t * t)}, t = ${tr(t)} s olur.';
     if (k == 0) {
-      return _s(
+      return _sd(
         'Yerden ${tr(h)} m yükseklikteki bir noktadan $v0 m/s hızla yatay '
         'olarak atılan bir bilye, atış noktasının düşeyinden kaç metre uzakta '
         'yere düşer? ($_g)',
         x,
-        [v0 * t * t, v0 * h, 2 * x, v0 * t / 2],
+        [
+          v0 * t * t, // süre yerine t² (karekökü unutma)
+          v0 / t, // süreyle bölme
+          2 * x, // süreyi iki katı alma
+          v0 * t / 2, // süreyi yarı alma
+          v0 * h, // yüksekliği süre sanma
+        ],
         '$sure Menzil v₀·t = $v0 · ${tr(t)} = ${tr(x)} m bulunur.',
+        _hs(a, b, c),
         unit: 'm',
       );
     }
     if (k == 1) {
-      return _s(
+      return _sd(
         '$v0 m/s hızla yatay olarak atılan bir bilye, atış noktasının '
         'düşeyinden ${tr(x)} m uzakta yere düşüyor. Bilye yerden kaç metre '
         'yükseklikten atılmıştır? ($_g)',
         h,
-        [2 * h, 5 * t, 10 * t, h / 2],
+        [
+          2 * h, // ½ çarpanını unutma
+          5 * t, // t² yerine t
+          h / 2, // ½ çarpanını iki kez alma
+          10 * t, // düşey hızı yükseklik sanma
+        ],
         'Uçuş süresi ${tr(x)} / $v0 = ${tr(t)} s olur. Atış yüksekliği '
         '½·g·t² = 5 · ${tr(t)}² = ${tr(h)} m bulunur.',
+        _hs(a, b, c),
         unit: 'm',
       );
     }
-    return _s(
+    return _sd(
       'Yerden ${tr(h)} m yükseklikten yatay olarak atılan bir bilye, atış '
       'noktasının düşeyinden ${tr(x)} m uzakta yere düşüyor. Bilyenin atılma '
       'hızı kaç m/s olur? ($_g)',
       v0,
-      [x / h, x / (t * t), 10 * t, x * t],
+      [
+        10 * t, // yere çarpmadaki düşey hızı bulma
+        x / h, // yükseklikle bölme
+        math.sqrt(v0 * v0 + 100 * t * t), // yere çarpma hızını bulma
+        x / (t * t), // t² ile bölme
+        x * t, // süreyle çarpma
+      ],
       '$sure Atılma hızı x / t = ${tr(x)} / ${tr(t)} = $v0 m/s bulunur.',
+      _hs(a, b, c),
       unit: 'm/s',
     );
   },
@@ -598,17 +837,26 @@ final _f08 = lmAile(
       final ivme = 0.5 * (1 + b ~/ 5 + 4 * k); // 0,5 … 8 m/s²
       final f = m * kat; // sürtünme kuvveti
       final kuvvet = f + m * ivme;
-      return _s(
+      return _sd(
         'Yatay bir zeminde duran $m kg kütleli bir sandık, zemine paralel '
         '${tr(kuvvet)} N büyüklüğünde bir kuvvetle çekilerek harekete '
         'geçiriliyor. Sandık ile zemin arasındaki kinetik sürtünme katsayısı '
         '${tr(mu)} olduğuna göre sandığın ivmesi kaç m/s² olur? (g = 10 m/s² '
         'alınız.)',
         ivme,
-        [kuvvet / m, (kuvvet - mu * m) / m, kuvvet - f, (kuvvet + f) / m],
+        [
+          kuvvet / m, // sürtünmeyi unutma
+          (kuvvet - f) / (10 * m), // kütle yerine ağırlıkla bölme
+          (kuvvet - mu * m) / m, // sürtünmede g'yi unutma
+          kat, // sürtünmenin yavaşlatma ivmesi μ·g
+          kuvvet - f, // net kuvveti ivme sanma
+          kuvvet / (10 * m), // sürtünmeyi unutup ağırlıkla bölme
+          (kuvvet + f) / m, // sürtünmeyi ekleme
+        ],
         'Sürtünme kuvveti μ·m·g = ${tr(mu)} · $m · 10 = $f N olur. Net kuvvet '
         '${tr(kuvvet)} − $f = ${tr(kuvvet - f)} N, ivme ${tr(kuvvet - f)} / $m = '
         '${tr(ivme)} m/s² bulunur.',
+        _hs(a, b, c),
         unit: 'm/s²',
       );
     }
@@ -622,28 +870,44 @@ final _f08 = lmAile(
         'Sürtünmesiz yatay bir düzlemde duran K ve L cisimleri birbirine hafif '
         'bir iple bağlıdır.';
     if (c % 3 == 1) {
-      return _s(
+      return _sd(
         '$giris K cisminin kütlesi $m1 kg, L cisminin kütlesi $m2 kg olarak '
         'veriliyor. L cismi, ipi gergin tutan yönde yatay $kuvvet N '
         'büyüklüğünde bir kuvvetle çekildiğinde K ile L arasındaki ipte oluşan '
         'gerilme kuvveti kaç N olur?',
         ip,
-        [m2 * ivme, kuvvet, kuvvet / 2, ivme, kuvvet - ivme],
+        [
+          m2 * ivme, // L cisminin kütlesiyle hesaplama
+          kuvvet, // ipi uygulanan kuvvete eşit sanma
+          kuvvet / 2, // kuvveti ikiye bölme
+          kuvvet - ivme, // kütle yerine ivmeyi çıkarma
+          kuvvet * m1 / m2, // F·m₁ / (m₁ + m₂) yerine F·m₁ / m₂
+          ivme, // ivmeyi kuvvet sanma
+        ],
         'Sistemin ivmesi $kuvvet / ($m1 + $m2) = $ivme m/s² olur. İp yalnız '
         'K cismini çektiğinden gerilme kuvveti $m1 · $ivme = $ip N bulunur.',
+        _hs(a, b, c),
         unit: 'N',
       );
     }
-    return _s(
+    return _sd(
       '$giris K cisminin kütlesi $m1 kg, L cisminin kütlesi $m2 kg olarak '
       'veriliyor. L cismi, ipi gergin tutan yönde yatay bir F kuvvetiyle '
       'çekildiğinde ipteki gerilme kuvveti $ip N oluyor. Buna göre F kuvvetinin '
       'büyüklüğü kaç N olur?',
       kuvvet,
-      [ip, m2 * ivme, ip * (m1 + m2) / m2, 2 * ip, ip + m2],
+      [
+        ip, // F kuvvetini ip gerilmesine eşit sanma
+        ip * (m1 + m2) / m2, // kütle oranını ters alma
+        m2 * ivme, // yalnız L cisminin kütlesi
+        2 * ip, // gerilmeyi iki katı alma
+        ip + m2, // kütleyi kuvvete ekleme
+        ip * (m1 + m2), // gerilmeyi ivme sanma
+      ],
       'İp yalnız K cismini çektiğinden ivme $ip / $m1 = $ivme m/s² olur. '
       'F kuvveti iki cismi birlikte ivmelendirir: F = ($m1 + $m2) · $ivme = '
       '$kuvvet N.',
+      _hs(a, b, c),
       unit: 'N',
     );
   },
@@ -838,16 +1102,24 @@ final _f11 = lmAile(
       final h = 2 + b; // 2 … 21 m
       final v = const [2, 4, 6, 10][k];
       final pe = m * 10 * h, ke = m * v * v / 2;
-      return _s(
+      return _sd(
         'Kütlesi $m kg olan bir insansız hava aracı, yerden $h m yükseklikte '
         '$v m/s hızla yatay doğrultuda uçuyor. Yer düzeyi potansiyel enerjinin '
         'sıfır alındığı düzey olduğuna göre aracın mekanik enerjisi kaç J olur? '
         '(g = 10 m/s² alınız.)',
         pe + ke,
-        [pe, pe + 2 * ke, ke, m * h + ke],
+        [
+          pe, // kinetik enerjiyi unutma
+          pe + 2 * ke, // ½ çarpanını unutma
+          ke, // potansiyel enerjiyi unutma
+          m * h + ke, // g'yi unutma
+          pe - ke, // enerjileri çıkarma
+          pe + m * v / 2, // hızın karesini almama
+        ],
         'Potansiyel enerji m·g·h = $m · 10 · $h = $pe J, kinetik enerji '
         '½·m·v² = ½ · $m · $v² = ${tr(ke)} J olur. Mekanik enerji $pe + ${tr(ke)} = '
         '${tr(pe + ke)} J bulunur.',
+        _hs(a, b, c),
         unit: 'J',
       );
     }
@@ -861,44 +1133,67 @@ final _f11 = lmAile(
       final v = 2 * n; // 2 … 40 m/s
       const pist = 'Sürtünmesiz bir kayak pistinin yerden';
       if (k == 0) {
-        return _s(
+        return _sd(
           '$pist ${tr(ust)} m yükseklikteki noktasından durgun hâlden kaymaya '
           'başlayan bir kayakçı, pistin yerden $alt m yükseklikteki noktasından '
           'kaç m/s hızla geçer? (g = 10 m/s² alınız.)',
           v,
-          [math.sqrt(20 * ust), math.sqrt(10 * fark), 2 * v, v / 2],
+          [
+            2 * v, // v² = 4·g·h
+            v / 2, // v² = g·h / 2
+            math.sqrt(20 * ust), // başlangıç yüksekliğini kullanma
+            math.sqrt(10 * fark), // 2·g yerine g
+            math.sqrt(2 * fark), // g'yi unutma
+            math.sqrt(20 * ust) - math.sqrt(20 * alt), // hızları çıkarma
+            math.sqrt(20 * alt), // son yüksekliği kullanma
+          ],
           'Kayakçı ${tr(ust)} − $alt = ${tr(fark)} m alçalır. Mekanik enerji '
           'korunduğundan v² = 2·g·h = 2 · 10 · ${tr(fark)} = ${4 * n * n}, '
           'v = $v m/s olur.',
+          _hs(a, b, c),
           unit: 'm/s',
         );
       }
       if (k == 1) {
         final m = 40 + 5 * ((a + b) % 9); // 40 … 80 kg
         final ke = 2 * m * n * n;
-        return _s(
+        return _sd(
           '$pist ${tr(ust)} m yükseklikteki noktasından durgun hâlden kaymaya '
           'başlayan $m kg kütleli bir kayakçının, pistin yerden $alt m '
           'yükseklikteki noktasından geçerken kinetik enerjisi kaç J olur? '
           '(g = 10 m/s² alınız.)',
           ke,
-          [m * 10 * ust, m * 10 * alt, m * fark, ke / 2],
+          [
+            m * 10 * ust, // başlangıç yüksekliğini kullanma
+            m * fark, // g'yi unutma
+            m * 10 * alt, // son yüksekliği kullanma
+            ke / 2, // ½ çarpanı ekleme
+            2 * ke, // enerjiyi iki katı alma
+          ],
           'Kayakçı ${tr(ust)} − $alt = ${tr(fark)} m alçalır. Kaybedilen '
           'potansiyel enerji kinetik enerjiye dönüşür: $m · 10 · ${tr(fark)} = '
           '$ke J.',
+          _hs(a, b, c),
           unit: 'J',
         );
       }
-      return _s(
+      return _sd(
         'Sürtünmesiz bir kayak pistinde durgun hâlden kaymaya başlayan bir '
         'kayakçı, pistin yerden $alt m yükseklikteki noktasından $v m/s hızla '
         'geçiyor. Kayakçı yerden kaç metre yükseklikten kaymaya başlamıştır? '
         '(g = 10 m/s² alınız.)',
         ust,
-        [fark, alt + 2 * fark, alt + fark / 2, alt + v],
+        [
+          fark, // son yüksekliği eklemeyi unutma
+          alt + 2 * fark, // v² / g
+          alt + fark / 2, // v² / (4·g)
+          alt + v, // hızı yükseklik sanma
+          fark - alt, // son yüksekliği çıkarma
+        ],
         'Mekanik enerji korunduğundan alçalma miktarı v² / (2·g) = $v² / 20 = '
         '${tr(fark)} m olur. Başlangıç yüksekliği $alt + ${tr(fark)} = '
         '${tr(ust)} m bulunur.',
+        _hs(a, b, c),
         unit: 'm',
       );
     }
@@ -907,16 +1202,24 @@ final _f11 = lmAile(
     final v = 2 * (k + 1); // 2, 4, 6 m/s
     final pe = (m * 10 * h).round(), ke = m * v * v ~/ 2;
     final kisi = m <= 40 ? 'bir çocuk' : 'bir genç';
-    return _s(
+    return _sd(
       'Kütlesi $m kg olan $kisi, yerden ${tr(h)} m yükseklikteki bir su '
       'kaydırağının tepesinden durgun hâlden kaymaya başlıyor ve kaydırağın '
       'yer düzeyindeki ucuna $v m/s hızla ulaşıyor. Kayma sırasında sürtünme '
       'nedeniyle ısıya dönüşen enerji kaç J olur? (g = 10 m/s² alınız.)',
       pe - ke,
-      [pe, ke, pe + ke, pe - 2 * ke],
+      [
+        pe, // kinetik enerjiyi unutma
+        pe - 2 * ke, // ½ çarpanını unutma
+        ke, // kinetik enerjiyi yanıt sanma
+        pe + ke, // enerjileri toplama
+        m * h - ke, // g'yi unutma
+        pe - m * v / 2, // hızın karesini almama
+      ],
       'Başlangıçtaki potansiyel enerji $m · 10 · ${tr(h)} = $pe J, tabandaki '
       'kinetik enerji ½ · $m · $v² = $ke J olur. Isıya dönüşen enerji '
       '$pe − $ke = ${pe - ke} J bulunur.',
+      _hs(a, b, c),
       unit: 'J',
     );
   },
@@ -1015,16 +1318,23 @@ final _f13 = lmAile(
       final sure = const [0.01, 0.02, 0.05, 0.1][k];
       final dp = (a + 1) * (v1 + v2) / 10; // kg·m/s
       final kuvvet = (a + 1) * (v1 + v2) * const [10, 5, 2, 1][k];
-      return _s(
+      return _sd(
         'Kütlesi ${tr(m)} kg olan bir top, düşey bir duvara dik doğrultuda '
         '$v1 m/s hızla çarpıp aynı doğrultuda $v2 m/s hızla geri dönüyor. Topun '
         'duvarla teması ${tr(sure)} saniye sürdüğüne göre duvarın topa '
         'uyguladığı ortalama kuvvetin büyüklüğü kaç N olur?',
         kuvvet,
-        [m * (v1 - v2) / sure, m * v1 / sure, dp, m * v2 / sure],
+        [
+          m * (v1 - v2) / sure, // yön değişimini unutma
+          m * v1 / sure, // yalnız geliş hızı
+          (v1 + v2) / sure, // kütleyi unutma
+          dp, // momentum değişimini kuvvet sanma
+          m * v2 / sure, // yalnız dönüş hızı
+        ],
         'Hız yön değiştirdiğinden momentum değişiminin büyüklüğü m·(v₁ + v₂) = '
         '${tr(m)} · ($v1 + $v2) = ${tr(dp)} kg·m/s olur. F·Δt = Δp eşitliğinden '
         'F = ${tr(dp)} / ${tr(sure)} = $kuvvet N bulunur.',
+        _hs(a, b, c),
         unit: 'N',
       );
     }
@@ -1034,15 +1344,22 @@ final _f13 = lmAile(
     if (c % 3 == 1) {
       final ortak = (1 + b ~/ 5 + 4 * k) / 5; // 0,2 … 2,4 m/s
       final v1 = (1 + oran) * ortak; // 0,3 … 9,6 m/s
-      return _s(
+      return _sd(
         'Sürtünmesiz yatay bir rayda ${tr(v1)} m/s hızla ilerleyen $m1 kg '
         'kütleli bir araba, önünde durmakta olan $m2 kg kütleli başka bir '
         'arabaya çarpıp ona kenetleniyor. Kenetlenen arabaların çarpışmadan '
         'hemen sonraki ortak hızı kaç m/s olur?',
         ortak,
-        [v1 / 2, v1 * m1 / m2, v1 * m2 / (m1 + m2), v1],
+        [
+          v1 / 2, // hızı yarıya bölme
+          v1 * m1 / m2, // yalnız duran arabanın kütlesine bölme
+          v1 * m2 / (m1 + m2), // kütleleri karıştırma
+          v1 / (m1 + m2), // momentum yerine hızı toplam kütleye bölme
+          v1, // hızın değişmediğini sanma
+        ],
         'Çarpışmada momentum korunur: $m1 · ${tr(v1)} = ($m1 + $m2) · v. Buradan '
         'v = ${tr(m1 * v1)} / ${m1 + m2} = ${tr(ortak)} m/s olur.',
+        _hs(a, b, c),
         unit: 'm/s',
       );
     }
@@ -1050,16 +1367,24 @@ final _f13 = lmAile(
     final ortak = 2 * (k + 1) / 5; // 0,4 … 1,2 m/s
     final v1 = (1 + oran) * ortak + oran * v2; // 0,85 … 10,8 m/s
     final p1 = m1 * v1, p2 = m2 * v2;
-    return _s(
+    return _sd(
       'Sürtünmesiz yatay bir rayda $m1 kg kütleli K arabası ${tr(v1)} m/s, '
       '$m2 kg kütleli L arabası ${tr(v2)} m/s hızla birbirine doğru ilerliyor. '
       'Arabalar çarpışıp kenetlendiğine göre çarpışmadan hemen sonraki ortak '
       'hızlarının büyüklüğü kaç m/s olur?',
       ortak,
-      [(p1 + p2) / (m1 + m2), (v1 - v2) / 2, v1 - v2, (v1 + v2) / 2],
+      [
+        (p1 + p2) / (m1 + m2), // momentumları toplama
+        (v1 - v2) / 2, // kütleleri yok sayma
+        (p1 - p2) / m1, // yalnız K arabasının kütlesi
+        v1 - v2, // hızları çıkarma
+        (v1 + v2) / 2, // hızların ortalaması
+        (p1 - p2) / m2, // yalnız L arabasının kütlesi
+      ],
       'K arabasının hareket yönü pozitif alınırsa toplam momentum $m1 · '
       '${tr(v1)} − $m2 · ${tr(v2)} = ${tr(p1 - p2)} kg·m/s olur. Ortak hız '
       '${tr(p1 - p2)} / ($m1 + $m2) = ${tr(ortak)} m/s bulunur.',
+      _hs(a, b, c),
       unit: 'm/s',
     );
   },
@@ -1082,15 +1407,22 @@ final _f14 = lmAile(
       final w1 = q * u, w2 = p * u; // 10 … 625 N
       final w = 2 * (1 + b ~/ 5 + 4 * k); // 2 … 32 cm
       final d1 = p * w, d2 = q * w;
-      return _s(
+      return _sd(
         'Ağırlığı önemsiz bir çubuk, bir destek üzerinde yatay durmaktadır. '
         'Desteğin bir yanına, destekten $d1 cm uzağa $w1 N ağırlığında bir yük '
         'asılıyor. Çubuğun yatay dengede kalması için $w2 N ağırlığındaki '
         'ikinci yük, desteğin diğer yanında destekten kaç cm uzağa asılmalıdır?',
         d2,
-        [d1 * w2 / w1, d1, d1 + d2, 2 * d1],
+        [
+          d1 * w2 / w1, // ağırlıkların oranını ters alma
+          d1 + d2, // uzaklıkları toplama
+          d1, // eşit uzaklık
+          2 * d1, // uzaklığı iki katı alma
+          d1 * w1 / (w1 + w2), // toplam ağırlıkla bölme
+        ],
         'Desteğe göre torklar eşit olmalıdır: $w1 · $d1 = $w2 · d. Buradan '
         'd = ${w1 * d1} / $w2 = $d2 cm bulunur.',
+        _hs(a, b, c),
         unit: 'cm',
       );
     }
@@ -1101,16 +1433,23 @@ final _f14 = lmAile(
       final boy = (2 * d * (1 + s)).round(); // 15 … 600 cm
       final kol = d * s; // ağırlık merkezinin desteğe uzaklığı (cm)
       final yuk = agirlik * s;
-      return _s(
+      return _sd(
         'Uzunluğu $boy cm, ağırlığı $agirlik N olan türdeş bir çubuk, bir '
         'ucundan $d cm uzaktaki bir desteğe oturtuluyor. Çubuğun yatay dengede '
         'kalması için desteğe yakın olan ucuna kaç N ağırlığında bir yük '
         'asılmalıdır?',
         yuk,
-        [agirlik * (boy - d) / d, agirlik / s, agirlik * boy / (2 * d), agirlik],
+        [
+          agirlik * (boy - d) / d, // ağırlığı çubuğun ucuna koyma
+          agirlik / s, // kol oranını ters alma
+          agirlik * boy / (2 * d), // ortaya uzaklık yerine yarı boy
+          agirlik, // yükü çubuk ağırlığına eşit sanma
+          agirlik * s / 2, // kolu yarı alma
+        ],
         'Türdeş çubuğun ağırlık merkezi ortasındadır ve desteğe uzaklığı '
         '$boy / 2 − $d = ${tr(kol)} cm olur. Tork dengesinden P · $d = $agirlik · ${tr(kol)}, '
         'P = ${tr(yuk)} N bulunur.',
+        _hs(a, b, c),
         unit: 'N',
       );
     }
@@ -1120,7 +1459,7 @@ final _f14 = lmAile(
     final d2 = j2 / 10; // 0,1 … 0,4 m
     final f2 = 10 * (k + 1); // 10 … 30 N
     final t1 = f1 * j1 / 5, t2 = f2 * j2 / 10;
-    return _s(
+    return _sd(
       'Sürtünmesiz yatay bir masanın üzerindeki bir çubuk, bir ucundaki '
       'O noktası etrafında masa düzleminde serbestçe dönebilmektedir. Çubuğa '
       'masa düzleminde ve çubuğa dik iki kuvvet uygulanıyor: O noktasından '
@@ -1129,10 +1468,18 @@ final _f14 = lmAile(
       'kuvvet ise saat yönünün tersine döndürmeye çalışıyor. Bu iki kuvvetin '
       'O noktasına göre oluşturduğu net torkun büyüklüğü kaç N·m olur?',
       t1 - t2,
-      [t1 + t2, t1, (f1 - f2) * (d1 - d2), (f1 - f2) * d1],
+      [
+        t1 + t2, // torkları toplama
+        (f1 - f2) * d1, // kuvvetleri çıkarıp tek kolla çarpma
+        t1, // ikinci torku unutma
+        (f1 - f2) * (d1 - d2), // kuvvet ve kol farklarını çarpma
+        t2, // yalnız ikinci tork
+        f1 * d2 - f2 * d1, // kolları karıştırma
+      ],
       'Torklar F·d ile bulunur: $f1 · ${tr(d1)} = ${tr(t1)} N·m ve $f2 · '
       '${tr(d2)} = ${tr(t2)} N·m. Zıt yönlü oldukları için net tork '
       '${tr(t1)} − ${tr(t2)} = ${tr(t1 - t2)} N·m olur.',
+      _hs(a, b, c),
       unit: 'N·m',
     );
   },
@@ -1154,17 +1501,25 @@ final _f15 = lmAile(
       final makara = 10 * (1 + b ~/ 5); // 10 … 40 N
       final kuvvet = 5 * (a + 10 + 25 * k); // 50 … 545 N
       final yuk = n * kuvvet - makara;
-      return _s(
+      return _sd(
         'Bir palangada yük ile hareketli makara grubunu $n ip kolu '
         'taşımaktadır. Hareketli makara grubunun ağırlığı $makara N, yükün '
         'ağırlığı $yuk N olduğuna göre yükü sabit hızla yükseltmek için ipin '
         'serbest ucuna kaç N büyüklüğünde kuvvet uygulanmalıdır? (Sürtünmeler '
         've ip ağırlığı önemsizdir.)',
         kuvvet,
-        [yuk / n, (yuk - makara) / n, yuk + makara, (yuk + makara) / (n - 1), (yuk + makara) / 2],
+        [
+          yuk / n, // makara ağırlığını unutma
+          yuk + makara, // ip kollarına bölmeme
+          (yuk - makara) / n, // makara ağırlığını çıkarma
+          (yuk + makara) / (n - 1), // bir ip kolunu eksik sayma
+          (yuk + makara) / (n + 1), // serbest ucu da taşıyıcı sayma
+          (yuk + makara) / 2, // iki ip kolu sanma
+        ],
         'İp kollarının her birindeki gerilme F kadardır ve $n kol toplam '
         '$yuk + $makara = ${yuk + makara} N ağırlığı taşır. F = ${yuk + makara} / '
         '$n = $kuvvet N olur.',
+        _hs(a, b, c),
         unit: 'N',
       );
     }
@@ -1177,33 +1532,47 @@ final _f15 = lmAile(
       final boy = r * h; // 5 … 32 m
       final yuk = (kuvvet * r * verim / 100).round();
       final yararli = yuk * h, harcanan = kuvvet * boy;
-      return _s(
+      return _sd(
         'Ağırlığı $yuk N olan bir sandık, uzunluğu ${tr(boy)} m ve yüksekliği '
         '$h m olan bir eğik düzlemin tabanından tepesine, düzleme paralel '
         '$kuvvet N büyüklüğünde bir kuvvetle sabit hızla çekiliyor. Bu eğik '
         'düzlemin verimi yüzde kaçtır?',
         verim,
-        [100 - verim, 100 / r, verim / r, verim / 2],
+        [
+          100 - verim, // kayıp oranını bulma
+          100 / r, // yalnız yükseklik / uzunluk oranı
+          verim / r, // oranı iki kez uygulama
+          verim / 2, // verimi yarıya bölme
+        ],
         'Yararlı iş G·h = $yuk · $h = $yararli J, harcanan iş F·L = $kuvvet · '
         '${tr(boy)} = ${tr(harcanan)} J olur. Verim $yararli / ${tr(harcanan)} = '
         '${tr(verim / 100)}, yani %$verim bulunur.',
+        _hs(a, b, c),
         yuzde: true,
+        adim: 5,
       );
     }
     final n = 2 + b % 5; // kol / yarıçap oranı
     final yuk = 60 * (a + 1); // 60 … 1500 N
     final r = 5 + b ~/ 5 + 4 * k; // 5 … 16 cm
     final kol = n * r;
-    return _s(
+    return _sd(
       'Bir kuyu çıkrığında silindirin yarıçapı $r cm, çevirme kolunun uzunluğu '
       '$kol cm olarak ölçülüyor. Silindire sarılı ipin ucuna bağlı $yuk N '
       'ağırlığındaki yükü sabit hızla yukarı çekmek için kolun ucuna, '
       'kola dik doğrultuda kaç N büyüklüğünde kuvvet uygulanmalıdır? '
       '(Sürtünmeler önemsizdir.)',
       yuk ~/ n,
-      [yuk * n, yuk * r / (kol + r), yuk / (n - 1), yuk / 2, yuk - kol],
+      [
+        yuk * n, // oranı ters kurma
+        yuk * r / (kol + r), // kola yarıçapı ekleme
+        yuk / (n - 1), // koldan yarıçapı çıkarma
+        yuk / 2, // kuvveti yarıya bölme
+        yuk - kol, // kol uzunluğunu yükten çıkarma
+      ],
       'Çıkrıkta F · R = G · r eşitliği geçerlidir: F · $kol = $yuk · $r. Buradan '
       'F = ${yuk * r} / $kol = ${yuk ~/ n} N olur.',
+      _hs(a, b, c),
       unit: 'N',
     );
   },
@@ -1232,14 +1601,21 @@ final _f16 = lmAile(
       final d = (3 + 5 * b) / 10; // 0,3 … 9,8 g/cm³
       final hacim = x * y * z;
       final m = d * hacim;
-      return _s(
+      return _sd(
         'Ayrıt uzunlukları $x cm, $y cm ve $z cm olan dikdörtgenler prizması '
         'biçimindeki türdeş bir cismin kütlesi ${tr(m)} g olarak ölçülüyor. Bu '
         'cismin yapıldığı maddenin özkütlesi kaç g/cm³ olur?',
         d,
-        [hacim / m, m / (x * y), m / (x + y + z), m / (y * z)],
+        [
+          hacim / m, // oranı ters kurma
+          m / (x * y), // taban alanına bölme
+          m / (2 * (x * y + y * z + x * z)), // yüzey alanına bölme
+          m / (x + y + z), // ayrıtların toplamına bölme
+          m / (y * z), // bir yüzün alanına bölme
+        ],
         'Cismin hacmi $x · $y · $z = $hacim cm³ olur. Özkütle kütlenin hacme '
         'oranıdır: ${tr(m)} / $hacim = ${tr(d)} g/cm³.',
+        _hs(a, b, c),
       );
     }
     final (p, q) = _karisim[b % 5];
@@ -1252,7 +1628,7 @@ final _f16 = lmAile(
         'Karışımın hacmi sıvıların hacimleri toplamına eşit olduğuna göre '
         'karışımın özkütlesi kaç g/cm³ olur?';
     if (c % 3 == 1) {
-      return _s(
+      return _sd(
         'Birbiriyle karışabilen iki sıvıdan, özkütlesi ${tr(d1)} g/cm³ olan '
         'K sıvısından $v1 cm³ ve özkütlesi ${tr(d2)} g/cm³ olan L sıvısından '
         '$v2 cm³ alınarak türdeş bir karışım hazırlanıyor. $kosul',
@@ -1268,9 +1644,10 @@ final _f16 = lmAile(
         'K sıvısının kütlesi ${tr(d1)} · $v1 = ${tr(m1)} g, L sıvısının kütlesi '
         '${tr(d2)} · $v2 = ${tr(m2)} g olur. Karışımın özkütlesi (${tr(m1)} + ${tr(m2)}) / '
         '($v1 + $v2) = ${tr(m1 + m2)} / ${v1 + v2} = ${tr(dk)} g/cm³ bulunur.',
+        _hs(a, b, c),
       );
     }
-    return _s(
+    return _sd(
       'Birbiriyle karışabilen iki sıvıdan, özkütlesi ${tr(d1)} g/cm³ olan '
       'K sıvısından ${tr(m1)} g ve özkütlesi ${tr(d2)} g/cm³ olan L sıvısından ${tr(m2)} g '
       'alınarak türdeş bir karışım hazırlanıyor. $kosul',
@@ -1286,6 +1663,7 @@ final _f16 = lmAile(
       'K sıvısının hacmi ${tr(m1)} / ${tr(d1)} = $v1 cm³, L sıvısının hacmi ${tr(m2)} / '
       '${tr(d2)} = $v2 cm³ olur. Karışımın özkütlesi (${tr(m1)} + ${tr(m2)}) / ($v1 + $v2) = '
       '${tr(m1 + m2)} / ${v1 + v2} = ${tr(dk)} g/cm³ bulunur.',
+      _hs(a, b, c),
     );
   },
   exam: _tyt,
@@ -1306,16 +1684,24 @@ final _f17 = lmAile(
       final alan = n1 * n2 / 100; // 0,14 … 0,66 m²
       final basinc = 100 * (b + 1 + 20 * k); // 100 … 8000 Pa
       final agirlik = (b + 1 + 20 * k) * n1 * n2; // 14 … 5280 N
-      return _s(
+      return _sd(
         'Ağırlığı $agirlik N olan dikdörtgenler prizması biçimindeki bir '
         'sandık, ayrıt uzunlukları ${10 * n1} cm ve ${10 * n2} cm olan yüzü '
         'üzerine yatay zemine konuluyor. Sandığın zemine uyguladığı basınç kaç '
         'Pa olur?',
         basinc,
-        [basinc / 10000, basinc / 100, agirlik * alan, agirlik / ((n1 + n2) / 10)],
+        [
+          basinc / 10000, // alanı cm² ile bırakma
+          10 * basinc, // ağırlığı kütle sanıp g ile çarpma
+          basinc / 100, // alanı dm² ile hesaplama
+          agirlik * alan, // alanla çarpma
+          agirlik / ((n1 + n2) / 10), // alan yerine kenarların toplamı
+          100 * basinc, // cm² → m² dönüşümünde 10⁶ kullanma
+        ],
         'Temas yüzeyinin alanı ${tr(n1 / 10)} m · ${tr(n2 / 10)} m = ${tr(alan)} m² '
         'olur. Basınç ağırlığın alana oranıdır: $agirlik / ${tr(alan)} = '
         '$basinc Pa.',
+        _hs(a, b, c),
         unit: 'Pa',
       );
     }
@@ -1325,15 +1711,22 @@ final _f17 = lmAile(
       final alan = const [0.01, 0.02, 0.05][k]; // m²
       final basinc = d * (a + 1); // h·d·g
       final kuvvet = basinc * alan;
-      return _s(
+      return _sd(
         'Taban alanı ${tr(alan)} m² olan düşey silindirik bir kapta, özkütlesi '
         '$d kg/m³ olan bir sıvı ${tr(h)} m yüksekliğe kadar doludur. Sıvının '
         'kap tabanına uyguladığı basınç kuvveti kaç N olur? (g = 10 m/s² '
         'alınız.)',
         kuvvet,
-        [basinc, kuvvet / 10, d * 10 * alan, basinc / 10],
+        [
+          basinc, // basıncı kuvvet sanma
+          kuvvet / 10, // g'yi unutma
+          d * 10 * alan, // yüksekliği unutma
+          basinc / 10, // alanla çarpmak yerine 10'a bölme
+          10 * kuvvet, // g'yi iki kez çarpma
+        ],
         'Tabandaki sıvı basıncı h·d·g = ${tr(h)} · $d · 10 = $basinc Pa olur. '
         'Basınç kuvveti P·A = $basinc · ${tr(alan)} = ${tr(kuvvet)} N bulunur.',
+        _hs(a, b, c),
         unit: 'N',
       );
     }
@@ -1342,16 +1735,25 @@ final _f17 = lmAile(
     final h2 = 10 * (1 + b ~/ 4); // alt sıvı: 10 … 50 cm
     final d2 = const [1000, 1200, 1500][k];
     final p1 = h1 * d1 ~/ 10, p2 = h2 * d2 ~/ 10;
-    return _s(
+    return _sd(
       'Düşey bir kapta birbirine karışmayan iki sıvı bulunmaktadır. Altta, '
       'özkütlesi $d2 kg/m³ olan sıvı $h2 cm; üstte, özkütlesi $d1 kg/m³ olan '
       'sıvı $h1 cm yüksekliğindedir. Yalnız sıvıların kap tabanında '
       'oluşturduğu toplam basınç kaç Pa olur? (g = 10 m/s² alınız.)',
       p1 + p2,
-      [p2, (h1 + h2) * d2 / 10, (h1 + h2) * (d1 + d2) / 10, p1, (p1 + p2) / 10],
+      [
+        p2, // üstteki sıvıyı unutma
+        (h1 + h2) * d2 / 10, // tüm yüksekliği alttaki sıvıyla hesaplama
+        p1, // alttaki sıvıyı unutma
+        (h1 + h2) * (d1 + d2) / 10, // özkütleleri toplama
+        (p1 + p2) / 10, // g'yi unutma
+        (h1 + h2) * d1 / 10, // tüm yüksekliği üstteki sıvıyla hesaplama
+        100 * (p1 + p2), // cm'yi m'ye çevirmeme
+      ],
       'Üstteki sıvının basıncı ${tr(h1 / 100)} · $d1 · 10 = $p1 Pa, alttaki '
       'sıvının basıncı ${tr(h2 / 100)} · $d2 · 10 = $p2 Pa olur. Tabandaki '
       'toplam sıvı basıncı $p1 + $p2 = ${p1 + p2} Pa bulunur.',
+      _hs(a, b, c),
       unit: 'Pa',
     );
   },
@@ -1377,17 +1779,24 @@ final _f18 = lmAile(
       final dc = dc0 == 2 * ds ? 12.0 : dc0;
       final m = (a + 1) * dc / 10; // 0,2 … 30 kg
       final agirlik = (a + 1) * dc, fk = (a + 1) * ds;
-      return _s(
+      return _sd(
         'Kütlesi ${tr(m)} kg, hacmi $hacim cm³ olan bir metal parçası bir ipe '
         'bağlanarak özkütlesi ${tr(ds)} g/cm³ olan bir sıvının içine tamamen '
         'daldırılıyor. Metal parçası kabın tabanına değmeden dengede kaldığına '
         'göre ipteki gerilme kuvveti kaç N olur? (g = 10 m/s² alınız.)',
         agirlik - fk,
-        [fk, agirlik, agirlik + fk, agirlik - fk / 10],
+        [
+          fk, // kaldırma kuvvetini yanıt sanma
+          agirlik, // kaldırma kuvvetini unutma
+          (agirlik - fk) / 10, // kütlelerle hesaplama
+          agirlik + fk, // kuvvetleri toplama
+          agirlik - fk / 10, // kaldırma kuvvetinde g'yi unutma
+        ],
         'Metal parçasının ağırlığı ${tr(m)} · 10 = ${tr(agirlik)} N olur. Yerini '
         'değiştirdiği $hacim cm³ sıvının kütlesi $hacim · ${tr(ds)} = '
         '${tr(hacim * ds)} g olduğundan kaldırma kuvveti ${tr(fk)} N bulunur. '
         'İp gerilmesi ${tr(agirlik)} − ${tr(fk)} = ${tr(agirlik - fk)} N olur.',
+        _hs(a, b, c),
         unit: 'N',
       );
     }
@@ -1399,17 +1808,24 @@ final _f18 = lmAile(
       final hacim = 20 * (a + 1) + 500 * (b ~/ 5); // 20 … 2000 cm³
       final batan = hacim * oran, disari = hacim - batan;
       final ust = (b ~/ 5).isOdd;
-      return _s(
+      return _sd(
         'Hacmi $hacim cm³, özkütlesi ${tr(dc)} g/cm³ olan türdeş bir tahta '
         'takoz, özkütlesi ${tr(ds)} g/cm³ olan bir sıvıda yüzmektedir. Takozun '
         'sıvı ${ust ? 'yüzeyinin üzerinde kalan' : 'içinde kalan'} bölümünün '
         'hacmi kaç cm³ olur?',
         ust ? disari : batan,
-        [ust ? batan : disari, hacim * dc, hacim * (1 - dc), hacim / 2],
+        [
+          ust ? batan : disari, // batan ile dışarıdaki bölümü karıştırma
+          hacim * dc, // sıvının özkütlesini unutma
+          hacim * (1 - dc), // sıvının özkütlesini unutup çıkarma
+          hacim / 2, // yarısının battığını sanma
+          hacim * (ds - dc), // özkütle farkıyla hesaplama
+        ],
         'Yüzen cisimde batan hacmin toplam hacme oranı özkütlelerin oranına '
         'eşittir: ${tr(dc)} / ${tr(ds)} = ${tr(oran)}. Batan hacim $hacim · '
         '${tr(oran)} = ${tr(batan)} cm³'
         '${ust ? ', sıvı yüzeyinin üzerinde kalan hacim $hacim − ${tr(batan)} = ${tr(disari)} cm³ olur.' : ' olur.'}',
+        _hs(a, b, c),
         unit: 'cm³',
       );
     }
@@ -1420,20 +1836,22 @@ final _f18 = lmAile(
     final agirlik = m / 100; // N
     final tamBatik = (a + 1) * ds; // tamamen batmış cisme etki eden kuvvet
     final yuzer = dc < ds;
-    return _s(
+    return _sd(
       'Kütlesi $m g, hacmi $hacim cm³ olan içi dolu türdeş bir cisim, '
       'özkütlesi ${tr(ds)} g/cm³ olan sıvıyla dolu derin bir kaba serbest '
       'bırakılıyor. Cisim dengeye geldiğinde ona etki eden kaldırma kuvveti '
       'kaç N olur? (g = 10 m/s² alınız.)',
       yuzer ? agirlik : tamBatik,
       [
-        yuzer ? tamBatik : agirlik,
-        (agirlik - tamBatik).abs(),
-        agirlik + tamBatik,
-        (yuzer ? agirlik : tamBatik) * 10,
+        yuzer ? tamBatik : agirlik, // yüzme ve batma koşulunu karıştırma
+        (agirlik - tamBatik).abs(), // iki kuvvetin farkı
+        (yuzer ? agirlik : tamBatik) / 10, // g'yi unutma
+        agirlik + tamBatik, // iki kuvveti toplama
+        (yuzer ? agirlik : tamBatik) * 10, // g'yi iki kez çarpma
       ],
       'Cismin özkütlesi $m / $hacim = ${tr(dc)} g/cm³ olur. Bu değer sıvının '
       'özkütlesinden ${yuzer ? 'küçük olduğundan cisim yüzer ve kaldırma kuvveti ağırlığına eşit olur: ${tr(m / 1000, 3)} · 10 = ${tr(agirlik)} N.' : 'büyük olduğundan cisim dibe batar. Yerini değiştirdiği $hacim cm³ sıvının kütlesi ${tr(hacim * ds)} g olduğundan kaldırma kuvveti ${tr(tamBatik)} N olur.'}',
+      _hs(a, b, c),
       unit: 'N',
     );
   },
@@ -1461,14 +1879,22 @@ final _f19 = lmAile(
       final t2 = t1 + fark;
       final q = (a + 1) * c100 * fark;
       final oz = c100 / 100;
-      return _s(
+      return _sd(
         'Kütlesi $m g, öz ısısı ${tr(oz)} J/(g·°C) olan bir maddenin sıcaklığını '
         '$t1 °C değerinden $t2 °C değerine çıkarmak için maddeye kaç J ısı '
         'verilmelidir? (Madde hâl değiştirmemektedir.)',
         q,
-        [m * oz * t2, m * oz * t1, m * fark, m * oz * (t1 + t2)],
+        [
+          m * oz * t2, // son sıcaklığı kullanma
+          m * oz * t1, // ilk sıcaklığı kullanma
+          m * fark, // öz ısıyı unutma
+          q / 1000, // kütleyi kilograma çevirme
+          m * oz * (t1 + t2), // sıcaklıkları toplama
+          oz * fark, // kütleyi unutma
+        ],
         'Sıcaklık artışı $t2 − $t1 = $fark °C olur. Q = m·c·ΔT bağıntısından '
         'Q = $m · ${tr(oz)} · $fark = $q J bulunur.',
+        _hs(a, b, c),
         unit: 'J',
       );
     }
@@ -1479,16 +1905,24 @@ final _f19 = lmAile(
       final denge = 30 + 5 * (b ~/ 5); // 30 … 45 °C
       final adim = 2 * (k + 1);
       final t1 = denge - q * adim, t2 = denge + p * adim; // 12 … 63 °C
-      return _s(
+      return _sd(
         'Isıca yalıtılmış bir kapta, sıcaklığı $t1 °C olan $m1 g su ile '
         'sıcaklığı $t2 °C olan $m2 g su karıştırılıyor. Isı alışverişi yalnız '
         'sular arasında gerçekleştiğine göre ısıl denge sağlandığında karışımın '
         'sıcaklığı kaç °C olur?',
         denge,
-        [(t1 + t2) / 2, (m1 * t2 + m2 * t1) / (m1 + m2), t2 - t1, denge + adim, t1 + t2],
+        [
+          (t1 + t2) / 2, // kütleleri yok sayma
+          (m1 * t2 + m2 * t1) / (m1 + m2), // kütleleri karıştırma
+          t2 - t1, // sıcaklık farkını bulma
+          t1 + t2, // sıcaklıkları toplama
+          (t2 - t1) / 2, // farkın yarısı
+          denge + adim, // ara değer
+        ],
         'Alınan ısı verilen ısıya eşittir: $m1 · (T − $t1) = $m2 · ($t2 − T). '
         'Buradan T = ($m1 · $t1 + $m2 · $t2) / ($m1 + $m2) = '
         '${m1 * t1 + m2 * t2} / ${m1 + m2} = $denge °C olur.',
+        _hs(a, b, c),
         unit: '°C',
       );
     }
@@ -1497,14 +1931,23 @@ final _f19 = lmAile(
     final c10 = const [4, 9, 24][k]; // öz ısı · 10
     final oz = c10 / 10;
     final q = 10 * (a + 1) * (b + 1) * c10;
-    return _s(
+    return _sd(
       'Kütlesi $m g olan bir maddeye $q J ısı verildiğinde maddenin sıcaklığı '
       'hâl değiştirmeden $fark °C artıyor. Bu maddenin öz ısısı kaç J/(g·°C) '
       'olur?',
       oz,
-      [q / m, q / fark, m * fark / q, oz * 10],
+      [
+        q / m, // sıcaklık değişimini unutma
+        oz / 10, // ondalık kaydırma
+        q / fark, // kütleyi unutma
+        m * fark / q, // oranı ters kurma
+        q / (m * (fark + 273)), // sıcaklık farkını Kelvin'e çevirme
+        oz * 10, // ondalık kaydırma
+        1000 * oz, // kütleyi kilograma çevirme
+      ],
       'Q = m·c·ΔT bağıntısından c = Q / (m·ΔT) = $q / ($m · $fark) = '
       '$q / ${m * fark} = ${tr(oz)} J/(g·°C) bulunur.',
+      _hs(a, b, c),
     );
   },
   exam: _tyt,
@@ -1525,16 +1968,26 @@ final _f20 = lmAile(
       final t0 = 4 * (1 + b % 5); // buz: −4 … −20 °C
       final t = 5 * (1 + b ~/ 5 + 4 * k); // su: 5 … 80 °C
       final q1 = m * t0 ~/ 2, q2 = m * 80, q3 = m * t;
-      return _s(
+      return _sd(
         'Sıcaklığı −$t0 °C olan $m g buzun tamamını $t °C sıcaklığında suya '
         'dönüştürmek için gereken ısı kaç kaloridir? (Buzun öz ısısı '
         '0,5 cal/(g·°C), suyun öz ısısı 1 cal/(g·°C), buzun erime ısısı '
         '80 cal/g alınacaktır.)',
         q1 + q2 + q3,
-        [q2 + q3, q1 + q3, 2 * q1 + q2 + q3, q1 + q2 + q3 / 2, q1 + q2],
+        [
+          q2 + q3, // buzu ısıtmayı unutma
+          2 * q1 + q2 + q3, // buzun öz ısısını 1 alma
+          q1 + q3, // erimeyi unutma
+          4 * q1 + q2 + q3, // Q = m·ΔT / c
+          q1 + q2 + q3 / 2, // suyun öz ısısını 0,5 alma
+          3 * q1 + q2 + q3, // suyu −t₀ değerinden ısıtma
+          2 * q1 + q2 + q3 / 2, // buzun ve suyun öz ısılarını karıştırma
+          q1 + q2, // suyu ısıtmayı unutma
+        ],
         'Buzu 0 °C sıcaklığına getirmek için $m · 0,5 · $t0 = $q1 cal, eritmek '
         'için $m · 80 = $q2 cal, oluşan suyu $t °C sıcaklığına çıkarmak için '
         '$m · 1 · $t = $q3 cal gerekir. Toplam ısı ${q1 + q2 + q3} cal olur.',
+        _hs(a, b, c),
       );
     }
     if (c % 3 == 1) {
@@ -1542,47 +1995,76 @@ final _f20 = lmAile(
       final fark = 5 * (b + 1); // 5 … 100 °C
       final alfa = const [1.2, 2.0, 2.5][k]; // ·10⁻⁵ 1/°C
       final uzama = (a + 1) * (b + 1) * alfa / 10; // mm
-      return _s(
+      return _sd(
         'Boyu $boy m olan metal bir çubuğun sıcaklığı $fark °C artırılıyor. '
         'Çubuğun yapıldığı metalin boyca genleşme katsayısı ${tr(alfa)}·10⁻⁵ 1/°C '
         'olduğuna göre çubuğun boyu kaç mm uzar?',
         uzama,
-        [uzama / 10, uzama * 10, uzama / boy, uzama * 100],
+        [
+          uzama / 10, // m → mm yerine 100 ile çarpma
+          uzama * 10, // 10⁻⁴ alma
+          uzama / boy, // ilk boyu unutma
+          uzama * 100, // 10⁻⁵ çarpanını ve çevirmeyi unutma
+          uzama * 2, // yüzeyce genleşme katsayısı 2α
+        ],
         'ΔL = L₀·α·ΔT bağıntısından ΔL = $boy · ${tr(alfa)}·10⁻⁵ · $fark = '
         '${tr(uzama)}·10⁻³ m olur. Bu değer ${tr(uzama)} mm eder.',
+        _hs(a, b, c),
         unit: 'mm',
       );
     }
     final cel = a + 25 * b + 1; // 1 … 500 °C
     final fah = 1.8 * cel + 32, kel = cel + 273;
     if (k == 0) {
-      return _s(
+      return _sd(
         'Celsius ölçeğinde $cel °C olarak ölçülen bir sıcaklık, Fahrenheit '
         'ölçeğinde kaç °F olarak okunur?',
         fah,
-        [1.8 * cel, 1.8 * (cel + 32), cel / 1.8 + 32, cel + 32],
+        [
+          1.8 * cel, // 32 eklemeyi unutma
+          1.8 * (cel + 32), // işlem önceliği
+          cel / 1.8 + 32, // 1,8 ile bölme
+          cel + 273, // Kelvin ölçeğine çevirme
+          cel + 32, // 1,8 ile çarpmayı unutma
+          1.8 * cel - 32, // 32 çıkarma
+        ],
         'F = 1,8·C + 32 bağıntısından F = 1,8 · $cel + 32 = ${tr(1.8 * cel)} + 32 = '
         '${tr(fah)} °F olur.',
+        _hs(a, b, c),
       );
     }
     if (k == 1) {
-      return _s(
+      return _sd(
         'Fahrenheit ölçeğinde ${tr(fah)} °F olarak ölçülen bir sıcaklık, '
         'Celsius ölçeğinde kaç °C olarak okunur?',
         cel,
-        [fah - 32, (fah - 32) * 1.8, fah / 1.8, fah / 1.8 - 32],
+        [
+          fah - 32, // 1,8 ile bölmeyi unutma
+          fah / 1.8 - 32, // işlem önceliği
+          (fah - 32) * 1.8, // 1,8 ile çarpma
+          fah / 1.8, // 32 çıkarmayı unutma
+        ],
         'C = (F − 32) / 1,8 bağıntısından C = (${tr(fah)} − 32) / 1,8 = '
         '${tr(fah - 32)} / 1,8 = $cel °C olur.',
+        _hs(a, b, c),
         unit: '°C',
       );
     }
-    return _s(
+    return _sd(
       'Kelvin ölçeğinde $kel K olarak ölçülen bir sıcaklık, Fahrenheit '
       'ölçeğinde kaç °F olarak okunur?',
       fah,
-      [1.8 * kel + 32, 1.8 * cel, cel, kel + 32],
+      [
+        1.8 * cel, // 32 eklemeyi unutma
+        1.8 * kel + 32, // 273 çıkarmayı unutma
+        cel, // yalnız Celsius değerini bulma
+        kel + 32, // 273 çıkarmayı ve 1,8 ile çarpmayı unutma
+        cel + 32, // 1,8 ile çarpmayı unutma
+        1.8 * (cel + 32), // işlem önceliği
+      ],
       'Önce Celsius değeri bulunur: $kel − 273 = $cel °C. Sonra F = 1,8·C + 32 '
       'bağıntısından F = 1,8 · $cel + 32 = ${tr(fah)} °F olur.',
+      _hs(a, b, c),
     );
   },
   exam: _tyt,

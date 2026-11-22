@@ -3,6 +3,7 @@
 // yazım kullanılır: ← atama, · çarpma, mod kalan, div tam sayı bölümüdür;
 // "i = 1, 2, …, n için" ve "… olduğu sürece" döngülerinin gövdesi "döngü
 // sonu" satırına kadar sürer; dizilerin ilk elemanının indisi 1 alınır.
+import 'denge.dart';
 import 'ortak.dart';
 
 AdvancedFamily _bs(
@@ -62,6 +63,41 @@ int _rakamDegeri(String r) => int.parse(r, radix: 16);
 
 int _topla(Iterable<int> x) => x.fold(0, (p, q) => p + q);
 
+/// (a, b, c) koordinatlı vakanın 0 … 4999 arasındaki sıra numarası.
+int _no(int a, int b, int c) => a + 25 * b + 500 * c;
+
+/// Seçenekleri hazır sayısal soru: üç çeldirici, anahtardan küçük olanların
+/// sayısı vakanın hedef sırasına ([hedefSira]) eşit olacak biçimde [adaylar]
+/// arasından seçilir. Adaylar öncelik sırasıyla (değer, yazım) ikilileridir.
+AdvancedItem _sirali(
+  String prompt,
+  num anahtar,
+  String yazim,
+  Iterable<(num, String)> adaylar,
+  String explanation,
+  int i, [
+  int tuz = 0,
+]) => AdvancedItem(
+  prompt,
+  yazim,
+  siraliCeldiriciler(anahtar, yazim, adaylar, hedefSira(i, tuz)),
+  explanation,
+);
+
+/// [n] sayısının ikilik gösteriminde 1 (ya da [bit] 0 ise 0) olan, en soldaki
+/// basamak dışındaki ve [enAz] numaralı basamaktan başlayan konumlar
+/// (sağdan 0 ile başlayarak), [n] sayısına bağlı bir noktadan dolaşılarak.
+List<int> _bitKonumlari(int n, int bit, {int enAz = 0}) {
+  final l = n.bitLength, r = <int>[];
+  if (l - 1 <= enAz) return r;
+  final bas = n % (l - 1 - enAz);
+  for (var t = 0; t < l - 1 - enAz; t++) {
+    final k = enAz + (bas + t) % (l - 1 - enAz);
+    if ((n >> k & 1) == bit) r.add(k);
+  }
+  return r;
+}
+
 // ---------------------------------------------------------------------------
 // 1. İkilik ve onluk taban arasında dönüşüm
 // ---------------------------------------------------------------------------
@@ -79,27 +115,105 @@ final _ikilikKucuk = [
     if (!_palindrom(_ikilik(n))) n,
 ];
 
+/// Gösterim sorularında iki hatalı tasarım: [hatalar] içindeki her A hatası
+/// ve [kaymalar] içindeki her B hatası (bir basamağı yanlış bulma; değere
+/// uygulanır) için çeldiriciler A(n), B(n) ve A(B(n)) olur. Böylece hiçbir
+/// seçenek ötekilere anahtardan daha yakın olmaz. A hatası null verirse o
+/// tasarım kullanılmaz. Anahtardan küçük çeldirici sayısı [sira] olan ilk
+/// geçerli tasarım, yoksa sıraya en yakını seçilir; [yaz] doğru gösterimi,
+/// [deger] bir yazımın sıralamadaki değerini verir.
+List<String> _ikiHataliTasarim(
+  int n,
+  String Function(int) yaz,
+  List<String? Function(int)> hatalar,
+  List<int Function(int)> kaymalar,
+  int sira,
+  num Function(String) deger,
+) {
+  final anahtar = yaz(n), d0 = deger(anahtar);
+  List<String>? enIyi;
+  var fark = 9;
+  for (final h in hatalar) {
+    for (final g in kaymalar) {
+      final f = g(n);
+      final a1 = f > 0 ? h(n) : null, a2 = f > 0 ? h(f) : null;
+      if (a1 == null || a2 == null) continue;
+      final t = [a1, yaz(f), a2];
+      final hepsi = [anahtar, ...t];
+      var ayri = true;
+      for (var x = 0; x < 4; x++) {
+        for (var y = x + 1; y < 4; y++) {
+          if (ayniSecenek(hepsi[x], hepsi[y])) ayri = false;
+        }
+      }
+      if (!ayri) continue;
+      final d = (t.where((x) => deger(x) < d0).length - sira).abs();
+      if (d < fark) {
+        enIyi = t;
+        fark = d;
+        if (d == 0) return t;
+      }
+    }
+  }
+  return enIyi!;
+}
+
+/// Verilen konumlardaki bitlerden birini değiştiren B hataları.
+List<int Function(int)> _bitDegisimleri(List<int> konumlar) => [
+  for (final k in konumlar) (int x) => x ^ (1 << k),
+];
+
+/// Ondan ikiliğe çevirme sorusunun çeldiricileri. İki tipik hata tek tek ve
+/// birlikte uygulanır (A, B ve A + B): A kalanları ters sırayla yazma, ilk
+/// kalanı unutma ya da sona fazladan 0 ekleme; B bir kalanı yanlış bulma (bir
+/// bitin değişmesi). Böylece hiçbir seçenek ötekilere anahtardan daha yakın
+/// olmaz. Anahtardan küçük çeldirici sayısı [sira] olan ilk tasarım seçilir.
+List<String> _ikilikCeldiricileri(int n, int sira) {
+  final s = _ikilik(n), l = s.length;
+  int ters(int x) => int.parse(_ters(_ikilik(x)), radix: 2);
+  // Değiştirilen bitler sağdan en az üçüncü basamaktadır: 11 basamaklı
+  // gösterimler onluk sayı gibi okunduğunda da seçenekler ayrışır.
+  final ic = [for (var t = 0; t < l - 3; t++) 2 + (n + t) % (l - 3)];
+  final tasarimlar = [
+    for (final k in ic) [ters(n), n ^ (1 << k), ters(n ^ (1 << k))],
+    for (final k in ic) ...[
+      [n >> 1, n ^ (1 << k), (n ^ (1 << k)) >> 1],
+      [n << 1, n ^ (1 << k), (n ^ (1 << k)) << 1],
+    ],
+  ];
+  List<String>? enIyi;
+  var fark = 9;
+  for (final t in tasarimlar) {
+    final yazim = [for (final x in t) _ikilik(x)];
+    final hepsi = [s, ...yazim];
+    var ayri = true;
+    for (var x = 0; x < 4; x++) {
+      for (var y = x + 1; y < 4; y++) {
+        if (ayniSecenek(hepsi[x], hepsi[y])) ayri = false;
+      }
+    }
+    if (!ayri) continue;
+    final d = (t.where((x) => x < n).length - sira).abs();
+    if (d < fark) {
+      enIyi = yazim;
+      fark = d;
+      if (d == 0) break;
+    }
+  }
+  return enIyi!;
+}
+
 AdvancedItem _ikilikDonusum(int a, int b, int c) {
   final j = a + 25 * b;
   if (c < 3) {
     final n = _dolas(_ikilikHavuzu, j + 500 * c, 389);
     final s = _ikilik(n);
-    // Değiştirilen bitler sağdan en az üçüncü basamaktadır: 11 basamaklı
-    // gösterimler onluk sayı gibi okunduğunda da seçenekler ayrışır.
-    final p = 2 + n % (s.length - 3);
-    final q = p + 1 <= s.length - 2 ? p + 1 : 2;
-    return secenekli(
+    return AdvancedItem(
       'Onluk tabandaki $n sayısı bilgisayar belleğinde ikilik tabanda '
           'saklanacaktır. Bu sayının başında sıfır bulunmayan ikilik gösterimi '
           'nedir?',
       s,
-      [
-        _sifirsiz(_ters(s)),
-        _ikilik(n >> 1),
-        _ikilik(n ^ (1 << p)),
-        _ikilik(n << 1),
-        _ikilik(n ^ (1 << q)),
-      ],
+      _ikilikCeldiricileri(n, hedefSira(_no(a, b, c))),
       '${_ikininKuvveti(n) ? '$n sayısı ikinin bir kuvveti olduğundan yalnız $n basamak değerine 1, diğerlerine 0' : '$n = ${_kuvvetToplami(n)} olduğundan bu basamak değerlerine 1, diğerlerine 0'} '
           'yazılır: $s. Art arda ikiye bölmede kalanlar sondan başa doğru '
           'yazılarak da aynı sonuç bulunur.',
@@ -108,21 +222,22 @@ AdvancedItem _ikilikDonusum(int a, int b, int c) {
   if (c < 6) {
     final n = _dolas(_ikilikHavuzu, j + 500 * (c - 3), 1013);
     final s = _ikilik(n);
-    final ters = int.parse(_ters(s), radix: 2);
     final konum = _topla([
       for (var k = 0; k < s.length; k++)
         if (n >> k & 1 == 1) k + 1,
     ]);
-    return sayisal(
+    final hata = _okumaHatalari(n);
+    return sayisalSirali(
       'Bilgisayar belleğinde ikilik tabanda ${_tabanli(s, 2)} olarak saklanan '
       'sayının onluk tabandaki değeri kaçtır?',
       n,
-      [ters, 2 * n, n - (1 << (s.length - 1)), konum],
+      [...hata.take(3), konum, ...hata.skip(3)],
       _ikininKuvveti(n)
           ? '${_tabanli(s, 2)} sayısında yalnız bir basamakta 1 vardır; bu '
                 'basamağın değeri $n olur.'
           : '${_tabanli(s, 2)} sayısında 1 bulunan basamakların değerleri '
                 'toplanır: ${_kuvvetToplami(n)} = $n.',
+      hedefSira(_no(a, b, c)),
       positive: true,
     );
   }
@@ -131,29 +246,54 @@ AdvancedItem _ikilikDonusum(int a, int b, int c) {
   final x = _ikilikKucuk[r];
   final y = 12 + (29 * q + 7 * r) % 85;
   final s = _ikilik(x);
-  final ters = int.parse(_ters(s), radix: 2);
-  final ust = x - (1 << (s.length - 1));
+  final hata = _okumaHatalari(x);
   final cevir = _ikininKuvveti(x)
       ? '${_tabanli(s, 2)} = $x'
       : '${_tabanli(s, 2)} = ${_kuvvetToplami(x)} = $x';
   if ((q + r).isEven || x <= y || x == 2 * y) {
-    return sayisal(
+    return sayisalSirali(
       'İkilik tabanda yazılmış ${_tabanli(s, 2)} sayısı ile onluk tabandaki $y '
           'sayısının toplamı onluk tabanda kaçtır?',
       x + y,
-      [ters + y, 2 * x + y, ust + y],
+      [for (final h in hata) h + y],
       '$cevir olur. Toplam $x + $y = ${x + y} bulunur.',
+      hedefSira(_no(a, b, c)),
       positive: true,
     );
   }
-  return sayisal(
+  return sayisalSirali(
     '${_tabanli(s, 2)} − $y işleminde ilk sayı ikilik, ikinci sayı onluk '
         'tabandadır. Bu işlemin sonucu onluk tabanda kaçtır?',
     x - y,
-    [ters - y, 2 * x - y, ust - y, x + y],
+    [
+      for (final h in hata.take(3)) h - y,
+      x + y,
+      for (final h in hata.skip(3)) h - y,
+    ],
     '$cevir olur. Fark $x − $y = ${x - y} bulunur.',
+    hedefSira(_no(a, b, c)),
     positive: true,
   );
+}
+
+/// İkilik gösterimi verilen [x] sayısını onluğa çevirirken yapılan tipik
+/// hatalar, öncelik sırasıyla: basamakları ters sırayla okuma, basamak
+/// değerlerini 2 ile başlatma, en soldaki basamağı atlama, 1 olan bir
+/// basamağın değerini eklemeyi unutma, 0 olan bir basamağın değerini de
+/// ekleme, basamak değerlerini bir basamak sağa kaydırma.
+List<int> _okumaHatalari(int x) {
+  final s = _ikilik(x);
+  final bir = _bitKonumlari(x, 1), sifir = _bitKonumlari(x, 0);
+  return [
+    int.parse(_ters(s), radix: 2),
+    2 * x,
+    x - (1 << (s.length - 1)),
+    if (bir.isNotEmpty) x - (1 << bir.first),
+    if (sifir.isNotEmpty) x + (1 << sifir.first),
+    x >> 1,
+    if (bir.length > 1) x - (1 << bir[1]),
+    if (sifir.length > 1) x + (1 << sifir[1]),
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -251,40 +391,55 @@ AdvancedItem _onaltilikDonusum(int a, int b, int c) {
       final s = _onaltilik(n);
       final r = [for (final h in s.split('')) _rakamDegeri(h)];
       final harfli = r.any((d) => d >= 10);
-      return secenekli(
+      // Tipik hatalar: basamak değerlerini 10, 8 ya da 16 ile başlayan
+      // kuvvetler alma, harf değerlerini kaydırma, ters okuma, 16² yerine 32
+      // alma, harf değerlerini yan yana yazma; sonda komşu değerler.
+      return sayisalSirali(
         'Onaltılık tabanda ${_tabanli(s, 16)} olarak yazılan sayının onluk '
             'tabandaki değeri kaçtır? $_harfNotu',
-        '$n',
+        n,
         [
-          '${_agirlikli(r, (e) => _kuvvet(10, e))}',
+          _agirlikli(r, (e) => _kuvvet(10, e)),
           if (harfli)
-            '${_agirlikli([for (final d in r) d >= 10 ? d + 1 : d], (e) => _kuvvet(16, e))}',
-          '${int.parse(_ters(s), radix: 16)}',
-          if (s.length == 3)
-            '${_agirlikli(r, (e) => e == 2 ? 32 : _kuvvet(16, e))}',
-          '${_agirlikli(r, (e) => _kuvvet(8, e))}',
-          '${n + 16}',
-          '${n - 1}',
+            _agirlikli([
+              for (final d in r) d >= 10 ? d + 1 : d,
+            ], (e) => _kuvvet(16, e)),
+          int.parse(_ters(s), radix: 16),
+          if (s.length == 3) _agirlikli(r, (e) => e == 2 ? 32 : _kuvvet(16, e)),
+          _agirlikli(r, (e) => _kuvvet(8, e)),
+          if (harfli) int.parse(r.join()),
+          16 * n,
+          n + 16,
+          n - 16,
+          n + 1,
+          n - 1,
         ],
         '${_tabanli(s, 16)} = ${_acilim(s, 16)} = $n olur.',
+        hedefSira(_no(a, b, c)),
+        positive: true,
       );
     }
     final n = _dolas(_sekizHavuzu, k ~/ 2, 193);
     final s = _sekizlik(n);
     final r = [for (final h in s.split('')) _rakamDegeri(h)];
-    return secenekli(
+    return sayisalSirali(
       'Sekizlik tabanda ${_tabanli(s, 8)} olarak yazılan sayının onluk '
           'tabandaki değeri kaçtır?',
-      '$n',
+      n,
       [
-        s,
-        '${int.parse(_ters(s), radix: 8)}',
-        '${_agirlikli(r, (e) => e == 2 ? 16 : _kuvvet(8, e))}',
-        '${_agirlikli(r, (e) => _kuvvet(16, e))}',
-        '${n + 8}',
-        '${n - 1}',
+        int.parse(s),
+        int.parse(_ters(s), radix: 8),
+        _agirlikli(r, (e) => e == 2 ? 16 : _kuvvet(8, e)),
+        _agirlikli(r, (e) => _kuvvet(16, e)),
+        n + 8,
+        8 * n,
+        n - 8,
+        n - 1,
+        n + 1,
       ],
       '${_tabanli(s, 8)} = ${_acilim(s, 8)} = $n olur.',
+      hedefSira(_no(a, b, c)),
+      positive: true,
     );
   }
   if (c < 6) {
@@ -293,19 +448,33 @@ AdvancedItem _onaltilikDonusum(int a, int b, int c) {
       final n = _dolas(_onaltiHavuzu, k ~/ 2, 337);
       final s = _onaltilik(n);
       final r = [for (final h in s.split('')) _rakamDegeri(h)];
-      return secenekli(
+      List<int> rakam(int x) => [
+        for (final h in _onaltilik(x).split('')) _rakamDegeri(h),
+      ];
+      // A hataları: kalanları ters sırayla yazma, 16 yerine 8 ile bölme,
+      // ilk kalanı unutma, harf yerine rakam değerini yazma, harfleri bir
+      // kaydırma. B hatası: bir kalanı bir fazla ya da eksik bulma.
+      return AdvancedItem(
         'Onluk tabandaki $n sayısının onaltılık tabandaki gösterimi nedir? '
             '$_harfNotu',
         s,
-        [
-          _ters(s),
-          if (r.any((d) => d >= 10)) r.join(),
-          if (r.any((d) => d >= 11))
-            [for (final d in r) _onaltilik(d >= 11 ? d - 1 : d)].join(),
-          _sekizlik(n),
-          _onaltilik(n + 16),
-          _onaltilik(n + 1),
-        ],
+        _ikiHataliTasarim(
+          n,
+          _onaltilik,
+          [
+            (x) => _sifirsiz(_ters(_onaltilik(x))),
+            _sekizlik,
+            (x) => x < 16 ? null : _onaltilik(x ~/ 16),
+            (x) => rakam(x).any((d) => d >= 10) ? rakam(x).join() : null,
+            (x) => rakam(x).any((d) => d >= 11)
+                ? [for (final d in rakam(x)) _onaltilik(d >= 11 ? d - 1 : d)]
+                      .join()
+                : null,
+          ],
+          [(x) => x - 1, (x) => x + 1, (x) => x - 16, (x) => x + 16],
+          hedefSira(_no(a, b, c)),
+          (x) => int.parse(x, radix: 16),
+        ),
         '$n = ${_acilim(s, 16)} olduğundan basamaklar '
             '${r.map((d) => d >= 10 ? '$d (${_onaltilik(d)})' : '$d').join(', ')} '
             'olur: $s. Art arda 16 ile bölmede kalanlar sondan başa yazılarak '
@@ -314,16 +483,25 @@ AdvancedItem _onaltilikDonusum(int a, int b, int c) {
     }
     final n = _dolas(_sekizHavuzu, k ~/ 2, 401);
     final s = _sekizlik(n);
-    return secenekli(
+    // A hataları: kalanları ters sırayla yazma, ilk kalanı unutma, en büyük
+    // rakam 7 olduğu için 7 ile bölme. B hatası: bir kalanı bir fazla ya da
+    // eksik bulma. Sıralama onluk okumaya göredir (geçerli sekizlik
+    // yazımlarda aynı sıra).
+    return AdvancedItem(
       'Onluk tabandaki $n sayısının sekizlik tabandaki gösterimi nedir?',
       s,
-      [
-        _ters(s),
-        if ('$n'.split('').every((h) => int.parse(h) < 8)) '$n',
-        _sekizlik(n ~/ 8),
-        _sekizlik(n + 8),
-        _sekizlik(n - 1),
-      ],
+      _ikiHataliTasarim(
+        n,
+        _sekizlik,
+        [
+          (x) => _sifirsiz(_ters(_sekizlik(x))),
+          (x) => x < 8 ? null : _sekizlik(x ~/ 8),
+          (x) => x.toRadixString(7),
+        ],
+        [(x) => x - 1, (x) => x + 1, (x) => x - 8, (x) => x + 8],
+        hedefSira(_no(a, b, c)),
+        int.parse,
+      ),
       '$n = ${_acilim(s, 8)} olduğundan gösterim $s olur. Art arda 8 ile '
           'bölmede kalanlar sondan başa yazılarak da aynı sonuç bulunur.',
     );
@@ -335,12 +513,34 @@ AdvancedItem _onaltilikDonusum(int a, int b, int c) {
     final n = _dolas(_ikilikDortlu, m, 173);
     final bit = _ikilik(n);
     final dogru = _onaltilik(n);
-    return secenekli(
+    final tam = (1 << (4 * (bit.length ~/ 4))) - 1;
+    // A hataları: soldan gruplama, rakamları ters yazma, üçerli gruplama,
+    // soldaki eksik grubu atlama, harf yerine grup değerini yazma. B hatası:
+    // bir grubu bir fazla ya da eksik çevirme.
+    return AdvancedItem(
       'İkilik tabandaki ${_tabanli(bit, 2)} sayısı, bitleri sağdan dörderli '
           'gruplanarak onaltılık tabana çevrilecektir. Sayının onaltılık '
           'tabandaki gösterimi nedir?',
       dogru,
-      [_grupla(bit, 4, soldan: true), _ters(dogru), _grupla(bit, 3), '$n'],
+      _ikiHataliTasarim(
+        n,
+        _onaltilik,
+        [
+          (x) => _grupla(_ikilik(x), 4, soldan: true),
+          (x) => _sifirsiz(_ters(_onaltilik(x))),
+          (x) => _grupla(_ikilik(x), 3),
+          (x) => _onaltilik(x & tam),
+          (x) {
+            final q = [
+              for (final h in _onaltilik(x).split('')) _rakamDegeri(h),
+            ];
+            return q.any((d) => d >= 10) ? q.join() : null;
+          },
+        ],
+        [(x) => x - 1, (x) => x + 1, (x) => x - 16, (x) => x + 16],
+        hedefSira(_no(a, b, c)),
+        (x) => int.parse(x, radix: 16),
+      ),
       'Sağdan dörderli gruplar ${_gruplarYaz(bit, 4)} olur; her grup bir '
           'onaltılık rakam verir: $dogru.',
     );
@@ -349,17 +549,28 @@ AdvancedItem _onaltilikDonusum(int a, int b, int c) {
     final n = _dolas(_ikilikUclu, m, 181);
     final bit = _ikilik(n);
     final dogru = _sekizlik(n);
-    return secenekli(
+    final tam = (1 << (3 * (bit.length ~/ 3))) - 1;
+    // A hataları: soldan gruplama, rakamları ters yazma, dörderli gruplama,
+    // soldaki eksik grubu atlama. B hatası: bir grubu bir fazla ya da eksik
+    // çevirme. Harfsiz yazımlar onluk okumayla sıralanır.
+    return AdvancedItem(
       'İkilik tabandaki ${_tabanli(bit, 2)} sayısı, bitleri sağdan üçerli '
           'gruplanarak sekizlik tabana çevrilecektir. Sayının sekizlik '
           'tabandaki gösterimi nedir?',
       dogru,
-      [
-        _grupla(bit, 3, soldan: true),
-        _ters(dogru),
-        _grupla(bit, 4),
-        _sekizlik(n + 8),
-      ],
+      _ikiHataliTasarim(
+        n,
+        _sekizlik,
+        [
+          (x) => _grupla(_ikilik(x), 3, soldan: true),
+          (x) => _sifirsiz(_ters(_sekizlik(x))),
+          (x) => _grupla(_ikilik(x), 4),
+          (x) => _sekizlik(x & tam),
+        ],
+        [(x) => x - 1, (x) => x + 1, (x) => x - 8, (x) => x + 8],
+        hedefSira(_no(a, b, c)),
+        (x) => int.tryParse(x) ?? int.parse(x, radix: 16),
+      ),
       'Sağdan üçerli gruplar ${_gruplarYaz(bit, 3)} olur; her grup bir '
           'sekizlik rakam verir: $dogru.',
     );
@@ -369,19 +580,30 @@ AdvancedItem _onaltilikDonusum(int a, int b, int c) {
     final s = _onaltilik(n);
     final r = [for (final h in s.split('')) _rakamDegeri(h)];
     final dogru = _ikilik(n);
-    return secenekli(
+    List<int> rakam(int x) => [
+      for (final h in _onaltilik(x).split('')) _rakamDegeri(h),
+    ];
+    final l = n.bitLength;
+    // Hatalar: rakamları dolgusuz yazma, rakamları ters sırayla yazma,
+    // rakamları üç bitle yazma; her biri bir bitin yanlış yazılmasıyla
+    // birlikte de kullanılır.
+    return AdvancedItem(
       'Onaltılık tabandaki ${_tabanli(s, 16)} sayısının her rakamı dört bitle '
           'yazılarak ikilik tabana çevrilecektir. Sayının başında sıfır '
           'bulunmayan ikilik gösterimi nedir? $_harfNotu',
       dogru,
-      [
-        r.map(_ikilik).join(),
-        _sifirsiz(r.reversed.map((d) => _dolgulu(d, 4)).join()),
-        _sifirsiz(r.map((d) => _dolgulu(d, 3)).join()),
-        _ikilik(n ^ 16),
-        _ikilik(n ^ 64),
-        _ikilik(n ^ 256),
-      ],
+      _ikiHataliTasarim(
+        n,
+        _ikilik,
+        [
+          (x) => rakam(x).map(_ikilik).join(),
+          (x) => _sifirsiz(rakam(x).reversed.map((d) => _dolgulu(d, 4)).join()),
+          (x) => _sifirsiz(rakam(x).map((d) => _dolgulu(d, 3)).join()),
+        ],
+        _bitDegisimleri([for (var t = 0; t < l - 1; t++) (n + t) % (l - 1)]),
+        hedefSira(_no(a, b, c)),
+        (x) => int.parse(x, radix: 2),
+      ),
       'Rakamlar dörder bitle ${r.map((d) => _dolgulu(d, 4)).join(' ')} olarak '
           'yazılır; baştaki sıfırlar atılınca $dogru elde edilir.',
     );
@@ -390,19 +612,27 @@ AdvancedItem _onaltilikDonusum(int a, int b, int c) {
   final s = _sekizlik(n);
   final r = [for (final h in s.split('')) _rakamDegeri(h)];
   final dogru = _ikilik(n);
-  return secenekli(
+  List<int> rakam(int x) => [
+    for (final h in _sekizlik(x).split('')) _rakamDegeri(h),
+  ];
+  final l = n.bitLength;
+  return AdvancedItem(
     'Sekizlik tabandaki ${_tabanli(s, 8)} sayısının her rakamı üç bitle '
         'yazılarak ikilik tabana çevrilecektir. Sayının başında sıfır '
         'bulunmayan ikilik gösterimi nedir?',
     dogru,
-    [
-      r.map(_ikilik).join(),
-      _sifirsiz(r.map((d) => _dolgulu(d, 4)).join()),
-      _sifirsiz(r.reversed.map((d) => _dolgulu(d, 3)).join()),
-      _ikilik(n ^ 8),
-      _ikilik(n ^ 32),
-      _ikilik(n ^ 128),
-    ],
+    _ikiHataliTasarim(
+      n,
+      _ikilik,
+      [
+        (x) => rakam(x).map(_ikilik).join(),
+        (x) => _sifirsiz(rakam(x).map((d) => _dolgulu(d, 4)).join()),
+        (x) => _sifirsiz(rakam(x).reversed.map((d) => _dolgulu(d, 3)).join()),
+      ],
+      _bitDegisimleri([for (var t = 0; t < l - 1; t++) (n + t) % (l - 1)]),
+      hedefSira(_no(a, b, c)),
+      (x) => int.parse(x, radix: 2),
+    ),
     'Rakamlar üçer bitle ${r.map((d) => _dolgulu(d, 3)).join(' ')} olarak '
         'yazılır; baştaki sıfırlar atılınca $dogru elde edilir.',
   );
@@ -671,19 +901,56 @@ AdvancedItem _veriBirim(int a, int b, int c) {
     if (tur < 6) {
       final x = 2 + m;
       final dogru = x * f;
+      // Tipik hatalar: 1024 yerine 1000 alma, bir adım fazla ya da eksik
+      // çevirme, bit ile baytı karıştırma (8 ile çarpma ya da bölme),
+      // çarpanları toplama, 1024 · x çarpımında 24 · x terimini unutma; sonda
+      // bir birim fazla ya da eksik komşu değerler.
       final List<int> hatalar = switch (tur) {
-        0 || 1 => [x * 1000, x * 1048576, 128 * x],
-        2 => [x * 1000, x * 8192, x * 1048576],
-        3 || 5 => [x * 1024, x * 1000000, x * 1024000],
-        _ => [x * 1024, x * 8000, x * 8],
+        0 || 1 => [
+          x * 1000,
+          x * 1048576,
+          128 * x,
+          8192 * x,
+          1000 * x + 24,
+          f * (x + 1),
+          f * (x - 1),
+        ],
+        2 => [
+          x * 1000,
+          x * 8192,
+          x * 1048576,
+          128 * x,
+          8 * x,
+          1000 * x + 24,
+          f * (x + 1),
+        ],
+        3 || 5 => [
+          x * 1024,
+          x * 1000000,
+          x * 1024000,
+          8 * f * x,
+          2048 * x,
+          1024 * f * x,
+          f * (x + 1),
+        ],
+        _ => [
+          x * 1024,
+          x * 8000,
+          x * 8,
+          8 * 1048576 * x,
+          128 * x,
+          64 * 1024 * x,
+          f * (x + 1),
+        ],
       };
-      return sayisal(
+      return sayisalSirali(
         '$ad $x $kaynak olarak verilmiştir. $esitlik olduğuna göre bu boyut '
             'kaç $hedef eder?',
         dogru,
         hatalar,
         '${esitlik.replaceAll(' ve ', ', ')} olduğundan $x $kaynak = $x · $f '
             '= $dogru $hedef olur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     }
@@ -691,18 +958,29 @@ AdvancedItem _veriBirim(int a, int b, int c) {
     final v = 5 + m + (tur == 8 && m >= 27 ? 1 : 0);
     final x = tur == 8 ? 2048 * v : 256 * v;
     final dogru = x / f;
-    final List<double> hatalar = switch (tur) {
-      6 || 7 => [x / 1000, x * 1024.0, dogru * 8],
-      8 => [x / 1024, x / 8, x / 8000],
-      _ => [x / 1000, x / 8, x * 8 / 1024],
-    };
-    return ondalikli(
+    // Küçük yanda: bit ile baytı karıştırıp ayrıca 8 ile bölme, ondalık
+    // kısmı atma; sonda çeyrek birim komşular.
+    final List<double> hatalar = [
+      ...switch (tur) {
+        6 || 7 => [x / 1000, x * 1024.0, dogru * 8],
+        8 => [x / 1024, x / 8, x / 8000],
+        _ => [x / 1000, x / 8, x * 8 / 1024],
+      },
+      dogru / 8,
+      if (v % 4 != 0) (v ~/ 4).toDouble(),
+      (v - 1) / 4,
+      (v + 1) / 4,
+      (v - 2) / 4,
+      (v + 2) / 4,
+    ];
+    return ondalikliSirali(
       '$ad $x $kaynak olarak verilmiştir. $esitlik olduğuna göre bu boyut '
           'kaç $hedef eder?',
       dogru,
       hatalar,
       '${esitlik.replaceAll(' ve ', ', ')} olduğundan $x $kaynak = $x / $f = '
           '${tr(dogru)} $hedef olur.',
+      hedefSira(_no(a, b, c)),
       positive: true,
     );
   }
@@ -712,13 +990,18 @@ AdvancedItem _veriBirim(int a, int b, int c) {
     final adet = 1024 * x ~/ y, kalan = 1024 * x - adet * y;
     // Bölüm ve kalan birlikte yazılır: yuvarlanmış bölüm (ör. 98,997 → 99)
     // açıklamada yanıtla çelişmez.
-    return sayisal(
+    // Tipik hatalar: 1000 ile çevirme, kalanı yuvarlayıp bir fazla sayma,
+    // birim başına sığanı aşağı ya da yukarı yuvarlayıp çarpma, ikisini
+    // birlikte yapma (1000 ve birim başına aşağı yuvarlama).
+    final ceil = (1024 + y - 1) ~/ y;
+    return sayisalSirali(
       _kapasiteKoku(t, x, y),
       adet,
-      [1000 * x ~/ y, adet + 1, x * (1024 ~/ y)],
+      [1000 * x ~/ y, adet + 1, x * (1024 ~/ y), x * ceil, x * (1000 ~/ y)],
       '$x $kb = $x · 1024 = ${1024 * x} $db eder. ${1024 * x} = $adet · $y + '
       '$kalan olduğundan en çok $adet $ad sığar; kalan $kalan $db bir $ad '
       'daha almaya yetmez.',
+      hedefSira(_no(a, b, c)),
       positive: true,
     );
   }
@@ -726,43 +1009,68 @@ AdvancedItem _veriBirim(int a, int b, int c) {
   final tur = k % 3, m = k ~/ 3;
   if (tur == 0) {
     final (n, r) = _dolas(_indirmeHavuzu, m, 4001);
-    final t = 8 * n ~/ r;
-    return ondalikli(
+    final t = 8 * n ~/ r, d = (t + 4) ~/ 8;
+    // 8 ile çarpmayı unutma, 8 ile bölme ve iki kez 8 ile çarpma
+    // hatalarından sonra yaklaşık %12 ve %25 uzaklıkta komşular.
+    return ondalikliSirali(
       'Boyutu $n milyon bayt olan bir dosya, hızı $r Mbps olan bir bağlantıyla '
           'indiriliyor. 1 bayt = 8 bit ve 1 Mbps = 10⁶ bit/s olduğuna göre '
           'indirme kaç saniye sürer?',
       t.toDouble(),
-      [n / r, n / (8 * r), 64 * n / r],
+      [
+        n / r,
+        n / (8 * r),
+        64 * n / r,
+        for (final k in [1, -1, 2, -2]) (t + k * d).toDouble(),
+      ],
       'Dosya $n · 10⁶ · 8 = ${8 * n} · 10⁶ bittir. Hız $r · 10⁶ bit/s olduğundan '
           'süre ${8 * n} / $r = $t saniye olur.',
+      hedefSira(_no(a, b, c)),
       positive: true,
     );
   }
   if (tur == 1) {
     final (x, y) = _dolas(_kopyaHavuzu, m, 2999);
-    final t = 1024 * x ~/ y;
-    return ondalikli(
+    final t = 1024 * x ~/ y, d = (t + 4) ~/ 8;
+    return ondalikliSirali(
       'Boyutu $x GB olan bir yedek dosyası, saniyede $y MB hızla harici diske '
           'kopyalanıyor. 1 GB = 1024 MB olduğuna göre kopyalama kaç saniye '
           'sürer?',
       t.toDouble(),
-      [1000 * x / y, 8192 * x / y, 128 * x / y],
+      [
+        1000 * x / y,
+        8192 * x / y,
+        128 * x / y,
+        for (final k in [1, -1, 2, -2]) (t + k * d).toDouble(),
+      ],
       '$x GB = ${1024 * x} MB eder. Süre ${1024 * x} / $y = $t saniye olur.',
+      hedefSira(_no(a, b, c)),
       positive: true,
     );
   }
   // Belirli sürede indirilen veri miktarı (süre dakika cinsinden).
   final r = sec(_hizlar, m), dk = 2 + m ~/ _hizlar.length;
   final miktar = r * 60 * dk / 8;
-  return ondalikli(
+  // Tipik hatalar: dakikayı saniyeye çevirmeme, 8 ile bölmeyi unutma ya da
+  // iki kez bölme, 8 ile bölme yerine çarpma, dakikayı 3600 saniye alma,
+  // süreyle çarpmayı unutma.
+  return ondalikliSirali(
     'Hızı $r Mbps olan bir bağlantıyla $dk dakika boyunca kesintisiz indirme '
         'yapılıyor. 1 bayt = 8 bit ve 1 Mbps = 10⁶ bit/s olduğuna göre bu sürede '
         'kaç milyon bayt veri indirilir?',
     miktar,
-    [r * dk / 8, r * 60.0 * dk, r * 60 * dk / 64],
+    [
+      r * dk / 8,
+      r * 60.0 * dk,
+      r * 60 * dk / 64,
+      r * 480.0 * dk,
+      r * 3600 * dk / 8,
+      r * 60 / 8,
+    ],
     '$dk dakika ${60 * dk} saniyedir. İndirilen veri $r · 10⁶ · ${60 * dk} = '
         '${r * 60 * dk} · 10⁶ bit, yani ${r * 60 * dk} / 8 = ${tr(miktar)} '
         'milyon bayt olur.',
+    hedefSira(_no(a, b, c)),
     positive: true,
   );
 }
@@ -1669,7 +1977,7 @@ AdvancedItem _dongu(int a, int b, int c) {
     case 0:
       final p = 3 + 2 * a, n = 4 + b % 9, k = 2 + b ~/ 9;
       final g = n * (n + 1) ~/ 2, t = p + k * g;
-      return sayisal(
+      return sayisalSirali(
         _kod(_kodGiris, [
           't ← $p',
           'i = 1, 2, …, $n için',
@@ -1683,9 +1991,12 @@ AdvancedItem _dongu(int a, int b, int c) {
           p + k * (n + 1) * (n + 2) ~/ 2,
           k * g,
           p + k * n,
+          p + g,
+          p + k * n * (n + 1),
         ],
         'Döngü $n kez çalışır ve t değerine $k · (1 + 2 + … + $n) = $k · $g = '
         '${k * g} eklenir. Yazdırılan değer $p + ${k * g} = $t olur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 1:
@@ -1704,7 +2015,7 @@ AdvancedItem _dongu(int a, int b, int c) {
         return x;
       }
       final x = son(n);
-      return sayisal(
+      return sayisalSirali(
         _kod(_kodGiris, [
           'x ← $p',
           'y ← $q',
@@ -1715,11 +2026,20 @@ AdvancedItem _dongu(int a, int b, int c) {
           'yaz x',
         ], _yazSorusu),
         x,
-        [son(n, ters: true), son(n - 1), q + n * d, son(n + 1)],
+        // Ek hatalar: y değerinin arttığını unutma, x başlangıcını eklememe.
+        [
+          son(n, ters: true),
+          son(n - 1),
+          q + n * d,
+          son(n + 1),
+          p + n * q,
+          x - p,
+        ],
         'Her adımda x değerine o anki y eklenir, sonra y değeri $d artar. '
         'Eklenen y değerleri ${[for (var t = 0; t < n; t++) q + t * d].join(', ')} '
         'olduğundan x = $p + ${_topla([for (var t = 0; t < n; t++) q + t * d])} '
         '= $x olur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 2:
@@ -1727,17 +2047,24 @@ AdvancedItem _dongu(int a, int b, int c) {
       // s ← 2 · s − i kalıbında s = 2 başlangıcı her adımda s = i + 2 verir
       // (dizi bozulur); bu kalıpta başlangıç 3 ile 27 arasındadır.
       final n = 4 + b % 4, p = 2 + a + (b ~/ 4 == 0 ? 1 : 0);
-      List<int> iz(int adim, {bool hata = false}) {
+      // hata: işlem önceliği (m · (s ± k · i)); sabit: k · i yerine k;
+      // sifir: i değerini 0 ile başlatma.
+      List<int> iz(
+        int adim, {
+        bool hata = false,
+        bool sabit = false,
+        bool sifir = false,
+      }) {
         final r = [p];
         for (var i = 1; i <= adim; i++) {
-          final s = r.last;
-          r.add(hata ? m * (s + isaret * k * i) : m * s + isaret * k * i);
+          final s = r.last, e = sabit ? k : k * (sifir ? i - 1 : i);
+          r.add(hata ? m * (s + isaret * e) : m * s + isaret * e);
         }
         return r;
       }
       final dogru = iz(n);
       final ek = '${isaret > 0 ? '+' : '−'} ${k == 1 ? 'i' : '$k · i'}';
-      return sayisal(
+      return sayisalSirali(
         _kod(_kodGiris, [
           's ← $p',
           'i = 1, 2, …, $n için',
@@ -1746,10 +2073,18 @@ AdvancedItem _dongu(int a, int b, int c) {
           'yaz s',
         ], _yazSorusu),
         dogru.last,
-        [iz(n - 1).last, iz(n + 1).last, iz(n, hata: true).last],
+        [
+          iz(n - 1).last,
+          iz(n + 1).last,
+          iz(n, hata: true).last,
+          iz(n, sabit: true).last,
+          p * _kuvvet(m, n),
+          iz(n, sifir: true).last,
+        ],
         'Her adımda önce $m · s hesaplanır, sonra ${k == 1 ? 'i' : '$k · i'} '
         '${isaret > 0 ? 'eklenir' : 'çıkarılır'}. s değeri sırasıyla '
         '${dogru.join(' → ')} olur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 3:
@@ -1766,7 +2101,7 @@ AdvancedItem _dongu(int a, int b, int c) {
         return r;
       }
       final dogru = iz(n);
-      return sayisal(
+      return sayisalSirali(
         _kod(_kodGiris, [
           'x ← $p',
           'y ← $q',
@@ -1778,10 +2113,19 @@ AdvancedItem _dongu(int a, int b, int c) {
           'yaz y',
         ], _yazSorusu),
         dogru.last,
-        [iz(n - 1).last, iz(n + 1).last, (p + q) * (1 << (n - 1))],
+        // Ek hatalar: x ← y satırını atlama (x hep p kalır), x ← y satırını
+        // z hesaplanmadan önce çalıştırma.
+        [
+          iz(n - 1).last,
+          iz(n + 1).last,
+          (p + q) * (1 << (n - 1)),
+          q + n * p,
+          q * (1 << n),
+        ],
         'Her adımda yeni y, önceki x ile y değerlerinin toplamıdır. y değeri '
         'sırasıyla ${dogru.join(', ')} olur; yazdırılan değer '
         '${dogru.last} bulunur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 4:
@@ -1793,7 +2137,9 @@ AdvancedItem _dongu(int a, int b, int c) {
       var m = 6 + 2 * (b ~/ 5);
       if ([s, s + d, s + 2 * d].contains(m)) m++;
       final e = s + d * (m - 1);
-      return sayisal(
+      // Ek hatalar: aralıktaki tam sayıları sayarken 1 eklememe, yazdırılan
+      // toplamı çalışma sayısı sanma.
+      return sayisalSirali(
         _kod(_kodGiris, [
           't ← 0',
           'i = $s, ${s + d}, ${s + 2 * d}, …, $e için',
@@ -1802,9 +2148,10 @@ AdvancedItem _dongu(int a, int b, int c) {
           'yaz t',
         ], 'Bu kod çalıştırıldığında döngünün gövdesi kaç kez çalışır?'),
         m,
-        [m - 1, m + 1, e - s + 1],
+        [m - 1, m + 1, e - s + 1, e - s, m * (s + e) ~/ 2],
         'i değeri $s sayısından başlayıp $d artarak $e sayısına ulaşır. Çalışma '
         'sayısı ($e − $s) / $d + 1 = ${m - 1} + 1 = $m olur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 5:
@@ -1843,20 +2190,24 @@ AdvancedItem _dongu(int a, int b, int c) {
           'x değeri her adımda $d azalır: $n, ${n - d}, … biçiminde ilerler. '
           '${alt + r} değerinden sonra x = $son olur ve $son > $alt koşulu '
           'sağlanmadığından döngü $adet adımda biter.';
+      // Ek hatalar: alt sınırı unutup n / d alma, birim farkı sayma; x
+      // için iki adım erken ya da geç durma, kalanı (n mod d) yazma.
       if (sayac) {
-        return sayisal(
+        return sayisalSirali(
           _kod(giris, satirlar, _yazSorusu),
           adet,
-          [adet - 1, adet + 1, adet + 2],
+          [adet - 1, adet + 1, adet + 2, n ~/ d, n - alt],
           '$aciklama Yazdırılan say değeri $adet olur.',
+          hedefSira(_no(a, b, c)),
           positive: true,
         );
       }
-      return sayisal(
+      return sayisalSirali(
         _kod(giris, satirlar, _yazSorusu),
         son,
-        [alt, alt + r, son - d],
+        [alt, alt + r, son - d, alt + r + d, son - 2 * d, n % d],
         '$aciklama Yazdırılan x değeri $son olur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 6:
@@ -1870,7 +2221,9 @@ AdvancedItem _dongu(int a, int b, int c) {
       }
       // say değeri kökteki bir sayıya eşitse x değeri sorulur.
       final sayYaz = ![p, n, 0, 1].contains(adet) || [p, n].contains(x);
-      return sayisal(
+      // Ek hatalar: x başlangıcını 1 alma (sayaç için), bir fazla ya da eksik
+      // ikiye katlama (x için).
+      return sayisalSirali(
         _kod(
           'Aşağıdaki sözde kodda ← atama işlemidir; “olduğu sürece” '
           'döngüsünün gövdesi, koşul doğru olduğu sürece “döngü sonu” '
@@ -1887,10 +2240,13 @@ AdvancedItem _dongu(int a, int b, int c) {
           _yazSorusu,
         ),
         sayYaz ? adet : x,
-        sayYaz ? [adet - 1, adet + 1, x] : [x ~/ 2, 2 * x, adet],
+        sayYaz
+            ? [adet - 1, adet + 1, x, (n - 1).bitLength]
+            : [x ~/ 2, 2 * x, adet, x ~/ 4, 4 * x],
         'x değeri sırasıyla ${iz.join(', ')} olur. $x < $n koşulu '
         'sağlanmadığından döngü durur; '
         '${sayYaz ? 'say değeri $adet olur.' : 'yazdırılan x değeri $x olur.'}',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 7:
@@ -1908,7 +2264,9 @@ AdvancedItem _dongu(int a, int b, int c) {
         return t;
       }
       final t = hesap(n);
-      return sayisal(
+      // Ek hatalar: katlarda da 1 çıkarma, her adımda yalnız 1 çıkarma, bir
+      // fazla adım.
+      return sayisalSirali(
         _kod('$_kodGiris$_modNotu', [
           't ← $p',
           'i = 1, 2, …, $n için',
@@ -1917,11 +2275,19 @@ AdvancedItem _dongu(int a, int b, int c) {
           'yaz t',
         ], _yazSorusu),
         t,
-        [hesap(n, degilseYok: true), hesap(n, artir: true), hesap(n - 1)],
+        [
+          hesap(n, degilseYok: true),
+          hesap(n, artir: true),
+          hesap(n - 1),
+          t - katlar.length,
+          p - n,
+          hesap(n + 1),
+        ],
         '1 ile $n arasında $k sayısının katları ${katlar.join(', ')} olup '
         'toplamları ${_topla(katlar)} olur. Diğer ${n - katlar.length} '
         'adımda t birer azalır: $p + ${_topla(katlar)} − '
         '${n - katlar.length} = $t.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 8:
@@ -1948,7 +2314,9 @@ AdvancedItem _dongu(int a, int b, int c) {
       final ok = u * w ~/ u.gcd(w);
       final ikisi = n ~/ ok, birlesim = n ~/ u + n ~/ w - ikisi;
       final dogru = fark ? n ~/ u - ikisi : birlesim;
-      return sayisal(
+      // Ek hatalar: yalnız bir koşulun katlarını sayma, ortak katları sayma,
+      // birleşimi sayma, bir eksik sayma.
+      return sayisalSirali(
         _kod('$_kodGiris$_modNotu', [
           'say ← 0',
           'i = 1, 2, …, $n için',
@@ -1960,8 +2328,24 @@ AdvancedItem _dongu(int a, int b, int c) {
         ], _yazSorusu),
         dogru,
         fark
-            ? [n ~/ u, n ~/ u - n ~/ w, n ~/ w, dogru + 1]
-            : [n ~/ u + n ~/ w, ikisi, n - birlesim, birlesim + 1],
+            ? [
+                n ~/ u,
+                n ~/ u - n ~/ w,
+                n ~/ w,
+                dogru + 1,
+                ikisi,
+                birlesim,
+                dogru - 1,
+              ]
+            : [
+                n ~/ u + n ~/ w,
+                ikisi,
+                n - birlesim,
+                birlesim + 1,
+                n ~/ u,
+                n ~/ w,
+                birlesim - 1,
+              ],
         fark
             ? '1 ile $n arasında $u sayısının ${n ~/ u} katı vardır. Bunlardan '
                   '$w sayısının da katı olanlar $ok sayısının katlarıdır ve '
@@ -1970,6 +2354,7 @@ AdvancedItem _dongu(int a, int b, int c) {
                   'katı vardır; ikisinin ortak katları ($ok sayısının katları) '
                   '$ikisi tanedir. Sayı ${n ~/ u} + ${n ~/ w} − $ikisi = '
                   '$birlesim olur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
   }
@@ -2112,6 +2497,64 @@ AdvancedItem _isaretli(
   ], explanation);
 }
 
+/// Kalıp ve dal başına doğru formülün tipik hesap hataları: değişkenleri
+/// karıştırma, div ile mod'u karıştırma, bölümü yukarı yuvarlama, işlem
+/// önceliğini atlama, işareti ters alma. Başka bir dalın formülüyle aynı
+/// olan hatalar (ör. x − y yerine y − x) zaten yanlış dal çeldiricisidir.
+final _kosulKaymalari = <List<List<int Function(int, int)>>>[
+  [
+    [],
+    [],
+    [(x, y) => y % 3, (x, y) => x ~/ 3, (x, y) => (y + 2) ~/ 3],
+    [],
+  ],
+  [
+    [(x, y) => y - x, (x, y) => x + y],
+    [(x, y) => 2 * x, (x, y) => y + 2],
+    [(x, y) => x % 5, (x, y) => y ~/ 5, (x, y) => (x + 4) ~/ 5],
+    [(x, y) => (x + 2) * y, (x, y) => 2 * x + y, (x, y) => x + y],
+  ],
+  [
+    [(x, y) => x - y],
+    [(x, y) => 2 * y, (x, y) => x + 2],
+    [(x, y) => x % 2, (x, y) => y ~/ 2, (x, y) => (x + 1) ~/ 2],
+    [(x, y) => x - y],
+  ],
+  [
+    [(x, y) => (x - 2) * y, (x, y) => 2 * y - x, (x, y) => x + 2 * y],
+    [],
+    [(x, y) => y - x],
+    [(x, y) => y % 2, (x, y) => x ~/ 2, (x, y) => (y + 1) ~/ 2],
+  ],
+  [
+    [(x, y) => x + y + 50, (x, y) => 50 - x - y],
+    [],
+    [],
+    [],
+  ],
+];
+
+/// İşaretli tam sayı yanıtlı soru; çeldiriciler [adaylar] arasından,
+/// anahtardan küçük olanların sayısı [sira] olacak biçimde seçilir. Negatif
+/// seçenekler − ile yazılır.
+AdvancedItem _isaretliSirali(
+  String prompt,
+  int answer,
+  Iterable<int> adaylar,
+  String explanation,
+  int sira,
+) {
+  String yaz(int x) => x < 0 ? '−${-x}' : '$x';
+  return AdvancedItem(
+    prompt,
+    yaz(answer),
+    siraliCeldiriciler(answer, yaz(answer), [
+      for (final x in adaylar) (x, yaz(x)),
+    ], sira),
+    explanation,
+  );
+}
+
 /// Formüldeki x ve y yerine değerleri yazar.
 String _yerine(String formul, int x, int y) =>
     formul.replaceAll('x', '$x').replaceAll('y', '$y');
@@ -2199,18 +2642,27 @@ AdvancedItem _kosul(int a, int b, int c) {
           '${k.dallar[3].$1})',
       'yaz z',
     ];
-    return _isaretli(
+    // Önce yanlış dala sapma, sonra doğru formülde hesap hatası, en sonda
+    // elde ya da ödünç (±10) ve birler basamağı (±1, ±2) hataları. Girişlerle
+    // ve sıfırla aynı değerler kullanılmaz.
+    return _isaretliSirali(
       _kod(_notlu(_kosulGiris, satirlar), satirlar, _yazSorusu),
       d[dal],
       [
         for (var t = 0; t < 4; t++)
           if (t != dal) d[t],
+        for (final v in [
+          for (final f in _kosulKaymalari[c][dal]) f(x, y),
+          for (final e in const [10, -10, 1, -1, 2, -2, 3, -3]) d[dal] + e,
+        ])
+          if (v != 0 && v != x && v != y) v,
       ],
       'x = $x ve y = $y için ${k.dis.$1} koşulu '
       '${k.dis.$2(x, y) ? 'doğrudur ve ilk' : 'yanlıştır ve ikinci'} '
       'parantezdeki yapı çalışır. ${dal < 2 ? k.ic1.$1 : k.ic2.$1} koşulu '
       '${dal.isEven ? 'doğru' : 'yanlış'} olduğundan z = '
       '${_yerine(k.dallar[dal].$1, x, y)} = ${d[dal]} yazdırılır.',
+      hedefSira(_no(a, b, c)),
     );
   }
   switch (c) {

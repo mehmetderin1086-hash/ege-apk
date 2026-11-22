@@ -1,7 +1,138 @@
 // Lise fizik metin aileleri: elektrik, manyetizma, dalgalar, çembersel
 // hareket, optik ve modern fizik. Her aile 5.000 ayrı vaka üretir; veriler
 // sonuçlar tam ya da kısa ondalıklı çıkacak biçimde seçilmiştir.
+import 'dart:math' as math;
+
+import 'denge.dart';
 import 'ortak.dart';
+
+/// (a, b, c) koordinatlarının sıra numarası (lmAile ile aynı düzen).
+int _no(int a, int b, int c) => a + 25 * b + 500 * c;
+
+/// [siraliCeldiriciler] gibi seçer: anahtardan küçük çeldirici sayısı [sira]
+/// olur ve adaylar öncelik sırasıyla alınır. Ek kural: anahtarı seçilmiş bir
+/// çeldiriciyle birlikte tam ortaya (aritmetik ya da geometrik ortalama)
+/// alacak aday, aynı yanda başka aday kaldıkça ertelenir; böylece "ortadaki
+/// değer" kestirimi anahtarı göstermez. Değerler seçeneklerde yazılan
+/// değerlerdir.
+List<String> _sirali(
+  num anahtar,
+  String anahtarYazim,
+  Iterable<(num, String)> adaylar,
+  int sira,
+) {
+  final kota = [sira.clamp(0, 3), 3 - sira.clamp(0, 3)];
+  final secilen = <(num, String)>[];
+  final ertelenen = <(num, String)>[], yedek = <(num, String)>[];
+  bool yeni(String x) =>
+      x.trim().isNotEmpty &&
+      !ayniSecenek(x, anahtarYazim) &&
+      ![...secilen, ...ertelenen, ...yedek].any((w) => ayniSecenek(w.$2, x));
+  bool ortaYapar(num y) => secilen.any((s) {
+    final x = s.$1;
+    if ((x - anahtar) * (y - anahtar) >= 0) return false;
+    if ((x + y - 2 * anahtar).abs() <= 1e-9 * (1 + anahtar.abs())) return true;
+    return anahtar > 0 &&
+        x > 0 &&
+        y > 0 &&
+        (math.sqrt(x * y) / anahtar - 1).abs() <= 0.02;
+  });
+  int yan(num x) => x < anahtar ? 0 : 1;
+  for (final (deger, yazim) in adaylar) {
+    if (secilen.length == 3) break;
+    if (!yeni(yazim)) continue;
+    if (kota[yan(deger)] == 0) {
+      yedek.add((deger, yazim));
+    } else if (ortaYapar(deger)) {
+      ertelenen.add((deger, yazim));
+    } else {
+      secilen.add((deger, yazim));
+      kota[yan(deger)]--;
+    }
+  }
+  // Eksik kalırsa önce anahtarı ortaya almayan adaylarla (gerekirse öteki
+  // yandan) tamamlanır; sıra hedefinden sapmak, ortadaki değer ipucundan
+  // iyidir.
+  for (final x in [...yedek, ...ertelenen]) {
+    if (secilen.length < 3 && !ortaYapar(x.$1)) secilen.add(x);
+  }
+  for (final x in [...ertelenen, ...yedek]) {
+    if (secilen.length == 3) break;
+    if (!secilen.contains(x)) secilen.add(x);
+  }
+  if (secilen.length != 3) {
+    throw StateError('Eksik çeldirici: $anahtarYazim → $secilen');
+  }
+  return [for (final s in secilen) s.$2];
+}
+
+/// Ondalıklı yanıtlı soru; anahtarın seçenekler içindeki değer sırası vakadan
+/// vakaya [hedefSira] ile değişir ([sira] verilirse o kullanılır). [hatalar]
+/// anahtarın iki yanındaki tipik hata değerleridir (öncelik sırasıyla);
+/// yetmezse en sonda anahtarın yakın komşuları kullanılır. Komşu katsayıları
+/// (1,2 · 0,75 · 1,5 · 0,6) bilerek bakışımsızdır: anahtar komşuların ortası
+/// olmaz. Sıfıra yuvarlanan ya da yazımı değerinden %10'dan çok sapan adaylar
+/// atılır.
+AdvancedItem _ondalikSira(
+  String prompt,
+  double answer,
+  List<double> hatalar,
+  String explanation,
+  int i, {
+  required String unit,
+  int digits = 2,
+  int? sira,
+}) {
+  double yuvarla(double x) =>
+      double.parse(tr(x, digits).replaceFirst(',', '.'));
+  final adim = answer.abs() >= 20 ? 1.0 : (answer.abs() >= 2 ? 0.5 : 0.1);
+  final aday = [
+    for (final x in [
+      ...hatalar,
+      for (final m in const [1.2, 0.75, 1.5, 0.6]) answer * m,
+      for (var k = 1; k <= 6; k++) ...[answer + k * adim, answer - k * adim],
+    ])
+      if (x.isFinite &&
+          yuvarla(x) > 0 &&
+          (yuvarla(x) - x).abs() <= 0.1 * x.abs())
+        x,
+  ];
+  final yazim = birimli(tr(answer, digits), unit);
+  return AdvancedItem(
+    prompt,
+    yazim,
+    _sirali(yuvarla(answer), yazim, [
+      for (final x in aday) (yuvarla(x), birimli(tr(x, digits), unit)),
+    ], sira ?? hedefSira(i)),
+    explanation,
+  );
+}
+
+/// Tam sayı yanıtlı soru; [_ondalikSira] gibi, komşular yuvarlanarak eklenir.
+AdvancedItem _sayiSira(
+  String prompt,
+  int answer,
+  List<int> hatalar,
+  String explanation,
+  int i, {
+  String unit = '',
+}) {
+  final adim = answer.abs() >= 200 ? 10 : (answer.abs() >= 40 ? 5 : 1);
+  final aday = [
+    ...hatalar,
+    for (final m in const [1.2, 0.75, 1.5, 0.6]) (answer * m).round(),
+    for (var k = 1; k <= 6; k++) ...[answer + k * adim, answer - k * adim],
+  ].where((x) => x > 0);
+  final yazim = birimli('$answer', unit);
+  return AdvancedItem(
+    prompt,
+    yazim,
+    _sirali(answer, yazim, [
+      for (final x in aday) (x, birimli('$x', unit)),
+    ], hedefSira(i)),
+    explanation,
+  );
+}
 
 AdvancedFamily _fe(
   String key,
@@ -116,18 +247,26 @@ final lmFizikElektrik = <AdvancedFamily>[
         final i1 = 2 * (1 + b % 5); // onda bir amper: 0,2 … 1 A
         final i2 = i1 + 2 * (1 + b ~/ 5 + 4 * k); // 0,4 … 5 A
         final v1 = r * i1 / 10, v2 = r * i2 / 10;
-        return ondalikli(
+        return _ondalikSira(
           '${sec(_omikIletken, a + b)} uçları arasına ${tr(v1)} V gerilim '
           'uygulandığında iletkenden ${tr(i1 / 10)} A akım geçiyor. Sıcaklığı '
           'değişmeyen aynı iletkenin uçları arasındaki gerilim ${tr(v2)} V '
           'yapılırsa iletkenden geçen akım kaç A olur?',
           i2 / 10,
-          [i1 * i1 / i2 / 10, r.toDouble(), (i2 - i1) / 10, (i1 + i2) / 10],
+          [
+            i1 * i1 / i2 / 10, // akım gerilimle ters orantılı sanılmış
+            (i1 + i2) / 10, // yeni akım eskisine eklenmiş
+            r.toDouble(), // direnç değeri akım sanılmış
+            (i2 - i1) / 10, // akımdaki artış
+            i1 / 10, // akım değişmez sanılmış
+            if (i2 <= 2 * i1) i2 * i2 / i1 / 10, // akım gerilimin karesiyle
+            v2, // gerilim değeri akım sanılmış
+          ],
           'İletkenin direnci R = V / I = ${tr(v1)} / ${tr(i1 / 10)} = $r Ω '
           'olur. Direnç değişmediğinden yeni akım I = ${tr(v2)} / $r = '
           '${tr(i2 / 10)} A bulunur.',
+          _no(a, b, c),
           unit: 'A',
-          positive: true,
         );
       }
       // Krom-nikelin özdirenci yaklaşık 1 Ω·mm²/m alınır: L = R·A. Böylece
@@ -139,25 +278,26 @@ final lmFizikElektrik = <AdvancedFamily>[
       final s1 = tr(s100 / 100), s2 = tr(ns * s100 / 100); // mm²
       final akim = tr((1 + a % 5) / 2); // 0,5 … 2,5 A
       final gerilim = tr(r1 * (1 + a % 5) / 2); // V
-      return sayisal(
+      return _sayiSira(
         'Uzunluğu $l1 m, kesit alanı $s1 mm² olan krom-nikel bir telin '
         'uçları arasına $gerilim V gerilim uygulandığında telden $akim A '
         'akım geçiyor. Aynı maddeden yapılmış, uzunluğu $l2 m ve kesit alanı '
         '$s2 mm² olan başka bir telin aynı sıcaklıktaki direnci kaç Ω olur?',
         r2,
         [
-          r1 * nl * ns,
-          if (r1 * ns % nl == 0) r1 * ns ~/ nl,
-          r1,
-          r1 * nl,
-          1 + k,
+          r1 * nl * ns, // kesit alanıyla çarpılmış
+          if (r1 * ns % nl == 0) r1 * ns ~/ nl, // iki oran da ters
+          r1, // direnç değişmez sanılmış
+          r1 * nl, // kesit alanı hesaba katılmamış
+          1 + k, // uzunluk hesaba katılmamış
+          if (r1 % (nl * ns) == 0) r1 ~/ (nl * ns), // ikisine de bölünmüş
         ],
         'Birinci telin direnci R = V / I = $gerilim / $akim = $r1 Ω olur. '
         'R = ρ·L / A olduğundan direnç uzunlukla doğru, kesit alanıyla ters '
         'orantılıdır. Uzunluk $nl katına, kesit alanı $ns katına çıktığı '
         'için R = $r1·$nl / $ns = $r2 Ω bulunur.',
+        _no(a, b, c),
         unit: 'Ω',
-        positive: true,
       );
     },
     tyt: true,
@@ -185,25 +325,42 @@ final lmFizikElektrik = <AdvancedFamily>[
           'Paralel kolun eşdeğeri $r1·$r2 / ($r1 + $r2) = $rp Ω, devrenin '
           'eşdeğer direnci $rp + $r3 = ${rp + r3} Ω olur. Ana kol akımı '
           'I = ${tr(v)} / ${rp + r3} = ${tr(i)} A bulunur.';
+      final i1 = j * (r2 ~/ g) / 10, i2 = j * (r1 ~/ g) / 10;
       if (c.isEven) {
-        return ondalikli(
+        return _ondalikSira(
           '$giris üreteçten çekilen akım (ana kol akımı) kaç A olur?',
           i,
-          [v / (r1 + r2 + r3), v / r3, v / rp, v / (r1 + r2)],
+          [
+            v / (r1 + r2 + r3), // tüm dirençler seri sanılmış
+            v / r3, // paralel kol unutulmuş
+            v / rp, // seri direnç unutulmuş
+            v * (rp + r3) / (rp * r3), // R₃ de paralel sanılmış
+            i1, // R₁ kolunun akımı
+            v / (r1 + r2), // paralel kol seri sanılmış, R₃ unutulmuş
+            i2, // R₂ kolunun akımı
+            v / (r1 * r2 + r3), // paralel eşdeğerde paydaya bölünmemiş
+          ],
           ortak,
+          _no(a, b, c),
           unit: 'A',
-          positive: true,
         );
       }
-      final i1 = j * (r2 ~/ g) / 10, i2 = j * (r1 ~/ g) / 10;
-      return ondalikli(
+      return _ondalikSira(
         '$giris R₁ direncinden geçen akım kaç A olur?',
         i1,
-        [i2, i, i / 2, v / r1],
+        [
+          i2, // akım dirençle doğru orantılı paylaştırılmış
+          i, // ana kol akımı
+          i / 2, // akım eşit paylaştırılmış
+          v / r1, // üretecin gerilimi R₁'e uygulanmış
+          v / (r1 + r3), // R₂ yok sayılmış
+          v * r3 / ((rp + r3) * r1), // gerilim payları yer değiştirmiş
+          v / (r1 + r2 + r3), // tüm dirençler seri sanılmış
+        ],
         '$ortak Paralel kollarda akım dirençle ters orantılı paylaşılır: '
         'I₁ = ${tr(i)}·$r2 / ($r1 + $r2) = ${tr(i1)} A.',
+        _no(a, b, c),
         unit: 'A',
-        positive: true,
       );
     },
     tyt: true,
@@ -230,26 +387,34 @@ final lmFizikElektrik = <AdvancedFamily>[
           'Harcanan enerji E = P·t = ${tr(p / 1000)} kW·${t * gun} saat = '
           '${tr(e)} kWh olur. Bedeli ${tr(e)}·${tr(f10 / 10)} = '
           '${tr(ucret)} TL bulunur.';
-      final celdirici = [e, ucret / gun, ucret / t, ucret * 10, ucret / 10];
+      final celdirici = [
+        e, // enerji (kWh) bedel sanılmış
+        ucret * 10, // W → kW çevirmesinde 100'e bölünmüş
+        ucret / gun, // gün sayısıyla çarpılmamış
+        if (gun < 30) ucret * 30 / gun, // dönem 30 gün sanılmış
+        ucret / t, // günlük süreyle çarpılmamış
+        ucret / 10,
+        e * 10 / f10, // birim fiyatla çarpmak yerine bölmek
+      ];
       if (c.isEven) {
-        return ondalikli(
+        return _ondalikSira(
           'Gücü $p W olan $cihaz her gün $t saat çalıştırılıyor. $soru',
           ucret,
           celdirici,
           hesap,
+          _no(a, b, c),
           unit: 'TL',
-          positive: true,
         );
       }
       final akim = tr((5 + a) / 2);
-      return ondalikli(
+      return _ondalikSira(
         '220 V gerilimli şehir şebekesine bağlı $cihaz çalışırken $akim A '
         'akım çekiyor ve her gün $t saat çalıştırılıyor. $soru',
         ucret,
         celdirici,
         'Cihazın gücü P = V·I = 220·$akim = $p W olur. $hesap',
+        _no(a, b, c),
         unit: 'TL',
-        positive: true,
       );
     },
     tyt: true,
@@ -268,44 +433,50 @@ final lmFizikElektrik = <AdvancedFamily>[
       if (c.isEven) {
         final r = (1 + b % 4) / 2; // iç direnç 0,5 … 2 Ω
         final rd = n * (tt - r);
-        return ondalikli(
+        return _ondalikSira(
           'Her birinin emk değeri ${tr(emk)} V, iç direnci ${tr(r)} Ω olan '
           '$n özdeş üreteç seri bağlanarak ${tr(rd)} Ω değerindeki bir '
           'direncin uçlarına bağlanıyor. Dirençten geçen akım kaç A olur?',
           i,
           [
-            n * emk / (rd + r),
-            emk / (rd + r),
-            emk / (rd + n * r),
-            n * emk / rd,
+            n * emk / (rd + r), // iç dirençler toplanmamış
+            emk / (rd + n * r), // emk değerleri toplanmamış
+            n * emk / rd, // iç direnç yok sayılmış
+            emk / (rd + r), // tek üreteç
+            n * emk / (rd + r / n), // iç direnç paralel kuralıyla
+            emk / (rd + r / n), // paralel bağlama kuralları
+            emk / rd, // tek üreteç, iç direnç yok
           ],
           'Seri bağlı üreteçlerde emk değerleri ve iç dirençler toplanır: '
           'toplam emk $n·${tr(emk)} = ${tr(n * emk)} V, toplam iç direnç '
           '$n·${tr(r)} = ${tr(n * r)} Ω olur. I = ${tr(n * emk)} / '
           '(${tr(rd)} + ${tr(n * r)}) = ${tr(i)} A.',
+          _no(a, b, c),
           unit: 'A',
-          positive: true,
         );
       }
       final r0 = const [10, 20, 25, 50][b % 4] / 100;
       final r = n * r0, rd = tt - r0;
-      return ondalikli(
+      return _ondalikSira(
         'Her birinin emk değeri ${tr(emk)} V, iç direnci ${tr(r)} Ω olan $n '
         'özdeş üreteç, aynı kutupları birleştirilerek paralel bağlanıyor ve '
         '${tr(rd)} Ω değerindeki bir direncin uçlarına bağlanıyor. Dirençten '
         'geçen akım kaç A olur?',
         i,
         [
-          n * emk / (rd + r),
-          emk / (rd + r),
-          emk / (rd + n * r),
-          n * emk / (rd + r0),
+          n * emk / (rd + r0), // emk değerleri toplanmış
+          emk / (rd + r), // iç direnç n'ye bölünmemiş
+          emk / rd, // iç direnç yok sayılmış
+          emk / (rd + n * r), // iç direnç n ile çarpılmış
+          n * emk / (rd + r), // seri kuralı: emk toplanmış
+          emk / (n * (rd + r0)), // emk üreteçlere paylaştırılmış
+          n * emk / (rd + n * r), // seri bağlama kuralları
         ],
         'Özdeş üreteçler paralel bağlandığında emk değişmez (${tr(emk)} V), '
         'eşdeğer iç direnç ${tr(r)} / $n = ${tr(r0)} Ω olur. I = ${tr(emk)} '
         '/ (${tr(rd)} + ${tr(r0)}) = ${tr(i)} A.',
+        _no(a, b, c),
         unit: 'A',
-        positive: true,
       );
     },
   ),
@@ -378,7 +549,7 @@ final lmFizikElektrik = <AdvancedFamily>[
         final d = const [2, 4, 5, 10, 20][k]; // cm
         final v = e * d ~/ 100;
         final w = q * v;
-        return sayisal(
+        return _sayiSira(
           'Aralarındaki uzaklık $d cm olan yüklü paralel iki levha arasında '
           'büyüklüğü $e V/m olan düzgün bir elektrik alan bulunuyor. Yükü '
           '$q µC olan bir parçacık levhalardan birinden diğerine '
@@ -386,17 +557,19 @@ final lmFizikElektrik = <AdvancedFamily>[
           '(mikrojoule) olur?',
           w,
           [
-            w * 100,
-            v,
-            q * e,
-            e * d,
-            q * e ~/ d,
+            w * 100, // uzaklık cm olarak kullanılmış
+            v, // yükle çarpılmamış (potansiyel farkı)
+            q * e, // uzaklık unutulmuş
+            if (w.isEven) w ~/ 2, // kondansatör enerjisindeki 1/2
+            e * d, // uzaklık cm ile, yük unutulmuş
+            if (q * e % d == 0) q * e ~/ d, // uzaklıkla çarpmak yerine bölmek
             w * 10,
             if (w % 10 == 0) w ~/ 10,
+            if (v % q == 0) v ~/ q, // yükle çarpmak yerine bölmek
           ],
           'Levhalar arasındaki potansiyel farkı V = E·d = $e·${tr(d / 100)} '
           '= $v V olur. İşin büyüklüğü W = q·V = $q·$v = $w µJ bulunur.',
-          positive: true,
+          _no(a, b, c),
         );
       }
       final vk = 10 * (a + 2);
@@ -405,22 +578,26 @@ final lmFizikElektrik = <AdvancedFamily>[
       final vl = vk + dv;
       final adim = vl >= 200 ? 10 : (vl >= 40 ? 5 : 1);
       // İşaret hatası (vk − dv) negatif çıkabilir; gerçek eksiyle yazılır.
-      return secenekli(
+      final adaylar = [
+        vk - dv, // işaret hatası
+        vk + w, // yüke bölünmemiş
+        dv, // yalnız potansiyel farkı
+        if (q <= 5) vk + w * q, // yüke bölmek yerine çarpmak
+        w, // iş potansiyel sanılmış
+        vk, // potansiyel değişmez sanılmış
+        dv - vk, // işaret hatası (K'nin potansiyeli çıkarılmış)
+        for (final m in const [1.2, 0.75, 1.5, 0.6]) (vl * m).round(),
+        for (var j = 1; j <= 3; j++) ...[vl + j * adim, vl - j * adim],
+      ];
+      return AdvancedItem(
         'Bir elektrik alanında, potansiyeli $vk V olan K noktasındaki +$q µC '
         'yüklü parçacığı L noktasına sabit hızla götürmek için elektriksel '
         'kuvvetlere karşı $w µJ iş yapılıyor. L noktasının potansiyeli kaç V '
         'olur?',
         _volt(vl),
-        [
-          vk - dv,
-          dv,
-          vk + w,
-          w,
-          vk,
-          vl + adim,
-          vl - adim,
-          vl + 2 * adim,
-        ].map(_volt),
+        _sirali(vl, _volt(vl), [
+          for (final x in adaylar) (x, _volt(x)),
+        ], hedefSira(_no(a, b, c))),
         'K ile L arasındaki potansiyel farkı W / q = $w / $q = $dv V olur. '
         'Pozitif yük elektriksel kuvvetlere karşı taşındığından L daha '
         'yüksek potansiyeldedir: $vk + $dv = $vl V.',
@@ -441,18 +618,29 @@ final lmFizikElektrik = <AdvancedFamily>[
         final c3 = const [2, 3, 5, 6, 10][k];
         final v = 5 * (b + 1);
         final q = (cs + c3) * v;
-        return sayisal(
+        final hepsiSeri = cs * c3 * v, tersBag = (c1 + c2) * c3 * v;
+        return _sayiSira(
           'Sığaları $c1 µF ve $c2 µF olan iki kondansatör seri bağlanmış, '
           'bu kola sığası $c3 µF olan üçüncü bir kondansatör paralel '
           'bağlanmıştır. Sistem $v V gerilimli bir üretecin uçlarına bağlanıp '
           'tamamen dolduğunda üreteçten çekilen toplam yük kaç µC '
           '(mikrokulon) olur?',
           q,
-          [(c1 + c2 + c3) * v, cs * v, (c1 + c2) * v, c3 * v],
+          [
+            (c1 + c2 + c3) * v, // seri kol paralel sanılmış
+            cs * v, // paralel kondansatör unutulmuş
+            (2 * cs + c3) * v, // seri kondansatörlerin yükleri toplanmış
+            c3 * v, // yalnız paralel kondansatör
+            (c1 + c2) * v,
+            if (hepsiSeri % (cs + c3) == 0) hepsiSeri ~/ (cs + c3), // tümü seri
+            if (tersBag % (c1 + c2 + c3) == 0)
+              tersBag ~/ (c1 + c2 + c3), // seri ve paralel yer değiştirmiş
+            if (q.isEven) q ~/ 2, // enerji bağıntısındaki 1/2
+          ],
           'Seri kolun eşdeğer sığası $c1·$c2 / ($c1 + $c2) = $cs µF, paralel '
           'kolla birlikte eşdeğer sığa $cs + $c3 = ${cs + c3} µF olur. '
           'Q = C·V = ${cs + c3}·$v = $q µC.',
-          positive: true,
+          _no(a, b, c),
         );
       }
       final n = 2 + k;
@@ -461,23 +649,29 @@ final lmFizikElektrik = <AdvancedFamily>[
       final ces = seri ? a + 1 : n * (a + 1);
       final v = 2 * (b + 1);
       final e = ces * v * v ~/ 2;
-      return sayisal(
+      final tekV2 = tek * v * v;
+      return _sayiSira(
         'Her birinin sığası $tek µF olan $n özdeş kondansatör birbirine '
         '${seri ? 'seri' : 'paralel'} bağlanıyor ve $v V gerilimli bir '
         'üretecin uçlarına bağlanarak dolduruluyor. Kondansatörlerde '
         'depolanan toplam enerji kaç µJ (mikrojoule) olur?',
         e,
         [
-          ces * v * v,
-          (seri ? n * tek : tek) * v * v ~/ 2,
-          ces * v ~/ 2,
-          tek * v * v,
+          ces * v * v, // 1/2 unutulmuş
+          (seri ? n * tek : tek) * v * v ~/ 2, // bağlama kuralı karışmış
+          ces * v ~/ 2, // gerilimin karesi alınmamış
+          tek * v * v, // tek kondansatör, 1/2 unutulmuş
+          // Seride tek kondansatörün enerjisi (gerilimi V / n); paralelde
+          // eşdeğer sığayla bulunan enerji bir de n ile çarpılmış.
+          if (seri && tekV2 % (2 * n * n) == 0) tekV2 ~/ (2 * n * n),
+          if (!seri) n * e,
+          if (!seri && tekV2 % (2 * n) == 0) tekV2 ~/ (2 * n), // seri kuralı
         ],
         '${seri ? 'Özdeş $n kondansatör seri bağlandığında eşdeğer sığa '
                   '$tek / $n = $ces µF olur.' : 'Özdeş $n kondansatör paralel '
                   'bağlandığında eşdeğer sığa $n·$tek = $ces µF olur.'} '
         'E = C·V² / 2 = $ces·$v² / 2 = $e µJ.',
-        positive: true,
+        _no(a, b, c),
       );
     },
   ),
@@ -498,7 +692,7 @@ final lmFizikElektrik = <AdvancedFamily>[
         final i = b + 1; // A
         final f = 2 * m1 * m2 * i * s10 / 1000;
         final tam = 2 * m1 * m2 * i / 100;
-        return ondalikli(
+        return _ondalikSira(
           'Büyüklüğü $alan T olan düzgün bir manyetik alanın içinde, $l cm '
           'uzunluğundaki düz bir iletken telden $i A akım geçiyor. '
           '${dik ? 'Tel, manyetik alan çizgilerine dik konumdadır.' : 'Tel, '
@@ -507,28 +701,29 @@ final lmFizikElektrik = <AdvancedFamily>[
           'Tele etkiyen manyetik kuvvetin büyüklüğü kaç N olur?',
           f,
           [
-            if (!dik) tam,
-            if (c10 > 0) tam * c10 / 10,
-            f * 100,
-            f / i,
+            if (!dik) tam, // sin θ unutulmuş
+            if (c10 > 0) tam * c10 / 10, // sin yerine cos
+            f * 100, // uzunluk cm olarak kullanılmış
+            f / i, // akım unutulmuş
             f * 10,
             f / 10,
+            f / 100,
           ],
           dik
               ? 'Tel alana dik olduğundan F = B·I·L = $alan·$i·'
                     '${tr(l / 100)} = ${tr(f, 3)} N olur.'
               : 'F = B·I·L·sin θ = $alan·$i·${tr(l / 100)}·$sinus = '
                     '${tr(f, 3)} N olur.',
+          _no(a, b, c),
           unit: 'N',
           digits: 3,
-          positive: true,
         );
       }
       final q = 1 + a % 5, mv = 2 + a ~/ 5;
       final alan = tr((b + 1) / 10); // 0,1 … 2 T
       final f = q * mv * (b + 1) * s10 / 1000;
       final tam = q * mv * (b + 1) / 100;
-      return ondalikli(
+      return _ondalikSira(
         'Yükü $q µC olan bir parçacık, büyüklüğü $alan T olan düzgün bir '
         'manyetik alana $mv·10⁵ m/s hızla giriyor. '
         '${dik ? 'Parçacığın hızı manyetik alan çizgilerine diktir.' : 'Parçacığın '
@@ -538,20 +733,21 @@ final lmFizikElektrik = <AdvancedFamily>[
         '(1 µC = 10⁻⁶ C)',
         f,
         [
-          if (!dik) tam,
-          if (c10 > 0) tam * c10 / 10,
-          f * 10,
+          if (!dik) tam, // sin θ unutulmuş
+          if (c10 > 0) tam * c10 / 10, // sin yerine cos
+          f * 10, // on üsleri yanlış
           f / 10,
           f * 100,
+          f / 100,
         ],
         dik
             ? 'Hız alana dik olduğundan F = q·v·B = $q·10⁻⁶·$mv·10⁵·$alan = '
                   '${tr(f, 3)} N olur.'
             : 'F = q·v·B·sin θ = $q·10⁻⁶·$mv·10⁵·$alan·$sinus = '
                   '${tr(f, 3)} N olur.',
+        _no(a, b, c),
         unit: 'N',
         digits: 3,
-        positive: true,
       );
     },
   ),
@@ -638,17 +834,24 @@ final lmFizikElektrik = <AdvancedFamily>[
         final t = const [4, 6, 8, 10, 20][k]; // s
         final n = (b + 4) * t ~/ 2;
         final v = (a + 10) * (b + 4) / 20;
-        return ondalikli(
+        return _ondalikSira(
           'Gergin ve uzun bir halatın ucundaki kaynak $t saniyede $n tam '
           'dalga üretiyor. Halat üzerinde ilerleyen periyodik dalgalarda '
           'ardışık iki dalga tepesi arasındaki uzaklık ${tr(lam)} m olduğuna '
           'göre dalgaların yayılma hızı kaç m/s olur?',
           v,
-          [lam / f, f, lam * n, lam * t, 2 * v],
+          [
+            lam / f, // frekans yerine periyot
+            lam * n, // dalga sayısı frekans sanılmış
+            lam / t, // toplam süre periyot sanılmış
+            2 * v, // ardışık tepeler arası λ / 2 sanılmış
+            f, // frekans yanıt sanılmış
+            lam * t,
+          ],
           'Frekans f = $n / $t = ${tr(f)} Hz, dalga boyu λ = ${tr(lam)} m '
           'olur. v = λ·f = ${tr(lam)}·${tr(f)} = ${tr(v)} m/s.',
+          _no(a, b, c),
           unit: 'm/s',
-          positive: true,
         );
       }
       final v = (a + 1) / 2; // 0,5 … 12,5 m/s
@@ -657,21 +860,29 @@ final lmFizikElektrik = <AdvancedFamily>[
       final lam = (a + 1) * (b + 1) / 10;
       final d = (n - 1) * lam;
       final ikili = n == 2;
-      return ondalikli(
+      return _ondalikSira(
         'Esnek bir ortamda ${tr(v)} m/s hızla yayılan periyodik dalgalarda, '
         '${ikili ? 'ardışık iki dalga tepesi arasındaki' : 'art arda gelen '
                   '$n dalga tepesinden ilki ile sonuncusu arasındaki'} '
         'uzaklık ${tr(d)} m olarak ölçülüyor. Bu dalgaların periyodu kaç s '
         'olur?',
         per,
-        [d / v, d / (n * v), v / lam, lam, lam * v, 2 * per],
+        [
+          d / v, // uzaklık dalga boyu sanılmış
+          d / (n * v), // n − 1 yerine n aralık
+          v / lam, // periyot yerine frekans
+          2 * per, // ardışık tepeler arası λ / 2 sanılmış
+          lam * v, // bölmek yerine çarpmak
+          per / 2, // ardışık tepeler arası 2λ sanılmış
+          lam, // dalga boyu yanıt sanılmış
+        ],
         '${ikili ? 'Ardışık iki dalga tepesi arasındaki uzaklık bir dalga '
                   'boyudur: λ = ${tr(lam)} m.' : 'Art arda gelen $n tepe '
                   'arasında ${n - 1} dalga boyu bulunur: λ = ${tr(d)} / '
                   '${n - 1} = ${tr(lam)} m.'} '
         'T = λ / v = ${tr(lam)} / ${tr(v)} = ${tr(per)} s olur.',
+        _no(a, b, c),
         unit: 's',
-        positive: true,
       );
     },
     tyt: true,
@@ -688,23 +899,32 @@ final lmFizikElektrik = <AdvancedFamily>[
       if (c.isEven) {
         final v = 320 + 10 * k;
         final d1 = v * (a + 1) ~/ 10, d2 = v * (a + b + 2) ~/ 10;
-        return sayisal(
+        return _sayiSira(
           'Karşılıklı iki dik yamaç arasında duran bir dağcı kısa bir düdük '
           'sesi çıkarıyor. Dağcı, yakın yamaçtan gelen yankıyı $t1 s, uzak '
           'yamaçtan gelen yankıyı $t2 s sonra duyuyor. Sesin havadaki hızı '
           '$v m/s olduğuna göre iki yamaç arasındaki uzaklık kaç m olur?',
           d1 + d2,
-          [2 * (d1 + d2), d2, d2 - d1, 2 * d2],
+          [
+            2 * (d1 + d2), // gidiş-dönüş için ikiye bölünmemiş
+            d2, // yalnız uzak yamacın uzaklığı
+            2 * d1 + d2, // yalnız uzak yankının süresi ikiye bölünmüş
+            d2 - d1, // uzaklıkların farkı
+            d1 + 2 * d2, // yalnız yakın yankının süresi ikiye bölünmüş
+            if ((d1 + d2).isEven) (d1 + d2) ~/ 2, // iki kez ikiye bölünmüş
+            2 * d2, // uzak yankının süresi ikiye bölünmemiş
+            d1, // yalnız yakın yamacın uzaklığı
+          ],
           'Ses her yamaca gidip döndüğünden uzaklıklar $v·$t1 / 2 = $d1 m ve '
           '$v·$t2 / 2 = $d2 m olur. Yamaçlar arasındaki uzaklık $d1 + $d2 = '
           '${d1 + d2} m bulunur.',
+          _no(a, b, c),
           unit: 'm',
-          positive: true,
         );
       }
       final v = const [1450, 1480, 1500, 1520, 1550][k];
       final h1 = v * (a + 1) ~/ 10, h2 = v * (a + b + 2) ~/ 10;
-      return sayisal(
+      return _sayiSira(
         'Bir araştırma gemisinin sonar cihazından deniz tabanına doğru '
         'gönderilen ses sinyali önce bir balık sürüsünden, sonra deniz '
         'tabanından yansıyor. Sürüden yansıyan sinyal $t1 s, tabandan '
@@ -712,12 +932,20 @@ final lmFizikElektrik = <AdvancedFamily>[
         'hızı $v m/s olduğuna göre balık sürüsü deniz tabanından kaç m '
         'yukarıdadır?',
         h2 - h1,
-        [2 * (h2 - h1), h2, h1, h1 + h2],
+        [
+          2 * (h2 - h1), // gidiş-dönüş için ikiye bölünmemiş
+          h2, // deniz tabanının derinliği
+          h1, // sürünün derinliği
+          h1 + h2, // derinlikler toplanmış
+          if ((h2 - h1).isEven) (h2 - h1) ~/ 2, // iki kez ikiye bölünmüş
+          2 * h2 - h1, // yalnız sürü yankısının süresi ikiye bölünmüş
+          h2 - 2 * h1, // yalnız taban yankısının süresi ikiye bölünmüş
+        ],
         'Sürünün derinliği $v·$t1 / 2 = $h1 m, deniz tabanının derinliği '
         '$v·$t2 / 2 = $h2 m olur. Sürü tabandan $h2 − $h1 = ${h2 - h1} m '
         'yukarıdadır.',
+        _no(a, b, c),
         unit: 'm',
-        positive: true,
       );
     },
     tyt: true,
@@ -732,43 +960,60 @@ final lmFizikElektrik = <AdvancedFamily>[
       final (p, q) = _oranlar[b];
       final adim = a % 5 + 5 * (c ~/ 2); // 0 … 24
       final kat = kesir(p, q), kareKat = kesir(p * p, q * q);
+      // Tipik hatalar t₁·(p/q)ᵏ biçimindedir (kök alınmamış, oran ters, periyot
+      // değişmez sanılmış); bunların üçü anahtarın bir yanında, biri öteki
+      // yanında kalır. Bu yüzden periyot artıyorsa anahtar 3. ya da 4.,
+      // azalıyorsa 1. ya da 2. sıraya konur: dört sıra eşit sıklıkta görülür.
+      final sira = (p > q ? 2 : 0) + hedefSira(_no(a, b, c)) % 2;
       if (c.isEven) {
         final tau = 10 + 2 * adim; // 0,01 s
         final mu = 10 * (1 + a ~/ 5); // g
         final m1 = q * q * mu, m2 = p * p * mu;
         final t1 = q * tau / 100, t2 = p * tau / 100;
-        return ondalikli(
+        return _ondalikSira(
           'Sürtünmesiz yatay düzlemde, bir yayın ucuna bağlı $m1 g kütleli '
           'cisim ${tr(t1)} s periyotla basit harmonik hareket yapıyor. Cisim '
           'çıkarılıp aynı yaya $m2 g kütleli başka bir cisim bağlanırsa '
           'salınımın periyodu kaç s olur?',
           t2,
-          [t1 * p * p / (q * q), t1 * q / p, t1, t1 * q * q / (p * p)],
+          [
+            t1 * p * p / (q * q), // kök alınmamış
+            t1 * q / p, // oran ters alınmış
+            t1, // periyot değişmez sanılmış
+            t1 * q * q / (p * p), // oran ters, kök alınmamış
+          ],
           'Yay sarkacında T = 2π·√(m / k) olduğundan periyot kütlenin '
           'kareköküyle doğru orantılıdır. Kütle oranı $m2 / $m1 = $kareKat '
           'olduğundan periyot ilk değerinin $kat katı olur: '
           'T = ${tr(t1)}·$kat = ${tr(t2)} s.',
+          _no(a, b, c),
           unit: 's',
-          positive: true,
+          sira: sira,
         );
       }
       final tau = 40 + 2 * adim; // 0,01 s
       final lam = const [4, 5, 6, 8, 10][a ~/ 5]; // cm
       final l1 = q * q * lam, l2 = p * p * lam;
       final t1 = q * tau / 100, t2 = p * tau / 100;
-      return ondalikli(
+      return _ondalikSira(
         'Bir gezegenin yüzeyinde, ip uzunluğu $l1 cm olan basit sarkacın '
         'küçük genlikli salınımlarının periyodu ${tr(t1)} s olarak ölçülüyor. '
         'Aynı yerde ip uzunluğu $l2 cm yapılırsa sarkacın periyodu kaç s '
         'olur?',
         t2,
-        [t1 * p * p / (q * q), t1 * q / p, t1, t1 * q * q / (p * p)],
+        [
+          t1 * p * p / (q * q), // kök alınmamış
+          t1 * q / p, // oran ters alınmış
+          t1, // periyot değişmez sanılmış
+          t1 * q * q / (p * p), // oran ters, kök alınmamış
+        ],
         'Basit sarkaçta T = 2π·√(L / g) olduğundan periyot ip uzunluğunun '
         'kareköküyle doğru orantılıdır. Uzunluk oranı $l2 / $l1 = $kareKat '
         'olduğundan periyot ilk değerinin $kat katı olur: '
         'T = ${tr(t1)}·$kat = ${tr(t2)} s.',
+        _no(a, b, c),
         unit: 's',
-        positive: true,
+        sira: sira,
       );
     },
   ),
@@ -786,18 +1031,27 @@ final lmFizikElektrik = <AdvancedFamily>[
         final w = 1 + k; // rad/s
         final ivme = w * w * (a + 1) / 5;
         final f = w * w * (a + 1) * (b + 1) / 10;
-        return ondalikli(
+        return _ondalikSira(
           'Sürtünmesiz yatay bir düzlemde, ${tr(m)} kg kütleli bir cisim '
           '${tr(r)} m yarıçaplı çembersel yörüngede $w rad/s sabit açısal '
           'hızla dönüyor. Cisme etkiyen merkezcil kuvvetin büyüklüğü kaç N '
           'olur?',
           f,
-          [m * w * r, m * w * w / r, ivme, m * r, m * w * w, 2 * f],
+          [
+            m * w * r, // ω'nın karesi alınmamış
+            2 * f, // yarıçap yerine çap
+            m * w * w / r, // r ile çarpmak yerine bölmek
+            ivme, // ivme kuvvet sanılmış
+            f / 2, // kinetik enerjideki 1/2 katsayısı
+            m * w * w, // yarıçap unutulmuş
+            m * r, // açısal hız unutulmuş
+            m * w * w * r * r, // F = m·v² (r'ye bölünmemiş)
+          ],
           'Merkezcil ivme a = ω²·r = $w²·${tr(r)} = ${tr(ivme)} m/s² olur. '
           'Merkezcil kuvvet F = m·a = ${tr(m)}·${tr(ivme)} = ${tr(f)} N '
           'bulunur.',
+          _no(a, b, c),
           unit: 'N',
-          positive: true,
         );
       }
       final r = (a + 1) / 10; // 0,1 … 2,5 m
@@ -805,16 +1059,25 @@ final lmFizikElektrik = <AdvancedFamily>[
       final t = const [4, 8, 12, 20, 40][k]; // s
       final n = (b + 1) * t ~/ 4;
       final v = 3 * (a + 1) * (b + 1) / 20;
-      return ondalikli(
+      return _ondalikSira(
         'Yarıçapı ${tr(r)} m olan bir çark sabit hızla dönerken $t saniyede '
         '$n tam devir yapıyor. Çarkın kenarındaki bir noktanın çizgisel '
         'hızının büyüklüğü kaç m/s olur? (π = 3 alınız.)',
         v,
-        [6 * r * t / n, r * fr, v / 2, 6 * fr],
+        [
+          6 * r * t / n, // frekans yerine periyot
+          r * fr, // 2π unutulmuş
+          2 * v, // yarıçap yerine çap
+          v / 2, // 2 unutulmuş (π·r·f)
+          6 * fr, // yarıçap unutulmuş
+          6 * r / t, // çevre toplam süreye bölünmüş
+          6 * fr / r, // r ile çarpmak yerine bölmek
+          if (t <= 8) 6 * r * n, // süreye bölünmemiş
+        ],
         'Frekans f = $n / $t = ${tr(fr)} s⁻¹ olur. v = 2·π·r·f = '
         '2·3·${tr(r)}·${tr(fr)} = ${tr(v)} m/s bulunur.',
+        _no(a, b, c),
         unit: 'm/s',
-        positive: true,
       );
     },
   ),
@@ -830,7 +1093,7 @@ final lmFizikElektrik = <AdvancedFamily>[
         final (x, y) = _gezegenler[b];
         final m = 2 * (1 + a + 25 * k); // kg
         final w = 10 * m * x ~/ (y * y);
-        return sayisal(
+        return _sayiSira(
           "Kütlesi $m kg olan bir keşif aracı, kütlesi Dünya'nın kütlesinin "
           "$x katı, yarıçapı Dünya'nın yarıçapının $y katı olan bir "
           'gezegenin yüzeyine indiriliyor. Dünya yüzeyindeki çekim ivmesi '
@@ -838,16 +1101,20 @@ final lmFizikElektrik = <AdvancedFamily>[
           'kaç N olur?',
           w,
           [
-            10 * m * x ~/ y,
-            10 * m,
-            if (10 * m * y * y % x == 0) 10 * m * y * y ~/ x,
-            10 * m * x,
+            10 * m * x ~/ y, // yarıçapın karesi alınmamış
+            10 * m, // Dünya'daki ağırlık
+            if (10 * m * y * y % x == 0) 10 * m * y * y ~/ x, // oran ters
+            10 * m * x, // yarıçap hesaba katılmamış
+            if (10 * m % (y * y) == 0) 10 * m ~/ (y * y), // kütle oranı yok
+            if (10 * m * x % (y * y * y) == 0)
+              10 * m * x ~/ (y * y * y), // yarıçapın küpü alınmış
+            if (w % 10 == 0) w ~/ 10, // g ile çarpılmamış
           ],
           'g = G·M / R² olduğundan gezegenin yüzeyindeki çekim ivmesi '
           '10·$x / $y² = ${tr(10 * x / (y * y))} m/s² olur. Ağırlık '
           '$m·${tr(10 * x / (y * y))} = $w N bulunur.',
+          _no(a, b, c),
           unit: 'N',
-          positive: true,
         );
       }
       final n = 1 + b % 4;
@@ -858,18 +1125,25 @@ final lmFizikElektrik = <AdvancedFamily>[
       final g100 = const [25, 10, 5, 4][n - 1] * (a + 1);
       final kare = (n + 1) * (n + 1);
       final g0 = g100 * kare / 100, g = g100 / 100;
-      return ondalikli(
+      return _ondalikSira(
         'Yarıçapı $yaricap km olan bir gezegenin yüzeyindeki çekim ivmesi '
         '${tr(g0)} m/s² olarak biliniyor. Bu gezegenin yüzeyinden $h km '
         'yükseklikteki bir noktada çekim ivmesi kaç m/s² olur?',
         g,
-        [g0 / (n * n), g0 / (n + 1), g0 / n, g0 / (n + 2)],
+        [
+          g0 / (n * n), // merkez yerine yüzeyden uzaklık
+          g0 / (n + 1), // uzaklığın karesi alınmamış
+          g0 / (1 + n * n), // (R + h)² yerine R² + h²
+          g0 / n, // iki hata birlikte
+          g0 / ((n + 2) * (n + 2)), // yarıçap yerine çap eklenmiş
+          g0 / (kare * (n + 1)), // uzaklığın küpü alınmış
+        ],
         'Noktanın gezegenin merkezine uzaklığı $yaricap + $h = '
         '${yaricap + h} km, yani yarıçapın ${n + 1} katıdır. Çekim ivmesi '
         'merkeze uzaklığın karesiyle ters orantılı olduğundan g = ${tr(g0)} '
         '/ $kare = ${tr(g)} m/s² olur.',
+        _no(a, b, c),
         unit: 'm/s²',
-        positive: true,
       );
     },
   ),
@@ -886,7 +1160,14 @@ final lmFizikElektrik = <AdvancedFamily>[
         final d1 = tr(p * (1 + k) / 2), d2 = tr(q * (1 + k) / 2); // m
         final e1 = q * q * (a + 1), e2 = p * p * (a + 1); // lüks
         final dogrusal = p * q * (a + 1);
-        return ondalikli(
+        final m1 = p * (1 + k) / 2, m2 = q * (1 + k) / 2; // d₁, d₂ (m)
+        // Tipik hatalar e₁·(p/q)ᵏ biçimindedir ve anahtarın (k = 2) hep bir
+        // yanında kalır; öteki yanda yalnız iki adımlı hatalar (ışık şiddeti
+        // bulunurken ya da yeni aydınlanmada uzaklığın karesi unutulmuş)
+        // bulunur. Bu yüzden aydınlanma artıyorsa anahtar 3. ya da 4.,
+        // azalıyorsa 1. ya da 2. sıraya konur.
+        final sira = (p > q ? 2 : 0) + hedefSira(_no(a, b, c)) % 2;
+        return _ondalikSira(
           'Noktasal bir ışık kaynağından $d1 m uzakta, ışınlara dik tutulan '
           'bir ekranın üzerindeki aydınlanma şiddeti $e1 lüks olarak '
           'ölçülüyor. Ekran aynı kaynaktan $d2 m uzağa, yine ışınlara dik '
@@ -894,17 +1175,19 @@ final lmFizikElektrik = <AdvancedFamily>[
           'olur?',
           e2.toDouble(),
           [
-            dogrusal.toDouble(),
-            if (q * q * e1 % (p * p) == 0) q * q * e1 / (p * p),
-            if (q * e1 % p == 0) q * e1 / p,
-            e1.toDouble(),
-            2.0 * dogrusal,
-            q * e1 / p,
+            dogrusal.toDouble(), // uzaklıkla ters orantılı sanılmış
+            q * q * e1 / (p * p), // uzaklığın karesiyle doğru orantılı
+            e1.toDouble(), // aydınlanma değişmez sanılmış
+            q * e1 / p, // uzaklıkla doğru orantılı sanılmış
+            e1 * m1 * m1 / m2, // yeni uzaklığın karesi alınmamış
+            e1 * m1 / (m2 * m2), // ışık şiddetinde karesi alınmamış
           ],
           'E = I / d² olduğundan aydınlanma şiddeti uzaklığın karesiyle ters '
           'orantılıdır: E = $e1·($d1 / $d2)² = $e1·${kesir(p * p, q * q)} = '
           '$e2 lüks.',
-          positive: true,
+          _no(a, b, c),
+          unit: '',
+          sira: sira,
         );
       }
       final n = 2 + k;
@@ -916,7 +1199,7 @@ final lmFizikElektrik = <AdvancedFamily>[
       final yer = b < 8
           ? sec(const ['Bir fabrika atölyesinin', 'Bir depo binasının'], a)
           : sec(const ['Bir spor salonunun', 'Bir fuar salonunun'], a);
-      return sayisal(
+      return _sayiSira(
         '$yer tavanına asılmış bir aydınlatma armatüründe, her birinin ışık '
         'şiddeti $siddet cd olan $n özdeş lamba bulunuyor. Armatür, tam '
         'altındaki zemin noktasından $d m yüksektedir ve bu noktaya gelen '
@@ -925,14 +1208,16 @@ final lmFizikElektrik = <AdvancedFamily>[
         'lüks olur?',
         e,
         [
-          2 * n * (a + 1) * (b + 6),
-          4 * (a + 1),
-          n * siddet,
-          2 * (a + 1) * (b + 6),
+          2 * n * (a + 1) * (b + 6), // uzaklığın karesi alınmamış
+          4 * (a + 1), // tek lamba
+          n * (a + 1) * (b + 6), // d² yerine 2d
+          2 * (a + 1) * (b + 6), // tek lamba, karesi alınmamış
+          if (4 * (a + 1) % n == 0) 4 * (a + 1) ~/ n, // şiddet n'ye bölünmüş
+          n * siddet, // uzaklığa bölünmemiş
         ],
         'Toplam ışık şiddeti $n·$siddet = ${n * siddet} cd olur. '
         'E = I / d² = ${n * siddet} / $d² = $e lüks bulunur.',
-        positive: true,
+        _no(a, b, c),
       );
     },
     tyt: true,
@@ -949,43 +1234,56 @@ final lmFizikElektrik = <AdvancedFamily>[
       if (c % 3 == 0) {
         final d = 150 + 10 * a, t = 2 + kk;
         final son = d - v * t;
-        return sayisal(
+        return _sayiSira(
           'Düşey duran bir düzlem aynadan $d cm uzakta bulunan oyuncak bir '
           'araba, aynaya dik doğrultuda $v cm/s sabit hızla aynaya doğru '
           'harekete geçiyor. Araba harekete başladıktan $t s sonra araba ile '
           'aynadaki görüntüsü arasındaki uzaklık kaç cm olur?',
           2 * son,
-          [son, 2 * d - v * t, 2 * d, d],
+          [
+            // 2d − vt ile 2d − 3vt anahtarın iki yanında eşit uzaklıktadır;
+            // _sirali ikisini birlikte seçmez.
+            son, // görüntü unutulmuş: arabanın aynaya uzaklığı
+            2 * d - v * t, // görüntünün de yaklaştığı unutulmuş
+            2 * d - 3 * v * t, // görüntünün hızı 2v sanılmış
+            2 * (d + v * t), // hareket yönünde işaret hatası
+            d - 2 * v * t, // aynaya uzaklık 2v ile azalıyor sanılmış
+            d, // başlangıçtaki araba – ayna uzaklığı
+            2 * d, // başlangıçtaki araba – görüntü uzaklığı
+            2 * v * t, // uzaklığın azalma miktarı
+          ],
           'Araba $t s içinde $v·$t = ${v * t} cm yol alır ve aynaya uzaklığı '
           '$d − ${v * t} = $son cm olur. Görüntü aynanın arkasında aynı '
           'uzaklıkta oluştuğundan aradaki uzaklık 2·$son = ${2 * son} cm '
           'bulunur.',
+          _no(a, b, c),
           unit: 'cm',
-          positive: true,
         );
       }
       if (c % 3 == 1) {
         final t = 2 + a % 5;
         final r = 10 * (1 + a ~/ 5 + 5 * kk);
         final d = v * t + r, ara = 2 * r;
-        return sayisal(
+        return _sayiSira(
           'Bir bilye, düşey duran bir düzlem aynaya dik doğrultuda $v cm/s '
           'sabit hızla yaklaşıyor. Bilye aynadan $d cm uzaktayken süre '
           'ölçülmeye başlanıyor. Bilye ile aynadaki görüntüsü arasındaki '
           'uzaklık kaç saniye sonra $ara cm olur?',
           t,
           [
-            2 * t,
+            2 * t, // görüntünün hareketi unutulmuş
             if (d > ara && (d - ara) % v == 0) (d - ara) ~/ v,
-            if (d % v == 0) d ~/ v,
+            if (d % v == 0) d ~/ v, // aynaya varış süresi
+            if (t.isEven) t ~/ 2, // aynaya uzaklık 2v ile azalıyor sanılmış
+            if (2 * r % v == 0) t + 2 * r ~/ v, // işaret hatası
             if (r % v == 0) r ~/ v,
           ],
           'Başlangıçta bilye ile görüntüsü arasındaki uzaklık 2·$d = '
           '${2 * d} cm olur. Görüntü de aynaya $v cm/s hızla yaklaştığından '
           'aralarındaki uzaklık saniyede 2·$v = ${2 * v} cm azalır. Süre '
           '(${2 * d} − $ara) / ${2 * v} = $t s bulunur.',
+          _no(a, b, c),
           unit: 's',
-          positive: true,
         );
       }
       final mum = a + 2;
@@ -995,17 +1293,24 @@ final lmFizikElektrik = <AdvancedFamily>[
       final n1 = 360 ~/ alfa - 1, n2 = 360 ~/ beta - 1;
       final yon = n2 > n1 ? 'artar' : 'azalır';
       final fark = (n2 - n1).abs();
-      return sayisal(
+      return _sayiSira(
         'Aralarındaki açı $alfa° olan kesişen iki düzlem aynanın arasına '
         '$mum küçük mum yerleştiriliyor. Aynalar arasındaki açı $beta° '
         'yapılırsa aynalarda oluşan toplam görüntü sayısı kaç $yon?',
         mum * fark,
-        [fark, mum * n2, mum * (alfa - beta).abs(), mum * n1],
+        [
+          fark, // mum sayısıyla çarpılmamış
+          mum * n2, // son görüntü sayısı
+          mum * (fark + 1), // −1 yalnız bir sayımda uygulanmış
+          mum * n1, // ilk görüntü sayısı
+          if (fark > 1) mum * (fark - 1),
+          mum * (alfa - beta).abs(),
+        ],
         'Kesişen iki düzlem ayna arasındaki bir cismin görüntü sayısı '
         '360 / α − 1 olur. Her mumun görüntü sayısı $n1 iken $n2 olur. '
         'Toplam görüntü sayısı $mum·$n1 = ${mum * n1} iken $mum·$n2 = '
         '${mum * n2} olduğundan ${mum * fark} $yon.',
-        positive: true,
+        _no(a, b, c),
       );
     },
     tyt: true,
@@ -1025,35 +1330,52 @@ final lmFizikElektrik = <AdvancedFamily>[
       final ayna = a.isEven;
       final oran = kesir(p, q);
       if (c.isEven) {
-        return ondalikli(
+        return _ondalikSira(
           'Odak uzaklığı $f cm olan '
           '${ayna ? 'bir çukur aynanın' : 'ince kenarlı bir merceğin'} asal '
           'ekseni üzerine, ${ayna ? 'aynadan' : 'mercekten'} $dc cm uzağa '
           'boyu ${tr(h1)} cm olan bir cisim yerleştiriliyor. Oluşan gerçek '
           'görüntünün boyu kaç cm olur?',
           h2,
-          [h1 * q / p, h1 * p / (p + q), h1 * (p + q) / q, h1 * (p + q) / p],
+          [
+            h1 * q / p, // büyütme ters alınmış
+            h1 * p / (p + q), // büyütme f / d(cisim) alınmış
+            h1 * (p + q) / q, // büyütme d(görüntü) / f alınmış
+            h1 * (p + q) / p, // büyütme d(cisim) / f alınmış
+            h1 * p * p / (q * q), // büyütmenin karesi alınmış
+            h1 * q / (p + q), // büyütme f / d(görüntü) alınmış
+          ],
           '1/f = 1/d(cisim) + 1/d(görüntü) bağıntısından 1/d(görüntü) = '
           '1/$f − 1/$dc olur ve görüntü uzaklığı $dg cm bulunur. Büyütme '
           '$dg / $dc = $oran olduğundan görüntünün boyu ${tr(h1)}·$oran = '
           '${tr(h2)} cm olur.',
+          _no(a, b, c),
           unit: 'cm',
-          positive: true,
         );
       }
-      return sayisal(
+      final fark = (dc - dg).abs();
+      return _sayiSira(
         '${ayna ? 'Bir çukur aynanın' : 'İnce kenarlı bir merceğin'} asal '
         'ekseni üzerine, ${ayna ? 'aynadan' : 'mercekten'} $dc cm uzağa boyu '
         '${tr(h1)} cm olan bir cisim yerleştirildiğinde bir perde üzerinde '
         'boyu ${tr(h2)} cm olan net bir görüntü elde ediliyor. Buna göre '
         '${ayna ? 'aynanın' : 'merceğin'} odak uzaklığı kaç cm olur?',
         f,
-        [dg, q * q * s, dc + dg, p * p * s],
+        [
+          dg, // görüntü uzaklığı odak sanılmış
+          dc + dg, // ters değerler yerine uzaklıklar toplanmış
+          2 * f, // odak yerine eğrilik merkezi (2F)
+          if (dc.isEven) dc ~/ 2, // cisim 2F'de sanılmış
+          if (dg.isEven) dg ~/ 2, // görüntü 2F'de sanılmış
+          if (dc * dg % fark == 0) dc * dg ~/ fark, // ters değerlerde işaret
+          if (f.isEven) f ~/ 2, // bulunan değer bir de ikiye bölünmüş
+          dc, // cisim uzaklığı odak sanılmış
+        ],
         'Büyütme ${tr(h2)} / ${tr(h1)} = $oran olduğundan görüntü uzaklığı '
         '$dc·$oran = $dg cm olur. 1/f = 1/$dc + 1/$dg bağıntısından '
         'f = $dc·$dg / ($dc + $dg) = $f cm bulunur.',
+        _no(a, b, c),
         unit: 'cm',
-        positive: true,
       );
     },
   ),
@@ -1071,7 +1393,7 @@ final lmFizikElektrik = <AdvancedFamily>[
       if (c.isEven) {
         final gor = h * alt / ust;
         final kap = h > 60 ? 'bir tankın' : 'bir kabın';
-        return ondalikli(
+        return _ondalikSira(
           'Işığın boşluktaki hızı 3·10⁸ m/s, saydam bir sıvıdaki hızı $hiz '
           'm/s olarak veriliyor. Bu sıvıyla dolu $kap tabanındaki madenî '
           'para sıvı yüzeyinden $h cm aşağıdadır. Sıvı yüzeyinin $y cm '
@@ -1079,17 +1401,24 @@ final lmFizikElektrik = <AdvancedFamily>[
           'kendisinden kaç cm uzakta görür? (Havanın kırılma indisini 1 '
           'alınız.)',
           y + gor,
-          [y + h * ust / alt, gor, (y + h).toDouble(), (y + h) * alt / ust],
+          [
+            y + h * ust / alt, // n'ye bölmek yerine n ile çarpmak
+            gor, // gözlemcinin yüksekliği eklenmemiş
+            (y + h).toDouble(), // kırılma hesaba katılmamış
+            (y + h) * alt / ust, // gözlemcinin yüksekliği de n'ye bölünmüş
+            (y + h) * ust / alt, // toplam uzaklık n ile çarpılmış
+            y + h - gor, // görünür yükselme derinlik sanılmış
+          ],
           'Sıvının kırılma indisi n = c / v = $indis olur. Paranın görünür '
           'derinliği h / n = $h·${kesir(alt, ust)} = ${tr(gor)} cm, '
           'gözlemciye görünür uzaklığı $y + ${tr(gor)} = ${tr(y + gor)} cm '
           'bulunur.',
+          _no(a, b, c),
           unit: 'cm',
-          positive: true,
         );
       }
       final gor = h * ust / alt;
-      return ondalikli(
+      return _ondalikSira(
         'Havadaki dalga boyu $l0 nm olan tek renkli ışığın saydam bir sıvı '
         'içindeki dalga boyu $l1 nm olarak ölçülüyor. Bu sıvının içinde, '
         'yüzeyden $y cm derinlikteki bir noktadan yüzeye dik doğrultuda '
@@ -1097,13 +1426,22 @@ final lmFizikElektrik = <AdvancedFamily>[
         'küçük bir lambayı kendisinden kaç cm uzakta görür? (Havanın kırılma '
         'indisini 1 alınız.)',
         y + gor,
-        [y + h * alt / ust, gor, (y + h).toDouble(), (y + h) * ust / alt],
+        [
+          y + h * alt / ust, // n ile çarpmak yerine n'ye bölmek
+          gor, // gözlemcinin derinliği eklenmemiş
+          (y + h).toDouble(), // kırılma hesaba katılmamış
+          (y + h) * ust / alt, // gözlemcinin derinliği de n ile çarpılmış
+          y * ust / alt + h, // n ile yanlış uzaklık çarpılmış
+          (y + h) * alt / ust, // toplam uzaklık n'ye bölünmüş
+          y + gor - h, // görünür yükselme uzaklık sanılmış
+          y * alt / ust + gor, // gözlemcinin derinliği de n'ye bölünmüş
+        ],
         'Sıvının kırılma indisi n = $l0 / $l1 = $indis olur. Sıvının içinden '
         'bakıldığında lamba yüzeyden h·n = $h·${kesir(ust, alt)} = '
         '${tr(gor)} cm yukarıda görünür; gözlemciye görünür uzaklığı $y + '
         '${tr(gor)} = ${tr(y + gor)} cm bulunur.',
+        _no(a, b, c),
         unit: 'cm',
-        positive: true,
       );
     },
   ),
@@ -1119,20 +1457,28 @@ final lmFizikElektrik = <AdvancedFamily>[
         final w = 18 + a, k1 = 3 + b; // 0,1 eV
         final e1 = w + k1, e2 = e1 + const [6, 11, 15, 24, -2][k];
         final k2 = e2 - w;
-        return ondalikli(
+        return _ondalikSira(
           'Bir fotoselin katoduna enerjisi ${tr(e1 / 10)} eV olan fotonlar '
           'düşürüldüğünde sökülen elektronların maksimum kinetik enerjisi '
           '${tr(k1 / 10)} eV oluyor. Aynı katoda enerjisi ${tr(e2 / 10)} eV '
           'olan fotonlar düşürülürse fotoelektronları durdurmak için gereken '
           'kesme (durdurma) gerilimi kaç V olur?',
           k2 / 10,
-          [(e2 - k1) / 10, w / 10, e2 / 10, (e2 - e1).abs() / 10],
+          [
+            (e2 - k1) / 10, // eşik yerine ilk kinetik enerji çıkarılmış
+            w / 10, // eşik enerjisi yanıt sanılmış
+            e2 / 10, // foton enerjisi yanıt sanılmış
+            (e2 - e1).abs() / 10, // foton enerjilerinin farkı
+            k1 / 10, // kinetik enerji değişmez sanılmış
+            k1 * e2 / e1 / 10, // kinetik enerji foton enerjisiyle orantılı
+            (e2 + w) / 10, // eşik enerjisi eklenmiş
+          ],
           'Katodun eşik enerjisi ${tr(e1 / 10)} − ${tr(k1 / 10)} = '
           '${tr(w / 10)} eV olur. İkinci durumda maksimum kinetik enerji '
           '${tr(e2 / 10)} − ${tr(w / 10)} = ${tr(k2 / 10)} eV olduğundan '
           'kesme gerilimi ${tr(k2 / 10)} V bulunur.',
+          _no(a, b, c),
           unit: 'V',
-          positive: true,
         );
       }
       final idx = b + 20 * k;
@@ -1141,20 +1487,30 @@ final lmFizikElektrik = <AdvancedFamily>[
       final (l2, e2) = _fotonlar[j < i ? j : j + 1];
       final w = 120 + 3 * a; // 0,01 eV
       final k1 = e1 - w, k2 = e2 - w;
-      return ondalikli(
+      return _ondalikSira(
         'Bir fotokatoda dalga boyu $l1 nm olan ışık düşürüldüğünde sökülen '
         'elektronların maksimum kinetik enerjisi ${tr(k1 / 100)} eV oluyor. '
         'Aynı fotokatoda dalga boyu $l2 nm olan ışık düşürülürse sökülen '
         'elektronların maksimum kinetik enerjisi kaç eV olur? '
         '(h·c = 1240 eV·nm)',
         k2 / 100,
-        [e2 / 100, (e2 - k1) / 100, k1 * l1 / l2 / 100, w / 100],
+        [
+          e2 / 100, // foton enerjisi yanıt sanılmış
+          (e2 - k1) / 100, // eşik yerine ilk kinetik enerji çıkarılmış
+          k1 * l1 / l2 / 100, // kinetik enerji frekansla orantılı sanılmış
+          w / 100, // eşik enerjisi yanıt sanılmış
+          k1 / 100, // kinetik enerji değişmez sanılmış
+          (e2 - e1).abs() / 100, // foton enerjilerinin farkı
+          k1 * l2 / l1 / 100, // dalga boyuyla doğru orantılı sanılmış
+          (e2 + w) / 100, // eşik enerjisi eklenmiş
+        ],
         'Foton enerjileri 1240 / $l1 = ${tr(e1 / 100)} eV ve 1240 / $l2 = '
         '${tr(e2 / 100)} eV olur. Eşik enerjisi ${tr(e1 / 100)} − '
         '${tr(k1 / 100)} = ${tr(w / 100)} eV olduğundan yeni maksimum '
         'kinetik enerji ${tr(e2 / 100)} − ${tr(w / 100)} = ${tr(k2 / 100)} '
         'eV bulunur.',
-        positive: true,
+        _no(a, b, c),
+        unit: '',
       );
     },
   ),
