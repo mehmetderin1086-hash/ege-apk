@@ -2859,7 +2859,8 @@ bool _fonksiyonUygun(int c, List<int> a, List<int> b) {
     return false;
   }
   final (yanit, yanlis) = _fonksiyonDeger(c, a, b);
-  if (yanit <= 1) return false;
+  // Yanıt 1 ya da kümelerde yazılı bir eleman olmasın.
+  if (yanit <= 1 || a.contains(yanit) || b.contains(yanit)) return false;
   // Tipik bir yanlış yolun da doğru yanıtı verdiği kümeler atlanır.
   return !yanlis.contains(yanit) && yanit <= 4000;
 }
@@ -3034,7 +3035,11 @@ AdvancedItem _ifadeSecenek(
   String aciklama,
 ) => secenekli(kok, dogru, yanlis, aciklama);
 
-AdvancedItem _fonksiyonDegerSoru(int a, int b, int c) {
+AdvancedItem _fonksiyonDegerSoru(int a, int b, int c) =>
+    _kokteOlmayan((w) => _fonksiyonDegerUret(a, b, c, w));
+
+/// [w]: ikincil bir parametreyi değiştirir (yanıt kökte yazılıysa).
+AdvancedItem _fonksiyonDegerUret(int a, int b, int c, int w) {
   final p = const [2, 3, 4, 5, -2][a % 5];
   final q = const [-5, -3, -1, 2, 4][a ~/ 5];
   final ic = _dogrusal(p, q);
@@ -3047,7 +3052,7 @@ AdvancedItem _fonksiyonDegerSoru(int a, int b, int c) {
       // çakışmayacak biçimde seçilir.
       final x0 = _uygun(
         const [3, -2, 4, 5, -3, 6, 2, -4, 7, 8, -5, 9],
-        (a + b) % 3,
+        (a + b) % 3 + w,
         (x) {
           final k = p * x + q, v = r * x + sabit;
           return x != k &&
@@ -3079,14 +3084,43 @@ AdvancedItem _fonksiyonDegerSoru(int a, int b, int c) {
     case 1:
       final r = const [2, -3, 4, -1, 5, -4, 1, -2, 3, -5][b % 10];
       final sabit = const [-6, 5][b ~/ 10];
-      final kk = _uygun(const [2, 5, -1, 3, 7, -2, 4, 6, -3, 8, 9, -4], a % 5, (
-        k,
-      ) {
-        final x0 = k - q;
-        final v = x0 * x0 + r * x0 + sabit;
-        final dogrudan = k * k + r * k + sabit;
-        return v != dogrudan && !{q, r, sabit, k}.contains(v) && x0 != 0;
-      });
+      final kk = _uygun(
+        const [
+          2,
+          5,
+          -1,
+          3,
+          7,
+          -2,
+          4,
+          6,
+          -3,
+          8,
+          9,
+          -4,
+          10,
+          -5,
+          11,
+          12,
+          -6,
+          13,
+          -7,
+          14,
+          15,
+          -8,
+          16,
+          17,
+          -9,
+          18,
+        ],
+        a % 5 + 5 * w,
+        (k) {
+          final x0 = k - q;
+          final v = x0 * x0 + r * x0 + sabit;
+          final dogrudan = k * k + r * k + sabit;
+          return v != dogrudan && !{q, r, sabit, k}.contains(v) && x0 != 0;
+        },
+      );
       final x0 = kk - q;
       final v = x0 * x0 + r * x0 + sabit;
       final ters = kk + q;
@@ -3126,7 +3160,7 @@ AdvancedItem _fonksiyonDegerSoru(int a, int b, int c) {
       final n = const [5, -4][b ~/ 10] + a % 5 - 2;
       final x1 = 1 + a ~/ 5, x2 = x1 + 2 + a % 2;
       final y1 = m * x1 + n, y2 = m * x2 + n;
-      final k = _uygun(const [-2, 6, 7, -3, 8, 9, -1, 10, 11], b % 3, (x) {
+      final k = _uygun(const [-2, 6, 7, -3, 8, 9, -1, 10, 11], b % 3 + w, (x) {
         final v = m * x + n;
         return x != x1 && x != x2 && x != 0 && !{x1, x2, y1, y2, x}.contains(v);
       });
@@ -3145,7 +3179,7 @@ AdvancedItem _fonksiyonDegerSoru(int a, int b, int c) {
       final sabit = const [-3, 5][b ~/ 10];
       final pp = 2 + a % 5;
       final qq = const [1, 3, -2, 5, -4][a ~/ 5];
-      final kk = _uygun(const [3, -1, 4, 2, 5, -2, 6, 7], a % 3, (k) {
+      final kk = _uygun(const [3, -1, 4, 2, 5, -2, 6, 7], a % 3 + w, (k) {
         final x0 = pp * k - qq, v = r * x0 + sabit;
         return v != r * k + sabit &&
             !{pp, qq, r, sabit, k}.contains(v) &&
@@ -3230,7 +3264,7 @@ AdvancedItem _fonksiyonDegerSoru(int a, int b, int c) {
     default:
       final m = const [2, 3, 4, 5, 6, -2, -3, 7, -4, 8][b % 10];
       final n = const [4, -3, 5, -6, 7][a % 5] + (b ~/ 10) * 9;
-      final h = 1 + a ~/ 5 % 3; // f(x + h) − f(x − h) = 2mh
+      final h = 1 + (a ~/ 5 + w) % 3; // f(x + h) − f(x − h) = 2mh
       final k = const [3, -2, 5, 4, -3][a ~/ 5];
       final v = m * k + n;
       return _tam(

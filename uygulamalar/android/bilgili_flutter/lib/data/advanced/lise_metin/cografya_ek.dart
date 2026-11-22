@@ -2181,6 +2181,429 @@ final _f14 = lmSirali(
   lesson: 'Coğrafya-1',
 );
 
+// ─────────────── 15 · Türkiye'nin coğrafi bölgeleri ve bölümleri ────────────
+
+// İl merkezlerinin bulunduğu bölge. Toprakları birkaç bölgeye yayılan ve
+// sınavlarda tartışmalı sorulan iller (Afyonkarahisar, Bilecik, Kahramanmaraş,
+// Sivas, Malatya, Adıyaman vb.) alınmamıştır.
+const _bolgeIller = {
+  'Marmara': [
+    'İstanbul',
+    'Edirne',
+    'Kırklareli',
+    'Tekirdağ',
+    'Çanakkale',
+    'Kocaeli',
+    'Yalova',
+    'Sakarya',
+    'Bursa',
+    'Balıkesir',
+  ],
+  'Ege': ['İzmir', 'Aydın', 'Muğla', 'Manisa', 'Denizli', 'Uşak', 'Kütahya'],
+  'Akdeniz': [
+    'Antalya',
+    'Mersin',
+    'Adana',
+    'Hatay',
+    'Osmaniye',
+    'Isparta',
+    'Burdur',
+  ],
+  'İç Anadolu': [
+    'Ankara',
+    'Konya',
+    'Eskişehir',
+    'Kayseri',
+    'Yozgat',
+    'Kırıkkale',
+    'Kırşehir',
+    'Nevşehir',
+    'Aksaray',
+    'Niğde',
+    'Karaman',
+  ],
+  'Karadeniz': [
+    'Samsun',
+    'Trabzon',
+    'Rize',
+    'Artvin',
+    'Giresun',
+    'Ordu',
+    'Sinop',
+    'Kastamonu',
+    'Zonguldak',
+    'Bartın',
+    'Düzce',
+    'Amasya',
+    'Tokat',
+    'Çorum',
+  ],
+  'Doğu Anadolu': [
+    'Erzurum',
+    'Kars',
+    'Ardahan',
+    'Iğdır',
+    'Ağrı',
+    'Van',
+    'Muş',
+    'Bitlis',
+    'Bingöl',
+    'Tunceli',
+    'Elazığ',
+    'Hakkari',
+  ],
+  'Güneydoğu Anadolu': [
+    'Gaziantep',
+    'Şanlıurfa',
+    'Diyarbakır',
+    'Mardin',
+    'Batman',
+    'Siirt',
+    'Şırnak',
+    'Kilis',
+  ],
+};
+
+// İl merkezlerinin bulunduğu bölüm; yalnız ders kitaplarında tek bölüme
+// bağlanan il merkezleri alınmıştır.
+const _bolumIller = {
+  'Çatalca-Kocaeli Bölümü': ['İstanbul', 'Kocaeli'],
+  'Ergene Bölümü': ['Edirne'],
+  'Güney Marmara Bölümü': ['Bursa', 'Balıkesir', 'Çanakkale'],
+  'Kıyı Ege Bölümü': ['İzmir', 'Aydın', 'Manisa', 'Muğla'],
+  'İç Batı Anadolu Bölümü': ['Uşak', 'Kütahya'],
+  'Antalya Bölümü': ['Antalya', 'Isparta', 'Burdur'],
+  'Adana Bölümü': ['Adana', 'Mersin', 'Hatay', 'Osmaniye'],
+  'Konya Bölümü': ['Konya', 'Karaman'],
+  'Yukarı Sakarya Bölümü': ['Ankara', 'Eskişehir'],
+  'Orta Kızılırmak Bölümü': [
+    'Kayseri',
+    'Kırşehir',
+    'Nevşehir',
+    'Kırıkkale',
+    'Yozgat',
+  ],
+  'Batı Karadeniz Bölümü': ['Zonguldak', 'Bartın', 'Kastamonu', 'Düzce'],
+  'Orta Karadeniz Bölümü': ['Samsun', 'Amasya', 'Tokat', 'Çorum'],
+  'Doğu Karadeniz Bölümü': ['Giresun', 'Trabzon', 'Rize', 'Artvin'],
+  'Erzurum-Kars Bölümü': ['Erzurum', 'Kars', 'Ardahan'],
+  'Yukarı Fırat Bölümü': ['Elazığ', 'Tunceli'],
+  'Yukarı Murat-Van Bölümü': ['Van', 'Muş', 'Bitlis'],
+  'Hakkari Bölümü': ['Hakkari'],
+  'Orta Fırat Bölümü': ['Gaziantep', 'Şanlıurfa', 'Kilis'],
+  'Dicle Bölümü': ['Diyarbakır', 'Mardin', 'Batman', 'Siirt'],
+};
+
+final _bolgeTablo = <_Etiketli>[
+  for (final e in _bolgeIller.entries)
+    for (final il in e.value) (il, e.key, null),
+];
+final _bolumTablo = <_Etiketli>[
+  for (final e in _bolumIller.entries)
+    for (final il in e.value) (il, e.key, null),
+];
+
+AdvancedItem _bolge(int i) {
+  final r = i % 5, tur = i ~/ 5;
+  if (r < 3) {
+    return _etiketli(
+      tur * 3 + r,
+      3000,
+      _bolgeTablo,
+      _bolgeIller.keys.toList(),
+      siraSoru: 'Bu illerin merkezlerinin bulunduğu coğrafi bölgeler sırasıyla hangisidir?',
+      hangiSoru: (h, _) =>
+          "Bu illerden hangilerinin merkezi $h Bölgesi'ndedir?",
+      aciklama: (x) =>
+          '${x.map((e) => '${e.$1}: ${e.$2} Bölgesi').join('; ')}.',
+    );
+  }
+  return _etiketli(
+    tur * 2 + r - 3,
+    2000,
+    _bolumTablo,
+    _bolumIller.keys.toList(),
+    siraSoru: 'Bu illerin merkezlerinin bulunduğu coğrafi bölümler sırasıyla hangisidir?',
+    hangiSoru: (h, _) => "Bu illerden hangilerinin merkezi $h'ndedir?",
+    aciklama: (x) => '${x.map((e) => '${e.$1}: ${e.$2}').join('; ')}.',
+  );
+}
+
+final _f15 = lmSirali(
+  'cg_bolge',
+  "Türkiye'nin coğrafi bölgeleri ve bölümleri",
+  Topic.geography,
+  Difficulty.easy,
+  BloomLevel.hatirlama,
+  _bolge,
+  exam: ExamKind.ayt,
+  lesson: 'Coğrafya-1',
+);
+
+// ───────────────── 16 · Bitki örtüsü türleri ve görüldükleri iklimler ───────
+
+const _maki = 'maki',
+    _garig = 'garig',
+    _bozkir = 'bozkır (step)',
+    _cayir = 'çayır';
+const _savan = 'savan', _tundra = 'tundra', _yagmur = 'ekvatoral yağmur ormanı';
+const _tayga = 'tayga (iğne yapraklı orman)',
+    _yaprak = 'yaprak döken geniş yapraklı orman';
+const _muson = 'muson ormanı', _col = 'çöl bitkileri';
+const _bitkiler = <_Etiketli>[
+  (
+    'Yaz kuraklığına dayanıklı, her mevsim yeşil kalan sık ve sert yapraklı çalılar',
+    _maki,
+    'Akdeniz iklimi',
+  ),
+  (
+    'Kocayemiş, sandal, defne ve mersin gibi türlerden oluşan çalı topluluğu',
+    _maki,
+    'Akdeniz iklimi',
+  ),
+  (
+    "Türkiye'de kızılçam ormanlarının tahrip edildiği alanlarda gelişen her dem yeşil çalılar",
+    _maki,
+    'Akdeniz iklimi',
+  ),
+  (
+    'Makilerin tahrip edildiği yerlerde gelişen, daha kısa boylu ve seyrek çalılar',
+    _garig,
+    'Akdeniz iklimi',
+  ),
+  (
+    'Kekik, adaçayı ve lavanta gibi kokulu, kısa boylu bitkilerden oluşan topluluk',
+    _garig,
+    'Akdeniz iklimi',
+  ),
+  (
+    'İlkbahar yağışlarıyla yeşeren, yaz kuraklığında sararıp kuruyan otsu bitkiler',
+    _bozkir,
+    'karasal iklim',
+  ),
+  (
+    "Türkiye'de İç Anadolu'nun yağışı az alanlarında geniş yer kaplayan otsu bitki örtüsü",
+    _bozkir,
+    'karasal iklim',
+  ),
+  (
+    'Karasal iklimde yağış azlığı nedeniyle ağaçların yetişemediği alanlardaki otsu bitki örtüsü',
+    _bozkir,
+    'karasal iklim',
+  ),
+  (
+    'Yaz yağışlarının bol olduğu yüksek kesimlerde yazın da yeşil kalan uzun boylu otlar',
+    _cayir,
+    null,
+  ),
+  (
+    "Türkiye'de Erzurum-Kars Platosu'nda yaygın olan, büyükbaş hayvancılığa elverişli otsu "
+        'bitki örtüsü',
+    _cayir,
+    null,
+  ),
+  (
+    'Yazları yağışlı, kışları kurak tropikal alanlarda uzun boylu otlar ve seyrek ağaçlardan '
+        'oluşan bitki örtüsü',
+    _savan,
+    'savan iklimi',
+  ),
+  (
+    "Afrika'da baobab ağaçlarıyla tanınan, yaz yağışlarıyla yeşeren uzun boylu ot toplulukları",
+    _savan,
+    'savan iklimi',
+  ),
+  (
+    'Tropikal kuşakta yağışlı ve kurak iki dönemin belirgin olduğu alanların otsu bitki örtüsü',
+    _savan,
+    'savan iklimi',
+  ),
+  (
+    'Kutup çevresinde, yazları kısa ve serin geçen alanlarda yosun ve likenlerden oluşan bitki '
+        'örtüsü',
+    _tundra,
+    'tundra iklimi',
+  ),
+  (
+    'Toprağın büyük bölümü yıl boyunca donmuş kaldığından ağaçların yetişemediği alanlardaki '
+        'bitki örtüsü',
+    _tundra,
+    'tundra iklimi',
+  ),
+  (
+    'Sıcak ve yağışlı iklimde çok katlı, sık ve her dem yeşil geniş yapraklı ağaçlardan oluşan '
+        'ormanlar',
+    _yagmur,
+    'ekvatoral iklim',
+  ),
+  (
+    'Amazon ve Kongo havzalarında geniş alan kaplayan, tür çeşitliliği çok fazla olan ormanlar',
+    _yagmur,
+    'ekvatoral iklim',
+  ),
+  (
+    'Ekvator çevresinde yıl boyunca sıcak ve yağışlı koşullarda gelişen sık ormanlar',
+    _yagmur,
+    'ekvatoral iklim',
+  ),
+  (
+    'Sert karasal iklimde çam, ladin ve köknar gibi iğne yapraklı ağaçlardan oluşan ormanlar',
+    _tayga,
+    'sert karasal iklim',
+  ),
+  (
+    "Sibirya ve Kanada'da geniş alan kaplayan iğne yapraklı ormanlar",
+    _tayga,
+    'sert karasal iklim',
+  ),
+  (
+    'Uzun ve sert kışlara dayanıklı, iğne yapraklı ve çoğu her dem yeşil ağaçlardan oluşan '
+        'ormanlar',
+    _tayga,
+    'sert karasal iklim',
+  ),
+  (
+    'Ilıman ve nemli iklimlerde kayın, meşe ve gürgen gibi ağaçlardan oluşan, kışın yaprağını '
+        'döken ormanlar',
+    _yaprak,
+    'ılıman okyanusal iklim',
+  ),
+  (
+    "Batı ve Orta Avrupa'da ılıman okyanusal iklimin etkili olduğu alanlarda yaygın olan ormanlar",
+    _yaprak,
+    'ılıman okyanusal iklim',
+  ),
+  (
+    "Yazları çok yağışlı, kışları kurak geçen Güney ve Güneydoğu Asya'da görülen, kurak dönemde "
+        'yaprağını döken ormanlar',
+    _muson,
+    'muson iklimi',
+  ),
+  (
+    'Yağışın çok az olduğu alanlarda kaktüs gibi kuraklığa dayanıklı, seyrek bitkiler',
+    _col,
+    'çöl iklimi',
+  ),
+  (
+    'Kökleri derinlere uzanan, yapraklarını dikene dönüştürerek su kaybını azaltan bitkiler',
+    _col,
+    'çöl iklimi',
+  ),
+];
+const _iklimde = {
+  'Akdeniz iklimi': 'Akdeniz ikliminde',
+  'karasal iklim': 'karasal iklimde',
+  'savan iklimi': 'savan ikliminde',
+  'tundra iklimi': 'tundra ikliminde',
+  'ekvatoral iklim': 'ekvatoral iklimde',
+  'sert karasal iklim': 'sert karasal iklimde',
+  'ılıman okyanusal iklim': 'ılıman okyanusal iklimde',
+  'muson iklimi': 'muson ikliminde',
+  'çöl iklimi': 'çöl ikliminde',
+};
+
+final _f16 = lmSirali(
+  'cg_bitki_ortusu',
+  'Bitki örtüsü türleri ve görüldükleri iklimler',
+  Topic.geography,
+  Difficulty.medium,
+  BloomLevel.anlama,
+  (i) => _etiketli(
+    i,
+    lmAileBoyu,
+    _bitkiler,
+    const [
+      _maki,
+      _garig,
+      _bozkir,
+      _cayir,
+      _savan,
+      _tundra,
+      _yagmur,
+      _tayga,
+      _yaprak,
+      _muson,
+      _col,
+    ],
+    grupHer: false,
+    siraSoru:
+        'Bu özelliklerin ait olduğu bitki örtüsü türleri sırasıyla hangisidir?',
+    hangiSoru: (h, grup) => grup
+        ? 'Bu bitki örtülerinden hangileri ${_iklimde[h]} görülür?'
+        : 'Bu özelliklerden hangileri $h için geçerlidir?',
+    aciklama: (x) =>
+        'Sırasıyla: ${x.map((e) => '${e.$2}${e.$3 == null ? '' : ' (${e.$3})'}').join(', ')}.',
+  ),
+  exam: ExamKind.tyt,
+  lesson: 'Coğrafya',
+);
+
+// ───────────────── 17 · Ekonomik faaliyetlerin sınıflandırılması ────────────
+
+const _bir = 'birincil', _iki = 'ikincil', _uc = 'üçüncül';
+const _faaliyetler = <_Etiketli>[
+  ('Tarlada buğday hasat eden bir çiftçi', _bir, null),
+  ("Karadeniz'de hamsi avlayan bir balıkçı", _bir, null),
+  ('Yaylada küçükbaş hayvan yetiştiren bir çoban', _bir, null),
+  ('Ormanda ağaç kesen bir orman işçisi', _bir, null),
+  ('Ocakta krom cevheri çıkaran bir maden işçisi', _bir, null),
+  ('Kovanlardan bal elde eden bir arıcı', _bir, null),
+  ('Bahçesinde fındık toplayan bir üretici', _bir, null),
+  ('Serada domates yetiştiren bir üretici', _bir, null),
+  ('Süt ineği yetiştiriciliği yapan bir besici', _bir, null),
+  ('Ocaktan mermer blokları çıkaran bir işçi', _bir, null),
+  ('Havuzlarda alabalık yetiştiren bir üretici', _bir, null),
+  ('Dağlarda kekik toplayan bir toplayıcı', _bir, null),
+  ('Pamuk tarlasında çalışan bir tarım işçisi', _bir, null),
+  ('Şeker fabrikasında pancarı şekere işleyen bir işçi', _iki, null),
+  ('Dokuma fabrikasında iplikten kumaş üreten bir işçi', _iki, null),
+  ('Kereste fabrikasında tomrukları biçen bir işçi', _iki, null),
+  ('Otomobil fabrikasında montaj hattında çalışan bir işçi', _iki, null),
+  ('Un fabrikasında buğdayı öğüten bir işçi', _iki, null),
+  ('Süt fabrikasında peynir üreten bir işçi', _iki, null),
+  ('Demir-çelik fabrikasında çelik üreten bir işçi', _iki, null),
+  ('Konserve fabrikasında balık konservesi hazırlayan bir işçi', _iki, null),
+  ('Kâğıt fabrikasında odundan kâğıt hamuru üreten bir işçi', _iki, null),
+  ('Zeytinyağı fabrikasında zeytinden yağ elde eden bir işçi', _iki, null),
+  ('Çay fabrikasında yaş çayı kuru çaya işleyen bir işçi', _iki, null),
+  ('Mobilya atölyesinde masa yapan bir marangoz', _iki, null),
+  ('Mermer fabrikasında blokları plakaya dönüştüren bir işçi', _iki, null),
+  ('Hastanede hasta muayene eden bir doktor', _uc, null),
+  ('Okulda ders anlatan bir öğretmen', _uc, null),
+  ('Otelde konukları karşılayan bir resepsiyon görevlisi', _uc, null),
+  ('Ürünleri limandan kente taşıyan bir tır şoförü', _uc, null),
+  ('Bankada kredi işlemlerini yürüten bir memur', _uc, null),
+  ('Pazarda sebze satan bir esnaf', _uc, null),
+  ('Müzede ziyaretçilere bilgi veren bir rehber', _uc, null),
+  ('Kargo şirketinde paket dağıtan bir kurye', _uc, null),
+  ('Mağazada giysi satan bir satış görevlisi', _uc, null),
+  ('Bir havayolu şirketinde çalışan bir kabin görevlisi', _uc, null),
+  ('Belediyede çöp toplayan bir temizlik görevlisi', _uc, null),
+  ('Eczanede ilaç satan bir eczacı', _uc, null),
+  ('Mahkemede dava takip eden bir avukat', _uc, null),
+  ('Lokantada yemek servisi yapan bir garson', _uc, null),
+];
+
+final _f17 = lmSirali(
+  'cg_ekonomik_faaliyet',
+  'Birincil, ikincil ve üçüncül ekonomik faaliyetler',
+  Topic.geography,
+  Difficulty.easy,
+  BloomLevel.anlama,
+  (i) => _etiketli(
+    i,
+    lmAileBoyu,
+    _faaliyetler,
+    const [_bir, _iki, _uc],
+    siraSoru: 'Bu kişilerin yaptığı ekonomik faaliyetler sırasıyla hangi gruba girer?',
+    hangiSoru: (h, _) =>
+        'Bu kişilerden hangileri $h ekonomik faaliyette bulunmaktadır?',
+    aciklama: (x) => '${x.map((e) => '${e.$1}: ${e.$2} faaliyet').join('; ')}.',
+  ),
+  exam: ExamKind.tyt,
+  lesson: 'Coğrafya',
+);
+
 // ── YER TUTUCU (geçici) ──
 AdvancedFamily _tmp(int n) => lmAile(
   'cg_tmp_$n',
@@ -2212,5 +2635,8 @@ final lmCografyaEk = <AdvancedFamily>[
   _f12,
   _f13,
   _f14,
-  for (var n = 15; n <= 20; n++) _tmp(n),
+  _f15,
+  _f16,
+  _f17,
+  for (var n = 18; n <= 20; n++) _tmp(n),
 ];

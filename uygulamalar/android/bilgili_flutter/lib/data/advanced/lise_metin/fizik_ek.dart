@@ -2498,7 +2498,11 @@ final _ikiParcacik = _tekil([
       if (m1 != m2)
         for (var v1 = 1; v1 <= 9; v1++)
           for (var v2 = 1; v2 <= 9; v2++)
-            if (v1 != v2 && m1 * v1 != m2 * v2) (m1, m2, v1, v2),
+            // Oran kökteki bir sayıya eşit olmasın.
+            if (v1 != v2 &&
+                m1 * v1 != m2 * v2 &&
+                !_icinde(m2 * v2 / (m1 * v1), [m1, m2, v1, v2]))
+              (m1, m2, v1, v2),
 ], (t) => (_oran(t.$1, t.$2), _oran(t.$3, t.$4)));
 
 const _iyonKutle = [
@@ -2534,9 +2538,19 @@ final _enerjiParcacik = _tekil([
           if (_kareOran(m2 * e2, m1 * e1) != null &&
               m2 * e2 != m1 * e1 &&
               m1 != m2 &&
-              e1 != e2)
+              e1 != e2 &&
+              _kareOranUygun(m1, m2, e1, e2))
             (m1, m2, e1, e2),
 ], (t) => (_oran(t.$1, t.$2), _oran(t.$3, t.$4)));
+
+/// Dalga boyu oranı kökteki sayılara, kütle oranına ya da karesine eşit
+/// olmasın (yalnız kütle oranını yazan ya da karekökü unutan öğrenci doğruyu
+/// bulmasın).
+bool _kareOranUygun(int m1, int m2, int e1, int e2) {
+  final (p, q) = _kareOran(m2 * e2, m1 * e1)!;
+  final y = p / q;
+  return !_icinde(y, [m1, m2, e1, e2, m2 / m1, e2 / e1, m2 * e2 / (m1 * e1)]);
+}
 
 /// x / y rasyonel bir sayının karesiyse (√x, √y) sadeleşmiş ikilisi.
 (int, int)? _kareOran(int x, int y) {
@@ -3058,7 +3072,9 @@ final _girisim = _tekil([
       ])
         if (l * boy % (10 * d) == 0 &&
             l * boy >= 300 * d &&
-            l * boy <= 15000 * d)
+            l * boy <= 15000 * d &&
+            // Δx kökteki L ya da d değerine sayıca eşit olmasın.
+            !_icinde(l * boy / (1000 * d), [boy / 100, d / 100]))
           (l, boy, d),
 ], (t) => (t.$1, _oran(t.$2, t.$3)));
 
@@ -3226,16 +3242,21 @@ const _suFrekans = [
   20,
   25,
   30,
+  35,
   40,
+  45,
   50,
   60,
+  70,
   75,
   80,
+  90,
   100,
   120,
   125,
   150,
   160,
+  175,
   200,
   250,
 ];
@@ -3247,14 +3268,22 @@ final _suDalgasi = _tekil([
         if (f10 * l1 >= 1200 &&
             f10 * l1 <= 4000 &&
             f10 * l2 >= 500 &&
-            !_icinde(f10 * l2 / 100, [
-              f10 / 10,
-              l1 / 10,
-              l2 / 10,
-              f10 * l1 / 100,
-            ]))
+            _suUygun(f10, l1, l2))
           (f10, l1, l2),
 ], (t) => (_oran(t.$2, t.$3), t.$1 * t.$2));
+
+/// Hızlar, dalga boyları, frekans ve hız farkı birbirinden farklı olsun
+/// (sorulan nicelik kökteki bir sayıya eşit çıkmasın).
+bool _suUygun(int f10, int l1, int l2) {
+  final v1 = f10 * l1 / 100, v2 = f10 * l2 / 100;
+  final degerler = [f10 / 10, l1 / 10, l2 / 10, v1, v2, v1 - v2];
+  for (var i = 0; i < degerler.length; i++) {
+    for (var j = i + 1; j < degerler.length; j++) {
+      if ((degerler[i] - degerler[j]).abs() < 1e-9) return false;
+    }
+  }
+  return true;
+}
 
 AdvancedItem _derinlikDegisimi(int a, int b, int k) {
   final v = b % 4;
@@ -3308,7 +3337,7 @@ AdvancedItem _derinlikDegisimi(int a, int b, int k) {
             'cm, sığ bölgedeki dalga boyu ${_n(la2)} cm olarak ölçülüyor. '
             'Dalgaların derin bölgedeki hızı sığ bölgedekinden kaç cm/s fazladır?',
         fark,
-        [la1 - la2, fark / (f10 / 10) * 2, v1],
+        [la1 - la2, v1 + v2, v1],
         '$sabit. Derin bölgede v = ${_n(f10 / 10)}·${_n(la1)} = ${_n(v1)} cm/s, '
             'sığ bölgede v = ${_n(f10 / 10)}·${_n(la2)} = ${_n(v2)} cm/s olur; fark '
             '${_n(fark)} cm/s bulunur.',

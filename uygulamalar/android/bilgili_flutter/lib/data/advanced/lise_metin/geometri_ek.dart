@@ -2010,7 +2010,10 @@ final lmGeometriEk = <AdvancedFamily>[
     BloomLevel.uygulama,
     (a, b, c) {
       if (c <= 2) {
-        final q = 4 + a, p = q + 2 + b;
+                final q = 4 + a;
+        var p = q + 2 + b;
+        // |KL| = |DC| çakışması (|AB| = 3·|DC|) kaydırılır.
+        if (c == 2 && p == 3 * q) p += 20;
         const giris = 'ABCD yamuğunda [AB] ∥ [DC] olup';
         const orta =
             '[AD] ve [BC] kenarlarının orta noktalarını birleştiren orta taban';
@@ -2070,7 +2073,15 @@ final lmGeometriEk = <AdvancedFamily>[
           positive: true,
         );
       }
-      final q = 2 + b;
+            var q = 2 + b;
+      // Sorulan uzunluk kökte yazılı bir tabana eşit çıkarsa küçük taban
+      // 20 cm uzatılır (kaydırılan değerler başka vakada kullanılmaz).
+      final sorulanUz = switch (c) {
+        3 || 7 => l2,
+        4 || 6 => w,
+        _ => -1,
+      };
+      if ({q, c <= 4 ? q + 2 * l1 : q + l1}.contains(sorulanUz)) q += 20;
       if (c <= 4 || c == 9) {
         // İkizkenar yamuk: her uçtaki parça d, yükseklik h, yan kenar w.
         final d = l1, h = l2, p = q + 2 * d;
@@ -2162,7 +2173,8 @@ final lmGeometriEk = <AdvancedFamily>[
     BloomLevel.analiz,
     (a, b, c) {
       final (m, n) = _orantilar[a];
-      final u = 2 + b;
+            // Alan birimi 10 cm² ve üstü: alanlar kökteki uzunluklarla karışmaz.
+      final u = 10 + b;
       const ortak =
           'Bu üçgenlerin A köşesinden [BC] doğrusuna inen yükseklikleri '
           'ortaktır; alanları tabanlarıyla orantılıdır.';
@@ -2222,7 +2234,7 @@ final lmGeometriEk = <AdvancedFamily>[
           );
         case 4 || 5:
           final (p, q) = _orantilar[b];
-          final s = 2 * (m + n) * (p + q), ade = 2 * m * p;
+                    final s = 10 * (m + n) * (p + q), ade = 10 * m * p;
           final veri =
               'ABC üçgeninde D noktası [AB], E noktası [AC] kenarı üzerindedir. '
               '|AD| = $m cm, |DB| = $n cm, |AE| = $p cm, |EC| = $q cm ve ABC '
@@ -2235,7 +2247,7 @@ final lmGeometriEk = <AdvancedFamily>[
             return sayisal(
               '$veri Buna göre ADE üçgeninin alanı kaç cm² olur?',
               ade,
-              [2 * m * (p + q), 2 * p * (m + n), ?_bol(s * m * p, n * q)],
+                            [10 * m * (p + q), 10 * p * (m + n), ?_bol(s * m * p, n * q)],
               cozum,
               unit: 'cm²',
               positive: true,
@@ -2244,7 +2256,7 @@ final lmGeometriEk = <AdvancedFamily>[
           return sayisal(
             '$veri Buna göre DBCE dörtgeninin alanı kaç cm² olur?',
             s - ade,
-            [ade, s - 2 * m * (p + q), s - 2 * n * q],
+                        [ade, s - 10 * m * (p + q), s - 10 * n * q],
             '$cozum A(DBCE) = $s − $ade = ${s - ade} cm².',
             unit: 'cm²',
             positive: true,
@@ -2282,7 +2294,7 @@ final lmGeometriEk = <AdvancedFamily>[
           );
         case 8:
           final x = 1 + a % 5, z = 1 + a ~/ 5, y = 1 + b % 10;
-          final v = 2 + b ~/ 10;
+                    final v = 10 + 5 * (b ~/ 10);
           return sayisal(
             'ABC üçgeninin [BC] kenarı üzerinde B, D, E, C sırasıyla dizilen D '
                 've E noktaları alınıyor. |BD| = $x cm, |DE| = $y cm, |EC| = $z cm '
@@ -2325,7 +2337,10 @@ final lmGeometriEk = <AdvancedFamily>[
       if (c == 0) {
         final x = 3 + a;
         final (p, r) = _kesenKatsayi[b % 10];
-        final l = 8 + b + a ~/ 3, yr = 3 + (a + 2 * b) % 9;
+                var l = 8 + b + a ~/ 3;
+        final yr = 3 + (a + 2 * b) % 9;
+        // Teğet uzunluğu kökteki bir katsayıya eşit çıkmasın.
+        if ({(l - p * x).abs(), (l - r * x).abs(), p, r, x}.contains(l)) l += 30;
         final q = l - p * x, s = l - r * x;
         final veri =
             'O merkezli çembere dışındaki P noktasından çizilen iki teğet '
@@ -2419,7 +2434,10 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       if (c == 5) {
-        final r1 = 2 + a, r2 = r1 + 1 + b;
+                final r1 = 2 + a;
+        var r2 = r1 + 1 + b;
+        // Yanıt 2r₁ − 1 büyük yarıçapa eşit çıkmasın.
+        if (r2 == 2 * r1 - 1) r2 += 20;
         return sayisal(
           'Yarıçapları $r1 cm ve $r2 cm olan iki çember iki farklı noktada '
               'kesişiyor. Merkezler arasındaki uzaklık cm cinsinden bir tam sayı '
@@ -2432,8 +2450,11 @@ final lmGeometriEk = <AdvancedFamily>[
           positive: true,
         );
       }
-      if (c == 6) {
-        final r1 = 2 + a, r2 = r1 + 2 + b;
+            if (c == 6) {
+        final r1 = 2 + a;
+        var r2 = r1 + 2 + b;
+        // İç içe durumda yanıt r₂ − r₁ − 1 küçük yarıçapa eşit çıkmasın.
+        if (r2 == 2 * r1 + 1) r2 += 20;
         if ((a + b).isEven) {
           return sayisal(
             'Yarıçapları $r1 cm ve $r2 cm olan iki çemberin dört ortak teğeti '
@@ -2463,7 +2484,9 @@ final lmGeometriEk = <AdvancedFamily>[
       }
       final (l1, l2, w) = _yonluUclu(a);
       if (c == 7) {
-        final r1 = 2 + b, r2 = r1 + l1;
+                var r1 = 2 + b;
+        if (l2 == r1 || l2 == r1 + l1) r1 += 20;
+        final r2 = r1 + l1;
         return sayisal(
           'Yarıçapları $r1 cm ve $r2 cm olan iki çemberin merkezleri '
               'arasındaki uzaklık $w cm olarak veriliyor. Bu çemberlere çizilen '
@@ -2481,7 +2504,9 @@ final lmGeometriEk = <AdvancedFamily>[
       }
       if (c == 8) {
         final k = 1 + 40 ~/ l1, top = k * l1, uz = k * l2, d = k * w;
-        final r1 = 1 + b, r2 = top - r1;
+                var r1 = 1 + b;
+        if (uz == r1 || uz == top - r1) r1 += 20;
+        final r2 = top - r1;
         return sayisal(
           'Yarıçapları $r1 cm ve $r2 cm olan iki çemberin merkezleri '
               'arasındaki uzaklık $d cm olarak veriliyor. Bu çemberlere çizilen '
@@ -2496,7 +2521,11 @@ final lmGeometriEk = <AdvancedFamily>[
           positive: true,
         );
       }
-      final r1 = 1 + a, r2 = r1 + 1 + b, pr = r1 * r2;
+            final r1 = 1 + a;
+      var r2 = r1 + 1 + b;
+      // r₂ = 4r₁ olursa 2√(r₁r₂) büyük yarıçapa eşit çıkar.
+      if (r2 == 4 * r1) r2 += 20;
+      final pr = r1 * r2;
       return secenekli(
         'Yarıçapları $r1 cm ve $r2 cm olan iki çember dıştan teğettir. Bu '
             'çemberlere çizilen bir ortak dış teğetin, değme noktaları arasında '

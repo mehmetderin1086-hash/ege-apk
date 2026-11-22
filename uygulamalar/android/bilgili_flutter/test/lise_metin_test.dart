@@ -7,9 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('lise metin bankası 200 aileden 1.000.000 soru sunar', () {
-    expect(liseMetinFamilies, hasLength(200));
-    expect(liseMetinFamilies.map((f) => f.key).toSet(), hasLength(200));
+  test('lise metin bankası 400 aileden 2.000.000 soru sunar', () {
+    expect(liseMetinFamilies, hasLength(400));
+    expect(liseMetinFamilies.map((f) => f.key).toSet(), hasLength(400));
     var toplam = 0;
     for (final f in liseMetinFamilies) {
       expect(f.key, startsWith('lm_'));
@@ -30,13 +30,13 @@ void main() {
         expect(AdvancedCatalog.questionById(q.id)?.text, q.text);
       }
     }
-    expect(toplam, 1000000);
+    expect(toplam, 2000000);
     final eski = AdvancedCatalog.families
         .where((f) => !f.key.startsWith('lm_'))
         .fold<int>(0, (n, f) => n + f.count);
     expect(eski, 1270439);
-    expect(AdvancedCatalog.all.length, 2270439);
-    expect(AdvancedCatalog.select(level: StudyLevel.lise).length, 1592093);
+    expect(AdvancedCatalog.all.length, 3270439);
+    expect(AdvancedCatalog.select(level: StudyLevel.lise).length, 2592093);
   });
 
   test('lise metin paketi oynanabilir ve yalnız lise metin sorusu içerir', () {
@@ -45,7 +45,7 @@ void main() {
     final paket = ctrl.offlinePacks.singleWhere(
       (p) => p.id == 'builtin_sb_ak38_lise_metin',
     );
-    expect(paket.questions.length, greaterThanOrEqualTo(1000000));
+    expect(paket.questions.length, greaterThanOrEqualTo(2000000));
     ctrl.startPackRound(paket, maxQuestions: 12);
     final sorular = ctrl.activeRound!.questions;
     expect(sorular.map((q) => q.id).toSet(), hasLength(12));
