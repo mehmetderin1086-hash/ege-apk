@@ -42,8 +42,8 @@ List<String> _celdirici(
   final h = ayikla(hatalar), k = ayikla(komsular);
   final hA = [for (final x in h) if (x.$1 < anahtar) x.$2];
   final hU = [for (final x in h) if (x.$1 > anahtar) x.$2];
-  final kA = [for (final x in k) if (x.$1 < anahtar) "${x.$2} ~K"];
-  final kU = [for (final x in k) if (x.$1 > anahtar) "${x.$2} ~K"];
+  final kA = [for (final x in k) if (x.$1 < anahtar) x.$2];
+  final kU = [for (final x in k) if (x.$1 > anahtar) x.$2];
   int eksik(int r) => max(0, r - hA.length) + max(0, 3 - r - hU.length);
   bool olur(int r) =>
       r - hA.length <= kA.length && 3 - r - hU.length <= kU.length;
@@ -2415,13 +2415,17 @@ final lmGeometri = <AdvancedFamily>[
             'birimdir?',
             r,
             // Karekök almayı unutma, çapı verme, ikiye fazladan bölme, sabit
-            // terimin karekökünü alma, r² = a² + b² + F diye işaret hatası.
+            // terimin karekökünü alma, r² = a² + b² + F diye işaret hatası,
+            // sabit terimi unutma, merkezin bir koordinatını yarıçap sanma.
             [
               r * r,
               2 * r,
               if (r.isEven) r ~/ 2,
               kok(sabit.abs()),
               kok(h * h + k * k + sabit),
+              kok(h * h + k * k),
+              h.abs(),
+              k.abs(),
             ],
             '$tamKare; r² = ${r * r} olduğundan yarıçap $r birimdir.',
             _hs(a, b, c),

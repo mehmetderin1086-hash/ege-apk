@@ -294,6 +294,40 @@ AdvancedItem _sayiDengeli(
   );
 }
 
+/// Ondalıklı yanıtlı soru; çeldiriciler [_dengeli] ile seçilir. Yalnız
+/// pozitif ve en çok iki ondalık basamakla tam yazılabilen adaylar ile
+/// anahtarın [adim] uzaklığındaki komşular kullanılır.
+AdvancedItem _ondalikDengeli(
+  String kok,
+  double anahtar,
+  Iterable<double> hatalar,
+  String aciklama,
+  int no, {
+  required double adim,
+  String birim = '',
+  int genislik = 3,
+  List<int> agirlik = const [1, 1, 1, 1],
+}) {
+  bool uygun(double x) =>
+      x.isFinite && x > 0 && ((x * 100).round() - x * 100).abs() < 1e-6;
+  (num, String) yaz(double x) => (x, birimli(tr(x), birim));
+  final yazim = birimli(tr(anahtar), birim);
+  return AdvancedItem(
+    kok,
+    yazim,
+    _dengeli(
+      anahtar,
+      yazim,
+      hatalar.where(uygun).map(yaz),
+      [anahtar + adim, anahtar - adim].where(uygun).map(yaz),
+      no,
+      genislik: genislik,
+      agirlik: agirlik,
+    ),
+    aciklama,
+  );
+}
+
 /// Kesir yanıtlı olasılık sorusu; çeldiriciler [_dengeli] ile seçilir ve
 /// (0, 1) aralığında kalır ([birDahil] doğruysa 1 de olabilir). Komşular
 /// paydası aynı, payı bir fazla ya da bir eksik olan kesirlerdir.
@@ -3241,6 +3275,20 @@ final _f19 = lmAile(
   BloomLevel.uygulama,
   (a, b, c) {
     final x = a + 2, y = b + 2; // maya ve kas hücrelerinin parçaladığı glikoz
+    final no = _no(a, b, c);
+    AdvancedItem say(
+      String kok,
+      int anahtar,
+      List<int> hatalar,
+      String aciklama,
+    ) => _sayiDengeli(
+      kok,
+      anahtar,
+      hatalar,
+      aciklama,
+      no,
+      agirlik: const [2, 1, 1, 1],
+    );
     final deney =
         'Bir deneyde maya hücreleri etil alkol fermantasyonuyla $x molekül, '
         'oksijensiz kalan kas hücreleri laktik asit fermantasyonuyla $y '
@@ -3253,44 +3301,44 @@ final _f19 = lmAile(
         'asit fermantasyonunda 1 glikozdan 2 laktik asit oluşur.';
     switch (c) {
       case 0:
-        return sayisal(
+        return say(
           '$deney Bu iki olayda hücrelerin toplam net ATP kazancı kaç '
           'moleküldür?',
           2 * (x + y),
-          [4 * (x + y), x + y, 2 * x, 2 * x + 4 * y, 6 * (x + y)],
+          // Üretilen ATP'yi verme, glikoz başına 1 sayma, bir hücre grubunu
+          // unutma, oksijenli solunumun 38 ATP'sini kullanma.
+          [4 * (x + y), x + y, 2 * x, 2 * x + 4 * y, 6 * (x + y), 2 * y, 38 * (x + y)],
           '$atp Toplam net kazanç 2 · ($x + $y) = ${2 * (x + y)} ATP bulunur.',
-          positive: true,
         );
       case 1:
-        return sayisal(
+        return say(
           '$deney Bu iki olayda substrat düzeyinde fosforilasyonla üretilen '
           'toplam ATP kaç moleküldür?',
           4 * (x + y),
-          [2 * (x + y), x + y, 4 * x + 2 * y, 6 * (x + y), 4 * x],
+          // Net kazancı verme, glikoz başına 1 ya da 6 sayma, bir hücre
+          // grubunu unutma, iki kez sayma, oksijenli solunumla karıştırma.
+          [2 * (x + y), x + y, 4 * x + 2 * y, 6 * (x + y), 4 * x, 8 * (x + y), 38 * (x + y)],
           '$atp Üretilen toplam ATP 4 · ($x + $y) = ${4 * (x + y)} olur.',
-          positive: true,
         );
       case 2:
-        return sayisal(
+        return say(
           '$deney Bu iki olayda glikolizin başlangıcında glikozu etkinleştirmek '
           'için harcanan toplam ATP kaç moleküldür?',
           2 * (x + y),
           [4 * (x + y), x + y, 2 * x, 2 * y, 6 * (x + y)],
           '$atp Glikozu etkinleştirmek için her glikozda 2 ATP harcandığından '
           'toplam 2 · ($x + $y) = ${2 * (x + y)} ATP harcanır.',
-          positive: true,
         );
       case 3:
-        return sayisal(
+        return say(
           '$deney Bu iki olayda açığa çıkan toplam CO₂ molekülü sayısı '
           'kaçtır?',
           2 * x,
           [2 * (x + y), 2 * y, x, 6 * x, x + y],
           '$urun Yalnız maya hücreleri CO₂ oluşturur: 2 · $x = ${2 * x}.',
-          positive: true,
         );
       case 4:
-        return sayisal(
+        return say(
           '$deney Maya hücrelerinin oluşturduğu etil alkol ve CO₂ molekülleri '
           'ile kas hücrelerinin oluşturduğu laktik asit moleküllerinin toplam '
           'sayısı kaçtır?',
@@ -3298,10 +3346,9 @@ final _f19 = lmAile(
           [2 * (x + y), 4 * (x + y), 2 * x + 4 * y, 2 * x + y, 3 * (x + y)],
           '$urun Mayalarda 2 · $x + 2 · $x = ${4 * x}, kas hücrelerinde '
           '2 · $y = ${2 * y} molekül oluşur. Toplam ${4 * x + 2 * y} bulunur.',
-          positive: true,
         );
       case 5:
-        return sayisal(
+        return say(
           'Bir deneyde maya hücreleri etil alkol fermantasyonu, oksijensiz '
           'kalan kas hücreleri laktik asit fermantasyonu yapıyor. İki hücre '
           'grubunun toplam net ATP kazancı ${2 * (x + y)} molekül, maya '
@@ -3309,14 +3356,15 @@ final _f19 = lmAile(
           'ölçülüyor. Kas hücrelerinin parçaladığı glikoz molekülü sayısı '
           'kaçtır?',
           y,
-          [x + y, 2 * y, x, y + 1, y + 2, y + x + 1],
+          // Toplam glikozu verme, ikiye bölmeyi unutma ya da iki kez bölme,
+          // hücre gruplarını karıştırma.
+          [x + y, 2 * y, x, y + 1, y + 2, y + x + 1, y - 1, if (y.isEven) y ~/ 2],
           '$atp Toplam glikoz ${2 * (x + y)} / 2 = ${x + y} olur. Mayalar '
           '${2 * x} / 2 = $x glikoz parçalamıştır; kas hücrelerine '
           '${x + y} − $x = $y glikoz kalır.',
-          positive: true,
         );
       case 6:
-        return sayisal(
+        return say(
           'Bir deneyde maya hücrelerinin etil alkol fermantasyonuyla ${2 * x} '
           'molekül etil alkol, oksijensiz kalan kas hücrelerinin laktik asit '
           'fermantasyonuyla ${2 * y} molekül laktik asit oluşturduğu '
@@ -3327,10 +3375,9 @@ final _f19 = lmAile(
           'Parçalanan glikoz sayısı ${2 * x} / 2 + ${2 * y} / 2 = ${x + y} '
           'olur. $atp Üretilen toplam ATP 4 · ${x + y} = ${4 * (x + y)} '
           'bulunur.',
-          positive: true,
         );
       case 7:
-        return sayisal(
+        return say(
           'Bir deneyde maya hücreleri etil alkol fermantasyonuyla $x molekül '
           'glikoz parçalıyor; oksijensiz kalan kas hücreleri de laktik asit '
           'fermantasyonu yapıyor. İki olayda substrat düzeyinde '
@@ -3341,20 +3388,18 @@ final _f19 = lmAile(
           '$atp Toplam glikoz ${4 * (x + y)} / 4 = ${x + y}, kas hücrelerinin '
           'parçaladığı glikoz ${x + y} − $x = $y olur. Her glikozdan 2 laktik '
           'asit oluştuğundan 2 · $y = ${2 * y} bulunur.',
-          positive: true,
         );
       case 8:
-        return sayisal(
+        return say(
           '$deney Bu iki olayın glikoliz evresinde oluşan toplam pirüvat '
           '(pirüvik asit) molekülü sayısı kaçtır?',
           2 * (x + y),
           [x + y, 4 * (x + y), 2 * x, 3 * (x + y), 2 * y],
           'Glikolizde 6 karbonlu 1 glikozdan 3 karbonlu 2 pirüvat oluşur. '
           'Toplam pirüvat 2 · ($x + $y) = ${2 * (x + y)} olur.',
-          positive: true,
         );
       default:
-        return sayisal(
+        return say(
           'Bir deneyde oksijensiz kalan kas hücreleri laktik asit '
           'fermantasyonuyla ${2 * y} molekül laktik asit oluşturuyor; maya '
           'hücreleri de etil alkol fermantasyonu yapıyor. İki olayda substrat '
@@ -3367,7 +3412,6 @@ final _f19 = lmAile(
           'hücreleri ${2 * y} / 2 = $y glikoz parçalamıştır; mayalara '
           '${x + y} − $y = $x glikoz kalır. Her glikozdan 2 etil alkol '
           'oluştuğundan 2 · $x = ${2 * x} bulunur.',
-          positive: true,
         );
     }
   },
@@ -3388,6 +3432,14 @@ final _f20 = lmAile(
     final pro = 5 * (1 + (a + 2 * b) % 6);
     final toplam = 4 * kh + 4 * pro + 9 * yag;
     final gunluk = (a + b).isEven ? 2000 : 2500;
+    final no = _no(a, b, c);
+    AdvancedItem say(
+      String kok,
+      int anahtar,
+      List<int> hatalar,
+      String aciklama, {
+      int? adim,
+    }) => _sayiDengeli(kok, anahtar, hatalar, aciklama, no, adim: adim);
     const deger =
         'Karbonhidrat ve protein gram başına 4 kcal, yağ gram başına 9 kcal '
         'enerji verir.';
@@ -3399,66 +3451,90 @@ final _f20 = lmAile(
         '${9 * yag} = $toplam kcal olur.';
     switch (c) {
       case 0:
-        return sayisal(
+        return say(
           '$ogun Öğrencinin bu öğünden aldığı enerji kaç kcal olur?',
           toplam,
-          [4 * (kh + pro + yag), 9 * kh + 4 * pro + 4 * yag, 4 * kh + 9 * pro + 9 * yag, 4 * kh + 9 * yag],
+          // Bütün besinlere 4 ya da 9 kcal verme, değerleri karıştırma, bir
+          // besini unutma, gram toplamını verme.
+          [
+            4 * (kh + pro + yag), 9 * kh + 4 * pro + 4 * yag,
+            4 * kh + 9 * pro + 9 * yag, 4 * kh + 9 * yag,
+            9 * (kh + pro + yag), kh + pro + yag, 4 * kh + 4 * pro,
+          ],
           hesap,
-          positive: true,
         );
       case 1:
-        return sayisal(
+        return say(
           '$deger Bir öğrencinin bir öğünde tükettiği besinlerde $kh g '
           'karbonhidrat ve $pro g protein vardır. Öğünün toplam enerjisi '
           '$toplam kcal olduğuna göre öğündeki yağ miktarı kaç gramdır?',
           yag,
-          [9 * yag ~/ 4, 9 * yag, yag + 4, yag + 9, yag + 5, yag + 2],
+          // 9 yerine 4'e bölme, bölmeyi unutma, işlem kayması.
+          [9 * yag ~/ 4, 9 * yag, yag + 4, yag + 9, yag + 5, yag + 2, yag - 2, yag - 4],
           'Karbonhidrat ve proteinden gelen enerji 4 · ($kh + $pro) = '
           '${4 * (kh + pro)} kcal olur. Yağdan gelen enerji $toplam − '
           '${4 * (kh + pro)} = ${9 * yag} kcal, yağ miktarı ${9 * yag} / 9 = '
           '$yag g bulunur.',
-          positive: true,
         );
       case 2:
-        return ondalikli(
+        return _ondalikDengeli(
           '$ogun Günlük enerji gereksinimi $gunluk kcal olan bu öğrencinin '
           'öğünden aldığı enerji, günlük gereksiniminin yüzde kaçıdır?',
           toplam * 100 / gunluk,
-          [4 * (kh + pro + yag) * 100 / gunluk, 100 - toplam * 100 / gunluk, (4 * kh + 4 * pro) * 100 / gunluk, 9 * yag * 100 / gunluk]
-              .where(_ikiBasamakli),
+          // Bütün besinlere 4 ya da 9 kcal verme, kalan payı verme, yağı
+          // unutma ya da yalnız yağı alma, değerleri karıştırma.
+          [
+            4 * (kh + pro + yag) * 100 / gunluk,
+            100 - toplam * 100 / gunluk,
+            (4 * kh + 4 * pro) * 100 / gunluk,
+            9 * yag * 100 / gunluk,
+            9 * (kh + pro + yag) * 100 / gunluk,
+            (9 * kh + 4 * pro + 4 * yag) * 100 / gunluk,
+          ],
           '$hesap Günlük gereksinime oranı $toplam / $gunluk · 100 = '
           '${tr(toplam * 100 / gunluk)} bulunur.',
-          positive: true,
+          no,
+          adim: 2,
         );
       case 3:
         final k = 10 + 2 * a, p = 4 + (a + b) % 8, y = b + 2;
         final gram = const [50, 150, 200, 250][(a + b) % 4];
         final yuz = 4 * k + 4 * p + 9 * y;
-        return ondalikli(
+        return _ondalikDengeli(
           '$deger Bir besinin 100 gramında $k g karbonhidrat, $p g protein ve '
           '$y g yağ vardır. Bu besinden $gram g yiyen bir kişi kaç kcal enerji '
           'alır?',
           yuz * gram / 100,
-          [yuz.toDouble(), 4.0 * (k + p + y) * gram / 100, yuz * gram / 1000, yuz * 100 / gram]
-              .where(_ikiBasamakli),
+          // 100 g için değeri verme, bütün besinlere 4 ya da 9 kcal verme,
+          // 10 ya da 1000'e bölme, oranı ters kurma, yağı unutma.
+          [
+            yuz.toDouble(), 4.0 * (k + p + y) * gram / 100,
+            yuz * gram / 1000, yuz * 100 / gram, 9.0 * (k + p + y) * gram / 100,
+            yuz * gram / 10, 4.0 * (k + p) * gram / 100,
+          ],
           'Besinin 100 gramı 4 · $k + 4 · $p + 9 · $y = $yuz kcal enerji '
           'verir. $gram g için $yuz · $gram / 100 = ${tr(yuz * gram / 100)} '
           'kcal bulunur.',
-          positive: true,
+          no,
+          adim: 20,
         );
       case 4:
-        return sayisal(
+        return say(
           '$ogun Bu öğünde karbonhidrat ve proteinden gelen toplam enerji, '
           'yağdan gelen enerjiden kaç kcal fazladır?',
           4 * (kh + pro) - 9 * yag,
-          [toplam, 4 * kh - 9 * yag, 4 * (kh + pro) - 4 * yag, 9 * (kh + pro) - 4 * yag],
+          // Toplamı verme, proteini unutma, değerleri karıştırma, farkı gram
+          // üzerinden alma, çıkarmayı unutma, yağ enerjisini verme.
+          [
+            toplam, 4 * kh - 9 * yag, 4 * (kh + pro) - 4 * yag,
+            9 * (kh + pro) - 4 * yag, kh + pro - yag, 4 * (kh + pro), 9 * yag,
+          ],
           'Karbonhidrat ve proteinden 4 · ($kh + $pro) = ${4 * (kh + pro)} '
           'kcal, yağdan 9 · $yag = ${9 * yag} kcal gelir. Fark '
           '${4 * (kh + pro) - 9 * yag} kcal olur.',
-          positive: true,
         );
       case 5:
-        return sayisal(
+        return say(
           '$deger Bir öğrencinin bir öğünde tükettiği besinlerde $pro g '
           'protein ve $yag g yağ vardır. Öğünün toplam enerjisi $toplam kcal '
           'olduğuna göre öğündeki karbonhidrat miktarı kaç gramdır?',
@@ -3468,52 +3544,63 @@ final _f20 = lmAile(
           '${4 * pro + 9 * yag} kcal olur. Karbonhidrattan gelen enerji '
           '$toplam − ${4 * pro + 9 * yag} = ${4 * kh} kcal, miktarı '
           '${4 * kh} / 4 = $kh g bulunur.',
-          positive: true,
         );
       case 6:
-        return sayisal(
+        return say(
           '$ogun Günlük enerji gereksinimi $gunluk kcal olan bu öğrenci, '
           'gereksinimini tam karşılamak için günün kalanında kaç kcal daha '
           'enerji almalıdır?',
           gunluk - toplam,
-          [gunluk - 4 * (kh + pro + yag), toplam, gunluk - 4 * kh - 9 * yag, gunluk - toplam + 100],
+          // Bütün besinlere 4 ya da 9 kcal verme, öğünün enerjisini verme,
+          // proteini unutma, değerleri karıştırma, işlem kayması.
+          [
+            gunluk - 4 * (kh + pro + yag), toplam, gunluk - 4 * kh - 9 * yag,
+            gunluk - toplam + 100, gunluk - toplam - 100,
+            gunluk - 9 * kh - 4 * pro - 4 * yag,
+          ],
           '$hesap Kalan gereksinim $gunluk − $toplam = ${gunluk - toplam} kcal '
           'bulunur.',
-          positive: true,
         );
       case 7:
-        return ondalikli(
+        return _ondalikDengeli(
           '$ogun Öğrenci aynı enerjiyi yalnız proteinden alsaydı kaç gram '
           'protein tüketmesi gerekirdi?',
           toplam / 4,
-          [toplam / 9, (kh + pro + yag).toDouble(), toplam / 2, toplam.toDouble()]
-              .where(_ikiBasamakli),
+          // 4 yerine 9'a ya da 2'ye bölme, bölmeyi unutma, gram toplamını
+          // verme.
+          [toplam / 9, (kh + pro + yag).toDouble(), toplam / 2, toplam.toDouble()],
           '$hesap Protein gram başına 4 kcal verdiğinden $toplam / 4 = '
           '${tr(toplam / 4)} g protein gerekir.',
-          unit: 'g',
-          positive: true,
+          no,
+          adim: 20,
+          birim: 'g',
         );
       case 8:
-        return sayisal(
+        return say(
           '$deger Bir sporcu antrenmandan önce $kh g karbonhidrat içeren bir '
           'öğün, antrenmandan sonra $yag g yağ içeren bir atıştırmalık '
           'tüketiyor. Karbonhidrattan alınan enerji, yağdan alınan enerjiden '
           'kaç kcal fazladır?',
           4 * kh - 9 * yag,
-          [4 * kh + 9 * yag, 9 * kh - 4 * yag, 4 * (kh - yag), kh - yag],
+          // Toplama, değerleri karıştırma, ikisine 4 kcal verme, farkı gram
+          // üzerinden alma, yağ enerjisini verme.
+          [4 * kh + 9 * yag, 9 * kh - 4 * yag, 4 * (kh - yag), kh - yag, 9 * yag],
           'Karbonhidrattan 4 · $kh = ${4 * kh} kcal, yağdan 9 · $yag = '
           '${9 * yag} kcal alınır. Fark ${4 * kh - 9 * yag} kcal olur.',
-          positive: true,
         );
       default:
-        return sayisal(
+        return say(
           '$ogun Öğündeki yağın tamamı yerine aynı kütlede karbonhidrat '
           'tüketilseydi öğünün enerjisi kaç kcal olurdu?',
           toplam - 5 * yag,
-          [toplam, toplam + 5 * yag, toplam - 9 * yag, toplam - 4 * yag],
+          // Değişmediğini sanma, farkı ekleme, yağın enerjisini ya da
+          // karbonhidratın enerjisini çıkarma, yalnız 5 kcal çıkarma.
+          [
+            toplam, toplam + 5 * yag, toplam - 9 * yag, toplam - 4 * yag,
+            toplam - 5, 4 * (kh + pro) - 5 * yag,
+          ],
           '$hesap Yağ yerine karbonhidrat alındığında her gram için 9 − 4 = '
           '5 kcal eksilir: $toplam − 5 · $yag = ${toplam - 5 * yag} kcal.',
-          positive: true,
         );
     }
   },

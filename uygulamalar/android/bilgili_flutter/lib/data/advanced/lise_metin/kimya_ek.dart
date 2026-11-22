@@ -141,7 +141,8 @@ AdvancedItem _say(
 /// anahtarın iki yanındaki tipik hata değerleridir; bir yanda yetmezse o yana
 /// en çok [komsu] adım uzaklıktaki komşu değerler eklenir. [adim] verilmezse
 /// `_say`'daki komşu adımı kullanılır. [son] adayları (akla yatmayan
-/// büyüklükteki hata sonuçları) komşu değerlerden de sonra denenir.
+/// büyüklükteki hata sonuçları) yalnız başka yoldan üç çeldirici
+/// bulunamazsa kullanılır.
 AdvancedItem _saySirali(
   String kok,
   num dogru,
@@ -171,18 +172,28 @@ AdvancedItem _saySirali(
                       : (m >= 0.3 ? 0.1 : (m >= 0.03 ? 0.01 : 0.001)))));
   if (a < enKucuk) a = enKucuk;
   final esik = 0.5 / _on(basamak);
-  final havuz = <num>[
+  final yazim = birimli(_t(dogru, basamak), birim);
+  List<(num, String)> ciftler(Iterable<num> v) => [
+    for (final x in v)
+      if (x.isFinite && (!arti || x >= esik)) (deger(x), yaz(x)),
+  ];
+  final havuz = ciftler([
     ...adaylar,
     for (var k = 1; k <= komsu; k++) ...[d - k * a, d + k * a],
-    ...son,
-  ];
-  final yazim = birimli(_t(dogru, basamak), birim);
+  ]);
+  // [son] adayları yalnız üç çeldirici başka türlü bulunamıyorsa eklenir.
+  final farkli = <String>[];
+  for (final (_, y) in havuz) {
+    if (!ayniSecenek(y, yazim) && !farkli.any((z) => ayniSecenek(z, y))) {
+      farkli.add(y);
+    }
+  }
   return AdvancedItem(
     kok,
     yazim,
     siraliCeldiriciler(deger(d), yazim, [
-      for (final x in havuz)
-        if (x.isFinite && (!arti || x >= esik)) (deger(x), yaz(x)),
+      ...havuz,
+      if (farkli.length < 3) ...ciftler(son),
     ], sira),
     aciklama,
   );
@@ -5337,18 +5348,19 @@ final _f20 = lmSirali(
       ];
       final sHavuz = {...(sAyni.isEmpty ? sAday : sAyni)}.toList();
       final s2 = sHavuz[hedefSira(i) % (sHavuz.length < 3 ? sHavuz.length : 3)];
-      final pAday = {
+      // Yanlış π sayısı önce tipik hatalardan (ikisi de varsa sırayla),
+      // yoksa komşu değerlerden alınır.
+      bool pUygun(int v) => v > 0 && v != pi && v != sigma && v != s2;
+      final pTipik = {
         for (final v in [
           if (uclu > 0) coklu, // üçlü bağı tek π bağı sayma
           pi + coklu, // çoklu bağdaki bütün bağları π sayma
-          pi + 1,
-          pi - 1,
-          2 * pi,
-          pi + 2,
         ])
-          if (v > 0 && v != pi && v != sigma && v != s2) v,
+          if (pUygun(v)) v,
       }.toList();
-      final p2 = pAday[hedefSira(i, 1) % (pAday.length < 2 ? pAday.length : 2)];
+      final p2 = pTipik.isNotEmpty
+          ? pTipik[hedefSira(i, 1) % pTipik.length]
+          : [pi + 1, pi - 1, pi + 2, 2 * pi + 1].firstWhere(pUygun);
       return secenekli(
         'Yoğun formülü $f olan molekülde kaç tane σ (sigma) ve kaç tane π '
             '(pi) bağı bulunur?',

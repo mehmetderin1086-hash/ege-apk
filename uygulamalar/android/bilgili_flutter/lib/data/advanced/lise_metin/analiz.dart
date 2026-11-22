@@ -5980,8 +5980,8 @@ AdvancedItem _bukum(int a, int b, int c, int deneme) {
       (x) {
         if (c != 9) return !yasak.contains(x);
         // c = 9: a + b + c = x(1 − h) + n − h³ + 3h² − 3h, kökteki h, n ve
-        // eğime eşit olmasın (h = 1 iken yanıt n − 1'dir, eğimden bağımsız).
-        if (h == 1) return true;
+        // eğime eşit olmasın (h = 1 iken yanıt eğimden bağımsız n − 1'dir;
+        // verilen eğim bu değere eşit seçilmez).
         final nn = const [3, -4, 5, -1, 6][a ~/ 5];
         final y = x * (1 - h) + nn - h * h * h + 3 * h * h - 3 * h;
         return !{x, -x, h, -h, nn, -nn}.contains(y);

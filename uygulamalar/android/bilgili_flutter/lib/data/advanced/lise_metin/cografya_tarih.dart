@@ -873,16 +873,18 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
       // Tipik hatalar anahtarın iki yanında: bağımlı nüfusu toplam nüfusa oranlama,
       // oranı ters kurma (15–64 / bağımlı), yalnız 0–14 yaşı ya da yalnız 65 ve üzeri
       // yaşı hesaba katma, toplam nüfusu 15–64 yaş nüfusuna oranlama, 15–64 yaşın
-      // toplamdaki payını verme; en sonda 10 puanlık komşu değer.
+      // toplamdaki payını verme; en sonda komşu değerler. Gerçekçi olmayan %150 üstü
+      // oranlar kullanılmaz.
       siraliCeldiriciler(oran, '%$oran', [
         for (final x in <num>[
           toplamdaPay,
-          (10000 / oran).round(),
+          if (10000 / oran <= 150) (10000 / oran).round(),
           oran * pay / 100,
-          100 + oran,
+          if (100 + oran <= 150) 100 + oran,
           oran * (100 - pay) / 100,
           calisanPay,
           oran + 10,
+          oran + 6,
         ])
           (x, '%${tr(x)}'),
       ], sira),
@@ -898,16 +900,17 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
     'oranının 100 katı) %$oran olduğuna göre bu ilçede 0–14 yaş grubunda kaç kişi yaşamaktadır?',
     genc,
     // Tipik hatalar: 65 ve üzeri nüfusu çıkarmama ya da ekleme, bağımlı nüfusu 15–64
-    // yaş nüfusundan çıkarma (65 ve üzeri ile birlikte ya da değil), 65 ve üzeri
-    // nüfusu verme; tipik hata yetmezse en sonda ±%10 komşu değerler.
+    // yaş nüfusundan çıkarma (65 ve üzeri ile birlikte ya da değil); tipik hata
+    // yetmezse en sonda %10–20 komşu değerler. Kökte verilen 65 ve üzeri nüfus
+    // çeldirici yapılmaz.
     [
       bagimli,
       calisan - bagimli,
       bagimli + yasli,
       calisan - bagimli - yasli,
-      yasli,
       genc * 9 ~/ 10,
       genc * 11 ~/ 10,
+      genc * 8 ~/ 10,
     ],
     'Bağımlı nüfus = $calisan × $oran / 100 = $bagimli kişidir. '
     '0–14 yaş nüfusu = $bagimli − $yasli = $genc kişi.',

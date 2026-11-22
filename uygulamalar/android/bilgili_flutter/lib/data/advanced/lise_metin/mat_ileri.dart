@@ -314,18 +314,54 @@ bool _dengeli(int n, int d, List<(int, int)> u, {bool tumBicim = false}) {
       (bicim == 3 || (!tumBicim && bicim == 1));
 }
 
-/// Üçlü adaylarını öncelik geçişleriyle verir: önce biçimce tümüyle aynı ve
-/// işaretçe dengeli, sonra [_dengeli], en sonda koşulsuz. Her geçişte önce
-/// [tasarim] üçlüleri (bileşik tasarımlar), sonra [adaylar] seçkileri gelir.
+/// Seçeneğin sözcükleri (ipucu taramasındaki gibi): işaretsiz pay ve payda.
+Set<String> _sozler((int, int) x) =>
+    _q(x.$1, x.$2).replaceAll('−', '').split('/').toSet();
+
+/// Sözcük benzerliğinde (Jaccard toplamı) anahtar öne çıkmıyor mu? Anahtar
+/// en benzer seçenekse en az üç seçenek bu puanı paylaşmalıdır.
+bool _sozcukDengeli(List<Set<String>> s) {
+  final puan = [
+    for (var a = 0; a < 4; a++)
+      [
+        for (var b = 0; b < 4; b++)
+          if (b != a) s[a].intersection(s[b]).length / s[a].union(s[b]).length,
+      ].fold<double>(0, (t, x) => t + x),
+  ];
+  final enb = puan.fold<double>(puan[0], (t, x) => x > t ? x : t);
+  if (puan[0] < enb - 1e-9) return true;
+  return puan.where((x) => (x - enb).abs() < 1e-9).length >= 3;
+}
+
+/// Üçlü adaylarını öncelik geçişleriyle verir: önce biçimce tümüyle aynı,
+/// işaretçe, sözcükçe ve uzunlukça dengeli; sonra [_dengeli] ile sözcük ve
+/// uzunluk dengesi; sonra bunların bir kısmı; en sonda koşulsuz. Her geçişte önce [tasarim]
+/// üçlüleri (bileşik tasarımlar), sonra [adaylar] seçkileri gelir.
 Iterable<List<(int, int)>> _gecisler(
   int n,
   int d,
   List<List<(int, int)>> tasarim,
   List<(int, int)> adaylar,
 ) sync* {
+  final onbellek = <(int, int), Set<String>>{};
+  Set<String> soz((int, int) x) => onbellek.putIfAbsent(x, () => _sozler(x));
+  bool sozcuk(List<(int, int)> u) =>
+      u.every((x) => x.$2 != 0) &&
+      _sozcukDengeli([soz((n, d)), for (final x in u) soz(x)]);
+  // Anahtar tek başına en uzun seçenek olmasın: ondan uzun bir çeldirici
+  // ya da onunla aynı uzunlukta en az iki çeldirici bulunsun.
+  final boy = _q(n, d).length;
+  bool uzun(List<(int, int)> u) {
+    final l = [for (final x in u) _q(x.$1, x.$2).length];
+    return l.any((x) => x > boy) || l.where((x) => x == boy).length >= 2;
+  }
+
   for (final kosul in <bool Function(List<(int, int)>)>[
-    (u) => _dengeli(n, d, u, tumBicim: true),
+    (u) => _dengeli(n, d, u, tumBicim: true) && sozcuk(u) && uzun(u),
+    (u) => _dengeli(n, d, u) && sozcuk(u) && uzun(u),
+    (u) => _dengeli(n, d, u) && sozcuk(u),
     (u) => _dengeli(n, d, u),
+    sozcuk,
     (u) => true,
   ]) {
     yield* tasarim.where(kosul);
@@ -2705,9 +2741,11 @@ final lmMatIleri = <AdvancedFamily>[
                     for (final e in [m - p * k, 2 * p * k])
                       [(e, n), (y, 1), (e, 1)],
                   ],
+                  // Sabitlerin oranı (x = 0 koyma) ve baş katsayıların oranı
+                  // da tipik yanlışlardır.
                   [
                     (y, 1), (m - p * k, n), (2 * p * k, n), (m - p * k, 1), //
-                    (2 * p * k, 1), (0, 1), (1, 1),
+                    (2 * p * k, 1), (m, n), (p, n), (0, 1), (1, 1),
                   ],
                 ),
                 hs,
@@ -2800,12 +2838,20 @@ final lmMatIleri = <AdvancedFamily>[
             final yanlis = [
               (p, r), (q, r), (p + q, r), (ue, w), (r, pq), (pq, 1), (0, 1), //
             ];
+            // Bileşik üçlüler: pay hatası × paydayı unutma, pay hatası ×
+            // ters çevirme.
+            final tasarim = [
+              for (final e in [p + q, p, q]) ...[
+                [(e, r), (pq, 1), (e, 1)],
+                [(r, pq), (e, r), (r, e)],
+              ],
+            ];
             return _kesS(
               'lim (x → ∞) [$carpim]/($kare) $son',
               pq,
               r,
               [
-                ..._uclu(pq, r, _gecisler(pq, r, const [], yanlis), hs),
+                ..._uclu(pq, r, _gecisler(pq, r, tasarim, yanlis), hs),
                 ...yanlis,
               ],
               '$acilim Limit, en büyük dereceli terimlerin katsayıları '
@@ -2817,14 +2863,15 @@ final lmMatIleri = <AdvancedFamily>[
           final yanlis = [
             (r, p), (r, q), (r, p + q), (w, ue), (pq, r), (r, 1), (0, 1), //
           ];
+          // Bileşik üçlüler: payda hatası × ters çevirme.
+          final tasarim = [
+            for (final e in [p + q, p, q]) [(pq, r), (r, e), (e, r)],
+          ];
           return _kesS(
             'lim (x → ∞) ($kare)/[$carpim] $son',
             r,
             pq,
-            [
-              ..._uclu(r, pq, _gecisler(r, pq, const [], yanlis), hs),
-              ...yanlis,
-            ],
+            [..._uclu(r, pq, _gecisler(r, pq, tasarim, yanlis), hs), ...yanlis],
             '$acilim Limit, en büyük dereceli terimlerin katsayıları '
                 'oranıdır: $r/${p * q}'
                 '${_q(r, p * q) == '$r/${p * q}' ? '' : ' = ${_q(r, p * q)}'}.',

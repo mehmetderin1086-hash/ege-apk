@@ -268,7 +268,8 @@ List<String> _dengeli(
 }
 
 /// Tam sayı yanıtlı soru; eksi işareti tipografik yazılır. Adaylar yetmezse
-/// komşu değerlerle tamamlanır.
+/// komşu değerlerle tamamlanır. [enCok] verilirse ondan büyük çeldirici
+/// alınmaz (ör. sayma sorusunda evrensel kümenin eleman sayısı).
 AdvancedItem _tam(
   String kok,
   int yanit,
@@ -276,9 +277,11 @@ AdvancedItem _tam(
   String aciklama, {
   String birim = '',
   bool pozitif = false,
+  int? enCok,
 }) {
   final adim = yanit.abs() >= 200 ? 10 : (yanit.abs() >= 40 ? 5 : 1);
-  bool uygun(int x) => x != yanit && (!pozitif || x > 0);
+  bool uygun(int x) =>
+      x != yanit && (!pozitif || x > 0) && (enCok == null || x <= enCok);
   final aday = [
     for (final x in adaylar)
       if (uygun(x)) x,
@@ -296,14 +299,21 @@ AdvancedItem _tam(
         for (var j = 1; j <= 8; j++)
           if (uygun(yanit - j * adim)) yanit - j * adim,
       ].map(yaz),
-      [for (var j = 1; j <= 8; j++) yanit + j * adim].map(yaz),
+      [
+        for (var j = 1; j <= 8; j++)
+          if (uygun(yanit + j * adim)) yanit + j * adim,
+      ].map(yaz),
     ),
     aciklama,
   );
 }
 
 /// Kesir yanıtlı soru; adaylar (pay, payda) ikilileridir. Paydası sıfır olan
-/// adaylar atılır, eksikler komşu değerlerle tamamlanır.
+/// adaylar atılır, eksikler komşu değerlerle tamamlanır. [ters] doğruysa
+/// yanıtın tersi (kesri ters çevirme hatası) de aday olur; süre gibi
+/// büyüklüklerde bu bir hata yolu olmadığından kapatılır. [birdenKucuk]
+/// doğruysa yalnız 0 ile 1 arasındaki değerler çeldirici olur (bütünün kaçta
+/// kaçı soruları).
 AdvancedItem _kes(
   String kok,
   int n,
@@ -312,14 +322,19 @@ AdvancedItem _kes(
   String aciklama, {
   bool pozitif = false,
   String birim = '',
+  bool ters = true,
+  bool birdenKucuk = false,
 }) {
   final tam = n % d == 0;
   // x − n/d farkının işareti.
   int kars((int, int) x) => ((x.$1 * d - n * x.$2) * (x.$2 * d).sign).sign;
   bool uygun((int, int) x) =>
-      x.$2 != 0 && (!pozitif || x.$1 * x.$2 > 0) && kars(x) != 0;
+      x.$2 != 0 &&
+      (!pozitif || x.$1 * x.$2 > 0) &&
+      (!birdenKucuk || (x.$1 * x.$2 > 0 && x.$1.abs() < x.$2.abs())) &&
+      kars(x) != 0;
   final aday = [
-    for (final x in [...adaylar, if (n != 0 && !tam) (d, n)])
+    for (final x in [...adaylar, if (ters && n != 0 && !tam) (d, n)])
       if (uygun(x)) x,
   ];
   (double, String) yaz((int, int) x) =>
@@ -328,6 +343,7 @@ AdvancedItem _kes(
     for (var j = 1; j <= 6; j++) ...[(n - j * d, d), (n + j * d, d)],
     (n - 1, d),
     (n + 1, d),
+    if (birdenKucuk) ...[(n - 2, d), (n + 2, d), (n, d + 1), (n + 1, d + 1)],
   ].where(uygun);
   return secenekli(
     kok,
@@ -385,8 +401,9 @@ bool _asalUygun(int n, int tur) {
     // tek üslüleri unutan yol doğru yanıtı vermesin.
     3 => us.any((e) => e.isEven) && us.any((e) => e.isOdd),
     // Tam küp: en az bir üs 3k + 1 biçiminde olsun; her asalı bir kez çarpan
-    // yol doğru yanıtı vermesin.
-    4 => us.any((e) => e % 3 == 1),
+    // yol doğru yanıtı vermesin. Büyük asalların karesi k değerini milyonlara
+    // çıkarmasın diye k en çok 2000 tutulur.
+    4 => us.any((e) => e % 3 == 1) && _kupTamlayan(f) <= 2000,
     _ => true,
   };
 }
@@ -1195,9 +1212,10 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
       final son = ilk + (sira - 1) * artis;
       final top = (ilk + son) * sira ~/ 2;
       return _tam(
-        'Bir sinema salonunun ilk sırasında $ilk koltuk vardır ve sonraki her '
-            'sırada bir önceki sıradan $artis koltuk fazla bulunmaktadır. Salonda '
-            '$sira sıra koltuk olduğuna göre salonda toplam kaç koltuk vardır?',
+        'Bir açık hava tiyatrosunun ilk sırasında $ilk koltuk vardır ve sonraki '
+            'her sırada bir önceki sıradan $artis koltuk fazla bulunmaktadır. '
+            'Tiyatroda $sira sıra koltuk olduğuna göre tiyatroda toplam kaç koltuk '
+            'vardır?',
         top,
         [
           (ilk + son) * sira,
@@ -1607,17 +1625,45 @@ List<List<int>> _ucluler(int n) => [
 ];
 
 /// Bir koşul ve sorulan özellik için uygun üçlüler: en az bir öncül doğru.
-/// Üçlüler, liste boyunca dağılsın diye sabit adımla dolaşılır.
-List<List<int>> _uygunUcluler(List<int> sinif, int hedef) {
+/// Üçlüler, liste boyunca dağılsın diye sabit adımla dolaşılır. [yasak]
+/// içindeki ifadeler (koşulu aynen yineleyenler) hiçbir üçlüye girmez.
+List<List<int>> _uygunUcluler(
+  List<int> sinif,
+  int hedef, [
+  Set<int> yasak = const {},
+]) {
   final hepsi = _ucluler(sinif.length);
   final adim = _adimSec(hepsi.length);
   final r = <List<int>>[];
   for (var k = 0; k < hepsi.length; k++) {
     final u = hepsi[k * adim % hepsi.length];
+    if (u.any(yasak.contains)) continue;
     if (u.any((j) => sinif[j] == hedef)) r.add(u);
   }
   return r;
 }
+
+final _onculSonu = RegExp(r'^ (<|>|toplamı|çarpımı|tek|çift)');
+
+/// İfade, koşul metninde tek başına bir öncül olarak geçiyor mu? (“x · y
+/// çarpımı tek sayıdır.” ya da “x · y < 0 ve x < y” koşulunda x · y gibi.)
+/// Böyle bir öncül verilen bilgiyi aynen yineler ve seçenekleri ele verir.
+bool _onculuYineler(String kosul, String ifade) {
+  for (var i = kosul.indexOf(ifade); i >= 0; i = kosul.indexOf(ifade, i + 1)) {
+    final once = kosul.substring(0, i);
+    if ((once.isEmpty || once.endsWith(', ') || once.endsWith('ve ')) &&
+        _onculSonu.hasMatch(kosul.substring(i + ifade.length))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/// Koşulu aynen yineleyen ifadelerin dizinleri.
+Set<int> _yineleyenler(String kosul, List<String> ifadeler) => {
+  for (var j = 0; j < ifadeler.length; j++)
+    if (_onculuYineler(kosul, ifadeler[j])) j,
+};
 
 /// n ile aralarında asal, n/3 civarında bir adım.
 int _adimSec(int n) {
@@ -1631,14 +1677,31 @@ int _adimSec(int n) {
 final _pariteUclu = [
   for (var k = 0; k < _pariteKosul.length; k++)
     [
-      for (final h in const [1, 0]) _uygunUcluler(_pariteTablo[k], h),
+      for (final h in const [1, 0])
+        _uygunUcluler(
+          _pariteTablo[k],
+          h,
+          _yineleyenler(_pariteKosul[k].$1, [
+            for (final e
+                in _ucDegiskenParite(k) ? _pariteIfade3 : _pariteIfade2)
+              e.$1,
+          ]),
+        ),
     ],
 ];
 
 final _isaretUclu = [
   for (var k = 0; k < _isaretKosul.length; k++)
     [
-      for (final h in const [1, -1]) _uygunUcluler(_isaretTablo[k], h),
+      for (final h in const [1, -1])
+        _uygunUcluler(
+          _isaretTablo[k],
+          h,
+          _yineleyenler(_isaretKosul[k].$1, [
+            for (final e in _isaretKosul[k].$4 ? _isaretIfade3 : _isaretIfade2)
+              e.$1,
+          ]),
+        ),
     ],
 ];
 
@@ -2290,13 +2353,31 @@ List<int> _tamlar(List<_Ar> parcalar) => [
 
 String _parcaYaz(List<_Ar> x) => x.isEmpty ? '∅' : x.map(_arYaz).join(' ∪ ');
 
-String _tamListe(List<int> t) {
+String _tamListe(List<int> liste) {
+  final t = [...liste]..sort();
   if (t.isEmpty) return 'tam sayı yoktur';
   if (t.length == 1) return 'yalnızca ${_n(t.first)} olup 1 tanedir';
   if (t.length <= 6) {
     return '${[for (final x in t) _n(x)].join(', ')} olup ${t.length} tanedir';
   }
-  return '${_n(t[0])}, ${_n(t[1])}, …, ${_n(t.last)} olup ${t.length} tanedir';
+  // Aradaki boşluklar “…” ile örtülmesin diye her ardışık blok ayrı yazılır:
+  // −10, −9, …, −6 ile −4, −3.
+  final bloklar = <List<int>>[];
+  for (final x in t) {
+    if (bloklar.isNotEmpty && bloklar.last.last + 1 == x) {
+      bloklar.last.add(x);
+    } else {
+      bloklar.add([x]);
+    }
+  }
+  String blok(List<int> b) => b.length <= 3
+      ? [for (final x in b) _n(x)].join(', ')
+      : '${_n(b[0])}, ${_n(b[1])}, …, ${_n(b.last)}';
+  final yazi = [for (final b in bloklar) blok(b)];
+  final birlesik = yazi.length <= 2
+      ? yazi.join(' ile ')
+      : '${yazi.sublist(0, yazi.length - 1).join('; ')} ve ${yazi.last}';
+  return '$birlesik olup ${t.length} tanedir';
 }
 
 AdvancedItem _aralikSoru(int a, int b, int c) {
@@ -2813,6 +2894,7 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
         ],
         'Toplamı $k olan sıralı ikililer ${liste.join(', ')} olup $say tanedir.',
         pozitif: true,
+        enCok: A.length * B.length,
       );
     case 9:
       final n = _bolenSayilari[a];
@@ -2853,6 +2935,7 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
                 if (x < y) '($x, $y)'].join(', ')} '
             'olup $k tanedir.',
         pozitif: true,
+        enCok: n,
       );
     case 2:
       final k = _ciftSay(A, B, (x, y) => (x + y).isEven);
@@ -2867,6 +2950,7 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
         'Toplamın çift olması için x ile y aynı türden (ikisi de tek ya da ikisi '
             'de çift) olmalıdır: $tekA · $tekB + $ciftA · $ciftB = $k.',
         pozitif: true,
+        enCok: n,
       );
     case 3:
       final k = _ciftSay(A, B, _bolerMi);
@@ -2882,6 +2966,7 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
         [_ciftSay(A, B, (x, y) => _bolerMi(y, x)), k - 1, k + 1, n - k],
         'Koşulu sağlayan sıralı ikililer ${liste.join(', ')} olup $k tanedir.',
         pozitif: true,
+        enCok: n,
       );
     case 4:
       final ortak = [
@@ -2896,6 +2981,7 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
         '(A × B) ∩ (B × A) = (A ∩ B) × (A ∩ B) olur. A ∩ B = ${_kumeYaz(ortak)} '
             'kümesi $m elemanlı olduğundan sonuç $m · $m = ${m * m} bulunur.',
         pozitif: true,
+        enCok: n,
       );
     case 5:
       final ab = [
@@ -2913,6 +2999,7 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
         'A \\ B = ${_kumeYaz(ab)} ve B \\ A = ${_kumeYaz(ba)} olduğundan eleman '
             'sayısı ${ab.length} · ${ba.length} = ${ab.length * ba.length} olur.',
         pozitif: true,
+        enCok: n,
       );
     default:
       final k = _ciftSay(A, B, (x, y) => x < y);
@@ -3206,19 +3293,25 @@ AdvancedItem _fonksiyonSayisiSoru(int a, int b, int c) {
       kok =
           '$veri f: A → B fonksiyonlarından kaç tanesinde f($x1) çift sayı ve '
           'f($x2) tek sayıdır?';
+      final digerleri = m - 2 == 1
+          ? 'f(${A[1]}) için $n seçenek vardır'
+          : 'diğer ${m - 2} elemanın her biri için $n seçenek vardır';
       aciklama =
-          'f($x1) için ${cift.length}, f($x2) için ${tek.length}, diğer '
-          '${m - 2} elemanın her biri için $n seçenek vardır: ${cift.length} · '
-          '${tek.length} · $n${m - 2 == 1 ? '' : _ust(m - 2)} = $yanit.';
+          'f($x1) için ${cift.length}, f($x2) için ${tek.length}, $digerleri: '
+          '${cift.length} · ${tek.length} · $n${m - 2 == 1 ? '' : _ust(m - 2)} = '
+          '$yanit.';
     case 7:
       final x1 = A[(a + b) % m];
       kok =
           '$veri f: A → B bire bir fonksiyonlarından kaç tanesinde f($x1) çift '
           'sayıdır?';
+      final kalanlar = m - 1 == 1
+          ? 'kalan eleman, kalan ${n - 1} değerden biriyle eşlenir'
+          : 'kalan ${m - 1} eleman kalan ${n - 1} değerle bire bir eşlenir';
       aciklama =
-          'f($x1) değeri ${cift.length} çift sayıdan biri olur; kalan ${m - 1} '
-          'eleman kalan ${n - 1} değerle bire bir eşlenir: ${cift.length} · '
-          'P(${n - 1}, ${m - 1}) = ${cift.length} · ${_permutasyon(n - 1, m - 1)} = $yanit.';
+          'f($x1) değeri ${cift.length} çift sayıdan biri olur; $kalanlar: '
+          '${cift.length} · P(${n - 1}, ${m - 1}) = ${cift.length} · '
+          '${_permutasyon(n - 1, m - 1)} = $yanit.';
     case 8:
       final enBuyuk = A.reduce((p, q) => p > q ? p : q);
       final sabit = B.where((y) => y >= enBuyuk).length;
@@ -3240,7 +3333,15 @@ AdvancedItem _fonksiyonSayisiSoru(int a, int b, int c) {
           'bire bir olanları büyük elemandan başlayarak sayılır ve $bb tanedir. '
           'Sonuç ${_carp(secim)} − $bb = $yanit olur.';
   }
-  return _tam(kok, yanit, yanlis, aciklama, pozitif: true);
+  // Çeldirici, A → B fonksiyonlarının toplam sayısını (n^m) aşmaz.
+  return _tam(
+    kok,
+    yanit,
+    yanlis,
+    aciklama,
+    pozitif: true,
+    enCok: _kuvvet(n, m),
+  );
 }
 
 // ---------------------------------------------------------------------------

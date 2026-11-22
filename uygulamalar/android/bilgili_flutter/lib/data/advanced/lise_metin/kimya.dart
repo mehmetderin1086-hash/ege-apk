@@ -241,16 +241,22 @@ AdvancedItem _oranli(
   aciklama,
 );
 
-/// (a, b, c) koordinatlı vakanın hedef değer sırası (denge.dart · hedefSira).
-int _sira(int a, int b, int c, [int tuz = 0]) =>
-    hedefSira(a + 25 * b + 500 * c, tuz);
+/// (a, b, c) koordinatlı vakanın hedef değer sırası (denge.dart · hedefSira):
+/// `% 4` istenen sıradır; `~/ 4` (0 … 15) ondan bağımsız ikinci bir seçimdir
+/// ve istenen sıra olanaksız olduğunda olanaklı sıralar arasından seçer.
+int _sira(int a, int b, int c) {
+  final i = a + 25 * b + 500 * c;
+  return hedefSira(i) + 4 * hedefSira(i, 1) + 16 * hedefSira(i, 2);
+}
 
 /// [_say] gibi; ancak çeldiricileri, anahtardan küçük olanların sayısı [sira]
 /// (0 … 3) olacak biçimde seçer. [adaylar] öncelik sırasıyla tipik hata
 /// değerleridir (anahtarın iki yanında da); en sonda, yalnız gerekirse,
 /// anahtarın iki yanındaki komşu değerler kullanılır. Bir yanda tipik hata
 /// yetmediğinde en çok [komsu] komşu değer kullanılır; daha fazlası
-/// gerekecekse hedef sıra, gereken en küçük adımla kaydırılır. Komşu değerler
+/// gerekecekse hedef sıra, olanaklı sıralar arasından [sira] içindeki ikinci
+/// bağımsız seçimle ([_sira]) belirlenir; böylece kayan vakalar tek bir uç
+/// sırada toplanmaz. Komşu değerler
 /// yalnız ([komsuAlt], [komsuUst]) açık aralığından alınır; adımları
 /// [komsuOlcek] (verilmezse anahtarın kendisi) büyüklüğüne göre seçilir.
 AdvancedItem _saySirali(
@@ -293,11 +299,21 @@ AdvancedItem _saySirali(
     return gereken > komsu ? gereken - komsu : 0;
   }
 
-  var hedef = sira;
-  for (var s = 0; s < 4; s++) {
-    final fark = asim(s) - asim(hedef);
-    if (fark < 0 || (fark == 0 && (s - sira).abs() < (hedef - sira).abs())) {
-      hedef = s;
+  final istenen = sira % 4;
+  final olanakli = [
+    for (var s = 0; s < 4; s++)
+      if (asim(s) == 0) s,
+  ];
+  var hedef = istenen;
+  if (asim(istenen) > 0 && olanakli.isNotEmpty) {
+    hedef = olanakli[(sira ~/ 4) % olanakli.length];
+  } else if (asim(istenen) > 0) {
+    for (var s = 0; s < 4; s++) {
+      final fark = asim(s) - asim(hedef);
+      if (fark < 0 ||
+          (fark == 0 && (s - istenen).abs() < (hedef - istenen).abs())) {
+        hedef = s;
+      }
     }
   }
   return AdvancedItem(
@@ -367,10 +383,34 @@ AdvancedItem _kesirSirali(
     anahtar,
     siraliCeldiriciler(n / d, anahtar, [
       for (final (p, q) in havuz) (p / q, kesir(p, q)),
-    ], sira),
+    ], sira % 4),
     aciklama,
   );
 }
+
+/// pH yanıtlı soru: seçenekler 0 … 14 arasındaki tam sayılardır; anahtarın
+/// değer sırası [sira] ile belirlenir (uçlardaki pH değerlerinde olanaklı en
+/// yakın sıraya kayar).
+AdvancedItem _pHSirali(
+  String kok,
+  int ph,
+  Iterable<int> adaylar,
+  String aciklama,
+  int sira,
+) => _saySirali(
+  kok,
+  ph,
+  [
+    for (final x in adaylar)
+      if (x >= 0 && x <= 14) x,
+  ],
+  aciklama,
+  sira,
+  basamak: 0,
+  arti: false,
+  komsuAlt: -0.5,
+  komsuUst: 14.5,
+);
 
 /// [x], [ref] değerinin 1/[kat] katı ile [kat] katı arasındaysa kendisi, değilse
 /// NaN (aday listesinden düşer). Anahtardan çok uzak kalan ve bağlamda
@@ -4055,6 +4095,7 @@ final _f19 = lmAile(
   BloomLevel.uygulama,
   (a, b, c) {
     final w = c ~/ 5;
+    final sira = _sira(a, b, c);
     switch (c % 5) {
       case 0:
         final (f, asit, nu) = _kuvvetliler[a % 5 + 5 * w];
@@ -4064,16 +4105,16 @@ final _f19 = lmAile(
         final n = _bilimsel(v / nu, -k);
         final ph = asit ? k : 14 - k;
         final iyon = asit ? 'H⁺' : 'OH⁻';
-        return sayisal(
+        return _pHSirali(
           'Hacmi $hacim olan sulu çözeltide $n mol $f çözünmüştür. $f suda '
               'tamamen iyonlaştığına göre 25 °C sıcaklıkta çözeltinin pH değeri '
               'kaçtır?',
           ph,
-          [14 - ph, ph + 1, ph - 1, 7],
+          [14 - ph, ph + 1, ph - 1, 7, ph + 2, ph - 2],
           '${nu == 1 ? '' : 'Bir formül birimi $nu tane $iyon verir. '}[$iyon] '
               '= ${nu == 1 ? '' : '$nu·'}$n / ${_t(v)} = 10${_ust(-k)} mol/L olur. '
               '${asit ? 'pH = $k bulunur.' : 'pOH = $k olduğundan pH = 14 − $k = $ph bulunur.'}',
-          positive: true,
+          sira,
         );
       case 1:
         final (f, asit, _) = _kuvvetliler[a % 5 + 5 * w];
@@ -4092,7 +4133,7 @@ final _f19 = lmAile(
         final v = const [10, 20, 25, 40, 50, 100, 200, 250, 400, 500][b ~/ 2];
         final kat = _kuvvet(10, j);
         final ilk = asit ? k : 14 - k, son = asit ? k + j : 14 - k - j;
-        return sayisal(
+        return _pHSirali(
           '25 °C sıcaklıkta pH değeri $ilk olan $v mL $f çözeltisine saf su '
           'eklenerek hacmi $kat katına çıkarılıyor. Son çözeltinin pH değeri '
           'kaçtır?',
@@ -4103,6 +4144,7 @@ final _f19 = lmAile(
             asit ? son + 1 : son - 1,
             7,
             14 - son,
+            asit ? son - 1 : son + 1,
           ],
           asit
               ? 'Hacim $kat katına çıkınca [H⁺] 10${_ust(-k)} değerinden '
@@ -4110,24 +4152,33 @@ final _f19 = lmAile(
               : 'pOH = 14 − $ilk = $k olur. Hacim $kat katına çıkınca [OH⁻] '
                     '10${_ust(-k)} değerinden 10${_ust(-k - j)} mol/L değerine '
                     'düşer; pOH = ${k + j}, pH = 14 − ${k + j} = $son olur.',
-          positive: true,
+          sira,
         );
       case 2:
         final (asit, na, baz, nb) = _notrCiftleri[a % 5 + 5 * w];
         final i = 1 + a ~/ 5, jj = 1 + b % 4, carpan = 1 + b ~/ 4;
         final d1 = i / 20, d2 = jj / 25;
         final v1 = nb * 4 * jj * carpan, v2 = na * 5 * i * carpan;
-        return sayisal(
+        return _saySirali(
           '${_t(d1)} mol/L derişimli $v1 mL $asit çözeltisini tamamen '
               'nötrleştirmek için ${_t(d2)} mol/L derişimli $baz çözeltisinden kaç '
               'mL gerekir?',
           v2,
-          [v2 * nb ~/ na, v2 * nb, v1, v2 * 2, v2 ~/ 2, v2 + v1],
+          [
+            v2 * nb / na,
+            v2 / na,
+            v2 * nb,
+            v1,
+            v1 * d2 / d1,
+            v2 * 2,
+            v2 / 2,
+            v2 + v1,
+          ],
           'n(H⁺) = $na·${_t(d1)}·$v1 = ${_t(na * d1 * v1)} mmol olur. Nötralleşmede '
               'n(H⁺) = n(OH⁻) olduğundan $nb·${_t(d2)}·V = ${_t(na * d1 * v1)} '
               'eşitliğinden V = $v2 mL bulunur.',
-          unit: 'mL',
-          positive: true,
+          sira,
+          birim: 'mL',
         );
       case 3:
         final (asit, baz) = const [
@@ -4156,18 +4207,18 @@ final _f19 = lmAile(
         final ph = asitFazla ? k : 14 - k;
         final fazla = asitFazla ? 'H⁺' : 'OH⁻';
         final artan = 2 / _on(k) * v / 1000;
-        return sayisal(
+        return _pHSirali(
           '${_t(ca)} mol/L derişimli $v mL $asit çözeltisi ile ${_t(cb)} mol/L '
               'derişimli $v mL $baz çözeltisi karıştırılıyor. 25 °C sıcaklıkta '
               'karışımın pH değeri kaçtır?',
           ph,
-          [14 - ph, 7, ph + 1, ph - 1],
+          [14 - ph, 7, ph + 1, ph - 1, ph + 2, ph - 2],
           'n(H⁺) = ${_t(ca * v / 1000, 4)} mol, n(OH⁻) = '
               '${_t(cb * v / 1000, 4)} mol olur; ${_t(artan, 4)} mol $fazla artar. '
               'Toplam hacim ${_t(2 * v / 1000)} L olduğundan [$fazla] = '
               '10${_ust(-k)} mol/L, ${asitFazla ? 'pH = $k' : 'pOH = $k ve pH = 14 − $k = $ph'} '
               'bulunur.',
-          positive: true,
+          sira,
         );
       default:
         final (baz, nb) = const [
@@ -4182,17 +4233,17 @@ final _f19 = lmAile(
         final d = i / 10, v = 100 * (b + 1);
         final hMol = na * i * (b + 1) / 100, bMol = hMol / nb;
         final mk = _mk(baz), m = bMol * mk;
-        return sayisal(
+        return _saySirali(
           '${_t(m)} gram $baz bazını tamamen nötrleştirmek için ${_t(d)} mol/L '
               'derişimli $asit çözeltisinden kaç mL gerekir? (${_kut([baz])})',
           v,
-          [v * na, v * nb ~/ na, v ~/ 2, v * 2, v + 100, v * nb],
+          [v * na, v / nb, v * nb / na, v / na, v * nb, v / 2, v * 2, v + 100],
           '${_t(m)} / ${_t(mk)} = ${_t(bMol, 3)} mol $baz ${_t(hMol)} mol OH⁻ '
               'verir. Gereken asit ${_t(hMol)} / $na = ${_t(hMol / na, 3)} moldür; '
               'hacmi ${_t(hMol / na, 3)} / ${_t(d)} = ${_t(v / 1000)} L = $v mL '
               'olur.',
-          unit: 'mL',
-          positive: true,
+          sira,
+          birim: 'mL',
         );
     }
   },

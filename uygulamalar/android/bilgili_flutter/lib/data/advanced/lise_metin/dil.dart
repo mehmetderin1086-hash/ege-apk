@@ -2156,6 +2156,8 @@ final _presentPerfect = lmSirali(
     switch (tur) {
       case 0:
         // Hata boyutları: 1 yardımcı fiil, 2 fiil biçimi, 4 yet/already.
+        // Açıklama “already” sözünü andığı için yet/already boyutu her
+        // desende yer alır (ilk desen dışarıda kalır).
         String yaz(int h) =>
             '${h & 1 == 0 ? aux : ters}n\'t ${h & 2 == 0 ? f.$2 : f.$1} / '
             '${h & 4 == 0 ? 'yet' : 'already'}';
@@ -2163,7 +2165,7 @@ final _presentPerfect = lmSirali(
           '${o.$1} ___ (not / ${f.$1}) ${f.$3} ___.\n$soru',
           yaz(0),
           _desenSec(yaz(0), [
-            for (final d in _ucBoyutDesen) [for (final h in d) yaz(h)],
+            for (final d in _ucBoyutDesen.skip(1)) [for (final h in d) yaz(h)],
           ], i),
           'Özne “${o.$2}” ile olumsuzda “${aux}n\'t” kullanılır ve fiil '
           'üçüncü hâlini alır (${f.$1} → ${f.$2}). Olumsuz cümlenin sonuna '
@@ -2173,8 +2175,9 @@ final _presentPerfect = lmSirali(
         return secenekli(
           '___ ${o.$2} ___ (${f.$1}) ${f.$3} yet?\n$soru',
           '${_buyuk(aux)} / ${f.$2}',
-          // Yardımcı fiilin uyumu × fiil biçimi deseni. “Did / yalın fiil”
-          // Amerikan İngilizcesinde doğru sayılabileceği için kullanılmaz.
+          // Yardımcı fiilin uyumu × fiil biçimi deseni. “Did” yardımcı fiil
+          // hatası olarak alınmaz: desenin çift hatası “Did / yalın fiil”
+          // olurdu ve bu Amerikan İngilizcesinde doğru sayılabilir.
           [
             '${_buyuk(ters)} / ${f.$2}',
             '${_buyuk(aux)} / ${f.$1}',

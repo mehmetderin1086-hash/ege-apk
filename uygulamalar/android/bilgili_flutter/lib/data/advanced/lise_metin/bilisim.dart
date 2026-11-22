@@ -99,6 +99,32 @@ AdvancedItem _sirali(
   );
 }
 
+/// Tam sayı yanıtlı, seçenekleri [enAz] … [enCok] aralığında kalan soru
+/// (küçük sayımlar): tipik hatalardan sonra ±1 … ±6 komşular eklenir ve
+/// çeldiriciler [_sirali] ile seçilir.
+AdvancedItem _sinirliSayisal(
+  String prompt,
+  int answer,
+  Iterable<int> alternatives,
+  String explanation,
+  int i, {
+  required int enAz,
+  required int enCok,
+}) => _sirali(
+  prompt,
+  answer,
+  '$answer',
+  [
+    for (final x in [
+      ...alternatives,
+      for (var k = 1; k <= 6; k++) ...[answer + k, answer - k],
+    ])
+      if (x >= enAz && x <= enCok) (x, '$x'),
+  ],
+  explanation,
+  i,
+);
+
 /// Sayısal iki hatalı tasarım: A hatası [yanlislar] içinden bir değer (ör.
 /// yanlış dal), B hatası anahtara eklenen [kaymalar] içinden bir hesap hatası;
 /// çeldiriciler A, B ve A + B (w, n + e, w + e) olur ve hiçbiri ötekilere
@@ -3909,16 +3935,18 @@ AdvancedItem _islemSayisi(int a, int b, int c) {
   switch (c) {
     case 0:
       final n = 24 + a, m = 4 + b;
-      return sayisal(
+      return sayisalSirali(
         _kod(
           _sayGiris,
           ic('i = 1, 2, …, $n için', 'j = 1, 2, …, $m için'),
           _saySorusu,
         ),
         n * m,
-        [n + m, (n - 1) * m, n * (m - 1), n * n],
+        // Ek hatalar: döngülerden birini bir fazla sayma.
+        [n + m, (n - 1) * m, n * (m - 1), n * n, (n + 1) * m, n * (m + 1)],
         'Dıştaki döngü $n kez, içteki döngü her seferinde $m kez çalışır: '
         '$n · $m = ${n * m}.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 1:
@@ -3930,37 +3958,58 @@ AdvancedItem _islemSayisi(int a, int b, int c) {
         3 => '(1 + 2)',
         _ => '(1 + 2 + … + ${s - 1})',
       };
-      return sayisal(
+      return sayisalSirali(
         _kod(
           _sayGiris,
           ic('i = $s, ${s + 1}, …, $n için', 'j = 1, 2, …, i için'),
           _saySorusu,
         ),
         dogru,
-        [n * (n + 1) ~/ 2, (n - s + 1) * n, dogru - n, dogru + s],
+        // Ek hatalar: s ile değil s + 1 ile başlama, her turu en küçük s
+        // değeriyle sayma, tur sayısını bir eksik alma.
+        [
+          n * (n + 1) ~/ 2,
+          (n - s + 1) * n,
+          dogru - n,
+          dogru + s,
+          dogru - s,
+          (n - s + 1) * s,
+          (n - s) * (n + s) ~/ 2,
+        ],
         'İçteki döngü i kez çalışır; toplam $s + ${s + 1} + … + $n olur. Bu '
         'toplam (1 + 2 + … + $n) − $bas = ${n * (n + 1) ~/ 2} − '
         '${(s - 1) * s ~/ 2} = $dogru bulunur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 2:
       final n = 6 + a, m = n + 2 + b;
       final dogru = n * m - n * (n - 1) ~/ 2;
-      return sayisal(
+      return sayisalSirali(
         _kod(
           _sayGiris,
           ic('i = 1, 2, …, $n için', 'j = i, i + 1, …, $m için'),
           _saySorusu,
         ),
         dogru,
-        [n * m, n * (m - n + 1), dogru + n, dogru - n],
+        // Ek hatalar: iç döngünün m − i kez çalıştığını sanıp her turu en kısa
+        // turla sayma, 1 … m toplamını alma.
+        [
+          n * m,
+          n * (m - n + 1),
+          dogru + n,
+          dogru - n,
+          n * (m - n),
+          m * (m + 1) ~/ 2,
+        ],
         'i değeri için içteki döngü $m − i + 1 kez çalışır: $m + ${m - 1} + … '
         '+ ${m - n + 1} = $dogru.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 3:
       final n = 4 + a % 5, m = 4 + a ~/ 5, p = 4 + b;
-      return sayisal(
+      return sayisalSirali(
         _kod(_sayGiris, [
           'say ← 0',
           'i = 1, 2, …, $n için',
@@ -3973,9 +4022,19 @@ AdvancedItem _islemSayisi(int a, int b, int c) {
           'yaz say',
         ], _saySorusu),
         n * m * p,
-        [n * m + p, n + m + p, n * m * (p - 1), n * p],
+        // Ek hatalar: döngülerden birini bir fazla sayma.
+        [
+          n * m + p,
+          n + m + p,
+          n * m * (p - 1),
+          n * p,
+          n * m * (p + 1),
+          (n + 1) * m * p,
+          n * (m + 1) * p,
+        ],
         'Üç döngü iç içe olduğundan çalışma sayıları çarpılır: $n · $m · $p = '
         '${n * m * p}.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 4:
@@ -3985,7 +4044,7 @@ AdvancedItem _islemSayisi(int a, int b, int c) {
       // (m değerleri 4, 5, 11, 12 olup a ve b ile birlikte tek kalır).
       var m = 4 + b ~/ 10 * 7;
       if ([s, s + d, s + 2 * d, e, 0, 1].contains(adet * m)) m++;
-      return sayisal(
+      return sayisalSirali(
         _kod(
           _sayGiris,
           ic(
@@ -3995,9 +4054,19 @@ AdvancedItem _islemSayisi(int a, int b, int c) {
           _saySorusu,
         ),
         adet * m,
-        [(adet - 1) * m, e * m, (e - s) * m, adet + m],
+        // Ek hatalar: dış ya da iç döngüyü bir fazla ya da eksik sayma.
+        [
+          (adet - 1) * m,
+          e * m,
+          (e - s) * m,
+          adet + m,
+          (adet + 1) * m,
+          adet * (m - 1),
+          adet * (m + 1),
+        ],
         'Dıştaki döngü ($e − $s) / $d + 1 = $adet kez, içteki döngü her '
         'seferinde $m kez çalışır: $adet · $m = ${adet * m}.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 5:
@@ -4009,7 +4078,7 @@ AdvancedItem _islemSayisi(int a, int b, int c) {
         m++;
       }
       final log = m.bitLength - 1;
-      return sayisal(
+      return sayisalSirali(
         _kod('$_sayGiris$_divNotu', [
           'say ← 0',
           'i = 1, 2, …, $n için',
@@ -4022,17 +4091,28 @@ AdvancedItem _islemSayisi(int a, int b, int c) {
           'yaz say',
         ], _saySorusu),
         n * log,
-        [n * (log + 1), n + log, n * (m ~/ 2), log],
+        // Ek hatalar: ikiye bölme sayısını bir eksik alma, dış döngüyü bir
+        // fazla sayma, iç döngünün m kez döndüğünü sanma.
+        [
+          n * (log + 1),
+          n + log,
+          n * (m ~/ 2),
+          log,
+          n * (log - 1),
+          (n + 1) * log,
+          n * m,
+        ],
         '$m sayısı ikiye bölüne bölüne $log adımda 1 olur '
         '(${_us(2, log)} ≤ $m < ${_us(2, log + 1)}). Bu iç döngü dıştaki '
         'döngünün $n turunda da çalışır: $n · $log = ${n * log}.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 6:
       // n ve m tek: çift ve tek toplamlı çiftlerin sayısı farklıdır.
       final n = 5 + 2 * a, m = 5 + 2 * b;
       final dogru = ((n + 1) ~/ 2) * ((m + 1) ~/ 2) + (n ~/ 2) * (m ~/ 2);
-      return sayisal(
+      return sayisalSirali(
         _kod(
           '$_sayGiris$_modNotu',
           ic(
@@ -4043,10 +4123,21 @@ AdvancedItem _islemSayisi(int a, int b, int c) {
           _saySorusu,
         ),
         dogru,
-        [n * m, n * m - dogru, n + m, dogru + 1],
+        // Ek hatalar: yalnız ikisi de tek ya da ikisi de çift olan çiftleri
+        // sayma, yalnız i değerinin tek olmasına bakma.
+        [
+          n * m,
+          n * m - dogru,
+          n + m,
+          dogru + 1,
+          ((n + 1) ~/ 2) * ((m + 1) ~/ 2),
+          (n ~/ 2) * (m ~/ 2),
+          ((n + 1) ~/ 2) * m,
+        ],
         'i + j toplamı, i ile j ikisi de tek ya da ikisi de çift olduğunda '
         'çifttir: ${(n + 1) ~/ 2} · ${(m + 1) ~/ 2} + ${n ~/ 2} · ${m ~/ 2} '
         '= $dogru.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 7:
@@ -4060,7 +4151,7 @@ AdvancedItem _islemSayisi(int a, int b, int c) {
       var m = 4 + b;
       if ([n, m, 0, 1].contains(say(m))) m += 20;
       final dogru = say(m);
-      return sayisal(
+      return sayisalSirali(
         _kod(
           _sayGiris,
           ic(
@@ -4071,17 +4162,28 @@ AdvancedItem _islemSayisi(int a, int b, int c) {
           _saySorusu,
         ),
         dogru,
-        [n * m, n * m - dogru, dogru - (n < m ? n : m), dogru + 1],
+        // Ek hatalar: eşitsizliği ters okuyup i ≥ j çiftlerini sayma, bir
+        // eksik ya da iki fazla sayma.
+        [
+          n * m,
+          n * m - dogru,
+          dogru - (n < m ? n : m),
+          dogru + 1,
+          n * m - dogru + (n < m ? n : m),
+          dogru - 1,
+          dogru + 2,
+        ],
         'Her i için i ≤ j koşulunu sağlayan j değerleri sayılır: '
         '${[for (var i = 1; i <= n && i <= m; i++) '${m - i + 1}'].join(' + ')} '
         '= $dogru.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 8:
       final n = 5 + a, k = 2 + b % 5, ek = b ~/ 5;
       final dogru = k * n * (n + 1) ~/ 2 + ek * n;
       final ust = ek == 0 ? '$k · i' : '$k · i + $ek';
-      return sayisal(
+      return sayisalSirali(
         _kod(
           _sayGiris,
           ic('i = 1, 2, …, $n için', 'j = 1, 2, …, $ust için'),
@@ -4093,14 +4195,19 @@ AdvancedItem _islemSayisi(int a, int b, int c) {
           k * n * (n - 1) ~/ 2 + ek * n,
           if (ek > 0) k * n * (n + 1) ~/ 2,
           n * k + ek,
+          // Ek hatalar: dış döngüyü bir fazla sayma, toplamda 2 ile bölmeyi
+          // unutma.
+          k * (n + 1) * (n + 2) ~/ 2 + ek * (n + 1),
+          k * n * (n + 1) + ek * n,
         ],
         'i değeri için içteki döngü $ust kez çalışır. Toplam $k · (1 + 2 + … + '
         '$n)${ek == 0 ? '' : ' + $ek · $n'} = $dogru.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     default:
       final n = 12 + a, m = 7 + b;
-      return sayisal(
+      return sayisalSirali(
         _kod(_sayGiris, [
           'say ← 0',
           'i = 1, 2, …, $n için',
@@ -4112,9 +4219,10 @@ AdvancedItem _islemSayisi(int a, int b, int c) {
           'yaz say',
         ], 'Bu kod çalıştırıldığında yazdırılan değer kaçtır?'),
         n + m,
-        [n * m, n + m + 2, n + m - 1, 2 * n + m],
+        [n * m, n + m + 2, n + m - 1, 2 * n + m, n + m - 2, n + m + 1],
         'İki döngü iç içe değil, art ardadır: önce $n, sonra $m kez çalışır. '
         'Yazdırılan değer $n + $m = ${n + m} olur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
   }
@@ -4486,7 +4594,9 @@ AdvancedItem _metin(int a, int b, int c) {
     final ns = h.allMatches(s).length, nt = h.allMatches(t).length;
     final say = ns + nt;
     final dogru = fark ? u.length - say : say;
-    return sayisal(
+    // Ek hatalar: yalnız bir metindeki sayıyı kullanma, bir geçişi gözden
+    // kaçırma, tümleyeni yazma (uzunluk − sayı ya da sayı).
+    return _sinirliSayisal(
       _kod('Aşağıdaki sözde kodda ← atama işlemidir. $_metinNotu', [
         's ← "$s"',
         't ← "$t"',
@@ -4495,12 +4605,23 @@ AdvancedItem _metin(int a, int b, int c) {
       ], _yazSorusu),
       dogru,
       fark
-          ? [say, u.length, u.length - ns, dogru + 1]
-          : [ns, nt, u.length, say + 1],
+          ? [
+              say,
+              u.length,
+              u.length - ns,
+              dogru + 1,
+              u.length - nt,
+              s.length - ns,
+              t.length - nt,
+              dogru - 1,
+            ]
+          : [ns, nt, u.length, say + 1, say - 1, u.length - say, s.length],
       'u = "$u" olur ve ${u.length} karakter içerir. "$h" karakteri s '
       'metninde $ns, t metninde $nt kez, toplam $say kez geçer. '
       '${fark ? 'Yazdırılan değer ${u.length} − $say = $dogru olur.' : 'Yazdırılan değer $say olur.'}',
-      positive: true,
+      _no(a, b, c),
+      enAz: 1,
+      enCok: u.length,
     );
   }
   final ilk = c < 7;
@@ -4985,17 +5106,28 @@ AdvancedItem _eslik(int a, int b, int c) {
       if (_birler(d).isEven != cift) d,
   ];
   final say = hatali.length;
-  return sayisal(
+  // Ek hatalar: eşlik türünü karıştırıp doğru paketleri sayma, bir paketi
+  // gözden kaçırma ya da fazla sayma.
+  return _sinirliSayisal(
     '${_buyukHarf(tur)} eşlik kullanılan bir iletimde her paket 7 veri biti ve en sağdaki '
         'eşlik bitinden oluşur. $_eslikTanimi Alıcıya ${paketler.join(', ')} '
         'paketleri ulaşmıştır. Alıcı eşlik denetimiyle kaç pakette hata '
         'saptar?',
     say,
-    [paketler.length - say, say + 1, say - 1, paketler.length],
+    [
+      paketler.length - say,
+      say + 1,
+      say - 1,
+      paketler.length,
+      say + 2,
+      say - 2,
+    ],
     'Her paketteki 1 sayısı sayılır; $tur eşlikte 1 sayısı '
         '${cift ? 'tek' : 'çift'} olan paketler hatalıdır: ${hatali.join(', ')}. '
         'Hata saptanan paket sayısı $say olur.',
-    positive: true,
+    _no(a, b, c),
+    enAz: 1,
+    enCok: paketler.length,
   );
 }
 

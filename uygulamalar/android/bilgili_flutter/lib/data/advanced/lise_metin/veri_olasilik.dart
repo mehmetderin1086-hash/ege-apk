@@ -427,6 +427,39 @@ AdvancedItem _ondalikAralikli(
   return AdvancedItem(prompt, '$yanit', ilk!, aciklama);
 }
 
+/// Yüzde yanıtlı soru (%25 biçiminde); anahtarın değer sırası, tipik
+/// adaylarla ulaşılabilen sıralar arasında düzgün dağıtılır.
+AdvancedItem _yuzdeAralikli(
+  String prompt,
+  int yanit,
+  Iterable<int> adaylar,
+  String aciklama,
+  int i,
+) {
+  final tipik = <int>[];
+  void ekle(int x) {
+    if (x > 0 && x < 100 && x != yanit && !tipik.contains(x)) tipik.add(x);
+  }
+
+  adaylar.forEach(ekle);
+  if (tipik.length < 3) {
+    for (final k in const [5, -5, 10, 2, 15, 20, -10, -2]) {
+      ekle(yanit + k);
+    }
+  }
+  final ust = tipik.where((x) => x > yanit).length;
+  final alt = tipik.length - ust;
+  final sira = _araliktaSira(i, ust >= 3 ? 0 : 3 - ust, alt >= 3 ? 3 : alt);
+  return AdvancedItem(
+    prompt,
+    '%$yanit',
+    siraliCeldiriciler(yanit, '%$yanit', [
+      for (final x in tipik) (x, '%$x'),
+    ], sira),
+    aciklama,
+  );
+}
+
 /// Bölünebiliyorsa a / b, bölünemiyorsa 0 (0 aday olarak elenir).
 int _tamBol(int a, int b) => b != 0 && a % b == 0 ? a ~/ b : 0;
 
@@ -2916,7 +2949,9 @@ AdvancedItem _onerme(int a, int b, int c) {
     'Bu bileşik önermelerin doğruluk değerleri (D: doğru, Y: yanlış) numara '
     'sırasıyla hangi seçenekte doğru verilmiştir?',
     dizi(s1, s2, s3),
-    [dizi(s1, s2, !s3), dizi(!s1, s2, s3), dizi(s1, !s2, s3)],
+    // Her çeldiricide iki değer yanlıştır (110, 101, 011 deseni): her konumda
+    // doğru değer dört seçeneğin ikisinde görülür, çoğunluk anahtarı vermez.
+    [dizi(!s1, !s2, s3), dizi(!s1, s2, !s3), dizi(s1, !s2, !s3)],
     'p ≡ ${_bit(d[0])}, q ≡ ${_bit(d[1])}, r ≡ ${_bit(d[2])} alınır; '
     'değiller bunların tersidir. I. $cozum1. II. $cozum2. III. $cozum3. '
     'Sonuç: ${dizi(s1, s2, s3)}.',
@@ -3566,69 +3601,112 @@ AdvancedItem _deneysel(int a, int b, int c) {
 // ---------------------------------------------------------------------------
 
 AdvancedItem _basitFaiz(int a, int b, int c) {
+  final i = _no(a, b, c);
   final v = c ~/ 5;
   final oran = 8 + 2 * (b % 5) + v; // %8 … %17
   final yil = 2 + b ~/ 5; // 2 … 5 yıl
   switch (c % 5) {
     case 0:
       final ana = 3000 + 500 * a, faiz = ana * oran * yil ~/ 100;
-      return sayisal(
+      return _tamAralikli(
         'Bir bankaya yıllık %$oran basit faizle yatırılan $ana TL, $yil yıl '
         'sonunda kaç TL faiz getirir?',
         faiz,
-        [ana * oran ~/ 100, ana + faiz, faiz ~/ 10, ana * (oran + yil) ~/ 100],
+        [
+          ana * oran ~/ 100, // süreyle çarpılmaz
+          ana + faiz, // faiz yerine toplam para
+          faiz ~/ 10, // basamak kayması
+          faiz * 10,
+          ana * (oran + yil) ~/ 100, // oran ile süre toplanır
+          ana * oran * (yil + 1) ~/ 100,
+          ana * oran * yil ~/ 1200, // aylık bağıntı kullanılır
+        ],
         'Basit faiz = ana para·oran·süre : 100 = $ana·$oran·$yil : 100 = '
         '$faiz TL.',
+        i,
         unit: 'TL',
-        positive: true,
       );
     case 1:
       final ana = 3000 + 500 * a, faiz = ana * oran * yil ~/ 100;
-      return sayisal(
+      return _tamAralikli(
         'Yıllık %$oran basit faizle bankaya yatırılan bir miktar para $yil '
         'yılda $faiz TL faiz getirmiştir. Bankaya yatırılan para kaç '
         'TL\'dir?',
         ana,
-        [faiz * 100 ~/ oran, ana + faiz, faiz * oran * yil ~/ 100, ana - faiz],
+        [
+          faiz * 100 ~/ oran, // süreye bölünmez
+          faiz * oran * yil ~/ 100, // faiz bağıntısı ters uygulanır
+          ana + faiz,
+          ana - faiz,
+          faiz * 100 ~/ (oran + yil), // oran ile süre toplanır
+          ana ~/ 10, // basamak kayması
+          ana * 10,
+          faiz, // faiz ana para sanılır
+        ],
         'Ana para = faiz·100 : (oran·süre) = $faiz·100 : ($oran·$yil) = '
         '$ana TL.',
+        i,
         unit: 'TL',
-        positive: true,
       );
     case 2:
       final ana = 3000 + 500 * a, faiz = ana * oran * yil ~/ 100;
-      return _yuzdeli(
+      return _yuzdeAralikli(
         'Bankaya basit faizle yatırılan $ana TL, $yil yılda $faiz TL faiz '
         'getirmiştir. Buna göre yıllık faiz oranı yüzde kaçtır?',
         oran,
-        [oran * yil, oran + yil, oran - 2, oran + 1, oran + 3],
+        [
+          oran * yil, // süreye bölünmez
+          faiz * 100 ~/ ((ana + faiz) * yil), // toplam para ana para sanılır
+          oran + yil,
+          if (oran % yil == 0) oran ~/ yil, // süreye iki kez bölünür
+          oran - 2,
+          oran + 1,
+          oran + 3,
+        ],
         'Oran = faiz·100 : (ana para·süre) = $faiz·100 : ($ana·$yil) = '
         '$oran; yıllık faiz oranı %$oran olur.',
+        i,
       );
     case 3:
       final ana = 3000 + 500 * a, faiz = ana * oran * yil ~/ 100;
-      return sayisal(
+      return _tamAralikli(
         'Yıllık %$oran basit faizle bankaya yatırılan $ana TL kaç yılda '
         '$faiz TL faiz getirir?',
         yil,
-        [yil + 1, yil - 1, 2 * yil, yil + 2],
+        [
+          yil + 1,
+          yil - 1,
+          2 * yil,
+          yil + 2,
+          if (yil.isEven) yil ~/ 2,
+          yil - 2,
+          12 * yil, // aylık bağıntı kullanılır
+        ],
         'Süre = faiz·100 : (ana para·oran) = $faiz·100 : ($ana·$oran) = '
         '$yil yıl.',
+        i,
         unit: 'yıl',
-        positive: true,
       );
     default:
       final ana = 1200 * (2 + a), ay = 3 * yil; // 6, 9, 12 ya da 15 ay
       final faiz = (2 + a) * oran * ay;
-      return sayisal(
+      return _tamAralikli(
         'Yıllık %$oran basit faizle bankaya yatırılan $ana TL, $ay ay '
         'sonunda kaç TL faiz getirir?',
         faiz,
-        [ana * oran * ay ~/ 100, ana * oran ~/ 100, faiz + ana, faiz ~/ 2],
+        [
+          ana * oran * ay ~/ 100, // ay yıl sanılır
+          ana * oran ~/ 100, // bir yıllık faiz
+          faiz ~/ 2,
+          faiz + ana, // faiz yerine toplam para
+          faiz ~/ 10, // basamak kayması
+          ana * oran ~/ 1200, // bir aylık faiz
+          faiz * 10,
+        ],
         'Süre ay olarak verildiğinde faiz = ana para·oran·ay : 1200 '
         'bağıntısı kullanılır: $ana·$oran·$ay : 1200 = $faiz TL.',
+        i,
         unit: 'TL',
-        positive: true,
       );
   }
 }
