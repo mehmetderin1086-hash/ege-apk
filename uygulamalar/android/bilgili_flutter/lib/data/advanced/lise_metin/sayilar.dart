@@ -430,14 +430,17 @@ AdvancedItem _kes(
 /// başka aday kalmazsa alınır (komşular anahtarla eşit aralıklı bir dizi kurup
 /// anahtarı dizinin ucunda ele vermesin). Anahtarı iki çeldiricinin tam
 /// ortasında bırakan aday (yanıtı ele veren simetrik çift) en son alınır.
+/// Kökte yazılı bir sayıya eşit aday ([kokte]; anahtar kökte yazılı değilken
+/// öğrenci bu seçenekleri eleyebilir) eşit aralık kuran aday gibi sona bırakılır.
 /// Yazımı anahtarla ya da birbiriyle aynı olan (`ayniSecenek`) adaylar atlanır.
 List<String> _dengeliSec(
   double yanit,
   String yanitYazim,
   List<(double, String)> hatalar,
   List<(double, String)> komsular,
-  int hedef,
-) {
+  int hedef, {
+  Set<(int, int)> kokte = const {},
+}) {
   final kota = [hedef, 3 - hedef];
   final secilen = <(double, String)>[];
   bool yeni((double, String) e) =>
@@ -446,9 +449,12 @@ List<String> _dengeliSec(
   bool esit(double p, double q) =>
       (p - q).abs() <= 1e-9 * (1 + p.abs() + q.abs());
   // 2: anahtar, x ile bir çeldiricinin tam ortasında; 1: x, seçeneklerden
-  // ikisiyle eşit aralıklı bir üçlü kurar; 0: hiçbiri.
-  int duzey(double x) {
+  // ikisiyle eşit aralıklı bir üçlü kurar ya da kökte yazılıdır; 0: hiçbiri.
+  int duzey((double, String) e) {
+    final x = e.$1;
     if (secilen.any((s) => esit(x + s.$1, 2 * yanit))) return 2;
+    final deger = _rasyonelDeger(e.$2.split(' ').first);
+    if (deger != null && kokte.contains(deger)) return 1;
     final d = [yanit, for (final s in secilen) s.$1];
     for (var i = 0; i < d.length; i++) {
       for (var j = i + 1; j < d.length; j++) {
@@ -464,7 +470,7 @@ List<String> _dengeliSec(
   void tur(List<(double, String)> liste, int enCok, bool serbest) {
     for (final e in liste) {
       if (secilen.length == 3) return;
-      if (!yeni(e) || duzey(e.$1) > enCok) continue;
+      if (!yeni(e) || duzey(e) > enCok) continue;
       final yan = e.$1 < yanit ? 0 : 1;
       if (!serbest) {
         if (kota[yan] == 0) continue;
@@ -492,6 +498,19 @@ List<String> _dengeliSec(
     throw StateError('Eksik çeldirici: $yanitYazim → $secilen');
   }
   return [for (final e in secilen) e.$2];
+}
+
+/// Kökte yazılı sayıların (üsler ve alt simgeler hariç) mutlak değerleri, sade
+/// kesir olarak ([_yanitKokte] ile aynı okuma).
+Set<(int, int)> _kokDegerleri(String kok) {
+  final metin = kok
+      .replaceAll(_onluKuvvet, ' ')
+      .replaceAll(_simgeler, ' ')
+      .replaceAll('−', '-');
+  return {
+    for (final t in _kokSayiDeseni.allMatches(metin))
+      ?_rasyonelDeger(t.group(1)!),
+  };
 }
 
 /// Kökün karmasından hedef değer sırası (0 … 3): vakadan vakaya dengeli değişir.
@@ -536,17 +555,28 @@ AdvancedItem _tamD(
             if (uygun(x)) yaz(x),
       ],
       _hedef(kok),
+      kokte: _kokDegerleri(kok),
     ),
     aciklama,
   );
 }
 
 /// Komşu değer aralığı: [birim] sayısının, [yanit] değerinin yaklaşık %5'i
-/// kadar olan katı (en az [birim]). Problemdeki miktarlar [birim] katı
-/// olduğundan komşu değerler de aynı “parça” yapısını korur.
+/// kadar olan katı. Problemdeki miktarlar [birim] katı olduğundan komşu
+/// değerler de aynı “parça” yapısını korur. [birim] yanıtın %10'undan büyükse
+/// (komşular yanıttan çok uzaklaşmasın diye) yanıtın %5'ini aşmayan 1, 2 ya da
+/// 5 ile başlayan en büyük yuvarlak aralık alınır.
 int _katAdim(int yanit, int birim) {
   final k = (yanit / (20 * birim)).round();
-  return birim * (k < 1 ? 1 : k);
+  if (k >= 1) return birim * k;
+  if (10 * birim <= yanit) return birim;
+  var adim = 1;
+  for (var u = 1; u * 20 <= yanit; u *= 10) {
+    for (final c in const [1, 2, 5]) {
+      if (c * u * 20 <= yanit) adim = c * u;
+    }
+  }
+  return adim;
 }
 
 /// [_kes] gibi; değer sırası [_tamD] gibi dengelenir. Komşu değerler
@@ -598,6 +628,7 @@ AdvancedItem _kesD(
           if (uygun(x)) yaz(x),
       ],
       _hedef(kok),
+      kokte: _kokDegerleri(kok),
     ),
     aciklama,
   );
@@ -906,7 +937,7 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
             _kareTamlayan(f),
             // Üssü zaten üçün katı olan çarpanı da bir sonraki kata tamamlamak.
             _carp([for (final x in f) _kuvvet(x.$1, 3 - x.$2 % 3)]),
-          ].where((x) => x > 1),
+          ].where((x) => x > 1 && x <= 10 * k),
           '$yaz olur. ${_kupAciklama(f, k)} Gerçekten $n · $k = ${n * k} = '
               '${_tamKok(n * k, 3)}³ olur.',
           pozitif: true,
@@ -1042,7 +1073,8 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
           _carp([for (final x in f) _kuvvet(x.$1, x.$2 % 3)]),
           _kareTamlayan(f),
           // Üssü zaten üçün katı olan çarpanı da bir sonraki kata tamamlamak.
-          _carp([for (final x in f) _kuvvet(x.$1, 3 - x.$2 % 3)]),
+          if (_carp([for (final x in f) _kuvvet(x.$1, 3 - x.$2 % 3)]) <= 10 * k)
+            _carp([for (final x in f) _kuvvet(x.$1, 3 - x.$2 % 3)]),
         ].where((x) => x > 1),
         '$yaz ${_kupAciklama(f, k)}',
         pozitif: true,
@@ -1110,7 +1142,14 @@ String _legendreYaz(int n, int p) {
         ust,
         '${f(n + 1)} = ${n + 1} · $n · ${f(n - 1)} olduğundan bölüm ${n + 1} · $n '
             '= $ust olur.',
-        [n + 1, 2, n * (n - 1), (n + 1) * (n - 1), (n + 1) * n * (n - 1)],
+        [
+          n + 1,
+          2,
+          n * (n - 1),
+          (n + 1) * (n - 1),
+          // (n − 1) çarpanını da yazmak (büyük n için aşırı büyük olur).
+          if (n <= 11) (n + 1) * n * (n - 1),
+        ],
       );
     case 1:
       return (
@@ -3385,9 +3424,10 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
           k,
           _kuvvet(2, k + 1),
           2 * k,
-          // x < y koşulunu x ≤ y ya da x ≥ y gibi okumak.
-          _kuvvet(2, _ciftSay(A, B, (x, y) => x <= y)),
-          _kuvvet(2, n - k),
+          // x < y koşulunu x ≤ y ya da x ≥ y gibi okumak (yanıttan çok
+          // büyük çıkan değerler alınmaz).
+          for (final e in [_ciftSay(A, B, (x, y) => x <= y), n - k])
+            if (e <= k + 4) _kuvvet(2, e),
         ],
         'x < y koşulunu sağlayan sıralı ikililerin sayısı $k olur. Bu $k '
             'ikiliden oluşan kümenin her alt kümesi istenen özelliktedir (boş küme '
@@ -5716,7 +5756,14 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
       return _tamD(
         '$kok Buna göre memur mutfak giderlerine kaç TL ayırır?',
         ikinci,
-        [m * p2 ~/ q2, kalan, ilk, kalan1 - ilk],
+        [
+          m * p2 ~/ q2,
+          kalan,
+          ilk,
+          kalan1 - ilk,
+          // Kalan para yerine kiraya ayrılan paranın kesrini almak.
+          m * p1 * p2 ~/ (q1 * q2),
+        ],
         'Kiraya $m · ${_kesYaz(f1)} = $ilk TL ayrılır ve $kalan1 TL kalır. Mutfak '
             'giderleri bu kalanın ${_kesYaz(f2)} kadarı olduğundan $kalan1 · '
             '${_kesYaz(f2)} = $ikinci TL olur.',

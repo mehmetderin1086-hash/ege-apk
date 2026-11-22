@@ -3253,7 +3253,8 @@ final lmGeometriEk = <AdvancedFamily>[
           // kullanılmaz). Karekök almayı unutma, halkanın alanını küçük
           // dairenin alanı sanma (√fark), yarıçap farkı ve karekök yerine
           // ikiye bölme. (0, R) aralığında üç değer bulunmayan iki küçük
-          // vakada (R ≤ 4) r² ve R'nin üstündeki komşular eklenir.
+          // vakada (R ≤ 4) aralıktaki değerler önce alınır (sıra 3), eksik
+          // kalan yer r² ve R'nin üstündeki komşularla doldurulur.
           return _uzunlukSirali(
             '$esMerkez farklı olan iki çemberden büyüğünün yarıçapı $R cm, iki '
                 'çember arasında kalan daire halkasının alanı ${_pi(fark)} cm² olduğuna '
@@ -3266,7 +3267,7 @@ final lmGeometriEk = <AdvancedFamily>[
             ],
             'π·$R² − π·r² = ${_pi(fark)} eşitliğinden r² = ${R * R} − $fark = '
                 '${r * r}, r = $r cm bulunur.',
-            sira,
+            R <= 4 ? 3 : sira,
             ust: R,
           );
         case 2:

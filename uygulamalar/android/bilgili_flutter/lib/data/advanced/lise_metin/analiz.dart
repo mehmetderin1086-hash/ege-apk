@@ -485,7 +485,8 @@ bool _dahaIyi(List<int> a, List<int> b) {
 /// Üçlüler sırasıyla şu ölçütlerle karşılaştırılır: anahtardan küçük
 /// çeldirici sayısının [sira] hedefine uzaklığı; anahtarın sözcük
 /// benzerliğinde öne çıkması ya da tek başına geride kalması, uzunlukta tek
-/// başına en uzun ya da en kısa olması; adayların öncelik sırası. Yazımı anahtarla ya da önceki bir
+/// başına en uzun ya da en kısa olması ve seçilen komşu değer sayısı;
+/// adayların öncelik sırası. Yazımı anahtarla ya da önceki bir
 /// adayla aynı olan adaylar atlanır; ilk [enFazla] farklı aday denenir.
 List<String> _dengeli(
   num anahtar,
@@ -494,8 +495,19 @@ List<String> _dengeli(
   int sira, {
   int enFazla = 10,
 }) {
-  final d = <num>[], y = <String>[];
-  for (final (deger, metin) in adaylar) {
+  final liste = adaylar.toList();
+  // Listenin sonundaki komşu değerler (_komsuTam: k ∓ s, k ∓ 2s) son çaredir;
+  // seçilen her komşu, tipik bir hataya göre bir ceza puanı alır.
+  var komsuBas = liste.length;
+  if (anahtar == anahtar.roundToDouble()) {
+    final komsu = _komsuTam(anahtar.toInt()).toSet();
+    while (komsuBas > 0 && komsu.contains(liste[komsuBas - 1].$1)) {
+      komsuBas--;
+    }
+  }
+  final d = <num>[], y = <String>[], km = <bool>[];
+  for (var i = 0; i < liste.length; i++) {
+    final (deger, metin) = liste[i];
     if (y.length == enFazla) break;
     if (metin.trim().isEmpty ||
         ayniSecenek(metin, yazim) ||
@@ -504,6 +516,7 @@ List<String> _dengeli(
     }
     d.add(deger);
     y.add(metin);
+    km.add(i >= komsuBas);
   }
   final n = y.length;
   if (n < 3) throw StateError('Eksik çeldirici: $yazim → $y');
@@ -538,7 +551,8 @@ List<String> _dengeli(
           (alt - sira).abs(),
           (tepe == 1 ? 3 : (tepe == 2 || tepe == 0 ? 1 : 0)) +
               (_tekBasina(puan, 0, enKucuk: true) ? 1 : 0) +
-              (_tekBasina(uz, 0) || _tekBasina(uz, 0, enKucuk: true) ? 1 : 0),
+              (_tekBasina(uz, 0) || _tekBasina(uz, 0, enKucuk: true) ? 1 : 0) +
+              [p, q, r].where((x) => km[x]).length,
           p + q + r,
         ];
         if (enIyiCeza == null || _dahaIyi(ceza, enIyiCeza)) {
