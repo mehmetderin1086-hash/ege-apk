@@ -15,6 +15,12 @@ const ust = 50;
 
 void main() {
   test('seçki üret', () {
+    // İncelemede kusurlu bulunan sorular (tool/secki/elenen.txt, satır başına
+    // bir soru kimliği) seçkiye alınmaz.
+    final elenenDosya = File('tool/secki/elenen.txt');
+    final disari = elenenDosya.existsSync()
+        ? elenenDosya.readAsLinesSync().map((l) => l.split('#').first.trim()).where((l) => l.isNotEmpty).toSet()
+        : <String>{};
     final sozluk = <String, int>{};
     final secilen = <String, List<int>>{};
     final tum = <(String, int, Set<int>, String)>[]; // aile, vaka, kume, kok
@@ -22,6 +28,7 @@ void main() {
       if (!AdvancedCatalog.cokSecmeliLise(f)) continue;
       final sira = enUzakSira(f, ust).where((e) => e.$2 >= esik);
       for (final (i, _) in sira) {
+        if (disari.contains('ak38_${f.key}_$i')) continue;
         final kok = f.build(i).prompt;
         tum.add((f.key, i, sozcukKumesi(kok, sozluk), kok));
       }
