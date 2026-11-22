@@ -77,41 +77,85 @@ List<String> _celdirici(
   ];
   final hedef = sira % 4;
   final r = izin.contains(hedef) ? hedef : izin[sira ~/ 4 % izin.length];
-  final alt = [...hA, ...kA].take(r).toList();
-  final ust = [...hU, ...kU].take(3 - r).toList();
-  // Anahtar iki çeldiricinin geometrik ortası olmasın (x/2 ile 2x gibi;
-  // "yarısı ve iki katı seçeneklerde olan" ipucu). Böyle bir çiftin bir
-  // öğesi aynı yandaki sıradaki adayla değiştirilir: önce tipik hatalar
-  // (önce üstte, sonra altta), sonra komşular. Hedef sıra değişmez.
-  final kare = anahtar * anahtar;
-  bool orta(num p, num q) => (p * q - kare).abs() <= 1e-9 * kare;
-  bool ciftVar() => alt.any((p) => ust.any((q) => orta(p.$1, q.$1)));
-  bool degistir(
-    List<(num, String)> secilen,
-    List<(num, String)> karsi,
-    List<(num, String)> adaylar,
-  ) {
-    final i = secilen.indexWhere((p) => karsi.any((q) => orta(p.$1, q.$1)));
-    if (i < 0) return false;
-    for (final x in adaylar) {
-      if (secilen.contains(x) || karsi.any((q) => orta(x.$1, q.$1))) continue;
-      secilen[i] = x;
-      return true;
-    }
-    return false;
+  // Seçim, hedef sırayı koruyan aday birleşimleri arasından yapılır
+  // (her yanda öncelik sırasıyla ilk altı aday). Anahtar iki çeldiricinin
+  // geometrik ya da aritmetik ortası olmasın (x/2 ile 2x, x − d ile x + d:
+  // "yarısı ve iki katı seçeneklerde" ipucu) ve öteki seçeneklerin çoğunun
+  // basit katı (2, 3, 4 kat ya da 1/2, 1/3, 1/4) olduğu tek "merkez"
+  // seçenek olmasın. Uyan birleşimlerden öncelik sıraları toplamı en
+  // küçük olan alınır; komşu sayısı gerekenden (en az bir) fazla olmaz.
+  // Uyan yoksa yalnız orta koşulu, o da yoksa ilk adaylar kullanılır.
+  final alt0 = [...hA, ...kA].take(6).toList();
+  final ust0 = [...hU, ...kU].take(6).toList();
+  final enCokKomsu = max(1, eksik(r));
+  bool esit(num p, num q) =>
+      (p - q).abs() <= 1e-9 * max(1, max(p.abs(), q.abs()));
+  bool orta(num p, num q) =>
+      esit(p * q, anahtar * anahtar) || esit(p + q, 2 * anahtar);
+  bool basit(num p, num q) {
+    if (p == 0 || q == 0) return false;
+    final o = (p / q).abs() >= 1 ? (p / q).abs() : (q / p).abs();
+    return esit(o, 2) || esit(o, 3) || esit(o, 4);
   }
 
-  for (var tur = 0; tur < 3 && ciftVar(); tur++) {
-    if (!(degistir(ust, alt, hU) ||
-        degistir(alt, ust, hA) ||
-        degistir(ust, alt, kU) ||
-        degistir(alt, ust, kA))) {
-      break;
+  int derece(num x, Iterable<num> ys) => ys.where((y) => basit(x, y)).length;
+  bool merkez(List<num> d) {
+    final dk = derece(anahtar, d);
+    if (dk < 2) return false;
+    for (var i = 0; i < d.length; i++) {
+      final oteki = [
+        anahtar,
+        for (var j = 0; j < d.length; j++)
+          if (j != i) d[j],
+      ];
+      if (derece(d[i], oteki) >= dk) return false;
+    }
+    return true;
+  }
+
+  List<(num, String)>? secim;
+  var secimDuzey = -1, secimMaliyet = 0;
+  for (final ia in _birlesim(alt0.length, r)) {
+    for (final iu in _birlesim(ust0.length, 3 - r)) {
+      final komsu =
+          ia.where((i) => i >= hA.length).length +
+          iu.where((i) => i >= hU.length).length;
+      if (komsu > enCokKomsu) continue;
+      final a = [for (final i in ia) alt0[i]];
+      final u = [for (final i in iu) ust0[i]];
+      final ortaVar = a.any((p) => u.any((q) => orta(p.$1, q.$1)));
+      final duzey = ortaVar
+          ? 0
+          : merkez([
+              for (final x in [...a, ...u]) x.$1,
+            ])
+          ? 1
+          : 2;
+      final maliyet = [...ia, ...iu].fold<int>(0, (t, i) => t + i);
+      if (duzey > secimDuzey ||
+          (duzey == secimDuzey && maliyet < secimMaliyet)) {
+        secim = [...a, ...u];
+        secimDuzey = duzey;
+        secimMaliyet = maliyet;
+      }
     }
   }
   return [
-    for (final x in [...alt, ...ust]) x.$2,
+    for (final x in secim ?? [...alt0.take(r), ...ust0.take(3 - r)]) x.$2,
   ];
+}
+
+/// [n] öğeden [k] tanesinin artan sıralı dizin birleşimleri.
+Iterable<List<int>> _birlesim(int n, int k, [int bas = 0]) sync* {
+  if (k == 0) {
+    yield const [];
+    return;
+  }
+  for (var i = bas; i <= n - k; i++) {
+    for (final kalan in _birlesim(n, k - 1, i + 1)) {
+      yield [i, ...kalan];
+    }
+  }
 }
 
 /// Komşu değerlerin anahtara uzaklığı (adım sayısı). Üstte ve altta farklı
@@ -132,7 +176,8 @@ List<num> _komsu(num anahtar, num adim) => [
 /// [ust] verilirse çeldiriciler bu iki değerin (ikisi de hariç) arasında
 /// kalır: kökün kendi verisiyle çelişen (küçük üçgenin alanının büyüğünkünü
 /// aşması, parçanın bütünden uzun olması gibi) seçenek kurulmaz. Aralıkta
-/// üç farklı değer kalmayan çok küçük vakalarda yalnız pozitiflik aranır.
+/// üç farklı değer kalmayan çok küçük vakalarda önce sınır değerleri, o da
+/// yetmezse yalnız pozitiflik aranır.
 AdvancedItem _sayi(
   String prompt,
   int dogru,
@@ -147,14 +192,15 @@ AdvancedItem _sayi(
   final yazim = birimli('$dogru', unit);
   final komsu = [for (final x in _komsu(dogru, adim)) x as int];
   // Uzunluk, alan, hacim ve sayım yanıtlarında yalnız pozitif değerler.
-  bool aralikta(int x) => x > alt && (ust == null || x < ust);
-  final yeter =
-      {
-        for (final x in [...yanlis, ...komsu])
-          if (x != dogru && aralikta(x)) x,
-      }.length >=
-      3;
-  bool gecer(int x) => yeter ? aralikta(x) : x > 0;
+  // Aralıkta üç değer yoksa önce sınır değerlerinin kendisine izin verilir.
+  bool aralikta(int x, int pay) =>
+      x > 0 && x > alt - pay && (ust == null || x < ust + pay);
+  int sayi(int pay) => {
+    for (final x in [...yanlis, ...komsu])
+      if (x != dogru && aralikta(x, pay)) x,
+  }.length;
+  final pay = sayi(0) >= 3 ? 0 : (sayi(1) >= 3 ? 1 : 1 << 30);
+  bool gecer(int x) => aralikta(x, pay);
   return AdvancedItem(
     prompt,
     yazim,
@@ -1308,9 +1354,17 @@ final lmGeometri = <AdvancedFamily>[
           'alanı kaç cm² olur?',
           alan,
           // İkiye bölmeyi unutma ya da iki kez bölme, uzun tabanla çarpma,
-          // tabanları çıkarma. (Kısa tabanla çarpım eklenmez: uzun tabanla
-          // çarpımla birlikte anahtarın tam iki yanında kalırdı.)
-          [(p + q) * h, p * h, (p - q) * h ~/ 2, bol((p + q) * h, 4)],
+          // tabanları çıkarma, kısa tabanla çarpma, yamuğu uzun tabanlı üçgen
+          // sanma. (Kısa ve uzun tabanla çarpımlar anahtarın tam iki yanında
+          // kalır; _celdirici ikisini aynı vakada seçmez.)
+          [
+            (p + q) * h,
+            p * h,
+            (p - q) * h ~/ 2,
+            bol((p + q) * h, 4),
+            q * h,
+            bol(p * h, 2),
+          ],
           'Yamuğun alanı, taban uzunlukları toplamı ile yüksekliğin '
               'çarpımının yarısıdır: ($p + $q)·$h / 2 = ${p + q}·$h / 2 = '
               '$alan cm².',

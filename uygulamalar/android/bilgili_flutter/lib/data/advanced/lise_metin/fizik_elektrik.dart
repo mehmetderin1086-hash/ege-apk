@@ -9,70 +9,118 @@ import 'ortak.dart';
 /// (a, b, c) koordinatlarının sıra numarası (lmAile ile aynı düzen).
 int _no(int a, int b, int c) => a + 25 * b + 500 * c;
 
+/// Sıra hedefi tutmayan vakada öteki sıralardan birini seçen ikinci karma
+/// (0 … 15).
+int _kayma(int i) => hedefSira(i, 1) + 4 * hedefSira(i, 2);
+
 /// [siraliCeldiriciler] gibi seçer: anahtardan küçük çeldirici sayısı [sira]
-/// olur ve adaylar öncelik sırasıyla alınır. Ek kural: anahtarı seçilmiş bir
-/// çeldiriciyle birlikte tam ortaya (aritmetik ya da geometrik ortalama)
-/// alacak aday, aynı yanda başka aday kaldıkça ertelenir; böylece "ortadaki
-/// değer" kestirimi anahtarı göstermez. Değerler seçeneklerde yazılan
-/// değerlerdir.
+/// olur ve tipik hatalar ([hatalar]) öncelik sırasıyla alınır. Ek kurallar:
+/// anahtarı seçilmiş bir çeldiriciyle birlikte tam ortaya (aritmetik ya da
+/// geometrik ortalama) alacak aday, aynı yanda başka aday kaldıkça ertelenir;
+/// düz komşu değerlerden ([komsular]) en çok [komsuSiniri] tanesi kullanılır.
+/// [yon] (sorudaki ilk değer) verilirse anahtarın bulunduğu yanda en az bir
+/// çeldirici olur; yalnız değişimin yönünü bilen öğrenci anahtarı bulamaz.
+/// Hedef sıra bu kurallarla tutmuyorsa tutan öteki sıralardan biri [kayma]
+/// ile seçilir: sıra kayar, çeldiriciler tipik hata olarak kalır. Değerler
+/// seçeneklerde yazılan değerlerdir.
 List<String> _sirali(
   num anahtar,
   String anahtarYazim,
-  Iterable<(num, String)> adaylar,
-  int sira,
-) {
-  final kota = [sira.clamp(0, 3), 3 - sira.clamp(0, 3)];
-  final secilen = <(num, String)>[];
-  final ertelenen = <(num, String)>[], yedek = <(num, String)>[];
-  bool yeni(String x) =>
-      x.trim().isNotEmpty &&
-      !ayniSecenek(x, anahtarYazim) &&
-      ![...secilen, ...ertelenen, ...yedek].any((w) => ayniSecenek(w.$2, x));
-  bool ortaYapar(num y) => secilen.any((s) {
-    final x = s.$1;
-    if ((x - anahtar) * (y - anahtar) >= 0) return false;
-    if ((x + y - 2 * anahtar).abs() <= 1e-9 * (1 + anahtar.abs())) return true;
-    return anahtar > 0 &&
-        x > 0 &&
-        y > 0 &&
-        (math.sqrt(x * y) / anahtar - 1).abs() <= 0.02;
-  });
-  int yan(num x) => x < anahtar ? 0 : 1;
-  for (final (deger, yazim) in adaylar) {
-    if (secilen.length == 3) break;
-    if (!yeni(yazim)) continue;
-    if (kota[yan(deger)] == 0) {
-      yedek.add((deger, yazim));
-    } else if (ortaYapar(deger)) {
-      ertelenen.add((deger, yazim));
-    } else {
+  List<(num, String)> hatalar,
+  List<(num, String)> komsular,
+  int sira, {
+  int kayma = 0,
+  int komsuSiniri = 1,
+  num? yon,
+}) {
+  List<(num, String)> sec(int hedef) {
+    final kota = [hedef, 3 - hedef];
+    final secilen = <(num, String)>[];
+    final ertelenen = <(num, String)>[], yedek = <(num, String)>[];
+    bool yeni(String x) =>
+        x.trim().isNotEmpty &&
+        !ayniSecenek(x, anahtarYazim) &&
+        ![...secilen, ...ertelenen, ...yedek].any((w) => ayniSecenek(w.$2, x));
+    bool ortaYapar(num y) => secilen.any((s) {
+      final x = s.$1;
+      if ((x - anahtar) * (y - anahtar) >= 0) return false;
+      final orta = (x + y - 2 * anahtar).abs();
+      if (orta <= 1e-9 * (1 + anahtar.abs())) return true;
+      return anahtar > 0 &&
+          x > 0 &&
+          y > 0 &&
+          (math.sqrt(x * y) / anahtar - 1).abs() <= 0.02;
+    });
+    int yan(num x) => x < anahtar ? 0 : 1;
+    for (final (deger, yazim) in hatalar) {
+      if (secilen.length == 3) break;
+      if (!yeni(yazim)) continue;
+      if (kota[yan(deger)] == 0) {
+        yedek.add((deger, yazim));
+      } else if (ortaYapar(deger)) {
+        ertelenen.add((deger, yazim));
+      } else {
+        secilen.add((deger, yazim));
+        kota[yan(deger)]--;
+      }
+    }
+    var komsu = 0;
+    for (final (deger, yazim) in komsular) {
+      if (secilen.length == 3 || komsu == komsuSiniri) break;
+      if (kota[yan(deger)] == 0 || !yeni(yazim) || ortaYapar(deger)) continue;
       secilen.add((deger, yazim));
       kota[yan(deger)]--;
+      komsu++;
     }
+    // Eksik kalırsa öteki yandaki tipik hatalarla (önce anahtarı ortaya
+    // almayanlarla), en son çare olarak da başka komşularla tamamlanır.
+    for (final x in [...yedek, ...ertelenen]) {
+      if (secilen.length < 3 && !ortaYapar(x.$1)) secilen.add(x);
+    }
+    for (final x in [...ertelenen, ...yedek]) {
+      if (secilen.length == 3) break;
+      if (!secilen.contains(x)) secilen.add(x);
+    }
+    for (final (deger, yazim) in komsular) {
+      if (secilen.length == 3) break;
+      if (yeni(yazim)) secilen.add((deger, yazim));
+    }
+    return secilen;
   }
-  // Eksik kalırsa önce anahtarı ortaya almayan adaylarla (gerekirse öteki
-  // yandan) tamamlanır; sıra hedefinden sapmak, ortadaki değer ipucundan
-  // iyidir.
-  for (final x in [...yedek, ...ertelenen]) {
-    if (secilen.length < 3 && !ortaYapar(x.$1)) secilen.add(x);
+
+  bool tutar(List<(num, String)> s, int hedef) {
+    if (s.length != 3 || s.where((x) => x.$1 < anahtar).length != hedef) {
+      return false;
+    }
+    final r = yon;
+    if (r == null || anahtar == r) return true;
+    return s.any((x) => x.$1 != r && (x.$1 > r) == (anahtar > r));
   }
-  for (final x in [...ertelenen, ...yedek]) {
-    if (secilen.length == 3) break;
-    if (!secilen.contains(x)) secilen.add(x);
+
+  var sonuc = sec(sira);
+  if (!tutar(sonuc, sira)) {
+    final uygun = <List<(num, String)>>[];
+    for (var h = 0; h < 4; h++) {
+      if (h == sira) continue;
+      final s = sec(h);
+      if (tutar(s, h)) uygun.add(s);
+    }
+    if (uygun.isNotEmpty) sonuc = uygun[kayma % uygun.length];
   }
-  if (secilen.length != 3) {
-    throw StateError('Eksik çeldirici: $anahtarYazim → $secilen');
+  if (sonuc.length != 3) {
+    throw StateError('Eksik çeldirici: $anahtarYazim → $sonuc');
   }
-  return [for (final s in secilen) s.$2];
+  return [for (final s in sonuc) s.$2];
 }
 
 /// Ondalıklı yanıtlı soru; anahtarın seçenekler içindeki değer sırası vakadan
 /// vakaya [hedefSira] ile değişir ([sira] verilirse o kullanılır). [hatalar]
 /// anahtarın iki yanındaki tipik hata değerleridir (öncelik sırasıyla);
-/// yetmezse en sonda anahtarın yakın komşuları (1,2 · 0,75 · 1,5 · 0,6 katı,
-/// son çare olarak ± adım) kullanılır. Anahtarı iki çeldiricinin ortasına
-/// alan seçimleri [_sirali] önler. Sıfıra yuvarlanan ya da yazımı değerinden
-/// %10'dan çok sapan adaylar atılır.
+/// yetmezse en çok [komsuSiniri] tane yakın komşu (1,2 · 0,75 katı, ± adım,
+/// son çare olarak 1,5 · 0,6 katı) kullanılır, yoksa sıra kayar ([_sirali]).
+/// Sıfıra yuvarlanan, yazımı değerinden %10'dan çok sapan ya da anahtara
+/// yuvarlama farkı kadar yakın (%2'den az; %5'ten az farklı olup anahtarın
+/// basamağına yuvarlanınca anahtarı veren) adaylar atılır.
 AdvancedItem _ondalikSira(
   String prompt,
   double answer,
@@ -82,6 +130,8 @@ AdvancedItem _ondalikSira(
   required String unit,
   int digits = 2,
   int? sira,
+  double? yon,
+  int komsuSiniri = 1,
 }) {
   double yuvarla(double x) =>
       double.parse(tr(x, digits).replaceFirst(',', '.'));
@@ -97,25 +147,47 @@ AdvancedItem _ondalikSira(
     return answer * m;
   }
 
+  final k = yuvarla(answer);
+  bool gecerli(double x) {
+    if (!x.isFinite) return false;
+    final y = yuvarla(x), fark = (y - k).abs();
+    if (y <= 0 || (y - x).abs() > 0.1 * x.abs() || fark < 0.02 * k) {
+      return false;
+    }
+    return fark >= 0.05 * k || tr(y, basamak) != yazilan;
+  }
+
   final adim = answer.abs() >= 20 ? 1.0 : (answer.abs() >= 2 ? 0.5 : 0.1);
-  final aday = [
-    for (final x in [
-      ...hatalar,
-      for (final m in const [1.2, 0.75, 1.5, 0.6]) komsu(m),
-      for (var k = 1; k <= 6; k++) ...[answer + k * adim, answer - k * adim],
-    ])
-      if (x.isFinite &&
-          yuvarla(x) > 0 &&
-          (yuvarla(x) - x).abs() <= 0.1 * x.abs())
-        x,
-  ];
-  final yazim = birimli(tr(answer, digits), unit);
+  (num, String) cift(double x) => (yuvarla(x), birimli(tr(x, digits), unit));
+  final yazim = birimli(yazilan, unit);
   return AdvancedItem(
     prompt,
     yazim,
-    _sirali(yuvarla(answer), yazim, [
-      for (final x in aday) (yuvarla(x), birimli(tr(x, digits), unit)),
-    ], sira ?? hedefSira(i)),
+    _sirali(
+      k,
+      yazim,
+      [
+        for (final x in hatalar)
+          if (gecerli(x)) cift(x),
+      ],
+      [
+        for (final x in [
+          komsu(1.2),
+          komsu(0.75),
+          answer + adim,
+          answer - adim,
+          komsu(1.5),
+          komsu(0.6),
+          for (var j = 2; j <= 6; j++)
+            ...[answer + j * adim, answer - j * adim],
+        ])
+          if (gecerli(x)) cift(x),
+      ],
+      sira ?? hedefSira(i),
+      kayma: _kayma(i),
+      komsuSiniri: komsuSiniri,
+      yon: yon,
+    ),
     explanation,
   );
 }
@@ -128,20 +200,40 @@ AdvancedItem _sayiSira(
   String explanation,
   int i, {
   String unit = '',
+  int? sira,
+  int komsuSiniri = 1,
 }) {
   final adim = answer.abs() >= 200 ? 10 : (answer.abs() >= 40 ? 5 : 1);
-  final aday = [
-    ...hatalar,
-    for (final m in const [1.2, 0.75, 1.5, 0.6]) (answer * m).round(),
-    for (var k = 1; k <= 6; k++) ...[answer + k * adim, answer - k * adim],
-  ].where((x) => x > 0);
+  (num, String) cift(int x) => (x, birimli('$x', unit));
   final yazim = birimli('$answer', unit);
   return AdvancedItem(
     prompt,
     yazim,
-    _sirali(answer, yazim, [
-      for (final x in aday) (x, birimli('$x', unit)),
-    ], hedefSira(i)),
+    _sirali(
+      answer,
+      yazim,
+      [
+        for (final x in hatalar)
+          if (x > 0) cift(x),
+      ],
+      [
+        for (final x in [
+          (answer * 1.2).round(),
+          (answer * 0.75).round(),
+          answer + adim,
+          answer - adim,
+          (answer * 1.5).round(),
+          (answer * 0.6).round(),
+          for (var j = 2; j <= 6; j++)
+            ...[answer + j * adim, answer - j * adim],
+        ])
+          // Anahtardan %2'den az farklı komşu yuvarlama farkı gibi görünür.
+          if (x > 0 && (x - answer).abs() >= 0.02 * answer) cift(x),
+      ],
+      sira ?? hedefSira(i),
+      kayma: _kayma(i),
+      komsuSiniri: komsuSiniri,
+    ),
     explanation,
   );
 }
@@ -279,6 +371,7 @@ final lmFizikElektrik = <AdvancedFamily>[
           '${tr(i2 / 10)} A bulunur.',
           _no(a, b, c),
           unit: 'A',
+          yon: i1 / 10,
         );
       }
       // Krom-nikelin özdirenci yaklaşık 1 Ω·mm²/m alınır: L = R·A. Böylece
@@ -408,6 +501,13 @@ final lmFizikElektrik = <AdvancedFamily>[
         ucret / 10,
         e * 10 / f10, // birim fiyatla çarpmak yerine bölmek
       ];
+      // 30 ve 60 günlük dönemlerde anahtarın üstünde tek tipik hata (×10)
+      // bulunur ve anahtar en küçük seçenek olamaz; denge için 10 ve 20
+      // günlük dönemlerde 2. sıra hedefinin yarısı 1. sıraya alınır.
+      final hs = hedefSira(_no(a, b, c));
+      final sira = gun < 30 && hs == 1 && hedefSira(_no(a, b, c), 3) < 2
+          ? 0
+          : hs;
       if (c.isEven) {
         return _ondalikSira(
           'Gücü $p W olan $cihaz her gün $t saat çalıştırılıyor. $soru',
@@ -416,6 +516,7 @@ final lmFizikElektrik = <AdvancedFamily>[
           hesap,
           _no(a, b, c),
           unit: 'TL',
+          sira: sira,
         );
       }
       final akim = tr((5 + a) / 2);
@@ -427,6 +528,7 @@ final lmFizikElektrik = <AdvancedFamily>[
         'Cihazın gücü P = V·I = 220·$akim = $p W olur. $hesap',
         _no(a, b, c),
         unit: 'TL',
+        sira: sira,
       );
     },
     tyt: true,
@@ -590,7 +692,7 @@ final lmFizikElektrik = <AdvancedFamily>[
       final vl = vk + dv;
       final adim = vl >= 200 ? 10 : (vl >= 40 ? 5 : 1);
       // İşaret hatası (vk − dv) negatif çıkabilir; gerçek eksiyle yazılır.
-      final adaylar = [
+      final hatalar = [
         vk - dv, // işaret hatası
         vk + w, // yüke bölünmemiş
         dv, // yalnız potansiyel farkı
@@ -598,8 +700,15 @@ final lmFizikElektrik = <AdvancedFamily>[
         w, // iş potansiyel sanılmış
         vk, // potansiyel değişmez sanılmış
         dv - vk, // işaret hatası (K'nin potansiyeli çıkarılmış)
-        for (final m in const [1.2, 0.75, 1.5, 0.6]) (vl * m).round(),
-        for (var j = 1; j <= 3; j++) ...[vl + j * adim, vl - j * adim],
+      ];
+      final komsular = [
+        (vl * 1.2).round(),
+        (vl * 0.75).round(),
+        vl + adim,
+        vl - adim,
+        (vl * 1.5).round(),
+        (vl * 0.6).round(),
+        for (var j = 2; j <= 3; j++) ...[vl + j * adim, vl - j * adim],
       ];
       return AdvancedItem(
         'Bir elektrik alanında, potansiyeli $vk V olan K noktasındaki +$q µC '
@@ -607,9 +716,14 @@ final lmFizikElektrik = <AdvancedFamily>[
         'kuvvetlere karşı $w µJ iş yapılıyor. L noktasının potansiyeli kaç V '
         'olur?',
         _volt(vl),
-        _sirali(vl, _volt(vl), [
-          for (final x in adaylar) (x, _volt(x)),
-        ], hedefSira(_no(a, b, c))),
+        _sirali(
+          vl,
+          _volt(vl),
+          [for (final x in hatalar) (x, _volt(x))],
+          [for (final x in komsular) (x, _volt(x))],
+          hedefSira(_no(a, b, c)),
+          kayma: _kayma(_no(a, b, c)),
+        ),
         'K ile L arasındaki potansiyel farkı W / q = $w / $q = $dv V olur. '
         'Pozitif yük elektriksel kuvvetlere karşı taşındığından L daha '
         'yüksek potansiyeldedir: $vk + $dv = $vl V.',
@@ -958,6 +1072,10 @@ final lmFizikElektrik = <AdvancedFamily>[
         'yukarıdadır.',
         _no(a, b, c),
         unit: 'm',
+        // Taban yankısı sürününkinin iki katından kısa sürede geliyorsa
+        // (b ≤ a) anahtarın altında en çok bir tipik hata kalır; anahtar o
+        // vakalarda 1. ya da 2., ötekilerde 3. ya da 4. sıraya konur.
+        sira: (b > a ? 2 : 0) + hedefSira(_no(a, b, c)) % 2,
       );
     },
     tyt: true,
@@ -972,11 +1090,23 @@ final lmFizikElektrik = <AdvancedFamily>[
       final (p, q) = _oranlar[b];
       final adim = a % 5 + 5 * (c ~/ 2); // 0 … 24
       final kat = kesir(p, q), kareKat = kesir(p * p, q * q);
-      // Tipik hatalar t₁·(p/q)ᵏ biçimindedir (kök alınmamış, oran ters, periyot
-      // değişmez sanılmış); bunların üçü anahtarın bir yanında, biri öteki
-      // yanında kalır. Bu yüzden periyot artıyorsa anahtar 3. ya da 4.,
-      // azalıyorsa 1. ya da 2. sıraya konur: dört sıra eşit sıklıkta görülür.
-      final sira = (p > q ? 2 : 0) + hedefSira(_no(a, b, c)) % 2;
+      // Tipik hatalar: kök alınmamış (t₁·p²/q²), periyot yerine periyottaki
+      // değişim (|t₂ − t₁|), oran ters (t₁·q/p), periyot değişmez sanılmış
+      // (t₁), oran ters ve kök alınmamış. Yalnız değişim t₁ ile anahtar
+      // arasında kalabilir (oran 2'den büyük ya da 1/2'den küçükken); anahtar
+      // yalnız o zaman en küçük (periyot azalıyorsa) ya da en büyük (artıyorsa)
+      // seçenek olur. Böylece değişimin yönünü bilmek anahtarı göstermez.
+      final hs = hedefSira(_no(a, b, c));
+      final sira = p < q
+          ? (2 * p < q && hs < 3 ? 0 : 1)
+          : (p > 2 * q && hs < 3 ? 3 : 2);
+      List<double> hatalar(double t1, double t2) => [
+        t1 * p * p / (q * q), // kök alınmamış
+        (t2 - t1).abs(), // periyottaki değişim
+        t1 * q / p, // oran ters alınmış
+        t1, // periyot değişmez sanılmış
+        t1 * q * q / (p * p), // oran ters, kök alınmamış
+      ];
       if (c.isEven) {
         final tau = 10 + 2 * adim; // 0,01 s
         final mu = 10 * (1 + a ~/ 5); // g
@@ -988,12 +1118,7 @@ final lmFizikElektrik = <AdvancedFamily>[
           'çıkarılıp aynı yaya $m2 g kütleli başka bir cisim bağlanırsa '
           'salınımın periyodu kaç s olur?',
           t2,
-          [
-            t1 * p * p / (q * q), // kök alınmamış
-            t1 * q / p, // oran ters alınmış
-            t1, // periyot değişmez sanılmış
-            t1 * q * q / (p * p), // oran ters, kök alınmamış
-          ],
+          hatalar(t1, t2),
           'Yay sarkacında T = 2π·√(m / k) olduğundan periyot kütlenin '
           'kareköküyle doğru orantılıdır. Kütle oranı $m2 / $m1 = $kareKat '
           'olduğundan periyot ilk değerinin $kat katı olur: '
@@ -1001,6 +1126,7 @@ final lmFizikElektrik = <AdvancedFamily>[
           _no(a, b, c),
           unit: 's',
           sira: sira,
+          yon: t1,
         );
       }
       final tau = 40 + 2 * adim; // 0,01 s
@@ -1013,12 +1139,7 @@ final lmFizikElektrik = <AdvancedFamily>[
         'Aynı yerde ip uzunluğu $l2 cm yapılırsa sarkacın periyodu kaç s '
         'olur?',
         t2,
-        [
-          t1 * p * p / (q * q), // kök alınmamış
-          t1 * q / p, // oran ters alınmış
-          t1, // periyot değişmez sanılmış
-          t1 * q * q / (p * p), // oran ters, kök alınmamış
-        ],
+        hatalar(t1, t2),
         'Basit sarkaçta T = 2π·√(L / g) olduğundan periyot ip uzunluğunun '
         'kareköküyle doğru orantılıdır. Uzunluk oranı $l2 / $l1 = $kareKat '
         'olduğundan periyot ilk değerinin $kat katı olur: '
@@ -1026,6 +1147,7 @@ final lmFizikElektrik = <AdvancedFamily>[
         _no(a, b, c),
         unit: 's',
         sira: sira,
+        yon: t1,
       );
     },
   ),
@@ -1200,6 +1322,7 @@ final lmFizikElektrik = <AdvancedFamily>[
           _no(a, b, c),
           unit: '',
           sira: sira,
+          yon: e1.toDouble(),
         );
       }
       final n = 2 + k;
@@ -1296,6 +1419,8 @@ final lmFizikElektrik = <AdvancedFamily>[
           '(${2 * d} − $ara) / ${2 * v} = $t s bulunur.',
           _no(a, b, c),
           unit: 's',
+          // Küçük tam sayı sürelerde ±1 s komşular olağan seçeneklerdir.
+          komsuSiniri: 3,
         );
       }
       final mum = a + 2;
@@ -1491,6 +1616,7 @@ final lmFizikElektrik = <AdvancedFamily>[
           'kesme gerilimi ${tr(k2 / 10)} V bulunur.',
           _no(a, b, c),
           unit: 'V',
+          yon: k1 / 10,
         );
       }
       final idx = b + 20 * k;
@@ -1523,6 +1649,7 @@ final lmFizikElektrik = <AdvancedFamily>[
         'eV bulunur.',
         _no(a, b, c),
         unit: '',
+        yon: k1 / 100,
       );
     },
   ),

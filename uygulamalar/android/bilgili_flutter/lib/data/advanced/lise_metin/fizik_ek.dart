@@ -42,7 +42,16 @@ AdvancedItem _s(
   int? sira,
 }) {
   if (sira != null) {
-    return _sSirali(kok, dogru, hatalar, aciklama, sira, unit, pozitif, basamak);
+    return _sSirali(
+      kok,
+      dogru,
+      hatalar,
+      aciklama,
+      sira,
+      unit,
+      pozitif,
+      basamak,
+    );
   }
   final k = _iki(dogru);
   if ((dogru - k).abs() > 1e-7) {
@@ -128,9 +137,43 @@ AdvancedItem _sSirali(
       throw StateError('Değeri bilinmeyen çeldirici $h: $kok');
     }
   }
-  for (final m in const [1, -1, 2, -2, 3, -3, 4, -4, 5, 6]) {
-    final x = _iki(k + m * adim);
-    if (!pozitif || x > 0) ekle(x, yaz(x));
+  // Son çare komşular: önce anahtarın %20-25 çevresindeki katları, sonra
+  // birer adım; ardışık eşit aralıklı değerler (0,11 – 0,12 – 0,13) ancak
+  // bunlar da tükenirse kullanılır. Değerler anahtarın duyarlığına
+  // yuvarlanır: 10 ve üstü tam sayı anahtarda (sayımlar gibi) tam sayıya;
+  // küçük tam sayılarda katlar yuvarlanınca yine ardışık tam sayılar
+  // çıkacağından iki ondalığa.
+  num yuvarla(num x) => basamak != null
+      ? double.parse(x.toStringAsFixed(basamak))
+      : (k == k.roundToDouble() && k.abs() >= 10 ? x.roundToDouble() : _iki(x));
+  // Anahtar yazım duyarlığının 20 katından küçükse (0,05 gibi) yanındaki
+  // yazılabilir değerler azdır; ikiden çok komşu, anahtarı da içine alan
+  // ardışık bir dizi (0,02 – 0,03 – 0,04 – 0,05) oluştururdu. Bu durumda
+  // en çok iki komşu eklenir, eksik kalan yan öbür yanın tipik hatalarıyla
+  // tamamlanır.
+  final dar = k.abs() < 20 * enAz;
+  var komsu = 0;
+  for (final x in [
+    k * 1.25,
+    k * 0.8,
+    k + adim,
+    k - adim,
+    k * 1.5,
+    k / 1.5,
+    k + 2 * adim,
+    k - 2 * adim,
+    k * 2,
+    k / 2,
+    k + 3 * adim,
+    k - 3 * adim,
+    k + 4 * adim,
+    k + 5 * adim,
+  ]) {
+    if (dar && komsu >= 2 && adaylar.length >= 3) break;
+    final y = yuvarla(x);
+    final once = adaylar.length;
+    if (!pozitif || y > 0) ekle(y, yaz(y));
+    if (adaylar.length > once) komsu++;
   }
   final anahtar = yaz(k);
   return AdvancedItem(
@@ -2546,7 +2589,13 @@ AdvancedItem _yildizYolculugu(int a, int b, int k) {
         'hızıyla giden bir uzay aracındaki gözlemciye göre Dünya ile yıldız '
         'arasındaki uzaklık kaç ışık yılı olur? $not',
     kisa,
-    [d * 100 / kok, d * beta / 100, d * (100 - beta) / 100, d, kisa * kok / 100],
+    [
+      d * 100 / kok,
+      d * beta / 100,
+      d * (100 - beta) / 100,
+      d,
+      kisa * kok / 100,
+    ],
     'Araçtaki gözlemciye göre Dünya–yıldız uzaklığı hareket doğrultusunda '
         'kısalır: L = L₀·√(1 − v²/c²) = $d·$kokYazi = ${_n(kisa)} ışık yılı.',
     sira: s,
@@ -4334,11 +4383,11 @@ AdvancedItem _ozdesKureler(int a, int b, int k) {
           '= ${_n(y)} µC bulunur.',
     ),
   };
-  // Ek tipik hatalar: işareti kaybetmek, ara adımdaki yükü yanıt sanmak,
-  // bir dokunmayı atlamak ya da fazladan bir kez yarıya bölmek.
+  // Ek tipik hatalar: ara adımdaki yükü yanıt sanmak, bir dokunmayı ya da
+  // bir küreyi atlamak, fazladan bir kez yarıya bölmek.
   final ekler = switch (v) {
     0 => [(qk + ql) / 2, (ql + qm) / 2],
-    1 => <double>[],
+    1 => [(qk + ql) / 2, (qk + qm) / 2],
     2 => [(qk + ql) / 8, 0.0],
     _ => [(qk + ql) / 4, (qk + ql + 4 * qm) / 4],
   };
@@ -4452,14 +4501,14 @@ AdvancedItem _yaricapliKureler(int a, int b, int k, bool topraklama) {
   };
   // Ek tipik hatalar: yarıçap oranını ters kurmak, yalnız kendi yükünü
   // paylaştırmak, yükü yüzey alanıyla (r²) orantılı sanmak, son yükleri
-  // karıştırmak.
+  // karıştırmak, paylaştırmayı bir kez fazla uygulamak.
   final toplam = q1 + q2, yl = toplam * r2 / (r1 + r2);
   final alan = r1 * r1 + r2 * r2;
   final ekler = switch (v) {
     0 => [toplam * r1 / r2, q1 * r1 / (r1 + r2), toplam * r1 * r1 / alan],
     1 => [toplam * r2 / r1, q2 * r2 / (r1 + r2), toplam * r2 * r2 / alan],
     2 => [(q1 - yl).abs(), (q2 - yk).abs(), (yk - yl).abs()],
-    _ => [yk * r1 / r2, yl * r1 / (r1 + r2)],
+    _ => [yk * r1 / r2, yl * r1 / (r1 + r2), y * r1 / (r1 + r2)],
   };
   return _s(
     '$giris $soru',
@@ -5727,9 +5776,7 @@ List<List<double>> _renkOlcu(List<List<int>> se) {
     var t = 0.0;
     for (var b = 0; b < se.length; b++) {
       if (b == a) continue;
-      t +=
-          kume[a].intersection(kume[b]).length /
-          kume[a].union(kume[b]).length;
+      t += kume[a].intersection(kume[b]).length / kume[a].union(kume[b]).length;
     }
     return t;
   }

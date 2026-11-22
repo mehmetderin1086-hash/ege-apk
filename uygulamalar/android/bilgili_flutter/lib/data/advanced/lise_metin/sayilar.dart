@@ -5877,19 +5877,34 @@ AdvancedItem _birimUret(int a, int b, int c, int w) {
       final ml = const [200, 250, 400, 500, 750][a % 5];
       final adet = 12 + 2 * b + 40 * (a ~/ 5) + 200 * w;
       final litre = ml * adet / 1000;
+      final kok =
+          '${d(litre)} L zeytinyağı, her biri $ml mL alan şişelere dolduruluyor. '
+          'Bu iş için kaç şişe gerekir?';
       // Şişe sayısı tam sayıdır; 1,2 ya da 0,012 gibi tam olmayan çeldiriciler
-      // hemen elenir. Çeldiriciler tam sayı olan hatalardan gelir: 1 L = 10000 mL
-      // ya da 1 L = 100 mL sanmak, bölmek yerine çarpmak (litre · şişe hacmi);
-      // yetmezse yakın tam sayılar.
-      return _tam(
-        '${d(litre)} L zeytinyağı, her biri $ml mL alan şişelere dolduruluyor. Bu iş '
-            'için kaç şişe gerekir?',
-        adet,
-        [10 * adet, ?_bol(adet, 10), ?_bol(adet * ml * ml, 1000000)],
+      // hemen elenir. Bu yüzden yalnız tam sayı çıkan hatalar kullanılır ve her
+      // yanın listesinde önce gelir: küçük yanda 1 L = 100 mL sanmak ve bölmek
+      // yerine çarpmak (litre · şişe hacmi), büyük yanda 1 L = 10000 mL sanmak;
+      // ardından yakın çift sayılar. Yanıtın kaç çeldiriciden büyük olacağı
+      // kökten seçilen hedefle belirlenir; böylece yanıt her sırada görülür.
+      (double, String) yaz(int x) => (x.toDouble(), '$x');
+      return secenekli(
+        kok,
+        '$adet',
+        _dengeli(
+          kok,
+          adet.toDouble(),
+          const [],
+          const [],
+          [
+            ?_bol(adet, 10),
+            ?_bol(adet * ml * ml, 1000000),
+            for (var j = 1; j <= 8; j++)
+              if (adet - 2 * j > 0) adet - 2 * j,
+          ].map(yaz),
+          [10 * adet, for (var j = 1; j <= 8; j++) adet + 2 * j].map(yaz),
+        ),
         '${d(litre)} L = ${d(litre * 1000)} mL olur (1 L = 1000 mL). Şişe sayısı '
             '${d(litre * 1000)} / $ml = $adet bulunur.',
-        pozitif: true,
-        komsuAdim: 2,
       );
     case 6:
       final hektarMi = b >= 10;

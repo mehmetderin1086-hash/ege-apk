@@ -5209,14 +5209,14 @@ final lmGeometriEk = <AdvancedFamily>[
         while ((e0 + 1) * (e0 + 1) < R) {
           e0++;
         }
-        // Uçları katma, yalnız pozitifleri ya da sıfırı saymama, (1 + m²)
-        // çarpanını unutma ve kareyi almadan |n| < sınır sanma.
+        // Uçları katma, yalnız pozitifleri ya da sıfırı saymama ve (1 + m²)
+        // çarpanını unutma.
         return sayisalSirali(
           'Analitik düzlemde y = ${_ifade([(m, 'x')])} + n doğrusu x² + y² = '
               '$R çemberini iki farklı noktada kestiğine göre n sayısının '
               'alabileceği kaç farklı tam sayı değeri vardır?',
           adet,
-          [2 * e + 3, e, 2 * e, 2 * e0 + 1, 2 * sinir - 1],
+          [2 * e + 3, e, 2 * e, 2 * e0 + 1],
           'Doğru denklemi çemberde yerine yazılırsa '
               '${_ifade([(oran, 'x²'), (2 * m, 'nx')])} + n² − $R = 0 olur. İki '
               'noktada kesişme için diskriminant pozitif olmalıdır: n² < $R·$oran '
@@ -5271,14 +5271,13 @@ final lmGeometriEk = <AdvancedFamily>[
         fark += 9;
       }
       final t = (r + fark) * nn, cc = sabitOf(fark);
-      // Merkezin uzaklığı, en büyük uzaklık, yarıçap; çapı çıkarma ve
-      // √(A² + B²) ile bölmeyi unutma.
+      // Merkezin uzaklığı, en büyük uzaklık, yarıçap ve çapı çıkarma.
       return sayisalSirali(
         'Analitik düzlemde ${_cember(h, k, r * r)} çemberi ile '
             '${_dnk(pa, pb, cc)} doğrusu kesişmiyor. Çember üzerindeki noktaların '
             'bu doğruya olan uzaklıklarının en küçüğü kaç birimdir?',
         fark,
-        [r + fark, 2 * r + fark, r, fark - r, t - r],
+        [r + fark, 2 * r + fark, r, fark - r],
         'Merkez M${_n(h, k)}, yarıçap $r birimdir. Merkezin doğruya uzaklığı '
             '|$pa·${_pz(h)} + ${_pz(pb)}·${_pz(k)} + ${_pz(cc)}| / $nn = $t / $nn '
             '= ${r + fark} birim olur. En yakın nokta merkezle doğru arasındadır: '

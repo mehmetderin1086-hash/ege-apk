@@ -289,16 +289,22 @@ AdvancedItem _saySirali(
   final esik = 0.5 / _on(basamak);
   bool gecerli(num x) => x.isFinite && (!arti || x >= esik);
   final anahtar = yaz(dogru, kesin: true);
-  bool yakin(num x, num y) => _yakin(x, y, basamak, orijin);
+  // Yazılan değerler (değer, ondalık basamak): yakınlık denetimi için.
+  final anahtarYazim = _yazim(dogru, basamak);
+  final yazimlar = <(num, int)>[];
+  bool yakin((num, int) z) =>
+      _yakin(z, anahtarYazim, orijin) ||
+      yazimlar.any((w) => _yakin(w, z, orijin));
   final tipik = <(num, String)>[];
   for (final x in adaylar.where(gecerli)) {
-    final y = yaz(x);
+    final y = yaz(x), z = _yazim(x, basamak);
     if (ayniSecenek(y, anahtar) ||
-        yakin(x, d) ||
-        tipik.any((t) => ayniSecenek(t.$2, y) || yakin(t.$1, x))) {
+        tipik.any((t) => ayniSecenek(t.$2, y)) ||
+        yakin(z)) {
       continue;
     }
     tipik.add((x, y));
+    yazimlar.add(z);
   }
   final alt = tipik.where((t) => t.$1 < d).length, ust = tipik.length - alt;
   int asim(int s) {
@@ -325,13 +331,11 @@ AdvancedItem _saySirali(
   }
   final komsular = <(num, String)>[];
   for (final x in _komsular(d, (komsuOlcek ?? d).toDouble(), basamak)) {
-    if (gecerli(x) &&
-        x > komsuAlt &&
-        x < komsuUst &&
-        !yakin(x, d) &&
-        ![...tipik, ...komsular].any((t) => yakin(t.$1, x))) {
-      komsular.add((x, yaz(x)));
-    }
+    if (!gecerli(x) || x <= komsuAlt || x >= komsuUst) continue;
+    final z = _yazim(x, basamak);
+    if (yakin(z)) continue;
+    komsular.add((x, yaz(x)));
+    yazimlar.add(z);
   }
   return AdvancedItem(
     kok,
@@ -341,25 +345,29 @@ AdvancedItem _saySirali(
   );
 }
 
-/// [x] ile [y], [basamak] basamakla yazıldığında pratikte aynı mı görünür:
-/// göreli farkları (büyüklük [orijin] noktasından ölçülür) %2'den küçükse ya
-/// da ondalık basamak sayıları farklıyken kısa yazılanın son basamağının
-/// yarısı içinde kalıyorlarsa (ve göreli fark %6'dan küçükse). Örnek: 60,72
-/// ile 60,7; 0,21 ile 0,2; 340 ile 336.
-bool _yakin(num x, num y, int basamak, [num orijin = 0]) {
-  num yazilan(num v) => num.parse(tr(v, basamak).replaceFirst(',', '.'));
-  int ondalik(num v) {
-    final s = tr(v, basamak), virgul = s.indexOf(',');
-    return virgul < 0 ? 0 : s.length - virgul - 1;
-  }
+/// [x] sayısının [basamak] basamakla yazılan değeri ve ondalık basamak sayısı
+/// (60,72 → (60.72, 2)).
+(num, int) _yazim(num x, int basamak) {
+  final s = tr(x, basamak), virgul = s.indexOf(',');
+  return (
+    num.parse(s.replaceFirst(',', '.')),
+    virgul < 0 ? 0 : s.length - virgul - 1,
+  );
+}
 
-  final p = yazilan(x), q = yazilan(y);
+/// Yazılan iki değer ([_yazim]) pratikte aynı mı görünür: göreli farkları
+/// (büyüklük [orijin] noktasından ölçülür) %2'den küçükse ya da ondalık
+/// basamak sayıları farklıyken kısa yazılanın son basamağının yarısı içinde
+/// kalıyorlarsa (ve göreli fark %6'dan küçükse). Örnek: 60,72 ile 60,7; 0,21
+/// ile 0,2; 340 ile 336.
+bool _yakin((num, int) x, (num, int) y, [num orijin = 0]) {
+  final (p, op) = x;
+  final (q, oq) = y;
   final u = (p - orijin).abs(), w = (q - orijin).abs();
   final buyuk = u > w ? u : w;
   if (buyuk == 0) return true;
   final fark = (p - q).abs(), goreli = fark / buyuk;
   if (goreli < 0.02) return true;
-  final op = ondalik(x), oq = ondalik(y);
   return op != oq &&
       goreli < 0.06 &&
       fark <= 0.5 / _on(op < oq ? op : oq) + 1e-9;

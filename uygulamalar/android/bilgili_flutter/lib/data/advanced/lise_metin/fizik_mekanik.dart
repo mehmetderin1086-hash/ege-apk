@@ -46,9 +46,13 @@ AdvancedItem _s(
   );
 }
 
-/// Vaka numarasından (i = a + 25·b + 500·c) anahtarın hedef değer sırası.
-int _hs(int a, int b, int c, [int tuz = 0]) =>
-    hedefSira(a + 25 * b + 500 * c, tuz);
+/// Vaka numarasından (i = a + 25·b + 500·c) anahtarın hedef değer sırası
+/// (0 … 3). 4 ile çarpılıp eklenen ikinci bağımsız değer, hedef sıra
+/// kurulamadığında yerine geçecek sırayı seçer (`_sd`).
+int _hs(int a, int b, int c) {
+  final i = a + 25 * b + 500 * c;
+  return hedefSira(i) + 4 * hedefSira(i, 7);
+}
 
 /// Anahtarın yazım duyarlığında (tam sayı, bir ya da iki ondalık) ve değerinin
 /// en az %10'u kadar olan en küçük yuvarlak komşu adımı.
@@ -77,11 +81,11 @@ num _ikinciAdim(num k, num s) {
 }
 
 /// Değer sırası dengeli pozitif sayısal soru. Anahtardan küçük çeldirici
-/// sayısı [sira] olur (`hedefSira`). [hatalar] öncelik sırasıyla tipik hata
+/// sayısı [sira] % 4 olur (`_hs`). [hatalar] öncelik sırasıyla tipik hata
 /// değerleridir (anahtarın iki yanında da); bir yanda yetmezse anahtarın
 /// [adim] (verilmezse `_komsuAdim`) aralıklı komşularıyla tamamlanır. Bir
 /// soruda en çok iki komşu değer bulunur: hedef sıra daha fazlasını
-/// gerektirirse ona en yakın, iki komşuyla kurulabilen sıra kullanılır.
+/// gerektirirse iki komşuyla kurulabilen bir yedek sıra kullanılır.
 /// Komşular [komsuAlt] ile [komsuUst] arasında kalır (fiziksel olarak
 /// olanaklı aralık, uçlar dışarıda). Seçenekler iki ondalıkla yazıldığından
 /// aynılık yüzde birlik değerle sınanır (`ayniSecenek` ile eşdeğer). Eşit
@@ -138,12 +142,19 @@ AdvancedItem _sd(
     return ka > altK || ku > komsu.length - altK ? 9 : ka + ku;
   }
 
-  var r = sira.clamp(0, 3);
+  // Kurulamayan uç hedef (0 ya da 3) yerine ikinci karma değere göre ya en
+  // yakın ya da en uzak kurulabilen sıra, kurulamayan orta hedef yerine iki
+  // yanındaki sıralardan biri seçilir; yedek sıralar tek bir sırada yığılmaz.
+  final hedef = sira % 4, yedek = (sira ~/ 4).isEven;
+  var r = hedef;
   if (gerek(r) > 2) {
-    final yon = kY.isEven ? 1 : -1;
-    for (final d in [yon, -yon, 2 * yon, -2 * yon, 3 * yon, -3 * yon]) {
-      if (sira + d >= 0 && sira + d <= 3 && gerek(sira + d) <= 2) {
-        r = sira + d;
+    final yon = hedef == 0 ? 1 : (hedef == 3 ? -1 : (yedek ? 1 : -1));
+    final denenecek = hedef == 0 || hedef == 3
+        ? (yedek ? [yon, 2 * yon, 3 * yon] : [3 * yon, 2 * yon, yon])
+        : [yon, -yon, 2 * yon, -2 * yon];
+    for (final d in denenecek) {
+      if (hedef + d >= 0 && hedef + d <= 3 && gerek(hedef + d) <= 2) {
+        r = hedef + d;
         break;
       }
     }
@@ -1778,7 +1789,7 @@ final _f16 = lmAile(
         '${tr(d2)} · $v2 = ${tr(m2)} g olur. Karışımın özkütlesi (${tr(m1)} + ${tr(m2)}) / '
         '($v1 + $v2) = ${tr(m1 + m2)} / ${v1 + v2} = ${tr(dk)} g/cm³ bulunur.',
         _hs(a, b, c),
-        adim: 0.05,
+        adim: 0.02,
         komsuAlt: d2,
         komsuUst: d1,
       );
@@ -1800,7 +1811,7 @@ final _f16 = lmAile(
       '${tr(d2)} = $v2 cm³ olur. Karışımın özkütlesi (${tr(m1)} + ${tr(m2)}) / ($v1 + $v2) = '
       '${tr(m1 + m2)} / ${v1 + v2} = ${tr(dk)} g/cm³ bulunur.',
       _hs(a, b, c),
-      adim: 0.05,
+      adim: 0.02,
       komsuAlt: d2,
       komsuUst: d1,
     );

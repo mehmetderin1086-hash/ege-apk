@@ -1,6 +1,7 @@
 // AYT Matematik metin aileleri (ikinci tur): toplam-fark ve iki kat açı,
 // trigonometrik denklem, sinüs ve kosinüs teoremi, ters trigonometri,
 // logaritma uygulamaları, fonksiyonlar, süreklilik, türev ve integral.
+import 'denge.dart';
 import 'ortak.dart';
 
 // ---------------------------------------------------------------------------
@@ -433,6 +434,157 @@ AdvancedFamily _aile(
   lesson: 'Matematik',
   shortAnswer: shortAnswer,
 );
+
+// ---------------------------------------------------------------------------
+// Seçenek dengesi
+// ---------------------------------------------------------------------------
+//
+// Bilgisiz bir öğrenci anahtarı seçeneklerin düzeninden bulamamalıdır
+// (tool/lise_metin/ipucu.dart). Dengelenen ailelerde soru önce eski yoluyla
+// kurulur; böylece kök, anahtar, açıklama ve rastlantı denetiminin kararı
+// aynen kalır. Yalnız çeldiriciler, tipik hata adaylarından yeniden seçilir.
+
+/// lmAile koordinatlarından vakanın sıra numarası.
+int _vaka(int a, int b, int c) => a + 25 * b + 500 * c;
+
+final _sozAyrac = RegExp(r'[^\p{L}\p{N}]+', unicode: true);
+
+/// Seçeneğin sözcük kümesi (ipucu taramasındaki ölçütle aynı).
+Set<String> _sozKumesi(String s) =>
+    s.toLowerCase().split(_sozAyrac).where((w) => w.isNotEmpty).toSet();
+
+/// [x] içinde [j] numaralı değer tek başına en büyük (ya da [enKucuk]
+/// doğruysa tek başına en küçük) mü?
+bool _tekBasina(List<num> x, int j, {bool enKucuk = false}) {
+  for (var k = 0; k < x.length; k++) {
+    if (k != j && (enKucuk ? x[k] - x[j] : x[j] - x[k]) <= 1e-9) return false;
+  }
+  return true;
+}
+
+/// Ceza listelerinin sözlük sırasıyla karşılaştırılması.
+bool _dahaIyi(List<int> a, List<int> b) {
+  for (var k = 0; k < a.length; k++) {
+    if (a[k] != b[k]) return a[k] < b[k];
+  }
+  return false;
+}
+
+/// Üç çeldiriciyi [adaylar] (öncelik sırasıyla değer ve yazım) içinden seçer.
+/// Üçlüler sırasıyla şu ölçütlerle karşılaştırılır: anahtardan küçük
+/// çeldirici sayısının [sira] hedefine uzaklığı; anahtarın sözcük
+/// benzerliğinde tek başına en yüksek ya da en düşük, uzunlukta tek başına en
+/// uzun olması; adayların öncelik sırası. Yazımı anahtarla ya da önceki bir
+/// adayla aynı olan adaylar atlanır; ilk [enFazla] farklı aday denenir.
+List<String> _dengeli(
+  num anahtar,
+  String yazim,
+  Iterable<(num, String)> adaylar,
+  int sira, {
+  int enFazla = 10,
+}) {
+  final d = <num>[], y = <String>[];
+  for (final (deger, metin) in adaylar) {
+    if (y.length == enFazla) break;
+    if (metin.trim().isEmpty ||
+        ayniSecenek(metin, yazim) ||
+        y.any((w) => ayniSecenek(w, metin))) {
+      continue;
+    }
+    d.add(deger);
+    y.add(metin);
+  }
+  final n = y.length;
+  if (n < 3) throw StateError('Eksik çeldirici: $yazim → $y');
+  final soz = [_sozKumesi(yazim), for (final x in y) _sozKumesi(x)];
+  final boy = [yazim.length, for (final x in y) x.length];
+  double benzer(int p, int q) {
+    if (p == q) return 0;
+    final u = soz[p].union(soz[q]).length;
+    return u == 0 ? 0 : soz[p].intersection(soz[q]).length / u;
+  }
+
+  final jac = [
+    for (var p = 0; p <= n; p++) [for (var q = 0; q <= n; q++) benzer(p, q)],
+  ];
+  var enIyi = const <int>[];
+  List<int>? enIyiCeza;
+  for (var p = 0; p < n; p++) {
+    for (var q = p + 1; q < n; q++) {
+      for (var r = q + 1; r < n; r++) {
+        final s = [0, p + 1, q + 1, r + 1];
+        final alt = [p, q, r].where((x) => d[x] < anahtar).length;
+        final puan = [
+          for (final u in s) s.fold<double>(0, (t, v) => t + jac[u][v]),
+        ];
+        final uz = [for (final u in s) boy[u]];
+        final ceza = [
+          (alt - sira).abs(),
+          (_tekBasina(puan, 0) || _tekBasina(puan, 0, enKucuk: true) ? 1 : 0) +
+              (_tekBasina(uz, 0) ? 1 : 0),
+          p + q + r,
+        ];
+        if (enIyiCeza == null || _dahaIyi(ceza, enIyiCeza)) {
+          enIyi = [p, q, r];
+          enIyiCeza = ceza;
+        }
+      }
+    }
+  }
+  return [for (final x in enIyi) y[x]];
+}
+
+/// [eski] sorunun kökü, anahtarı ve açıklaması korunur; çeldiricileri
+/// [_dengeli] ile [adaylar] içinden yeniden seçilir. Seçim kurulamazsa eski
+/// çeldiriciler kalır (rastlantı denetiminin kararı değişmesin diye).
+AdvancedItem _dengele(
+  AdvancedItem eski,
+  num anahtar,
+  Iterable<(num, String)> adaylar,
+  int sira,
+) {
+  try {
+    return AdvancedItem(
+      eski.prompt,
+      eski.correct,
+      _dengeli(anahtar, eski.correct, adaylar, sira),
+      eski.explanation,
+    );
+  } on StateError {
+    return eski;
+  }
+}
+
+/// Tam sayı adayları; [pozitif] doğruysa sıfır ve negatifler atılır.
+List<(num, String)> _tamAday(
+  Iterable<int?> xs, {
+  String birim = '',
+  bool pozitif = false,
+}) => [
+  for (final x in xs)
+    if (x != null && (!pozitif || x > 0)) (x, birimli(_n(x), birim)),
+];
+
+/// Kesir adayları; [aralik] verilirse aralık dışındakiler atılır.
+List<(num, String)> _rAday(
+  Iterable<_R?> xs, {
+  bool pozitif = false,
+  bool Function(_R)? aralik,
+}) => [
+  for (final x in xs)
+    if (x != null && (!pozitif || x.p > 0) && (aralik == null || aralik(x)))
+      (x.p / x.q, '$x'),
+];
+
+/// Tam sayı yanıtın yakın komşuları (son çare): x ∓ s ve x ∓ 2s; s, x/8'i
+/// geçmeyen en büyük yuvarlak adımdır (1, 2, 5, 10, 20, …).
+List<int> _komsuTam(int x) {
+  var s = 1;
+  for (final u in const [2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]) {
+    if (u * 8 <= x.abs()) s = u;
+  }
+  return [x - s, x + s, x - 2 * s, x + 2 * s];
+}
 
 // ---------------------------------------------------------------------------
 // 1 · Toplam-fark formülleri
@@ -2163,9 +2315,11 @@ AdvancedItem _trigIsaret(int a, int b, int c) {
           'z = ${_aciYaz(f3, acilar[2])} olduğuna göre x, y ve z sayılarının '
           'işaretleri hangi seçenekte doğru verilmiştir?',
       yaz(poz),
+      // Her çeldiricide iki işaret yanlıştır: her terimin doğru işareti iki
+      // seçenekte görülür, terim terim çoğunluk anahtarı göstermez.
       [
         for (var i = 0; i < 3; i++)
-          yaz([for (var j = 0; j < 3; j++) j == i ? !poz[j] : poz[j]]),
+          yaz([for (var j = 0; j < 3; j++) j == i ? poz[j] : !poz[j]]),
       ],
       '$aciklama.',
     );
@@ -3597,6 +3751,140 @@ int _us(int taban, int kuvvet) {
 }
 
 AdvancedItem _logModel(int a, int b, int c) {
+  final eski = _logModelEski(a, b, c);
+  final sira = hedefSira(_vaka(a, b, c));
+  final j = a + 25 * b;
+  // Çeldiriciler: kat ya da yarılanma sayısını süre sanma, çarpanı periyotla
+  // çarpma, bir dönem eksik ya da fazla sayma, üs yerine çarpma, toplam süreyi
+  // periyot sanma; en sonda komşu değerler.
+  final List<int?> aday;
+  String birim = '';
+  switch (c) {
+    case 0 || 1 || 8:
+      final (ca, tt, k) = _katlanma[(j * 7 + 11 * c) % _katlanma.length];
+      final t = k * tt;
+      final n0 = _susSec(_baslangic, j + c, {
+        t,
+        tt,
+        if (t % _us(ca, k) == 0) t ~/ _us(ca, k),
+      });
+      final n = n0 * _us(ca, k);
+      if (c == 0) {
+        birim = 'dk';
+        aday = [
+          ...[_us(ca, k) * tt, (k - 1) * tt, (k + 1) * tt, k, k * ca * tt],
+          ...[tt, (k - 2) * tt, (k + 2) * tt, ..._komsuTam(t)],
+        ];
+      } else if (c == 1) {
+        aday = [
+          ...[n0 * _us(ca, k + 1), n0 * ca * k, n0 * _us(ca, k - 1)],
+          if (k <= 4) n0 * _us(ca + 1, k),
+          ...[n0 * (1 + ca * k), n0 * _us(k, ca)],
+          if (k >= 3) n0 * _us(ca, k - 2),
+          ...[n0 * _us(ca, k + 2), n - n0, ..._komsuTam(n)],
+        ];
+      } else {
+        birim = 'dk';
+        aday = [
+          ...[t ~/ _us(ca, k), t ~/ (k - 1), t ~/ (k + 1), t ~/ 2, t],
+          if (t % ca == 0) t ~/ ca,
+          ..._komsuTam(tt),
+        ];
+      }
+    case 2 || 3 || 9:
+      final (bir, tt, k) = _yarilanma[(j * 7 + 13 * c) % _yarilanma.length];
+      final t = k * tt;
+      final m = _susSec(_kalanKutle, j + c, {
+        t,
+        tt,
+        if (t % _us(2, k) == 0) t ~/ _us(2, k),
+      });
+      final m0 = m * _us(2, k);
+      if (c == 2) {
+        birim = bir;
+        aday = [
+          ...[_us(2, k) * tt, (k - 1) * tt, (k + 1) * tt, k],
+          ...[_us(2, k) * tt ~/ 2, tt, (k - 2) * tt, (k + 2) * tt],
+          ..._komsuTam(t),
+        ];
+      } else if (c == 3) {
+        birim = 'g';
+        aday = [
+          ...[m0 ~/ (2 * k), m0 ~/ _us(2, k + 1), m0 ~/ _us(2, k - 1)],
+          ...[m0 - m, m0 ~/ 2],
+          if (m0 % _us(2, k + 2) == 0) m0 ~/ _us(2, k + 2),
+          ..._komsuTam(m),
+        ];
+      } else {
+        birim = bir;
+        aday = [
+          ...[t ~/ (k + 1), t ~/ (k - 1), t * m ~/ m0, t ~/ 2, t],
+          if (k >= 3 && t % (k - 2) == 0) t ~/ (k - 2),
+          ..._komsuTam(tt),
+        ];
+      }
+    case 4:
+      final (tur, x, y, ki, n) = _logSureVeri[j];
+      final (kat, _) = _katlar[ki];
+      if (tur == 1) {
+        birim = 'saat';
+        var katlanma = 0;
+        for (var u = 1; u < kat; u *= x) {
+          katlanma++;
+        }
+        aday = [
+          ...[n - 1, y * katlanma, n + 1, y * ((kat + x - 1) ~/ x)],
+          ...[y * kat ~/ x, n - 2, n + 2, n - 3, n + 3],
+        ];
+      } else {
+        final (yuzde, _, _, _, _, _) = _oranlar[x];
+        final yp = yuzde.abs();
+        final dogrusal = yuzde > 0
+            ? ((kat - 1) * 100 + yp - 1) ~/ yp
+            : ((kat - 1) * 100 + kat * yp - 1) ~/ (kat * yp);
+        aday = [n - 1, n + 1, dogrusal, n + 2, n - 2, n - 3, n + 3, n + 4];
+      }
+    case 5:
+      final (bir, tt, k) = _yarilanma[(j * 11 + 5) % _yarilanma.length];
+      birim = bir;
+      final t = k * tt;
+      aday = [
+        ...[k, _us(2, k) * tt, (k - 1) * tt, (k + 1) * tt, tt],
+        ...[(k - 2) * tt, (k + 2) * tt, ..._komsuTam(t)],
+      ];
+    default:
+      final (ta, tt, k) = _acikModel[(j * 7 + 19 * c) % _acikModel.length];
+      final t = k * tt;
+      final n0 = _susSec(_baslangic, j + 2 * c, {
+        t,
+        if (t % _us(ta, k) == 0) t ~/ _us(ta, k),
+      });
+      final n = n0 * _us(ta, k);
+      if (c == 6) {
+        birim = 'saat';
+        aday = [
+          ...[k, _us(ta, k) * tt, (k - 1) * tt, (k + 1) * tt, tt],
+          ...[(k - 2) * tt, (k + 2) * tt, ..._komsuTam(t)],
+        ];
+      } else {
+        aday = [
+          ...[n0 * _us(ta, k + 1), n0 * ta * k, n0 * _us(ta, k - 1), n0 * t],
+          if (ta <= 3) n0 * _us(k, ta),
+          if (k >= 3) n0 * _us(ta, k - 2),
+          ...[n0 * _us(ta, k + 2), n - n0, ..._komsuTam(n)],
+        ];
+      }
+  }
+  final deger = num.parse(eski.correct.split(' ').first);
+  return _dengele(
+    eski,
+    deger,
+    _tamAday(aday, birim: birim, pozitif: true),
+    sira,
+  );
+}
+
+AdvancedItem _logModelEski(int a, int b, int c) {
   final j = a + 25 * b;
   switch (c) {
     case 0 || 1 || 8:
@@ -4191,7 +4479,7 @@ AdvancedItem _grafikDonusum(int a, int b, int c, int deneme) {
     };
     // Yanıt verilen noktaya eşit olmasın.
     if (x == p && y == q) _kirli = true;
-    return _secenek(
+    final eski = _secenek(
       'f fonksiyonunun grafiği A${_nokta(p, q)} noktasından geçmektedir. '
           'Buna göre y = $ifade fonksiyonunun grafiği hangi noktadan kesinlikle '
           'geçer?',
@@ -4199,6 +4487,20 @@ AdvancedItem _grafikDonusum(int a, int b, int c, int deneme) {
       [...hatalar, _nokta(y, x), _nokta(x + 1, y), _nokta(x, y + 1)],
       '$adim${c == 3 ? ': ' : ' = '}${_nokta(x, y)}.',
     );
+    if (c == 0) return eski;
+    // Çeldiriciler apsiste ve ordinatta birer tipik hatanın üç birleşimidir:
+    // yansımayı yanlış eksene uygulama ya da unutma, ötelemeyi ters yöne
+    // yapma. Her koordinatın doğru değeri iki seçenekte görülür.
+    final (x2, y2) = switch (c) {
+      1 => (-p, q + k),
+      2 => (p, k - q),
+      _ => (p - h, q),
+    };
+    return AdvancedItem(eski.prompt, eski.correct, [
+      _nokta(x2, y),
+      _nokta(x, y2),
+      _nokta(x2, y2),
+    ], eski.explanation);
   }
   if (c <= 6) {
     // Ters yön: dönüştürülmüş grafiğin noktasından f grafiğinin noktasına.
@@ -4236,7 +4538,7 @@ AdvancedItem _grafikDonusum(int a, int b, int c, int deneme) {
       _ => [_nokta(bx, by - k), _nokta(-bx, by + k), _nokta(bx, k - by)],
     };
     if (bx == p && by == q) _kirli = true;
-    return _secenek(
+    final eski = _secenek(
       'y = $ifade fonksiyonunun grafiği B${_nokta(bx, by)} noktasından '
           'geçtiğine göre y = f(x) fonksiyonunun grafiği hangi noktadan '
           'kesinlikle geçer?',
@@ -4244,6 +4546,16 @@ AdvancedItem _grafikDonusum(int a, int b, int c, int deneme) {
       [...hatalar, _nokta(q, p), _nokta(p + 1, q), _nokta(p, q + 1)],
       '$adim. f fonksiyonunun grafiği ${_nokta(p, q)} noktasından geçer.',
     );
+    if (c == 4) return eski;
+    // Apsiste yansımayı geri almayı unutma ya da yanlış eksende yapma,
+    // ordinatta eksiyi unutma ya da ötelemeyi ters yönde geri alma: üç
+    // birleşim. Her koordinatın doğru değeri iki seçenekte görülür.
+    final (x2, y2) = c == 5 ? (-p, -q) : (-p, q + 2 * k);
+    return AdvancedItem(eski.prompt, eski.correct, [
+      _nokta(x2, q),
+      _nokta(p, y2),
+      _nokta(x2, y2),
+    ], eski.explanation);
   }
   // c = 7, 8, 9: kuralı verilen f ile dönüşüm.
   final f = [
@@ -5585,6 +5897,7 @@ final List<(int, int)> _kupAlan = [
 ];
 
 AdvancedItem _ikiEgriAlan(int a, int b, int c, int deneme) {
+  final sira = hedefSira(_vaka(a, b, c));
   if (c <= 5) {
     // a → (α, d); b → (r₁, doğru ya da ikinci parabol).
     final al = const [1, -1, 2, -2, 3][a % 5];
@@ -5628,7 +5941,7 @@ AdvancedItem _ikiEgriAlan(int a, int b, int c, int deneme) {
       final kup = al.abs() * d * d * d;
       final carpanlar =
           '${_n(al)}·${r1 == 0 ? 'x' : '(${_pol([1, -r1])})'}·(${_pol([1, -r2])})';
-      return _ras(
+      final eski = _ras(
         'y = ${_pol(egri1)} parabolü ile $ikinci arasında kalan kapalı '
             'bölgenin alanı kaç birimkaredir?',
         alan,
@@ -5646,6 +5959,27 @@ AdvancedItem _ikiEgriAlan(int a, int b, int c, int deneme) {
             '∫${_alt(r1)}${_ust(r2)} |${_pol(carpim)}| dx = ${al.abs()}·$d³/6 = '
             '$alan birimkaredir.',
         pozitif: true,
+      );
+      // 1/6 yerine 1/3, 1/2 ya da 1/12 alma; baş katsayıyı unutma; d³ yerine
+      // d² yazma; 6'ya bölmeyi unutma. Son dört aday komşu değerlerdir.
+      return _dengele(
+        eski,
+        alan.p / alan.q,
+        _rAday([
+          alan * _R(2),
+          _R(d * d * d, 6),
+          alan * _R(3),
+          _R(al.abs() * d * d, 6),
+          _R(al.abs() * d * d, 2),
+          alan * _R(6),
+          alan / _R(2),
+          _R(d * d * d, 3),
+          alan + _R(1),
+          alan - _R(1),
+          alan * _R(5, 4),
+          alan * _R(3, 4),
+        ], pozitif: true),
+        sira,
       );
     }
 
@@ -5672,7 +6006,7 @@ AdvancedItem _ikiEgriAlan(int a, int b, int c, int deneme) {
     final fark = r == 0
         ? '${_n(ka)}·x·(x² − ${e * e})'
         : '${_n(ka)}·(${_pol([1, -r])})·((${_pol([1, -r])})² − ${e * e})';
-    return _ras(
+    final eski = _ras(
       'y = ${_pol(kup)} eğrisi ile y = ${_pol(dogru)} doğrusu arasında kalan '
           'bölgelerin alanları toplamı kaç birimkaredir?',
       alan,
@@ -5682,6 +6016,28 @@ AdvancedItem _ikiEgriAlan(int a, int b, int c, int deneme) {
           'simetriktir; her birinin alanı ${ka.abs()}·$e⁴/4 = ${alan / _R(2)} '
           'olduğundan toplam alan $alan birimkaredir.',
       pozitif: true,
+    );
+    // Tek bölgeyi alma; ilkelde u⁴/4 ya da e²u²/2 paydasını unutma; baş
+    // katsayıyı unutma; parabol formülünü d = 2e ile uygulama; tek bölgede
+    // çıkarma yerine toplama. Son dört aday komşu değerlerdir.
+    final e4 = e * e * e * e;
+    return _dengele(
+      eski,
+      alan.p / alan.q,
+      _rAday([
+        alan / _R(2),
+        alan * _R(2),
+        _R(e4, 2),
+        alan * _R(3),
+        _R(4 * ka.abs() * e * e * e, 3),
+        _R(e4, 4),
+        alan * _R(3, 2),
+        alan + _R(1),
+        alan - _R(1),
+        alan * _R(5, 4),
+        alan * _R(3, 4),
+      ], pozitif: true),
+      sira,
     );
   }
 

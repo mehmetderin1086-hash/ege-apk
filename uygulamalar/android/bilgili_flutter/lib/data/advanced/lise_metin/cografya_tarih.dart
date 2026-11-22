@@ -343,6 +343,7 @@ AdvancedItem _olcekUzunluk(int a, int b, int c) {
         ters * 10,
         ters * 100,
         km * s,
+        s, // işlemi yarıda bırakıp 1 cm'nin gerçek karşılığını yanıt sanma
       ],
       'Haritadaki 1 cm gerçekte $payda cm, yani ${tr(s)} km eder. '
           '${tr(cm10 / 10)} × ${tr(s)} = ${tr(km)} km bulunur.',

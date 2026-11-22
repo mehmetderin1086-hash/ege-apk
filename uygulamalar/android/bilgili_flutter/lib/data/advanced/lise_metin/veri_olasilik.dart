@@ -191,19 +191,21 @@ AdvancedItem _olasilikSirali(
   return AdvancedItem(prompt, yazim, ilk!, aciklama);
 }
 
-/// İşaretli tam sayı yanıtlı soru (negatifler − ile yazılır). Vakaların
-/// dörtte birinde seçenekler iki ± çiftidir (anahtar, ters işaretlisi ve bir
-/// hata değerinin iki işaretlisi); ötekilerde mutlak değerleri farklı dört
-/// sayıdır. Kip vakadan bağımsız seçildiği için ± eşleşmesi anahtarı
-/// göstermez. Anahtarın değer sırası olası sıralar arasında düzgün dağıtılır
-/// ve anahtar, işareti tek olan seçenek olarak kalmaz.
+/// İşaretli tam sayı yanıtlı soru (negatifler − ile yazılır). İşaret hatası
+/// yapılabilen ([ciftli]) vakaların yarısında seçenekler iki ± çiftidir
+/// (anahtar, ters işaretlisi ve bir hata değerinin iki işaretlisi);
+/// ötekilerde mutlak değerleri farklı dört sayıdır. Kip vakadan bağımsız
+/// seçildiği için ± eşleşmesi anahtarı göstermez. Anahtarın değer sırası olası
+/// sıralar arasında düzgün dağıtılır ve anahtar, işareti tek olan seçenek
+/// olarak kalmaz.
 AdvancedItem _isaretliSirali(
   String prompt,
   int yanit,
   Iterable<int> adaylar,
   String aciklama,
-  int i,
-) {
+  int i, {
+  bool ciftli = false,
+}) {
   final tipik = <int>[];
   void ekle(int x) {
     if (x != 0 &&
@@ -214,7 +216,7 @@ AdvancedItem _isaretliSirali(
   }
 
   adaylar.forEach(ekle);
-  if (hedefSira(i, 1) == 0 && tipik.isNotEmpty) {
+  if (ciftli && hedefSira(i, 1) < 2 && tipik.isNotEmpty) {
     final kucuk = hedefSira(i) < 2;
     final e = tipik
         .firstWhere(
@@ -316,7 +318,8 @@ int _araliktaSira(int i, int alt, int ust) =>
 /// Pozitif tam sayı yanıtlı soru. [adaylar] tipik hatalardır; anahtarın
 /// değer sırası, bu adaylarla ulaşılabilen sıralar arasında düzgün (ya da
 /// [agirlik] verilirse ağırlıklı) dağıtılır. Komşu değerler yalnız farklı
-/// tipik aday üçten azsa eklenir.
+/// tipik aday üçten azsa eklenir. [ek], tam sayı olmayan tipik hatalardır
+/// (değer, yazım); öteki adaylardan önce denenir.
 AdvancedItem _tamAralikli(
   String prompt,
   int yanit,
@@ -325,12 +328,13 @@ AdvancedItem _tamAralikli(
   int i, {
   String unit = '',
   List<int>? agirlik,
+  List<(num, String)> ek = const [],
 }) {
   final tipik = <int>[];
   for (final x in adaylar) {
     if (x > 0 && x != yanit && !tipik.contains(x)) tipik.add(x);
   }
-  if (tipik.length < 3) {
+  if (tipik.length + ek.length < 3) {
     final adim = yanit >= 200 ? 10 : (yanit >= 40 ? 5 : 1);
     for (var k = 1; k <= 6; k++) {
       for (final x in [yanit + k * adim, yanit - k * adim]) {
@@ -338,8 +342,10 @@ AdvancedItem _tamAralikli(
       }
     }
   }
-  final ust = tipik.where((x) => x > yanit).length;
-  final alt = tipik.length - ust;
+  final ust =
+      tipik.where((x) => x > yanit).length +
+      ek.where((e) => e.$1 > yanit).length;
+  final alt = tipik.length + ek.length - ust;
   final lo = ust >= 3 ? 0 : 3 - ust, hi = alt >= 3 ? 3 : alt;
   final sira = agirlik == null
       ? _araliktaSira(i, lo, hi)
@@ -349,6 +355,7 @@ AdvancedItem _tamAralikli(
     prompt,
     yazim,
     siraliCeldiriciler(yanit, yazim, [
+      ...ek,
       for (final x in tipik) (x, birimli('$x', unit)),
     ], sira),
     aciklama,
@@ -1538,6 +1545,7 @@ AdvancedItem _binom(int a, int b, int c) {
         '($p $isaret $q)${_ust(m)} = ${_par(p + sq)}${_ust(m)} = '
         '${_eksi(yanit)}.',
         i,
+        ciftli: s < 0,
       );
     case 1:
       final k = 1 + e % (n - 1);
@@ -1554,6 +1562,7 @@ AdvancedItem _binom(int a, int b, int c) {
         '${_par(sq)}${_ust(k)} = $cnk·${_kuvvet(p, n - k)}·'
         '${_par(_kuvvet(sq, k))} = ${_eksi(yanit)}.',
         i,
+        ciftli: s < 0,
       );
     case 2:
       final k = 1 + (e + 1) % (n - 1);
@@ -1575,6 +1584,7 @@ AdvancedItem _binom(int a, int b, int c) {
         '(${kat(p, hx)})${_ust(n - k)}·($ikinci)${_ust(k)}. Katsayı '
         '$cnk·${_kuvvet(p, n - k)}·${_par(_kuvvet(sq, k))} = ${_eksi(yanit)}.',
         i,
+        ciftli: s < 0,
       );
     case 3:
       final jx = e % n; // x'in üssü: 0 … n − 1
@@ -1607,6 +1617,7 @@ AdvancedItem _binom(int a, int b, int c) {
                   'biçimindedir. Katsayı $cnj·${_kuvvet(p, jx)}·'
                   '${_par(_kuvvet(sq, n - jx))} = ${_eksi(yanit)} olur.',
         i,
+        ciftli: s < 0,
       );
     default:
       final m = n - 1;
@@ -1629,6 +1640,7 @@ AdvancedItem _binom(int a, int b, int c) {
         '($p $isaret $q)${_ust(m)} = ${_par(p + sq)}${_ust(m)} = '
         '${_eksi(yanit)}.',
         i,
+        ciftli: s < 0,
       );
   }
 }
@@ -2216,7 +2228,6 @@ AdvancedItem _ortalama(int a, int b, int c) {
           m + s * (d + 1),
           m - s * d * (n + 1) ~/ n,
           (n * m + x) ~/ (n + 2),
-          m, // ortalama değişmez sanılır
         ],
         'İlk $n günün toplamı $n·$m = ${n * m} kalemdir. Yeni toplam '
         '${n * m} + $x = ${n * m + x} olur; ortalama ${n * m + x} : ${n + 1} '
@@ -2236,7 +2247,7 @@ AdvancedItem _ortalama(int a, int b, int c) {
           (m + x) ~/ 2,
           m - s * (d + 1),
           m - s * d * (n - 1), // fark bölünmeden çıkarılır
-          m, // ortalama değişmez sanılır
+          (n * m + x) ~/ (n - 1), // çıkarma yerine toplama
         ],
         'Toplam $n·$m = ${n * m} kişidir. Bir gün çıkarılınca toplam '
         '${n * m} − $x = ${n * m - x} olur; ortalama ${n * m - x} : ${n - 1} '
@@ -2498,10 +2509,12 @@ AdvancedItem _medyanMod(int a, int b, int c) {
           '${medyan + mod + aciklik}.',
     ),
   };
+  // Medyan ve mod en küçük ile en büyük veri arasında kalır; bu iki soruda
+  // aralık dışındaki hatalar (sıra numarası, tekrar sayısı, açıklık) elenir.
   return _tamAralikli(
     '$giris Bu veri grubunun $soru kaçtır?',
     yanit,
-    yanlis,
+    tur <= 1 ? yanlis.where((x) => x >= l0 && x <= l4) : yanlis,
     cozum,
     _no(a, b, c),
   );
@@ -3677,7 +3690,6 @@ AdvancedItem _basitFaiz(int a, int b, int c) {
           faiz * 100 ~/ (oran + yil), // oran ile süre toplanır
           ana ~/ 10, // basamak kayması
           ana * 10,
-          faiz, // faiz ana para sanılır
         ],
         'Ana para = faiz·100 : (oran·süre) = $faiz·100 : ($oran·$yil) = '
         '$ana TL.',
@@ -3735,9 +3747,10 @@ AdvancedItem _basitFaiz(int a, int b, int c) {
           ana * oran ~/ 100, // bir yıllık faiz
           faiz ~/ 2,
           faiz + ana, // faiz yerine toplam para
-          faiz ~/ 10, // basamak kayması
+          _tamBol(faiz, 10), // basamak kayması
           ana * oran ~/ 1200, // bir aylık faiz
           faiz * 10,
+          (2 + a) * oran * (ay - 1), // bir ay eksik sayılır
         ],
         'Süre ay olarak verildiğinde faiz = ana para·oran·ay : 1200 '
         'bağıntısı kullanılır: $ana·$oran·$ay : 1200 = $faiz TL.',
@@ -3906,7 +3919,7 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
         kdv,
         [
           fiyat * k ~/ 100, // KDV ilk fiyattan alınır
-          kdv ~/ 10, // basamak kayması
+          _tamBol(kdv, 10), // basamak kayması
           indirimli + kdv, // toplam tutar
           fiyat * x ~/ 100, // indirim tutarı
           fiyat * x * k ~/ 10000, // KDV indirim tutarından alınır
@@ -3934,7 +3947,6 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
           haric,
           [
             dahil * (100 - k) ~/ 100, // KDV dâhil fiyatın %k'si düşülür
-            dahil, // KDV düşülmez
             dahil - haric, // KDV tutarı
             dahil * 100 ~/ (100 - k), // bağıntı ters kurulur
             dahil - k, // yüzde yerine TL düşülür
@@ -3948,6 +3960,9 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
           agirlik: _altSiraAgirligi,
         );
       }
+      // Dâhil fiyatın %k'sini alma hatası tam sayıya kesilince anahtara
+      // eşit çıkıyorsa (%1 KDV), bu hata kuruşuyla birlikte yazılır.
+      final yaygin = dahil * k / 100;
       return _tamAralikli(
         '$giris Bu ürünün fiyatının içindeki KDV tutarı kaç '
         'TL\'dir?',
@@ -3956,8 +3971,7 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
           dahil * k ~/ 100, // KDV dâhil fiyatın %k'si alınır
           haric * k ~/ (100 + k), // bağıntıda hariç fiyat kullanılır
           haric,
-          (dahil - haric) ~/ 10, // basamak kayması
-          k * 10,
+          _tamBol(dahil - haric, 10), // basamak kayması
           (dahil - haric) * 2,
           (dahil - haric) * 10,
         ],
@@ -3965,6 +3979,10 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
         i,
         unit: 'TL',
         agirlik: _altSiraAgirligi,
+        ek: [
+          if (dahil * k % 100 != 0 && dahil * k ~/ 100 == dahil - haric)
+            (yaygin, birimli(tr(yaygin), 'TL')),
+        ],
       );
     case 2:
       final fiyat = 400 * (2 + a);
@@ -4050,7 +4068,7 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
           toplam ~/ taksit, // bir taksit
           toplam, // taksitli fiyat
           pesin * vade ~/ 100 * taksit, // fark taksit sayısıyla çarpılır
-          pesin * vade ~/ 1000, // basamak kayması
+          _tamBol(pesin * vade, 1000), // basamak kayması
           (toplam - pesin) * 10,
         ],
         'Vade farkı peşin fiyatın %$vade kadarıdır: $pesin·$vade : 100 = '
@@ -4093,7 +4111,6 @@ AdvancedItem _indirimKdv(int a, int b, int c) {
           satis * 100 ~/ (100 + x),
           etiket + 100,
           if ((satis * 100) % x == 0) satis * 100 ~/ x, // %x'e bölünür
-          satis,
         ],
         'Satış fiyatı etiket fiyatının %${100 - x} kadarıdır: etiket fiyatı '
         '$satis·100 : ${100 - x} = $etiket TL bulunur.',
@@ -4152,7 +4169,7 @@ AdvancedItem _kurBirim(int a, int b, int c) {
           tl ~/ (kur - 1),
           miktar + 5,
           miktar - 5,
-          tl ~/ 10,
+          _tamBol(tl, 10),
         ],
         'Eldeki tutar kura bölünür: $tl : $kur = $miktar $para.',
         i,
@@ -4173,7 +4190,6 @@ AdvancedItem _kurBirim(int a, int b, int c) {
           dolar,
           [
             avro * r2 ~/ r1, // kur oranı ters alınır
-            avro * avroKuru, // ara sonuç (TL) yanıt sanılır
             avro + (avroKuru - dolarKuru), // kur farkı eklenir
             avro, // çevirme yapılmaz
             dolar + m,
@@ -4190,7 +4206,6 @@ AdvancedItem _kurBirim(int a, int b, int c) {
         avro,
         [
           dolar * r1 ~/ r2, // kur oranı ters alınır
-          dolar * dolarKuru, // ara sonuç (TL) yanıt sanılır
           dolar - (avroKuru - dolarKuru), // kur farkı çıkarılır
           dolar, // çevirme yapılmaz
           avro - m,
@@ -4240,7 +4255,6 @@ AdvancedItem _kurBirim(int a, int b, int c) {
         dusuk,
         [
           u1 < u2 ? u2 : u1, // pahalı olan seçilir
-          p1 < p2 ? p1 : p2, // paket fiyatı kilogram fiyatı sanılır
           p1 < p2 ? p1 * 2 : p2 * 2,
           dusuk + 20,
           dusuk - 20,
