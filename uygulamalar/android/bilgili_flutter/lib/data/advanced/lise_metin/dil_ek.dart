@@ -2729,6 +2729,36 @@ const _tamlamaKarisan = {
 
 final _tamlamaSerpik = _serpistir(_tamlamalar, 5);
 
+List<String> _tamlamaYanlislari(String tur, int kay) {
+  final disi = _tamlamaDisi[tur] ?? const <String>[];
+  return _digerleri(
+    [
+      for (final t in _tamlamaTurleri)
+        if (!disi.contains(t)) t,
+    ],
+    tur,
+    kay,
+    [
+      for (final t in _tamlamaKarisan[tur]!)
+        if (!disi.contains(t)) t,
+    ],
+  );
+}
+
+// Sıralı biçimin (çift sıra numaraları) seçkileri ([_sirali] dengeli kipi).
+// Beş tür bulunduğundan üç tamlaması ayrı türden üçlüye temiz çeldirici
+// kurulamaz; tam iki tamlaması aynı türden üçlüler alınır.
+final _tamlamaSecki = _uygunSecki(
+  _tamlamaSerpik,
+  _bicimBoyu(2),
+  (x) => _dengeliKurulur(
+    [for (final e in x) e.$2],
+    [for (final e in x) _tamlamaYanlislari(e.$2, 0)],
+    ayri: false,
+    ikili: true,
+  ),
+);
+
 final _tamlama = lmSirali(
   'tk_tamlama',
   'İsim tamlamaları ve sıfat tamlamaları',
@@ -2736,7 +2766,7 @@ final _tamlama = lmSirali(
   Difficulty.medium,
   BloomLevel.analiz,
   (i) {
-    final x = _bicimSecki(_tamlamaSerpik, i, 2);
+    final x = _bicimSecki(_tamlamaSerpik, i, 2, [_tamlamaSecki, null]);
     final tur = [for (final e in x) e.$2];
     final liste = _uc([for (final e in x) e.$1]);
     final aciklama =
@@ -2759,25 +2789,10 @@ final _tamlama = lmSirali(
       '$liste\nNumaralanmış tamlamaların türleri sırasıyla hangi seçenekte '
       'doğru verilmiştir?',
       tur,
-      [
-        for (var p = 0; p < 3; p++)
-          _digerleri(
-            [
-              for (final t in _tamlamaTurleri)
-                if (!(_tamlamaDisi[tur[p]] ?? const <String>[]).contains(t)) t,
-            ],
-            tur[p],
-            i + p,
-            _tamlamaKarisan[tur[p]]!
-                .where(
-                  (t) =>
-                      !(_tamlamaDisi[tur[p]] ?? const <String>[]).contains(t),
-                )
-                .toList(),
-          ),
-      ],
+      [for (var p = 0; p < 3; p++) _tamlamaYanlislari(tur[p], i + p)],
       aciklama,
       i,
+      dengeli: true,
     );
   },
   exam: ExamKind.tyt,
@@ -2873,6 +2888,52 @@ String _cozumle(String parcalar, String turler) {
 
 final _kokEkSerpik = _serpistir(_kokEkler, 4);
 
+String _kokEtiketi((String, String, String) e) =>
+    '${e.$2.split('+').first}${e.$3.startsWith('f') ? '-' : ''}';
+
+/// Ek sayısı sorusunda [hedef] türünden eklerin sayısı için tipik yanlışlar:
+/// bütün ekleri saymak, öteki ek türünü saymak, bir eksik, bir ya da iki
+/// fazla saymak.
+List<String> _sayiYanlislari((String, String, String) e, String hedef) {
+  final d = _ekSayisi(e.$3, hedef);
+  return [
+    for (final n in {
+      e.$3.length - 1,
+      _ekSayisi(e.$3, hedef == 'y' ? 'ç' : 'y'),
+      d + 1,
+      d - 1,
+      d + 2,
+    })
+      if (n >= 0 && n != d) '$n',
+  ];
+}
+
+// Biçimlerin seçkileri ([_sirali] dengeli kipi): kök biçiminde üç kök
+// ayrıdır. Ek sayısı biçimlerinde sayıların üçü de ayrı olursa çeldiricilere
+// yalnız daha büyük sayılar kalır ve en küçük toplamlı seçenek yanıtı ele
+// verir; bu biçimlerde tam iki sözcüğün ek sayısı aynıdır.
+final _kokEkSecki = <List<int>?>[
+  _uygunSecki(
+    _kokEkSerpik,
+    _bicimBoyu(3),
+    (x) => _dengeliKurulur(
+      [for (final e in x) _kokEtiketi(e)],
+      [for (final e in x) _kokYanlislari(e.$2)],
+    ),
+  ),
+  for (final hedef in const ['y', 'ç'])
+    _uygunSecki(
+      _kokEkSerpik,
+      _bicimBoyu(3),
+      (x) => _dengeliKurulur(
+        [for (final e in x) '${_ekSayisi(e.$3, hedef)}'],
+        [for (final e in x) _sayiYanlislari(e, hedef)],
+        ayri: false,
+        ikili: true,
+      ),
+    ),
+];
+
 final _kokEk = lmSirali(
   'tk_kok_ek',
   'Kök ve ek: kök, yapım eki ve çekim eki sayısı',
@@ -2881,50 +2942,34 @@ final _kokEk = lmSirali(
   BloomLevel.analiz,
   (i) {
     final bicim = i % 3;
-    final x = _bicimSecki(_kokEkSerpik, i, 3);
+    final x = _bicimSecki(_kokEkSerpik, i, 3, _kokEkSecki);
     final liste = _uc([for (final e in x) e.$1]);
     final aciklama =
         '${[for (final e in x) '${e.$1}: ${_cozumle(e.$2, e.$3)}; ${_ekSayisi(e.$3, 'y')} yapım, ${_ekSayisi(e.$3, 'ç')} çekim eki'].join('. ')}.';
     if (bicim == 0) {
-      final kok = [
-        for (final e in x)
-          '${e.$2.split('+').first}${e.$3.startsWith('f') ? '-' : ''}',
-      ];
       return _sirali(
         '$liste\nNumaralanmış sözcüklerin kökleri sırasıyla hangi seçenekte '
         'doğru verilmiştir?',
-        kok,
+        [for (final e in x) _kokEtiketi(e)],
         // Başka sözcüklerin kökleriyle kurulan dizilimler kolayca elendiği
         // için çeldiriciler yalnız kökü ekleriyle birlikte alma hatasıdır.
         [for (final e in x) _kokYanlislari(e.$2)],
         aciklama,
         i,
+        dengeli: true,
       );
     }
     final hedef = bicim == 1 ? 'y' : 'ç';
-    final dogru = [for (final e in x) _ekSayisi(e.$3, hedef)];
     return _sirali(
       '$liste\nNumaralanmış sözcüklerdeki '
       '${bicim == 1 ? 'yapım' : 'çekim'} eki sayıları sırasıyla hangi '
       'seçenekte doğru verilmiştir?',
-      [for (final n in dogru) '$n'],
-      [
-        for (var p = 0; p < 3; p++)
-          [
-            for (final n in {
-              // Bütün ekleri saymak, öteki ek türünü saymak, bir eksik ya da
-              // bir fazla saymak.
-              x[p].$3.length - 1,
-              _ekSayisi(x[p].$3, bicim == 1 ? 'ç' : 'y'),
-              dogru[p] + 1,
-              dogru[p] - 1,
-              dogru[p] + 2,
-            })
-              if (n >= 0 && n != dogru[p]) '$n',
-          ],
-      ],
+      [for (final e in x) '${_ekSayisi(e.$3, hedef)}'],
+      [for (final e in x) _sayiYanlislari(e, hedef)],
       aciklama,
       i,
+      dengeli: true,
+      sayisal: true,
     );
   },
   exam: ExamKind.tyt,
@@ -3041,6 +3086,33 @@ String _durakli(String dize, String kalip) {
 
 final _heceSerpik = _serpistir(_dizeler, 5);
 
+/// Hece sayısı sorusunda tipik yanlışlar: bir fazla, bir eksik, iki fazla.
+List<String> _heceSayiYanlislari(int n) => ['${n + 1}', '${n - 1}', '${n + 2}'];
+
+// Biçimlerin seçkileri ([_sirali] dengeli kipi): hece sayısı (çift sıra
+// numaraları) ve durak kalıbı (tek sıra numaraları). Üç etiketi aynı üçlü
+// alınmaz.
+final _heceSecki = <List<int>?>[
+  _uygunSecki(
+    _heceSerpik,
+    _bicimBoyu(2),
+    (x) => _dengeliKurulur(
+      [for (final e in x) '${_heceSayisi(e.$1)}'],
+      [for (final e in x) _heceSayiYanlislari(_heceSayisi(e.$1))],
+      ikili: true,
+    ),
+  ),
+  _uygunSecki(
+    _heceSerpik,
+    _bicimBoyu(2),
+    (x) => _dengeliKurulur(
+      [for (final e in x) e.$2],
+      [for (final e in x) _heceKarisan[e.$2]!],
+      ikili: true,
+    ),
+  ),
+];
+
 final _heceOlcu = lmSirali(
   'tk_hece_olcu',
   'Hece ölçüsü: dizelerin hece sayısı ve durak kalıbı',
@@ -3048,7 +3120,7 @@ final _heceOlcu = lmSirali(
   Difficulty.medium,
   BloomLevel.uygulama,
   (i) {
-    final x = _bicimSecki(_heceSerpik, i, 2);
+    final x = _bicimSecki(_heceSerpik, i, 2, _heceSecki);
     final liste = _uc([for (final e in x) e.$1]);
     final sayi = [for (final e in x) _heceSayisi(e.$1)];
     final aciklama =
@@ -3061,17 +3133,18 @@ final _heceOlcu = lmSirali(
         [for (final e in x) _heceKarisan[e.$2]!],
         aciklama,
         i,
+        dengeli: true,
       );
     }
     return _sirali(
       '$liste\nNumaralanmış dizelerin hece sayıları sırasıyla hangi seçenekte '
       'doğru verilmiştir?',
       [for (final n in sayi) '$n'],
-      [
-        for (final n in sayi) ['${n + 1}', '${n - 1}', '${n + 2}'],
-      ],
+      [for (final n in sayi) _heceSayiYanlislari(n)],
       aciklama,
       i,
+      dengeli: true,
+      sayisal: true,
     );
   },
   exam: ExamKind.tyt,
@@ -3376,6 +3449,43 @@ const _temsilciler = [
 final _nazimSerpik = _serpistir(_nazimlar, 8);
 final _temsilciSerpik = _serpistir(_temsilciler, 10);
 
+List<String> _nazimYanlislari(String nazim, int kay) =>
+    _digerleri(_nazimHavuzu, nazim, kay, _nazimKarisan[nazim]!);
+
+List<String> _akimYanlislari((String, String, List<String>) e, int kay) =>
+    _digerleri(
+      [
+        for (final s in _akimHavuzu)
+          if (!e.$3.contains(s)) s,
+      ],
+      e.$2,
+      kay,
+      [
+        for (final s in _akimKarisan[e.$2]!)
+          if (!e.$3.contains(s)) s,
+      ],
+    );
+
+// Biçimlerin seçkileri ([_sirali] dengeli kipi). Üç açıklama üç ayrı nazım
+// biçimini, üç sanatçı üç ayrı akımı gösterir: aynı biçimi tanıtan iki
+// açıklama aynı özellikleri yineleyeceği için birlikte alınmaz.
+final _nazimSecki = _uygunSecki(
+  _nazimSerpik,
+  _bicimBoyu(2),
+  (x) => _dengeliKurulur(
+    [for (final e in x) e.$2],
+    [for (final e in x) _nazimYanlislari(e.$2, 0)],
+  ),
+);
+final _temsilciSecki = _uygunSecki(
+  _temsilciSerpik,
+  _bicimBoyu(2),
+  (x) => _dengeliKurulur(
+    [for (final e in x) e.$2],
+    [for (final e in x) _akimYanlislari(e, 0)],
+  ),
+);
+
 final _nazimAkim = lmSirali(
   'tk_nazim_akim',
   'Nazım biçimleri ve Batı edebiyatı akımları',
@@ -3384,45 +3494,30 @@ final _nazimAkim = lmSirali(
   BloomLevel.hatirlama,
   (i) {
     if (i.isEven) {
-      final x = _bicimSecki(_nazimSerpik, i, 2);
+      final x = _bicimSecki(_nazimSerpik, i, 2, [_nazimSecki, null]);
       final dogru = [for (final e in x) e.$2];
       return _sirali(
         '${_uc([for (final e in x) '${e.$1}.'])}\nNumaralanmış açıklamaların '
             'tanıttığı nazım biçimleri sırasıyla hangi seçenekte doğru '
             'verilmiştir?',
         dogru,
-        [
-          for (var p = 0; p < 3; p++)
-            _digerleri(_nazimHavuzu, dogru[p], i + p, _nazimKarisan[dogru[p]]!),
-        ],
+        [for (var p = 0; p < 3; p++) _nazimYanlislari(dogru[p], i + p)],
         '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. açıklama: ${dogru[p]} (${_nazimOzet[dogru[p]]})'].join('; ')}.',
         i,
+        dengeli: true,
       );
     }
-    final x = _bicimSecki(_temsilciSerpik, i, 2);
+    final x = _bicimSecki(_temsilciSerpik, i, 2, [null, _temsilciSecki]);
     final dogru = [for (final e in x) e.$2];
     return _sirali(
       '${_uc([for (final e in x) e.$1])}\nNumaralanmış sanatçıların temsilcisi '
           'olduğu Batı edebiyatı akımları sırasıyla hangi seçenekte doğru '
           'verilmiştir?',
       dogru,
-      [
-        for (var p = 0; p < 3; p++)
-          _digerleri(
-            [
-              for (final s in _akimHavuzu)
-                if (!x[p].$3.contains(s)) s,
-            ],
-            dogru[p],
-            i + p,
-            [
-              for (final s in _akimKarisan[dogru[p]]!)
-                if (!x[p].$3.contains(s)) s,
-            ],
-          ),
-      ],
+      [for (var p = 0; p < 3; p++) _akimYanlislari(x[p], i + p)],
       '${[for (final e in x) '${e.$1}: ${e.$2}'].join('; ')}.',
       i,
+      dengeli: true,
     );
   },
   exam: ExamKind.ayt,

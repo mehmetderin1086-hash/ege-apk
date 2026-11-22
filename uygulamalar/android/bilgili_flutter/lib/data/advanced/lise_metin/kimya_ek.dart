@@ -2054,11 +2054,12 @@ final _f10 = lmAile(
   Difficulty.hard,
   BloomLevel.analiz,
   (a, b, c) {
-    // Yanıta 3 dereceden yakın yanlış sonuçlar seçenek yapılmaz: yanıtla
-    // neredeyse aynı bir seçenek ikisinden birinin doğru olduğunu ele verir.
+    // Yanıta çok yakın (3 dereceden ya da yanıtın %2'sinden az farklı) yanlış
+    // sonuçlar seçenek yapılmaz: yanıtla neredeyse aynı bir seçenek
+    // ikisinden birinin doğru olduğunu ele verir.
     List<num> uzak(num d, Iterable<num> v) => [
       for (final x in v)
-        if ((x - d).abs() >= 3) x,
+        if ((x - d).abs() >= (d.abs() * 0.02 > 3 ? d.abs() * 0.02 : 3)) x,
     ];
     if (c < 2) {
       final t1k = 200 + 10 * (a + 25 * c), x = _enerjiDegisimi[b];
@@ -2075,7 +2076,13 @@ final _f10 = lmAile(
         t2,
         uzak(
           t2,
-          _mutlakUstu([t1 * oran, t2k, t1k * oran * oran - 273, t1 + x]),
+          _mutlakUstu([
+            t1 * oran,
+            t2k,
+            t1k * oran * oran - 273,
+            t1 + x,
+            t1k * _karekok(oran) - 273, // enerji oranını hız oranı sanma
+          ]),
         ),
         'Ortalama kinetik enerji mutlak sıcaklıkla doğru orantılıdır. T₁ = '
             '${_yz(t1)} + 273 = $t1k K, T₂ = $t1k·${_t(oran)} = $t2k K olur; '
@@ -2112,6 +2119,8 @@ final _f10 = lmAile(
             (p * p / (q * q) * t1 - t1).abs(),
             t2k,
             t2.abs(),
+            (_karekok(p / q) * t1k - t1k).abs(), // kare yerine karekök alma
+            (q * q / (p * p) * t1k - t1k).abs(), // oranı ters kullanma
           ]),
           '$cozum. Sıcaklık ${artis ? '$t2k − $t1k' : '$t1k − $t2k'} = $fark °C '
               '${artis ? 'artırılmalıdır' : 'azaltılmalıdır'}.',
@@ -2131,6 +2140,7 @@ final _f10 = lmAile(
             p / q * t1,
             p / q * t1k, // kelvin sonucunu °C diye verme
             _karekok(p / q) * t1k - 273, // kare yerine karekök alma
+            q * q / (p * p) * t1k - 273, // oranı ters kullanma
           ]),
         ),
         '$cozum; bu da $t2k − 273 = ${_yz(t2)} °C eder.',
@@ -2197,6 +2207,7 @@ final _f10 = lmAile(
                 t1k * mx / my - 273,
                 t1k * kok - 273,
                 t2k,
+                t1k / kok - 273, // karekökü ters kullanma
               ]),
       ),
       'Ortalama hız √(T/M) ile orantılıdır; hızlar eşitse T₁/M₁ = T₂/M₂ olur. '
