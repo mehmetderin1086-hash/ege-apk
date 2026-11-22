@@ -1579,7 +1579,7 @@ AdvancedItem _yuzde(int a, int b, int c) {
 // 15. Kâr-zarar problemleri
 // ---------------------------------------------------------------------------
 AdvancedItem _karZarar(int a, int b, int c) {
-  final kk = c ~/ 2;
+  final kk = c ~/ 2, sira = _sira(a, b, c);
   if (c.isEven) {
     final m = 200 * (b + 1);
     final p = 40 + 10 * (a % 5), q = 5 * (1 + a ~/ 5);
@@ -1590,17 +1590,30 @@ AdvancedItem _karZarar(int a, int b, int c) {
       final veri = kk == 2
           ? '$satis TL fiyatla satılıyor'
           : 'satıldığında $kar TL kâr elde ediliyor';
-      return sayisal(
+      return sayisalSirali(
         'Maliyeti üzerinden %$p kârla etiketlenen bir ürün, etiket fiyatı '
             'üzerinden %$q indirimle $veri. Buna göre ürünün maliyeti kaç TL olur?',
         m,
         kk == 2
-            ? [satis * 100 ~/ (100 + p - q), etiket, satis * 100 ~/ (100 + p)]
-            : [kar * 100 ~/ (p - q), kar * 100 ~/ p, satis],
+            ? [
+                satis * 100 ~/ (100 + p - q), // yüzdeler çıkarılmış
+                etiket,
+                satis * 100 ~/ (100 + p), // indirim hesaba katılmamış
+                satis, // satış fiyatı yanıt sanılmış
+                satis * (100 - p) ~/ 100, // kâr satış fiyatından düşülmüş
+              ]
+            : [
+                kar * 100 ~/ (p - q), // yüzdeler çıkarılmış
+                kar * 100 ~/ p, // indirim hesaba katılmamış
+                satis,
+                etiket,
+                kar * 100 ~/ q,
+              ],
         'Maliyet x TL olsun. Satış fiyatı x · ${100 + p}/100 · ${100 - q}/100 '
             '= ${tr(oran, 4)}x olur. '
             '${kk == 2 ? '${tr(oran, 4)}x = $satis' : '${tr(oran, 4)}x − x = $kar'} '
             'eşitliğinden x = $m bulunur.',
+        sira,
         unit: 'TL',
         positive: true,
       );
@@ -1609,20 +1622,42 @@ AdvancedItem _karZarar(int a, int b, int c) {
       0 => (
         'ürünün satış fiyatı kaç TL olur?',
         satis,
-        [etiket, m * (100 + p - q) ~/ 100, kar, m],
+        [
+          etiket, // indirim yapılmamış
+          m * (100 + p - q) ~/ 100, // yüzdeler çıkarılmış
+          kar,
+          m,
+          etiket * (100 + q) ~/ 100, // indirim eklenmiş
+          m * (100 - q) ~/ 100, // indirim maliyete uygulanmış
+          indirim,
+        ],
       ),
       1 => (
         'bu satıştan kaç TL kâr elde edilir?',
         kar,
-        [m * (p - q) ~/ 100, etiket - m, indirim, satis],
+        [
+          m * (p - q) ~/ 100, // yüzdeler çıkarılmış
+          etiket - m, // indirim düşülmemiş
+          indirim,
+          satis,
+          m * q ~/ 100, // indirim oranı maliyete uygulanmış
+          etiket,
+        ],
       ),
       _ => (
         'yapılan indirim kaç TL olur?',
         indirim,
-        [m * q ~/ 100, kar, etiket - m, satis * q ~/ 100],
+        [
+          m * q ~/ 100, // indirim maliyet üzerinden
+          kar,
+          etiket - m, // etiket farkı
+          satis * q ~/ 100, // indirim satış fiyatı üzerinden
+          satis,
+          m * (p + q) ~/ 100,
+        ],
       ),
     };
-    return sayisal(
+    return sayisalSirali(
       'Maliyeti $m TL olan bir ürün, maliyet üzerinden %$p kârla '
           'etiketlenmiştir. Bu ürün etiket fiyatı üzerinden %$q indirimle '
           'satılıyor. Buna göre $soru',
@@ -1631,6 +1666,7 @@ AdvancedItem _karZarar(int a, int b, int c) {
       'Etiket fiyatı $m · ${100 + p}/100 = $etiket TL, satış fiyatı $etiket · '
           '${100 - q}/100 = $satis TL olur. İndirim $indirim TL, kâr $satis − $m = '
           '$kar TL olduğundan istenen değer $yanit TL bulunur.',
+      sira,
       unit: 'TL',
       positive: true,
     );

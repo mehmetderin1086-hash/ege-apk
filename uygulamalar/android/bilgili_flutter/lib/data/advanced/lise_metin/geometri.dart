@@ -2259,42 +2259,71 @@ final lmGeometri = <AdvancedFamily>[
       final payda = '√(${ka * ka} + ${kb * kb}) = $h';
       String sonuc(int n) =>
           '$n/$h${kesir(n, h) == '$n/$h' ? '' : ' = ${kesir(n, h)}'}';
+      final sira = _hs(a, b, c);
+      // Çeldiriciler paydası aynı (√(A² + B²)) kalan pay hatalarıdır; pay ya
+      // da paydası anahtarla ortak olan "kökü unutma", "paydayı unutma" gibi
+      // seçenekler anahtarı ötekilerin ortası yapardı. Anahtar tam sayıysa
+      // paydayı unutma hatası da eklenir; böylece anahtar tek tam sayı kalmaz.
+      List<String> celdir(int pay, Iterable<int> paylar) {
+        final yazim = kesir(pay, h);
+        return _celdirici(
+          pay / h,
+          yazim,
+          [
+            if (pay % h == 0) (pay, '$pay'),
+            for (final e in paylar)
+              if (e > 0) (e / h, kesir(e, h)),
+          ],
+          [
+            for (var j = 1; j <= 6; j++)
+              for (final e in [pay + j, pay - j])
+                if (e > 0) (e / h, kesir(e, h)),
+          ],
+          sira,
+        );
+      }
+
       if (c.isEven) {
         final x0 = a - 12, y0 = b - 10, t = ka * x0 + kb * y0;
         var k = ((a + 2 * b) % 9 + 1) * ((a + b).isEven ? 1 : -1);
         if (t + k == 0) k++;
         final n = (t + k).abs();
-        return kesirli(
+        return AdvancedItem(
           'Analitik düzlemde A${_n(x0, y0)} noktasının ${_dnk(ka, kb, k)} '
           'doğrusuna uzaklığı kaç birimdir?',
-          n,
-          h,
-          [
-            ((t - k).abs(), h),
-            (n, h * h),
-            (n, 1),
-            (t.abs(), h),
-            (n, ka.abs() + kb.abs()),
-          ].where((e) => e.$1 > 0),
+          kesir(n, h),
+          // Sabit terimin işaretini çevirme, x ile y katsayılarını karıştırma,
+          // sabit terimi unutma, bir terimin işaretini çevirme, mutlak değeri
+          // terim terim alma.
+          celdir(n, [
+            (t - k).abs(),
+            (kb * x0 + ka * y0 + k).abs(),
+            t.abs(),
+            (ka * x0 - kb * y0 + k).abs(),
+            (kb * y0 - ka * x0 + k).abs(),
+            (ka * x0).abs() + (kb * y0).abs() + k.abs(),
+          ]),
           'Pay |$ka·${_pz(x0)} + ${_pz(kb)}·${_pz(y0)} + ${_pz(k)}| = $n, '
           'payda $payda olur. Uzaklık ${sonuc(n)} birimdir.',
         );
       }
       final c1 = a - 12, d = 1 + b + a % 4, c2 = c1 + d;
       final kat = (a + b).isEven ? 1 : 2;
-      return kesirli(
+      return AdvancedItem(
         'Analitik düzlemde ${_dnk(ka, kb, c1)} ve '
         '${_dnk(kat * ka, kat * kb, kat * c2)} paralel doğruları arasındaki '
         'uzaklık kaç birimdir?',
-        d,
-        h,
-        [
-          ((c1 - kat * c2).abs(), h),
-          ((c1 + c2).abs(), h),
-          (d, h * h),
-          (d, 1),
-          (d, ka.abs() + kb.abs()),
-        ].where((e) => e.$1 > 0),
+        kesir(d, h),
+        // Sabitleri toplama, ikinci denklemi sadeleştirmeden sabitleri
+        // çıkarma ya da yalnız birinci denklemi 2 ile genişletme, doğrulardan
+        // birinin orijine uzaklığını verme.
+        celdir(d, [
+          (c1 + c2).abs(),
+          if (kat == 2) (c1 - 2 * c2).abs(),
+          if (kat == 2) 2 * d,
+          c2.abs(),
+          c1.abs(),
+        ]),
         '${kat == 2 ? 'İkinci denklem 2 ile sadeleştirilirse '
                   '${_dnk(ka, kb, c2)} olur. ' : ''}Katsayıları aynı olan '
         'paralel doğrularda pay |${_m(c1)} − ${_pz(c2)}| = $d, payda $payda '

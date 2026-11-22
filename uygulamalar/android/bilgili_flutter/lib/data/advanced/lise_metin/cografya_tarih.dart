@@ -315,22 +315,26 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
   final harita = 3 + b + 20 * q; // cm²
   final gercek = harita * (a + 3) * (a + 3) / 4;
   final unut = harita * s; // ölçeğin karesi yerine kendisine bölme
+  // Tipik hatalar: kare yerine ölçeğin kendisine ya da iki katına bölme, birim
+  // çevirmede basamak kaydırma ve kareyi unutmanın basamak kaymalı biçimleri.
+  // Tam sayı anahtarın rakamlarını ondalık kısmında taşıyan kaydırmalar ("23" için
+  // "0,23") sona alınır; yoksa sözcük benzerliği anahtarı öne çıkarır.
+  bool paylasir(double x) => tr(x, 3).split(RegExp('[^0-9]+')).contains('$harita');
+  final adaylar = [
+    unut,
+    harita * 10.0,
+    harita / 10,
+    harita * 100.0,
+    harita / 100,
+    harita * s / 2,
+    unut / 10,
+    unut / 100,
+  ];
   return ondalikliSirali(
     'Gerçek alanı ${tr(gercek)} km² olan ${yer.$2}, 1/$payda ölçekli bir haritada kaç '
     'santimetrekarelik yer kaplar?',
     harita.toDouble(),
-    // Tipik hatalar: kare yerine ölçeğin kendisine ya da iki katına bölme, birim
-    // çevirmede basamak kaydırma ve kareyi unutmanın basamak kaymalı biçimleri.
-    [
-      unut,
-      harita * 10.0,
-      harita / 10,
-      harita * 100.0,
-      harita / 100,
-      harita * s / 2,
-      unut / 10,
-      unut / 100,
-    ],
+    [...adaylar.where((x) => !paylasir(x)), ...adaylar.where(paylasir)],
     'Haritadaki 1 cm gerçekte ${tr(s)} km olduğundan 1 cm² gerçekte ${tr(s * s)} km² eder. '
     '${tr(gercek)} / ${tr(s * s)} = $harita cm² bulunur.',
     _ucaYakinSira(i),
