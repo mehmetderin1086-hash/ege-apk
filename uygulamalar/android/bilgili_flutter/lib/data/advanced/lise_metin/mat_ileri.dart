@@ -2919,9 +2919,9 @@ final lmMatIleri = <AdvancedFamily>[
             return _tamS(
               'Ölçüsü $aci radyan olan açının esas ölçüsü kaç derecedir?',
               derece,
-              // Tümleyen, ters yön, π'yi 90° ya da 360° alma, bütünler. Esas
-              // ölçü [0°, 360°) aralığında olduğundan bir tur eksik çıkarma
-              // (aralık dışı) kullanılmaz.
+              // Tümleyen, ters yön, π'yi 90° ya da 360° alma, bütünler, 180°
+              // ile indirgeyip ters yönü alma. Esas ölçü [0°, 360°) aralığında
+              // olduğundan bir tur eksik çıkarma (aralık dışı) kullanılmaz.
               [
                 360 - derece,
                 (derece + 180) % 360,

@@ -1377,7 +1377,7 @@ AdvancedItem _trigDenklemOzel(int a, int b, int c) {
   // Tek kök soruluyorsa seçenekler [0°, 360°) aralığında, toplam soruluyorsa
   // pozitif kalır: aralık dışındaki değerler çözmeden elenirdi.
   bool olasi(int x2) => soru == 0 ? x2 > 0 : x2 >= 0 && x2 < 720;
-  return secenekli(kokMetin, _yarim(yanit2), [
+  final eski = secenekli(kokMetin, _yarim(yanit2), [
     for (final x in [
       ...adaylar2,
       yanit2 + 60,
@@ -1393,6 +1393,24 @@ AdvancedItem _trigDenklemOzel(int a, int b, int c) {
     ])
       if (olasi(x)) _yarim(x),
   ], aciklama);
+  // θ − α değerlerini k ile bölmeden kök sanma da tipik bir hatadır; komşu
+  // değerler iki yana da eklenir.
+  final bolmeden = k == 1
+      ? null
+      : switch (soru) {
+          0 => k * yanit2,
+          1 => k * kok.first.$2,
+          _ => k * kok.last.$2,
+        };
+  return _dengele(eski, yanit2 / 2, [
+    for (final x in [
+      ...adaylar2,
+      ?bolmeden,
+      ...[yanit2 + 60, yanit2 - 60, yanit2 + 120, yanit2 - 120],
+      ...[yanit2 + 180, yanit2 - 180, yanit2 + 240, yanit2 - 240],
+    ])
+      if (olasi(x)) (x / 2, _yarim(x)),
+  ], hedefSira(_vaka(a, b, c)));
 }
 
 /// İkinci dereceden trigonometrik denklemlerin kök çiftleri ((p1, q1),
@@ -1586,9 +1604,10 @@ AdvancedItem _trigDenklemKare(int a, int b, int c) {
   // Hatalı sayımlar: her kökü iki çözüm sayma, geçersiz kökü de sayma.
   int ham(int p, int q) => p.abs() == q ? 1 : 2;
   bool gecerli(int p, int q) => p.abs() <= q;
+  final sira = hedefSira(_vaka(a, b, c));
   if (sayi) {
     final yanit = n1 + n2;
-    return _tam(
+    final eski = _tam(
       kokMetin,
       yanit,
       [
@@ -1602,6 +1621,21 @@ AdvancedItem _trigDenklemKare(int a, int b, int c) {
       '${aciklama}Kök sayısı $n1 + $n2 = $yanit.',
       pozitif: false,
     );
+    // Her kökü iki çözüm sayma, geçersiz kökü de sayma, çözüm yerine kök
+    // sayma, yalnız bir çarpanın çözümlerini sayma; komşu sayılar.
+    return _dengele(
+      eski,
+      yanit,
+      _tamAday(
+        [
+          ham(p1, q1) + ham(p2, q2),
+          (gecerli(p1, q1) ? 1 : 0) + (gecerli(p2, q2) ? 1 : 0),
+          2 * ((gecerli(p1, q1) ? 1 : 0) + (gecerli(p2, q2) ? 1 : 0)),
+          ...[n1, n2, yanit + 1, yanit - 1, yanit + 2, yanit - 2, 0],
+        ].where((x) => x >= 0),
+      ),
+      sira,
+    );
   }
   final yanit = t1 + t2;
   // Hatalı toplamlar: sinüste her köke 180°, kosinüste 180° verme; geçersiz
@@ -1609,13 +1643,28 @@ AdvancedItem _trigDenklemKare(int a, int b, int c) {
   int yanlis(int p, int q, int dogru) => !gecerli(p, q)
       ? (sinus ? 180 : 360)
       : (p.abs() == q ? dogru : (sinus ? 180 : 180));
-  return _tam(kokMetin, yanit, [
+  final eski = _tam(kokMetin, yanit, [
     yanlis(p1, q1, t1) + yanlis(p2, q2, t2),
     t1 + t2 + (gecerli(p2, q2) ? 0 : (sinus ? 180 : 360)),
     yanit + 180,
     if (yanit >= 180) yanit - 180,
     yanit + 360,
   ], '${aciklama}Köklerin toplamı $t1° + $t2° = $yanit°.');
+  // Yanlış toplam kuralları, geçersiz kökü katma, yalnız bir çarpanın
+  // köklerini toplama; komşu değerler (90° adımlı).
+  return _dengele(
+    eski,
+    yanit,
+    _tamAday(
+      [
+        yanlis(p1, q1, t1) + yanlis(p2, q2, t2),
+        t1 + t2 + (gecerli(p2, q2) ? 0 : (sinus ? 180 : 360)),
+        ...[yanit + 180, yanit - 180, yanit + 360, t1, t2],
+        ...[yanit - 360, yanit + 90, yanit - 90],
+      ].where((x) => x >= 0),
+    ),
+    sira,
+  );
 }
 
 // ---------------------------------------------------------------------------
