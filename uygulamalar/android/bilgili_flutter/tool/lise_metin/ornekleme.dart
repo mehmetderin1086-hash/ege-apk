@@ -102,5 +102,5 @@ void liseMetinOrnekle(String alan, List<AdvancedFamily> aileler) {
     dosya.writeAsStringSync((anahtarYaz ? anahtar : sorular).toString());
     // ignore: avoid_print
     print('$n örnek yazıldı: ${dosya.path}');
-  });
+  }, timeout: const Timeout(Duration(minutes: 10)));
 }

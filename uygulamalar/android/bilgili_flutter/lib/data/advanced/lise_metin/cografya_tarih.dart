@@ -1049,10 +1049,9 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
       // oranı ters kurma (15–64 / bağımlı), yalnız 0–14 yaşı ya da yalnız 65 ve üzeri
       // yaşı hesaba katma, toplam nüfusu 15–64 yaş nüfusuna oranlama, 15–64 yaşın
       // toplamdaki payını verme, bağımlı nüfusu 0–14 yaş nüfusuna oranlama; en sonda
-      // komşu değerler. Gerçekçi olmayan %170 üstü oranlar kullanılmaz. Anahtarın üstünde
-      // yeterli tipik hata bulunur; komşu değerler yalnız anahtarın üstünde
-      // kalabildiğinden çok kullanılırsa anahtar yakın değerlerin en küçüğü olarak
-      // göze batar.
+      // komşu değerler. Gerçekçi olmayan %170 üstü oranlar kullanılmaz. Komşu değerler
+      // yalnız anahtarın üstüne düşer; çok kullanılırlarsa anahtar yakın değerlerin
+      // en küçüğü olarak göze batar.
       siraliCeldiriciler(oran, '%$oran', [
         for (final x in <num>[
           toplamdaPay,

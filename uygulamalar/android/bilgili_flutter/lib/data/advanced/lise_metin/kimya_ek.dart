@@ -144,6 +144,14 @@ AdvancedItem _say(
 /// katına büyütülür. [son] adayları (akla yatmayan
 /// büyüklükteki hata sonuçları) yalnız başka yoldan üç çeldirici
 /// bulunamazsa kullanılır.
+///
+/// [yon] (0 ya da 1) verilirse komşu değerler anahtara bitişik kümelenmez:
+/// iki adım yanıtın %25'ini aşmıyorsa komşular iki adımdan başlar; anahtarın
+/// bir yanında tek bir komşu değer gerekecekse hedef sıra bir artırılır ya da
+/// azaltılır ([yon] hangisinin önce deneneceğini seçer), böylece o yanda iki
+/// komşu ya da hiç komşu bulunur. Tek komşu değer anahtara en yakın seçenek
+/// olur ve “birbirine en yakın iki seçenekten büyüğü (küçüğü)” kuralı anahtarı
+/// bulurdu; iki komşu değer ise birbirine anahtardan daha yakındır.
 AdvancedItem _saySirali(
   String kok,
   num dogru,
@@ -156,6 +164,7 @@ AdvancedItem _saySirali(
   num? adim,
   int komsu = 2,
   Iterable<num> son = const [],
+  int? yon,
 }) {
   String yaz(num x) => birimli(_yz(x, basamak), birim);
   double deger(num x) => double.parse(tr(x, basamak).replaceFirst(',', '.'));
@@ -182,9 +191,34 @@ AdvancedItem _saySirali(
     for (final x in v)
       if (x.isFinite && (!arti || x >= esik)) (deger(x), yaz(x)),
   ];
+  var s = sira;
+  var katlar = [for (var k = 1; k <= komsu; k++) k];
+  if (yon != null) {
+    if (2 * a <= 0.25 * m) katlar = [for (var k = 2; k <= komsu + 1; k++) k, 1];
+    final kd = deger(d);
+    final gorulen = <String>[];
+    var alt = 0, ust = 0;
+    for (final (v, y) in ciftler(adaylar)) {
+      if (ayniSecenek(y, yazim) || gorulen.any((z) => ayniSecenek(z, y))) {
+        continue;
+      }
+      gorulen.add(y);
+      v < kd ? alt++ : ust++;
+    }
+    // Hedef sıra r iken bir yanda tam bir komşu değer gerekiyor mu?
+    bool tekKomsu(int r) => r - alt == 1 || (3 - r) - ust == 1;
+    if (tekKomsu(s)) {
+      for (final r in yon == 0 ? [s + 1, s - 1] : [s - 1, s + 1]) {
+        if (r >= 0 && r <= 3 && !tekKomsu(r)) {
+          s = r;
+          break;
+        }
+      }
+    }
+  }
   final havuz = ciftler([
     ...adaylar,
-    for (var k = 1; k <= komsu; k++) ...[d - k * a, d + k * a],
+    for (final k in katlar) ...[d - k * a, d + k * a],
   ]);
   // [son] adayları yalnız üç çeldirici başka türlü bulunamıyorsa eklenir.
   final farkli = <String>[];
@@ -199,7 +233,7 @@ AdvancedItem _saySirali(
     siraliCeldiriciler(deger(d), yazim, [
       ...havuz,
       if (farkli.length < 3) ...ciftler(son),
-    ], sira),
+    ], s),
     aciklama,
   );
 }
@@ -3358,6 +3392,7 @@ final _f14 = lmAile(
             '${ekzo ? 'açığa çıkar' : 'alınır'}.',
         hedefSira(i),
         birim: 'kJ',
+        yon: hedefSira(i, 11) % 2,
       );
     }
     // Bilinmeyen bağ enerjisi.
@@ -3409,6 +3444,7 @@ final _f14 = lmAile(
       ])
         y.abs().round(),
     ];
+    final bagTavani = x * 1.25 > 1100 ? x * 1.25 : 1100;
     final digerleri = [
       for (final e in {...kirilan.keys, ...olusan.keys})
         if (e != bilinmeyen) '$e: ${_bagEnerjisi[e]}',
@@ -3430,11 +3466,13 @@ final _f14 = lmAile(
           'enerjileri (kJ/mol): ${digerleri.join(', ')}. Buna göre $bilinmeyen bağının '
           'enerjisi kaç kJ/mol olur?',
       coz(dh),
-      // Bağ enerjisi için akla yatmayan küçük değerler (yanıtın %30'undan az)
-      // komşu değerlerden de sonra, ancak başka aday kalmazsa kullanılır.
+      // Bağ enerjisi için akla yatmayan değerler (yanıtın %30'undan az ya da
+      // hiçbir bağın enerjisi olamayacak kadar büyük: 1100 kJ/mol'ü ve yanıtın
+      // 1,25 katını aşan; ör. bağ sayısına bölmeyi unutunca bulunan 12x) komşu
+      // değerlerden de sonra, ancak başka aday kalmazsa kullanılır.
       _ayrisik([
         for (final v in yanlislar)
-          if (v >= 0.3 * x) v,
+          if (v >= 0.3 * x && v <= bagTavani) v,
       ], enAz: 3),
       'Denklemdeki $k mol $f için ΔH = ${_isaretli(dh)} kJ olur '
           '(${_t(q)}·$k/${_t(mol)}). $bilinmeyen bağının enerjisi x ile '
@@ -3444,8 +3482,9 @@ final _f14 = lmAile(
       hedefSira(i),
       son: [
         for (final v in yanlislar)
-          if (v < 0.3 * x) v,
+          if (v < 0.3 * x || v > bagTavani) v,
       ],
+      yon: hedefSira(i, 11) % 2,
     );
   },
   exam: ExamKind.ayt,
@@ -4096,6 +4135,8 @@ final _f17 = lmAile(
         '$cozum Bu ${_t(deger)} mol $nicelik ${_t(g)} gram eder.',
         sira,
         birim: 'g',
+        // Komşu değerler mol ızgarasında: komşu mol miktarının kütlesi.
+        adim: _molAdimi(deger) * molKutle,
       );
     }
 
@@ -4225,6 +4266,7 @@ final _f17 = lmAile(
           '$yol Bu ${_t(co2)} mol CO₂ ${_t(co2 * 44)} gram eder.',
           sira,
           birim: 'g',
+          adim: _molAdimi(co2) * 44,
         );
       case 5:
         final g = h2o * 18;
@@ -4243,6 +4285,7 @@ final _f17 = lmAile(
               '${_t(h2o)} mol, yani ${_t(h2o)}·18 = ${_t(g)} gram H₂O oluşur.',
           sira,
           birim: 'g',
+          adim: _molAdimi(h2o) * 18,
         );
       case 6:
         final kok =
