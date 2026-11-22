@@ -2273,6 +2273,7 @@ final List<(int, int, _R, int)> _kosIkiKenar = () {
 }();
 
 AdvancedItem _kosinusTeoremi(int a, int b, int c) {
+  final sira = hedefSira(_vaka(a, b, c));
   if (c <= 8) {
     final j = a + 25 * b + 500 * c;
     final (x, y, z) = _kosUcgenler[j ~/ 3];
@@ -2285,7 +2286,7 @@ AdvancedItem _kosinusTeoremi(int a, int b, int c) {
       final o = buyuk ? z : x, s1 = buyuk ? x : y, s2 = buyuk ? y : z;
       final yanit = buyuk ? kz : kx;
       final diger = buyuk ? [kx, ky] : [kz, ky];
-      return _ras(
+      final eski = _ras(
         'Kenar uzunlukları $x cm, $y cm ve $z cm olan bir üçgenin en '
             '${buyuk ? 'büyük' : 'küçük'} açısının kosinüsü kaçtır?',
         yanit,
@@ -2297,6 +2298,20 @@ AdvancedItem _kosinusTeoremi(int a, int b, int c) {
         aralik: _acikBirlik,
         // Paydada karşı kenarı kullanma.
         yedek: [_R(s1 * s1 + s2 * s2 - o * o, 2 * o * s1)],
+      );
+      // İşaret hatası, başka bir açının kosinüsü, paydada 2'yi unutma ya da
+      // iki kez alma, paydada karşı kenarı kullanma; her biri işaret
+      // hatasıyla birlikte de görülür.
+      final payda = _R(s1 * s1 + s2 * s2 - o * o, 2 * o * s1);
+      return _dengele(
+        eski,
+        yanit.p / yanit.q,
+        _rAday([
+          ...[-yanit, diger[1], -diger[1], diger[0], -diger[0]],
+          ...[yanit * _R(2), -yanit * _R(2), yanit / _R(2), -yanit / _R(2)],
+          ...[payda, -payda],
+        ], aralik: _acikBirlik),
+        sira,
       );
     }
     // Orta kenar y'nin karşısındaki açı, adlandırılmış köşeyle sorulur.
@@ -2321,7 +2336,7 @@ AdvancedItem _kosinusTeoremi(int a, int b, int c) {
       _ => '|AC|',
     };
     final yanit = ky;
-    return _ras(
+    final eski = _ras(
       'ABC üçgeninde |AB| = $ab cm, |BC| = $bc cm ve |AC| = $ac cm olduğuna '
           'göre cos $kose değeri kaçtır?',
       yanit,
@@ -2333,6 +2348,16 @@ AdvancedItem _kosinusTeoremi(int a, int b, int c) {
           'bulunur.',
       aralik: _acikBirlik,
       yedek: [yanit / _R(2), _R(k1 * k1 + k2 * k2 - y * y, 2 * y * k1)],
+    );
+    final payda = _R(k1 * k1 + k2 * k2 - y * y, 2 * y * k1);
+    return _dengele(
+      eski,
+      yanit.p / yanit.q,
+      _rAday([
+        ...[-yanit, kz, -kz, kx, -kx, yanit * _R(2), -yanit * _R(2)],
+        ...[yanit / _R(2), -yanit / _R(2), payda, -payda],
+      ], aralik: _acikBirlik),
+      sira,
     );
   }
   final (bk, ck, cs, ak) = _kosIkiKenar[a + 25 * b];
@@ -2346,7 +2371,7 @@ AdvancedItem _kosinusTeoremi(int a, int b, int c) {
   final cosYaz = cs == _R(1, 2) || cs == _R(-1, 2)
       ? 'cos A = $cs olduğundan '
       : '';
-  return _tam(
+  final eski = _tam(
     'ABC üçgeninde |AB| = $bk cm, |AC| = $ck cm ve $aci olduğuna göre |BC| '
         'kaç cm olur?',
     ak,
@@ -2356,6 +2381,23 @@ AdvancedItem _kosinusTeoremi(int a, int b, int c) {
         '= $a2 olur; |BC| = $ak cm.',
     birim: 'cm',
     pozitif: true,
+  );
+  // Karekök almayı unutma, kosinüs teriminin işaretini çevirme, kosinüs
+  // terimini unutma, kenarları çıkarma ya da toplama; komşu değerler.
+  return _dengele(
+    eski,
+    ak,
+    _tamAday(
+      [
+        a2,
+        if (artiKok.$2 == 1) artiKok.$1,
+        if (pis.$2 == 1) pis.$1,
+        ...[ck - bk, bk + ck, ..._komsuTam(ak)],
+      ],
+      birim: 'cm',
+      pozitif: true,
+    ),
+    sira,
   );
 }
 

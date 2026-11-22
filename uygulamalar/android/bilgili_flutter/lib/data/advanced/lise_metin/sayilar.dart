@@ -424,13 +424,13 @@ AdvancedItem _kes(
 /// Değer sırası dengeli çeldirici seçimi: anahtardan küçük çeldirici sayısı
 /// [hedef] (0 … 3) olur. [hatalar] tipik hata değerleri, [komsular] anahtarın
 /// iki yanındaki komşu değerlerdir (yakından uzağa); ikililer (değer, yazım)
-/// biçimindedir. Öncelik: o yandaki hatalar, sonra o yandaki komşular. Dört
-/// seçenekten üçünü eşit aralıklı yapan aday, aynı türden başka aday kaldıkça
-/// alınmaz (komşular anahtarla birlikte eşit aralıklı dizi kurup anahtarı dizinin
-/// ucunda ele vermesin). Anahtarı iki çeldiricinin tam ortasında bırakan
-/// (yanıtı ele veren simetrik çift) aday ancak o yanda başka aday kalmazsa
-/// alınır. Bir yanda aday yetmezse öbür yanın adaylarıyla tamamlanır. Yazımı
-/// anahtarla ya da birbiriyle aynı olan (`ayniSecenek`) adaylar atlanır.
+/// biçimindedir. Öncelik: o yandaki hatalar, sonra o yandaki komşular; o yanda
+/// aday kalmazsa öbür yanın adayları. Dört seçenekten üçünü eşit aralıklı yapan
+/// hata, aynı yanda başka hata kaldıkça alınmaz; böyle bir komşu değer ise ancak
+/// başka aday kalmazsa alınır (komşular anahtarla eşit aralıklı bir dizi kurup
+/// anahtarı dizinin ucunda ele vermesin). Anahtarı iki çeldiricinin tam
+/// ortasında bırakan aday (yanıtı ele veren simetrik çift) en son alınır.
+/// Yazımı anahtarla ya da birbiriyle aynı olan (`ayniSecenek`) adaylar atlanır.
 List<String> _dengeliSec(
   double yanit,
   String yanitYazim,
@@ -474,11 +474,17 @@ List<String> _dengeliSec(
     }
   }
 
+  // Eşit aralıklı üçlü kuran komşu değer, hedef sıradan sapmaktan daha çok
+  // ipucu verdiğinden önce öbür yanın adaylarına bakılır.
   for (final serbest in const [false, true]) {
     tur(hatalar, 0, serbest);
     tur(hatalar, 1, serbest);
     tur(komsular, 0, serbest);
+  }
+  for (final serbest in const [false, true]) {
     tur(komsular, 1, serbest);
+  }
+  for (final serbest in const [false, true]) {
     tur(hatalar, 2, serbest);
     tur(komsular, 2, serbest);
   }
@@ -4050,11 +4056,21 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
       return _tamD(
         '$m² − $n² işleminin sonucu kaçtır?',
         top * fark,
-        // Son yanlış: işareti karıştırıp m² + n² hesaplamak.
-        [fark * fark, top + fark, top * fark ~/ 2, m * m + n * n],
+        // Yanıt yuvarlak bir sayı olduğundan çeldiricilerin bir kısmı da
+        // yuvarlaktır: m + n toplamını 10 eksik ya da fazla bulmak, sonucu
+        // ikiye bölmek. Son yanlış: işareti karıştırıp m² + n² hesaplamak.
+        [
+          top * fark ~/ 2,
+          (top + 10) * fark,
+          fark * fark,
+          (top - 10) * fark,
+          top + fark,
+          m * m + n * n,
+        ],
         'İki kare farkı özdeşliğine göre $m² − $n² = ($m − $n) · ($m + $n) = '
             '$fark · $top = ${top * fark} olur.',
         pozitif: true,
+        komsuAdim: top, // m − n farkını yanlış bulmak: (m + n) · (fark ± 1)
       );
     case 1:
       final m = 31 + 2 * a, n = 11 + b;
@@ -4078,35 +4094,61 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
         '$m² $isaret 2 · $m · $n + $n² işleminin sonucu kaçtır?',
         k * k,
         [
+          // Yanıt yuvarlak bir sayının karesi olduğundan çeldiricilerin bir
+          // kısmı da öyledir: m ± n değerini 10 eksik ya da fazla bulmak.
+          (k - 10) * (k - 10),
           // Ortadaki 2mn terimini unutmak.
           m * m + n * n,
-          topla ? (m - n) * (m - n) : (m + n) * (m + n),
+          // Kare almak yerine 2 ile çarpmak.
+          2 * k,
+          (k + 10) * (k + 10),
           // Ortadaki terimin 2 katsayısını unutmak: m² ± mn + n².
           m * m + (topla ? 1 : -1) * m * n + n * n,
-          2 * k,
+          topla ? (m - n) * (m - n) : (m + n) * (m + n),
           // 2 katsayısını ikinci terime yazmak: (m ± 2n)².
           (topla ? m + 2 * n : m - 2 * n) * (topla ? m + 2 * n : m - 2 * n),
         ],
         '$m² $isaret 2 · $m · $n + $n² = ($m $isaret $n)² = $k² = ${k * k} olur.',
         pozitif: true,
+        komsuAdim: 100,
       );
     case 4:
       final k = 13 + 2 * a, x = 11 + 4 * b, y = 100 - x;
       return _tamD(
         '$k · $x + $k · $y işleminin sonucu kaçtır?',
         100 * k,
-        [k * x + y, k + 100, 2 * k * 100, k * (x - y)],
+        // Yanıt yuvarlak olduğundan çeldiricilerin bir kısmı da yuvarlaktır:
+        // ortak çarpanı bir eksik almak, bir sıfır eksik ya da fazla yazmak.
+        [
+          k * x + y,
+          2 * k * 100,
+          100 * (k - 1),
+          10 * k,
+          1000 * k,
+          k + 100,
+          k * (x - y),
+        ],
         'Ortak çarpan $k parantezine alınır: $k · ($x + $y) = $k · 100 = ${100 * k}.',
         pozitif: true,
+        komsuAdim: 100,
       );
     case 5:
       final k = 14 + 2 * a, x = 52 + 2 * b, f = 10 * (1 + b % 3), y = x - f;
       return _tamD(
         '$k · $x − $k · $y işleminin sonucu kaçtır?',
         k * f,
-        [k * x - y, k * (x + y), f, k * f + k],
+        [
+          k * x - y,
+          // x − y farkını 10 eksik ya da fazla bulmak.
+          k * (f + 10),
+          k * (x + y),
+          k * (f - 10),
+          f,
+          k * f + k,
+        ],
         'Ortak çarpan $k parantezine alınır: $k · ($x − $y) = $k · $f = ${k * f}.',
         pozitif: true,
+        komsuAdim: 10,
       );
     case 6:
       final top = 7 + a, fark = 2 + b;
@@ -4165,7 +4207,15 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
       return _tamD(
         '$pp · $r + $pp · $sx + $q · $r + $q · $sx işleminin sonucu kaçtır?',
         t1 * t2,
-        [pp * r + q * sx, (pp + r) * (q + sx), t1 + t2, t1 * t2 ~/ 2],
+        [
+          pp * r + q * sx,
+          // r + s toplamını 10 eksik ya da fazla bulmak.
+          t1 * (t2 + 10),
+          (pp + r) * (q + sx),
+          t1 * (t2 - 10),
+          t1 + t2,
+          t1 * t2 ~/ 2,
+        ],
         'Gruplandırma yapılır: $pp · ($r + $sx) + $q · ($r + $sx) = ($pp + $q) · '
             '($r + $sx) = $t1 · $t2 = ${t1 * t2}.',
         pozitif: true,

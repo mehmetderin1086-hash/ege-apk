@@ -300,8 +300,8 @@ AdvancedItem _saySirali(
       _yakin(z, anahtarYazim, orijin) ||
       yazimlar.any((w) => _yakin(w, z, orijin));
   // Anahtarın hem iki katı hem yarısı seçeneklerde olursa anahtar bu ikisinin
-  // ortak "merkezi" olur ve kolayca seçilir; bu durumda vakaya göre (üçüncü
-  // bağımsız seçim) yalnız biri tutulur.
+  // ortak "merkezi" olur ve kolayca seçilir; [ikiKatYarim] verilmişse vakaya
+  // göre (üçüncü bağımsız seçim) yalnız biri tutulur.
   final liste = adaylar.where(gecerli).toList();
   bool esit(num x, num y) => (x - y).abs() <= 1e-9 * (1 + x.abs() + y.abs());
   if (ikiKatYarim &&
