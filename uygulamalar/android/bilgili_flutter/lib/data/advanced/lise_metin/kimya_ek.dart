@@ -145,13 +145,13 @@ AdvancedItem _say(
 /// büyüklükteki hata sonuçları) yalnız başka yoldan üç çeldirici
 /// bulunamazsa kullanılır.
 ///
-/// [yon] (0 ya da 1) verilirse komşu değerler anahtara bitişik kümelenmez:
-/// iki adım yanıtın %25'ini aşmıyorsa komşular iki adımdan başlar; anahtarın
-/// bir yanında tek bir komşu değer gerekecekse hedef sıra bir artırılır ya da
-/// azaltılır ([yon] hangisinin önce deneneceğini seçer), böylece o yanda iki
-/// komşu ya da hiç komşu bulunur. Tek komşu değer anahtara en yakın seçenek
-/// olur ve “birbirine en yakın iki seçenekten büyüğü (küçüğü)” kuralı anahtarı
-/// bulurdu; iki komşu değer ise birbirine anahtardan daha yakındır.
+/// [tipikOncelik] verilirse komşu değerler anahtara bitişik kümelenmez: iki
+/// adım yanıtın %25'ini aşmıyorsa komşular iki adımdan başlar. Değer true ise
+/// hedef sıra komşu değer gerektirdiğinde tipik hatalarla kurulabilen en yakın
+/// sıra alınır (komşu değer hiç kullanılmaz). Bu iki kip vakadan vakaya
+/// karıştırılınca anahtar ne değer sırasından ne de “birbirine en yakın iki
+/// seçenekten büyüğü” ya da “ötekilerin ortalamasına en yakın seçenek”
+/// kurallarından bulunur.
 AdvancedItem _saySirali(
   String kok,
   num dogru,
@@ -164,7 +164,7 @@ AdvancedItem _saySirali(
   num? adim,
   int komsu = 2,
   Iterable<num> son = const [],
-  int? yon,
+  bool? tipikOncelik,
 }) {
   String yaz(num x) => birimli(_yz(x, basamak), birim);
   double deger(num x) => double.parse(tr(x, basamak).replaceFirst(',', '.'));
@@ -193,7 +193,7 @@ AdvancedItem _saySirali(
   ];
   var s = sira;
   var katlar = [for (var k = 1; k <= komsu; k++) k];
-  if (yon != null) {
+  if (tipikOncelik != null) {
     if (2 * a <= 0.25 * m) katlar = [for (var k = 2; k <= komsu + 1; k++) k];
     final kd = deger(d);
     final gorulen = <String>[];
@@ -205,16 +205,10 @@ AdvancedItem _saySirali(
       gorulen.add(y);
       v < kd ? alt++ : ust++;
     }
-    // Hedef sıra r iken bir yanda tam bir komşu değer gerekiyor mu?
-    bool tekKomsu(int r) => r - alt == 1 || (3 - r) - ust == 1;
-    if (tekKomsu(s)) {
-      for (final r in yon == 0 ? [s + 1, s - 1] : [s - 1, s + 1]) {
-        if (r >= 0 && r <= 3 && !tekKomsu(r)) {
-          s = r;
-          break;
-        }
-      }
-    }
+    // Hedef sıra komşu değer gerektiriyorsa tipik hatalarla kurulabilen en
+    // yakın sıra alınır.
+    final enAz = 3 - ust < 0 ? 0 : 3 - ust, enCok = alt > 3 ? 3 : alt;
+    if (tipikOncelik && enAz <= enCok) s = s.clamp(enAz, enCok);
   }
   final havuz = ciftler([
     ...adaylar,
@@ -270,7 +264,8 @@ bool _anahtarAykiri(List<String> se) {
 }
 
 /// Mol yanıtlı sorularda komşu değer adımı: tam sayı yanıtta 1, ötekilerde
-/// yanıtın büyüklüğüne göre 1, 0,5, 0,1 ya da 0,05 (0,05 molün katları).
+/// yanıtın büyüklüğüne göre 1, 0,5, 0,1 ya da 0,05 (0,05 molün katları). Gram
+/// yanıtlarda bu adım mol kütlesiyle çarpılır (komşu mol miktarının kütlesi).
 double _molAdimi(double v) {
   if ((v - v.roundToDouble()).abs() < 1e-9) return 1;
   return v >= 20 ? 1 : (v >= 2 ? 0.5 : (v >= 0.3 ? 0.1 : 0.05));
@@ -3344,8 +3339,12 @@ final _f14 = lmAile(
             ]),
           ),
     ];
-    // Anahtarın değer sırası vakadan vakaya değişir (tipik hatalar çoğunlukla
-    // anahtardan büyük olduğundan küçük yanda gerekirse komşu değer alınır).
+    // Anahtarın değer sırası vakadan vakaya değişir. Tipik hatalar çoğunlukla
+    // anahtardan büyük olduğundan küçük yanda komşu değer gerekir; vakaların
+    // yarısında komşu değer yerine tipik hatalarla kurulabilen en yakın sıra
+    // alınır (`_saySirali`, tipikOncelik), öteki yarısında komşular iki adımdan
+    // başlar. Böylece anahtar ne değer sırasından ne de yanındaki komşu
+    // değerden bulunur.
     final i = a + 25 * b + 500 * c;
     if (c < 5) {
       final kutleli = c >= 3;
@@ -3392,7 +3391,7 @@ final _f14 = lmAile(
             '${ekzo ? 'açığa çıkar' : 'alınır'}.',
         hedefSira(i),
         birim: 'kJ',
-        yon: hedefSira(i, 11) % 2,
+        tipikOncelik: hedefSira(i, 13) < 2,
       );
     }
     // Bilinmeyen bağ enerjisi.
@@ -3484,7 +3483,7 @@ final _f14 = lmAile(
         for (final v in yanlislar)
           if (v < 0.3 * x || v > bagTavani) v,
       ],
-      yon: hedefSira(i, 11) % 2,
+      tipikOncelik: hedefSira(i, 13) < 2,
     );
   },
   exam: ExamKind.ayt,
@@ -5448,9 +5447,7 @@ final _f20 = lmSirali(
     // olduğundan sp² ve sp sayıları her seçenekte çift kalır (tek sayılı bir
     // çeldirici anahtarı ele vermez). Küçük moleküllerde sp³ sayısı artırılmaz.
     final h = _onAlti(i);
-    final azalt = [
-      if (dalSay > 0) a - dalSay else if (a >= 1) a - 1,
-    ];
+    final azalt = [if (dalSay > 0) a - dalSay else if (a >= 1) a - 1];
     final artir = [if (a + b + c > 4 || azalt.isEmpty) a + 1];
     final xler = h.isEven ? [...azalt, ...artir] : [...artir, ...azalt];
     final yler = <List<int> Function(List<int>)>[

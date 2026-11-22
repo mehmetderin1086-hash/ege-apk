@@ -402,9 +402,9 @@ final _f01 = lmAile(
     final het = _gt(harf, 1), dom = _gt(harf, 0), rec = _gt(harf, 2);
     final m = 6 + b + 2 * a; // yavruların dörtte biri
     final n = 4 * m;
-    // Çeldiriciler m sayısının p/q katlarıdır (tam bölünmüyorsa aşağı
-    // yuvarlanır): yanlış oranı kullanma (1/4, 1/2, 3/4, tamamı, 2/3, 1/3,
-    // 9/16 …) hataları.
+    // Çeldiriciler m sayısının p/q katlarıdır: yanlış oranı kullanma (1/4,
+    // 1/2, 3/4, tamamı, 2/3, 1/3, 9/16 …) hataları. Tam bölünmeyen bir oranın
+    // aşağı yuvarlanmış sonucu tipik hata olmadığından kullanılmaz.
     AdvancedItem say(
       String kok,
       int anahtar,
@@ -416,8 +416,8 @@ final _f01 = lmAile(
       kok,
       anahtar,
       [
-        // Tam bölünmeyen oranlarda öğrencinin aşağı yuvarladığı sayı.
-        for (final (p, q) in oranlar) p * m ~/ q,
+        for (final (p, q) in oranlar)
+          if (p * m % q == 0) p * m ~/ q,
       ],
       aciklama,
       _no(a, b, c),
@@ -956,14 +956,20 @@ final _f03 = lmAile(
               'olma olasılığı kaçtır?',
           1,
           1 << n,
+          // Bağımsız genlerde gamet olasılığı hep 1/2ᵏ biçimindedir; bu
+          // biçimde olmayan seçenek bilen öğrencice hemen elenir. Bütün
+          // genleri heterozigot sanma, heterozigot sayısını bir ya da iki
+          // fazla ya da eksik sayma, homozigot gen çiftlerini sayma, her
+          // gamete 1/2 verme, tümleyen olay.
           [
             (1, 1 << k),
-            (1, 2 * n),
             (1, 1 << (n + 1)),
             (1, 1 << (n - 1)),
-            (1, k),
-            (1, _us(3, n)),
-            (1, n),
+            (1, 1 << (k - n)),
+            (1, 1 << (n + 2)),
+            if (n >= 3) (1, 1 << (n - 2)),
+            (1, 2),
+            ((1 << n) - 1, 1 << n),
           ],
           '$ortak Gamet çeşitleri eşit olasılıkla oluştuğundan $gamet '
               'gametinin oluşma olasılığı 1/${1 << n} olur.',
@@ -1035,16 +1041,17 @@ final _f03 = lmAile(
               'birlikte taşıma olasılığı kaçtır?',
           1,
           1 << h,
+          // Seçenekler 1/2ᵏ biçiminde kalır (1/3 gibi değerler elenir).
           [
             (1, 1 << n),
             (1, 1 << secim.length),
             (1, 1 << (h + 1)),
             (1, 1 << (h - 1)),
-            (1, secim.length),
-            (1, 2 * h),
-            // Bütün genleri heterozigot sanma, üssü iki fazla alma, tümleyen.
+            // Bütün genleri heterozigot sanma, üssü iki fazla ya da eksik
+            // alma, tümleyen.
             (1, 1 << k),
             (1, 1 << (h + 2)),
+            if (h >= 2) (1, 1 << (h - 2)),
             ((1 << h) - 1, 1 << h),
           ],
           'Heterozigot gen çiftinden gelen bir alelin gamete geçme olasılığı '
@@ -1750,8 +1757,12 @@ final _f08 = lmAile(
       String kok,
       int anahtar,
       List<int> hatalar,
-      String aciklama,
-    ) => _sayiDengeli(kok, anahtar, hatalar, aciklama, no);
+      String aciklama, {
+      int? adim,
+    }) => _sayiDengeli(kok, anahtar, hatalar, aciklama, no, adim: adim);
+    // Tam bölünmeyen bir hatanın aşağı yuvarlanmış sonucu tipik hata
+    // değildir; böyle adaylar kullanılmaz.
+    Iterable<int> bol(int x, int y) => x % y == 0 ? [x ~/ y] : const [];
     final dk = const [20, 30, 40, 60][j], sa = const [12, 18, 24, 36][j];
     final bakteri =
         'Uygun koşullarda $dk dakikada bir ikiye bölünerek çoğalan bir bakteri '
@@ -1795,6 +1806,8 @@ final _f08 = lmAile(
           'Bakteri sayısı $son / $k = $kat katına, yani 2${_ust(n)} katına '
               'çıkmıştır; bunun için $n bölünme gerekir. Süre $n · $dk = '
               '${n * dk} dakika olur.',
+          // Süre ancak bölünme süresinin katı olabilir; komşular da öyle.
+          adim: dk,
         );
       case 3:
         return say(
@@ -1808,8 +1821,8 @@ final _f08 = lmAile(
           [
             sa * 2,
             sa ~/ 2,
-            n * sa ~/ (n + 1),
-            n * sa ~/ (n - 1),
+            ...bol(n * sa, n + 1),
+            ...bol(n * sa, n - 1),
             sa + 6,
             sa - 6,
             if (n * sa % kat == 0) n * sa ~/ kat,
@@ -1828,11 +1841,11 @@ final _f08 = lmAile(
           [
             2 * k,
             4 * k,
-            son ~/ (2 * n),
-            k ~/ 2,
+            ...bol(son, 2 * n),
+            ...bol(k, 2),
             k + n,
-            son ~/ n,
-            if (k % n == 0) k ~/ n,
+            ...bol(son, n),
+            ...bol(k, n),
             son - kat,
           ],
           '$bolunmeDk Başlangıçtaki sayı '
@@ -2134,13 +2147,15 @@ final _f10 = lmAile(
       String kok,
       int anahtar,
       List<int> hatalar,
-      String aciklama,
-    ) => _sayiDengeli(
+      String aciklama, {
+      int? adim,
+    }) => _sayiDengeli(
       kok,
       anahtar,
       hatalar,
       aciklama,
       no,
+      adim: adim,
       genislik: 2,
       agirlik: const [2, 1, 1, 2],
     );
@@ -2300,6 +2315,8 @@ final _f10 = lmAile(
               '${2 * k} / 2 = $k bakteri vardır. $top / $k = ${1 << n} = '
               '2${_ust(n)} olduğundan $n eşlenme olmuştur; süre $n · $sure = '
               '${n * sure} dakikadır.',
+          // Süre ancak bölünme süresinin katı olabilir; komşular da öyle.
+          adim: sure,
         );
       default:
         return _olasilikDengeli(
@@ -2580,7 +2597,7 @@ final _f12 = lmAile(
             p - 1,
             p + 1,
             p - 2,
-            y * (p - 1) ~/ (y + 1),
+            if (y * (p - 1) % (y + 1) == 0) y * (p - 1) ~/ (y + 1),
             if (y * (p - 1) % (y - 1) == 0) y * (p - 1) ~/ (y - 1),
             y * (p - 1),
           ],
@@ -2636,7 +2653,8 @@ final _f12 = lmAile(
               'toplam kaç molekül su harcanır?',
           p1 + p2 - 2,
           // Bağ yerine glikoz sayma, tek molekül sanma, iki kez sayma, yalnız
-          // bir molekülü hesaplama, ortalama alma.
+          // bir molekülü hesaplama. (Ortalama alma kullanılmaz: p1 + p2 tek
+          // olduğundan ortalama tam sayı çıkmaz.)
           [
             p1 + p2,
             p1 + p2 - 1,
@@ -2644,7 +2662,6 @@ final _f12 = lmAile(
             2 * (p1 + p2),
             p1 - 1,
             p2 - 1,
-            (p1 + p2) ~/ 2 - 1,
           ],
           'Her molekülde glikozit bağı sayısı glikoz sayısından 1 eksiktir: '
               '($p1 − 1) + ($p2 − 1) = ${p1 + p2 - 2}.',
@@ -2954,6 +2971,9 @@ final _f15 = lmAile(
         'basamağındaki enerjinin %10 kadarı bir üst basamağa aktarılmaktadır.';
     final uretici = 'Zincirin üreticisi olan ${z[0]} basamağında';
     int enerji(int basamak) => e0 ~/ _us(10, basamak);
+    // Tam bölünmeyen bir hatanın aşağı yuvarlanmış sonucu (1,6 yerine 1)
+    // tipik hata değildir; böyle adaylar kullanılmaz.
+    Iterable<int> bol(int x, int y) => x % y == 0 ? [x ~/ y] : const [];
     final no = _no(a, b, c);
     AdvancedItem say(
       String kok,
@@ -2982,11 +3002,11 @@ final _f15 = lmAile(
           // yerine aktarım sayısıyla çarpma ya da bölme.
           [
             enerji(t - 1),
-            enerji(t) ~/ 10,
+            ...bol(enerji(t), 10),
             e0 * t ~/ 10,
             enerji(t) * 100,
-            e0 ~/ (10 * t),
-            enerji(t) ~/ 100,
+            ...bol(e0, 10 * t),
+            ...bol(enerji(t), 100),
           ],
           'Enerji her basamakta 10 kat azalır. Üreticiden ${z[t]} basamağına '
               '$t aktarım olduğundan enerji $e0 / 10${_ust(t)} = ${enerji(t)} kcal '
@@ -3026,8 +3046,8 @@ final _f15 = lmAile(
             enerji(u) * 100,
             enerji(s) ~/ 10,
             enerji(s) * 9 ~/ 10,
-            enerji(u) ~/ 10,
-            enerji(u) ~/ 100,
+            ...bol(enerji(u), 10),
+            ...bol(enerji(u), 100),
           ],
           'Bu iki basamak arasında ${u - s} aktarım vardır: ${enerji(s)} / '
               '10${_ust(u - s)} = ${enerji(u)} kcal.',
@@ -3135,11 +3155,11 @@ final _f15 = lmAile(
           enerji(t),
           [
             enerji(t - 1),
-            enerji(t) ~/ 10,
+            ...bol(enerji(t), 10),
             e0 * t ~/ 10,
             enerji(t) * 100,
-            e0 ~/ (10 * t),
-            enerji(t) ~/ 100,
+            ...bol(e0, 10 * t),
+            ...bol(enerji(t), 100),
           ],
           'Biyokütle her basamakta 10 kat azalır. Üreticiden ${z[t]} '
               'basamağına $t aktarım olduğundan $e0 / 10${_ust(t)} = ${enerji(t)} '
@@ -3555,7 +3575,8 @@ final _f17 = lmAile(
           // İki katını ya da yarısını alma, işlem kayması.
           [
             nabiz * 2,
-            nabiz ~/ 2,
+            // Tek sayılı nabzın yarısı tam sayı değildir.
+            if (nabiz.isEven) nabiz ~/ 2,
             nabiz + 10,
             nabiz - 10,
             nabiz + 20,
@@ -4092,7 +4113,8 @@ final _f20 = lmAile(
           yag,
           // 9 yerine 4'e bölme, bölmeyi unutma, işlem kayması.
           [
-            9 * yag ~/ 4,
+            // Tam bölünmeyen bir sonucun aşağı yuvarlanmışı kullanılmaz.
+            if (9 * yag % 4 == 0) 9 * yag ~/ 4,
             9 * yag,
             yag + 4,
             yag + 9,
@@ -4179,7 +4201,14 @@ final _f20 = lmAile(
               'olduğuna göre öğündeki karbonhidrat miktarı kaç gramdır?',
           kh,
           // 4 yerine 9'a bölme, bölmeyi unutma, işlem kayması.
-          [kh + 10, kh - 10, 4 * kh ~/ 9, kh + 20, 4 * kh, kh - 20],
+          [
+            kh + 10,
+            kh - 10,
+            if (4 * kh % 9 == 0) 4 * kh ~/ 9,
+            kh + 20,
+            4 * kh,
+            kh - 20,
+          ],
           'Protein ve yağdan gelen enerji 4 · $pro + 9 · $yag = '
               '${4 * pro + 9 * yag} kcal olur. Karbonhidrattan gelen enerji '
               '$toplam − ${4 * pro + 9 * yag} = ${4 * kh} kcal, miktarı '

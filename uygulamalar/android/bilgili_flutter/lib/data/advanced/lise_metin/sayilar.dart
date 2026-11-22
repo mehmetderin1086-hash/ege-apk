@@ -931,9 +931,14 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
     for (final x in _asalCarpan(n)) x.$2 * t + 1,
   ]);
   final asallar = [for (final x in f) x.$1];
+  final altKume = _kuvvet(2, _topla([for (final x in f) x.$2]));
+  final tekUslu = [
+    for (final x in f)
+      if (x.$2.isOdd) x.$1,
+  ];
   switch (c) {
     case 5:
-      return _tam(
+      return _tamD(
         'A = $ifade olduğuna göre A sayısının pozitif bölenlerinin sayısı '
             'kaçtır?',
         bolen,
@@ -943,12 +948,14 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
           2 * bolen,
           _topla([for (final x in f) x.$2 + 1]),
           ayrik,
+          // Her asal çarpanı ayrı bir çarpan sayıp alt küme sayısını almak.
+          if (altKume <= 3 * bolen) altKume,
         ],
         '$yaz Pozitif bölen sayısı ${_bolenYaz(f)} = $bolen bulunur.',
         pozitif: true,
       );
     case 6:
-      return _tam(
+      return _tamD(
         'A = $ifade olduğuna göre A sayısının tam sayı bölenlerinin sayısı '
             'kaçtır?',
         2 * bolen,
@@ -958,6 +965,7 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
           saf,
           2 * _carp([for (final x in f) x.$2]),
           2 * ayrik,
+          if (altKume <= 3 * bolen) 2 * altKume,
         ],
         '$yaz Pozitif bölen sayısı ${_bolenYaz(f)} = $bolen, tam sayı bölen '
             'sayısı 2 · $bolen = ${2 * bolen} bulunur.',
@@ -966,7 +974,7 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
       );
     case 7:
       final k = _kareTamlayan(f);
-      return _tam(
+      return _tamD(
         'k bir pozitif tam sayı olmak üzere A = $ifade için A · k çarpımı bir '
             'tam kare sayıdır. Buna göre k sayısının alabileceği en küçük değer '
             'kaçtır?',
@@ -979,13 +987,15 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
               if (x.$2.isEven) x.$1,
           ]),
           _kupTamlayan(f),
+          // Üssü tek olan çarpanlardan yalnız birini tamamlamak.
+          if (tekUslu.length > 1) ...[k ~/ tekUslu.last, k ~/ tekUslu.first],
         ].where((x) => x > 1),
         '$yaz ${_kareAciklama(f, k)}',
         pozitif: true,
       );
     case 8:
       final k = _kupTamlayan(f);
-      return _tam(
+      return _tamD(
         'k bir pozitif tam sayı olmak üzere A = $ifade için A · k çarpımı bir '
             'tam küp sayıdır. Buna göre k sayısının alabileceği en küçük değer '
             'kaçtır?',
@@ -998,16 +1008,26 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
           ]),
           _carp([for (final x in f) _kuvvet(x.$1, x.$2 % 3)]),
           _kareTamlayan(f),
+          // Üssü zaten üçün katı olan çarpanı da bir sonraki kata tamamlamak.
+          _carp([for (final x in f) _kuvvet(x.$1, 3 - x.$2 % 3)]),
         ].where((x) => x > 1),
         '$yaz ${_kupAciklama(f, k)}',
         pozitif: true,
       );
     default:
-      return _tam(
+      return _tamD(
         'A = $ifade olduğuna göre A sayısının asal olmayan pozitif '
             'bölenlerinin sayısı kaçtır?',
         bolen - f.length,
-        [bolen, bolen - f.length - 1, saf - 2, bolen - 1, ayrik - f.length],
+        [
+          bolen,
+          bolen - f.length - 1,
+          saf - 2,
+          bolen - 1,
+          ayrik - f.length,
+          // Üslerin birer fazlasını çarpmak yerine toplamak.
+          _topla([for (final x in f) x.$2 + 1]) - f.length,
+        ],
         '$yaz Pozitif bölen sayısı ${_bolenYaz(f)} = $bolen olur. Bunlardan '
             '${f.length} tanesi (${_liste([for (final p in asallar) '$p'])}) '
             'asal olduğundan asal olmayan bölen sayısı $bolen − ${f.length} = '
@@ -1057,7 +1077,7 @@ String _legendreYaz(int n, int p) {
         ust,
         '${f(n + 1)} = ${n + 1} · $n · ${f(n - 1)} olduğundan bölüm ${n + 1} · $n '
             '= $ust olur.',
-        [n + 1, 2, n * (n - 1), (n + 1) * (n - 1)],
+        [n + 1, 2, n * (n - 1), (n + 1) * (n - 1), (n + 1) * n * (n - 1)],
       );
     case 1:
       return (
@@ -1203,7 +1223,7 @@ AdvancedItem _faktoriyelSoru(int a, int b, int c) {
     case 0:
       final t = b % 10, n = 4 + a + 25 * (b ~/ 10);
       final (ifade, deger, aciklama, celdirici) = _faktoriyelKalip(t, n);
-      return _tam(
+      return _tamD(
         '$ifade işleminin sonucu kaçtır?',
         deger,
         celdirici,
@@ -1221,7 +1241,7 @@ AdvancedItem _faktoriyelSoru(int a, int b, int c) {
         return true;
       });
       final pay = m * (m - 1), payda = n + 1;
-      return _kes(
+      return _kesD(
         '($m! · $n!) / (${m - 2}! · ${n + 1}!) işleminin sonucu kaçtır?',
         pay,
         payda,
@@ -1235,7 +1255,7 @@ AdvancedItem _faktoriyelSoru(int a, int b, int c) {
       final n = 25 + a + 25 * b;
       final z = _legendre(n, 5);
       final terim = _legendreTerim(n, 5);
-      return _tam(
+      return _tamD(
         '$n! sayısının sonunda kaç tane sıfır vardır?',
         z,
         [
@@ -1243,6 +1263,8 @@ AdvancedItem _faktoriyelSoru(int a, int b, int c) {
           if (terim.length > 2) terim[0] + terim[1],
           n ~/ 10,
           _legendre(n, 2),
+          // 25'in katlarını iki, 125'in katlarını üç kez daha saymak.
+          _topla([for (var k = 0; k < terim.length; k++) (k + 1) * terim[k]]),
         ],
         'Sondaki sıfırları 2 · 5 çarpanları oluşturur; 5 çarpanları daha az '
             'olduğundan 5 çarpanları sayılır: ${_legendreYaz(n, 5)}.',
@@ -1254,7 +1276,7 @@ AdvancedItem _faktoriyelSoru(int a, int b, int c) {
       return _kokteOlmayan((v) {
         final m = 10 + b, n = 30 + 5 * a + b % 5 + 125 * v;
         final zn = _legendre(n, 5), zm = _legendre(m, 5);
-        return _tam(
+        return _tamD(
           '$n! · $m! çarpımının sonunda kaç tane sıfır vardır?',
           zn + zm,
           [n ~/ 5 + m ~/ 5, zn, zn * zm, zn + zm + 1],
@@ -1267,7 +1289,7 @@ AdvancedItem _faktoriyelSoru(int a, int b, int c) {
     case 4:
       final m = 10 + b, n = m + 5 + 3 * a;
       final zn = _legendre(n, 5), zm = _legendre(m, 5);
-      return _tam(
+      return _tamD(
         '$n! + $m! toplamının sonunda kaç tane sıfır vardır?',
         zm,
         // Son yanlış: 5 çarpanı yerine 10'un katlarını saymak.
@@ -1285,7 +1307,7 @@ AdvancedItem _faktoriyelSoru(int a, int b, int c) {
       final n = taban + a + 25 * (b % 10);
       final v = _legendre(n, p);
       final terim = _legendreTerim(n, p);
-      return _tam(
+      return _tamD(
         '$n! sayısı $p^k ile tam bölünebildiğine göre k doğal sayısının '
             'alabileceği en büyük değer kaçtır?',
         v,
@@ -1294,6 +1316,8 @@ AdvancedItem _faktoriyelSoru(int a, int b, int c) {
           v - terim.last,
           if (terim.length > 2) terim[0] + terim[1],
           v + 1,
+          // p² katlarını iki, p³ katlarını üç kez daha saymak.
+          _topla([for (var k = 0; k < terim.length; k++) (k + 1) * terim[k]]),
         ],
         '$n! içindeki $p çarpanları sayılır: ${_legendreYaz(n, p)}. En büyük k '
             'değeri $v olur.',
@@ -1320,7 +1344,7 @@ AdvancedItem _faktoriyelSoru(int a, int b, int c) {
                     '$p${_ust(e)} kuvvetinden ⌊${_legendre(n, p)}/$e⌋ = '
                     '${_legendre(n, p) ~/ e} tane bulunur',
       ];
-      return _tam(
+      return _tamD(
         '$n! sayısı $taban^k ile tam bölünebildiğine göre k doğal sayısının '
             'alabileceği en büyük değer kaçtır?',
         k,
@@ -1330,6 +1354,8 @@ AdvancedItem _faktoriyelSoru(int a, int b, int c) {
           if (f.length > 1) _buyukKisit(n, taban),
           if (f.length == 1) _legendre(n, f.first.$1),
           k + 1,
+          // Legendre toplamının yalnız ilk terimini alıp üsse bölmek.
+          [for (final (p, e) in f) n ~/ p ~/ e].reduce((x, y) => x < y ? x : y),
         ],
         '$taban = ${_carpanYaz(f)} olur. ${adimlar.join('. ')}. '
             '${f.length > 1 ? 'Bu değerlerin küçüğü alınır: ' : ''}k en çok $k '
@@ -1342,7 +1368,7 @@ AdvancedItem _faktoriyelSoru(int a, int b, int c) {
       final enAz = j.isEven;
       final nMin = _sifirdanN(k)!;
       final yanit = enAz ? nMin : nMin + 4;
-      return _tam(
+      return _tamD(
         'n! sayısının sonunda tam $k tane sıfır olduğuna göre n doğal sayısının '
             'alabileceği en ${enAz ? 'küçük' : 'büyük'} değer kaçtır?',
         yanit,
@@ -1375,16 +1401,23 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
       final ilk = 1 + a, adet = 11 + 3 * b, son = ilk + adet - 1;
       final top = (ilk + son) * adet ~/ 2;
       if (ilk == 1) {
-        return _tam(
+        return _tamD(
           '1 + 2 + 3 + … + $son toplamı kaçtır?',
           top,
-          [son * (son - 1) ~/ 2, son * son, (son + 1) * (son + 2) ~/ 2],
+          [
+            son * (son - 1) ~/ 2,
+            son * son,
+            (son + 1) * (son + 2) ~/ 2,
+            // 2 ile bölmeyi unutmak; n · (n + 1) yerine n · n almak.
+            son * (son + 1),
+            ?_bol(son * son, 2),
+          ],
           '1 + 2 + … + n = n · (n + 1) / 2 formülünde n = $son alınır: $son · '
               '${son + 1} / 2 = $top.',
           pozitif: true,
         );
       }
-      return _tam(
+      return _tamD(
         '$ilk + ${ilk + 1} + ${ilk + 2} + … + $son toplamı kaçtır?',
         top,
         [
@@ -1392,6 +1425,8 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
           son * (son + 1) ~/ 2,
           son * (son + 1) ~/ 2 - ilk * (ilk + 1) ~/ 2,
           ?_bol((ilk + son) * (adet + 1), 2),
+          // Uçların toplamı yerine farkını almak.
+          ?_bol((son - ilk) * adet, 2),
         ],
         'Terim sayısı $son − $ilk + 1 = $adet olur. Toplam (ilk terim + son '
             'terim) · terim sayısı / 2 = ($ilk + $son) · $adet / 2 = $top bulunur.',
@@ -1403,7 +1438,7 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
       final son = ilk + 2 * (adet - 1);
       final top = (ilk + son) * adet ~/ 2;
       final bastan = tek ? ilk == 1 : ilk == 2;
-      return _tam(
+      return _tamD(
         'Ardışık ${tek ? 'tek' : 'çift'} sayılardan oluşan '
             '${_artanToplam(ilk, 2, son)} toplamı kaçtır?',
         top,
@@ -1412,6 +1447,9 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
           if (!bastan) tek ? (son + 1) * (son + 1) ~/ 4 : son * (son + 2) ~/ 4,
           ?_bol((son - ilk + 1) * (ilk + son), 2),
           (ilk + son) * adet,
+          // Aradaki bütün tam sayıların toplamının yarısını almak.
+          ?_bol((son - ilk + 1) * (ilk + son), 4),
+          ?_bol((son - ilk) * adet, 2),
         ],
         'Terim sayısı ($son − $ilk) / 2 + 1 = $adet olur. Toplam ($ilk + $son) '
             '· $adet / 2 = $top bulunur.',
@@ -1421,7 +1459,7 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
       final ilk = 2 + a, artis = 3 + b % 5, adet = 10 + 4 * (b ~/ 5);
       final son = ilk + (adet - 1) * artis;
       final top = (ilk + son) * adet ~/ 2;
-      return _tam(
+      return _tamD(
         'Her terimi bir öncekinden $artis fazla olan '
             '${_artanToplam(ilk, artis, son)} toplamı kaçtır?',
         top,
@@ -1430,6 +1468,9 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
           (ilk + son) * adet,
           ?_bol((ilk + son) * (adet + 1), 2),
           ?_bol((ilk + son) * (son - ilk + 1), 2),
+          // n · ilk + artış · n(n − 1)/2 formülünde artışla çarpmayı unutmak.
+          adet * ilk + adet * (adet - 1) ~/ 2,
+          ?_bol((son - ilk) * adet, 2),
         ],
         'Terim sayısı ($son − $ilk) / $artis + 1 = $adet olur. Toplam ($ilk + '
             '$son) · $adet / 2 = $top bulunur.',
@@ -1441,7 +1482,7 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
       final artis = 3 + b % 5, adet = 12 + 5 * (b ~/ 5);
       final ilk = 2 + a == artis ? 27 + a : 2 + a;
       final son = ilk + (adet - 1) * artis;
-      return _tam(
+      return _tamD(
         'Her terimi bir öncekinden $artis fazla olan $ilk, ${ilk + artis}, '
             '${ilk + 2 * artis}, …, $son sayı dizisinde kaç terim vardır?',
         adet,
@@ -1460,7 +1501,7 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
       final ilk = 10 + a, artis = 1 + b % 4, sira = 8 + 2 * (b ~/ 4);
       final son = ilk + (sira - 1) * artis;
       final top = (ilk + son) * sira ~/ 2;
-      return _tam(
+      return _tamD(
         'Bir açık hava tiyatrosunun ilk sırasında $ilk koltuk vardır ve sonraki '
             'her sırada bir önceki sıradan $artis koltuk fazla bulunmaktadır. '
             'Tiyatroda $sira sıra koltuk olduğuna göre tiyatroda toplam kaç koltuk '
@@ -1471,6 +1512,9 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
           ?_bol((2 * ilk + sira * artis) * sira, 2),
           son * sira,
           ilk * sira,
+          ?_bol((ilk + son) * (sira - 1), 2),
+          // Her sıraya ilk sıradan yalnız bir kez artış eklemek.
+          sira * (ilk + artis),
         ],
         'Son sırada $ilk + ($sira − 1) · $artis = $son koltuk vardır. Toplam '
             '($ilk + $son) · $sira / 2 = $top koltuk olur.',
@@ -1480,7 +1524,7 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
       final ilk = 10 + 2 * a, artis = 2 + b % 5, hafta = 8 + 3 * (b ~/ 5);
       final son = ilk + (hafta - 1) * artis;
       final top = (ilk + son) * hafta ~/ 2;
-      return _tam(
+      return _tamD(
         'Bir öğrenci kumbarasına ilk hafta $ilk TL atıyor ve sonraki her hafta '
             'bir önceki haftadan $artis TL fazla para atıyor. Kumbaraya son olarak '
             '$son TL attığına göre kumbarada toplam kaç TL birikmiştir?',
@@ -1490,6 +1534,9 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
           (ilk + son) * hafta,
           son * hafta,
           ?_bol((ilk + son) * (hafta + 1), 2),
+          // Artışları unutmak ya da her haftaya yalnız bir kez eklemek.
+          ilk * hafta,
+          hafta * (ilk + artis),
         ],
         'Para atılan hafta sayısı ($son − $ilk) / $artis + 1 = $hafta olur. '
             'Toplam ($ilk + $son) · $hafta / 2 = $top TL bulunur.',
@@ -1498,7 +1545,7 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
       );
     case 7:
       final ilk = 2 * a + 1, adet = 12 + 2 * b, son = ilk + 2 * (adet - 1);
-      return _tam(
+      return _tamD(
         'Bir sokağın bir yanındaki evlerin kapı numaraları $ilk, ${ilk + 2}, '
             '${ilk + 4}, … biçiminde ardışık tek sayılardır. Bu yandaki son evin '
             'kapı numarası $son olduğuna göre sokağın bu yanında kaç ev vardır?',
@@ -1511,7 +1558,7 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
     case 8:
       final ilk = 2 + a, son = ilk + 9 + 2 * b;
       final top = (son * (son + 1) - (ilk - 1) * ilk) ~/ 2;
-      return _tam(
+      return _tamD(
         'Ardışık doğal sayılardan oluşan $ilk + ${ilk + 1} + ${ilk + 2} + … + n '
             'toplamı $top olduğuna göre n kaçtır?',
         son,
@@ -1529,7 +1576,7 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
         final ilk = 5 + a + 25 * v, artis = 2 + b % 4, gun = 6 + b ~/ 4;
         final son = ilk + (gun - 1) * artis;
         final top = (ilk + son) * gun ~/ 2;
-        return _tam(
+        return _tamD(
           'Bir öğrenci deneme sınavına hazırlanırken ilk gün $ilk soru çözüyor ve '
               'sonraki her gün bir önceki günden $artis soru fazla çözüyor. Buna göre '
               'öğrencinin çözdüğü soruların toplamı kaçıncı günün sonunda $top olur?',
@@ -2778,7 +2825,7 @@ AdvancedItem _aralikUret(int c, (_Ar, _Ar) ikili) {
   int adet(List<_Ar> x) => _tamlar(x).length;
   switch (c) {
     case 0 || 8:
-      return _tam(
+      return _tamD(
         '$veri A ∩ B kümesinde kaç tam sayı vardır?',
         kesT.length,
         [
@@ -2786,12 +2833,14 @@ AdvancedItem _aralikUret(int c, (_Ar, _Ar) ikili) {
           adet([_kesisim(acik(A), acik(B))]),
           birT.length,
           kesT.length + 1,
+          // Uçların farkını tam sayı adedi sanmak.
+          kes.$3 - kes.$1,
         ],
         'A ∩ B = ${_arYaz(kes)} olur. Bu aralıktaki tam sayılar ${_tamListe(kesT)}.',
         pozitif: true,
       );
     case 1 || 9:
-      return _tam(
+      return _tamD(
         '$veri A ∪ B kümesinde kaç tam sayı vardır?',
         birT.length,
         [
@@ -2804,7 +2853,7 @@ AdvancedItem _aralikUret(int c, (_Ar, _Ar) ikili) {
         pozitif: true,
       );
     case 2:
-      return _tam(
+      return _tamD(
         '$veri A \\ B kümesinde kaç tam sayı vardır?',
         abT.length,
         [
@@ -2812,12 +2861,14 @@ AdvancedItem _aralikUret(int c, (_Ar, _Ar) ikili) {
           _tamlar(_fark(kapali(A), acik(B))).length,
           _tamlar(_fark(acik(A), kapali(B))).length,
           kesT.length,
+          // s(A \ B) = s(A) − s(B) sanmak.
+          _tamlar([A]).length - _tamlar([B]).length,
         ],
         'A \\ B = ${_parcaYaz(ab)} olur. Bu kümedeki tam sayılar ${_tamListe(abT)}.',
         pozitif: true,
       );
     case 3:
-      return _tam(
+      return _tamD(
         '$veri B \\ A kümesinde kaç tam sayı vardır?',
         baT.length,
         [
@@ -2825,13 +2876,15 @@ AdvancedItem _aralikUret(int c, (_Ar, _Ar) ikili) {
           _tamlar(_fark(kapali(B), acik(A))).length,
           _tamlar(_fark(acik(B), kapali(A))).length,
           kesT.length,
+          // s(B \ A) = s(B) − s(A) sanmak.
+          _tamlar([B]).length - _tamlar([A]).length,
         ],
         'B \\ A = ${_parcaYaz(ba)} olur. Bu kümedeki tam sayılar ${_tamListe(baT)}.',
         pozitif: true,
       );
     case 4:
       final t = _topla(kesT);
-      return _tam(
+      return _tamD(
         '$veri A ∩ B kümesindeki tam sayıların toplamı kaçtır?',
         t,
         [
@@ -2845,7 +2898,7 @@ AdvancedItem _aralikUret(int c, (_Ar, _Ar) ikili) {
       );
     case 5:
       final t = _topla(abT);
-      return _tam(
+      return _tamD(
         '$veri A \\ B kümesindeki tam sayıların toplamı kaçtır?',
         t,
         [
@@ -2861,7 +2914,7 @@ AdvancedItem _aralikUret(int c, (_Ar, _Ar) ikili) {
       final t = birT.first + birT.last;
       final kap = _tamlar([_birlesim(kapali(A), kapali(B))]);
       final ac = _tamlar([_birlesim(acik(A), acik(B))]);
-      return _tam(
+      return _tamD(
         '$veri A ∪ B kümesindeki en küçük tam sayı ile en büyük tam sayının '
             'toplamı kaçtır?',
         t,
@@ -2878,7 +2931,7 @@ AdvancedItem _aralikUret(int c, (_Ar, _Ar) ikili) {
     default:
       final simetrik = [...ab, ...ba]..sort((x, y) => x.$1.compareTo(y.$1));
       final t = _tamlar(simetrik);
-      return _tam(
+      return _tamD(
         '$veri (A ∪ B) \\ (A ∩ B) kümesinde kaç tam sayı vardır?',
         t.length,
         [
@@ -2886,6 +2939,9 @@ AdvancedItem _aralikUret(int c, (_Ar, _Ar) ikili) {
           kesT.length,
           abT.length + baT.length + 1,
           birT.length - kesT.length + 1,
+          // Farklardan yalnız birini almak.
+          abT.length,
+          baT.length,
         ],
         '(A ∪ B) \\ (A ∩ B) = (A \\ B) ∪ (B \\ A) = ${_parcaYaz(simetrik)} olur. '
             'Bu kümedeki tam sayılar ${_tamListe(t..sort())}.',
@@ -3080,13 +3136,21 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
       final bDahil = b ~/ 5 % 2 == 1;
       final sa = genislik - 1 + (altDahil ? 1 : 0) + (ustDahil ? 1 : 0);
       final sb = r + (bDahil ? 1 : 0); // 0 doğal sayıdır
-      return _tam(
+      return _tamD(
         'A = {x | x tam sayı ve ${_n(alt)} ${altDahil ? '≤' : '<'} x '
             '${ustDahil ? '≤' : '<'} ${_n(ust)}} ve B = {y | y doğal sayı ve y '
             '${bDahil ? '≤' : '<'} $r} kümeleri veriliyor. A × B kümesinin eleman '
             'sayısı kaçtır?',
         sa * sb,
-        [sa * (sb - 1), sa + sb, (sa + 1) * sb, (sa - 1) * sb],
+        [
+          sa * (sb - 1),
+          sa + sb,
+          (sa + 1) * sb,
+          (sa - 1) * sb,
+          // Uç değerleri yanlış sayıp bir kümeye fazladan eleman katmak.
+          sa * (sb + 1),
+          (sa + 1) * (sb + 1),
+        ],
         'A kümesinin $sa, B kümesinin $sb elemanı vardır (0 bir doğal sayıdır). '
             's(A × B) = s(A) · s(B) = $sa · $sb = ${sa * sb} olur.',
         pozitif: true,
@@ -3109,7 +3173,7 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
       String dog(int k, String v, int sabit) =>
           '${k == 1 ? '' : '$k'}$v${sabit == 0 ? '' : (sabit > 0 ? ' + $sabit' : ' − ${-sabit}')}';
       final xYanlis = (u + q) % p == 0 ? (u + q) ~/ p : x + 1;
-      return _tam(
+      return _tamD(
         '(${dog(p, 'x', q)}, ${dog(1, 'y', sSabit)}) = (${_n(u)}, ${dog(r, 'y', t)}) '
             'sıralı ikilileri eşit olduğuna göre ${toplamMi ? 'x + y' : 'x · y'} kaçtır?',
         yanit,
@@ -3132,7 +3196,7 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
           for (final y in B)
             if (x + y == k) '($x, $y)',
       ];
-      return _tam(
+      return _tamD(
         'A = ${_kumeYaz(A)} ve B = ${_kumeYaz(B)} kümeleri veriliyor. A × B '
             'kümesinin (x, y) elemanlarından kaç tanesinde x + y = $k olur?',
         say,
@@ -3155,11 +3219,18 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
       ];
       final d = _bolenler(n).length;
       final pp = asallar.length;
-      return _tam(
+      return _tamD(
         'A = {x | x, $n sayısının pozitif bölenidir} ve B = {y | y asal sayı ve '
             'y < $ust} kümeleri veriliyor. A × B kümesinin eleman sayısı kaçtır?',
         d * pp,
-        [d + pp, (d - 2) * pp, d * (pp + 1), d * (pp - 1)],
+        [
+          d + pp,
+          (d - 2) * pp,
+          d * (pp + 1),
+          d * (pp - 1),
+          // Pozitif bölenler yerine tam sayı bölenleri saymak.
+          2 * d * pp,
+        ],
         '$n sayısının pozitif bölenleri ${_bolenler(n).join(', ')} olup $d tanedir. '
             '$ust sayısından küçük asal sayılar ${asallar.join(', ')} olup $pp tanedir. '
             's(A × B) = $d · $pp = ${d * pp} olur.',
@@ -3175,10 +3246,16 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
   switch (c) {
     case 1:
       final k = _ciftSay(A, B, (x, y) => x < y);
-      return _tam(
+      return _tamD(
         '$veri A × B kümesinin (x, y) elemanlarından kaç tanesinde x < y olur?',
         k,
-        [_ciftSay(A, B, (x, y) => x <= y), _ciftSay(A, B, (x, y) => x > y), n],
+        [
+          _ciftSay(A, B, (x, y) => x <= y),
+          _ciftSay(A, B, (x, y) => x > y),
+          n,
+          // İkililerin yarısının koşulu sağladığını sanmak.
+          ?_bol(n, 2),
+        ],
         'A × B kümesinin $n elemanından x < y koşulunu sağlayanlar '
             '${[for (final x in A)
               for (final y in B)
@@ -3192,7 +3269,7 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
       final tekA = A.where((x) => x.isOdd).length,
           tekB = B.where((x) => x.isOdd).length;
       final ciftA = A.length - tekA, ciftB = B.length - tekB;
-      return _tam(
+      return _tamD(
         '$veri A × B kümesinin (x, y) elemanlarından kaç tanesinde x + y toplamı '
             'çift sayıdır?',
         k,
@@ -3209,7 +3286,7 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
           for (final y in B)
             if (_bolerMi(x, y)) '($x, $y)',
       ];
-      return _tam(
+      return _tamD(
         '$veri A × B kümesinin (x, y) elemanlarından kaç tanesinde x sayısı y '
             'sayısını tam böler?',
         k,
@@ -3224,7 +3301,7 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
           if (B.contains(x)) x,
       ];
       final m = ortak.length;
-      return _tam(
+      return _tamD(
         '$veri (A × B) ∩ (B × A) kümesinin eleman sayısı kaçtır?',
         m * m,
         [m, 2 * m, n, 2 * m * m],
@@ -3242,10 +3319,18 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
         for (final x in B)
           if (!A.contains(x)) x,
       ];
-      return _tam(
+      return _tamD(
         '$veri (A \\ B) × (B \\ A) kümesinin eleman sayısı kaçtır?',
         ab.length * ba.length,
-        [ab.length + ba.length, ab.length * B.length, A.length * ba.length, n],
+        [
+          ab.length + ba.length,
+          ab.length * B.length,
+          A.length * ba.length,
+          n,
+          // Farklardan biri yerine kesişimi almak.
+          A.where(B.contains).length * ba.length,
+          ab.length * A.where(B.contains).length,
+        ],
         'A \\ B = ${_kumeYaz(ab)} ve B \\ A = ${_kumeYaz(ba)} olduğundan eleman '
             'sayısı ${ab.length} · ${ba.length} = ${ab.length * ba.length} olur.',
         pozitif: true,
@@ -3254,11 +3339,19 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
     default:
       final k = _ciftSay(A, B, (x, y) => x < y);
       final t = _kuvvet(2, k);
-      return _tam(
+      return _tamD(
         '$veri A × B kümesinin, her (x, y) elemanı için x < y koşulunu sağlayan '
             'kaç tane alt kümesi vardır?',
         t,
-        [t - 1, k, _kuvvet(2, k + 1), 2 * k],
+        [
+          t - 1,
+          k,
+          _kuvvet(2, k + 1),
+          2 * k,
+          // x < y koşulunu x ≤ y ya da x ≥ y gibi okumak.
+          _kuvvet(2, _ciftSay(A, B, (x, y) => x <= y)),
+          _kuvvet(2, n - k),
+        ],
         'x < y koşulunu sağlayan sıralı ikililerin sayısı $k olur. Bu $k '
             'ikiliden oluşan kümenin her alt kümesi istenen özelliktedir (boş küme '
             'dâhil); sayıları 2${_ust(k)} = $t bulunur.',
@@ -3604,7 +3697,7 @@ AdvancedItem _fonksiyonSayisiSoru(int a, int b, int c) {
           'Sonuç ${_carp(secim)} − $bb = $yanit olur.';
   }
   // Çeldirici, A → B fonksiyonlarının toplam sayısını (n^m) aşmaz.
-  return _tam(
+  return _tamD(
     kok,
     yanit,
     yanlis,
@@ -3927,7 +4020,7 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
       // m² − n² = (m − n)(m + n); toplam ve fark yuvarlak sayılardır.
       final top = 60 + 10 * a, fark = 2 + 2 * b;
       final m = (top + fark) ~/ 2, n = (top - fark) ~/ 2;
-      return _tam(
+      return _tamD(
         '$m² − $n² işleminin sonucu kaçtır?',
         top * fark,
         // Son yanlış: işareti karıştırıp m² + n² hesaplamak.
@@ -3938,7 +4031,7 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
       );
     case 1:
       final m = 31 + 2 * a, n = 11 + b;
-      return _tam(
+      return _tamD(
         '($m² − $n²) / ($m − $n) işleminin sonucu kaçtır?',
         m + n,
         [m - n, 2 * m, 2 * n, m + n + 2],
@@ -3954,7 +4047,7 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
       final m = topla ? 10 * t - n : 10 * t + n;
       final k = 10 * t;
       final isaret = topla ? '+' : '−';
-      return _tam(
+      return _tamD(
         '$m² $isaret 2 · $m · $n + $n² işleminin sonucu kaçtır?',
         k * k,
         [
@@ -3972,7 +4065,7 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
       );
     case 4:
       final k = 13 + 2 * a, x = 11 + 4 * b, y = 100 - x;
-      return _tam(
+      return _tamD(
         '$k · $x + $k · $y işleminin sonucu kaçtır?',
         100 * k,
         [k * x + y, k + 100, 2 * k * 100, k * (x - y)],
@@ -3981,7 +4074,7 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
       );
     case 5:
       final k = 14 + 2 * a, x = 52 + 2 * b, f = 10 * (1 + b % 3), y = x - f;
-      return _tam(
+      return _tamD(
         '$k · $x − $k · $y işleminin sonucu kaçtır?',
         k * f,
         [k * x - y, k * (x + y), f, k * f + k],
@@ -3990,7 +4083,7 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
       );
     case 6:
       final top = 7 + a, fark = 2 + b;
-      return _tam(
+      return _tamD(
         'x + y = $top ve x − y = $fark olduğuna göre x² − y² ifadesinin değeri '
             'kaçtır?',
         top * fark,
@@ -4003,11 +4096,18 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
       final fark = 1 + b % 10;
       final top = fark + 2 * (2 + a) + 2 * (b ~/ 10) * 25;
       final P = top * fark, x = (top + fark) ~/ 2, y = (top - fark) ~/ 2;
-      return _tam(
+      return _tamD(
         'x ve y pozitif tam sayılar olmak üzere x² − y² = $P ve x − y = $fark '
             'olduğuna göre x kaçtır?',
         x,
-        [top, y, ?_bol(P, 2), x + fark],
+        [
+          top,
+          y,
+          ?_bol(P, 2),
+          x + fark,
+          // x + y toplamının yarısını x sanmak.
+          ?_bol(top, 2),
+        ],
         'x² − y² = (x − y) · (x + y) olduğundan x + y = $P / $fark = $top olur. '
             'x + y = $top ve x − y = $fark eşitlikleri taraf tarafa toplanırsa '
             '2x = ${top + fark}, x = $x bulunur.',
@@ -4015,10 +4115,17 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
       );
     case 8:
       final m = 21 + 2 * a, n = 3 + b;
-      return _tam(
+      return _tamD(
         '($m + $n)² − ($m − $n)² işleminin sonucu kaçtır?',
         4 * m * n,
-        [2 * m * n, 4 * n * n, (2 * n) * (2 * n) + 2 * m * n, m * n],
+        [
+          2 * m * n,
+          4 * n * n,
+          (2 * n) * (2 * n) + 2 * m * n,
+          m * n,
+          // Kareleri çıkarmak yerine toplamak: 2m² + 2n².
+          2 * (m * m + n * n),
+        ],
         '(x + y)² − (x − y)² = 4xy özdeşliğine göre sonuç 4 · $m · $n = '
             '${4 * m * n} olur.',
         pozitif: true,
@@ -4028,7 +4135,7 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
       final t1 = const [50, 100][b ~/ 10], t2 = const [20, 30, 40][a % 3];
       final pp = 11 + a + (t1 == 100 ? 20 : 0), q = t1 - pp;
       final r = 3 + b % 10 + (t2 == 40 ? 5 : 0), sx = t2 - r;
-      return _tam(
+      return _tamD(
         '$pp · $r + $pp · $sx + $q · $r + $q · $sx işleminin sonucu kaçtır?',
         t1 * t2,
         [pp * r + q * sx, (pp + r) * (q + sx), t1 + t2, t1 * t2 ~/ 2],

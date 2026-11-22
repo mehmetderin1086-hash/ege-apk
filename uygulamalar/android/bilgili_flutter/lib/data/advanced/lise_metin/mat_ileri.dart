@@ -164,9 +164,11 @@ int _hs(int a, int b, int c, [int tuz = 0]) =>
     hedefSira(a + 25 * b + 500 * c, tuz);
 
 /// [siraliCeldiriciler] seçimi; dört seçenek eşit aralıklı bir dizi kurarsa
-/// (anahtar dizinin ucunda ya da ortasında kalıp ipucu verebilir) seçilen en
-/// düşük öncelikli çeldirici (önce komşular) havuzdan çıkarılıp yeniden
-/// seçilir; en çok üç deneme yapılır.
+/// (anahtar dizinin ucunda ya da ortasında kalıp ipucu verebilir) ya da
+/// anahtar, değerce iki yanındaki çeldiricilerin tam ortasında kalırsa
+/// (ör. 3, 4, 5 içinde 4; −p, p, 3p içinde p) bu diziyi kuran çeldiricilerin
+/// en düşük öncelikli olanı (önce komşular) havuzdan çıkarılıp yeniden
+/// seçilir; en çok dört deneme yapılır.
 List<String> _diziKirarak(
   num anahtar,
   String yazim,
@@ -175,15 +177,28 @@ List<String> _diziKirarak(
 ) {
   var aday = havuz;
   var secim = siraliCeldiriciler(anahtar, yazim, aday, sira);
-  for (var deneme = 0; deneme < 3; deneme++) {
+  bool esit(num a, num b) => (a - b).abs() <= 1e-9;
+  for (var deneme = 0; deneme < 4; deneme++) {
     final deger = {for (final (v, y) in aday) y: v};
-    final v = [anahtar, for (final y in secim) deger[y]!]..sort();
+    final s = [for (final y in secim) (deger[y]!, y)]
+      ..sort((p, q) => p.$1.compareTo(q.$1));
+    final v = [anahtar, for (final x in s) x.$1]..sort();
     final d = v[1] - v[0];
-    if ((v[2] - v[1] - d).abs() > 1e-9 || (v[3] - v[2] - d).abs() > 1e-9) {
-      return secim;
+    var suclu = const <String>[];
+    if (esit(v[2] - v[1], d) && esit(v[3] - v[2], d)) {
+      suclu = secim;
+    } else {
+      final alt = s.where((x) => x.$1 < anahtar),
+          ust = s.where((x) => x.$1 > anahtar);
+      if (alt.isNotEmpty &&
+          ust.isNotEmpty &&
+          esit(anahtar - alt.last.$1, ust.first.$1 - anahtar)) {
+        suclu = [alt.last.$2, ust.first.$2];
+      }
     }
+    if (suclu.isEmpty) return secim;
     int yer(String y) => aday.indexWhere((x) => x.$2 == y);
-    final son = secim.reduce((x, y) => yer(x) > yer(y) ? x : y);
+    final son = suclu.reduce((x, y) => yer(x) > yer(y) ? x : y);
     final yeni = [
       for (final x in aday)
         if (x.$2 != son) x,
@@ -2858,6 +2873,8 @@ final lmMatIleri = <AdvancedFamily>[
             360 - esas,
             (esas + 180) % 360,
             if (esas < 180) 180 - esas,
+            // 180° ile indirgeyip ters yönü alma: 360° − (x − 180°).
+            if (esas > 180) 540 - esas,
             esas - 10,
             esas + 10,
             if (esas > 20) esas - 20,
@@ -2911,6 +2928,7 @@ final lmMatIleri = <AdvancedFamily>[
                 if (derece.isEven) derece ~/ 2,
                 if (2 * derece < 360) 2 * derece,
                 if (derece < 180) 180 - derece,
+                if (derece > 180) 540 - derece,
               ],
               '$indir olduğundan esas ölçü ${_pili(m, q)} radyandır. Bu da '
                   '${m == 1 ? '' : '$m·'}180°/$q = $derece° eder.',

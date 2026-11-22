@@ -26,10 +26,9 @@ int _hs(int a, int b, int c) {
 /// kurulamıyorsa kurulabilen sıralardan biri [sira] ~/ 4 ile seçilir.
 /// Böylece seçenekler anahtarın çevresine dizilmiş komşulardan oluşmaz.
 /// [enCokAlt] verilirse anahtardan küçük çeldirici sayısı onu aşmaz.
-/// [zorunlu] adaylar arasındaysa her seçimde bulunur (anahtar tek tam sayı
-/// seçenek kalmasın diye); [isaret] doğruysa en az bir çeldirici anahtarla
-/// aynı işarette olur (anahtar tek negatif ya da tek negatif olmayan
-/// seçenek kalmasın diye).
+/// [ayniTur] verilirse en az bir çeldirici anahtarla aynı türdendir (tam
+/// sayı ya da kesir, negatif ya da negatif olmayan): anahtar seçeneklerin
+/// tek kesri, tek tam sayısı ya da tek negatifi olmaz.
 List<String> _celdirici(
   num anahtar,
   String yazim,
@@ -37,8 +36,7 @@ List<String> _celdirici(
   Iterable<(num, String)> komsular,
   int sira, {
   int enCokAlt = 3,
-  num? zorunlu,
-  bool isaret = false,
+  bool Function(num)? ayniTur,
 }) {
   // Bir çağrıdaki bütün adaylar aynı birim ve biçimdedir ve yazımları
   // değerlerinden türetilir; bu yüzden değeri aynı olan aday aynı seçenektir.
@@ -65,10 +63,15 @@ List<String> _celdirici(
       if (x.$1 > anahtar) x,
   ];
   int eksik(int r) => max(0, r - hA.length) + max(0, 3 - r - hU.length);
+  // [ayniTur] için aynı türden aday bulunan bir yana en az bir yer kalmalı.
+  bool tur(num x) => ayniTur == null || ayniTur(x);
+  final altTur = [...hA, ...kA].any((x) => tur(x.$1));
+  final ustTur = [...hU, ...kU].any((x) => tur(x.$1));
   bool olur(int r) =>
       r <= enCokAlt &&
       r - hA.length <= kA.length &&
-      3 - r - hU.length <= kU.length;
+      3 - r - hU.length <= kU.length &&
+      (!(altTur || ustTur) || (r > 0 && altTur) || (r < 3 && ustTur));
   final olasi = [
     for (var r = 0; r < 4; r++)
       if (olur(r)) r,
@@ -92,8 +95,12 @@ List<String> _celdirici(
   // sıraları toplamı en küçük olan alınır; komşu sayısı gerekenden (en az
   // bir) fazla olmaz.
   // Uyan yoksa yalnız orta koşulu, o da yoksa ilk adaylar kullanılır.
-  final alt0 = [...hA, ...kA].take(6).toList();
-  final ust0 = [...hU, ...kU].take(6).toList();
+  List<(num, String)> ilk(List<(num, String)> xs) => [
+    ...xs.take(6),
+    if (!xs.take(6).any((x) => tur(x.$1)))
+      ...xs.skip(6).where((x) => tur(x.$1)).take(1),
+  ];
+  final alt0 = ilk([...hA, ...kA]), ust0 = ilk([...hU, ...kU]);
   final enCokKomsu = max(1, eksik(r));
   bool esit(num p, num q) =>
       (p - q).abs() <= 1e-9 * max(1, max(p.abs(), q.abs()));
@@ -120,32 +127,47 @@ List<String> _celdirici(
     return true;
   }
 
-  final zorunluVar = [...alt0, ...ust0].any((x) => x.$1 == zorunlu);
+  // Anahtar, seçeneklerdeki basit kat ilişkilerinin tek çiftinde ya da en
+  // çok ilişkili seçeneklerin yarısından fazlasında mı ("2 katı olan iki
+  // seçenekten biri" kestirimi)?
+  bool ciftte(List<num> d) {
+    final hepsi = [anahtar, ...d];
+    final der = [
+      for (var i = 0; i < 4; i++)
+        derece(hepsi[i], [
+          for (var j = 0; j < 4; j++)
+            if (j != i) hepsi[j],
+        ]),
+    ];
+    final enCok = der.reduce(max);
+    return enCok > 0 &&
+        der[0] == enCok &&
+        der.where((x) => x == enCok).length <= 2;
+  }
+
   List<(num, String)>? secim;
   var secimDuzey = -1, secimMaliyet = 0;
   for (final ia in _birlesim(alt0.length, r)) {
     for (final iu in _birlesim(ust0.length, 3 - r)) {
-      final komsu =
-          ia.where((i) => i >= hA.length).length +
-          iu.where((i) => i >= hU.length).length;
-      if (komsu > enCokKomsu) continue;
       final a = [for (final i in ia) alt0[i]];
       final u = [for (final i in iu) ust0[i]];
+      final komsu =
+          a.where((x) => !hA.contains(x)).length +
+          u.where((x) => !hU.contains(x)).length;
+      if (komsu > enCokKomsu) continue;
       final ortaVar = a.any((p) => u.any((q) => orta(p.$1, q.$1)));
       final secilen = [...a, ...u];
-      final tur =
-          (zorunlu == null ||
-              !zorunluVar ||
-              secilen.any((x) => x.$1 == zorunlu)) &&
-          (!isaret || secilen.any((x) => (x.$1 < 0) == (anahtar < 0)));
       final duzey =
-          (tur ? 3 : 0) +
+          (ayniTur == null || secilen.any((x) => tur(x.$1)) ? 3 : 0) +
           (ortaVar
               ? 0
               : merkez([for (final x in secilen) x.$1])
               ? 1
               : 2);
-      final maliyet = [...ia, ...iu].fold<int>(0, (t, i) => t + i) + 10 * komsu;
+      final maliyet =
+          [...ia, ...iu].fold<int>(0, (t, i) => t + i) +
+          10 * komsu +
+          (ciftte([for (final x in secilen) x.$1]) ? 3 : 0);
       if (duzey > secimDuzey ||
           (duzey == secimDuzey && maliyet < secimMaliyet)) {
         secim = secilen;
@@ -2465,9 +2487,10 @@ final lmGeometri = <AdvancedFamily>[
           sira,
           // Tam sayı anahtarda tek tam sayı çeldirici (paydayı unutma)
           // anahtardan büyüktür; üç çeldiricinin de küçük olduğu sıra
-          // seçilmez ve bu çeldirici her vakada bulunur.
+          // seçilmez. Anahtar seçeneklerin tek tam sayısı ya da tek kesri
+          // olmaz.
           enCokAlt: pay % h == 0 ? 2 : 3,
-          zorunlu: pay % h == 0 ? pay : null,
+          ayniTur: (x) => (x == x.roundToDouble()) == (pay % h == 0),
         );
       }
 
@@ -2565,7 +2588,7 @@ final lmGeometri = <AdvancedFamily>[
               ],
               [for (final x in _komsu(top, 1)) (x, _m(x as int))],
               _hs(a, b, c),
-              isaret: true,
+              ayniTur: (x) => (x < 0) == (top < 0),
             ),
             'Merkez M${_n(h, k)} ve r² = ${r * r} olduğundan r = $r bulunur. '
             'a + b + r = ${_m(h)} + ${_pz(k)} + $r = ${_m(h + k + r)}.',

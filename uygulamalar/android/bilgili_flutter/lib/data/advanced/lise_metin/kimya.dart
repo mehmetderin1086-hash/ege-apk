@@ -297,8 +297,17 @@ AdvancedItem _saySirali(
   bool yakin((num, int) z) =>
       _yakin(z, anahtarYazim, orijin) ||
       yazimlar.any((w) => _yakin(w, z, orijin));
+  // Anahtarın hem iki katı hem yarısı seçeneklerde olursa anahtar bu ikisinin
+  // ortak "merkezi" olur ve kolayca seçilir; bu durumda vakaya göre (üçüncü
+  // bağımsız seçim) yalnız biri tutulur.
+  final liste = adaylar.where(gecerli).toList();
+  bool esit(num x, num y) => (x - y).abs() <= 1e-9 * (1 + x.abs() + y.abs());
+  if (liste.any((x) => esit(x, 2 * d)) && liste.any((x) => esit(x, d / 2))) {
+    final atilan = (sira ~/ 16).isEven ? d / 2 : 2 * d;
+    liste.removeWhere((x) => esit(x, atilan));
+  }
   final tipik = <(num, String)>[];
-  for (final x in adaylar.where(gecerli)) {
+  for (final x in liste) {
     final z = _yazim(x, basamak);
     if (yakin(z)) continue;
     tipik.add((x, yaz(x)));
@@ -1395,7 +1404,7 @@ final _f05 = lmAile(
             n * ak,
             n * mk,
             n * kalan,
-            n * ak * adet * adet,
+            n * mk * adet / atomSay,
             g / 2,
             g * 2,
             n * adet,

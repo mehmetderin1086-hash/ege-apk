@@ -1057,33 +1057,39 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
     final genc = bagimli * pay ~/ 100, yasli = bagimli - genc;
     final toplamdaPay = (bagimli * 100 / (calisan + bagimli)).round();
     final calisanPay = (calisan * 100 / (calisan + bagimli)).round();
+    // Tipik hatalar anahtarın iki yanında: bağımlı nüfusu toplam nüfusa oranlama,
+    // oranı ters kurma (15–64 / bağımlı), yalnız 0–14 yaşı ya da yalnız 65 ve üzeri
+    // yaşı hesaba katma, toplam nüfusu 15–64 yaş nüfusuna oranlama, 15–64 yaşın
+    // toplamdaki payını verme, bağımlı nüfusu 0–14 yaş nüfusuna oranlama; en sonda
+    // komşu değerler. Gerçekçi olmayan %170 üstü oranlar kullanılmaz; %100'ü aşan
+    // değerlerden en çok ikisi kullanılır, yoksa anahtar gerçekçi aralıktaki tek
+    // seçenek kalabilir. Birbirine 3 puandan yakın iki değer aynı soruda kullanılmaz.
+    // Komşu değerler yalnız anahtarın üstüne düşer; çok kullanılırlarsa anahtar yakın
+    // değerlerin en küçüğü olarak göze batar.
+    final adaylar = <num>[];
+    var yuzUstu = 0;
+    for (final x in <num>[
+      toplamdaPay,
+      if (10000 / oran <= 170) (10000 / oran).round(),
+      oran * pay / 100,
+      if (100 + oran <= 170) 100 + oran,
+      oran * (100 - pay) / 100,
+      calisanPay,
+      if (10000 / pay <= 170) (10000 / pay).round(),
+      oran + 10,
+      oran + 6,
+    ]) {
+      if (x > 100 && ++yuzUstu > 2) continue;
+      adaylar.add(x);
+    }
     return AdvancedItem(
       'Bir ilçede 0–14 yaş grubunda $genc, 15–64 yaş grubunda $calisan, 65 ve üzeri yaş grubunda '
           '$yasli kişi yaşamaktadır. Bağımlı nüfus oranı, 0–14 ile 65 ve üzeri yaş gruplarındaki '
           'toplam nüfusun 15–64 yaş grubundaki nüfusa oranının 100 ile çarpılmasıyla bulunduğuna '
           'göre bu ilçenin bağımlı nüfus oranı yüzde kaçtır?',
       '%$oran',
-      // Tipik hatalar anahtarın iki yanında: bağımlı nüfusu toplam nüfusa oranlama,
-      // oranı ters kurma (15–64 / bağımlı), yalnız 0–14 yaşı ya da yalnız 65 ve üzeri
-      // yaşı hesaba katma, toplam nüfusu 15–64 yaş nüfusuna oranlama, 15–64 yaşın
-      // toplamdaki payını verme, bağımlı nüfusu 0–14 yaş nüfusuna oranlama; en sonda
-      // komşu değerler. Birbirine 3 puandan yakın iki değer aynı soruda kullanılmaz.
-      // Gerçekçi olmayan %170 üstü oranlar kullanılmaz. Komşu değerler
-      // yalnız anahtarın üstüne düşer; çok kullanılırlarsa anahtar yakın değerlerin
-      // en küçüğü olarak göze batar.
       siraliCeldiriciler(oran, '%$oran', [
-        for (final x in _ayrik(<num>[
-          toplamdaPay,
-          if (10000 / oran <= 170) (10000 / oran).round(),
-          oran * pay / 100,
-          if (100 + oran <= 170) 100 + oran,
-          oran * (100 - pay) / 100,
-          calisanPay,
-          if (10000 / pay <= 170) (10000 / pay).round(),
-          oran + 10,
-          oran + 6,
-        ], 3))
-          (x, '%${tr(x)}'),
+        for (final x in _ayrik(adaylar, 3)) (x, '%${tr(x)}'),
       ], sira),
       'Bağımlı nüfus $genc + $yasli = $bagimli kişidir. '
           '$bagimli / $calisan × 100 = %$oran bulunur.',

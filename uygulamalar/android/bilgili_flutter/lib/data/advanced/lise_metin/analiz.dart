@@ -5508,7 +5508,276 @@ AdvancedItem _optimizasyon(int a, int b, int c) {
     _ => _aralikUc.length,
   };
   final t = _temizSec('opt$c', adet, (t) => _optimizasyonHam(t, c), a + 25 * b);
-  return _optimizasyonHam(t, c);
+  final eski = _optimizasyonHam(t, c);
+  final (yanit, aday) = _optimizasyonAday(t, c);
+  final birim = eski.correct.contains(' ')
+      ? eski.correct.substring(eski.correct.indexOf(' ') + 1)
+      : '';
+  // Yanıt eski soruyla aynı hesaplanmadıysa eski çeldiriciler kalır.
+  if (birimli(_n(yanit), birim) != eski.correct) return eski;
+  return _dengele(
+    eski,
+    yanit,
+    _tamAday(aday, birim: birim, pozitif: c <= 6),
+    hedefSira(_vaka(a, b, c)),
+  );
+}
+
+/// Tam bölünüyorsa bölüm, değilse null (çeldirici adayı atılır).
+int? _bol(int a, int b) => b != 0 && a % b == 0 ? a ~/ b : null;
+
+/// [_optimizasyonHam] sorusunun yanıtı ve çeldirici adayları (öncelik
+/// sırasıyla, anahtarın iki yanından): eski adaylar, ardından en uygun
+/// noktayı yanlış bulma, bir kenarı ya da bölmeyi fazla veya eksik sayma,
+/// yarıya bölme, işlemi karıştırma gibi hatalar; en sonda komşu değerler.
+(int, List<int?>) _optimizasyonAday(int j, int c) {
+  if (c <= 1) {
+    final (uzun, k, duvar) = _citVeri[j];
+    final x = uzun ~/ (2 * (k + 1));
+    final y = duvar ? uzun ~/ 2 : uzun ~/ 4;
+    final alan = x * y, l2 = uzun * uzun;
+    if (c == 0) {
+      // Bir bölme fazla sayılırsa x = L/(2(k + 2)) olur.
+      final fazla = duvar ? _bol(l2, 4 * (k + 2)) : _bol(l2, 8 * (k + 2));
+      return (
+        alan,
+        [
+          2 * alan,
+          _bol(alan, 2),
+          ...(k == 1
+              ? (duvar ? [l2 ~/ 16, x * (uzun - x)] : [l2 ~/ 8, l2 ~/ 4])
+              : [
+                  duvar ? l2 ~/ 8 : l2 ~/ 16,
+                  duvar ? x * (uzun - k * x) : x * (uzun - (k + 1) * x),
+                  (uzun ~/ 4) * (uzun ~/ 4),
+                ]),
+          fazla,
+          if (duvar && k == 1) _bol(l2, 9),
+          ..._komsuTam(alan),
+        ],
+      );
+    }
+    return (
+      x,
+      [
+        uzun ~/ 4,
+        _bol(uzun, 2 * (k + 2)),
+        y,
+        _bol(x, 2),
+        2 * x,
+        x + k,
+        if (!duvar) _bol(uzun, 8),
+        ..._komsuTam(x),
+      ],
+    );
+  }
+  if (c <= 3) {
+    final (fa, fb, duvar, butce) = _butceCit[j];
+    final x = butce ~/ (4 * fa);
+    final y = duvar ? butce ~/ (2 * fb) : butce ~/ (4 * fb);
+    final alan = x * y;
+    if (c == 2) {
+      final esit = butce ~/ (2 * (fa + fb));
+      return (
+        alan,
+        [
+          duvar
+              ? butce * butce ~/ (16 * fa * fb)
+              : butce * butce ~/ (8 * fa * fb),
+          _bol(alan, 2),
+          2 * alan,
+          esit * esit,
+          x * x,
+          y * y,
+          ..._komsuTam(alan),
+        ],
+      );
+    }
+    final tel = duvar ? 2 * x + y : 2 * x + 2 * y;
+    return (
+      tel,
+      [
+        x + y,
+        2 * tel,
+        duvar ? 2 * x + 2 * y : 2 * x + y,
+        _bol(tel, 2),
+        4 * x,
+        2 * y,
+        x + 2 * y,
+        ..._komsuTam(tel),
+      ],
+    );
+  }
+  if (c == 4) {
+    final (p, q) = _dogruAlti[j * 11 % _dogruAlti.length];
+    final pq = p * q;
+    return (
+      pq ~/ 4,
+      [
+        pq ~/ 2,
+        pq ~/ 8,
+        pq,
+        _bol(3 * pq, 16),
+        (p + q) * (p + q) ~/ 16,
+        _bol(2 * pq, 9),
+        _bol(pq, 6),
+        ..._komsuTam(pq ~/ 4),
+      ],
+    );
+  }
+  if (c == 5) {
+    final (ka, kb, s) = _toplamSabit[j];
+    final x = s ~/ (2 * ka), y = s ~/ (2 * kb);
+    final yanit = x * y;
+    return (
+      yanit,
+      [
+        s * s ~/ 4,
+        yanit ~/ 2,
+        (s ~/ (ka + kb)) * (s ~/ (ka + kb)),
+        _bol(yanit, 4),
+        2 * yanit,
+        x + y,
+        ..._komsuTam(yanit),
+      ],
+    );
+  }
+  if (c == 6) {
+    final (tur, u, v, w) = _karmaOpt[j];
+    switch (tur) {
+      case 0:
+        return (u, [3 * u, _bol(u, 2), _bol(3 * u, 2), 2 * u, ..._komsuTam(u)]);
+      case 1:
+        final s = 6 * u, hacim = 16 * u * u * u;
+        return (
+          hacim,
+          [
+            u * (s - 4 * u) * (s - 4 * u),
+            2 * hacim,
+            hacim ~/ 2,
+            u * s * s,
+            _bol(s * s * s, 16),
+            25 * u * u * u,
+            ..._komsuTam(hacim),
+          ],
+        );
+      case 2:
+        final (ka, kb, x, _) = _kutuDikdortgen[u];
+        return (
+          x,
+          [x + 1, ka ~/ 6, kb ~/ 6, 2 * x, x - 1, _bol(ka, 4), ..._komsuTam(x)],
+        );
+      case 3:
+        final (ka, kb, x, hacim) = _kutuDikdortgen[u];
+        return (
+          hacim,
+          [
+            (x + 1) * (ka - 2 * x - 2) * (kb - 2 * x - 2),
+            x * ka * kb,
+            (x - 1) * (ka - 2 * x + 2) * (kb - 2 * x + 2),
+            2 * hacim,
+            hacim ~/ 2,
+            ..._komsuTam(hacim),
+          ],
+        );
+      case 4:
+        final yuzey = 12 * u * u;
+        return (
+          yuzey,
+          [
+            ...[6 * u * u, 16 * u * u, 10 * u * u, 2 * yuzey, 8 * u * u],
+            ...[17 * u * u, ..._komsuTam(yuzey)],
+          ],
+        );
+      case 5:
+        final yuzey = 6 * u * u;
+        return (
+          yuzey,
+          [
+            ...[5 * u * u, 8 * u * u, 4 * u * u, 2 * yuzey, 3 * u * u],
+            ...[7 * u * u, ..._komsuTam(yuzey)],
+          ],
+        );
+      case 6:
+        final h = 3 * u * u, alan = 4 * u * u * u;
+        return (
+          alan,
+          [
+            ...[2 * alan, u * h, alan + h, 2 * u * u * u, 2 * u * h],
+            ..._komsuTam(alan),
+          ],
+        );
+      case 7:
+        final (ka, kb, p) = (u, v, w);
+        final yanit = 2 * _kokAyir(ka * kb * p).$1;
+        return (
+          yanit,
+          [
+            ka * p + kb,
+            yanit ~/ 2,
+            if (_kokAyir(p).$2 == 1) (ka + kb) * _kokAyir(p).$1,
+            2 * yanit,
+            ..._komsuTam(yanit),
+          ],
+        );
+      default:
+        final s = v, buyukX = u == 1;
+        final x = buyukX ? 2 * s ~/ 3 : s ~/ 3, y = s - x;
+        final yanit = buyukX ? x * x * y : x * y * y;
+        return (
+          yanit,
+          [
+            (s ~/ 2) * (s ~/ 2) * (s - s ~/ 2),
+            2 * yanit,
+            buyukX ? x * y * y : x * x * y,
+            yanit ~/ 2,
+            buyukX ? x * x * x : y * y * y,
+            ..._komsuTam(yanit),
+          ],
+        );
+    }
+  }
+  // c = 7, 8, 9: kapalı aralıkta en büyük ve en küçük değer. Kritik noktayı
+  // işaret hatasıyla −r bulma, M ile m'yi karıştırma da çeldiricidir.
+  final (ka, r1, r2, d, p, q) =
+      _aralikUc[(j + 500 * (c - 7)) % _aralikUc.length];
+  final f = [ka, -3 * ka * (r1 + r2) ~/ 2, 3 * ka * r1 * r2, d];
+  final degerler = [
+    for (final x in {p, q, r1, r2}) _deg(f, x),
+  ];
+  final maks = degerler.reduce((x, y) => x > y ? x : y);
+  final min = degerler.reduce((x, y) => x < y ? x : y);
+  final yerelMaks = _deg(f, ka > 0 ? r1 : r2);
+  final yerelMin = _deg(f, ka > 0 ? r2 : r1);
+  final fp = _deg(f, p), fq = _deg(f, q);
+  // −r aralıkta kalıyorsa öğrenci onu da kritik nokta sanıp değerlendirir.
+  int? hatali(int r) => -r >= p && -r <= q && -r != r ? _deg(f, -r) : null;
+  final e1 = hatali(r1), e2 = hatali(r2);
+  return switch (c) {
+    7 => (
+      maks,
+      [
+        ...[yerelMaks, fp, fq, min, e1, e2, maks - min, maks + min],
+        ..._komsuTam(maks),
+      ],
+    ),
+    8 => (
+      min,
+      [
+        ...[yerelMin, fp, fq, maks, e1, e2, min - maks, maks + min],
+        ..._komsuTam(min),
+      ],
+    ),
+    _ => (
+      maks + min,
+      [
+        ...[yerelMaks + yerelMin, fp + fq, maks - min, maks, min],
+        ...[if (e1 != null && e2 != null) e1 + e2, yerelMaks + min],
+        maks + yerelMin,
+        ..._komsuTam(maks + min),
+      ],
+    ),
+  };
 }
 
 /// (n/d)·x yazımı: `_xKat(2, 1)` → `2x`, `_xKat(1, 1)` → `x`,
