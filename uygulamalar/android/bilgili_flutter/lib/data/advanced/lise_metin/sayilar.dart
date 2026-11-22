@@ -5760,6 +5760,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
               '$kalan TL kalır.',
           birim: 'TL',
           pozitif: true,
+          enCok: 20 * kalan, // aşırı büyük hatalar alınmaz
           komsuAdim: _katAdim(kalan, m ~/ birim),
         );
       }
@@ -5779,6 +5780,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
             '${_kesYaz(f2)} = $ikinci TL olur.',
         birim: 'TL',
         pozitif: true,
+        enCok: 20 * ikinci, // aşırı büyük hatalar alınmaz
         komsuAdim: _katAdim(ikinci, m ~/ birim),
       );
     case 1 || 8:
@@ -5810,6 +5812,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
         'x · ${_q(k1 * k2, q1 * q2)} = $kalan eşitliğinden x = $bas bulunur.',
         birim: su ? 'L' : 'kg',
         pozitif: true,
+        enCok: 20 * bas, // aşırı büyük hatalar alınmaz
         komsuAdim: _katAdim(bas, birim),
       );
     case 2:
@@ -5842,6 +5845,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
             'x = $bas bulunur.',
         birim: 'TL',
         pozitif: true,
+        enCok: 20 * bas, // aşırı büyük hatalar alınmaz
         komsuAdim: _katAdim(bas, birim * q3),
       );
     case 3 || 9:
@@ -5922,6 +5926,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
             '$fark olduğundan x = $bas bulunur.',
         birim: 'TL',
         pozitif: true,
+        enCok: 20 * bas, // aşırı büyük hatalar alınmaz
         komsuAdim: _katAdim(bas, q1 * s2),
       );
     case 6:
@@ -5951,6 +5956,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
             '${_q(k1 * gq - gp * q1, q1 * gq)} = $T ve x = $bas bulunur.',
         birim: 'TL',
         pozitif: true,
+        enCok: 20 * bas, // aşırı büyük hatalar alınmaz
         komsuAdim: _katAdim(bas, q1 * hq),
       );
     default:
@@ -5974,6 +5980,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
             '${_q(k1 * k2, q1 * q2)} olur. x · ${_q(k1 * k2, q1 * q2)} = $kalan '
             'eşitliğinden x = $sayfa bulunur.',
         pozitif: true,
+        enCok: 20 * sayfa, // aşırı büyük hatalar alınmaz
         komsuAdim: _katAdim(sayfa, birim),
       );
   }

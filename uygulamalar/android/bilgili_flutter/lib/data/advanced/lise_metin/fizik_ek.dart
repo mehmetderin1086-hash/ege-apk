@@ -225,7 +225,12 @@ AdvancedItem _sSirali(
   return AdvancedItem(
     kok,
     anahtar,
-    _siraliSec(k, anahtar, adaylar, sira, yan),
+    _siraliSec(k, anahtar, adaylar, sira, yan, [
+      for (final m in RegExp(
+        r'(?<![0-9,])([0-9]+(?:,[0-9]+)?)(?![0-9])',
+      ).allMatches(kok))
+        double.parse(m.group(1)!.replaceFirst(',', '.')),
+    ]),
     aciklama,
   );
 }
@@ -247,6 +252,7 @@ List<String> _siraliSec(
   List<(num, String)> adaylar,
   int sira, [
   (num, num)? yan,
+  List<num> kokSayilari = const [],
 ]) {
   bool simetrik(num x, num y) {
     if ((x - k) * (y - k) >= 0) return false;
@@ -268,10 +274,10 @@ List<String> _siraliSec(
   for (final a in adaylar) {
     if (secilen.length == 3) break;
     if (!yeni(a)) continue;
-    final yan = a.$1 < k ? 0 : 1;
-    if (kota[yan] > 0 && uyar(a)) {
+    final taraf = a.$1 < k ? 0 : 1;
+    if (kota[taraf] > 0 && uyar(a)) {
       secilen.add(a);
-      kota[yan]--;
+      kota[taraf]--;
     } else {
       yedek.add(a);
     }
@@ -286,25 +292,48 @@ List<String> _siraliSec(
     throw StateError('Eksik çeldirici: $anahtarYazim → $secilen');
   }
   bool yanda(num x) => yan != null && x > yan.$1 && x < yan.$2;
-  if (yan != null && !secilen.any((w) => yanda(w.$1))) {
-    // Değiştirilen çeldiricinin anahtara göre yanı korunabiliyorsa
-    // korunur (hedef sıra bozulmasın); olmazsa o yandaki ilk aday alınır.
-    final kalan = secilen.sublist(0, 2);
-    final eskiAlt = secilen[2].$1 < k;
-    (num, String)? yeniAday;
+  bool kokte(num x) => kokSayilari.any((y) => (x.abs() - y).abs() < 1e-9);
+  // secilen[j] yerine [uygun] bir aday arar. Değiştirilen çeldiricinin
+  // anahtara göre yanı korunabiliyorsa korunur (hedef sıra bozulmasın).
+  (num, String)? yerine(int j, bool Function(num) uygun) {
+    final kalan = [
+      for (var x = 0; x < 3; x++)
+        if (x != j) secilen[x],
+    ];
+    final eskiAlt = secilen[j].$1 < k;
     for (final ayniYan in [true, false]) {
       for (final a in adaylar) {
-        if (!yanda(a.$1) || ayniSecenek(a.$2, anahtarYazim)) continue;
+        if (!uygun(a.$1) || ayniSecenek(a.$2, anahtarYazim)) continue;
         if (ayniYan && (a.$1 < k) != eskiAlt) continue;
         if (kalan.any((w) => ayniSecenek(w.$2, a.$2) || simetrik(w.$1, a.$1))) {
           continue;
         }
-        yeniAday = a;
+        return a;
+      }
+    }
+    return null;
+  }
+
+  if (yan != null && !secilen.any((w) => yanda(w.$1))) {
+    final a = yerine(2, yanda);
+    if (a != null) secilen[2] = a;
+  }
+  // Üç çeldiricinin üçü de kökte yazılı sayılarsa (ör. ilk hız ve iki
+  // kütleyle sayıca aynı hızlar) anahtar "kökte geçmeyen tek seçenek" olurdu.
+  if (secilen.every((w) => kokte(w.$1))) {
+    for (var j = 2; j >= 0; j--) {
+      final yanKalir =
+          yan == null ||
+          [
+            for (var x = 0; x < 3; x++)
+              if (x != j) secilen[x],
+          ].any((w) => yanda(w.$1));
+      final a = yerine(j, (x) => !kokte(x) && (yanKalir || yanda(x)));
+      if (a != null) {
+        secilen[j] = a;
         break;
       }
-      if (yeniAday != null) break;
     }
-    if (yeniAday != null) secilen[2] = yeniAday;
   }
   return [for (final a in secilen) a.$2];
 }
