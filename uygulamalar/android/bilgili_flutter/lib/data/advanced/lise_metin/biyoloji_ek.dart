@@ -176,7 +176,7 @@ T _yay<T>(List<T> liste, int j, int n) {
 // Her bilgi yalnız bir hücre yapısı için doğrudur.
 const _organelGorev = <(String, String)>[
   (
-    'Amino asitleri peptit bağlarıyla birleştirerek protein sentezler.',
+    'Amino asitleri peptit bağlarıyla birleştirerek protein sentezleyen zarsız organeldir.',
     'ribozom',
   ),
   ('Prokaryot hücrelerde bulunan tek organel çeşididir.', 'ribozom'),
@@ -210,7 +210,8 @@ const _organelGorev = <(String, String)>[
     'lökoplast',
   ),
   (
-    'Hidrolitik enzimler taşır ve hücre içi sindirimi gerçekleştirir.',
+    'Golgi cisimciğinden oluşan, hücre içi sindirimi sağlayan hidrolitik enzimleri taşıyan '
+        'keseciktir.',
     'lizozom',
   ),
   (
@@ -239,7 +240,8 @@ const _organelGorev = <(String, String)>[
     'granülsüz endoplazmik retikulum',
   ),
   (
-    'Hayvan hücrelerinde bölünme sırasında iğ ipliklerinin oluşumunu sağlar.',
+    'Hayvan hücrelerinde bölünme sırasında kutuplara giderek iğ ipliklerinin oluşumunu sağlayan '
+        'organeldir.',
     'sentrozom',
   ),
   (
@@ -291,12 +293,12 @@ const _organelGorev = <(String, String)>[
     'merkezî koful',
   ),
   (
-    'Tatlı suda yaşayan tek hücrelilerde hücreye giren fazla suyu dışarı atar.',
+    'Tatlı suda yaşayan tek hücrelilerde hücreye giren fazla suyu dışarı atan keseciktir.',
     'kontraktil koful',
   ),
   (
-    'Tek hücrelilerde besinlerin içine alındığı ve lizozomla birleşerek sindirildiği '
-        'keseciktir.',
+    'Tek hücrelilerde endositozla alınan maddeleri taşıyan, lizozomla birleşince içindekilerin '
+        'sindirildiği keseciktir.',
     'besin kofulu',
   ),
   (
@@ -1168,14 +1170,14 @@ const _alemAdi = [
 // (canlı, âlem, fotosentez yapabilir mi, çok hücreli mi, heterotrof mu);
 // null: kaynaklarda kesin olmayan ya da türler arasında değişen özellik.
 const _canlilar = <(String, int, bool?, bool?, bool?)>[
-  ('yoğurt yapımında kullanılan laktik asit bakterisi', 0, false, false, true),
-  ('insan kalın bağırsağında yaşayan E. coli bakterisi', 0, false, false, true),
-  ('fotosentez yapan siyanobakteri', 0, true, null, false),
-  ('baklagil köklerinde yaşayan azot bağlayıcı bakteri', 0, false, false, true),
-  ('verem hastalığının etkeni olan bakteri', 0, false, false, true),
+  ('yoğurt yapımında kullanılan Lactobacillus', 0, false, false, true),
+  ('insan kalın bağırsağında yaşayan E. coli', 0, false, false, true),
+  ('göl ve denizlerde yaşayan siyanobakteri', 0, true, null, false),
+  ('baklagillerin kök yumrularında yaşayan Rhizobium', 0, false, false, true),
+  ('verem hastalığının etkeni', 0, false, false, true),
   ('aşırı tuzlu göllerde yaşayan tuzcul arke', 1, null, false, null),
   ('kaplıca sularında yaşayan termofil arke', 1, false, false, null),
-  ('bataklıklarda metan gazı üreten arke', 1, false, false, null),
+  ('bataklıklarda metan gazı üreten metanojen', 1, false, false, null),
   ('amip', 2, false, false, true),
   ('öglena', 2, true, false, null),
   ('paramesyum (terliksi hayvan)', 2, false, false, true),
@@ -1186,7 +1188,7 @@ const _canlilar = <(String, int, bool?, bool?, bool?)>[
   ('ekmek mayası', 3, false, false, true),
   ('şapkalı mantar', 3, false, true, true),
   ('ekmek küfü', 3, false, null, true),
-  ('penisilin elde edilen küf mantarı', 3, false, null, true),
+  ('penisilin elde edilen küf', 3, false, null, true),
   ('kara yosunu', 4, true, true, false),
   ('eğrelti otu', 4, true, true, false),
   ('at kuyruğu', 4, true, true, false),
@@ -1204,7 +1206,15 @@ const _canlilar = <(String, int, bool?, bool?, bool?)>[
   ('penguen', 5, false, true, true),
 ];
 
-final _canliAlem = [for (final c in _canlilar) (c.$1, _alemAdi[c.$2])];
+// Âlem sorularında adı âlemini ele veren canlılar (“… arke”, “… siyanobakteri”,
+// “şapkalı mantar”) kullanılmaz; cıvık mantar ise bilerek tuzak olarak kalır.
+final _canliAlem = [
+  for (final c in _canlilar)
+    if (!c.$1.contains('bakteri') &&
+        !c.$1.contains(' arke') &&
+        !(c.$2 == 3 && c.$1.contains('mantar')))
+      (c.$1, _alemAdi[c.$2]),
+];
 
 // Her özellik yalnız bir âlem için doğrudur.
 const _alemOzellik = <(String, String)>[
@@ -1213,7 +1223,7 @@ const _alemOzellik = <(String, String)>[
     'Bakteriler',
   ),
   (
-    'Fotosentez yapan siyanobakterileri de içeren, çekirdek zarı bulunmayan tek hücreli '
+    'Yoğurt yapımında kullanılan türleri de bulunan, çekirdek zarı taşımayan tek hücreli '
         'canlılardır.',
     'Bakteriler',
   ),
@@ -1568,7 +1578,7 @@ const _donguOlay = <(String, List<bool?>, int?, int?, String?, String)>[
   (
     'Topraktaki nitratın bitki kökleriyle alınarak protein ve nükleik asit sentezinde '
         'kullanılması',
-    [false, true, false],
+    [null, true, false],
     null,
     -1,
     'üreticiler',
@@ -1629,7 +1639,7 @@ const _donguOlay = <(String, List<bool?>, int?, int?, String?, String)>[
         'döngüsü).',
   ),
   (
-    'Ayrıştırıcıların ölü bitki ve hayvan kalıntılarındaki organik maddeleri parçalaması',
+    'Toprağa düşen ölü bitki ve hayvan kalıntılarının çürüyerek parçalanması',
     [true, null, null],
     1,
     null,
@@ -1735,7 +1745,7 @@ const _donguOlay = <(String, List<bool?>, int?, int?, String?, String)>[
     'Bitkilerin kökleriyle topraktan su alması',
     [false, false, true],
     0,
-    0,
+    null,
     'üreticiler',
     'Bitkiler (üreticiler) topraktaki suyu kökleriyle alır (su döngüsü).',
   ),
@@ -1784,7 +1794,7 @@ const _donguOlay = <(String, List<bool?>, int?, int?, String?, String)>[
         'azalır (karbon döngüsü).',
   ),
   (
-    'Çürükçül bakterilerin idrardaki üreyi amonyağa dönüştürmesi',
+    'Bazı toprak bakterilerinin idrardaki üreyi amonyağa dönüştürmesi',
     [null, true, false],
     null,
     null,
@@ -1981,14 +1991,10 @@ AdvancedItem _olasilikSorusu(
 String _ebeveynYazi(int m, bool erkek, int g) {
   if (m == 2) {
     if (erkek) return g == 1 ? 'hasta' : 'sağlıklı';
-    return const ['hastalık alelini taşımayan', 'taşıyıcı', 'hasta'][g];
+    return const ['taşıyıcı olmayan sağlıklı', 'taşıyıcı', 'hasta'][g];
   }
   return m == 0
-      ? const [
-          'hastalık alelini taşımayan',
-          'heterozigot (taşıyıcı)',
-          'hasta',
-        ][g]
+      ? const ['homozigot sağlıklı', 'heterozigot (taşıyıcı)', 'hasta'][g]
       : const ['sağlıklı', 'heterozigot hasta', 'homozigot hasta'][g];
 }
 
@@ -2219,6 +2225,10 @@ AdvancedItem _ciftDizi(int c, List<_Tanim> dizi, bool sirasiz, int i) {
     soru =
         'Bu çiftin yeni doğacak iki çocuğundan birinin ${yazi[0]}, diğerinin ${yazi[1]} '
         'olma olasılığı kaçtır?';
+  } else if (yazi.every((y) => y == yazi[0])) {
+    soru =
+        'Bu çiftin yeni doğacak ${dizi.length == 2 ? 'iki çocuğunun ikisinin' : 'üç çocuğunun üçünün'} '
+        'de ${yazi[0]} olma olasılığı kaçtır?';
   } else {
     soru =
         'Bu çiftin yeni doğacak ${dizi.length == 2 ? 'iki' : 'üç'} çocuğundan '
@@ -2251,10 +2261,10 @@ AdvancedItem _ciftDizi(int c, List<_Tanim> dizi, bool sirasiz, int i) {
     cikarim,
     _cocukOrani(m, ga, gb),
     if (turetme.isNotEmpty) '${_bas(_ve(turetme))} olur.',
-    dizi.length == 1 && !sirasiz
-        ? 'İstenen olasılık ${dogru.s} olur.'
-        : 'Çocuklar birbirinden bağımsız olduğundan istenen olasılık $carpim = ${dogru.s} '
-              'olur.',
+    if (dizi.length > 1 || sirasiz)
+      'Çocuklar birbirinden bağımsız olduğundan istenen olasılık $carpim = ${dogru.s} olur.'
+    else if (turetme.isEmpty)
+      'İstenen olasılık ${dogru.s} olur.',
   ].join(' ');
   final kosulluCarpim = k.reduce((x, y) => x * y) * (sirasiz ? _K(2) : _K(1));
   return _olasilikSorusu('${_kalitimCumle[m]} $metin $soru', dogru, [
@@ -2300,6 +2310,10 @@ AdvancedItem _ciftMevcut(int c, int k) {
   final dogru = d[1] / toplam;
   final durum = hasta ? 'hasta' : 'sağlıklı';
   final ad = m == 2 ? 'taşıyıcı' : 'heterozigot';
+  final kalan = [
+    for (final g in uygun)
+      if (!d[g].sifir) _genotipAdi(m, erkek, g),
+  ];
   return _olasilikSorusu(
     '${_kalitimCumle[m]} $metin Bu çiftin $durum olan ${_siraSifat[k]} çocuğunun $ad olma '
         'olasılığı kaçtır?',
@@ -2308,9 +2322,9 @@ AdvancedItem _ciftMevcut(int c, int k) {
     '$cikarim Bu çaprazlamada ${erkek ? 'oğulların' : 'kızların'} genotip olasılıkları '
         '${[for (var g = 0; g < 3; g++)
           if (!d[g].sifir) '${_genotipAdi(m, erkek, g)} ${d[g].s}'].join(', ')} '
-        'olur. Çocuğun $durum olduğu bilindiğinden yalnız ${_ve([for (final g in uygun)
-          if (!d[g].sifir) _genotipAdi(m, erkek, g)])} '
-        'olasılıkları kalır; $ad olma olasılığı ${d[1].s} / ${toplam.s} = ${dogru.s} olur.',
+        'olur. Çocuğun $durum olduğu bilindiğinden yalnız ${_ve(kalan)} '
+        '${kalan.length == 1 ? 'olasılığı' : 'olasılıkları'} kalır; $ad olma olasılığı '
+        '${d[1].s} ÷ ${toplam.s} = ${dogru.s} olur.',
   );
 }
 
@@ -2390,8 +2404,8 @@ const _hedefTanim = <(int, bool, String, List<(int, int, int)>, String)>[
     true,
     '# sağlıklıdır; anne ve babası da sağlıklıdır, ancak bir kardeşi hastadır.',
     [(0, 1, 3), (1, 2, 3)],
-    "#'ın anne ve babası sağlıklı, kardeşi hasta olduğundan anne ve babası Aa × Aa olur; "
-        "sağlıklı #'ın Aa olma olasılığı 2/3 olur.",
+    "#'in anne ve babası sağlıklı, kardeşi hasta olduğundan anne ve babası Aa × Aa olur; "
+        "sağlıklı #'in Aa olma olasılığı 2/3 olur.",
   ),
   (
     0,
@@ -2448,8 +2462,8 @@ const _hedefTanim = <(int, bool, String, List<(int, int, int)>, String)>[
     true,
     '# hastadır; anne ve babası da hastadır, ancak bir kardeşi sağlıklıdır.',
     [(1, 2, 3), (2, 1, 3)],
-    "#'ın anne ve babası hasta, kardeşi sağlıklı olduğundan anne ve babası Aa × Aa olur; "
-        "hasta #'ın Aa olma olasılığı 2/3, AA olma olasılığı 1/3 olur.",
+    "#'in anne ve babası hasta, kardeşi sağlıklı olduğundan anne ve babası Aa × Aa olur; "
+        "hasta #'in Aa olma olasılığı 2/3, AA olma olasılığı 1/3 olur.",
   ),
   (
     1,
@@ -2918,7 +2932,9 @@ final _soyAdaylari = () {
       }
     }
   }
-  final bicim = <AdvancedItem Function(int)>[];
+  // Biçim soruları yanıt kümesine (olası kalıtım biçimleri) göre gruplanır;
+  // seçim grupları dengeler, böylece hiçbir yanıt baskın olmaz.
+  final bicimGrup = <int, List<AdvancedItem Function(int)>>{};
   for (final aH in [false, true]) {
     for (final bH in [false, true]) {
       for (var n = 1; n <= 4; n++) {
@@ -2931,7 +2947,10 @@ final _soyAdaylari = () {
             if (bilinen == 1 && aH || bilinen == 2 && bH) continue;
             final (u, _) = _bicimUygun(aH, bH, cocuklar, bilinen);
             if (u.contains(true)) {
-              bicim.add((i) => _bicimSorusu(aH, bH, cocuklar, bilinen, i));
+              final maske = (u[0] ? 1 : 0) | (u[1] ? 2 : 0) | (u[2] ? 4 : 0);
+              (bicimGrup[maske] ??= []).add(
+                (i) => _bicimSorusu(aH, bH, cocuklar, bilinen, i),
+              );
             }
           }
         }
@@ -2944,8 +2963,21 @@ final _soyAdaylari = () {
   final kalan = lmAileBoyu - secili.length;
   final bicimPay = kalan * 2 ~/ 5;
   final ucluPay = kalan - bicimPay;
-  for (var j = 0; j < bicimPay; j++) {
-    secili.add(_yay(bicim, j, bicimPay));
+  // Küçük gruplardan başlayarak her gruba kalan payın eşit bölümü (grup
+  // yetmezse grubun tamamı) verilir.
+  final gruplar = bicimGrup.values.toList()
+    ..sort((x, y) => x.length.compareTo(y.length));
+  var bicimKalan = bicimPay;
+  for (var g = 0; g < gruplar.length; g++) {
+    final grup = gruplar[g];
+    final esit = bicimKalan ~/ (gruplar.length - g);
+    final pay = g == gruplar.length - 1
+        ? bicimKalan
+        : (esit < grup.length ? esit : grup.length);
+    for (var j = 0; j < pay; j++) {
+      secili.add(_yay(grup, j, pay));
+    }
+    bicimKalan -= pay;
   }
   for (var j = 0; j < ucluPay; j++) {
     secili.add(_yay(uclu, j, ucluPay));
@@ -3061,15 +3093,28 @@ const _enzimler = <(String, String, String, String, int?, bool?)>[
 
 const _karbonhidrat = {'nişasta', 'maltoz', 'sakkaroz', 'laktoz'};
 
+// Adı salgılandığı yeri söyleyen enzimler salgı yeri sorularında kullanılmaz.
+const _yerAdli = {'tükürük amilazı', 'pankreas amilazı', 'pankreas lipazı'};
+
+// Adı etki ettiği maddeden türeyen enzimler: bir madde eşleştirmesinde en çok
+// biri bulunur (yoksa eşleştirme adlardan çözülür).
+const _maddeAdli = {'maltaz', 'sakkaraz', 'laktaz', 'dipeptidaz', 'nükleaz'};
+
+const _zimojen = {
+  'pepsin': 'pepsinojen',
+  'tripsin': 'tripsinojen',
+  'kimotripsin': 'kimotripsinojen',
+};
+
 final _enzimSorulari =
     <(String, bool? Function((String, String, String, String, int?, bool?)))>[
       (
         'Bu enzimlerden hangileri pankreastan salgılanır?',
-        (e) => e.$2 == 'pankreas',
+        (e) => _yerAdli.contains(e.$1) ? null : e.$2 == 'pankreas',
       ),
       (
         'Bu enzimlerden hangileri ince bağırsak çeperindeki bezlerden salgılanır?',
-        (e) => e.$2 == 'ince bağırsak',
+        (e) => _yerAdli.contains(e.$1) ? null : e.$2 == 'ince bağırsak',
       ),
       (
         'Bu enzimlerden hangileri ince bağırsakta etkinlik gösterir?',
@@ -3104,17 +3149,25 @@ final _enzimSorulari =
     ];
 
 final _enzimAdaylari = [
-  ..._adaylar(
+  for (final t in _adaylar(
     _enzimler.length,
     _enzimSorulari.length,
     (q, k) => _enzimSorulari[q].$2(_enzimler[k]),
     sinif: (k) => _enzimler[k].$3,
-  ),
+  ))
+    if (t.$4 != -1 ||
+        [
+              t.$1,
+              t.$2,
+              t.$3,
+            ].where((k) => _maddeAdli.contains(_enzimler[k].$1)).length <=
+            1)
+      t,
   for (final (a, b, c, _) in _adaylar(
     _enzimler.length,
     0,
     (q, k) => null,
-    sinif: (k) => _enzimler[k].$2,
+    sinif: (k) => _yerAdli.contains(_enzimler[k].$1) ? null : _enzimler[k].$2,
   ))
     (a, b, c, -2),
 ];
@@ -3139,7 +3192,7 @@ const _sindirimIfade = <(int, String, bool, String)>[
   ),
   (
     2,
-    'Safra ve pankreas öz suyu ince bağırsağın onikiparmak bağırsağı bölümüne dökülür.',
+    'Safra ve pankreas öz suyu ince bağırsağın on iki parmak bağırsağı bölümüne dökülür.',
     true,
     '',
   ),
@@ -3298,6 +3351,11 @@ String _enzimCumle((String, String, String, String, int?, bool?) e) {
   return '${_bas(ad)} $kaynak salgılanır; $yerde$ortam $madde üzerine etki eder.';
 }
 
+String _zimojenCumle((String, String, String, String, int?, bool?) e) =>
+    e.$6 == true
+    ? '${_bas(e.$1)} etkin olmayan ${_zimojen[e.$1]} hâlinde salgılanır, sonradan etkinleşir.'
+    : '${_bas(e.$1)} etkin hâlde salgılanır.';
+
 final _sindirim = lmSirali(
   'bl_sindirim',
   'Sindirim enzimleri, safra ve sindirim olayları',
@@ -3305,17 +3363,20 @@ final _sindirim = lmSirali(
   Difficulty.medium,
   BloomLevel.hatirlama,
   (i) {
-    // 10 vakalık döngü: 3 enzim sorusu, 7 ifade sorusu.
+    // 10 vakalık döngü: 2 enzim sorusu, 8 ifade sorusu.
     final r = i % 10, tur = i ~/ 10;
     final d = ucluDizilimler[(tur + r) % 6];
-    if (r < 3) {
-      final jj = tur * 3 + r, nn = lmAileBoyu * 3 ~/ 10;
+    if (r < 2) {
+      final jj = tur * 2 + r, nn = lmAileBoyu * 2 ~/ 10;
       final (a, b, c, q) = _yay(_enzimAdaylari, jj, nn);
       final x = [
         for (final t in d) _enzimler[[a, b, c][t]],
       ];
       final liste = _liste([for (final e in x) e.$1]);
-      final aciklama = x.map(_enzimCumle).join(' ');
+      final aciklama = [
+        ...x.map(_enzimCumle),
+        if (q == 8) ...x.map(_zimojenCumle),
+      ].join(' ');
       if (q == -1) {
         return _esle(
           '${liste}Bu enzimlerin etki ettiği maddeler sırasıyla hangi seçenekte doğru '
@@ -3342,7 +3403,7 @@ final _sindirim = lmSirali(
         aciklama,
       );
     }
-    final jj = tur * 7 + r - 3, nn = lmAileBoyu * 7 ~/ 10;
+    final jj = tur * 8 + r - 2, nn = lmAileBoyu * 8 ~/ 10;
     final (a, b, c, q) = _yay(_sindirimUcluleri, jj, nn);
     final x = [
       for (final t in d) _sindirimIfade[[a, b, c][t]],
@@ -3486,18 +3547,18 @@ const _nefronGorev = <(String, String)>[
     'distal tüp',
   ),
   (
-    'Birçok nefrondan gelen idrarı toplayıp böbrek havuzuna ileten kanaldır.',
+    'Birçok nefronun distal tüpünün açıldığı, idrarı böbrek havuzuna ileten yapıdır.',
     'toplama kanalı',
   ),
   ('Böbrekte oluşan idrarı idrar kesesine taşıyan borudur.', 'üreter'),
-  ('İdrarın biriktirildiği kaslı kesedir.', 'idrar kesesi'),
+  ('Üreterlerle gelen idrarın biriktirildiği kaslı organdır.', 'idrar kesesi'),
   ('İdrarın vücut dışına atıldığı kanaldır.', 'üretra'),
   (
     'Toplama kanallarından gelen idrarın toplandığı, üretere açılan boşluktur.',
     'böbrek havuzu',
   ),
   (
-    'Glomerulusa kan getiren, böbrek atardamarından ayrılan damarcıktır.',
+    'Böbrek atardamarından ayrılıp kanı glomerulusa ulaştıran küçük atardamardır.',
     'getirici damarcık',
   ),
   (
@@ -3511,7 +3572,7 @@ const _nefronGorev = <(String, String)>[
     'aldosteron',
   ),
   (
-    'Böbreklerden kalsiyum geri emilimini artıran, paratiroit bezinden salgılanan hormondur.',
+    'Böbreklerde kalsiyum geri emilimini artırarak kan kalsiyum düzeyini yükselten hormondur.',
     'parathormon',
   ),
 ];
@@ -3820,8 +3881,8 @@ const _sinirGorev = <(String, String)>[
     'beyincik',
   ),
   (
-    'Beyin kabuğu ile beyincik arasında köprü görevi yapar; solunumun düzenlenmesine yardım '
-        'eder.',
+    'Orta beyin ile omurilik soğanı arasında yer alan, solunumun düzenlenmesine yardım eden '
+        'beyin sapı bölümüdür.',
     'pons (köprü)',
   ),
   (
@@ -3843,11 +3904,12 @@ const _sinirGorev = <(String, String)>[
     'dendrit',
   ),
   (
-    'Uyartıyı hücre gövdesinden uzaklaştırıp akson uçlarına ileten uzun uzantıdır.',
+    'Uyartıyı hücre gövdesinden uzaklaştırıp sinaptik düğmeciklere ileten uzun uzantıdır.',
     'akson',
   ),
   (
-    'Aksonu saran ve uyartının iletim hızını artıran yalıtkan örtüdür.',
+    'Schwann hücrelerinin zarlarından oluşan, aksonu saran ve uyartının iletim hızını artıran '
+        'yalıtkan örtüdür.',
     'miyelin kılıf',
   ),
   (
@@ -3867,11 +3929,11 @@ const _sinirGorev = <(String, String)>[
     'Schwann hücreleri',
   ),
   (
-    'Uyartıyı duyu organlarındaki almaçlardan merkezî sinir sistemine taşır.',
+    'Uyartıyı almaçlardan merkezî sinir sistemine taşıyan nörondur.',
     'duyu nöronu',
   ),
   (
-    'Merkezî sinir sisteminden aldığı emri kaslara ya da bezlere iletir.',
+    'Merkezî sinir sisteminden aldığı emri kaslara ya da bezlere ileten nörondur.',
     'motor nöron',
   ),
   (
@@ -3904,7 +3966,10 @@ const _sinirGorev = <(String, String)>[
         'maddedir.',
     'nörotransmitter',
   ),
-  ('Beyni ve omuriliği saran, koruyan üç katlı zardır.', 'beyin zarları'),
+  (
+    'Beyni ve omuriliği saran, koruyan ve besleyen üç katlı örtüdür.',
+    'beyin zarları',
+  ),
   (
     'İskelet kaslarını ve istemli hareketleri denetleyen çevresel sinir sistemi bölümüdür.',
     'somatik sinir sistemi',
@@ -4070,6 +4135,10 @@ final _hormonEtkiAdaylari = _adaylar(
   (q, h) => _hormonBezde(h, q),
 );
 
+/// “X hormonuna” (adı zaten “hormonu” ile bitiyorsa “büyüme hormonuna”).
+String _hormonuna(String ad) =>
+    ad.endsWith('hormonu') ? '${ad}na' : '$ad hormonuna';
+
 String _hormonCumle((String, int, String) h) {
   final (ad, b, _) = h;
   final ek = b == 4 ? ' (hipotalamusta üretilir)' : '';
@@ -4098,8 +4167,8 @@ final _endokrin = lmSirali(
             'seçenekte doğru verilmiştir?',
         [for (final e in x) e.$1],
         j,
-        'Birinci etki ${x[0].$1}, ikinci etki ${x[1].$1}, üçüncü etki ${x[2].$1} hormonuna '
-            'aittir. ${x.map(_hormonCumle).join(' ')}',
+        'Birinci etki ${x[0].$1}, ikinci etki ${x[1].$1}, üçüncü etki '
+            '${_hormonuna(x[2].$1)} aittir. ${x.map(_hormonCumle).join(' ')}',
       );
     }
     if (f == 1) {
@@ -4114,7 +4183,7 @@ final _endokrin = lmSirali(
         j,
         [
           for (var t = 0; t < 3; t++)
-            '${_romen[t]}. etki ${_hormonlar[x[t]].$1} hormonuna aittir; bu hormon '
+            '${_romen[t]}. etki ${_hormonuna(_hormonlar[x[t]].$1)} aittir; bu hormon '
                 '${_bezler[_hormonlar[x[t]].$2].$2} kana verilir'
                 '${_hormonlar[x[t]].$2 == 4 ? ' (hipotalamusta üretilir)' : ''}.',
         ].join(' '),
@@ -4187,9 +4256,12 @@ const _duyuGorev = <(String, String)>[
     'Görme sinirinin gözden çıktığı, almaç bulunmadığından görüntü oluşmayan bölgedir.',
     'kör nokta',
   ),
-  ('Gözü dıştan saran ve koruyan, beyaz renkli sert tabakadır.', 'sert tabaka'),
   (
-    'Kan damarları ve pigment bakımından zengin olan, gözü besleyen orta tabakadır.',
+    'Gözü en dıştan saran, beyaz renkli, dayanıklı ve koruyucu tabakadır.',
+    'sert tabaka',
+  ),
+  (
+    'Bol pigment taşıyarak göz içinde ışığın yansımasını önleyen, gözü besleyen orta tabakadır.',
     'damar tabaka',
   ),
   (
@@ -4197,7 +4269,10 @@ const _duyuGorev = <(String, String)>[
         'yapıdır.',
     'camsı cisim',
   ),
-  ('Ağ tabakadaki uyartıları beyindeki görme merkezine taşır.', 'görme siniri'),
+  (
+    'Ağ tabakadaki almaçlarda oluşan uyartıları beyne taşıyan sinirdir.',
+    'görme siniri',
+  ),
   ('Ses dalgalarını toplayarak dış kulak yoluna yönlendirir.', 'kulak kepçesi'),
   (
     'Gelen ses dalgalarıyla titreşerek titreşimleri orta kulağa iletir.',
@@ -4220,7 +4295,7 @@ const _duyuGorev = <(String, String)>[
     'salyangoz',
   ),
   (
-    'Salyangozdaki almaçlardan aldığı uyartıları beyindeki işitme merkezine taşır.',
+    'Salyangozdaki almaçlarda oluşan uyartıları beyne taşıyan sinirdir.',
     'işitme siniri',
   ),
   (
@@ -4252,11 +4327,13 @@ const _duyuGorev = <(String, String)>[
     'yağ bezleri',
   ),
   (
-    'Dilin üzerindeki kabarıklıklarda bulunan, tat almaçlarını içeren yapılardır.',
+    'Dilin üzerindeki kabarıklıklarda bulunan, suda çözünmüş kimyasal maddeleri algılayan '
+        'almaçları içeren yapılardır.',
     'tat tomurcukları',
   ),
   (
-    'Burun boşluğunun üst kısmında bulunan, koku almaçlarını taşıyan bölgedir.',
+    'Burun boşluğunun üst kısmında bulunan, havadaki kimyasal maddeleri algılayan almaçları '
+        'taşıyan bölgedir.',
     'koku epiteli (sarı bölge)',
   ),
   (
@@ -4820,14 +4897,17 @@ final _solunumAdaylari = () {
       }
     }
   }
-  // Basınçları verilen sorular: kalan vakalar yayılarak seçilir.
+  // Basınçları verilen sorular: kalan vakalar yayılarak seçilir. Basınç
+  // karşılaştırması (konu 5) ve hava akışının yönü (konu 6) kökteki sayılardan
+  // doğrudan okunduğundan bu sorularda öncül olarak kullanılmaz.
   final basinc = <AdvancedItem Function(int)>[];
   for (var atm = 760; atm >= 600; atm -= 10) {
     for (var fark = 1; fark <= 3; fark++) {
       for (final alma in [true, false]) {
         for (final u in _solunumUcluleri) {
           final (a, b, c) = u;
-          if ([a, b, c].any((k) => _solunumOlay[k].$3 == alma)) {
+          if ([a, b, c].any((k) => _solunumOlay[k].$3 == alma) &&
+              [a, b, c].every((k) => _solunumOlay[k].$1 < 5)) {
             basinc.add((i) => _solunumMekanik(u, alma, atm, fark, i));
           }
         }
@@ -4880,7 +4960,6 @@ const _destekYapi = <(String, int, String)>[
   ('kaburgalar', 1, 'yassı kemik'),
   ('göğüs kemiği', 1, 'yassı kemik'),
   ('kürek kemiği', 1, 'yassı kemik'),
-  ('omurlar', 1, 'düzensiz kemik'),
   ('kafatası kemikleri arasındaki eklemler', 2, 'oynamaz eklem'),
   ('omurlar arasındaki eklemler', 2, 'yarı oynar eklem'),
   ('kaburgaların göğüs kemiğine bağlandığı eklemler', 2, 'yarı oynar eklem'),
@@ -4899,11 +4978,40 @@ const _destekSoru = {
   'uzun kemik': 'uzun kemik grubunda yer alır',
   'kısa kemik': 'kısa kemik grubunda yer alır',
   'yassı kemik': 'yassı kemik grubunda yer alır',
-  'düzensiz kemik': 'düzensiz kemik grubunda yer alır',
   'oynamaz eklem': 'oynamaz eklem grubunda yer alır',
   'yarı oynar eklem': 'yarı oynar eklem grubunda yer alır',
   'oynar eklem': 'oynar eklem grubunda yer alır',
 };
+
+// Yapı üçlüleri ve sorulan tür (null: eşleştirme). Sorulan türün grubundan
+// (kas, kemik, eklem) en az iki yapı bulunur; böylece yanıt, yalnız gruba
+// bakılarak (tek kemik, tek eklem) bulunamaz. Birden çok yapının doğru olduğu
+// adaylar ve eşleştirmelerin tamamı alınır, kalan yer tek yanıtlı adaylardan
+// yayılarak doldurulur.
+final _destekAdaylari = () {
+  final cok = <(int, int, int, String?)>[];
+  final tek = <(int, int, int, String?)>[];
+  final n = _destekYapi.length;
+  for (var a = 0; a < n; a++) {
+    for (var b = a + 1; b < n; b++) {
+      for (var c = b + 1; c < n; c++) {
+        final x = [_destekYapi[a], _destekYapi[b], _destekYapi[c]];
+        final turler = {for (final e in x) e.$3};
+        if (x[0].$2 == x[1].$2 && x[1].$2 == x[2].$2 && turler.length == 3) {
+          cok.add((a, b, c, null));
+        }
+        for (final t in turler) {
+          final g = x.firstWhere((e) => e.$3 == t).$2;
+          final ng = x.where((e) => e.$2 == g).length;
+          final nt = x.where((e) => e.$3 == t).length;
+          if (ng >= 2) (nt == 1 ? tek : cok).add((a, b, c, t));
+        }
+      }
+    }
+  }
+  final kalan = lmAileBoyu - lmAileBoyu ~/ 5 - cok.length;
+  return [...cok, for (var j = 0; j < kalan; j++) _yay(tek, j, kalan)];
+}();
 
 const _destekEslestirme = [
   'Bu kasların türleri sırasıyla hangi seçenekte doğru verilmiştir?',
@@ -4979,13 +5087,13 @@ final _destekHareket = lmSirali(
       );
     }
     final kk = j * 4 + f, nn = lmAileBoyu - lmAileBoyu ~/ 5;
-    final u = kombinasyon(_destekYapi, 3, kk * lmAileBoyu ~/ nn);
-    final x = [for (final t in d) u[t]];
+    final (a, b, c, sorulanTur) = _destekAdaylari[kk * 2477 % nn];
+    final x = [
+      for (final t in d) _destekYapi[[a, b, c][t]],
+    ];
     final liste = _liste([for (final e in x) e.$1]);
     final aciklama = '${_bas(_ve([for (final e in x) '${e.$1}: ${e.$3}']))}.';
-    final ayniGrup = x[0].$2 == x[1].$2 && x[1].$2 == x[2].$2;
-    final farkli = {for (final e in x) e.$3}.length == 3;
-    if (ayniGrup && farkli && kk % 4 != 3) {
+    if (sorulanTur == null) {
       return _esle(
         '$liste${_destekEslestirme[x[0].$2]}',
         [for (final e in x) e.$3],
@@ -4993,7 +5101,7 @@ final _destekHareket = lmSirali(
         aciklama,
       );
     }
-    final sorulan = x[kk ~/ 6 % 3].$3;
+    final sorulan = sorulanTur;
     return _oncullu(
       '${liste}Bu yapılardan hangileri ${_destekSoru[sorulan]}?',
       [for (final e in x) e.$3 == sorulan],
@@ -5095,17 +5203,17 @@ const _bitkiDoku = <(String, String)>[
   ),
   (
     'Yaprağın üst yüzeyine yakın, sık dizilmiş ve kloroplastça zengin silindirik hücrelerden '
-        'oluşur.',
+        'oluşan parankimadır.',
     'palizat parankiması',
   ),
   (
-    'Hücreleri arasında geniş boşluklar bulunan, gaz alışverişini kolaylaştıran yaprak '
-        'parankimasıdır.',
+    'Yaprakta palizat parankimasının altında bulunan, gevşek dizilmiş düzensiz hücrelerden '
+        'oluşan parankimadır.',
     'sünger parankiması',
   ),
   (
     'Patates yumrusu gibi organlarda nişasta depolayan parankimadır.',
-    'depo parankiması',
+    'besin depolayan parankima',
   ),
   (
     'Su bitkilerinde geniş hücreler arası boşluklarıyla bitkinin suda durmasını ve gaz '
@@ -5117,7 +5225,7 @@ const _bitkiDoku = <(String, String)>[
     'su depolayan parankima',
   ),
   (
-    'Suyu ve mineralleri kökten yapraklara taşır; olgun hücreleri ölüdür.',
+    'Suyu ve mineralleri kökten yapraklara taşıyan, olgun hücreleri ölü olan iletim dokusudur.',
     'ksilem (odun borusu)',
   ),
   (
@@ -5129,7 +5237,8 @@ const _bitkiDoku = <(String, String)>[
     'ksilem (odun borusu)',
   ),
   (
-    'Fotosentez ürünlerini bitkinin diğer kısımlarına taşır; hücreleri canlıdır.',
+    'Fotosentez ürünlerini bitkinin diğer kısımlarına taşıyan, canlı hücrelerden oluşan iletim '
+        'dokusudur.',
     'floem (soymuk borusu)',
   ),
   ('Kalbur boruları ve arkadaş hücrelerinden oluşur.', 'floem (soymuk borusu)'),
@@ -5147,7 +5256,8 @@ const _bitkiDoku = <(String, String)>[
     'epidermis',
   ),
   (
-    'İki bekçi hücresi arasındaki açıklıktan gaz alışverişini ve terlemeyi sağlar.',
+    'İki bekçi hücresi ve aralarındaki açıklıktan oluşan, gaz alışverişini ve terlemeyi sağlayan '
+        'yapıdır.',
     'stoma',
   ),
   (
@@ -5172,7 +5282,8 @@ const _bitkiDoku = <(String, String)>[
     'lentisel (kovucuk)',
   ),
   (
-    'Yaprak kenarlarından suyun sıvı hâlde atılmasını (damlama) sağlayan su stomalarıdır.',
+    'Yaprak kenarlarında bulunan, suyun sıvı hâlde atılmasını (damlama) sağlayan sürekli açık '
+        'yapılardır.',
     'hidatot',
   ),
   (
@@ -5216,7 +5327,7 @@ final _bitkiDokuAilesi = lmSirali(
     i,
     _bitkiDoku,
     eslestirme:
-        'Bu bilgilerin ait olduğu bitki dokuları ya da organları sırasıyla hangi '
+        'Bu bilgilerin ait olduğu bitki dokuları, yapıları ya da organları sırasıyla hangi '
         'seçenekte doğru verilmiştir?',
     oncul: (y) => 'Bu bilgilerden hangileri “$y” için doğrudur?',
     aciklama: (x) =>
@@ -5262,7 +5373,7 @@ const _bitkiHormon = <(String, String)>[
     'Meyvelerin olgunlaşmadan dökülmesini geciktirmek için kullanılır.',
     'oksin',
   ),
-  ('Köklerde üretilir; hücre bölünmesini (sitokinezi) uyarır.', 'sitokinin'),
+  ('Köklerde üretilir; meristemlerde hücre bölünmesini uyarır.', 'sitokinin'),
   (
     'Koparılmış yaprakların sararmasını (yaşlanmasını) geciktirir.',
     'sitokinin',
@@ -5272,16 +5383,19 @@ const _bitkiHormon = <(String, String)>[
     'sitokinin',
   ),
   (
-    'Doku kültüründe hücre bölünmesini artırmak için besi ortamına eklenir.',
+    'Yaprakta klorofil yıkımını yavaşlatarak yaprağın uzun süre yeşil kalmasını sağlar.',
     'sitokinin',
   ),
   (
     'Kesme çiçeklerin ve yaprakların daha uzun süre taze kalmasını sağlar.',
     'sitokinin',
   ),
-  ('Köklerde üretilip ksilemle gövdeye taşınır.', 'sitokinin'),
   (
-    'Hücre bölünmesini uyardığı için meristemlerde ve gelişen meyvelerde miktarı fazladır.',
+    'Köklerde üretilip ksilemle yapraklara taşınır ve yaprakların yaşlanmasını geciktirir.',
+    'sitokinin',
+  ),
+  (
+    'Yan tomurcuklara uygulandığında bu tomurcukların büyüyüp dal oluşturmasını sağlar.',
     'sitokinin',
   ),
   (
@@ -5355,12 +5469,12 @@ final _bitkiHormonAilesi = lmSirali(
     i,
     _bitkiHormon,
     eslestirme:
-        'Bu bilgilerle ilgili bitki hormonları sırasıyla hangi seçenekte doğru '
+        'Bu bilgilerin ait olduğu bitki hormonları sırasıyla hangi seçenekte doğru '
         'verilmiştir?',
-    oncul: (y) => 'Bu bilgilerden hangileri $y hormonuyla ilgilidir?',
+    oncul: (y) => 'Bu bilgilerden hangileri $y hormonuna aittir?',
     aciklama: (x) =>
         'Birinci bilgi ${x[0].$2}, ikinci bilgi ${x[1].$2}, üçüncü bilgi '
-        '${x[2].$2} hormonuyla ilgilidir.',
+        '${x[2].$2} hormonuna aittir.',
   ),
   exam: ExamKind.ayt,
   lesson: 'Biyoloji',
@@ -5403,45 +5517,46 @@ const _bitkiHareketi = <(String, int, int)>[
     0,
     1,
   ),
-  ('Bir kutunun tek açıklığından giren ışığa doğru fidelerin uzaması', 0, 1),
-  ('Ayçiçeği fidelerinin ışığın geldiği yöne doğru bükülmesi', 0, 1),
-  ('Kökün ışık kaynağının ters yönüne doğru büyümesi', 0, -1),
-  ('Tohumdan çıkan kökün yer çekimi yönünde aşağı doğru büyümesi', 1, 1),
+  ('Bir masa lambasının yanındaki fidelerin lambaya doğru bükülmesi', 0, 1),
+  ('Ayçiçeği fidelerinin güneşin bulunduğu yöne doğru bükülmesi', 0, 1),
   (
-    'Tohumdan çıkan gövdenin yer çekimine ters yönde yukarı doğru büyümesi',
-    1,
+    'Pencere önünde suyla dolu saydam bir kapta yetişen bitkinin köklerinin pencereden '
+        'uzaklaşacak yönde büyümesi',
+    0,
     -1,
   ),
+  ('Çimlenen tohumdan çıkan kökün aşağı doğru büyümesi', 1, 1),
+  ('Karanlıkta çimlenen tohumdan çıkan gövdenin yukarı doğru büyümesi', 1, -1),
   ('Yan yatırılan bir saksıdaki bitkinin kökünün aşağı doğru kıvrılması', 1, 1),
   (
-    'Yan yatırılan bir saksıdaki bitkinin gövdesinin yukarı doğru kıvrılması',
+    'Karanlık bir dolapta yan yatırılan saksıdaki bitkinin gövdesinin yukarı doğru kıvrılması',
     1,
     -1,
   ),
-  ('Fasulye gövdesinin dokunduğu bir sırığa sarılarak yükselmesi', 2, 1),
-  ('Asma sülüklerinin dokundukları tele sarılması', 2, 1),
-  ('Bezelye sülüklerinin dokundukları desteğe sarılması', 2, 1),
-  ('Kabak sülüklerinin dokundukları desteğe sarılması', 2, 1),
+  ('Fasulye gövdesinin yanına dikilen bir sırığa sarılarak yükselmesi', 2, 1),
+  ('Asma sülüklerinin bağdaki tellere sarılması', 2, 1),
+  ('Bezelye sülüklerinin yanındaki ince bir çubuğa sarılması', 2, 1),
+  ('Kabak sülüklerinin bahçe çitine sarılması', 2, 1),
   ('Sarılıcı bitkilerin dallarının destek çevresinde dolanarak büyümesi', 2, 1),
   ('Polen tüpünün dişicik borusu içinde yumurtalığa doğru büyümesi', 3, 1),
   ('Kökün topraktaki mineral bakımından zengin bölgeye doğru büyümesi', 3, 1),
+  ('Kökün topraktaki zehirli bir maddeden uzaklaşacak yönde büyümesi', 3, -1),
+  ('Küstüm otu yapraklarının üzerine bir böcek konunca hızla kapanması', 4, 0),
   (
-    'Kökün topraktaki zehirli bir kimyasal maddeden uzaklaşacak yönde büyümesi',
-    3,
-    -1,
+    'Küstüm otunun saksısı yere çarpınca yaprakçıklarının hızla katlanması',
+    4,
+    0,
   ),
-  ('Küstüm otu yapraklarının dokunulunca hızla kapanması', 4, 0),
-  ('Küstüm otu yaprakçıklarının sarsıldığında katlanması', 4, 0),
   ('Küstüm otu yapraklarının üzerine su damlası düşünce kapanması', 4, 0),
-  ('Akşam sefası çiçeklerinin ışık şiddeti azalınca açılması', 5, 0),
+  ('Akşam sefası çiçeklerinin hava kararınca açılması', 5, 0),
   (
-    'Bazı çiçeklerin ışık şiddetine bağlı olarak sabah açılıp akşam kapanması',
+    'Gündüz açık olan bazı çiçeklerin karanlık bir odaya alınınca kapanması',
     5,
     0,
   ),
-  ('Lale çiçeklerinin ortam sıcaklığı artınca açılması', 6, 0),
-  ('Lale çiçeklerinin ortam sıcaklığı düşünce kapanması', 6, 0),
-  ('Çiğdem çiçeklerinin sıcak ortamda açılıp soğukta kapanması', 6, 0),
+  ('Lale çiçeklerinin hava ısınınca açılması', 6, 0),
+  ('Lale çiçeklerinin hava soğuyunca kapanması', 6, 0),
+  ('Çiğdem çiçeklerinin ılık havada açılıp soğuk havada kapanması', 6, 0),
 ];
 
 const _hareketSorulari = [

@@ -45,6 +45,11 @@ String _bas(String s) => s.isEmpty
 
 String _uc(List<String> x) => 'I. ${x[0]}\nII. ${x[1]}\nIII. ${x[2]}';
 
+/// Üçlü seçkinin dizilimi. Dizilim, soru biçimini seçen i % 2 ve i % 3
+/// kalanlarından bağımsızdır: her kalan sınıfında altı dizilimin hepsi
+/// kullanılır, böylece doğru numaraların konumu biçime göre kaymaz.
+List<int> _dizilimSec(int i) => ucluDizilimler[(i + i ~/ 6) % 6];
+
 const _romaRakam = ['I', 'II', 'III'];
 
 /// [n] elemanlı listeden [k] elemanlı bütün seçkiler (sözlük sırasıyla).
@@ -262,6 +267,8 @@ int _artanKutle(int p, int q, int u, int b, int duzey, bool yFazla) {
     final e = adaylar[(b % 5 + r) % adaylar.length] * u;
     if (_sabitOranTemiz(p, q, k, e, yFazla)) return e;
   }
+  // Yedek aday yalnız alt düzeyde denenir; üst düzeyin takımıyla ayrık kalır.
+  if (duzey == 0 && _sabitOranTemiz(p, q, k, u, yFazla)) return u;
   throw StateError('Uygun artan kütle yok: $p/$q, $b');
 }
 
@@ -290,7 +297,12 @@ bool _sabitOranTemiz(int p, int q, int k, int e, bool yFazla) {
     tersToplam,
     yanlisToplam,
   ];
-  return !artanHata.any((h) => ayni(h, e)) && !topHata.any((h) => ayni(h, top));
+  // Kökteki oran değeri (p/q) ile oranın payı ve paydası da yanıtla
+  // çakışmasın (kütleler onda bir gram).
+  final kokSayilari = <num>[10 * p / q, 10 * p, if (q != 1) 10 * q];
+  return !artanHata.any((h) => ayni(h, e)) &&
+      !topHata.any((h) => ayni(h, top)) &&
+      !kokSayilari.any((h) => ayni(h, e) || ayni(h, top));
 }
 
 AdvancedItem _katliOran(int a, int b, int w) {
@@ -720,7 +732,6 @@ const _katyonlar = <String, (String, int, String, bool, int)>{
   'Sn4': ('Sn', 4, 'kalay', false, 2),
   'Cr3': ('Cr', 3, 'krom', false, 2),
   'Co2': ('Co', 2, 'kobalt', false, 3),
-  'Ni2': ('Ni', 2, 'nikel', false, 3),
   'Hg2': ('Hg', 2, 'cıva', false, 1),
   'Mn2': ('Mn', 2, 'mangan', false, 4),
   'Mn4': ('Mn', 4, 'mangan', false, 2),
@@ -794,7 +805,6 @@ const _iyonikCiftler = [
   ('Sn4', ['Cl', 'O', 'S']),
   ('Cr3', ['Cl', 'O', 'OH', 'NO3', 'SO4']),
   ('Co2', ['Cl', 'O', 'NO3', 'SO4']),
-  ('Ni2', ['Cl', 'O', 'OH', 'NO3', 'SO4']),
   ('Hg2', ['Cl', 'I', 'O', 'S', 'NO3']),
   ('Mn2', ['Cl', 'SO4']),
   ('Mn4', ['O']),
@@ -905,7 +915,7 @@ final _f03 = lmSirali(
   BloomLevel.uygulama,
   (i) {
     final u = kombinasyon(_iyonikler, 3, i);
-    final d = ucluDizilimler[i % 6];
+    final d = _dizilimSec(i);
     final x = [for (final j in d) u[j]];
     final adlar = [for (final e in x) _iyonikAd(e)];
     final formuller = [for (final e in x) _iyonikFormul(e)];
@@ -1036,7 +1046,7 @@ final _f04 = lmSirali(
   BloomLevel.uygulama,
   (i) {
     final u = kombinasyon(_molekuller, 3, i);
-    final d = ucluDizilimler[i % 6];
+    final d = _dizilimSec(i);
     final x = [for (final j in d) u[j]];
     final adlar = [for (final (a, b, c, e) in x) _molekulAdi(a, b, c, e)];
     final formuller = [
@@ -1201,7 +1211,7 @@ final _f05 = lmSirali(
   Difficulty.medium,
   BloomLevel.anlama,
   (i) {
-    final d = ucluDizilimler[i % 6];
+    final d = _dizilimSec(i);
     if (i % 3 == 0) {
       final u = kombinasyon(_bagTurleri, 3, i);
       final x = [for (final j in d) u[j]];
@@ -1310,7 +1320,11 @@ const _degisimler = [
   ('yumurtanın pişmesi', true, 'proteinlerin yapısı değişir'),
   ('kesilen elmanın havada kararması', true, 'oksijenle tepkime'),
   ('bitkilerde fotosentez yapılması', true, 'glikoz ve oksijen oluşur'),
-  ('besinlerin sindirilmesi', true, 'büyük moleküller parçalanır'),
+  (
+    'besinlerin enzimlerle sindirilmesi',
+    true,
+    'büyük moleküller küçük moleküllere parçalanır',
+  ),
   ('mumun yanması', true, 'yanma tepkimesi'),
   ('gümüş eşyaların zamanla kararması', true, 'gümüş sülfür oluşur'),
   ('bakır çatıların zamanla yeşillenmesi', true, 'bakır bileşikleri oluşur'),
@@ -1351,7 +1365,7 @@ final _f06 = lmSirali(
   BloomLevel.anlama,
   (i) {
     final u = kombinasyon(_degisimler, 3, i);
-    final x = [for (final j in ucluDizilimler[i % 6]) u[j]];
+    final x = [for (final j in _dizilimSec(i)) u[j]];
     final aciklama =
         'Kimyasal değişimde yeni madde oluşur; fiziksel değişimde maddenin '
         'kimliği korunur. '
@@ -1503,7 +1517,7 @@ const _ayirmaTurleri =
         'santrifüjleme',
         'santrifüjlenerek',
         'özkütle farkı',
-        ['ayırma hunisi', 'mıknatısla ayırma', 'eleme', 'ayrımsal damıtma'],
+        ['mıknatısla ayırma', 'eleme', 'ayrımsal damıtma', 'süblimleştirme'],
         [
           'manyetik özellik farkı',
           'kaynama noktası farkı',
@@ -1563,7 +1577,7 @@ final _f07 = lmSirali(
   BloomLevel.uygulama,
   (i) {
     final u = kombinasyon(_ayirmaIslemleri, 3, i);
-    final x = [for (final j in ucluDizilimler[i % 6]) u[j]];
+    final x = [for (final j in _dizilimSec(i)) u[j]];
     final tur = [for (final e in x) _ayirmaTurleri[e.$3]!];
     final aciklama =
         '${[for (var p = 0; p < 3; p++) '${_romaRakam[p]}: ${tur[p].$1} (${tur[p].$3})'].join('; ')}.';
@@ -1705,7 +1719,7 @@ final _f08 = lmSirali(
   BloomLevel.anlama,
   (i) {
     final u = kombinasyon(_tepkimeler, 3, i);
-    final x = [for (final j in ucluDizilimler[i % 6]) u[j]];
+    final x = [for (final j in _dizilimSec(i)) u[j]];
     final liste = _uc([for (final e in x) e.$1]);
     final aciklama =
         '${[for (var p = 0; p < 3; p++) '${_romaRakam[p]}: ${x[p].$2} (${_tepkimeNedeni[x[p].$2]})'].join('; ')}.';
@@ -1942,18 +1956,37 @@ const _gazCiftleri = [
   ('O₂', 'CO₂'), ('CH₄', 'CO₂'), ('Ar', 'CO₂'), ('CO₂', 'O₂'), ('CO₂', 'N₂'),
 ];
 
-// Ortalama hızın katları: (pay, payda) ve uygun m aralığı (T₁ = payda²·m).
+// Ortalama hızın katları (pay, payda); T₁ = payda²·m, T₂ = pay²·m.
 const _hizKatlari = [
-  (2, 1, 150, 500),
-  (3, 2, 38, 222),
-  (4, 3, 17, 125),
-  (5, 4, 10, 80),
-  (5, 3, 17, 80),
-  (6, 5, 6, 55),
-  (1, 2, 100, 375),
-  (2, 3, 25, 166),
-  (3, 4, 12, 93),
-  (4, 5, 7, 60),
+  (2, 1),
+  (3, 2),
+  (4, 3),
+  (5, 4),
+  (5, 3),
+  (6, 5),
+  (1, 2),
+  (2, 3),
+  (3, 4),
+  (4, 5),
+];
+
+/// Hız sorusunda kullanılabilecek m değerleri: 120 K ≤ T₁ ≤ 1600 K,
+/// 100 K ≤ T₂ ≤ 2100 K. T₂ = 273 K ile, sıcaklık değişimi sorusunda değişimin
+/// ilk ya da son sıcaklığa (°C ya da K) eşit olduğu durumlar atlanır.
+List<int> _hizDegerleri(int p, int q, bool degisim) => [
+  for (var m = 1; q * q * m <= 1600; m++)
+    if (q * q * m >= 120 &&
+        p * p * m >= 100 &&
+        p * p * m <= 2100 &&
+        p * p * m != 273 &&
+        (!degisim ||
+            ![
+              (p * p * m - 273).abs(),
+              p * p * m,
+              (q * q * m - 273).abs(),
+              q * q * m,
+            ].contains((p * p * m - q * q * m).abs())))
+      m,
 ];
 
 const _enerjiDegisimi = [
@@ -1963,6 +1996,10 @@ const _enerjiDegisimi = [
 
 String _tanecik(String g) =>
     _tekAtomlu.contains(g) ? 'atomlarının' : 'moleküllerinin';
+
+/// Mutlak sıfırın (−273 °C) altına düşen, fiziksel olarak olanaksız °C
+/// çeldiricilerini atar.
+Iterable<num> _mutlakUstu(Iterable<num> x) => x.where((t) => t > -272.5);
 
 final _f10 = lmAile(
   'km_kinetik_teori',
@@ -1984,7 +2021,7 @@ final _f10 = lmAile(
             '${artis ? 'artırılmak' : 'azaltılmak'} isteniyor. Buna göre gaz kaç '
             '°C sıcaklığa ${artis ? 'ısıtılmalıdır' : 'soğutulmalıdır'}?',
         t2,
-        [t1 * oran, t2k, t1k * oran * oran - 273, t1 + x],
+        _mutlakUstu([t1 * oran, t2k, t1k * oran * oran - 273, t1 + x]),
         'Ortalama kinetik enerji mutlak sıcaklıkla doğru orantılıdır. T₁ = '
             '${_yz(t1)} + 273 = $t1k K, T₂ = $t1k·${_t(oran)} = $t2k K olur; '
             'gazın sıcaklığı $t2k − 273 = ${_yz(t2)} °C olmalıdır.',
@@ -1994,8 +2031,9 @@ final _f10 = lmAile(
       );
     }
     if (c < 4) {
-      final (p, q, lo, hi) = _hizKatlari[b % 10];
-      final m = lo + (a + 25 * (c - 2)) * (hi - lo) ~/ 49;
+      final (p, q) = _hizKatlari[b % 10];
+      final degerler = _hizDegerleri(p, q, b >= 10);
+      final m = degerler[(a + 25 * (c - 2)) * (degerler.length - 1) ~/ 49];
       final t1k = q * q * m, t2k = p * p * m;
       final t1 = t1k - 273, t2 = t2k - 273;
       final gaz = _soguGazlar[(a + 2 * b) % 5];
@@ -2029,7 +2067,7 @@ final _f10 = lmAile(
       return _say(
         '$giris gaz kaç °C sıcaklığa ${artis ? 'ısıtılmalıdır' : 'soğutulmalıdır'}?',
         t2,
-        [p / q * t1k - 273, p * p / (q * q) * t1, t2k, p / q * t1],
+        _mutlakUstu([p / q * t1k - 273, p * p / (q * q) * t1, t2k, p / q * t1]),
         '$cozum; bu da $t2k − 273 = ${_yz(t2)} °C eder.',
         birim: '°C',
         basamak: 0,
@@ -2047,7 +2085,9 @@ final _f10 = lmAile(
           t2 >= 100 &&
           t2 >= _gazKaynama[gy]! + 30 &&
           t1 <= 1500 &&
-          t2 <= 2000;
+          // Metan gibi moleküller çok yüksek sıcaklıkta bozunur; üst sınır
+          // her iki gaz için 1500 K.
+          t2 <= 1500;
     }
 
     while (!uygun(lo)) {
@@ -2058,7 +2098,14 @@ final _f10 = lmAile(
       hi++;
     }
     final j = b + 20 * ((c - 4) ~/ 2);
-    final k = lo + j * (hi - lo) ~/ 59;
+    // T₂ (K) ya da t₂ (°C) kökteki bir sayıya eşit olmasın.
+    final adaylar = [
+      for (var kk = lo; kk <= hi; kk++)
+        if (![taban * kk - 273, mx, my].contains(taban * kk * my ~/ mx) &&
+            ![taban * kk - 273, mx, my].contains(taban * kk * my ~/ mx - 273))
+          kk,
+    ];
+    final k = adaylar[j * (adaylar.length - 1) ~/ 59];
     final t1k = taban * k, t2k = t1k * my ~/ mx;
     final t1 = t1k - 273, t2 = t2k - 273;
     final kelvin = c.isOdd;
@@ -2070,7 +2117,12 @@ final _f10 = lmAile(
       kelvin ? t2k : t2,
       kelvin
           ? [t1 * my / mx, t1k * mx / my, t1k * kok, t2]
-          : [t1 * my / mx, t1k * mx / my - 273, t1k * kok - 273, t2k],
+          : _mutlakUstu([
+              t1 * my / mx,
+              t1k * mx / my - 273,
+              t1k * kok - 273,
+              t2k,
+            ]),
       'Ortalama hız √(T/M) ile orantılıdır; hızlar eşitse T₁/M₁ = T₂/M₂ olur. '
           'T₁ = ${_yz(t1)} + 273 = $t1k K, T₂ = $t1k·$my/$mx = $t2k K'
           '${kelvin ? '' : ' = ${_yz(t2)} °C'} bulunur.',
@@ -2671,9 +2723,11 @@ final _f12 = lmSirali(
       );
     }
     final giris = sunusYazi();
+    // Kütleyle verilen çözeltilerde mol kütlesi de köke yazılır.
+    final veri = sunus > 20 ? '$sabit; $f: $mk g/mol' : sabit;
     if (q == 0) {
       return _bilimselSoru(
-        '$giris Bu çözeltideki $iyon iyonu derişimi kaç mol/L olur? ($sabit)',
+        '$giris Bu çözeltideki $iyon iyonu derişimi kaç mol/L olur? ($veri)',
         (d, xUs),
         [kd * cd, cd, _karekok(kd), xd * 10],
         kokYol,
@@ -2685,7 +2739,7 @@ final _f12 = lmSirali(
       String y(double v) => '%${_yz(v, 6)}';
       return secenekli(
         '$giris ${asit ? 'Asidin' : 'Bazın'} iyonlaşma yüzdesi kaçtır? '
-            '($sabit)',
+            '($veri)',
         '%${_t(yuzde, 6)}',
         [
           for (final v in [100 * kd / cd, 100 * xd, yuzde / 10, yuzde * 10])
@@ -2711,7 +2765,7 @@ final _f12 = lmSirali(
     final hatali = asit == phSoru ? 100 * n : 1400 - 100 * n;
     return _say(
       '$giris Bu çözeltinin ${phSoru ? 'pH' : 'pOH'} değeri kaçtır? '
-          '($sabit$logNotu)',
+          '($veri$logNotu)',
       dogru / 100,
       [
         hatali / 100,
@@ -2796,7 +2850,7 @@ final _f13 = lmSirali(
   BloomLevel.anlama,
   (i) {
     final u = kombinasyon(_tuzlar, 3, i);
-    final x = [for (final j in ucluDizilimler[i % 6]) u[j]];
+    final x = [for (final j in _dizilimSec(i)) u[j]];
     final sinif = [for (final e in x) _tuzSinifi(e)];
     final liste = _uc([for (final e in x) e.$1]);
     final aciklama =
@@ -2986,7 +3040,10 @@ final _f14 = lmAile(
           : turler;
       final secim = kutleli ? c - 3 : c;
       final (k, f, girenMi) = adaylar[secim % adaylar.length];
-      final j = b + 1 + 20 * (secim ~/ adaylar.length);
+      // Tam 1 mol atlanır (mol başına ısı yanıtla çakışmasın).
+      var jj = b + 1;
+      if (20 % k == 0 && jj >= 20 ~/ k) jj++;
+      final j = jj + 21 * (secim ~/ adaylar.length);
       final mol = k * j / 20, q = dh.abs() * j / 20;
       final (_, mk, kut) = _molekulBagi[f]!;
       final miktar = kutleli ? '${_t(mol * mk)} gram $f' : '${_t(mol)} mol $f';
@@ -3041,8 +3098,15 @@ final _f14 = lmAile(
     ];
     final kb = kirilan[bilinmeyen] ?? 0, kf = olusan[bilinmeyen] ?? 0;
     final b0 = bk - kb * x, f0 = bo - kf * x;
-    String parca(int sabit, int kat) =>
-        kat == 0 ? '$sabit' : '$sabit + ${kat == 1 ? '' : kat}x';
+    String parca(int sabit, int kat) {
+      final xli = '${kat == 1 ? '' : kat}x';
+      return kat == 0 ? '$sabit' : (sabit == 0 ? xli : '$sabit + $xli');
+    }
+
+    // Çıkarılan taraf tek terimse parantez yazılmaz.
+    final olusanYazi = kf == 0 || f0 == 0
+        ? parca(f0, kf)
+        : '(${parca(f0, kf)})';
     return _say(
       '$denklem tepkimesinde ${_t(mol)} mol $f ${girenMi ? 'harcandığında' : 'oluştuğunda'} '
           '${_t(q)} kJ ısı ${ekzo ? 'açığa çıkmaktadır' : 'alınmaktadır'}. Bağ '
@@ -3053,7 +3117,7 @@ final _f14 = lmAile(
       'Denklemdeki $k mol $f için ΔH = ${_isaretli(dh)} kJ olur '
           '(${_t(q)}·$k/${_t(mol)}). $bilinmeyen bağının enerjisi x ile '
           'gösterilirse ΔH = Σ(kırılan) − Σ(oluşan) eşitliği '
-          '${_isaretli(dh)} = ${parca(b0, kb)} − ${kf == 0 ? '$f0' : '(${parca(f0, kf)})'} olur; buradan '
+          '${_isaretli(dh)} = ${parca(b0, kb)} − $olusanYazi olur; buradan '
           'x = $x kJ/mol bulunur.',
     );
   },
@@ -3322,18 +3386,92 @@ final _f15 = lmSirali(
 
 const _kelvinler = [300, 400, 500, 600, 800, 1000];
 
-// Verilen denge sabitleri (yüzde birlik birimle).
-const _kpKcDegerleri = [
-  1, 2, 4, 5, 10, 20, 25, 40, 50, 80, 150, 200, 250, 400, 500, 800, 15, 30, //
-  60, 120,
+// Kp–Kc soruları genel türlerle (X, Y, Z) kurulur: gerçek bir tepkimenin
+// belirli bir sıcaklıktaki denge sabiti tek bir değerdir, değiştirilen
+// sabitler gerçek maddelere yazılmaz. Türler: (katsayı, simge, gaz mı).
+const _kpKcTepkimeleri = [
+  ([(1, 'X', true), (3, 'Y', true)], [(2, 'Z', true)]),
+  ([(1, 'X', true), (2, 'Y', true)], [(1, 'Z', true)]),
+  ([(1, 'X', false), (3, 'Y', true)], [(1, 'Z', true)]),
+  ([(4, 'X', true), (1, 'Y', true)], [(3, 'Z', true)]),
+  ([(2, 'X', true), (1, 'Y', true)], [(2, 'Z', true)]),
+  ([(1, 'X', true), (1, 'Y', true)], [(1, 'Z', true)]),
+  ([(2, 'X', true)], [(1, 'Y', true)]),
+  ([(1, 'X', false), (2, 'Y', true)], [(1, 'Z', true)]),
+  ([(1, 'X', true), (2, 'Y', true)], [(2, 'Z', true)]),
+  ([(1, 'X', true)], [(2, 'Y', true)]),
+  ([(1, 'X', false)], [(1, 'Y', false), (1, 'Z', true)]),
+  ([(1, 'X', false), (1, 'Y', true)], [(2, 'Z', true)]),
+  ([(2, 'X', true)], [(2, 'Y', true), (1, 'Z', true)]),
+  ([(1, 'X', true)], [(1, 'Y', true), (1, 'Z', true)]),
+  ([(2, 'X', false), (1, 'Y', true)], [(2, 'Z', true)]),
+  ([(1, 'X', true)], [(1, 'Y', true), (2, 'Z', true)]),
+  ([(1, 'X', false)], [(1, 'Y', true), (1, 'Z', true)]),
+  ([(2, 'X', true)], [(1, 'Y', true), (3, 'Z', true)]),
+  ([(1, 'X', true), (1, 'Y', false)], [(3, 'Z', true)]),
 ];
 
+int _kpKcDn(int r) {
+  final (giren, urun) = _kpKcTepkimeleri[r];
+  return _gazMol(urun) - _gazMol(giren);
+}
+
+/// (tepkime, sıcaklık, yön) için on taban değer (yüzde birlik birimle).
+/// [carp] doğruysa taban verilir ve (RT)^|Δn| ile çarpılarak yanıt bulunur;
+/// yanlışsa çarpım verilir ve taban sorulur. Taban ve çarpım en çok iki
+/// ondalıklıdır; yanıt bir katsayıya ya da sıcaklık değerine eşit olmaz. Aynı
+/// Δn değerli tepkimeler 5'in katlarından ayrık sıraları alır, böylece hesapları
+/// da birbirinden ayrılır.
+List<int> _kpKcTabanSecimi(int r, int ti, bool carp) {
+  final (giren, urun) = _kpKcTepkimeleri[r];
+  final dn = _kpKcDn(r), n = dn.abs();
+  final esler = [
+    for (var s = 0; s < _kpKcTepkimeleri.length; s++)
+      if (_kpKcDn(s) == dn) s,
+  ];
+  final sira = esler.indexOf(r), adim = esler.length;
+  final tk = _kelvinler[ti];
+  var rtn = 1, olcek = 1;
+  for (var j = 0; j < n; j++) {
+    rtn *= 82 * tk;
+    olcek *= 1000;
+  }
+  final taban = [
+    for (var a = 5; a <= 3000; a += 5)
+      if ((a * rtn) % olcek == 0 &&
+          a * rtn ~/ olcek >= 10 &&
+          a * rtn ~/ olcek <= 10000000)
+        a,
+  ];
+  final yasak = <double>[
+    for (final (k, _, _) in [...giren, ...urun]) k.toDouble(),
+    (tk - 273).toDouble(),
+  ];
+  final out = <int>[];
+  for (var j = sira; j < taban.length && out.length < 10; j += adim) {
+    final a = taban[j];
+    final cevap = (carp ? a * rtn ~/ olcek : a) / 100;
+    // Taban 1 alınmaz: verilen ya da sorulan sabit 1 olmasın.
+    if (a == 100 || yasak.any((y) => (y - cevap).abs() < 1e-9)) continue;
+    out.add(a);
+  }
+  if (out.length < 10) throw StateError('Kp–Kc tabanı yetmedi: $r, $tk');
+  return out;
+}
+
+final _kpKcSecimleri = <(int, int, bool), List<int>>{};
+
+/// (tepkime, sıcaklık, sıra): her tepkime ve sıcaklık için 20 vaka.
 final _kpKcDurumlari = [
-  for (var r = 0; r < _dengeTepkimeleri.length; r++)
-    if (_gazMol(_dengeTepkimeleri[r].$2) != _gazMol(_dengeTepkimeleri[r].$1))
-      for (var t = 0; t < _kelvinler.length; t++)
-        for (var k = 0; k < _kpKcDegerleri.length; k++) (r, t, k),
+  for (var r = 0; r < _kpKcTepkimeleri.length; r++)
+    for (var t = 0; t < _kelvinler.length; t++)
+      for (var k = 0; k < 20; k++) (r, t, k),
 ];
+
+String _kpKcDenklem(int r) {
+  final (giren, urun) = _kpKcTepkimeleri[r];
+  return '${_dengeTerim(giren)} ⇌ ${_dengeTerim(urun)}';
+}
 
 // Dönüşümler: 0 ters, 1 iki katı, 2 yarısı, 3 ters ve iki katı, 4 ters ve
 // yarısı. Her dönüşüm için K = gövde·10^üs değerleri kesin sonuç verir.
@@ -3345,11 +3483,50 @@ const _donusumGovdeleri = [
   [10, 20, 40, 50, 80, 25, 125],
 ];
 
+/// Verilen K (gövde, üs) ve dönüşüm sonrası kesin K′.
+((int, int), (int, int)) _donusumDegerleri(int d, int g, int e) {
+  final kare = d == 2 || d == 4;
+  final kVer = kare ? _sade(g * g, 2 * e - 2) : _govdeUs(g, e);
+  final (int, int) cevap = switch (d) {
+    0 => _bolum(1, kVer.$1, -kVer.$2, 6)!,
+    1 => _sade(kVer.$1 * kVer.$1, 2 * kVer.$2),
+    2 => _govdeUs(g, e),
+    3 => _bolum(1, kVer.$1 * kVer.$1, -2 * kVer.$2, 6)!,
+    _ => _bolum(10, g, -e, 6)!,
+  };
+  return (kVer, cevap);
+}
+
+// Yanıtın verilen K'ye ya da iki denklemdeki bir katsayıya (yarım
+// katsayılardaki 2 paydası dâhil) eşit olduğu durumlar atlanır. Girenlerin
+// hepsi katı olan ayrışmalarda Kc gaz derişimlerinin çarpımıdır; bu
+// tepkimelerde verilen Kc 1'i aşmaz.
 final _donusumDurumlari = [
   for (var r = 0; r < _dengeTepkimeleri.length; r++)
     for (var d = 0; d < 5; d++)
       for (final g in _donusumGovdeleri[d])
-        for (var e = -3; e <= 3; e++) (r, d, g, e),
+        for (var e = -3; e <= 3; e++)
+          if (() {
+            final (kVer, cevap) = _donusumDegerleri(d, g, e);
+            final y = _ondalik(cevap.$1, cevap.$2);
+            final (giren, urun, _) = _dengeTepkimeleri[r];
+            if (!giren.any((t) => t.$3) &&
+                _ondalik(kVer.$1, kVer.$2) > 1 + 1e-12) {
+              return false;
+            }
+            final katsayilar = <double>[
+              _ondalik(kVer.$1, kVer.$2),
+              if (d == 2 || d == 4) 2,
+              for (final (k, _, _) in [...giren, ...urun]) ...[
+                k.toDouble(),
+                d == 1 || d == 3
+                    ? 2.0 * k
+                    : (d == 2 || d == 4 ? k / 2 : k * 1.0),
+              ],
+            ];
+            return !katsayilar.any((x) => (x - y).abs() < 1e-12 * (1 + y));
+          }())
+            (r, d, g, e),
 ];
 
 /// Katsayıları [pay]/[payda] ile çarpılmış terim listesi.
@@ -3375,8 +3552,8 @@ final _f16 = lmSirali(
     final ab = _kpKcDurumlari.length;
     if (i < ab) {
       final (r, ti, ki) = _kpKcDurumlari[i];
-      final (giren, urun, _) = _dengeTepkimeleri[r];
-      final dn = _gazMol(urun) - _gazMol(giren);
+      final (giren, urun) = _kpKcTepkimeleri[r];
+      final dn = _kpKcDn(r);
       var tumu = 0;
       for (final (k, _, _) in urun) {
         tumu += k;
@@ -3386,44 +3563,65 @@ final _f16 = lmSirali(
       }
       final tk = _kelvinler[ti], tc = tk - 273;
       final rt = 0.082 * tk;
-      final kv = _kpKcDegerleri[ki] / 100;
-      final us = dn.abs();
-      num kuvvet(num x, int n) {
+      final n = dn.abs();
+      // Çift sıralarda taban verilip çarpım, tek sıralarda çarpım verilip
+      // taban sorulur.
+      final carp = ki.isEven;
+      final taban = (_kpKcSecimleri[(r, ti, carp)] ??= _kpKcTabanSecimi(
+        r,
+        ti,
+        carp,
+      ))[ki ~/ 2];
+      num kuvvet(num x, int us) {
         num p = 1;
-        for (var j = 0; j < n; j++) {
+        for (var j = 0; j < us.abs(); j++) {
           p *= x;
         }
-        return p;
+        return us < 0 ? 1 / p : p;
       }
 
-      final cevap = kv * kuvvet(rt, us);
-      final kpVerili = dn < 0;
-      final verilen = kpVerili ? 'Kp' : 'Kc', istenen = kpVerili ? 'Kc' : 'Kp';
-      final tumUs = tumu.abs();
+      var carpim = taban;
+      for (var j = 0; j < n; j++) {
+        carpim *= 82 * tk;
+      }
+      final kb = taban / 100;
+      final kp = carpim / (100 * kuvvet(1000, n));
+      // Kp = Kc·(RT)^Δn: verilen Kc ise üs Δn, verilen Kp ise −Δn olur.
+      final us = carp ? n : -n;
+      final verilenKc = (us == dn);
+      final verilen = carp ? kb : kp, cevap = carp ? kp : kb;
+      final verilenAd = verilenKc ? 'Kc' : 'Kp';
+      final istenenAd = verilenKc ? 'Kp' : 'Kc';
+      final rtYazi = n == 1 ? _t(rt, 1) : '(${_t(rt, 1)})${_ust(n)}';
+      final baginti = 'Kp = Kc·(RT)${dn == 1 ? '' : _ust(dn)}';
       return _say(
-        '${_dengeDenklem(r)} tepkimesinin $tc °C sıcaklıktaki '
-            '${kpVerili ? 'kısmi basınçlar' : 'derişimler'} cinsinden denge sabiti '
-            '$verilen = ${_t(kv)} olarak verilmiştir. Buna göre aynı sıcaklıkta '
-            '${kpVerili ? 'derişimler' : 'kısmi basınçlar'} cinsinden denge sabiti '
-            '($istenen) kaçtır? (R = 0,082 L·atm/(mol·K))',
+        '${_kpKcDenklem(r)} tepkimesinin $tc °C sıcaklıktaki '
+            '${verilenKc ? 'derişimler' : 'kısmi basınçlar'} cinsinden denge '
+            'sabiti $verilenAd = ${_t(verilen)} olarak verilmiştir. Buna göre '
+            'aynı sıcaklıkta ${verilenKc ? 'kısmi basınçlar' : 'derişimler'} '
+            'cinsinden denge sabiti ($istenenAd) kaçtır? (R = 0,082 '
+            'L·atm/(mol·K))',
         cevap,
         [
-          kv * kuvvet(0.082 * tc, us),
-          if (kv / kuvvet(rt, us) >= 0.001) kv / kuvvet(rt, us),
-          kv * kuvvet(8.314 * tk, us),
+          // Kelvine çevirmeme, bağıntıyı ters kullanma, R yerine 8,314 alma
+          // ya da üs yerine Δn ile çarpma, katıları sayma, üssü unutma,
+          // dönüşüm yapmama.
+          verilen * kuvvet(0.082 * tc, us),
+          verilen * kuvvet(rt, -us),
+          if (n == 1)
+            verilen * kuvvet(8.314 * tk, us)
+          else
+            verilen * kuvvet(rt * n, us.sign),
           if (tumu != dn && tumu != 0)
-            (tumu.sign == dn.sign
-                ? kv * kuvvet(rt, tumUs)
-                : kv / kuvvet(rt, tumUs)),
-          if (us == 2) kv * rt,
-          kv,
+            verilen * kuvvet(rt, verilenKc ? tumu : -tumu),
+          if (n == 2) verilen * kuvvet(rt, us.sign),
+          verilen,
         ],
         'Gaz katsayılarına göre Δn = ${_gazMol(urun)} − ${_gazMol(giren)} = '
             '${_yz(dn)}${tumu != dn ? ' (katılar hesaba katılmaz)' : ''}. '
-            'T = $tc + 273 = $tk K, RT = 0,082·$tk = ${_t(rt, 1)}. '
-            '${kpVerili ? 'Kc = Kp·(RT)${us == 1 ? '' : _ust(us)}' : 'Kp = Kc·(RT)${us == 1 ? '' : _ust(us)}'} = '
-            '${_t(kv)}·${us == 1 ? _t(rt, 1) : '(${_t(rt, 1)})${_ust(us)}'} = ${_t(cevap, 4)} bulunur.',
-        basamak: 4,
+            'T = $tc + 273 = $tk K, RT = 0,082·$tk = ${_t(rt, 1)}. $baginti '
+            'bağıntısından $istenenAd = ${_t(verilen)}${us > 0 ? '·' : '/'}'
+            '$rtYazi = ${_t(cevap)} bulunur.',
       );
     }
     final j = i - ab;
@@ -3431,8 +3629,7 @@ final _f16 = lmSirali(
     final (r, d, g, e) = _donusumDurumlari[j * _donusumDurumlari.length ~/ n];
     final (giren, urun, _) = _dengeTepkimeleri[r];
     // K = g·10^(e−1); yarım dönüşümlerde K = g²·10^(2e−2).
-    final kare = d == 2 || d == 4;
-    final kVer = kare ? _sade(g * g, 2 * e - 2) : _govdeUs(g, e);
+    final (kVer, cevap) = _donusumDegerleri(d, g, e);
     final kd = _ondalik(kVer.$1, kVer.$2);
     final (yeniGiren, yeniUrun) = d == 0 || d == 3 || d == 4
         ? (urun, giren)
@@ -3444,14 +3641,6 @@ final _f16 = lmSirali(
     };
     final yeni =
         '${_katsayiliTerim(yeniGiren, pay, payda)} ⇌ ${_katsayiliTerim(yeniUrun, pay, payda)}';
-    // Kesin yanıt: (gövde, üs).
-    final (int, int) cevap = switch (d) {
-      0 => _bolum(1, kVer.$1, -kVer.$2, 6)!,
-      1 => _sade(kVer.$1 * kVer.$1, 2 * kVer.$2),
-      2 => _govdeUs(g, e),
-      3 => _bolum(1, kVer.$1 * kVer.$1, -2 * kVer.$2, 6)!,
-      _ => _bolum(10, g, -e, 6)!,
-    };
     final kural = switch (d) {
       0 => 'Tepkime ters çevrilince denge sabitinin tersi alınır (K′ = 1/K)',
       1 =>
@@ -3533,15 +3722,20 @@ final _f17 = lmAile(
       double molKutle,
       List<double> hatalar,
       String cozum,
-      List<double> yazilan,
-    ) {
-      final cakisir = yazilan.any((y) => (y - deger).abs() < 1e-9);
+      List<double> yazilan, {
+      // Bileşik mol kütlesinden bulunuyorsa C ve H atom kütleleri de verilir.
+      bool molKutledenBulunur = false,
+    }) {
+      final ekKutle = molKutledenBulunur ? 'C: 12, H: 1' : '';
+      final kokSayilari = [
+        ...yazilan,
+        if (molKutledenBulunur) ...[1.0, 12.0],
+      ];
+      final cakisir = kokSayilari.any((y) => (y - deger).abs() < 1e-9);
       if (!cakisir) {
         return _say(
-          '$kok kaç mol $nicelik oluşur?'.replaceFirst(
-            'kaç mol O₂ oluşur?',
-            'kaç mol O₂ harcanır?',
-          ),
+          '$kok kaç mol $nicelik ${nicelik == 'O₂' ? 'harcanır' : 'oluşur'}?'
+          '${ekKutle.isEmpty ? '' : ' ($ekKutle)'}',
           deger,
           hatalar,
           cozum,
@@ -3549,9 +3743,15 @@ final _f17 = lmAile(
         );
       }
       final g = deger * molKutle;
+      if ([...yazilan, 1, 12, 16].any((y) => (y - g).abs() < 1e-9)) {
+        throw StateError('Gram yanıtı da kökteki bir sayıyla çakışıyor: $kok');
+      }
+      final gramKutle = nicelik == 'H₂O'
+          ? 'H: 1, O: 16'
+          : (nicelik == 'CO₂' ? 'C: 12, O: 16' : 'O: 16');
       return _say(
         '$kok kaç gram $nicelik ${nicelik == 'O₂' ? 'harcanır' : 'oluşur'}? '
-            '(${nicelik == 'H₂O' ? 'H: 1, O: 16' : (nicelik == 'CO₂' ? 'C: 12, O: 16' : 'O: 16')})',
+            '(${molKutledenBulunur ? 'C: 12, H: 1, O: 16' : gramKutle})',
         g,
         [for (final e in hatalar) e * molKutle],
         '$cozum Bu ${_t(deger)} mol $nicelik ${_t(g)} gram eder.',
@@ -3632,15 +3832,35 @@ final _f17 = lmAile(
         );
       case 4:
         final m = x * mk;
+        final kok =
+            'Molekülünde $n karbon atomu bulunan bir $sinif bileşiğinin ${_t(m)} '
+            'gramı tamamen yakılıyor. Buna göre';
+        final hatalar = [
+          for (final hh in hY) m / (12 * n + hh) * n,
+          m / mk,
+          m / 44,
+          m / 12,
+        ];
+        final yol =
+            '$bilgi bileşik $f, mol kütlesi $mk g/mol olur. ${_t(m)} / $mk = '
+            '${_t(x)} mol bileşikten ${_t(x)}·$n = ${_t(co2)} mol CO₂ oluşur.';
+        // Yanıt köke yazılan sayılardan (karbon sayısı, kütle, atom
+        // kütleleri) biriyle çakışırsa CO₂ kütlesi sorulur.
+        if (![n, m, 12, 1].any((y) => (y - co2).abs() < 1e-9)) {
+          return _say(
+            '$kok kaç mol CO₂ oluşur? (C: 12, H: 1)',
+            co2,
+            hatalar,
+            yol,
+            birim: 'mol',
+          );
+        }
         return _say(
-          'Molekülünde $n karbon atomu bulunan bir $sinif bileşiğinin ${_t(m)} '
-              'gramı tamamen yakılıyor. Buna göre kaç mol CO₂ oluşur? (C: 12, '
-              'H: 1)',
-          co2,
-          [for (final hh in hY) m / (12 * n + hh) * n, m / mk, m / 44, m / 12],
-          '$bilgi bileşik $f, mol kütlesi $mk g/mol olur. ${_t(m)} / $mk = '
-              '${_t(x)} mol bileşikten ${_t(x)}·$n = ${_t(co2)} mol CO₂ oluşur.',
-          birim: 'mol',
+          '$kok kaç gram CO₂ oluşur? (C: 12, H: 1, O: 16)',
+          co2 * 44,
+          [for (final e in hatalar) e * 44],
+          '$yol Bu ${_t(co2)} mol CO₂ ${_t(co2 * 44)} gram eder.',
+          birim: 'g',
         );
       case 5:
         final g = h2o * 18;
@@ -3674,6 +3894,7 @@ final _f17 = lmAile(
           ],
           '$yol ${_t(x)} mol $f yanınca ${_t(co2)} mol CO₂ oluşur.',
           [x, mk.toDouble()],
+          molKutledenBulunur: true,
         );
       case 7:
         return _say(
@@ -3688,14 +3909,33 @@ final _f17 = lmAile(
           birim: 'g/mol',
         );
       case 8:
-        final hAtom = x * h;
+        // Yanıt köke yazılan bir sayıyla çakışırsa sırayla karbon atomu ve
+        // toplam atom sayısı sorulur.
+        final yazilan = [mk, x, 12, 1];
+        final secenek =
+            [
+              ('hidrojen', x * h, h),
+              ('karbon', x * n, n),
+              ('toplam', x * (n + h), n + h),
+            ].firstWhere(
+              (e) => !yazilan.any((y) => (y - e.$2).abs() < 1e-9),
+              orElse: () => ('toplam', x * (n + h), n + h),
+            );
+        final (tur, deger, tane) = secenek;
         return _say(
           'Mol kütlesi $mk g/mol olan bir $sinif bileşiğinin ${_t(x)} molünde '
-              'kaç mol hidrojen atomu bulunur? (C: 12, H: 1)',
-          hAtom,
-          [for (final hh in hY) x * hh, x * h / 2, x * n, x * 2 * n],
-          '$bilgi mol kütlesi $mk g/mol olan bileşik $f olur. ${_t(x)} mol '
-              '$f içinde ${_t(x)}·$h = ${_t(hAtom)} mol H atomu bulunur.',
+              'kaç mol ${tur == 'toplam' ? 'atom' : '$tur atomu'} bulunur? '
+              '(C: 12, H: 1)',
+          deger,
+          tur == 'hidrojen'
+              ? [for (final hh in hY) x * hh, x * h / 2, x * n, x * 2 * n]
+              : (tur == 'karbon'
+                    ? [x * h, x * mk / 12, x * (n + h), x * 2 * n]
+                    : [x * h, x * n, x * (n + h / 2), x * 3 * n]),
+          '$bilgi mol kütlesi $mk g/mol olan bileşik $f olur. Bir molekülde '
+              '$tane ${tur == 'toplam' ? 'atom' : '$tur atomu'} bulunduğundan '
+              '${_t(x)} mol $f içinde ${_t(x)}·$tane = ${_t(deger)} mol '
+              '${tur == 'toplam' ? 'atom' : '$tur atomu'} vardır.',
           birim: 'mol',
         );
       default:
@@ -3785,17 +4025,17 @@ const _organikler = [
   ('CH₃COCH₂CH₂CH₃', _fgKeton),
   ('C₆H₅COCH₃', _fgKeton),
   ('CH₃COCH(CH₃)₂', _fgKeton),
-  ('HCOOH', _fgAsit),
+  // Formik asit ve formatlar (HCOO–) aldehit grubu da taşıdığından alınmadı.
   ('CH₃COOH', _fgAsit),
   ('CH₃CH₂COOH', _fgAsit),
   ('CH₃CH₂CH₂COOH', _fgAsit),
   ('(CH₃)₂CHCOOH', _fgAsit),
   ('C₆H₅COOH', _fgAsit),
   ('HOOCCOOH', _fgAsit),
-  ('HCOOCH₃', _fgEster),
+  ('CH₃CH₂CH₂CH₂COOH', _fgAsit),
   ('CH₃COOCH₃', _fgEster),
   ('CH₃COOCH₂CH₃', _fgEster),
-  ('HCOOCH₂CH₃', _fgEster),
+  ('CH₃CH₂CH₂COOCH₃', _fgEster),
   ('CH₃CH₂COOCH₃', _fgEster),
   ('CH₃COOCH₂CH₂CH₃', _fgEster),
   ('CH₃CH₂COOCH₂CH₃', _fgEster),
@@ -3817,7 +4057,7 @@ final _f18 = lmSirali(
   BloomLevel.anlama,
   (i) {
     final u = kombinasyon(_organikler, 3, i);
-    final x = [for (final j in ucluDizilimler[i % 6]) u[j]];
+    final x = [for (final j in _dizilimSec(i)) u[j]];
     final liste = _uc([for (final e in x) e.$1]);
     final aciklama =
         '${[for (var p = 0; p < 3; p++) '${x[p].$1}: ${x[p].$2} (${_fgGrup[x[p].$2]})'].join('; ')}.';

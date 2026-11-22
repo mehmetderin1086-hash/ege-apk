@@ -53,18 +53,29 @@ String _kume(int maske, int k) {
   return '${s.sublist(0, s.length - 1).join(', ')} ve ${s.last}';
 }
 
-/// “Hangileri?” sorusu; doğru yanıt [maske] ile verilen alt kümedir.
+/// Sıra numarasından türetilen karışık bir tam sayı. Ara değerler 2⁵³ altında
+/// kaldığından her platformda aynı sonucu verir.
+int _karisik(int x) {
+  final h = (x * 7919 + 104729) % 1000003;
+  return ((h * h + x * 31) % 1000003) * 48271 % 2147483647;
+}
+
+/// “Hangileri?” sorusu; doğru yanıt [maske] ile verilen alt kümedir. Çeldirici
+/// alt kümeler doğru yanıttan bağımsız, karışık bir sırayla seçilir: seçenekler
+/// doğru yanıtın tek öncüllük değişikliklerinden oluşursa öncüllerin seçeneklerde
+/// kaç kez geçtiği sayılarak doğru yanıt bulunabilirdi.
 AdvancedItem _hangileri(String kok, int maske, int k, String aciklama, int i) {
   final tum = (1 << k) - 1;
-  final adaylar = <int>[
-    for (var r = 0; r < k; r++) maske ^ (1 << ((i + r) % k)),
-    maske ^ tum,
-    for (var m = 0; m < tum; m++) (m + i) % tum + 1,
-  ].where((m) => m != 0 && m != maske);
+  int sirala(int x, int y) {
+    final d = _karisik(16 * i + x).compareTo(_karisik(16 * i + y));
+    return d != 0 ? d : x.compareTo(y);
+  }
+
+  final sira = [for (var m = 1; m <= tum; m++) m]..sort(sirala);
   return secenekli(
     kok,
     _kume(maske, k),
-    adaylar.map((m) => _kume(m, k)),
+    sira.where((m) => m != maske).map((m) => _kume(m, k)),
     aciklama,
   );
 }
@@ -83,36 +94,25 @@ List<T> _secki<T>(List<T> tablo, int k, int s, int n) {
   return [...u.sublist(r), ...u.sublist(0, r)];
 }
 
-/// Sıralı etiket yanıtı için çeldiriciler: iki konumun yer değiştirmesi ya da
-/// bir iki konumun başka bir etiketle değiştirilmesi. Her aday en az bir
-/// konumda kesin yanlıştır; yanıta eşit olanları [secenekli] atar.
+/// Sıralı etiket yanıtı (üç ya da dört konum) için dengeli çeldiriciler. Her
+/// konuma doğrusundan farklı bir etiket (havuzdaki komşu etiketlerden biri)
+/// atanır; her çeldirici doğru etiketi yalnız bir konumda (dört konumda son iki
+/// konumu üçüncü çeldirici) korur. Böylece her konumda doğru etiket ile seçilen
+/// yanlış etiket ikişer seçenekte geçer ve doğru yanıt, seçeneklerin
+/// birbirine benzerliğinden çıkarılamaz. Her çeldirici en az iki konumda
+/// kesin yanlıştır ve üç çeldirici birbirinden farklıdır.
 List<String> _siraYanlis(List<String> dogru, List<String> havuz, int s) {
-  final k = dogru.length;
-  List<String> diger(int p) => [
-    for (final h in havuz)
-      if (h != dogru[p]) h,
-  ];
-  String degis(Map<int, int> m) => [
-    for (var p = 0; p < k; p++)
-      m.containsKey(p) ? diger(p)[m[p]! % diger(p).length] : dogru[p],
-  ].join(' – ');
-  String takas(int p) {
-    final v = [...dogru];
-    final q = (p + 1) % k;
-    final t = v[p];
-    v[p] = v[q];
-    v[q] = t;
-    return v.join(' – ');
+  final k = dogru.length, n = havuz.length;
+  final alt = <String>[];
+  for (var p = 0; p < k; p++) {
+    final yer = havuz.indexOf(dogru[p]);
+    final kay = n == 2 ? 1 : const [1, -1, 2, -2][(s + p) % 4];
+    alt.add(havuz[(yer + kay + 2 * n) % n]);
   }
-
   return [
-    takas(s % k),
-    degis({(s + 1) % k: s ~/ k}),
-    takas((s + 1) % k),
-    degis({(s + 2) % k: s ~/ k + 1}),
-    for (var r = 0; r < k; r++) degis({(s + r) % k: s ~/ 7 + r}),
-    for (var r = 0; r < k; r++)
-      degis({(s + r) % k: s ~/ 5 + r, (s + r + 1) % k: s ~/ 3 + r + 1}),
+    for (var r = 0; r < 3; r++)
+      [for (var p = 0; p < k; p++) (p < 3 ? p : 2) == r ? dogru[p] : alt[p]]
+          .join(' – '),
   ];
 }
 
@@ -122,7 +122,10 @@ typedef _Etiketli = (String, String, String?);
 /// Etiketli olgu sorusu. Çift [j] için sıralı eşleştirme, tek [j] için
 /// “hangileri” sorusu üretir; seçkideki bütün ögelerin grubu varsa “hangileri”
 /// sorusu gruba göre, yoksa etikete göre sorulur. Aynı seçki iki soru türünde
-/// kullanıldığından kökler [n] vaka için farklıdır.
+/// kullanıldığından kökler [n] vaka için farklıdır. [celisir], bir grubun
+/// sorulduğu soruda başka bir grubun ögesi bulunursa sorunun tartışmalı olacağı
+/// grup çiftlerini verir (ör. “karasal iklim” sorusunda sert karasal ögesi);
+/// böyle bir seçkide seçkideki başka bir grup sorulur.
 AdvancedItem _etiketli(
   int j,
   int n,
@@ -134,6 +137,8 @@ AdvancedItem _etiketli(
   required String Function(String hedef, bool grup) hangiSoru,
   required String Function(List<_Etiketli> x) aciklama,
   bool grupHer = true,
+  bool Function(String hedef, String grup)? celisir,
+  String Function(String hedef, bool grup)? olumsuzSoru,
 }) {
   final s = j ~/ 2;
   final x = _secki(tablo, k, s, (n + 1) ~/ 2);
@@ -148,11 +153,33 @@ AdvancedItem _etiketli(
       acik,
     );
   }
-  final grup = x.every((e) => e.$3 != null) && (grupHer || s.isEven);
-  final hedef = grup ? x[s % k].$3! : etiket[s % k];
+  var grup = x.every((e) => e.$3 != null) && (grupHer || s.isEven);
+  String? grupHedef;
+  for (var r = 0; grup && r < k && grupHedef == null; r++) {
+    final h = x[(s + r) % k].$3!;
+    if (celisir == null || !x.any((e) => e.$3 != h && celisir(h, e.$3!))) {
+      grupHedef = h;
+    }
+  }
+  if (grupHedef == null) grup = false;
+  final hedef = grupHedef ?? etiket[s % k];
   var maske = 0;
   for (var p = 0; p < k; p++) {
     if ((grup ? x[p].$3 : x[p].$2) == hedef) maske |= 1 << p;
+  }
+  // Etiketi çok olan çizelgelerde ögelerin etiketleri çoğunlukla farklıdır ve
+  // olumlu sorunun yanıtı tek öncül olur; “Yalnız …” seçeneğini seçmek doğru
+  // yanıtı sık verirdi. [olumsuzSoru] verilen ailelerde seçkilerin yarısında
+  // olumsuz soru sorulur (bütün öncüller hedefe uyuyorsa soru olumlu kalır).
+  final tum = (1 << k) - 1;
+  if (olumsuzSoru != null && (s ~/ 2).isOdd && maske != tum) {
+    return _hangileri(
+      '$liste${olumsuzSoru(hedef, grup)}',
+      tum ^ maske,
+      k,
+      acik,
+      s,
+    );
   }
   return _hangileri('$liste${hangiSoru(hedef, grup)}', maske, k, acik, s);
 }
@@ -256,7 +283,12 @@ AdvancedItem _gunesAcisi(int a, int b, int c) {
     final dl = _gunler[t].$3;
     final u = (fi - dl).abs(), aci = 5400 - u;
     final yanlis = dl == 0
-        ? [5400 - (fi - 1407).abs(), fi.abs(), 5400 - fi.abs() - 1407]
+        ? [
+            5400 - (fi - 1407).abs(),
+            fi.abs(),
+            5400 - fi.abs() - 1407,
+            5400 - (fi + 1407).abs(),
+          ]
         : [5400 - (fi + dl).abs(), u, 5400 - fi.abs()];
     return secenekli(
       '${_dik(t)} $_aciKural Buna göre ${_enlemAd(fi)} paralelindeki bir yerde '
@@ -275,15 +307,31 @@ AdvancedItem _gunesAcisi(int a, int b, int c) {
   if (bicim == 1) {
     // İki yerin açı farkı. Aynı yarım küredeki L merkezi K merkezinden en az 5°
     // uzaktadır; K tek, L çift dereceli olduğundan açılar hiç eşitlenmez.
-    final t = (q + b) % 4;
-    final dl = _gunler[t].$3;
+    // Kökü (a, b) ile tarih belirler; dakikalar kökün tekliğini etkilemez.
     final kd = 3 + 2 * a, j = b ~/ 2;
     final ld = b.isEven
         ? (kd + 5 + 4 * j > 58 ? kd + 5 + 4 * j - 56 : kd + 5 + 4 * j)
         : 4 + 4 * j;
-    final k = kd * 60 + _dakikalar[(a + 3 * b) % 10];
-    final l = (b.isOdd ? -1 : 1) * (ld * 60 + _dakikalar[(3 * a + b + 5) % 10]);
-    int fark(int d) => ((k - d).abs() - (l - d).abs()).abs();
+    final isaret = b.isOdd ? -1 : 1;
+    var km = _dakikalar[(a + 3 * b) % 10],
+        lm = _dakikalar[(3 * a + b + 5) % 10];
+    int farkAB(int k, int l, int d) => ((k - d).abs() - (l - d).abs()).abs();
+    var t = (q + b) % 4;
+    // İki merkez dik gelinen paralele neredeyse eşit uzaklıkta kalırsa fark 1°
+    // altına düşer. Ekinokslarda dakikaların yer değiştirmesi farkı 1° üzerine
+    // çıkarır; gündönümlerinde bu (a, b) için kullanılmayan tarih alınır.
+    if (farkAB(kd * 60 + km, isaret * (ld * 60 + lm), _gunler[t].$3) < 60) {
+      if (_gunler[t].$3 == 0) {
+        final g = km;
+        km = lm;
+        lm = g;
+      } else {
+        t = (b + 3) % 4;
+      }
+    }
+    final dl = _gunler[t].$3;
+    final k = kd * 60 + km, l = isaret * (ld * 60 + lm);
+    int fark(int d) => farkAB(k, l, d);
     final uk = (k - dl).abs(), ul = (l - dl).abs();
     final dogru = fark(dl);
     final ak = 5400 - uk, al = 5400 - ul;
@@ -301,7 +349,8 @@ AdvancedItem _gunesAcisi(int a, int b, int c) {
         dogru - 60,
         dogru + 120,
         dogru + 180,
-      ].where((x) => x > 0 && x < 5400).map(_aci),
+        // Yanıt en az 1° olduğundan 1° altındaki çeldiriciler de alınmaz.
+      ].where((x) => x >= 60 && x < 5400).map(_aci),
       '${_gunler[t].$1} günü güneş ışınları ${_dikAd(t)} dik gelir. Geliş açısı K '
           'merkezinde 90° − ${_aci(uk)} = ${_aci(ak)}, L merkezinde 90° − ${_aci(ul)} = '
           '${_aci(al)} olur. Fark ${_aci(ak > al ? ak : al)} − ${_aci(ak > al ? al : ak)} = '
@@ -374,11 +423,13 @@ const _klm = ['K', 'L', 'M'];
 
 AdvancedItem _gunSuresi(int a, int b, int c) {
   final bicim = c % 3, q = c ~/ 3;
-  // Birinci yer çift dereceli kuzey, ikinci tek dereceli güney, üçüncü buçuklu
-  // kuzey enlemindedir; bu yüzden hiçbir tarihte iki yerin açısı eşitlenmez.
+  // Birinci yer tam dereceli kuzey, ikinci 15 dakikalı güney (1°15′ … 58°15′),
+  // üçüncü 30 dakikalı kuzey enlemindedir; dakikalar farklı olduğundan hiçbir
+  // tarihte iki yerin açısı eşitlenmez. Güneydeki yer Oğlak Dönencesi'nin iki
+  // yanına da düşer.
   final yerler = [
     (2 + 2 * a) * 60,
-    -(1 + 2 * b) * 60,
+    -((1 + 3 * b) * 60 + 15),
     (31 + (7 * a + 3 * b) % 22) * 60 + 30,
   ];
   final d = ucluDizilimler[(a + 2 * b + c) % 6];
@@ -733,6 +784,12 @@ const _hareketler = <_Etiketli>[
   ("Ekvator'dan kutuplara doğru çizgisel hızın azalması", _gunluk, null),
   ('Doğudaki yerlerde güneşin batıdaki yerlerden önce doğması', _gunluk, null),
   ('Güneş ışınlarının geliş açısının gün içinde değişmesi', _gunluk, null),
+  ("Güneş'in gün içinde en yüksek konuma öğle vakti ulaşması", _gunluk, null),
+  (
+    'Aynı meridyen üzerindeki yerlerde öğle vaktinin aynı anda yaşanması',
+    _gunluk,
+    null,
+  ),
   ('Mevsimlerin oluşması', _yillik, null),
   ('Gece ve gündüz sürelerinin yıl içinde uzayıp kısalması', _yillik, null),
   (
@@ -764,15 +821,9 @@ const _hareketler = <_Etiketli>[
     null,
   ),
   ('Matematik iklim kuşaklarının oluşması', _yillik, null),
-  ("Güneş'in doğuş ve batış saatlerinin yıl içinde değişmesi", _yillik, null),
   ('Aylık ortalama sıcaklıkların yıl içinde değişmesi', _yillik, null),
   (
     "Kuzey Yarım Küre'de en uzun gündüzün 21 Haziran'da yaşanması",
-    _yillik,
-    null,
-  ),
-  (
-    "Kuzey Yarım Küre'de en kısa gündüzün 21 Aralık'ta yaşanması",
     _yillik,
     null,
   ),
@@ -786,20 +837,10 @@ const _hareketler = <_Etiketli>[
     _yillik,
     null,
   ),
-  (
-    "Ekvator dışındaki yerlerde gece ve gündüz sürelerinin yalnız 21 Mart ve 23 Eylül'de eşit "
-        'olması',
-    _yillik,
-    null,
-  ),
   ('Kutup dairelerinin 66°33′ enlemlerinde yer alması', _yillik, null),
-  ('Dönencelerin 23°27′ enlemlerinde yer alması', _yillik, null),
-  ('Dünya ile Güneş arasındaki uzaklığın yıl içinde değişmesi', _yillik, null),
-  (
-    "21 Haziran'da Kuzey Kutup Dairesi ile Kuzey Kutbu arasında 24 saat gündüz yaşanması",
-    _yillik,
-    null,
-  ),
+  // Dünya–Güneş uzaklığının değişmesi eksen eğikliğinin değil yörüngenin elips
+  // olmasının sonucudur; “dolanma ve eksen eğikliği” sorusunda tartışmalı olduğundan
+  // alınmamıştır.
 ];
 
 final _f04 = lmSirali(
@@ -813,7 +854,9 @@ final _f04 = lmSirali(
     lmAileBoyu,
     _hareketler,
     const [_gunluk, _yillik],
-    siraSoru: "Bu durumlar sırasıyla Dünya'nın hangi hareketinin sonucudur?",
+    siraSoru:
+        "Bu durumlar sırasıyla Dünya'nın günlük hareketinin mi yoksa eksen "
+        'eğikliğiyle birlikte yıllık hareketinin mi sonucudur?',
     hangiSoru: (h, _) => h == _gunluk
         ? "Bu durumlardan hangileri Dünya'nın kendi ekseni etrafında dönmesinin (günlük "
               'hareketin) sonucudur?'
@@ -919,20 +962,23 @@ final _f05 = lmAile(
 
 // ──────────────────────── 6 · İklim tipini belirleme ────────────────────────
 
-// (ad, yağış dağılımı, gerekçe, karışan iklimler). Sıcaklıklar onda bir °C.
+// (ad, yağış dağılımı, gerekçe, karışan iklimler, cümle içi yazım). Sıcaklıklar
+// onda bir °C.
 const _iklimler = [
   (
     'Ekvatoral iklim',
     'Yılın her ayı yağışlıdır; kurak dönem bulunmamaktadır.',
     'Her ay sıcak, yıllık sıcaklık farkı çok az ve yağış her mevsim bol olduğundan',
     [1, 2, 5],
+    'ekvatoral iklim',
   ),
   (
     'Savan iklimi',
     'Yağışlar yaz döneminde düşmekte, kış dönemi kurak geçmektedir.',
-    'Yıl boyunca sıcak, yazları yağışlı, kışları kurak ve yıllık yağışı 1300 mm altında '
-        'olduğundan',
+    'Yıl boyunca sıcak, yazları yağışlı, kışları kurak ve yıllık yağışı ekvatoral ve muson '
+        'iklimlerine göre az olduğundan',
     [2, 0, 3],
+    'savan iklimi',
   ),
   (
     'Muson iklimi',
@@ -940,24 +986,28 @@ const _iklimler = [
         'kurak geçmektedir.',
     'Sıcak, yazları denizden esen rüzgârlarla çok yağışlı, kışları kurak olduğundan',
     [1, 0, 4],
+    'muson iklimi',
   ),
   (
     'Çöl iklimi',
     'Yağış çok az ve düzensizdir.',
     'Yazları çok sıcak ve yıllık yağışı 250 mm altında kaldığından',
     [6, 1, 4],
+    'çöl iklimi',
   ),
   (
     'Akdeniz iklimi',
     'Yağışın büyük bölümü kış mevsiminde düşmekte, yaz ayları kurak geçmektedir.',
     'Yazları sıcak ve kurak, kışları ılık ve yağışlı olduğundan',
     [6, 5, 1],
+    'Akdeniz iklimi',
   ),
   (
     'Ilıman okyanusal iklim',
     'Yağış bütün mevsimlere dengeli dağılmaktadır.',
     'Yazları serin, kışları ılık geçtiği ve her mevsim yağış aldığı için',
     [4, 7, 6],
+    'ılıman okyanusal iklim',
   ),
   (
     'Karasal iklim',
@@ -965,24 +1015,28 @@ const _iklimler = [
         'biçiminde olmaktadır.',
     'Yazları sıcak ve kurak, kışları soğuk ve karlı, yıllık yağışı az olduğundan',
     [4, 7, 3],
+    'karasal iklim',
   ),
   (
     'Sert karasal iklim',
     'Yağış daha çok yaz aylarında düşmektedir.',
     'Kışları çok uzun ve sert, yazları kısa ve serin geçtiğinden',
     [8, 6, 5],
+    'sert karasal iklim',
   ),
   (
     'Tundra iklimi',
     'Yağış az olup çoğunlukla kısa süren yaz mevsiminde düşmektedir.',
     'En sıcak ay ortalaması 10 °C altında kalıp 0 °C üzerine çıktığından',
     [9, 7, 6],
+    'tundra iklimi',
   ),
   (
     'Kutup iklimi',
     'Yağış çok az olup kar biçiminde düşmektedir.',
     'Bütün ayların ortalama sıcaklığı 0 °C altında kaldığından',
     [8, 7, 6],
+    'kutup iklimi',
   ),
 ];
 
@@ -1023,7 +1077,7 @@ AdvancedItem _iklimTipi(int a, int b, int c) {
     ],
     'Yıllık sıcaklık farkı ${_n(sicak / 10)} − ${_derecePar(soguk)} = ${_n(fark / 10)} °C, yıllık '
         'yağış $yagis mm olarak verilmiştir. ${iklim.$3} istasyonda görülen iklim tipi '
-        '${iklim.$1} olarak belirlenir.',
+        '${iklim.$5} olarak belirlenir.',
   );
 }
 
@@ -1180,13 +1234,14 @@ const _yerSekilleri = <_Etiketli>[
   ('Çentik (V biçimli) vadi', _akarsu, null),
   ('Kanyon vadi', _akarsu, null),
   ('Menderes', _akarsu, null),
-  ('Dev kazanı', _akarsu, null),
+  // Dev kazanı (buzul dev kazanları da vardır) ve peneplen (bütün dış
+  // kuvvetlerin uzun süreli aşındırması) tek bir dış kuvvete bağlanamadığından
+  // alınmamıştır.
   ('Delta', _akarsu, null),
   ('Birikinti konisi', _akarsu, null),
   ('Birikinti yelpazesi', _akarsu, null),
   ('Akarsu taraçası (seki)', _akarsu, null),
   ('Kırgıbayır', _akarsu, null),
-  ('Peneplen (yontukdüz)', _akarsu, null),
   ('Irmak adası', _akarsu, null),
   ('Çağlayan (şelale)', _akarsu, null),
   ('Mantar kaya (şeytan masası)', _ruzgar, null),
@@ -1238,6 +1293,8 @@ final _f08 = lmSirali(
         'Bu yer şekillerini oluşturan dış kuvvetler sırasıyla hangisidir?',
     hangiSoru: (h, _) =>
         'Bu yer şekillerinden hangileri ${_kuvvetIle[h]} oluşur?',
+    olumsuzSoru: (h, _) =>
+        'Bu yer şekillerinden hangileri ${_kuvvetIle[h]} oluşmaz?',
     aciklama: (x) => '${x.map((e) => '${e.$1}: ${e.$2}').join('; ')}.',
   ),
   exam: ExamKind.tyt,
@@ -1298,15 +1355,19 @@ const _icKuvvetler = <_Etiketli>[
     _dep,
     null,
   ),
-  ('Kuzey Anadolu Fay Hattı boyunca sık sık sarsıntı yaşanması', _dep, null),
+  (
+    'Merkez üssüne yakın yerlerde en şiddetli hissedilen ani yer sarsıntıları',
+    _dep,
+    null,
+  ),
   ('Odak noktasından yayılan dalgalarla yer kabuğunun titreşmesi', _dep, null),
   ('Sismograf ile kaydedilen ani yer sarsıntılarının oluşması', _dep, null),
 ];
 const _icKuvvetIle = {
-  _oro: 'orojenez (dağ oluşumu) ile',
-  _epi: 'epirojenez (kıta oluşumu) ile',
-  _vol: 'volkanizma ile',
-  _dep: 'depremlerle',
+  _oro: 'orojenik (dağ oluşumu) hareketlerin sonucudur',
+  _epi: 'epirojenik (kıta oluşumu) hareketlerin sonucudur',
+  _vol: 'volkanizmanın sonucudur',
+  _dep: 'deprem olarak tanımlanır',
 };
 
 const _uzak = 'uzaklaşan sınır',
@@ -1362,29 +1423,31 @@ const _depremler = <_Etiketli>[
   ('1999 Gölcük depremi', _tek, null),
   ('1939 Erzincan depremi', _tek, null),
   ('2023 Kahramanmaraş depremleri', _tek, null),
+  // Volkanik ve çöküntü depremlerinde her öge ayrı bir bilgi verir (neden, örnek,
+  // görüldüğü yer ya da etki alanı); aynı bilgiyi yineleyen öncül çifti oluşmaz.
   (
-    'Volkanik patlamalar sırasında magma ve gaz hareketlerinin oluşturduğu depremler',
+    'Yer altındaki magma ve gazların yükselme hareketleriyle oluşan depremler',
     _vdep,
     null,
   ),
   (
-    'Etna ve Vezüv gibi etkin volkanların çevresinde patlamalarla birlikte görülen depremler',
+    "İtalya'da Etna ve Vezüv çevresinde patlamalarla birlikte görülen depremler",
     _vdep,
     null,
   ),
   (
-    'Magmanın yer kabuğu içindeki hareketiyle volkanik alanlarda oluşan sarsıntılar',
+    'Yalnız etkin yanardağların bulunduğu alanlarda görülen, etki alanı dar depremler',
     _vdep,
     null,
   ),
   (
-    'Kireç taşı ve jips gibi kolay eriyen kayaçlarda oluşan boşlukların tavanının çökmesiyle '
-        'oluşan depremler',
+    'Yer altındaki mağara ve boşlukların tavanlarının çökmesiyle oluşan depremler',
     _cok,
     null,
   ),
   (
-    'Karstik arazilerde mağara tavanlarının çökmesiyle oluşan depremler',
+    'Kireç taşı, jips ve kaya tuzu gibi kolay eriyen kayaçların yaygın olduğu alanlarda '
+        'görülen, etkisi yerel kalan depremler',
     _cok,
     null,
   ),
@@ -1406,9 +1469,8 @@ AdvancedItem _icKuvvet(int i) {
       3500,
       _icKuvvetler,
       const [_oro, _epi, _vol, _dep],
-      siraSoru: 'Bu oluşumlar sırasıyla hangi iç kuvvetle ilgilidir?',
-      hangiSoru: (h, _) =>
-          'Bu oluşumlardan hangileri ${_icKuvvetIle[h]} ilgilidir?',
+      siraSoru: 'Bu oluşumlar sırasıyla hangi iç kuvvet olayına örnektir?',
+      hangiSoru: (h, _) => 'Bu oluşumlardan hangileri ${_icKuvvetIle[h]}?',
       aciklama: _eslesme,
     );
   }
@@ -1566,14 +1628,11 @@ const _topraklar = <_Etiketli>[
     'Çernozyom',
     _zonal,
   ),
+  // Türkiye'deki yayılışı ders kitaplarında farklı adlarla (kestane renkli,
+  // kahverengi bozkır) verildiğinden yalnız oluşum koşulu sorulur.
   (
     'Yarı kurak karasal iklimde kısa boylu bozkırların altında oluşan topraklar',
-    'Kestane renkli bozkır toprağı',
-    _zonal,
-  ),
-  (
-    "Türkiye'de İç Anadolu'nun bozkır alanlarında geniş yer kaplayan topraklar",
-    'Kestane renkli bozkır toprağı',
+    'Kestane renkli toprak',
     _zonal,
   ),
   (
@@ -1674,7 +1733,7 @@ const _toprakAdlari = [
   'Laterit',
   'Podzol',
   'Çernozyom',
-  'Kestane renkli bozkır toprağı',
+  'Kestane renkli toprak',
   'Kahverengi orman toprağı',
   'Terra rossa',
   'Tundra toprağı',
@@ -1707,7 +1766,8 @@ final _f11 = lmSirali(
     siraSoru: 'Bu özelliklerin ait olduğu toprak tipleri sırasıyla hangisidir?',
     hangiSoru: (h, grup) => grup
         ? 'Bu özelliklerden hangileri ${_kusakIfade[h]} topraklara aittir?'
-        : 'Bu özelliklerden hangileri $h için geçerlidir?',
+        : 'Bu özelliklerden hangileri ${h[0].toLowerCase()}${h.substring(1)} için '
+              'geçerlidir?',
     aciklama: (x) =>
         'Sırasıyla: ${x.map((e) => '${e.$2}${e.$3 == null ? '' : ' (${e.$3})'}').join(', ')}.',
   ),
@@ -1717,123 +1777,142 @@ final _f11 = lmSirali(
 
 // ───────────────────── 12 · Türkiye'de madenler ve yatakları ────────────────
 
-// Her yöreye ders kitaplarında en çok anılan madeni eşlenmiştir; yanlış
-// yüklemler o yörede çıkarılmayan madenlerden seçilmiştir.
+// Her yöreye ders kitaplarında en çok anılan madeni eşlenmiştir. Yanlış yüklemler
+// yalnız belirli yörelerde bulunan madenlerden (bor, taş kömürü, petrol, asfaltit,
+// boksit) o yörede kesinlikle bulunmayanlardır; krom, demir, linyit gibi ülkenin
+// pek çok yerinde bulunan madenler yanlış yüklem yapılmamıştır. Üretimi azalan ya
+// da duran yörelerde “yatakları bulunur” denir.
 const _madenOnerme = <_Onerme>[
   (
     'Kırka (Eskişehir) yöresinde',
     'bor çıkarılır.',
-    ['krom çıkarılır.', 'boksit çıkarılır.', 'cıva çıkarılır.'],
+    ['taş kömürü çıkarılır.', 'petrol çıkarılır.', 'asfaltit çıkarılır.'],
   ),
   (
     'Bigadiç (Balıkesir) yöresinde',
     'bor çıkarılır.',
-    ['bakır çıkarılır.', 'demir çıkarılır.', 'taş kömürü çıkarılır.'],
+    ['taş kömürü çıkarılır.', 'asfaltit çıkarılır.', 'petrol çıkarılır.'],
   ),
   (
     'Emet (Kütahya) yöresinde',
     'bor çıkarılır.',
-    ['cıva çıkarılır.', 'boksit çıkarılır.', 'krom çıkarılır.'],
+    ['petrol çıkarılır.', 'taş kömürü çıkarılır.', 'asfaltit çıkarılır.'],
   ),
   (
     'Guleman (Elazığ) yöresinde',
     'krom çıkarılır.',
-    ['bor çıkarılır.', 'boksit çıkarılır.', 'kükürt çıkarılır.'],
+    ['bor çıkarılır.', 'taş kömürü çıkarılır.', 'asfaltit çıkarılır.'],
   ),
   (
     'Divriği (Sivas) yöresinde',
     'demir çıkarılır.',
-    ['bor çıkarılır.', 'cıva çıkarılır.', 'petrol çıkarılır.'],
+    ['bor çıkarılır.', 'asfaltit çıkarılır.', 'taş kömürü çıkarılır.'],
   ),
   (
     'Hekimhan (Malatya) yöresinde',
     'demir çıkarılır.',
-    ['boksit çıkarılır.', 'taş kömürü çıkarılır.', 'bor çıkarılır.'],
+    ['taş kömürü çıkarılır.', 'bor çıkarılır.', 'asfaltit çıkarılır.'],
   ),
   (
     'Murgul (Artvin) yöresinde',
     'bakır çıkarılır.',
-    ['bor çıkarılır.', 'krom çıkarılır.', 'linyit çıkarılır.'],
+    ['bor çıkarılır.', 'petrol çıkarılır.', 'asfaltit çıkarılır.'],
   ),
   (
     'Küre (Kastamonu) yöresinde',
     'bakır çıkarılır.',
-    ['boksit çıkarılır.', 'bor çıkarılır.', 'petrol çıkarılır.'],
+    ['bor çıkarılır.', 'asfaltit çıkarılır.', 'petrol çıkarılır.'],
   ),
   (
     'Seydişehir (Konya) yöresinde',
     'boksit çıkarılır.',
-    ['bakır çıkarılır.', 'bor çıkarılır.', 'taş kömürü çıkarılır.'],
+    ['taş kömürü çıkarılır.', 'bor çıkarılır.', 'asfaltit çıkarılır.'],
   ),
   (
     'Akseki (Antalya) yöresinde',
     'boksit çıkarılır.',
-    ['krom çıkarılır.', 'linyit çıkarılır.', 'bor çıkarılır.'],
+    ['bor çıkarılır.', 'taş kömürü çıkarılır.', 'asfaltit çıkarılır.'],
   ),
   (
     'Balya (Balıkesir) yöresinde',
-    'kurşun ve çinko çıkarılır.',
-    ['boksit çıkarılır.', 'krom çıkarılır.', 'petrol çıkarılır.'],
+    'kurşun ve çinko yatakları bulunur.',
+    [
+      'taş kömürü yatakları bulunur.',
+      'petrol yatakları bulunur.',
+      'asfaltit yatakları bulunur.',
+    ],
   ),
   (
     'Halıköy (Ödemiş, İzmir) yöresinde',
-    'cıva çıkarılır.',
-    ['bor çıkarılır.', 'demir çıkarılır.', 'taş kömürü çıkarılır.'],
+    'cıva yatakları bulunur.',
+    [
+      'bor yatakları bulunur.',
+      'taş kömürü yatakları bulunur.',
+      'petrol yatakları bulunur.',
+    ],
   ),
   (
     'Zonguldak çevresinde',
     'taş kömürü çıkarılır.',
-    ['bor çıkarılır.', 'krom çıkarılır.', 'boksit çıkarılır.'],
+    ['bor çıkarılır.', 'petrol çıkarılır.', 'asfaltit çıkarılır.'],
   ),
   (
     'Afşin-Elbistan (Kahramanmaraş) yöresinde',
     'linyit çıkarılır.',
-    ['taş kömürü çıkarılır.', 'bor çıkarılır.', 'cıva çıkarılır.'],
+    ['taş kömürü çıkarılır.', 'bor çıkarılır.', 'asfaltit çıkarılır.'],
   ),
   (
     'Soma (Manisa) yöresinde',
     'linyit çıkarılır.',
-    ['taş kömürü çıkarılır.', 'boksit çıkarılır.', 'krom çıkarılır.'],
+    ['taş kömürü çıkarılır.', 'asfaltit çıkarılır.', 'bor çıkarılır.'],
   ),
   (
     'Tunçbilek (Kütahya) yöresinde',
     'linyit çıkarılır.',
-    ['bor çıkarılır.', 'cıva çıkarılır.', 'demir çıkarılır.'],
+    ['taş kömürü çıkarılır.', 'petrol çıkarılır.', 'asfaltit çıkarılır.'],
   ),
   (
     'Batman çevresinde',
     'petrol çıkarılır.',
-    ['bor çıkarılır.', 'taş kömürü çıkarılır.', 'krom çıkarılır.'],
+    ['bor çıkarılır.', 'taş kömürü çıkarılır.', 'boksit çıkarılır.'],
   ),
   (
     'Adıyaman çevresinde',
     'petrol çıkarılır.',
-    ['bor çıkarılır.', 'boksit çıkarılır.', 'cıva çıkarılır.'],
+    ['taş kömürü çıkarılır.', 'bor çıkarılır.', 'boksit çıkarılır.'],
   ),
   (
     'Hamitabat (Kırklareli) yöresinde',
-    'doğal gaz çıkarılır.',
-    ['bor çıkarılır.', 'krom çıkarılır.', 'demir çıkarılır.'],
+    'doğal gaz yatakları bulunur.',
+    [
+      'bor yatakları bulunur.',
+      'taş kömürü yatakları bulunur.',
+      'asfaltit yatakları bulunur.',
+    ],
   ),
   (
     'Keçiborlu (Isparta) yöresinde',
-    'kükürt çıkarılır.',
-    ['bor çıkarılır.', 'bakır çıkarılır.', 'taş kömürü çıkarılır.'],
+    'kükürt yatakları bulunur.',
+    [
+      'bor yatakları bulunur.',
+      'taş kömürü yatakları bulunur.',
+      'petrol yatakları bulunur.',
+    ],
   ),
   (
     'Silopi (Şırnak) yöresinde',
     'asfaltit çıkarılır.',
-    ['bor çıkarılır.', 'boksit çıkarılır.', 'krom çıkarılır.'],
+    ['bor çıkarılır.', 'taş kömürü çıkarılır.', 'boksit çıkarılır.'],
   ),
   (
     'Ovacık (Bergama, İzmir) yöresinde',
     'altın çıkarılır.',
-    ['bor çıkarılır.', 'taş kömürü çıkarılır.', 'boksit çıkarılır.'],
+    ['bor çıkarılır.', 'taş kömürü çıkarılır.', 'petrol çıkarılır.'],
   ),
   (
     'Kışladağ (Uşak) yöresinde',
     'altın çıkarılır.',
-    ['bor çıkarılır.', 'krom çıkarılır.', 'taş kömürü çıkarılır.'],
+    ['bor çıkarılır.', 'taş kömürü çıkarılır.', 'petrol çıkarılır.'],
   ),
 ];
 
@@ -1846,7 +1925,7 @@ final _f12 = lmSirali(
   (i) => _dogruYanlis(
     i,
     _madenOnerme,
-    "Türkiye'de madenlerin çıkarıldığı yerlerle ilgili bu bilgilerden hangileri doğrudur?",
+    "Türkiye'deki maden yöreleriyle ilgili bu bilgilerden hangileri doğrudur?",
   ),
   exam: ExamKind.ayt,
   lesson: 'Coğrafya-1',
@@ -2314,6 +2393,8 @@ AdvancedItem _bolge(int i) {
       siraSoru: 'Bu illerin merkezlerinin bulunduğu coğrafi bölgeler sırasıyla hangisidir?',
       hangiSoru: (h, _) =>
           "Bu illerden hangilerinin merkezi $h Bölgesi'ndedir?",
+      olumsuzSoru: (h, _) =>
+          "Bu illerden hangilerinin merkezi $h Bölgesi'nde değildir?",
       aciklama: (x) =>
           '${x.map((e) => '${e.$1}: ${e.$2} Bölgesi').join('; ')}.',
     );
@@ -2325,6 +2406,7 @@ AdvancedItem _bolge(int i) {
     _bolumIller.keys.toList(),
     siraSoru: 'Bu illerin merkezlerinin bulunduğu coğrafi bölümler sırasıyla hangisidir?',
     hangiSoru: (h, _) => "Bu illerden hangilerinin merkezi $h'ndedir?",
+    olumsuzSoru: (h, _) => "Bu illerden hangilerinin merkezi $h'nde değildir?",
     aciklama: (x) => '${x.map((e) => '${e.$1}: ${e.$2}').join('; ')}.',
   );
 }
@@ -2526,13 +2608,30 @@ final _f16 = lmSirali(
       _col,
     ],
     grupHer: false,
+    // Karasal ile sert karasal, karasal ya da Akdeniz iklimi ile nemli ılıman
+    // ormanlar, Akdeniz iklimi ile bozkır, savan ile muson bitki örtüsü bir
+    // arada sorulursa “görülür/görülmez” yanıtı tartışmalı olabileceğinden bu
+    // çiftlerde seçkideki başka bir grup sorulur.
+    celisir: (h, g) => switch ((h, g)) {
+      ('karasal iklim', 'sert karasal iklim') ||
+      ('sert karasal iklim', 'karasal iklim') ||
+      ('karasal iklim', 'ılıman okyanusal iklim') ||
+      ('Akdeniz iklimi', 'ılıman okyanusal iklim') ||
+      ('Akdeniz iklimi', 'karasal iklim') ||
+      ('muson iklimi', 'savan iklimi') ||
+      ('savan iklimi', 'muson iklimi') => true,
+      _ => false,
+    },
     siraSoru:
         'Bu özelliklerin ait olduğu bitki örtüsü türleri sırasıyla hangisidir?',
     hangiSoru: (h, grup) => grup
         ? 'Bu bitki örtülerinden hangileri ${_iklimde[h]} görülür?'
         : 'Bu özelliklerden hangileri $h için geçerlidir?',
+    olumsuzSoru: (h, grup) => grup
+        ? 'Bu bitki örtülerinden hangileri ${_iklimde[h]} görülmez?'
+        : 'Bu özelliklerden hangileri $h için geçerli değildir?',
     aciklama: (x) =>
-        'Sırasıyla: ${x.map((e) => '${e.$2}${e.$3 == null ? '' : ' (${e.$3})'}').join(', ')}.',
+        'Sırasıyla: ${x.map((e) => '${e.$2}${e.$3 == null ? '' : ', ${_iklimde[e.$3]} görülür'}').join('; ')}.',
   ),
   exam: ExamKind.tyt,
   lesson: 'Coğrafya',
@@ -2568,20 +2667,20 @@ const _faaliyetler = <_Etiketli>[
   ('Çay fabrikasında yaş çayı kuru çaya işleyen bir işçi', _iki, null),
   ('Mobilya atölyesinde masa yapan bir marangoz', _iki, null),
   ('Mermer fabrikasında blokları plakaya dönüştüren bir işçi', _iki, null),
+  // Eğitim, bankacılık ve hukuk gibi bilgiye dayalı hizmetler bazı ders
+  // kitaplarında dördüncül faaliyet sayıldığından üçüncül örnek yapılmamıştır.
   ('Hastanede hasta muayene eden bir doktor', _uc, null),
-  ('Okulda ders anlatan bir öğretmen', _uc, null),
   ('Otelde konukları karşılayan bir resepsiyon görevlisi', _uc, null),
   ('Ürünleri limandan kente taşıyan bir tır şoförü', _uc, null),
-  ('Bankada kredi işlemlerini yürüten bir memur', _uc, null),
   ('Pazarda sebze satan bir esnaf', _uc, null),
-  ('Müzede ziyaretçilere bilgi veren bir rehber', _uc, null),
+  ('Turistlere kent turu yaptıran bir turist rehberi', _uc, null),
   ('Kargo şirketinde paket dağıtan bir kurye', _uc, null),
   ('Mağazada giysi satan bir satış görevlisi', _uc, null),
-  ('Bir havayolu şirketinde çalışan bir kabin görevlisi', _uc, null),
+  ('Uçakta yolculara hizmet veren bir kabin görevlisi', _uc, null),
   ('Belediyede çöp toplayan bir temizlik görevlisi', _uc, null),
   ('Eczanede ilaç satan bir eczacı', _uc, null),
-  ('Mahkemede dava takip eden bir avukat', _uc, null),
   ('Lokantada yemek servisi yapan bir garson', _uc, null),
+  ('Berber dükkânında saç kesen bir berber', _uc, null),
 ];
 
 final _f17 = lmSirali(
@@ -2627,7 +2726,7 @@ const _gocOrnekleri = <(String, List<String>)>[
     [_icGoc, _gonullu],
   ),
   (
-    "1960'lı yıllarda çalışmak için Almanya'ya giden işçiler",
+    "1961 yılında imzalanan iş gücü anlaşmasıyla çalışmak için Almanya'ya giden işçiler",
     [_disGoc, _gonullu],
   ),
   (
@@ -2656,10 +2755,6 @@ const _gocOrnekleri = <(String, List<String>)>[
   ),
   (
     "Turizm sezonunda Antalya'daki otellerde çalışıp sezon bitince evine dönen gençler",
-    [_icGoc, _mevsim, _gonullu],
-  ),
-  (
-    'Yaz aylarında hayvanlarıyla yaylaya çıkıp sonbaharda köyüne dönen hayvancılar',
     [_icGoc, _mevsim, _gonullu],
   ),
   (
@@ -2931,7 +3026,7 @@ const _afetler = <_Etiketli>[
     null,
   ),
   (
-    'Deniz tabanında oluşan deprem ya da volkan patlamalarının yol açtığı dev dalgalardır.',
+    'Deniz tabanındaki ani hareketlerin oluşturduğu, kıyıya ulaştığında büyük yıkıma yol açan dev dalgalardır.',
     _afTsunami,
     null,
   ),
@@ -2973,8 +3068,9 @@ final _f19 = lmSirali(
       _afTsunami,
       _afVolkan,
     ],
-    siraSoru: 'Bu bilgilerin ilgili olduğu doğal afetler sırasıyla hangisidir?',
-    hangiSoru: (h, _) => 'Bu bilgilerden hangileri “$h” ile ilgilidir?',
+    siraSoru: 'Bu bilgilerin ait olduğu doğal afetler sırasıyla hangisidir?',
+    hangiSoru: (h, _) => 'Bu bilgilerden hangileri $h afetine aittir?',
+    olumsuzSoru: (h, _) => 'Bu bilgilerden hangileri $h afetine ait değildir?',
     aciklama: (x) => 'Sırasıyla: ${x.map((e) => e.$2).join(', ')}.',
   ),
   exam: ExamKind.tyt,
@@ -3003,7 +3099,7 @@ const _goller = <(String, String)>[
   ('Nemrut Krater Gölü', _gVol),
   ('Meke Gölü', _gVol),
   ('Gölcük Gölü (Isparta)', _gVol),
-  ('Salda Gölü', _gKar),
+  // Salda Gölü bazı kaynaklarda tektonik-karstik sayıldığından alınmamıştır.
   ('Avlan Gölü', _gKar),
   ('Suğla Gölü', _gKar),
   ('Hafik Gölü', _gKar),

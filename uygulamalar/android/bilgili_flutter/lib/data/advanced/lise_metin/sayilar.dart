@@ -1117,9 +1117,8 @@ AdvancedItem _ardisikSoru(int a, int b, int c) {
         final top = (ilk + son) * gun ~/ 2;
         return _tam(
           'Bir öğrenci deneme sınavına hazırlanırken ilk gün $ilk soru çözüyor ve '
-              'sonraki her gün bir önceki günden $artis soru fazla çözüyor. Toplam '
-              '$top soru çözdüğü gün, çalışmaya başladığı günden itibaren kaçıncı '
-              'gündür?',
+              'sonraki her gün bir önceki günden $artis soru fazla çözüyor. Buna göre '
+              'öğrencinin çözdüğü soruların toplamı kaçıncı günün sonunda $top olur?',
           gun,
           [gun - 1, gun + 1, gun + 2],
           '$gun gün sonunda son gün $ilk + ($gun − 1) · $artis = $son soru çözülür '
@@ -2146,6 +2145,7 @@ String _parcaYaz(List<_Ar> x) => x.isEmpty ? '∅' : x.map(_arYaz).join(' ∪ ')
 
 String _tamListe(List<int> t) {
   if (t.isEmpty) return 'tam sayı yoktur';
+  if (t.length == 1) return 'yalnızca ${_n(t.first)} olup 1 tanedir';
   if (t.length <= 6) {
     return '${[for (final x in t) _n(x)].join(', ')} olup ${t.length} tanedir';
   }
@@ -2195,8 +2195,25 @@ AdvancedItem _aralikSoru(int a, int b, int c) {
               0)
         (ilkTip + 7 * k) % 16,
   ];
+  // Önce, kapalı/açık uç ayrımının yanıtı değiştirdiği (tüm uçları kapalı
+  // sanan yolun yanlış sonuç verdiği) seçimler denenir.
+  _Ar kapat(_Ar x) => (x.$1, true, x.$3, true);
+  for (final t in adaylar) {
+    final (x, y) = araliklar(t);
+    final r = _aralikUret(c, (x, y));
+    if (_yanitKokte(r)) continue;
+    if (_aralikUret(c, (kapat(x), kapat(y))).correct != r.correct) return r;
+  }
   for (final t in adaylar) {
     final r = _aralikUret(c, araliklar(t));
+    if (!_yanitKokte(r)) return r;
+  }
+  // Hiçbir uç seçimi uymazsa bütün uçlar 40 birim kaydırılır; bu kadar büyük
+  // uçlar başka hiçbir vakada kullanılmadığından kökler yine farklı kalır.
+  _Ar kaydir(_Ar x) => (x.$1 + 40, x.$2, x.$3 + 40, x.$4);
+  for (final t in adaylar) {
+    final (x, y) = araliklar(t);
+    final r = _aralikUret(c, (kaydir(x), kaydir(y)));
     if (!_yanitKokte(r)) return r;
   }
   return _aralikUret(c, araliklar(adaylar.first));
@@ -2404,6 +2421,7 @@ List<(List<int>, List<int>)> _kartezyenListe(int c) =>
             return k > 0 &&
                 !yazili(k) &&
                 k != _ciftSay(a, b, (x, y) => x <= y) &&
+                k != _ciftSay(a, b, (x, y) => x > y) &&
                 k != n - k;
           case 2:
             final k = _ciftSay(a, b, (x, y) => (x + y).isEven);
@@ -2539,7 +2557,8 @@ AdvancedItem _kartezyenUret(int a, int b, int c, int v) {
           ? 7
           : x0; // x = 0 için çarpım soruları kendiliğinden 0 olurdu
       final q = const [-5, -3, -1, 1, 3, 5, 7][b % 7];
-      final r = 2 + b % 3, y = 1 + b ~/ 3 + a % 3; // y: 1 … 9
+      // y: 1 … 9; son varyantlarda 10 … 18 (kökte yazılı yanıtları önlemek için).
+      final r = 2 + b % 3, y = 1 + b ~/ 3 + a % 3 + 9 * (v ~/ 4);
       final sSabit = const [4, -2, 6, 1, -4][(a + b) % 5] + 10 * (v ~/ 2);
       final t = sSabit - (r - 1) * y;
       final u = p * x + q;
@@ -2776,6 +2795,10 @@ int _sabitDegil(List<int> a, List<int> b) =>
   final ortak = a.where(b.contains).length;
   final esitDegil = _carp([for (final x in a) n - (b.contains(x) ? 1 : 0)]);
   final buyuk = _carp(_buyukEsit(a, b));
+  // f(x) ≥ x koşulunda tipik yanlışlar: eşitliği unutmak (f(x) > x) ve
+  // seçenek sayılarını çarpmak yerine toplamak.
+  final kesin = _carp([for (final x in a) b.where((y) => y > x).length]);
+  final toplamYanlis = _topla(_buyukEsit(a, b));
   switch (c) {
     case 0:
       return (
@@ -2801,7 +2824,7 @@ int _sabitDegil(List<int> a, List<int> b) =>
     case 3:
       return (
         _bireBirBuyuk(a, b),
-        [buyuk, _permutasyon(n, m), _bireBirYanlis(a, b)],
+        [buyuk, _permutasyon(n, m), _bireBirYanlis(a, b), kesin, toplamYanlis],
       );
     case 4:
       return (
@@ -2830,11 +2853,29 @@ int _sabitDegil(List<int> a, List<int> b) =>
           .length;
       return (
         _sabitDegil(a, b),
-        [buyuk, buyuk - n, buyuk - 1, hepsi - n + 0 * sabit],
+        [
+          buyuk,
+          buyuk - n,
+          buyuk - 1,
+          hepsi - n + 0 * sabit,
+          kesin - sabit,
+          toplamYanlis,
+          kesin,
+        ],
       );
     default:
       final bb = _bireBirBuyuk(a, b);
-      return (buyuk - bb, [buyuk, hepsi - _permutasyon(n, m), bb]);
+      return (
+        buyuk - bb,
+        [
+          buyuk,
+          hepsi - _permutasyon(n, m),
+          bb,
+          kesin - bb,
+          toplamYanlis,
+          kesin,
+        ],
+      );
   }
 }
 
@@ -3045,8 +3086,11 @@ AdvancedItem _fonksiyonDegerUret(int a, int b, int c, int w) {
   final ic = _dogrusal(p, q);
   switch (c) {
     case 0 || 6:
-      final r = const [2, 3, 4, 5, -3, 6, -2, 7, 8, -4][b % 10];
+      final r0 = const [2, 3, 4, 5, -3, 6, -2, 7, 8, -4][b % 10];
       final sabit = const [3, -4][b ~/ 10] + (c == 6 ? 2 : 0);
+      // Sağ taraf −(px + q) olursa f(u) = −u olur ve soru kendiliğinden çözülür;
+      // bu durumda r listenin dışındaki bir değere kaydırılır.
+      final r = r0 == -p && sabit == -q ? r0 + (r0 > 0 ? 7 : -7) : r0;
       final dis = _dogrusal(r, sabit);
       // x0 değeri, doğru yanıt tipik yanlışlarla ve kökteki sayılarla
       // çakışmayacak biçimde seçilir.
@@ -3136,7 +3180,10 @@ AdvancedItem _fonksiyonDegerUret(int a, int b, int c, int w) {
     case 2:
       final m = const [2, 3, -2, 4, -3, 5, 1, -1, 6, -4][b % 10];
       final r = m * p;
-      final sabit = const [7, -6][b ~/ 10] + a % 3;
+      final s0 = const [7, -6][b ~/ 10] + a % 3;
+      // m = ±1 iken n = 0 olursa f(x) = ±x olur (iki taraf aynı ifade); sabit
+      // kaydırılır.
+      final sabit = m.abs() == 1 && s0 == m * q ? s0 + 10 : s0;
       final n = sabit - m * q;
       return _ifadeSecenek(
         'f($ic) = ${_dogrusal(r, sabit)} olduğuna göre f(x) fonksiyonunun kuralı '
@@ -3293,7 +3340,7 @@ AdvancedItem _carpanlaraAyirmaSoru(int a, int b, int c) {
       return _tam(
         '$m² − $n² işleminin sonucu kaçtır?',
         top * fark,
-        [fark * fark, top * top - fark * fark, top * fark ~/ 2, top + fark],
+        [fark * fark, top + fark, top * fark ~/ 2],
         'İki kare farkı özdeşliğine göre $m² − $n² = ($m − $n) · ($m + $n) = '
             '$fark · $top = ${top * fark} olur.',
         pozitif: true,
@@ -3442,58 +3489,53 @@ const _ortakKokler = [
 AdvancedItem _rasyonelSoru(int a, int b, int c) {
   final r = _ortakKokler[a];
   final tur = c % 5, deger = c >= 5;
-  final adaylar = [for (var x = -12; x <= 12; x++) x];
+  final adaylar = [for (var x = -15; x <= 15; x++) x];
   // Kalan kök(ler): ortak kökten, onun ters işaretlisinden ve birbirinden
-  // farklıdır; böylece başka bir çarpan sadeleşmez.
+  // farklıdır; böylece başka bir çarpan sadeleşmez. Değer sorularında yanıtı
+  // kökte yazılı bir sayıya eşit çıkan kökler de atlanır.
   bool uygun(int x) => x != r && x != -r;
-  late final int pk, qk; // sadeleşmiş ifade: (x − pk)/(x − qk)
-  var k = 1;
-  late final String pay, payda, payAyrim, paydaAyrim;
   final kay = deger ? 7 : 0;
-  switch (tur) {
-    case 0:
-      qk = _uygun(adaylar, (b + kay) % 20, uygun);
-      pk = -r;
-      pay = _ikinci(1, 0, -r * r);
-      payda = _ikiKok(r, qk);
-      payAyrim = '${_carpanX(r)}${_carpanX(-r)}';
-      paydaAyrim = '${_carpanX(r)}${_carpanX(qk)}';
-    case 1:
-      pk = _uygun(adaylar, (b + kay) % 20, uygun);
-      qk = -r;
-      pay = _ikiKok(r, pk);
-      payda = _ikinci(1, 0, -r * r);
-      payAyrim = '${_carpanX(r)}${_carpanX(pk)}';
-      paydaAyrim = '${_carpanX(r)}${_carpanX(-r)}';
-    case 2:
-      qk = _uygun(adaylar, (b + kay) % 20, uygun);
-      pk = r;
-      pay = _ikinci(1, -2 * r, r * r);
-      payda = _ikiKok(r, qk);
-      payAyrim = '${_carpanX(r)}²';
-      paydaAyrim = '${_carpanX(r)}${_carpanX(qk)}';
-    case 3:
-      qk = _uygun(adaylar, (b + kay) % 20, uygun);
-      pk = r; // kullanılmaz
-      k = 2 + (a + b) % 4;
-      pay = _dogrusal(k, -k * r);
-      payda = _ikiKok(r, qk);
-      payAyrim = '$k${_carpanX(r)}';
-      paydaAyrim = '${_carpanX(r)}${_carpanX(qk)}';
-    default:
-      final ikililer = [
-        for (final x in adaylar)
-          for (final y in adaylar)
-            if (uygun(x) && uygun(y) && x != y && x != -y) (x, y),
-      ];
-      final ikili = ikililer[((b + kay) % 20 * 37 + a * 11) % ikililer.length];
-      pk = ikili.$1;
-      qk = ikili.$2;
-      pay = _ikiKok(r, pk);
-      payda = _ikiKok(r, qk);
-      payAyrim = '${_carpanX(r)}${_carpanX(pk)}';
-      paydaAyrim = '${_carpanX(r)}${_carpanX(qk)}';
+  final sira = (b + kay) % 20;
+  if (tur == 4) {
+    final ikililer = [
+      for (final x in adaylar)
+        for (final y in adaylar)
+          if (uygun(x) && uygun(y) && x != y && x != -y) (x, y),
+    ];
+    final bas = (sira * 37 + a * 11) % ikililer.length;
+    for (var d = 0; d < ikililer.length; d++) {
+      final (x, y) = ikililer[(bas + d * 97) % ikililer.length];
+      final soru = _rasyonelUret(a, b, c, r, x, y);
+      if (!deger || !_yanitKokte(soru)) return soru;
+    }
+    final (x, y) = ikililer[bas];
+    return _rasyonelUret(a, b, c, r, x, y);
   }
+  AdvancedItem uret(int x) => switch (tur) {
+    0 => _rasyonelUret(a, b, c, r, -r, x),
+    1 => _rasyonelUret(a, b, c, r, x, -r),
+    _ => _rasyonelUret(a, b, c, r, r, x),
+  };
+  final uygunlar = [
+    for (final x in adaylar)
+      if (uygun(x) && (!deger || !_yanitKokte(uret(x)))) x,
+  ];
+  return uret(uygunlar[sira % uygunlar.length]);
+}
+
+/// Ortak kök [r]; sadeleşmiş ifade (x − pk)/(x − qk) (tür 3: k/(x − qk)).
+AdvancedItem _rasyonelUret(int a, int b, int c, int r, int pk, int qk) {
+  final tur = c % 5, deger = c >= 5;
+  final k = tur == 3 ? 2 + (a + b) % 4 : 1;
+  final (String pay, String payAyrim) = switch (tur) {
+    0 => (_ikinci(1, 0, -r * r), '${_carpanX(r)}${_carpanX(-r)}'),
+    2 => (_ikinci(1, -2 * r, r * r), '${_carpanX(r)}²'),
+    3 => (_dogrusal(k, -k * r), '$k${_carpanX(r)}'),
+    _ => (_ikiKok(r, pk), '${_carpanX(r)}${_carpanX(pk)}'),
+  };
+  final (String payda, String paydaAyrim) = tur == 1
+      ? (_ikinci(1, 0, -r * r), '${_carpanX(r)}${_carpanX(-r)}')
+      : (_ikiKok(r, qk), '${_carpanX(r)}${_carpanX(qk)}');
   final ifade = '($pay) / ($payda)';
   final ust = tur == 3 ? '$k' : _carpanX(pk);
   final dogruYazi = '$ust / ${_carpanX(qk)}';
@@ -3597,17 +3639,21 @@ String _terimAdi(int d) => d == 0
     ? 'sabit terimi'
     : (d == 1 ? 'x teriminin katsayısı' : 'x${_ust(d)} teriminin katsayısı');
 
-AdvancedItem _polinomEsitlikSoru(int a, int b, int c) {
+AdvancedItem _polinomEsitlikSoru(int a, int b, int c) =>
+    _kokteOlmayan((w) => _polinomEsitlikUret(a, b, c, w));
+
+/// [w]: ikincil bir parametreyi değiştirir (yanıt kökte yazılıysa).
+AdvancedItem _polinomEsitlikUret(int a, int b, int c, int w) {
   switch (c) {
     case 0:
       final p = 1 + a % 5, q = 2 + a ~/ 5;
       final A = 2 + b % 5, B = const [-7, 4, -3, 6][b ~/ 5];
       final r = _uygun(
         const [3, -2, 5, -4, 1, 6, -1],
-        (a + b) % 4,
+        (a + b) % 4 + w % 3,
         (x) => p - q + x != 0,
       );
-      final C = const [5, -8, 9, -6][(a + 2 * b) % 4];
+      final C = const [5, -8, 9, -6][(a + 2 * b + w ~/ 3) % 4];
       final m = A + p, n = B - q, k = C + r;
       return _tam(
         '(m − $p)x² + (n + $q)x + k ${r < 0 ? '+' : '−'} ${r.abs()} = '
@@ -3624,9 +3670,9 @@ AdvancedItem _polinomEsitlikSoru(int a, int b, int c) {
       final p = const [2, 3, 4, 5, -2][a % 5],
           q = const [-3, 5, -1, 4, -5][a ~/ 5];
       final r = const [4, -3, 2, -5, 6][b % 5],
-          sv = const [-1, 7, -6, 3][b ~/ 5];
+          sv = const [-1, 7, -6, 3][b ~/ 5] + 10 * (w ~/ 2);
       final carpim = _polCarp([p, q], [1, r, sv]);
-      final d = (a + b).isEven ? 2 : 1;
+      final d = (a + b).isEven != w.isOdd ? 2 : 1;
       final yanit = _katsayiAl(carpim, d);
       return _tam(
         '(${_polinom([p, q])}) · (${_polinom([1, r, sv])}) çarpımının ${_terimAdi(d)} '
@@ -3643,9 +3689,12 @@ AdvancedItem _polinomEsitlikSoru(int a, int b, int c) {
                   '${_n(yanit)}.',
       );
     case 2:
-      final p = const [2, 3, -2, 4, -3, 5, -4, 1, -1, 6][b % 10];
-      final m = 2 + a % 5, n = const [-5, 3, -4, 7, -1][a ~/ 5] + (b ~/ 10) * 9;
-      final toplam = (a + b).isEven;
+      // p = 1 alınmaz: (x + 1)(mx + n) açılımında m + n doğrudan x katsayısıdır.
+      final p = const [2, 3, -2, 4, -3, 5, -4, 7, -5, 6][b % 10];
+      // n = −1 alınmaz: m · n = −m baş katsayı olarak kökte yazılı olurdu.
+      final m = 2 + a % 5,
+          n = const [-5, 3, -4, 7, 8][a ~/ 5] + (b ~/ 10) * 9 + 40 * (w ~/ 2);
+      final toplam = (a + b).isEven != w.isOdd;
       final kat = _polCarp([1, p], [m, n]);
       return _tam(
         '(${_polinom([1, p])}) · (mx + n) = ${_polinom(kat)} eşitliği her x için '
@@ -3662,17 +3711,51 @@ AdvancedItem _polinomEsitlikSoru(int a, int b, int c) {
       break;
   }
   // Diğer türler aşağıda.
-  return _polinomEsitlikSoru2(a, b, c);
+  return _polinomEsitlikSoru2(a, b, c, w);
 }
 
-AdvancedItem _polinomEsitlikSoru2(int a, int b, int c) {
+AdvancedItem _polinomEsitlikSoru2(int a, int b, int c, int w) {
   switch (c) {
     case 3:
+      // r1 + r2 = 0 olmasın: o zaman x² katsayısı −r3 olur ve kökte yazılıdır.
       final r1 = const [1, 2, -1, 3, -2][a % 5],
-          r2 = const [4, -3, 5, -4, 2][a ~/ 5];
+          r2 = const [4, -6, 5, -4, 6][a ~/ 5];
       final r3 = _uygun(
-        const [-5, 6, -6, 7, 3, -7, 8, -8, 9, 1, -9, 10],
-        b % 10,
+        const [
+          -5,
+          6,
+          -6,
+          7,
+          3,
+          -7,
+          8,
+          -8,
+          9,
+          1,
+          -9,
+          10,
+          11,
+          -10,
+          12,
+          -11,
+          13,
+          -12,
+          14,
+          -13,
+          15,
+          -14,
+          16,
+          -15,
+          17,
+          -16,
+          18,
+          -17,
+          19,
+          -18,
+          20,
+          -19,
+        ],
+        b % 10 + 10 * (w % 3),
         (x) => x != r1 && x != r2,
       );
       final d = b < 10 ? 1 : 2;
@@ -3694,7 +3777,9 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c) {
       final p = const [2, -3, 4, -5, 1][a % 5],
           q = const [-3, 2, -4, 5, -2][a ~/ 5];
       final m =
-          const [3, -2, 5, -4, 1, -5, 6, 2, -6, 7][b % 10] + (b ~/ 10) * 20;
+          const [3, -2, 5, -4, 1, -5, 6, 2, -6, 7][b % 10] +
+          (b ~/ 10) * 20 +
+          40 * w;
       final K = m * q + p;
       return _tam(
         '(x² + mx ${p < 0 ? '−' : '+'} ${p.abs()}) · (${_polinom([1, q])}) çarpımında '
@@ -3707,7 +3792,7 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c) {
       );
     case 5:
       // Tam kare özdeşliği; v bilinmeyen katsayının yerini seçer.
-      final k = 1 + a % 5, v = a ~/ 5, n = v == 4 ? 2 + b : 1 + b;
+      final k = 1 + a % 5, v = a ~/ 5, n = (v == 4 ? 2 + b : 1 + b) + 25 * w;
       final A = k * k, B = 2 * k * n, C = n * n;
       final kx = k == 1 ? 'x' : '${k}x';
       switch (v) {
@@ -3747,9 +3832,10 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c) {
           );
       }
     case 6:
-      // a(x − p) + b(x + q) = Ax + B
-      final u = 2 + a % 5, v = const [3, -1, 4, 5, -7][a ~/ 5];
-      final p = 1 + b % 5, q = 2 + b ~/ 5;
+      // a(x − p) + b(x + q) = Ax + B. n = −1 alınmaz: p = m olduğunda m · n = −p
+      // kökte yazılı olurdu.
+      final u = 2 + a % 5, v = const [3, -8, 4, 5, -7][a ~/ 5];
+      final p = 1 + b % 5, q = 2 + b ~/ 5 + 4 * w;
       final A = u + v, B = -u * p + v * q;
       return _tam(
         'm(x − $p) + n(x + $q) = ${_polinom([A, B])} eşitliği her x için doğru '
@@ -3764,9 +3850,9 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c) {
       final p = const [2, -3, 1, 4, -2][a % 5],
           q = const [-1, 3, -4, 2, 5][a ~/ 5];
       final r = const [3, -1, -2, 4, 5][b % 5],
-          sv = const [2, -5, 6, -3][b ~/ 5];
+          sv = const [2, -5, 6, -3][b ~/ 5] + 10 * (w ~/ 2);
       final carpim = _polCarp([1, p, q], [1, r, sv]);
-      final d = (a + b).isEven ? 2 : 1;
+      final d = (a + b).isEven != w.isOdd ? 2 : 1;
       final yanit = _katsayiAl(carpim, d);
       return _tam(
         '(${_polinom([1, p, q])}) · (${_polinom([1, r, sv])}) çarpımının '
@@ -3819,9 +3905,11 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c) {
       final p = const [2, 3, -2, 4, 5][a % 5],
           q = const [-1, 4, -3, 2, -5][a ~/ 5];
       final r = const [3, -2, 5, -4][b % 4],
-          sv = const [1, -3, 4, -2, 6][b ~/ 4];
+          sv = const [5, -3, 4, -2, 6][b ~/ 4];
       final carpim = _polCarp([p, q, r], [1, sv]);
-      final d = (a + b) % 3;
+      // (x + 1) çarpanı kullanılmaz: o zaman katsayılar kökteki sayıların toplamı
+      // ya da kendisi olurdu.
+      final d = (a + b + w) % 3;
       final yanit = _katsayiAl(carpim, d);
       return _tam(
         '(${_polinom([p, q, r])}) · (${_polinom([1, sv])}) çarpımının ${_terimAdi(d)} '
@@ -3866,12 +3954,19 @@ List<int> _polTopla(List<int> x, List<int> y) {
   return [for (var i = 0; i < n; i++) xx[i] + yy[i]];
 }
 
-AdvancedItem _polinomBolmeSoru(int a, int b, int c) {
-  final q2 = const [1, 2, 3, -1, 2][a % 5];
+AdvancedItem _polinomBolmeSoru(int a, int b, int c) =>
+    _kokteOlmayan((w) => _polinomBolmeUret(a, b, c, w));
+
+/// [w]: kalan gibi ikincil bir parametreyi değiştirir (yanıt kökte yazılıysa).
+AdvancedItem _polinomBolmeUret(int a, int b, int c, int w) {
+  final q2 = const [1, 2, 3, -1, -2][a % 5];
   final q1 = const [-3, 2, -1, 4, 1][a ~/ 5];
-  final q0 = const [5, -4, 3, -2, 6, -5, 1, -6, 4, 2][b % 10];
-  final k = const [2, -1, 3, -2][b ~/ 10 + (c.isEven ? 0 : 2)];
-  final R = const [3, -4, 5, -2, 7, -1, 4][(a + b + c) % 7];
+  final q0 = const [5, -4, 3, -2, 6, -5, 1, -6, 4, 2][b % 10] + 20 * (w ~/ 3);
+  final k0 = const [2, -1, 3, -2][b ~/ 10 + (c.isEven ? 0 : 2)];
+  // c = 1'de q1 = q2 ve k = −2 iken P'nin x katsayısı istenen toplama eşit olur
+  // (q0 − k·q1 = q2 + q1 + q0); bu durumda bölen x − 2 alınır.
+  final k = c == 1 && k0 == -2 && q1 == q2 ? 2 : k0;
+  final R = const [3, -4, 5, -2, 7, -1, 4][(a + b + c + w) % 7];
   final Q = [q2, q1, q0];
   final P = _polTopla(_polCarp(Q, [1, -k]), [R]);
   final bolen = _polinom([1, -k]);
@@ -3914,7 +4009,7 @@ AdvancedItem _polinomBolmeSoru(int a, int b, int c) {
         '$sentetik Bölümün sabit terimi ${_n(q0)} olur.',
       );
     case 7:
-      final t = const [2, -1, 3, -2, 1][(a + 2 * b) % 5];
+      final t = const [2, -1, 3, -2, 1][(a + 2 * b + w ~/ 2) % 5];
       final v = _polDeger(Q, t);
       return _tam(
         'P(x) = $pYazi polinomunun $bolen ile bölümünden elde edilen bölüm Q(x) '
@@ -3943,8 +4038,11 @@ AdvancedItem _polinomBolmeSoru(int a, int b, int c) {
       d0 = const [1, -2, 3, 2, -3][a ~/ 5];
   final D = [1, d1, d0];
   final dYazi = _polinom(D);
-  final r1 = const [2, -3, 1, 4, -1, 3, -2, 5, -4, 6][b % 10],
-      r0 = const [-5, 4][b ~/ 10] + c;
+  // c = 6'da D(1) · T(1) = −r1 ise yanıt kalanın sabit terimine eşit olur;
+  // bu yüzden ikinci varyant r1'i de kaydırır.
+  final r1Taban = const [2, -3, 1, 4, -1, 3, -2, 5, -4, 6][b % 10];
+  final r1 = r1Taban + (c == 6 ? r1Taban.sign * 10 * (w ~/ 2) : 0),
+      r0 = const [-5, 4][b ~/ 10] + c + 20 * (w % 2);
   final kalanYazi = _dogrusal(r1, r0);
   switch (c) {
     case 3 || 4:
@@ -4104,11 +4202,21 @@ const _tamOlmayan = [
   30,
 ];
 
-AdvancedItem _ikinciDereceSoru(int a, int b, int c) {
+AdvancedItem _ikinciDereceSoru(int a, int b, int c) =>
+    _kokteOlmayan((w) => _ikinciDereceUret(a, b, c, w));
+
+/// [w]: ikincil bir parametreyi değiştirir (yanıt kökte yazılıysa).
+AdvancedItem _ikinciDereceUret(int a, int b, int c, int w) {
   switch (c) {
     case 0 || 1 || 9:
-      final r1 = -6 + a; // büyük kök −6 … 18
-      final r2 = r1 - 1 - b; // küçük kök
+      // Büyük kök −6 … 18; 0 yerine 19 alınır (0, kökteki “= 0” ile karışmasın).
+      // Küçük kökün sorulduğu c = 1 için büyük kök ±1 olursa sabit terim küçük
+      // kökün mutlak değeri olur; orada −1 ve 1 yerine −7 ve −8 alınır.
+      final r1Taban = c == 1 && (a == 5 || a == 7)
+          ? (a == 5 ? -7 : -8)
+          : (a == 6 ? 19 : -6 + a);
+      final r1 = r1Taban + 30 * (w ~/ 2);
+      final r2 = r1 - 1 - b - 25 * (w % 2); // küçük kök
       final denklem = '${_polinom([1, -(r1 + r2), r1 * r2])} = 0';
       final ayrim = '${_carpanX(r1)}${_carpanX(r2)} = 0';
       if (c == 9) {
@@ -4132,11 +4240,12 @@ AdvancedItem _ikinciDereceSoru(int a, int b, int c) {
             '${_n(r2)} olur. ${buyuk ? 'Büyük' : 'Küçük'} kök ${_n(buyuk ? r1 : r2)} bulunur.',
       );
     case 2 || 3 || 8:
-      // (p·x − m)(x − n) = 0; kökler m/p ve n.
-      final pk = const [2, 3, 4, 5, 6][a % 5];
+      // (p·x − m)(x − n) = 0; kökler m/p ve n. n = p olduğunda büyük kök baş
+      // katsayıyla aynı çıkar; ikinci varyant baş katsayıyı 7 … 11 aralığına taşır.
+      final pk = const [2, 3, 4, 5, 6][a % 5] + 5 * (w ~/ 2);
       final m = _uygun(
         const [1, -1, 3, -3, 5, -5, 7, -7, 2, -2, 9, -9, 11, -11, 13, -13, 17],
-        a ~/ 5 + (c == 8 ? 3 : 0),
+        a ~/ 5 + (c == 8 ? 3 : 5 * (w % 2)),
         (x) => x.gcd(pk) == 1,
       );
       final n = const [
@@ -4250,17 +4359,18 @@ AdvancedItem _ikinciDereceSoru(int a, int b, int c) {
       );
     case 6:
       // x² + mx + C = 0 denkleminin bir kökü r ise diğeri s (rs = C).
+      // ±1 kullanılmaz: r = ±1 iken sabit terim diğer köke eşit görünürdü.
       final r = const [
         2,
         -3,
         4,
-        -1,
+        12,
         5,
         -2,
         3,
         -4,
         6,
-        1,
+        -10,
         -5,
         7,
         -6,
@@ -4321,7 +4431,7 @@ AdvancedItem _ikinciDereceSoru(int a, int b, int c) {
       // (x − p)(x + q) = K biçimi; pozitif kök istenir.
       final r1 = 2 + a; // pozitif kök
       final r2 = -(1 + b); // negatif kök
-      final p = const [1, 2, 3, -1, 4, -2, 5][(a + b) % 7];
+      final p = const [1, 2, 3, -1, 4, -2, 5][(a + b + w) % 7];
       // (x − p)(x + q) − K = (x − r1)(x − r2) ⇒ q − p = −(r1 + r2), −pq − K = r1·r2
       final qq = p - (r1 + r2);
       final K = -p * qq - r1 * r2;
@@ -4344,12 +4454,17 @@ String _sar(String s) => s.contains('/') || s.startsWith('−') ? '($s)' : s;
 
 /// Doğrusal çarpanlı eşitsizlik: pay ve payda kökleri, ters yazılan çarpan
 /// (r − x biçimi), kare çarpan ve eşitsizlik işareti.
-AdvancedItem _isaretSoru(int a, int b, int c) {
+AdvancedItem _isaretSoru(int a, int b, int c) =>
+    _kokteOlmayan((w) => _isaretUret(a, b, c, w));
+
+/// [w]: pay/payda dağılımı, ters yazılan çarpan ya da kare çarpanın yeri gibi
+/// ikincil parametreleri değiştirir (yanıt kökte yazılıysa).
+AdvancedItem _isaretUret(int a, int b, int c, int w) {
   final say = c.isEven; // tam sayı adedi mi, toplam mı
-  final esit = (a + b + c) % 2 == 0; // ≤ mi < mi
+  final esit = ((a + b + c) % 2 == 0) != (w ~/ 2).isOdd; // ≤ mi < mi
   if (c < 6) {
     // Dört farklı kök: t1 < t2 < t3 < t4.
-    final t1 = -9 + a % 13,
+    final t1 = -9 + a % 13 + 30 * (w ~/ 4 % 2),
         g1 = 2 + b % 4,
         g2 = 1 + (a + b) % 3,
         g3 = 2 + b ~/ 4 % 5;
@@ -4379,7 +4494,7 @@ AdvancedItem _isaretSoru(int a, int b, int c) {
         [3],
       ],
     };
-    final secim = secimler[(a ~/ 13 + 2 * b) % secimler.length];
+    final secim = secimler[(a ~/ 13 + 2 * b + w % 2) % secimler.length];
     final pay = [for (final j in secim) kokler[j]];
     final payda = [
       for (var j = 0; j < 4; j++)
@@ -4462,7 +4577,7 @@ AdvancedItem _isaretSoru(int a, int b, int c) {
   }
   // c ≥ 6: kare çarpanlı eşitsizlik (x − p)²(x − q)/(x − r) ≤ 0 ya da < 0.
   final esit2 = c == 6 || c == 7;
-  final q = -12 + a, gen = 3 + b % 5, ek = b ~/ 10;
+  final q = -12 + a + 30 * (w % 3), gen = 3 + b % 5, ek = b ~/ 10;
   final r = (b ~/ 5).isEven
       ? q + gen
       : q - gen; // r, q'nun sağında ya da solunda
@@ -4473,7 +4588,9 @@ AdvancedItem _isaretSoru(int a, int b, int c) {
   final icMi = !esit2;
   final p = icMi
       ? alt + 1 + (a + ek) % (gen - 1)
-      : (a.isEven ? ust + 2 + a % 3 + 3 * ek : alt - 2 - a % 3 - 3 * ek);
+      : (a.isEven
+            ? ust + 2 + a % 3 + 3 * ek + 6 * (w ~/ 3)
+            : alt - 2 - a % 3 - 3 * ek - 6 * (w ~/ 3));
   final isaret = esit2 ? '≤' : '<';
   bool saglar(int x) {
     if (x == r) return false;
@@ -4482,7 +4599,7 @@ AdvancedItem _isaretSoru(int a, int b, int c) {
   }
 
   final cozum = [
-    for (var x = alt - 6; x <= ust + 6; x++)
+    for (var x = (p < alt ? p : alt) - 2; x <= (p > ust ? p : ust) + 2; x++)
       if (saglar(x)) x,
   ];
   final kareYok = [
@@ -4532,7 +4649,7 @@ String _derece2(int yarim) =>
 /// t anları (11t tam sayıdır) küçükten büyüğe.
 List<int> _aciAnlari(int h, int teta, int adet) {
   final r = <int>{};
-  for (var j = 0; j < 4; j++) {
+  for (var j = -2; j < 4; j++) {
     for (final isaret in const [1, -1]) {
       final n = 60 * (h % 12) + isaret * 2 * teta + 720 * j; // 11t
       if (n > 0) r.add(n);
@@ -4701,7 +4818,28 @@ const _kesirEk = [(3, 10), (5, 9), (4, 7), (2, 11), (5, 11), (7, 9)];
 String _kesYaz((int, int) f) => '${f.$1}/${f.$2}';
 
 AdvancedItem _kalanKesirSoru(int a, int b, int c) {
-  final f1 = _kesirA[a], f2 = _kesirB[b];
+  final f1 = _kesirA[a];
+  // Kesir sorularında (c = 3, 9) yanıtın kökteki kesirlerden birine eşit
+  // çıktığı ikinci kesirler atlanır.
+  bool yazili((int, int) f) {
+    final kn = (f1.$2 - f1.$1) * (f.$2 - f.$1), kd = f1.$2 * f.$2;
+    final n = c == 9 ? kd - kn : kn;
+    return {_q(f1.$1, f1.$2), _q(f.$1, f.$2)}.contains(_q(n, kd));
+  }
+
+  // c = 0, 3, 4 için ikinci kesir 1/2 olmasın: o zaman kalan ile ikinci
+  // harcama eşit çıkar ve birini soran soruda ötekini bulan da doğru yanıta
+  // ulaşır.
+  final yarimOlmasin = c == 0 || c == 3 || c == 4;
+  final f2 = c == 3 || c == 9 || yarimOlmasin
+      ? _uygun(
+          [..._kesirB, ..._kesirEk],
+          b,
+          (f) =>
+              (!(c == 3 || c == 9) || !yazili(f)) &&
+              (!yarimOlmasin || f != (1, 2)),
+        )
+      : _kesirB[b];
   final (p1, q1) = f1;
   final (p2, q2) = f2;
   final k1 = q1 - p1, k2 = q2 - p2; // kalan kesirlerin payları
@@ -4921,14 +5059,21 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
 /// km/sa → m/s: 18k km/sa = 5k m/s.
 String _hizYaz(int ms) => '${ms * 18 ~/ 5} km/sa';
 
-AdvancedItem _trenSoru(int a, int b, int c) {
+AdvancedItem _trenSoru(int a, int b, int c) =>
+    _kokteOlmayan((w) => _trenUret(a, b, c, w));
+
+/// [w]: yanıt kökte yazılıysa süreyi uzatır (c = 9 için ikinci trenin hızını
+/// değiştirir). Kaydırma, aynı türdeki başka bir vakayla çakışmayacak kadar
+/// büyüktür.
+AdvancedItem _trenUret(int a, int b, int c, int w) {
   final v = const [10, 15, 20, 25, 30][a % 5]; // m/s (36 … 108 km/sa)
   final ek = 2 * (a ~/ 5) + 11 * (b ~/ 10);
   final cevir = '${_hizYaz(v)} = $v m/s';
   switch (c) {
     case 0 || 2 || 7:
       final L = (c == 2 ? 110 : 100) + 20 * (b % 10); // tren boyu (m)
-      final t = (L + 400 + v - 1) ~/ v + ek; // tüneli tamamen geçme süresi
+      // Tüneli tamamen geçme süresi.
+      final t = (L + 400 + v - 1) ~/ v + ek + 20 * w;
       final T = v * t - L; // tünel boyu
       final tren = 'Uzunluğu $L m olan bir tren ${_hizYaz(v)} sabit hızla';
       if (c == 0) {
@@ -4989,7 +5134,7 @@ AdvancedItem _trenSoru(int a, int b, int c) {
     case 3:
       // Direk ve köprü: L = v·t1, B = v·(t2 − t1).
       final t1 = (120 + v - 1) ~/ v + b % 10;
-      final dt = 20 + 4 * (a ~/ 5) + 13 * (b ~/ 10);
+      final dt = 20 + 4 * (a ~/ 5) + 13 * (b ~/ 10) + 30 * w;
       final L = v * t1, B = v * dt, t2 = t1 + dt;
       return _tam(
         'Sabit hızla giden bir tren, yol kenarındaki bir direğin önünden $t1 saniyede '
@@ -5006,11 +5151,16 @@ AdvancedItem _trenSoru(int a, int b, int c) {
       );
     case 4 || 5 || 9:
       // İki tren: zıt yönde ya da aynı yönde. Tren boyları 120 … 400 m.
-      final v2 = const [10, 15, 20, 25, 5][(a ~/ 5 + b) % 5];
+      final v2 = const [10, 15, 20, 25, 5][(a ~/ 5 + b + (c == 9 ? w : 0)) % 5];
       final v1 = v + (c == 5 ? v2 : 0); // aynı yönde v1 > v2
       final goreli = c == 5 ? v1 - v2 : v1 + v2;
-      final uz1 = 120 + 20 * (b % 10);
-      final t = (uz1 + 120 + goreli - 1) ~/ goreli + b ~/ 10 + 2 * (a ~/ 5 % 2);
+      // c = 9 için a ~/ 5 tren boyunda taşınır; böylece hız seçimi serbest kalır.
+      final uz1 = 120 + 20 * (b % 10) + (c == 9 ? 4 * (a ~/ 5) : 0);
+      final t =
+          (uz1 + 120 + goreli - 1) ~/ goreli +
+          b ~/ 10 +
+          2 * (a ~/ 5 % 2) +
+          (c == 9 ? 0 : 4 * w);
       final toplam = goreli * t;
       final uz2 = toplam - uz1;
       if (c == 9) {
@@ -5055,7 +5205,7 @@ AdvancedItem _trenSoru(int a, int b, int c) {
       );
     case 6:
       final L = 150 + 25 * (b % 10);
-      final t = (L + 200 + v - 1) ~/ v + ek;
+      final t = (L + 200 + v - 1) ~/ v + ek + 20 * w;
       final B = v * t - L;
       return _tam(
         'Uzunluğu $L m olan bir tren, $B m uzunluğundaki bir köprüyü, köprüye girmeye '
@@ -5098,7 +5248,11 @@ AdvancedItem _trenSoru(int a, int b, int c) {
 
 const _dekarBilgi = '(1 dekar = 1000 m², 1 hektar = 10000 m²)';
 
-AdvancedItem _birimSoru(int a, int b, int c) {
+AdvancedItem _birimSoru(int a, int b, int c) =>
+    _kokteOlmayan((w) => _birimUret(a, b, c, w));
+
+/// [w]: akvaryum yüksekliği gibi ikincil bir ölçüyü değiştirir.
+AdvancedItem _birimUret(int a, int b, int c, int w) {
   String d(num x) => tr(x, 3);
   AdvancedItem ondalik(
     String kok,
@@ -5133,7 +5287,7 @@ AdvancedItem _birimSoru(int a, int b, int c) {
     case 1:
       // Hektar ↔ dekar.
       final hektar = (b < 10);
-      final x = 3 + a + 25 * (b % 10); // onda bir birim
+      final x = 3 + a + 25 * (b % 10) + 250 * w; // onda bir birim
       if (hektar) {
         final h = x / 10;
         return ondalik(
@@ -5164,9 +5318,10 @@ AdvancedItem _birimSoru(int a, int b, int c) {
             '$alan / 1000 = ${d(alan / 1000)} dekar bulunur.',
       );
     case 3:
+      // x · y = 1000 iken yanıt z olur; bu yüzden ikinci varyant y'yi değiştirir.
       final x = 30 + 5 * a,
-          y = 20 + 5 * (b % 10),
-          z = 30 + 10 * (b ~/ 10) + (a % 2) * 5;
+          y = 20 + 5 * (b % 10) + 50 * (w ~/ 2),
+          z = 30 + 10 * (b ~/ 10) + (a % 2) * 5 + 20 * (w % 2);
       final hacim = x * y * z;
       return ondalik(
         'Boyutları $x cm, $y cm ve $z cm olan dikdörtgenler prizması biçimindeki bir '
@@ -5188,7 +5343,7 @@ AdvancedItem _birimSoru(int a, int b, int c) {
       );
     case 5:
       final ml = const [200, 250, 400, 500, 750][a % 5];
-      final adet = 12 + 2 * b + 40 * (a ~/ 5);
+      final adet = 12 + 2 * b + 40 * (a ~/ 5) + 200 * w;
       final litre = ml * adet / 1000;
       return ondalik(
         '${d(litre)} L zeytinyağı, her biri $ml mL alan şişelere dolduruluyor. Bu iş '
@@ -5200,7 +5355,9 @@ AdvancedItem _birimSoru(int a, int b, int c) {
       );
     case 6:
       final hektarMi = b >= 10;
-      final x = (1 + a + 25 * (b % 10)) / 2;
+      // 1 dekar ya da 10 dekar gibi değerlerde yanıt verilen dönüşüm bilgisiyle
+      // aynı olur; o zaman ikinci varyant kullanılır.
+      final x = (1 + a + 25 * (b % 10) + 250 * w) / 2;
       final m2 = hektarMi ? x * 10000 : x * 1000;
       return ondalik(
         'Bir tarlanın ${d(x)} ${hektarMi ? 'hektar' : 'dekar'} büyüklüğündeki bölümüne '
@@ -5224,7 +5381,8 @@ AdvancedItem _birimSoru(int a, int b, int c) {
     case 8:
       final ml = const [150, 200, 180, 250, 120][a % 5];
       final adet = 2 + a ~/ 5;
-      final litre = (adet * ml + 100 * (1 + b)) / 1000;
+      final litre =
+          (adet * ml + 100 * (1 + b) + 50 * (w % 2) + 2000 * (w ~/ 2)) / 1000;
       final kalan = (litre * 1000).round() - adet * ml;
       return ondalik(
         'Bir sürahide ${d(litre)} L su vardır. Bu sudan her biri $ml mL alan $adet '
@@ -5237,7 +5395,7 @@ AdvancedItem _birimSoru(int a, int b, int c) {
       );
     default:
       final hiz = const [20, 25, 40, 50, 80][a % 5];
-      final dakika = 30 + 6 * (a ~/ 5) + 10 * b;
+      final dakika = 30 + 6 * (a ~/ 5) + 10 * b + 5 * (w % 2);
       final m3 = hiz * dakika / 1000;
       return ondalik(
         'Hacmi ${d(m3)} m³ olan boş bir depoya dakikada $hiz L su akıtan bir musluk '
@@ -5294,7 +5452,7 @@ final lmSayilar = <AdvancedFamily>[
     'bilimsel',
     'Bilimsel gösterim: dönüştürme, çarpma ve bölme',
     Difficulty.medium,
-    BloomLevel.uygulama,
+    BloomLevel.anlama,
     _bilimselSoru,
     shortAnswer: false,
   ),
@@ -5398,7 +5556,7 @@ final lmSayilar = <AdvancedFamily>[
     'birim_donusum',
     'Uzunluk, alan, hacim ve sıvı ölçü birimleri dönüşümü',
     Difficulty.easy,
-    BloomLevel.uygulama,
+    BloomLevel.anlama,
     _birimSoru,
   ),
 ];

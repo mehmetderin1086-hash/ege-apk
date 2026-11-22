@@ -96,6 +96,16 @@ List<T> _tekil<T>(Iterable<T> ogeler, Object Function(T) anahtar) {
   return (p ~/ g, q ~/ g);
 }
 
+/// [_yay] gibi seçer; seçilen öge [uygun] değilse aynı aralıktaki (başka sıra
+/// numarasına düşmeyen) sonraki ögeler denenir.
+T _yayUygun<T>(List<T> liste, int n, int adet, bool Function(T) uygun) {
+  final bas = n * liste.length ~/ adet, son = (n + 1) * liste.length ~/ adet;
+  for (var i = bas; i < son; i++) {
+    if (uygun(liste[i])) return liste[i];
+  }
+  return liste[bas];
+}
+
 /// k√3 yazımı; k = 1 için yalnız √3.
 String _k3(num k) => k == 1 ? '√3' : '${_n(k)}√3';
 
@@ -786,14 +796,15 @@ AdvancedItem _surtunmeKatsayi(int a, int b, int k) {
 }
 
 /// (giriş, kısa ad, tamlayan, yüzey ikilisi, μ yüzdeleri, en küçük ve en
-/// büyük hız (0,1 m/s), en büyük durma yolu (m)).
+/// büyük hız (0,1 m/s), en büyük durma yolu (m)). Bağlamların μ değerleri
+/// ayrıktır: aynı (μ, v) hesabı iki bağlamda yinelenmez.
 const _kayma = <(String, String, String, String, List<int>, int, int, int)>[
   (
     'Donmuş bir gölün yüzeyinde kaydırılan bir taş',
     'taş',
     'taşın',
     'Taş ile buz',
-    [2, 4, 5],
+    [2, 3, 4],
     10,
     120,
     150,
@@ -803,7 +814,7 @@ const _kayma = <(String, String, String, String, List<int>, int, int, int)>[
     'disk',
     'diskin',
     'Disk ile buz',
-    [5, 8, 10, 12],
+    [5, 6, 8, 10, 12],
     20,
     160,
     80,
@@ -823,9 +834,9 @@ const _kayma = <(String, String, String, String, List<int>, int, int, int)>[
     'kızak',
     'kızağın',
     'Kızak ile kar',
-    [5, 8, 15, 20, 25],
+    [14, 15, 16, 18],
     20,
-    120,
+    150,
     90,
   ),
   (
@@ -833,7 +844,7 @@ const _kayma = <(String, String, String, String, List<int>, int, int, int)>[
     'otomobil',
     'otomobilin',
     'Lastikler ile yol',
-    [40, 50, 75, 80],
+    [55, 65, 70, 75, 80],
     80,
     300,
     110,
@@ -1074,14 +1085,14 @@ final _tufek = _tekil([
           (m10, mg, v),
 ], (t) => (_oran(t.$2, t.$1), t.$3));
 
-/// Top: (kütle kg, mermi kg, mermi hızı m/s); geri tepme 0,5 … 15 m/s.
+/// Top: (kütle kg, mermi kg, mermi hızı m/s); geri tepme 0,5 … 6 m/s.
 final _top = _tekil([
   for (var mt = 400; mt <= 3000; mt += 100)
     for (final mm in const [4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 40, 50])
       for (var v = 150; v <= 900; v += 25)
         if (100 * mm * v % mt == 0 &&
             2 * mm * v >= mt &&
-            mm * v <= 15 * mt &&
+            mm * v <= 6 * mt &&
             !_icinde(mm * v / mt, [mt, mm, v]))
           (mt, mm, v),
 ], (t) => (_oran(t.$2, t.$1), t.$3));
@@ -1686,15 +1697,23 @@ final _delikHiz = _tekil([
           (r1, r2, v),
 ], (t) => (_oran(t.$1, t.$2), t.$3));
 
-/// (r₁ cm, r₂ cm, ω₁ rad/s); yeni açısal hız iki ondalıkta kesin.
-final _delikAcisal = _tekil([
+/// (r₁ cm, r₂ cm, T₁ onda bir s); yeni dolanım periyodu T₂ = T₁·r₂² / r₁²
+/// iki ondalıkta kesin ve en az 0,1 s. (Açısal hız soran boncuk sorusundan
+/// ayrı bir hesaptır.)
+final _delikPeriyot = _tekil([
   for (var r1 = 20; r1 <= 200; r1 += 5)
     for (var r2 = 10; r2 < r1; r2 += 5)
-      for (var w = 1; w <= 15; w++)
-        if (100 * w * r1 * r1 % (r2 * r2) == 0 &&
-            w * r1 * r1 <= 80 * r2 * r2 &&
-            !_icinde(w * r1 * r1 / (r2 * r2), [r1, r2, w, w * r1 / r2]))
-          (r1, r2, w),
+      for (var t10 = 5; t10 <= 150; t10++)
+        if (10 * t10 * r2 * r2 % (r1 * r1) == 0 &&
+            t10 * r2 * r2 >= r1 * r1 &&
+            !_icinde(t10 * r2 * r2 / (10 * r1 * r1), [
+              r1,
+              r2,
+              t10 / 10,
+              t10 * r2 / (10 * r1),
+              t10 * r1 * r1 / (10 * r2 * r2),
+            ]))
+          (r1, r2, t10),
 ], (t) => (_oran(t.$1, t.$2), t.$3));
 
 /// (r₁ cm, v₁ m/s, v₂ m/s); yeni yarıçap iki ondalıkta kesin.
@@ -1733,16 +1752,18 @@ AdvancedItem _ipDelik(int a, int b, int k) {
         unit: 'm/s',
       );
     case 1:
-      final (r1, r2, w) = _yay(_delikAcisal, n, 375);
-      final w2 = w * r1 * r1 / (r2 * r2);
+      final (r1, r2, t10) = _yay(_delikPeriyot, n, 375);
+      final t1 = t10 / 10, t2 = t10 * r2 * r2 / (10 * r1 * r1);
       return _s(
-        '$masa $r1 cm yarıçaplı çembersel yörüngede $w rad/s açısal hızla '
-            'dolanıyor. $cekilir $r2 cm yapılırsa cismin açısal hızı kaç rad/s '
-            'olur?',
-        w2,
-        [w * r1 / r2, w * r2 * r2 / (r1 * r1), w],
-        '$korunur L = m·r²·ω olduğundan r₁²·ω₁ = r₂²·ω₂ olur: ω₂ = $w·$r1² / '
-            '$r2² = ${_n(w2)} rad/s.',
+        '$masa $r1 cm yarıçaplı çembersel yörüngede ${_n(t1)} s periyotla '
+            'dolanıyor. $cekilir $r2 cm yapılırsa cismin dolanım periyodu kaç '
+            's olur?',
+        t2,
+        [t1 * r2 / r1, t1 * r1 * r1 / (r2 * r2), t1],
+        '$korunur L = m·r²·ω ve ω = 2π / T olduğundan r² / T sabittir: '
+            'r₁² / T₁ = r₂² / T₂. Buradan T₂ = ${_n(t1)}·$r2² / $r1² = '
+            '${_n(t2)} s bulunur.',
+        unit: 's',
       );
     case 2:
       final m10 = 1 + a % 10; // 0,1 … 1 kg
@@ -1871,57 +1892,49 @@ String _ikiGezegen(String bilinen) =>
     'Bir yıldızın çevresinde çembersel yörüngelerde dolanan X ve Y '
     'gezegenlerinden $bilinen';
 
+/// Üçüncü yasa: kökte yalnız bir gezegenin büyüklüğü ve iki gezegenin
+/// yarıçap (ya da periyot) oranı verilir; mutlak yarıçap ile periyot birlikte
+/// verilmediğinden yıldızın kütlesi için gerçek dışı bir değer ima edilmez.
 AdvancedItem _keplerUcuncu(int a, int b, int k, bool periyotSor) {
   final (p, q) = _keplerOran[b];
-  // Oran sabitken yalnız bilinen değer (periyot sorusunda T₁, yarıçap
-  // sorusunda r₁) hesabı değiştirir; onu a ve k birebir belirler. Öbür
-  // gezegen çiftinin ortak ölçeği yalnız bağlamdır.
-  final j = 1 + a + 25 * k; // 1 … 100
-  final ince = math.max(p, q) >= 4; // büyük oranlarda küçük birim
-  final birim = ince ? 100 : 10;
-  // Ortak ölçek anahtar kökteki bir sayıya eşit çıkmayacak biçimde 1 … 5
-  // arasından seçilir.
-  var olcek = 1 + (a + k) % 5;
-  var r1 = 0.0, r2 = 0.0, t1 = 0.0, t2 = 0.0;
-  for (var deneme = 0; deneme < 5; deneme++) {
-    final t = periyotSor ? j : olcek, s = periyotSor ? olcek : j;
-    r1 = p * p * s / (periyotSor ? 10 : birim);
-    r2 = q * q * s / (periyotSor ? 10 : birim);
-    t1 = p * p * p * t / (periyotSor ? birim : 10);
-    t2 = q * q * q * t / (periyotSor ? birim : 10);
-    final kokte = periyotSor ? [r1, r2, t1] : [t1, t2, r1];
-    if (!_icinde(periyotSor ? t2 : r2, kokte)) break;
-    olcek = olcek % 5 + 1;
+  final birim = math.max(p, q) >= 4 ? 100 : 10; // büyük oranlarda küçük birim
+  final kare = kesir(q * q, p * p), kup = kesir(q * q * q, p * p * p);
+  final altinci = kesir(q * q * q * q * q * q, p * p * p * p * p * p);
+  // Bilinen değeri a ve k birebir belirler; yanıt kökteki bir sayıya (oranın
+  // pay ve paydası, bilinen değer) eşit çıkarsa değer normal aralığın (1 …
+  // 100) dışına kaydırılır, böylece kökler yine ayrı kalır.
+  final oranSayilari = periyotSor ? [q * q, p * p] : [q * q * q, p * p * p];
+  var j = 1 + a + 25 * k;
+  double bilinen() => (periyotSor ? p * p * p : p * p) * j / birim;
+  double yanit() => (periyotSor ? q * q * q : q * q) * j / birim;
+  while (_icinde(yanit(), [...oranSayilari, bilinen()])) {
+    j += 100;
   }
-  const not = '(AB: astronomik birim)';
+  final x = bilinen(), y = yanit();
   const tanim =
       'X gezegeni için periyot ve yarıçap T₁ ve r₁, Y gezegeni için T₂ ve r₂ '
       'olsun. Kepler yasasına göre aynı yıldızın gezegenleri için T² / r³ '
       'sabit olduğundan (T₂ / T₁)² = (r₂ / r₁)³ olur.';
-  final kare = kesir(q * q, p * p), kup = kesir(q * q * q, p * p * p);
-  final altinci = kesir(q * q * q * q * q * q, p * p * p * p * p * p);
   if (periyotSor) {
     return _s(
-      '${_ikiGezegen('X gezegeninin yörünge yarıçapı ${_n(r1)} AB, Y '
-          'gezegenininki ${_n(r2)} AB olarak veriliyor.')} X gezegeninin dolanım '
-          'periyodu ${_n(t1)} yıl olduğuna göre Y gezegeninin dolanım periyodu '
-          'kaç yıl olur? $not',
-      t2,
-      [t1 * q * q / (p * p), t1 * q / p, t1 * q * q * q * q / (p * p * p * p)],
+      '${_ikiGezegen('Y gezegeninin yörünge yarıçapı X gezegenininkinin '
+          '$kare katıdır.')} X gezegeninin dolanım periyodu ${_n(x)} yıl '
+          'olduğuna göre Y gezegeninin dolanım periyodu kaç yıl olur?',
+      y,
+      [x * q * q / (p * p), x * q / p, x * q * q * q * q / (p * p * p * p)],
       '$tanim r₂ / r₁ = $kare olduğundan (T₂ / T₁)² = $altinci ve '
-          'T₂ / T₁ = $kup bulunur: T₂ = ${_n(t1)}·$kup = ${_n(t2)} yıl.',
+          'T₂ / T₁ = $kup bulunur: T₂ = ${_n(x)}·$kup = ${_n(y)} yıl.',
       unit: 'yıl',
     );
   }
   return _s(
-    '${_ikiGezegen('X gezegeninin dolanım periyodu ${_n(t1)} yıl, Y '
-        'gezegenininki ${_n(t2)} yıl olarak ölçülüyor.')} X gezegeninin '
-        'yörünge yarıçapı ${_n(r1)} AB olduğuna göre Y gezegeninin yörünge '
-        'yarıçapı kaç AB olur? $not',
-    r2,
-    [r1 * q * q * q / (p * p * p), r1 * q / p],
+    '${_ikiGezegen('Y gezegeninin dolanım periyodu X gezegenininkinin $kup '
+        'katıdır.')} X gezegeninin yörünge yarıçapı ${_n(x)} AB olduğuna göre '
+        'Y gezegeninin yörünge yarıçapı kaç AB olur? (AB: astronomik birim)',
+    y,
+    [x * q * q * q / (p * p * p), x * q / p],
     '$tanim T₂ / T₁ = $kup olduğundan (r₂ / r₁)³ = $altinci ve r₂ / r₁ = '
-        '$kare bulunur: r₂ = ${_n(r1)}·$kare = ${_n(r2)} AB.',
+        '$kare bulunur: r₂ = ${_n(x)}·$kare = ${_n(y)} AB.',
   );
 }
 
@@ -1995,7 +2008,9 @@ AdvancedItem _zamanGenislemesi(int a, int b, int k) {
   // çıkardı.
   final n = _atla(1 + a + 25 * (b ~/ 4), const {2}); // 1 … 126
   final ileri = k.isEven, parcacik = k >= 2;
-  final uzun = n / 2; // gözlemcinin ölçtüğü süre
+  // Parçacık sorularında süre tek çeyreklerdir (0,25; 0,75; …): uzay aracı
+  // sorularıyla aynı hesap yinelenmez.
+  final uzun = parcacik ? (2 * n - 1) / 4 : n / 2; // gözlemcinin ölçtüğü süre
   final oz = uzun * kok / 100; // öz süre
   final not = _kokNot(beta, kok);
   final birim = parcacik ? 'µs' : 'yıl';
@@ -2044,12 +2059,16 @@ AdvancedItem _boyKisalmasi(int a, int b, int k) {
   final ters = s < 2 && n.isEven;
   final birim = k == 2 ? 'km' : 'm';
   // Ters soruda ölçülen uzunluk, öz uzunluk kesin çıkacak biçimde seçilir.
+  // Üç bağlamın (araç, istasyon, işaret istasyonları) uzunlukları ayrık
+  // aralıklardan seçilir: aynı hesap iki bağlamda yinelenmez.
+  // Değerler zaman genişlemesi sorularındaki sürelerden (en çok 63) ve
+  // yıldız uzaklıklarından (tek sayılar 67 … 315) da ayrıktır.
   final olcu = s == 0
-      ? const [16, 60, 12][k] + 2 * n
-      : 3 * (const [6, 20, 4][k] + n);
+      ? const [60, 320, 1000][k] + 2 * n
+      : 3 * (const [20, 150, 400][k] + n);
   final oz = ters
       ? olcu * 100 / kok
-      : (const [20, 100, 10][k] + const [2, 4, 2][k] * n).toDouble();
+      : (const [70, 401, 1000][k] + const [2, 2, 10][k] * n).toDouble();
   final kisa = ters ? olcu.toDouble() : oz * kok / 100;
   final (ileriKok, tersKok) = switch (k) {
     0 => (
@@ -2135,7 +2154,8 @@ AdvancedItem _yildizYolculugu(int a, int b, int k) {
       unit: 'yıl',
     );
   }
-  final d = 4 + n; // ışık yılı
+  final d = 65 + 2 * n; // ışık yılı: 67 … 315 tek sayılar, boy ve süre
+  // sorularındaki değerlerle ayrık
   final kisa = d * kok / 100;
   return _s(
     "Dünya'dan $d ışık yılı uzaklıktaki bir yıldıza, Dünya'ya göre $hiz "
@@ -2165,29 +2185,88 @@ final _f08 = lmAile(
 
 // ─────────────────────── 9 · Kütle-enerji eşdeğerliği ───────────────────────
 
-const _u931 = '(1 u kütleye karşılık gelen enerji 931 MeV alınız.)';
-
 /// On binde bir u biriminden kütle yazımı.
 String _u(int onBinde) => _n(onBinde / 10000, 4);
 
+/// Yüz binde bir u biriminden kütle yazımı.
+String _u5(int yuzBinde) => _n(yuzBinde / 100000, 5);
+
+/// pay / payda değerinin [basamak] ondalığa yuvarlanmışı; tam yarımda null
+/// (yuvarlama yönü belirsiz kalmasın).
+double? _yuvarla(int pay, int payda, int basamak) {
+  final olcek = math.pow(10, basamak).toInt();
+  final ust = pay * olcek;
+  if (2 * (ust % payda) == payda) return null;
+  return ((2 * ust + payda) ~/ (2 * payda)) / olcek;
+}
+
+const _onda = 'sonucu en yakın onda birliğe yuvarlayınız.';
+const _tama = 'sonucu en yakın tam sayıya yuvarlayınız.';
+
+/// (1 u … 931 MeV alınız; [yuvarlama])
+String _u931Yuvarla(String yuvarlama) =>
+    '(1 u kütleye karşılık gelen enerji 931 MeV alınız; $yuvarlama)';
+
+/// Füzyon ve fisyon tepkimesinde açığa çıkan enerji: kütle farkı her sıra
+/// numarasında farklıdır (füzyonda yüz binde, fisyonda on binde bir u).
 AdvancedItem _tepkimeEnerjisi(int a, int b, int k) {
-  final fisyon = k >= 2;
-  final x = fisyon
-      ? 2300417 + 3517 * a + 123 * b + 40000 * (k - 2)
-      : 40263 + 1931 * a + 47 * b + 23000 * k;
-  final j = fisyon ? 12 + (a + 2 * b + 5 * k) % 14 : 1 + (a + b + k) % 3;
-  final y = x - 100 * j; // kütle farkı j/100 u
-  final dm = j / 100, e = 931 * j / 100;
+  final m = a + 25 * b; // 0 … 499
+  final fisyon = k == 1;
+  final payda = fisyon ? 10000 : 100000;
+  var dm = fisyon ? 1500 + 2 * m : 200 + 3 * m;
+  var e = _yuvarla(931 * dm, payda, fisyon ? 0 : 1);
+  if (e == null) {
+    dm += 1;
+    e = _yuvarla(931 * dm, payda, fisyon ? 0 : 1)!;
+  }
+  final x = fisyon ? 2360000 + 811 * m : 402820 + 1601 * m;
+  final y = x - dm;
+  String kutle(int v) => fisyon ? _u(v) : _u5(v);
+  final tam = 931 * dm / payda;
   return _s(
     'Bir ${fisyon ? 'fisyon (çekirdek bölünmesi)' : 'füzyon (çekirdek kaynaşması)'} '
-        'tepkimesinde tepkimeye giren taneciklerin toplam kütlesi ${_u(x)} u, '
-        'tepkime sonunda oluşan taneciklerin toplam kütlesi ${_u(y)} u olarak '
-        'veriliyor. Bu tepkimede açığa çıkan enerji kaç MeV olur? $_u931',
+        'tepkimesinde tepkimeye giren taneciklerin toplam kütlesi ${kutle(x)} u, '
+        'oluşan taneciklerin toplam kütlesi ${kutle(y)} u olarak veriliyor. Bu '
+        'tepkimede açığa çıkan enerji yaklaşık kaç MeV olur? '
+        '${_u931Yuvarla(fisyon ? _tama : _onda)}',
     e,
-    [dm, e / 10, e * 10],
-    'Kütle farkı Δm = ${_u(x)} − ${_u(y)} = ${_n(dm)} u olur. Bu kütle '
-        'enerjiye dönüştüğünden açığa çıkan enerji E = ${_n(dm)}·931 = ${_n(e)} '
-        'MeV bulunur.',
+    fisyon
+        ? [e * 10, (e / 10).roundToDouble(), dm / payda]
+        : [e * 10, e / 10, dm / payda],
+    'Kütle farkı Δm = ${kutle(x)} − ${kutle(y)} = ${kutle(dm)} u olur. Açığa '
+        'çıkan enerji E = Δm·931 = ${kutle(dm)}·931 = ${_n(tam, 5)} MeV, yani '
+        'yaklaşık ${_n(e)} MeV bulunur.',
+  );
+}
+
+/// Füzyonda oluşan taneciklerin toplam kinetik enerjisi.
+AdvancedItem _fuzyonKinetik(int a, int b, int k) {
+  final m = a + 25 * b + 500 * k; // 0 … 999
+  final dm = 300 + m; // yüz binde bir u
+  // Giren çekirdeklerin kinetik enerjisi 0,10 … 1,50 MeV (0,01 MeV
+  // biriminde): en az 0,1 MeV olduğundan onu unutan öğrenci yuvarlanmış
+  // doğru yanıtı bulamaz.
+  var kc = 10 + (37 * m) % 141;
+  var son = _yuvarla(kc * 1000 + 931 * dm, 100000, 1);
+  if (son == null) {
+    kc += 1;
+    son = _yuvarla(kc * 1000 + 931 * dm, 100000, 1)!;
+  }
+  final x = 301510 + 1031 * m, y = x - dm;
+  final kin = kc / 100, q = 931 * dm / 100000;
+  final qYuvarlak = _yuvarla(931 * dm, 100000, 1) ?? _iki(q);
+  return _s(
+    'Bir füzyon tepkimesinde tepkimeye giren çekirdeklerin toplam kütlesi '
+        '${_u5(x)} u, oluşan taneciklerin toplam kütlesi ${_u5(y)} u olarak '
+        'veriliyor. Tepkimeye giren çekirdeklerin toplam kinetik enerjisi '
+        '${_n(kin)} MeV olduğuna göre tepkimeden sonra oluşan taneciklerin toplam '
+        'kinetik enerjisi yaklaşık kaç MeV olur? ${_u931Yuvarla(_onda)}',
+    son,
+    [qYuvarlak, _iki((q - kin).abs()), _iki(kin + dm / 100000)],
+    'Kütle farkı Δm = ${_u5(x)} − ${_u5(y)} = ${_u5(dm)} u olup Δm·931 = '
+        '${_n(q, 5)} MeV enerjiye karşılık gelir. Enerji korunumundan oluşan '
+        'taneciklerin toplam kinetik enerjisi ${_n(kin)} + ${_n(q, 5)} = '
+        '${_n(kin + q, 5)} MeV, yani yaklaşık ${_n(son)} MeV olur.',
   );
 }
 
@@ -2242,47 +2321,67 @@ AdvancedItem _kutleEnerji(int a, int b, int k) {
   }
 }
 
+/// Nükleon başına bağlanma enerjisinin kütle numarasına göre yaklaşık
+/// değeri (MeV): A = 4'te 7,0; 12'de 7,6; 56'da 8,7; 240'ta 7,6.
+double _baglanmaEgrisi(int kutle) {
+  const noktalar = [(4, 7.0), (12, 7.6), (56, 8.7), (240, 7.6)];
+  for (var i = 1; i < noktalar.length; i++) {
+    final (a1, e1) = noktalar[i - 1];
+    final (a2, e2) = noktalar[i];
+    if (kutle <= a2) return e1 + (e2 - e1) * (kutle - a1) / (a2 - a1);
+  }
+  return noktalar.last.$2;
+}
+
+/// Bağlanma enerjisi (toplam ya da nükleon başına). Kütle eksikliği on binde
+/// bir u biriminde; nükleon başına enerji gerçek eğrinin ±0,15 MeV
+/// çevresindedir.
 AdvancedItem _baglanmaEnerjisi(int a, int b, int k) {
   final j = a + 25 * (b ~/ 2) + 250 * k; // 0 … 749
-  if (b.isEven) {
-    final kutle = 4 + j * 235 ~/ 749; // kütle numarası 4 … 239
-    final toplam =
-        10080 * kutle + j; // nükleonların toplam kütlesi (on binde bir u)
-    // Kütle eksikliği (yüzde bir u); 1 u olmasın: anahtar kökteki 931 MeV
-    // değerine eşit çıkardı.
-    final d0 = (86 * kutle + 50) ~/ 100 + j % 3;
-    final d100 = d0 == 100 ? 103 : d0;
-    final cekirdek = toplam - 100 * d100;
-    final dm = d100 / 100, e = 931 * d100 / 100;
+  final basina = b.isOdd;
+  final kutle = 4 + j * 235 ~/ 749; // kütle numarası 4 … 239
+  // Nükleon başına kütle eksikliği (milyonda bir u).
+  final f =
+      (_baglanmaEgrisi(kutle) / 931 * 1e6).round() +
+      (basina ? 53 * j + 97 : 37 * j) % 320 -
+      160;
+  var dm = (kutle * f + 50) ~/ 100; // on binde bir u
+  double? hesap() => basina
+      ? _yuvarla(931 * dm, 10000 * kutle, 2)
+      : _yuvarla(931 * dm, 10000, 0);
+  // Yanıt yarımda kalmasın, kökteki 931 ya da kütle numarasına eşit çıkmasın.
+  var e = hesap();
+  while (e == null || e == 931 || e == kutle) {
+    dm += 1;
+    e = hesap();
+  }
+  final toplam = 10078 * kutle + (13 * j) % 97; // nükleonların toplam kütlesi
+  final cekirdek = toplam - dm;
+  final tam = 931 * dm / 10000;
+  final toplamYuvarlak = _yuvarla(931 * dm, 10000, 0) ?? tam.roundToDouble();
+  final giris =
+      'Kütle numarası $kutle olan bir çekirdeği oluşturan proton ve nötronların '
+      'serbest hâldeki toplam kütlesi ${_u(toplam)} u, çekirdeğin kütlesi ise '
+      '${_u(cekirdek)} u olarak veriliyor.';
+  final eksik =
+      'Kütle eksikliği Δm = ${_u(toplam)} − ${_u(cekirdek)} = ${_u(dm)} u '
+      'olur. Bağlanma enerjisi E = Δm·931 = ${_u(dm)}·931 = ${_n(tam, 4)} MeV';
+  if (basina) {
     return _s(
-      'Kütle numarası $kutle olan bir çekirdeği oluşturan proton ve '
-          'nötronların serbest hâldeki toplam kütlesi ${_u(toplam)} u, çekirdeğin '
-          'kütlesi ise ${_u(cekirdek)} u olarak veriliyor. Bu çekirdeğin '
-          'bağlanma enerjisi kaç MeV olur? $_u931',
+      '$giris Bu çekirdeğin nükleon başına bağlanma enerjisi yaklaşık kaç MeV '
+          'olur? ${_u931Yuvarla('sonucu en yakın yüzde birliğe yuvarlayınız.')}',
       e,
-      [dm, e / kutle, e / 10],
-      'Kütle eksikliği Δm = ${_u(toplam)} − ${_u(cekirdek)} = ${_n(dm)} u '
-          'olur. Bağlanma enerjisi E = Δm·931 = ${_n(dm)}·931 = ${_n(e)} MeV '
-          'bulunur.',
+      [toplamYuvarlak],
+      '$eksik bulunur. Nükleon başına düşen bağlanma enerjisi '
+          '${_n(tam, 4)} / $kutle ≈ ${_n(e)} MeV olur.',
     );
   }
-  final x = 30151 + 1931 * a + 59 * (b ~/ 2) + 9000 * k; // on binde bir u
-  final d100 = 1 + (a + b + k) % 3;
-  final y = x - 100 * d100;
-  final kin = (1 + (7 * a + b + 3 * k) % 40) / 10; // MeV
-  final e = 931 * d100 / 100, son = kin + e;
   return _s(
-    'Bir füzyon tepkimesinde tepkimeye giren çekirdeklerin toplam kütlesi '
-        '${_u(x)} u, oluşan taneciklerin toplam kütlesi ${_u(y)} u olarak '
-        'veriliyor. Tepkimeye giren çekirdeklerin toplam kinetik enerjisi '
-        '${_n(kin)} MeV olduğuna göre tepkimeden sonra oluşan taneciklerin toplam '
-        'kinetik enerjisi kaç MeV olur? $_u931',
-    son,
-    [e, (e - kin).abs(), kin + d100 / 100],
-    'Kütle farkı Δm = ${_u(x)} − ${_u(y)} = ${_n(d100 / 100)} u olup '
-        '${_n(e)} MeV enerjiye karşılık gelir. Enerji korunumundan oluşan '
-        'taneciklerin toplam kinetik enerjisi ${_n(kin)} + ${_n(e)} = ${_n(son)} '
-        'MeV olur.',
+    '$giris Bu çekirdeğin bağlanma enerjisi yaklaşık kaç MeV olur? '
+        '${_u931Yuvarla(_tama)}',
+    e,
+    [(e / kutle).roundToDouble(), e * 10, dm / 10000],
+    '$eksik, yani yaklaşık ${_n(e)} MeV bulunur.',
   );
 }
 
@@ -2293,7 +2392,8 @@ final _f09 = lmAile(
   Difficulty.easy,
   BloomLevel.uygulama,
   (a, b, c) => switch (c % 3) {
-    0 => _tepkimeEnerjisi(a, b, c ~/ 3),
+    0 when c < 6 => _tepkimeEnerjisi(a, b, c ~/ 3),
+    0 => _fuzyonKinetik(a, b, c ~/ 3 - 2),
     1 => _kutleEnerji(a, b, c ~/ 3),
     _ => _baglanmaEnerjisi(a, b, c ~/ 3),
   },
@@ -2456,8 +2556,16 @@ AdvancedItem _dalgaBoyuDegisimi(int a, int b, int k) {
   final v = b % 4, q = b ~/ 4; // q: 0 … 4
   final kat = const [2, 3, 4, 5][k];
   final u0 = 1 + a + 25 * q; // 1 … 125
-  // Yavaşlatma sorusunda u = 100 alınmaz: yanıt kökteki 1/kat ile karışırdı.
-  final u = v == 1 && u0 == 100 ? 126 : u0;
+  // Yavaşlatma sorusunda yanıt kökteki 1/kat, kat ya da kat² sayısına eşit
+  // çıkarsa ölçek olağan aralığın dışına taşınır.
+  // Momentum sorusu hız sorusuyla aynı hesabı verdiğinden değerleri ayrı
+  // bir aralıktan (261 … 385) alınır.
+  var u = switch (v) {
+    1 when _icinde(u0 * kat / 100, [1, kat, kat * kat]) => u0 + 130,
+    2 => u0 + 260,
+    _ => u0,
+  };
+  if (v == 2 && _icinde(u / 100, [kat, kat * u / 100])) u += 130;
   final ad = _parcacikAdi[(a + b) % 4];
   final buyur = v == 1; // dalga boyu büyür
   final ilk = buyur ? u / 100 : kat * u / 100,
@@ -2501,7 +2609,7 @@ final _ikiParcacik = _tekil([
             // Oran kökteki bir sayıya eşit olmasın.
             if (v1 != v2 &&
                 m1 * v1 != m2 * v2 &&
-                !_icinde(m2 * v2 / (m1 * v1), [m1, m2, v1, v2]))
+                !_icinde(m2 * v2 / (m1 * v1), [m1, m2, v1, v2, 10]))
               (m1, m2, v1, v2),
 ], (t) => (_oran(t.$1, t.$2), _oran(t.$3, t.$4)));
 
@@ -2962,7 +3070,12 @@ bool _gucUygun(int tur, int x, int r) {
   if ((p * 100 - (p * 100).round()).abs() > 1e-6 || p < 1 || p > 5000) {
     return false;
   }
-  return !_icinde(p, [x, r, x / 2, x / r]);
+  final yanlis = switch (tur) {
+    1 => [2 * p, p / 2, x * r / 2],
+    3 => [2 * p, p / 2],
+    _ => [2 * p, p / 2, x / r],
+  };
+  return !_icinde(p, [x, r, x / 2, x / r, ...yanlis]);
 }
 
 final _gucTablolar = [for (var t = 0; t < 4; t++) _gucTablo(t)];
@@ -3074,7 +3187,8 @@ final _girisim = _tekil([
             l * boy >= 300 * d &&
             l * boy <= 15000 * d &&
             // Δx kökteki L ya da d değerine sayıca eşit olmasın.
-            !_icinde(l * boy / (1000 * d), [boy / 100, d / 100]))
+            !_icinde(l * boy / (1000 * d), [boy / 100, d / 100]) &&
+            d != boy)
           (l, boy, d),
 ], (t) => (t.$1, _oran(t.$2, t.$3)));
 
@@ -3114,13 +3228,37 @@ AdvancedItem _sacakGenisligi(int a, int b, int k) {
 AdvancedItem _sacakKonumu(int a, int b, int k) {
   final v = b % 4;
   final n = a + 25 * (b ~/ 4) + 125 * k; // 0 … 374
-  final (l, boy, d) = _yay(v == 0 ? _girisim : _girisimYarim, n, 375);
+  // Saçak sıraları; sorulan uzaklık bunlar ve Δx cinsinden katsayıdır.
+  final s = switch (v) {
+    0 => 2 + n % 5,
+    1 => 1 + n % 5,
+    _ => 1 + n % 3,
+  };
+  final m = v == 2 ? s + 1 + (n ~/ 3) % 3 : 1 + (n ~/ 3) % 4;
+  final kat = switch (v) {
+    0 => s.toDouble(),
+    1 => s - 0.5,
+    2 => m - 0.5 - s,
+    _ => s + m - 0.5,
+  };
+  // Yanıt kökteki bir sayıya (d, L, λ, saçak sıraları) eşit çıkmasın.
+  final (l, boy, d) = _yayUygun(
+    v == 0 ? _girisim : _girisimYarim,
+    n,
+    375,
+    (t) => !_icinde(kat * _sacak(t.$1, t.$2, t.$3) / 100, [
+      t.$3 / 100,
+      t.$2 / 100,
+      t.$1,
+      s,
+      if (v >= 2) m,
+    ]),
+  );
   final dx = _sacak(l, boy, d) / 100;
   final cozum = _sacakCozum(l, boy, d);
   const merkez = 'merkezî aydınlık saçağın';
   switch (v) {
     case 0:
-      final s = 2 + n % 5; // 2 … 6
       return _s(
         '${_deney(l, boy, d)} Perdede oluşan $s. aydınlık saçağın $merkez '
             'ortasına uzaklığı kaç mm olur?',
@@ -3131,7 +3269,6 @@ AdvancedItem _sacakKonumu(int a, int b, int k) {
         unit: 'mm',
       );
     case 1:
-      final s = 1 + n % 5; // 1 … 5
       return _s(
         '${_deney(l, boy, d)} Perdede oluşan $s. karanlık saçağın $merkez '
             'ortasına uzaklığı kaç mm olur?',
@@ -3142,8 +3279,7 @@ AdvancedItem _sacakKonumu(int a, int b, int k) {
         unit: 'mm',
       );
     case 2:
-      final s = 1 + n % 3, m = s + 1 + (n ~/ 3) % 3; // aynı tarafta
-      final x = (m - 0.5 - s) * dx;
+      final x = (m - 0.5 - s) * dx; // aynı tarafta
       return _s(
         '${_deney(l, boy, d)} Merkezî aydınlık saçağın aynı tarafında bulunan '
             '$s. aydınlık saçak ile $m. karanlık saçak arasındaki uzaklık kaç mm '
@@ -3155,8 +3291,7 @@ AdvancedItem _sacakKonumu(int a, int b, int k) {
         unit: 'mm',
       );
     default:
-      final s = 1 + n % 3, m = 1 + (n ~/ 3) % 4; // zıt taraflarda
-      final x = (s + m - 0.5) * dx;
+      final x = (s + m - 0.5) * dx; // zıt taraflarda
       return _s(
         '${_deney(l, boy, d)} Merkezî aydınlık saçağın bir tarafındaki $s. '
             'aydınlık saçak ile öbür tarafındaki $m. karanlık saçak arasındaki '
@@ -3462,6 +3597,1488 @@ final _f15 = lmAile(
   lesson: _fizik,
 );
 
+// ───────────────────────────── 16 · Elektriklenme ─────────────────────────────
+
+/// µC biriminde yük yazımı: artı ya da gerçek eksi işaretiyle.
+String _q(num x) => x > 0 ? '+${_n(x)}' : _n(x);
+
+/// İşaretli yük kökte parantez içinde: (+4), (−6).
+String _qp(num x) => '(${_q(x)})';
+
+/// Özdeş kürelerde dokunma dizileri: tur 0 (K–L, L–M → M), 1 (üçü birlikte),
+/// 2 (K–L, K topraklanır, K–L → L), 3 (K–L, L topraklanır, K–L, K–M → M).
+(double, List<double>) _ozdesHesap(int tur, int k, int l, int m) {
+  double abs3() => (k.abs() + l.abs() + m.abs()).toDouble();
+  return switch (tur) {
+    0 => (
+      (k + l + 2 * m) / 4,
+      [
+        (k + l + m) / 3,
+        (k + l) / 2 + m,
+        (k + l + m) / 2,
+        (k.abs() + l.abs() + 2 * m.abs()) / 4,
+      ],
+    ),
+    1 => (
+      (k + l + m) / 3,
+      [(k + l + m).toDouble(), (k + l + m) / 2, abs3() / 3],
+    ),
+    2 => ((k + l) / 4, [(k + l) / 2, (k.abs() + l.abs()) / 4, l / 2]),
+    _ => (
+      (k + l + 4 * m) / 8,
+      [
+        (k + l + 2 * m) / 4,
+        (k + l) / 4 + m,
+        (k.abs() + l.abs() + 4 * m.abs()) / 8,
+        (k + l + m) / 3,
+      ],
+    ),
+  };
+}
+
+/// Yanıt K ile L yüklerine simetrik bağlı olduğundan k < l alınır (üçlü
+/// dokunmada k < l < m): yerleri değişen ikizler aynı hesabı verirdi.
+List<(int, int, int)> _ozdesListe(int tur) => [
+  for (var k = -20; k <= 20; k++)
+    if (k != 0)
+      for (var l = k + 1; l <= 20; l++)
+        if (l != 0)
+          for (
+            var m = tur == 2 ? 1 : (tur == 1 ? l + 1 : -20);
+            m <= (tur == 2 ? 1 : 20);
+            m++
+          )
+            if (m != 0 && (tur == 2 || (m != k && m != l)))
+              if (_ozdesUygun(tur, k, l, m)) (k, l, m),
+];
+
+bool _ozdesUygun(int tur, int k, int l, int m) {
+  final (y, yanlis) = _ozdesHesap(tur, k, l, m);
+  if (y == 0 || _iki(y) != y) return false;
+  // Yanıtın büyüklüğü kökteki yüklerin büyüklüklerinden farklı olsun.
+  return !_icinde(y.abs(), [k.abs(), l.abs(), if (tur != 2) m.abs()]) &&
+      !_icinde(y, yanlis);
+}
+
+final _ozdesListeler = [for (var t = 0; t < 4; t++) _ozdesListe(t)];
+
+AdvancedItem _ozdesKureler(int a, int b, int k) {
+  final v = b % 4;
+  final n = a + 25 * (b ~/ 4) + 125 * k; // 0 … 499
+  final (qk, ql, qm) = _yay(_ozdesListeler[v], n, 500);
+  final (y, yanlis) = _ozdesHesap(v, qk, ql, qm);
+  const ozdes = 'Yalıtkan ayaklar üzerindeki özdeş iletken';
+  final kl = _n((qk + ql) / 2);
+  final giris = v == 2
+      ? '$ozdes K ve L kürelerinin yükleri sırasıyla ${_q(qk)} µC ve ${_q(ql)} µC '
+            'olarak veriliyor.'
+      : '$ozdes K, L ve M kürelerinin yükleri sırasıyla ${_q(qk)} µC, '
+            '${_q(ql)} µC ve ${_q(qm)} µC olarak veriliyor.';
+  const paylasim =
+      'Özdeş iletken küreler dokundurulduğunda toplam yük kürelere eşit '
+      'paylaşılır.';
+  final (islem, soru, cozum) = switch (v) {
+    0 => (
+      'Önce K ile L, sonra L ile M küreleri birbirine dokundurulup ayrılıyor.',
+      'M küresinin son yükü',
+      '$paylasim K ile L dokununca her biri (${_q(qk)} + ${_qp(ql)}) / 2 = $kl µC '
+          'olur. L ile M dokununca M küresinin yükü ($kl + ${_qp(qm)}) / 2 = '
+          '${_n(y)} µC bulunur.',
+    ),
+    1 => (
+      'Üç küre aynı anda birbirine dokundurulup ayrılıyor.',
+      'K küresinin son yükü',
+      '$paylasim Toplam yük ${_q(qk)} + ${_qp(ql)} + ${_qp(qm)} = '
+          '${_n(qk + ql + qm)} µC üç küreye eşit dağılır: ${_n(y)} µC.',
+    ),
+    2 => (
+      'K ile L dokundurulup ayrılıyor; sonra K küresi topraklanıp toprak '
+          'bağlantısı kesiliyor; ardından K ile L yeniden dokundurulup ayrılıyor.',
+      'L küresinin son yükü',
+      '$paylasim İlk dokunmada her küre $kl µC olur. Topraklanan K küresinin '
+          'yükü sıfırlanır. İkinci dokunmada L küresinin yükü ($kl + 0) / 2 = '
+          '${_n(y)} µC bulunur.',
+    ),
+    _ => (
+      'K ile L dokundurulup ayrılıyor; L küresi topraklanıp toprak bağlantısı '
+          'kesiliyor; K ile L yeniden dokundurulup ayrılıyor; son olarak K ile '
+          'M dokundurulup ayrılıyor.',
+      'M küresinin son yükü',
+      '$paylasim İlk dokunmada K ve L $kl µC olur; topraklanan L sıfırlanır ve '
+          'ikinci dokunmada K küresi ${_n((qk + ql) / 4)} µC olur. K ile M '
+          'dokununca M küresinin yükü (${_n((qk + ql) / 4)} + ${_qp(qm)}) / 2 '
+          '= ${_n(y)} µC bulunur.',
+    ),
+  };
+  return _s(
+    '$giris $islem $soru kaç µC olur?',
+    y,
+    yanlis,
+    cozum,
+    pozitif: false,
+  );
+}
+
+/// Farklı yarıçaplı iki küre: (r_K, r_L, q_K, q_L); yarıçap cm, yük µC.
+final _yaricapli = _tekil([
+  for (var r1 = 1; r1 <= 8; r1++)
+    for (var r2 = 1; r2 <= 8; r2++)
+      if (r1 != r2)
+        for (var q1 = -30; q1 <= 30; q1 += 2)
+          for (var q2 = -30; q2 <= 30; q2 += 2)
+            if (q1 != 0 &&
+                q2 != 0 &&
+                q1 != q2 &&
+                q1 + q2 != 0 &&
+                100 * (q1 + q2) * r1 % (r1 + r2) == 0)
+              (r1, r2, q1, q2),
+], (t) => (_oran(t.$1, t.$2), t.$3, t.$4));
+
+/// Yarıçaplı dokunma: tur 0 K'nin, 1 L'nin son yükü, 2 aktarılan yük, 3 L
+/// topraklanıp yeniden dokununca K'nin yükü.
+(double, List<double>) _yaricapHesap(int tur, (int, int, int, int) t) {
+  final (r1, r2, q1, q2) = t;
+  final toplam = q1 + q2, s = r1 + r2;
+  final yk = toplam * r1 / s, yl = toplam * r2 / s;
+  return switch (tur) {
+    0 => (yk, [toplam / 2, yl, toplam.toDouble()]),
+    1 => (yl, [toplam / 2, yk, toplam.toDouble()]),
+    2 => (
+      (q1 - yk).abs(),
+      [(q1 - toplam / 2).abs(), toplam.abs().toDouble(), yk.abs(), yl.abs()],
+    ),
+    _ => (yk * r1 / s, [yk / 2, yk, yk * r2 / s]),
+  };
+}
+
+/// Simetrik ikizler alınmaz: K'nin ya da L'nin son yükü ve aktarılan yük
+/// sorularında küçük küre K'dir (r_K < r_L); yanıtı toplam yüke bağlı
+/// sorularda q_K < q_L alınır.
+final _yaricapListeleri = [
+  for (var tur = 0; tur < 4; tur++)
+    [
+      for (final t in _yaricapli)
+        if ((tur == 3 || t.$1 < t.$2) &&
+            (tur == 2 || t.$3 < t.$4) &&
+            _yaricapUygun(tur, t))
+          t,
+    ],
+];
+
+bool _yaricapUygun(int tur, (int, int, int, int) t) {
+  final (y, yanlis) = _yaricapHesap(tur, t);
+  if (y == 0 || (y * 100 - (y * 100).round()).abs() > 1e-6) return false;
+  // Yanıtın büyüklüğü kökteki yarıçaplardan ve yük büyüklüklerinden farklı.
+  return !_icinde(y.abs(), [t.$1, t.$2, t.$3.abs(), t.$4.abs()]) &&
+      !_icinde(y, yanlis);
+}
+
+AdvancedItem _yaricapliKureler(int a, int b, int k, bool topraklama) {
+  final v = topraklama ? 3 : b % 3;
+  // Topraklamalı soru tek biçimdir: 1.500 sıra numarası (a, b, k) ile
+  // birebir; öbür biçimde b % 3 sorulan niceliği seçer.
+  final n = topraklama ? a + 25 * b + 500 * k : a + 25 * (b ~/ 3) + 175 * k;
+  final t = _yay(_yaricapListeleri[v], n, topraklama ? 1500 : 525);
+  final (r1, r2, q1, q2) = t;
+  final (y, yanlis) = _yaricapHesap(v, t);
+  final yk = (q1 + q2) * r1 / (r1 + r2);
+  final giris =
+      'Yalıtkan ayaklar üzerindeki iletken K ve L kürelerinin yarıçapları '
+      'sırasıyla $r1 cm ve $r2 cm, yükleri sırasıyla ${_q(q1)} µC ve '
+      '${_q(q2)} µC olarak veriliyor.';
+  final paylasim =
+      'Dokunan iletken kürelerin toplam yükü yarıçaplarla doğru orantılı '
+      'paylaşılır: toplam ${_q(q1)} + ${_qp(q2)} = ${_n(q1 + q2)} µC olduğundan '
+      'K küresi ${_n(q1 + q2)}·$r1 / ${r1 + r2} = ${_n(yk)} µC, L küresi '
+      '${_n(q1 + q2)}·$r2 / ${r1 + r2} = ${_n((q1 + q2) * r2 / (r1 + r2))} µC '
+      'alır.';
+  final (soru, ek) = switch (v) {
+    0 => (
+      'Küreler birbirine dokundurulup ayrıldıktan sonra K küresinin yükü kaç µC olur?',
+      '',
+    ),
+    1 => (
+      'Küreler birbirine dokundurulup ayrıldıktan sonra L küresinin yükü kaç µC olur?',
+      '',
+    ),
+    2 => (
+      'Küreler birbirine dokundurulduğunda kürelerden birinden ötekine aktarılan '
+          'yükün büyüklüğü kaç µC olur?',
+      ' K küresinin yükü ${_q(q1)} µC değerinden ${_n(yk)} µC değerine geçtiğinden '
+          'aktarılan yük ${_n(y)} µC olur.',
+    ),
+    _ => (
+      'Küreler dokundurulup ayrılıyor; L küresi topraklanıp toprak bağlantısı '
+          'kesildikten sonra K ve L yeniden dokundurulup ayrılıyor. K küresinin '
+          'son yükü kaç µC olur?',
+      ' Topraklanan L küresinin yükü sıfırlanır; ikinci dokunmada K küresinin '
+          'yükü ${_n(yk)}·$r1 / ${r1 + r2} = ${_n(y)} µC olur.',
+    ),
+  };
+  return _s('$giris $soru', y, yanlis, '$paylasim$ek', pozitif: false);
+}
+
+final _f16 = lmAile(
+  'fz_elektriklenme',
+  'Dokunmayla elektriklenme ve topraklama',
+  Topic.physics,
+  Difficulty.medium,
+  BloomLevel.analiz,
+  (a, b, c) => switch (c % 3) {
+    0 => _ozdesKureler(a, b, c ~/ 3),
+    1 => _yaricapliKureler(a, b, c ~/ 3, false),
+    _ => _yaricapliKureler(a, b, c ~/ 3, true),
+  },
+  exam: ExamKind.tyt,
+  lesson: _fizik,
+);
+
+// ─────────────────────────── 17 · Özdeş lambalı devreler ───────────────────────
+
+/// Devre: tarif, eşdeğer direncin R cinsinden payı ve paydası, lambalar
+/// (ad, ana kol akımına göre akım oranının payı ve paydası).
+typedef _Devre = (String, int, int, List<(String, int, int)>);
+
+const _devreler = <_Devre>[
+  (
+    'K lambası üretece seri bağlıdır; birbirine paralel bağlı L ve M '
+        'lambalarından oluşan grup K lambasıyla seri bağlanmıştır.',
+    3,
+    2,
+    [('K', 1, 1), ('L', 1, 2), ('M', 1, 2)],
+  ),
+  (
+    'Birbirine seri bağlı K ve L lambaları bir kolu, M lambası tek başına '
+        'ikinci kolu oluşturmaktadır; bu iki kol üretecin uçlarına paralel '
+        'bağlanmıştır.',
+    2,
+    3,
+    [('K', 1, 3), ('L', 1, 3), ('M', 2, 3)],
+  ),
+  (
+    'K lambası üretece seri bağlıdır; birbirine paralel bağlı L, M ve N '
+        'lambalarından oluşan grup K lambasıyla seri bağlanmıştır.',
+    4,
+    3,
+    [('K', 1, 1), ('L', 1, 3), ('M', 1, 3), ('N', 1, 3)],
+  ),
+  (
+    'K ve L lambaları birbirine ve üretece seri bağlıdır; birbirine paralel '
+        'bağlı M ve N lambalarından oluşan grup bu iki lambayla seri '
+        'bağlanmıştır.',
+    5,
+    2,
+    [('K', 1, 1), ('L', 1, 1), ('M', 1, 2), ('N', 1, 2)],
+  ),
+  (
+    'K lambası tek başına bir kolu, birbirine seri bağlı L, M ve N lambaları '
+        'ikinci kolu oluşturmaktadır; bu iki kol üretecin uçlarına paralel '
+        'bağlanmıştır.',
+    3,
+    4,
+    [('K', 3, 4), ('L', 1, 4), ('M', 1, 4), ('N', 1, 4)],
+  ),
+  (
+    'K lambası üretece seri bağlıdır. L lambası tek başına bir kolu, birbirine '
+        'seri bağlı M ve N lambaları ikinci kolu oluşturmaktadır; bu iki kol '
+        'birbirine paralel bağlanmış ve oluşan grup K lambasıyla seri '
+        'bağlanmıştır.',
+    5,
+    3,
+    [('K', 1, 1), ('L', 2, 3), ('M', 1, 3), ('N', 1, 3)],
+  ),
+  (
+    'Birbirine paralel bağlı K ve L lambalarından oluşan grup ile birbirine '
+        'paralel bağlı M, N ve P lambalarından oluşan grup, birbirine ve '
+        'üretece seri bağlanmıştır.',
+    5,
+    6,
+    [('K', 1, 2), ('L', 1, 2), ('M', 1, 3), ('N', 1, 3), ('P', 1, 3)],
+  ),
+  (
+    'Birbirine paralel bağlı K ve L lambalarından oluşan grup M lambasıyla '
+        'seri bağlanarak bir kolu, N lambası tek başına ikinci kolu '
+        'oluşturmaktadır; bu iki kol üretecin uçlarına paralel bağlanmıştır.',
+    3,
+    5,
+    [('K', 1, 5), ('L', 1, 5), ('M', 2, 5), ('N', 3, 5)],
+  ),
+  (
+    'Birbirine seri bağlı K ve L lambaları birinci kolu, birbirine seri bağlı '
+        'M ve N lambaları ikinci kolu, P lambası tek başına üçüncü kolu '
+        'oluşturmaktadır; bu üç kol üretecin uçlarına paralel bağlanmıştır.',
+    1,
+    2,
+    [('K', 1, 4), ('L', 1, 4), ('M', 1, 4), ('N', 1, 4), ('P', 1, 2)],
+  ),
+];
+
+/// Anahtarlı devreler: (ilk devre sırası, anahtar tarifi, anahtardan sonraki
+/// durum, yeni devre).
+const _anahtarlar = <(int, String, String, _Devre)>[
+  (
+    0,
+    'M lambasının bulunduğu kolda kapalı bir anahtar vardır.',
+    'anahtar açılırsa',
+    (
+      'Anahtar açılınca M lambasından akım geçmez; K ve L lambaları üretece '
+          'seri bağlı kalır.',
+      2,
+      1,
+      [('K', 1, 1), ('L', 1, 1)],
+    ),
+  ),
+  (
+    1,
+    'M lambasının bulunduğu kolda kapalı bir anahtar vardır.',
+    'anahtar açılırsa',
+    (
+      'Anahtar açılınca M lambasının kolundan akım geçmez; devrede yalnız '
+          'seri bağlı K ve L lambaları kalır.',
+      2,
+      1,
+      [('K', 1, 1), ('L', 1, 1)],
+    ),
+  ),
+  (
+    2,
+    'N lambasının bulunduğu kolda kapalı bir anahtar vardır.',
+    'anahtar açılırsa',
+    (
+      'Anahtar açılınca N lambasından akım geçmez; K lambası, birbirine '
+          'paralel bağlı L ve M lambalarıyla seri bağlı kalır.',
+      3,
+      2,
+      [('K', 1, 1), ('L', 1, 2), ('M', 1, 2)],
+    ),
+  ),
+  (
+    0,
+    'K lambasının uçlarına paralel bağlı, başlangıçta açık bir anahtar vardır.',
+    'anahtar kapatılırsa',
+    (
+      'Anahtar kapanınca K lambası kısa devre olur ve söner; paralel bağlı L '
+          've M lambaları doğrudan üretecin uçlarına bağlanmış olur.',
+      1,
+      2,
+      [('L', 1, 2), ('M', 1, 2)],
+    ),
+  ),
+  (
+    4,
+    'K lambasının bulunduğu kolda kapalı bir anahtar vardır.',
+    'anahtar açılırsa',
+    (
+      'Anahtar açılınca K lambasının kolundan akım geçmez; devrede yalnız '
+          'seri bağlı L, M ve N lambaları kalır.',
+      3,
+      1,
+      [('L', 1, 1), ('M', 1, 1), ('N', 1, 1)],
+    ),
+  ),
+  (
+    5,
+    'L lambasının bulunduğu kolda kapalı bir anahtar vardır.',
+    'anahtar açılırsa',
+    (
+      'Anahtar açılınca L lambasının kolundan akım geçmez; K, M ve N '
+          'lambaları üretece seri bağlı kalır.',
+      3,
+      1,
+      [('K', 1, 1), ('M', 1, 1), ('N', 1, 1)],
+    ),
+  ),
+  (
+    7,
+    'N lambasının bulunduğu kolda kapalı bir anahtar vardır.',
+    'anahtar açılırsa',
+    (
+      'Anahtar açılınca N lambasının kolundan akım geçmez; paralel bağlı K ve '
+          'L lambalarından oluşan grup M lambasıyla seri bağlı kalır.',
+      3,
+      2,
+      [('K', 1, 2), ('L', 1, 2), ('M', 1, 1)],
+    ),
+  ),
+  (
+    8,
+    'P lambasının bulunduğu kolda kapalı bir anahtar vardır.',
+    'anahtar açılırsa',
+    (
+      'Anahtar açılınca P lambasının kolundan akım geçmez; K ve L lambalarının '
+          'kolu ile M ve N lambalarının kolu üretece paralel bağlı kalır.',
+      1,
+      1,
+      [('K', 1, 2), ('L', 1, 2), ('M', 1, 2), ('N', 1, 2)],
+    ),
+  ),
+  (
+    6,
+    'M lambasının uçlarına paralel bağlı, başlangıçta açık bir anahtar vardır.',
+    'anahtar kapatılırsa',
+    (
+      'Anahtar kapanınca M lambasının uçları kısa devre olur; M, N ve P '
+          'lambaları birbirine paralel bağlı olduğundan üçü birden söner ve '
+          'paralel bağlı K ve L lambaları doğrudan üretecin uçlarına bağlanmış '
+          'olur.',
+      1,
+      2,
+      [('K', 1, 2), ('L', 1, 2)],
+    ),
+  ),
+];
+
+/// Güç katsayısı (E²/R biriminde): (akım oranı · payda / pay)².
+(int, int) _gucKatsayi(_Devre d, int lamba) {
+  final (_, rp, rq, lambalar) = d;
+  final (_, ap, aq) = lambalar[lamba];
+  return _oran(ap * rq * ap * rq, aq * rp * aq * rp);
+}
+
+/// Soru şablonu: (tür, devre/anahtar sırası, lamba sırası). Tür 0 belirli
+/// lamba, 1 en parlak, 2 en sönük, 3 toplam güç, 4 anahtardan sonraki güç.
+final _lambaSablon = <(int, int, int)>[
+  for (var d = 0; d < _devreler.length; d++) ...[
+    for (final j in _temsilciler(_devreler[d])) (0, d, j),
+    (1, d, 0),
+    (2, d, 0),
+    (3, d, 0),
+  ],
+  for (var s = 0; s < _anahtarlar.length; s++)
+    for (final j in _temsilciler(_anahtarlar[s].$4)) (4, s, j),
+];
+
+/// Güç katsayısı farklı olan lambalardan birer temsilci (simetrik lambalar
+/// yalnız adları değiştirirdi).
+List<int> _temsilciler(_Devre d) {
+  final gorulen = <(int, int)>{};
+  return [
+    for (var j = 0; j < d.$4.length; j++)
+      if (gorulen.add(_gucKatsayi(d, j))) j,
+  ];
+}
+
+/// (şablon, E onda bir volt, R Ω): güç, akımlar iki ondalıkta kesin.
+final _lambaListe = [
+  for (var t = 0; t < _lambaSablon.length; t++)
+    for (final e10 in const [
+      15, 30, 45, 60, 75, 80, 90, 100, 120, 135, 140, 150, 160, 180, //
+      200, 210, 240, 250, 270, 280, 300, 320, 350, 360, 400, 420, 450, 480,
+    ])
+      for (final r in const [
+        2, 3, 4, 5, 6, 8, 9, 10, 12, 15, 16, 18, 20, 24, 25, 30, //
+        32, 36, 40, 45, 48, 50, 60,
+      ])
+        if (_lambaUygun(t, e10, r) && _lambaSahibi(t, e10, r)) (t, e10, r),
+];
+
+/// Şablonun sorduğu gücün E²/R cinsinden katsayısı.
+(int, int) _sablonKatsayi(int t) {
+  final (tur, d, j) = _lambaSablon[t];
+  final (devre, ks) = _sablonDevre(t);
+  double deger((int, int) k) => k.$1 / k.$2;
+  return switch (tur) {
+    0 => ks[j],
+    1 => ks.reduce((x, y) => deger(x) >= deger(y) ? x : y),
+    2 => ks.reduce((x, y) => deger(x) <= deger(y) ? x : y),
+    3 => _oran(devre.$3, devre.$2),
+    _ => ks.first,
+  };
+}
+
+/// Aynı devrede aynı katsayıyı soran şablonlar (adı verilen lamba ile en
+/// parlak ya da en sönük lamba gibi) aynı hesabı verir; bu şablonlar (E, R)
+/// ikililerini sırayla paylaşır, böylece aynı hesap iki kez sorulmaz.
+final _lambaGruplari = [
+  for (var t = 0; t < _lambaSablon.length; t++)
+    [
+      for (var u = 0; u < _lambaSablon.length; u++)
+        if ((_lambaSablon[u].$1 == 4) == (_lambaSablon[t].$1 == 4) &&
+            _lambaSablon[u].$2 == _lambaSablon[t].$2 &&
+            _sablonKatsayi(u) == _sablonKatsayi(t))
+          u,
+    ],
+];
+
+bool _lambaSahibi(int t, int e10, int r) {
+  final grup = _lambaGruplari[t];
+  return grup[(e10 ~/ 5 + r) % grup.length] == t;
+}
+
+/// Şablonun devresi ve sorulan lamba(lar)ın güç katsayıları.
+(_Devre, List<(int, int)>) _sablonDevre(int t) {
+  final (tur, d, j) = _lambaSablon[t];
+  if (tur == 4) {
+    final yeni = _anahtarlar[d].$4;
+    return (yeni, [_gucKatsayi(yeni, j)]);
+  }
+  final devre = _devreler[d];
+  final ks = [for (var x = 0; x < devre.$4.length; x++) _gucKatsayi(devre, x)];
+  return (devre, ks);
+}
+
+double _oranDeger((int, int) o) => o.$1 / o.$2;
+
+/// Şablonun yanıtı (W) ve yanlış yolların değerleri. Lambayı doğrudan
+/// üretecin uçlarına bağlı ya da ana kol akımını taşıyor sanmak, gücü lamba
+/// sayısına bölmek, başka lambanın gücünü yazmak; anahtarlı soruda ilk güç.
+/// Doğru yanıta eşit çıkan değerler (o lamba için doğru akıl yürütme)
+/// çeldirici sayılmaz.
+(double, List<double>) _lambaHesap(int t, int e10, int r) {
+  final (tur, d, j) = _lambaSablon[t];
+  final e = e10 / 10, tam = e * e / r;
+  final (devre, ks) = _sablonDevre(t);
+  final degerler = [for (final k in ks) _oranDeger(k) * tam];
+  final n = devre.$4.length;
+  final anaGuc = (devre.$3 / devre.$2) * (devre.$3 / devre.$2) * tam;
+  final double y = switch (tur) {
+    0 => degerler[j],
+    1 => degerler.reduce(math.max),
+    2 => degerler.reduce(math.min),
+    3 => e * e * devre.$3 / (devre.$2 * r),
+    _ => degerler.first,
+  };
+  final yanlis = <double>[
+    tam,
+    anaGuc,
+    tam / (n * n),
+    if (tur < 3) ...degerler,
+    if (tur == 3) ...[n * tam, tam / n],
+    if (tur == 4)
+      _oranDeger(
+            _gucKatsayi(_devreler[_anahtarlar[d].$1], _lambaIlkSira(d, j)),
+          ) *
+          tam,
+  ];
+  return (
+    y,
+    [
+      for (final x in yanlis)
+        if ((x - y).abs() > 1e-9) x,
+    ],
+  );
+}
+
+/// "K, L ve M" biçiminde sıralama.
+String _veIle(List<String> x) => x.length == 1
+    ? x.first
+    : '${x.sublist(0, x.length - 1).join(', ')} ve ${x.last}';
+
+/// Anahtarlı devrede sorulan lambanın ilk devredeki sırası.
+int _lambaIlkSira(int s, int j) {
+  final ad = _anahtarlar[s].$4.$4[j].$1;
+  final ilk = _devreler[_anahtarlar[s].$1].$4;
+  return ilk.indexWhere((x) => x.$1 == ad);
+}
+
+bool _kesin2(num x) => (x * 100 - (x * 100).round()).abs() < 1e-6;
+
+bool _lambaUygun(int t, int e10, int r) {
+  final (y, _) = _lambaHesap(t, e10, r);
+  if (!_kesin2(y) || y < 0.1 || y > 150) return false;
+  final (tur, d, _) = _lambaSablon[t];
+  final (devre, _) = _sablonDevre(t);
+  final e = e10 / 10;
+  // Devrenin (anahtarlı soruda ilk devrenin de) toplam gücü en çok 200 W.
+  for (final x in [devre, if (tur == 4) _devreler[_anahtarlar[d].$1]]) {
+    if (e * e * x.$3 / (x.$2 * r) > 200) return false;
+  }
+  // Açıklamada yazılan eşdeğer direnç ve akımlar da kesin olsun.
+  final ana = e * devre.$3 / (devre.$2 * r);
+  if (!_kesin2(ana) || !_kesin2(r * devre.$2 / devre.$3)) return false;
+  for (final (_, ap, aq) in devre.$4) {
+    if (!_kesin2(ana * ap / aq)) return false;
+  }
+  return !_icinde(y, [e10 / 10, r]);
+}
+
+AdvancedItem _lambaSoru(int i) {
+  final (t, e10, r) = _yay(_lambaListe, i, lmAileBoyu);
+  final (tur, d, j) = _lambaSablon[t];
+  final e = e10 / 10;
+  final (y, yanlis) = _lambaHesap(t, e10, r);
+  final ilkDevre = tur == 4 ? _devreler[_anahtarlar[d].$1] : _devreler[d];
+  final giris =
+      'İç direnci önemsiz ve gerilimi ${_n(e)} V olan bir üretece, her birinin '
+      'direnci $r Ω olan özdeş lambalar bağlanıyor. ${ilkDevre.$1}'
+      '${tur == 4 ? ' ${_anahtarlar[d].$2}' : ''}';
+  const parlak = 'Lambaların parlaklığı harcadıkları güçle orantılıdır.';
+  final (devre, _) = _sablonDevre(t);
+  final ana = e * devre.$3 / (devre.$2 * r);
+  final esdeger = r * devre.$2 / devre.$3;
+  String lambaAkim(int x) {
+    final (ad, ap, aq) = devre.$4[x];
+    final ix = ana * ap / aq;
+    return '$ad lambasından ${ap == aq ? 'ana kol akımının tamamı' : 'ana kol akımının $ap/$aq kadarı'}, '
+        'yani ${_n(ix)} A geçer; gücü P = I²·R = ${_n(ix)}²·$r = ${_n(ix * ix * r)} W olur.';
+  }
+
+  final akimYazi =
+      'Eşdeğer direnç ${_n(esdeger)} Ω, ana kol akımı I = ${_n(e)} / '
+      '${_n(esdeger)} = ${_n(ana)} A olur.';
+  final (soru, cozum) = switch (tur) {
+    0 => (
+      '${devre.$4[j].$1} lambasının harcadığı güç kaç W olur?',
+      '$akimYazi ${lambaAkim(j)}',
+    ),
+    1 || 2 => () {
+      final ks = [
+        for (var x = 0; x < devre.$4.length; x++)
+          _oranDeger(_gucKatsayi(devre, x)),
+      ];
+      final hedef = tur == 1 ? ks.reduce(math.max) : ks.reduce(math.min);
+      final x = ks.indexWhere((v) => (v - hedef).abs() < 1e-12);
+      final adlar = [
+        for (var z = 0; z < ks.length; z++)
+          if ((ks[z] - hedef).abs() < 1e-12) devre.$4[z].$1,
+      ];
+      return (
+        '$parlak En ${tur == 1 ? 'parlak' : 'sönük'} yanan lambanın harcadığı güç kaç W olur?',
+        '$akimYazi ${lambaAkim(x)} En ${tur == 1 ? 'parlak' : 'sönük'} yanan '
+            '${adlar.length == 1 ? '${adlar.first} lambasıdır' : 'lambalar ${_veIle(adlar)} lambalarıdır'}.',
+      );
+    }(),
+    3 => (
+      'Üretecin devreye verdiği toplam güç kaç W olur?',
+      '$akimYazi Üretecin verdiği güç P = E·I = ${_n(e)}·${_n(ana)} = ${_n(y)} W olur.',
+    ),
+    _ => (
+      '${_anahtarlar[d].$3[0].toUpperCase()}${_anahtarlar[d].$3.substring(1)} '
+          '${devre.$4[j].$1} lambasının harcadığı güç kaç W olur?',
+      '${devre.$1} $akimYazi ${lambaAkim(j)}',
+    ),
+  };
+  return _s('$giris $soru', y, yanlis, cozum, unit: 'W');
+}
+
+final _f17 = lmSirali(
+  'fz_lamba_devre',
+  'Özdeş lambalı devrelerde güç ve parlaklık',
+  Topic.physics,
+  Difficulty.hard,
+  BloomLevel.analiz,
+  _lambaSoru,
+  exam: ExamKind.tyt,
+  lesson: _fizik,
+  shortAnswer: true,
+);
+
+// ─────────────────── 18 · Akım taşıyan telin manyetik alanı ───────────────────
+
+const _kNot = '(k = 10⁻⁷ T·m/A)';
+const _kPiNot = '(k = 10⁻⁷ T·m/A; π = 3 alınız.)';
+
+/// Düz tel: B (µT) = 20·I / d (d cm). (I A, d cm) ikilileri; oran ikizleri
+/// alınmaz.
+final _duzTel = _tekil([
+  for (var akim = 1; akim <= 60; akim++)
+    for (var d = 1; d <= 50; d++)
+      if (2000 * akim % d == 0 &&
+          !_icinde(20 * akim / d, [akim, d, 2000 * akim / d, 10 * akim / d]))
+        (akim, d),
+], (t) => _oran(t.$1, t.$2));
+
+/// Ters sorular: (I A, d cm) ikilileri, alan iki ondalıkta kesin. Akım
+/// sorulurken akım, uzaklık sorulurken uzaklık kökteki sayılardan farklıdır.
+final _duzTelTers = [
+  for (var akim = 1; akim <= 60; akim++)
+    for (var d = 1; d <= 50; d++)
+      if (2000 * akim % d == 0) (akim, d),
+];
+final _duzTelAkim = [
+  for (final (akim, d) in _duzTelTers)
+    if (!_icinde(akim, [20 * akim / d, d])) (akim, d),
+];
+final _duzTelUzaklik = [
+  for (final (akim, d) in _duzTelTers)
+    if (!_icinde(d, [20 * akim / d, akim])) (akim, d),
+];
+
+/// Orantı sorusu: (B₁ µT, d₁ cm, akım katı payı, paydası, d₂ cm).
+final _telOranti = [
+  for (var b1 = 5; b1 <= 200; b1 += 5)
+    for (final d1 in const [2, 3, 4, 5, 6, 8, 10, 12, 15, 20])
+      for (final (p, q) in const [
+        (2, 1),
+        (3, 1),
+        (4, 1),
+        (1, 2),
+        (3, 2),
+        (1, 3),
+      ])
+        for (final d2 in const [2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 24, 30])
+          // Ölçümdeki akım b1·d1 / 20 en çok 50 A, yeni akım en çok 100 A.
+          if (d2 != d1 &&
+              b1 * d1 <= 1000 &&
+              b1 * d1 * p <= 2000 * q &&
+              100 * b1 * p * d1 % (q * d2) == 0 &&
+              !_icinde(b1 * p * d1 / (q * d2), [
+                b1,
+                d1,
+                d2,
+                p,
+                q,
+                b1 * p * d2 / (q * d1),
+                b1 * p / q,
+                b1 * d1 / d2,
+              ]))
+            (b1, d1, p, q, d2),
+];
+
+AdvancedItem _duzTelAlani(int a, int b, int k) {
+  final n = a + 25 * (b ~/ 2) + 250 * k; // 0 … 999
+  if (b.isEven && n % 3 == 1) {
+    final (akim, d) = _yay(_duzTelAkim, n ~/ 3, 333);
+    final alan = 20 * akim / d;
+    return _s(
+      'Sonsuz uzun düz bir telden $d cm uzaklıktaki bir noktada telin '
+          'oluşturduğu manyetik alanın büyüklüğü ${_n(alan)} µT olarak '
+          'ölçülüyor. Telden geçen akımın şiddeti kaç A olur? $_kNot',
+      akim,
+      [alan * d / 10, alan * d / 40, 5 * alan * d],
+      'B = 2k·I / d bağıntısından I = B·d / (2k) bulunur: I = '
+          '${_n(alan)}·10⁻⁶·${_m(d)} / (2·10⁻⁷) = $akim A.',
+      unit: 'A',
+    );
+  }
+  if (b.isEven && n % 3 == 2) {
+    final (akim, d) = _yay(_duzTelUzaklik, n ~/ 3, 333);
+    final alan = 20 * akim / d;
+    return _s(
+      'Sonsuz uzun düz bir telden $akim A şiddetinde akım geçiyor. Telin '
+          'oluşturduğu manyetik alanın büyüklüğünün ${_n(alan)} µT olduğu '
+          'noktalar telden kaç cm uzaklıktadır? $_kNot',
+      d,
+      [d / 2, 2 * d, d / 100],
+      'B = 2k·I / d bağıntısından d = 2k·I / B bulunur: d = 2·10⁻⁷·$akim / '
+          '(${_n(alan)}·10⁻⁶) = ${_m(d)} m = $d cm.',
+      unit: 'cm',
+    );
+  }
+  if (b.isEven) {
+    final (akim, d) = _yay(_duzTel, n ~/ 3, 334);
+    final alan = 20 * akim / d;
+    return _s(
+      'Sonsuz uzun düz bir telden $akim A şiddetinde akım geçiyor. Telden $d '
+          'cm uzaklıktaki bir noktada telin oluşturduğu manyetik alanın büyüklüğü '
+          'kaç µT olur? $_kNot',
+      alan,
+      [100 * alan, alan / 2, 2 * alan],
+      'Düz telin oluşturduğu manyetik alan B = 2k·I / d bağıntısıyla bulunur: '
+          'B = 2·10⁻⁷·$akim / ${_m(d)} = ${_n(alan)}·10⁻⁶ T = ${_n(alan)} µT.',
+    );
+  }
+  final (b1, d1, p, q, d2) = _yay(_telOranti, n, 1000);
+  final b2 = b1 * p * d1 / (q * d2);
+  final kat = kesir(p, q);
+  return _s(
+    'Sonsuz uzun düz bir telden geçen akımın telden $d1 cm uzaklıktaki bir '
+        'noktada oluşturduğu manyetik alanın büyüklüğü $b1 µT olarak ölçülüyor. '
+        'Telden geçen akım ilk değerinin $kat katı yapılırsa telden $d2 cm '
+        'uzaklıktaki bir noktadaki manyetik alanın büyüklüğü kaç µT olur?',
+    b2,
+    [b1 * p * d2 / (q * d1), b1 * p / q, b1 * d1 / d2],
+    'B = 2k·I / d olduğundan alan akımla doğru, uzaklıkla ters orantılıdır: '
+        'B₂ = $b1·$kat·$d1 / $d2 = ${_n(b2)} µT.',
+  );
+}
+
+/// Paralel iki tel: (I₁, I₂, D cm, x cm, aynı yön mü, aradaki nokta mı).
+/// Aradaki noktada x birinci tele uzaklık; dıştaki noktada x ikinci tele
+/// uzaklıktır (nokta tellerin dışında, ikinci telin ötesinde).
+final _ikiTel = [
+  for (var i1 = 2; i1 <= 30; i1 += 2)
+    for (var i2 = 1; i2 <= 30; i2++)
+      if (i1 != i2)
+        for (final dd in const [6, 8, 10, 12, 15, 20, 24, 30])
+          for (final x in const [2, 3, 4, 5, 6, 8, 10, 12])
+            for (final ayni in const [true, false])
+              for (final ara in const [true, false])
+                // Orta noktada akımları yer değiştiren ikizler aynı hesabı verir.
+                if ((!ara || x < dd) &&
+                    !(ara && 2 * x == dd && i1 < i2) &&
+                    _ikiTelUygun(i1, i2, dd, x, ayni, ara))
+                  (i1, i2, dd, x, ayni, ara),
+];
+
+(double, double) _ikiTelAlanlari(int i1, int i2, int dd, int x, bool ara) =>
+    ara ? (20 * i1 / x, 20 * i2 / (dd - x)) : (20 * i1 / (dd + x), 20 * i2 / x);
+
+/// Bileşke: arada aynı yönlü akımlarda alanlar zıttır, zıt yönlüde aynıdır;
+/// dışta tersi.
+double _ikiTelNet(double b1, double b2, bool ayni, bool ara) =>
+    ayni == ara ? (b1 - b2).abs() : b1 + b2;
+
+bool _ikiTelUygun(int i1, int i2, int dd, int x, bool ayni, bool ara) {
+  final (b1, b2) = _ikiTelAlanlari(i1, i2, dd, x, ara);
+  if (!_kesin2(b1) || !_kesin2(b2)) return false;
+  final net = _ikiTelNet(b1, b2, ayni, ara);
+  if (net < 0.5) return false;
+  final ters = ayni == ara ? b1 + b2 : (b1 - b2).abs();
+  return !_icinde(net, [i1, i2, dd, x, b1, b2, ters]);
+}
+
+AdvancedItem _ikiTelAlani(int a, int b, int k) {
+  final (i1, i2, dd, x, ayni, ara) = _yay(_ikiTel, a + 25 * b + 500 * k, 1500);
+  final (b1, b2) = _ikiTelAlanlari(i1, i2, dd, x, ara);
+  final net = _ikiTelNet(b1, b2, ayni, ara);
+  final konum = ara
+      ? 'teller arasında, X telinden $x cm uzaklıktaki'
+      : 'tellerin dışında, Y telinin X telinden uzak tarafında ve Y telinden '
+            '$x cm uzaklıktaki';
+  final d1 = ara ? x : dd + x, d2 = ara ? dd - x : x;
+  final yon = ayni == ara
+      ? 'Bu noktada iki telin alanları zıt yönlü olduğundan bileşke alan '
+            '|${_n(b1)} − ${_n(b2)}| = ${_n(net)} µT olur.'
+      : 'Bu noktada iki telin alanları aynı yönlü olduğundan bileşke alan '
+            '${_n(b1)} + ${_n(b2)} = ${_n(net)} µT olur.';
+  return _s(
+    'Aynı düzlemde bulunan, birbirine paralel ve aralarındaki uzaklık $dd cm '
+        'olan sonsuz uzun X ve Y tellerinden ${ayni ? 'aynı' : 'zıt'} yönlerde '
+        'sırasıyla $i1 A ve $i2 A şiddetinde akımlar geçiyor. Tellerin düzleminde, '
+        '$konum noktada bileşke manyetik alanın büyüklüğü kaç µT olur? $_kNot',
+    net,
+    [ayni == ara ? b1 + b2 : (b1 - b2).abs(), b1, b2],
+    'Noktanın X teline uzaklığı $d1 cm, Y teline uzaklığı $d2 cm olur. X telinin '
+        'alanı 2·10⁻⁷·$i1 / ${_m(d1)} = ${_n(b1)} µT, Y telinin alanı '
+        '2·10⁻⁷·$i2 / ${_m(d2)} = ${_n(b2)} µT bulunur. $yon',
+  );
+}
+
+/// Çembersel tel: B (µT) = 60·N·I / r (π = 3, r cm). Sarım sayısı ile akımı
+/// yer değiştiren ikizler alınmaz.
+final _cemberTel = _tekil([
+  for (final sarim in const [1, 2, 3, 4, 5, 10, 20, 50, 100])
+    for (var akim = 1; akim <= 20; akim++)
+      for (final r in const [2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 24, 25, 30])
+        if (6000 * sarim * akim % r == 0 &&
+            60 * sarim * akim / r <= 5000 &&
+            !_icinde(60 * sarim * akim / r, [
+              sarim,
+              akim,
+              r,
+              20 * sarim * akim / r,
+              60 * akim / r,
+              6000 * sarim * akim / r,
+            ]))
+          (sarim, akim, r),
+], (t) => (math.min(t.$1, t.$2), math.max(t.$1, t.$2), t.$3));
+
+/// Orantı: (B₁ µT, sarım katı, akım katı payı/paydası, yarıçap katı
+/// payı/paydası).
+final _cemberOranti = [
+  for (var b1 = 10; b1 <= 300; b1 += 10)
+    for (final s in const [1, 2, 3])
+      for (final (ap, aq) in const [(1, 1), (2, 1), (3, 1), (1, 2), (3, 2)])
+        for (final (rp, rq) in const [
+          (1, 1),
+          (2, 1),
+          (3, 1),
+          (1, 2),
+          (3, 2),
+          (2, 3),
+        ])
+          if (!(s == 1 && ap == aq && rp == rq) &&
+              100 * b1 * s * ap * rq % (aq * rp) == 0 &&
+              !_icinde(b1 * s * ap * rq / (aq * rp), [
+                b1,
+                s,
+                b1 * s * ap * rp / (aq * rq),
+                b1 * ap * rq / (aq * rp),
+              ]))
+            (b1, s, ap, aq, rp, rq),
+];
+
+AdvancedItem _cemberTelAlani(int a, int b, int k) {
+  final n = a + 25 * (b ~/ 2) + 250 * k; // 0 … 749
+  if (b.isEven) {
+    final (sarim, akim, r) = _yay(_cemberTel, n, 750);
+    final alan = 60 * sarim * akim / r;
+    final tel = sarim == 1
+        ? 'Yarıçapı $r cm olan çembersel bir telden'
+        : 'Yarıçapı $r cm olan ve $sarim sarımdan oluşan çembersel bir bobinden';
+    return _s(
+      '$tel $akim A şiddetinde akım geçiyor. Çemberin merkezinde oluşan '
+          'manyetik alanın büyüklüğü kaç µT olur? $_kPiNot',
+      alan,
+      [if (sarim > 1) alan / sarim, alan / 3, 100 * alan],
+      'Çembersel telin merkezindeki alan B = 2π·k·N·I / r bağıntısıyla '
+          'bulunur: B = 2·3·10⁻⁷·$sarim·$akim / ${_m(r)} = ${_n(alan)}·10⁻⁶ T = '
+          '${_n(alan)} µT.',
+    );
+  }
+  final (b1, sk, ap, aq, rp, rq) = _yay(_cemberOranti, n, 750);
+  final b2 = b1 * sk * ap * rq / (aq * rp);
+  final degisim = [
+    if (sk > 1) 'sarım sayısı $sk katına',
+    if (ap != aq) 'akım ilk değerinin ${kesir(ap, aq)} katına',
+    if (rp != rq) 'yarıçap ilk değerinin ${kesir(rp, rq)} katına',
+  ];
+  final metin = degisim.length == 1
+      ? degisim.first
+      : '${degisim.sublist(0, degisim.length - 1).join(', ')} ve ${degisim.last}';
+  return _s(
+    'Çembersel bir telden geçen akımın çemberin merkezinde oluşturduğu '
+        'manyetik alanın büyüklüğü $b1 µT olarak ölçülüyor. Aynı biçimdeki telde '
+        '$metin getirilirse merkezdeki manyetik alanın büyüklüğü kaç µT olur?',
+    b2,
+    [b1 * sk * ap * rp / (aq * rq), b1 * ap * rq / (aq * rp), b1 * sk],
+    'Merkezdeki alan B = 2π·k·N·I / r olduğundan sarım sayısı ve akımla doğru, '
+        'yarıçapla ters orantılıdır: B₂ = $b1·$sk·${kesir(ap, aq)}·'
+        '${kesir(rq, rp)} = ${_n(b2)} µT.',
+  );
+}
+
+final _f18 = lmAile(
+  'fz_tel_manyetik',
+  'Düz ve çembersel akımın oluşturduğu manyetik alan',
+  Topic.physics,
+  Difficulty.hard,
+  BloomLevel.uygulama,
+  (a, b, c) => switch (c % 3) {
+    0 => _duzTelAlani(a, b, c ~/ 3),
+    1 => _ikiTelAlani(a, b, c ~/ 3),
+    _ => _cemberTelAlani(a, b, c ~/ 3),
+  },
+  exam: ExamKind.ayt,
+  lesson: _fizik,
+);
+
+// ───────────────────────── 19 · Bileşik kaplar ve U borusu ───────────────────────
+
+/// Sıvı yoğunlukları (yüzde bir g/cm³).
+const _yogunluklar = [
+  60,
+  70,
+  75,
+  80,
+  90,
+  100,
+  120,
+  125,
+  150,
+  160,
+  180,
+  200,
+  240,
+  250,
+  300,
+];
+
+/// (hafif yoğunluk, ağır yoğunluk, hafif sıvının yüksekliği cm): ağır sıvının
+/// yüksekliği kesin; oran ikizleri alınmaz.
+final _uBorusu = _tekil([
+  for (final d1 in _yogunluklar)
+    for (final d2 in _yogunluklar)
+      if (d1 < d2)
+        for (var h1 = 4; h1 <= 60; h1++)
+          if (100 * h1 * d1 % d2 == 0 &&
+              !_icinde(h1 * d1 / d2, [
+                h1,
+                d1 / 100,
+                d2 / 100,
+                h1 - h1 * d1 / d2,
+              ]) &&
+              !_icinde(h1 - h1 * d1 / d2, [h1, d1 / 100, d2 / 100]))
+            (d1, d2, h1),
+], (t) => (_oran(t.$1, t.$2), t.$3));
+
+/// Yoğunluk sorusunda Y sıvısı su olmasın: d(X) = h(Y) / h(X) yanlış yolu
+/// (d(Y) ile çarpmayı unutmak) doğru yanıtı vermesin.
+final _uBorusuYogunluk = [
+  for (final t in _uBorusu)
+    if (t.$2 != 100) t,
+];
+
+AdvancedItem _uBorusuDenge(int a, int b, int k) {
+  final v = b % 3;
+  final n = a + 25 * (b ~/ 3) + 175 * k; // 0 … 699
+  final (d1, d2, h1) = _yay(v == 1 ? _uBorusuYogunluk : _uBorusu, n, 700);
+  final h2 = h1 * d1 / d2;
+  final r1 = _n(d1 / 100), r2 = _n(d2 / 100);
+  const duzen =
+      'Bir U borusunda birbirine karışmayan X ve Y sıvıları dengededir. Y '
+      'sıvısı borunun alt kısmını doldurmuş ve iki kola dağılmıştır; X sıvısı '
+      'kollardan birinde Y sıvısının üzerindedir.';
+  const duzey =
+      'X ile Y sıvılarının ayrılma yüzeyinden geçen yatay düzeye göre';
+  const denge =
+      'Ayrılma yüzeyinden geçen yatay düzeyde iki koldaki basınçlar eşittir: '
+      'h(X)·d(X) = h(Y)·d(Y).';
+  switch (v) {
+    case 0:
+      return _s(
+        '$duzen X sıvısının yoğunluğu $r1 g/cm³, Y sıvısının yoğunluğu $r2 '
+            'g/cm³ olarak veriliyor. $duzey X sıvısının yüksekliği $h1 cm '
+            'olduğuna göre öbür koldaki Y sıvısının yüksekliği kaç cm olur?',
+        h2,
+        [h1 * d2 / d1, h1 - h2, h1.toDouble()],
+        '$denge Buradan h(Y) = $h1·$r1 / $r2 = ${_n(h2)} cm bulunur.',
+        unit: 'cm',
+      );
+    case 1:
+      return _s(
+        '$duzen Y sıvısının yoğunluğu $r2 g/cm³ olarak veriliyor. $duzey X '
+            'sıvısının yüksekliği $h1 cm, öbür koldaki Y sıvısının yüksekliği '
+            '${_n(h2)} cm olarak ölçülüyor. X sıvısının yoğunluğu kaç g/cm³ olur?',
+        d1 / 100,
+        [h1 * d2 / (100 * h2), d2 / 100, h2 / h1],
+        '$denge Buradan d(X) = ${_n(h2)}·$r2 / $h1 = $r1 g/cm³ bulunur.',
+      );
+    default:
+      final fark = h1 - h2;
+      return _s(
+        '$duzen X sıvısının yoğunluğu $r1 g/cm³, Y sıvısının yoğunluğu $r2 '
+            'g/cm³ olarak veriliyor. $duzey X sıvısının yüksekliği $h1 cm '
+            'olduğuna göre iki koldaki sıvıların serbest yüzeyleri arasındaki '
+            'düzey farkı kaç cm olur?',
+        fark,
+        [h2, h1 * d2 / d1 - h1, h1 + h2],
+        '$denge Y sıvısının yüksekliği h(Y) = $h1·$r1 / $r2 = ${_n(h2)} cm olur. '
+            'Serbest yüzeyler arasındaki fark $h1 − ${_n(h2)} = ${_n(fark)} cm '
+            'bulunur.',
+        unit: 'cm',
+      );
+  }
+}
+
+/// Torricelli: (P₀ cmHg, sıvı yoğunluğu yüzde bir g/cm³; 0,70 … 3,00):
+/// sütun yüksekliği iki ondalıkta kesin.
+final _torricelli = [
+  for (var p0 = 60; p0 <= 76; p0++)
+    for (var d = 70; d <= 300; d++)
+      if (1360 * p0 * 100 % d == 0) (p0, d),
+];
+
+/// Sütun yüksekliği ve basınç sorularında sıvı su olmasın: yoğunluğu hesaba
+/// katmamak doğru yanıtı vermesin.
+final _torricelliSusuz = [
+  for (final t in _torricelli)
+    if (t.$2 != 100) t,
+];
+
+/// Sıvı sütunu: (yoğunluk kg/m³, sütun yüksekliği cm) → açık hava basıncı
+/// 70 … 105 kPa. Sıvılar 700 … 3000 kg/m³ ve cıva.
+final _sutunBasinc = [
+  for (final d in [for (var x = 700; x <= 3000; x += 100) x, 13600])
+    for (var h = 50; h <= 1500; h += d == 13600 ? 1 : 5)
+      if (d * h >= 700000 && d * h <= 1050000 && !_icinde(d * h / 10, [d, h]))
+        (d, h),
+];
+
+const _civaNot = '(Cıvanın yoğunluğu 13,6 g/cm³ alınız.)';
+
+AdvancedItem _acikHava(int a, int b, int k) {
+  final n = a + 25 * (b ~/ 2) + 250 * k; // 0 … 749
+  if (b.isEven) {
+    final (p0, d) = _yay(
+      n % 3 == 2 ? _torricelli : _torricelliSusuz,
+      n ~/ 3,
+      250,
+    );
+    final h = 1360 * p0 / d;
+    final ds = _n(d / 100), hs = _n(h);
+    final esit = 'Sıvı sütununun basıncı açık hava basıncına eşittir:';
+    return switch (n % 3) {
+      0 => _s(
+        'Açık hava basıncının $p0 cmHg olduğu bir yerde Torricelli deneyi cıva '
+            'yerine yoğunluğu $ds g/cm³ olan bir sıvıyla yapılıyor. Tüpte '
+            'yükselen sıvı sütununun yüksekliği kaç cm olur? $_civaNot',
+        h,
+        [p0 * d / 1360, p0 * 13.6, p0],
+        '$esit $p0·13,6 = h·$ds. Buradan h = $hs cm bulunur.',
+        unit: 'cm',
+      ),
+      1 => _s(
+        'Bir yerde Torricelli deneyi cıva yerine yoğunluğu $ds g/cm³ olan bir '
+            'sıvıyla yapılıyor ve tüpte yükselen sıvı sütununun yüksekliği $hs '
+            'cm olarak ölçülüyor. Bu yerde açık hava basıncı kaç cmHg olur? '
+            '$_civaNot',
+        p0,
+        [h * d / 100, h / 13.6],
+        '$esit P₀·13,6 = $hs·$ds. Buradan P₀ = $p0 cmHg bulunur.',
+      ),
+      _ => _s(
+        'Açık hava basıncının $p0 cmHg olduğu bir yerde Torricelli deneyi cıva '
+            'yerine başka bir sıvıyla yapılıyor ve tüpte yükselen sıvı '
+            'sütununun yüksekliği $hs cm olarak ölçülüyor. Bu sıvının '
+            'yoğunluğu kaç g/cm³ olur? $_civaNot',
+        d / 100,
+        [p0 / h],
+        '$esit $p0·13,6 = $hs·d. Buradan d = $ds g/cm³ bulunur.',
+      ),
+    };
+  }
+  final (d, h) = _yay(_sutunBasinc, n, 750);
+  final p = d * h / 10; // Pa
+  return _s(
+    'Yoğunluğu $d kg/m³ olan ${d == 13600 ? 'cıvayla' : 'bir sıvıyla'} '
+        'yapılan Torricelli deneyinde tüpteki sıvı sütununun yüksekliği '
+        '${_n(h / 100)} m olarak ölçülüyor. Açık hava basıncı kaç Pa olur? '
+        '$_g10',
+    p,
+    [p * 100, d * h / 1000, p / 10],
+    'Açık hava basıncı sütunun yaptığı basınca eşittir: P = h·d·g = '
+        '${_n(h / 100)}·$d·10 = ${_n(p)} Pa.',
+    unit: 'Pa',
+  );
+}
+
+AdvancedItem _manometre(int a, int b, int k) {
+  final v = b % 4;
+  final n = a + 25 * (b ~/ 4) + 125 * k; // 0 … 374
+  final p0 = 68 + n % 9; // 68 … 76 cmHg
+  final asagi = v.isEven; // gaz tarafındaki cıva düzeyi aşağıda
+  // Düzey farkı 1 … 42 cm; P₀ − Δh = Δh olacaksa yarım santimetre kaydırılır
+  // (yanıt kökteki düzey farkına eşit çıkmasın).
+  final dh0 = 1 + n ~/ 9;
+  final num dh = !asagi && p0 == 2 * dh0 ? dh0 - 0.5 : dh0;
+  final pGaz = asagi ? p0 + dh : p0 - dh;
+  final pa = v >= 2;
+  final y = pa ? pGaz * 1360.0 : pGaz.toDouble();
+  final ters = (asagi ? p0 - dh : p0 + dh) * (pa ? 1360 : 1);
+  final gazYazi = _n(pGaz), dhYazi = _n(dh);
+  return _s(
+    'Açık uçlu cıvalı bir manometre, gaz dolu bir kaba bağlanmıştır. Açık '
+        'hava basıncı $p0 cmHg olan bir ortamda, manometrenin gaza bağlı '
+        'kolundaki cıva düzeyi açık koldaki cıva düzeyinden $dhYazi cm '
+        '${asagi ? 'aşağıdadır' : 'yukarıdadır'}. Kaptaki gazın basıncı kaç '
+        '${pa ? 'Pa' : 'cmHg'} olur?${pa ? ' (1 cmHg = 1360 Pa alınız.)' : ''}',
+    y,
+    [ters, dh * (pa ? 1360 : 1), p0 * (pa ? 1360 : 1)],
+    'Gaza bağlı koldaki cıva düzeyi ${asagi ? 'aşağıda olduğundan gaz basıncı açık hava basıncından büyüktür' : 'yukarıda olduğundan gaz basıncı açık hava basıncından küçüktür'}: '
+        'P = $p0 ${asagi ? '+' : '−'} $dhYazi = $gazYazi cmHg'
+        '${pa ? ' = $gazYazi·1360 = ${_n(y)} Pa' : ''}.',
+    unit: pa ? 'Pa' : '',
+  );
+}
+
+final _f19 = lmAile(
+  'fz_u_borusu',
+  'U borusu, açık hava basıncı ve manometre',
+  Topic.physics,
+  Difficulty.medium,
+  BloomLevel.uygulama,
+  (a, b, c) => switch (c % 3) {
+    0 => _uBorusuDenge(a, b, c ~/ 3),
+    1 => _acikHava(a, b, c ~/ 3),
+    _ => _manometre(a, b, c ~/ 3),
+  },
+  exam: ExamKind.tyt,
+  lesson: _fizik,
+);
+
+// ─────────────────────────────── 20 · Işık ve renk ────────────────────────────────
+
+/// Işık renkleri bit maskesiyle: kırmızı 1, yeşil 2, mavi 4.
+const _renkAd = [
+  'siyah',
+  'kırmızı',
+  'yeşil',
+  'sarı',
+  'mavi',
+  'magenta',
+  'camgöbeği',
+  'beyaz',
+];
+
+const _renkNot =
+    '(Işıkta ana renkler kırmızı, yeşil ve mavi; ara renkler sarı, camgöbeği '
+    '(cyan) ve magentadır.)';
+
+/// Rengin ana renk bileşenleri: sarı → kırmızı + yeşil.
+String _bilesen(int c) => c == 0
+    ? 'hiçbir bileşen'
+    : [
+        for (final x in const [1, 2, 4])
+          if (c & x != 0) _renkAd[x],
+      ].join(' + ');
+
+String _renkVe(int c) => c == 0 || c == 1 || c == 2 || c == 4
+    ? _renkAd[c]
+    : '${_renkAd[c]} (${_bilesen(c)})';
+
+/// Işık demeti: (lamba rengi, filtre rengi; 0 filtre yok). Filtreden hiç
+/// ışık geçmeyen demetler alınmaz.
+final _demetler = [
+  for (var l = 1; l <= 7; l++)
+    for (var f = 0; f <= 6; f++)
+      if (f == 0 || l & f != 0) (l, f),
+];
+
+int _demetRengi((int, int) d) => d.$2 == 0 ? d.$1 : d.$1 & d.$2;
+
+String _demetYazi((int, int) d) => d.$2 == 0
+    ? '${_renkAd[d.$1]} ışık'
+    : '${_renkAd[d.$1]} ışığın ${_renkAd[d.$2]} filtreden geçirilmesiyle elde '
+          'edilen ışık';
+
+/// "kırmızı bileşenini" ya da "kırmızı + yeşil bileşenlerini".
+String _bilesenEk(int c, String tekil, String cogul) =>
+    '${_bilesen(c)} ${c == 1 || c == 2 || c == 4 ? tekil : cogul}';
+
+String _demetCozum((int, int) d) => d.$2 == 0
+    ? '${_renkAd[d.$1]} ışık ${_bilesenEk(d.$1, 'bileşenini', 'bileşenlerini')} '
+          'taşır'
+    : '${_renkAd[d.$2]} filtre yalnız '
+          '${_bilesenEk(d.$2, 'bileşenini', 'bileşenlerini')} geçirdiğinden '
+          '${_renkAd[d.$1]} ışıktan ${_renkVe(_demetRengi(d))} ışık geçer';
+
+const _sira = ['Birinci', 'ikinci', 'üçüncü'];
+const _sayiAd = ['', '', 'iki', 'üç', 'dört'];
+
+int _veya(Iterable<int> x) => x.fold(0, (a, b) => a | b);
+int _ve(Iterable<int> x) => x.fold(7, (a, b) => a & b);
+
+/// Filtreli demetin ışığını filtrenin renginde sanmak.
+int _filtreRengi((int, int) d) => d.$2 == 0 ? d.$1 : d.$2;
+
+bool _filtreli(List<(int, int)> d) => d.any((x) => x.$2 != 0);
+
+String _demetTarif(List<(int, int)> demet) {
+  final son = demet.length - 1;
+  return [
+    for (var j = 0; j <= son; j++)
+      '${_sira[j]} demet${j == son ? ' ise' : ''} ${_demetYazi(demet[j])}'
+          '${j == son ? 'tır' : ''}',
+  ].join(', ');
+}
+
+/// Perdede toplama sorusunun yanlış yolları: filtreleri yok saymak, ışığı
+/// filtrenin renginde sanmak, ışıkları boya gibi karıştırmak (ortak bileşen),
+/// yalnız ilk ya da yalnız son demeti hesaba katmak.
+List<int> _toplamaYanlis(List<(int, int)> d) => [
+  if (_filtreli(d)) _veya(d.map((x) => x.$1)),
+  if (_filtreli(d)) _veya(d.map(_filtreRengi)),
+  _ve(d.map(_demetRengi)),
+  _demetRengi(d.first),
+  _demetRengi(d.last),
+];
+
+/// Hiçbir yanlış yol doğru rengi vermesin.
+bool _toplamaUygun(List<(int, int)> d) =>
+    !_toplamaYanlis(d).contains(_veya(d.map(_demetRengi)));
+
+/// Perdede ışıkların toplanması: iki ya da üç demet.
+AdvancedItem _renkToplama(List<(int, int)> demet) {
+  final renk = _veya(demet.map(_demetRengi));
+  return secenekli(
+    'Beyaz bir perdenin aynı bölgesine ${_sayiAd[demet.length]} ışık demeti '
+        'birlikte düşürülüyor. ${_demetTarif(demet)}. Perdenin bu bölgesi hangi '
+        'renkte görünür? $_renkNot',
+    _renkAd[renk],
+    [
+      for (final c in _toplamaYanlis(demet)) _renkAd[c],
+      _renkAd[7 - renk],
+      for (var c = 7; c >= 0; c--) _renkAd[c],
+    ],
+    '${_bas([for (final d in demet) _demetCozum(d)].join('; '))}. Işıklar '
+        'toplanınca bileşenler birleşir; perdede '
+        '${_bilesenEk(renk, 'bileşeni', 'bileşenleri')} bulunduğundan bölge '
+        '${_renkAd[renk]} görünür.',
+  );
+}
+
+String _dizi(List<int> renkler) => renkler.map((c) => _renkAd[c]).join(' – ');
+
+String _cisimListesi(List<int> cisim) =>
+    '${cisim.sublist(0, cisim.length - 1).map((o) => _renkAd[o]).join(', ')} '
+    've ${_renkAd[cisim.last]}';
+
+String _cisimSonuc(List<int> cisim, int isik) =>
+    'Cisim, aydınlatan ışıktaki bileşenlerden yalnız kendi renginde '
+    'bulunanları yansıtır; yansıtacak bileşen yoksa siyah görünür: '
+    '${[for (final o in cisim) '${_renkAd[o]} cisim ${_renkAd[o & isik]}'].join(', ')}.';
+
+bool _ayniDizi(List<int> x, List<int> y) {
+  for (var j = 0; j < x.length; j++) {
+    if (x[j] != y[j]) return false;
+  }
+  return true;
+}
+
+/// Renkli ışıkta cisimlerin görünen renkleri için yanlış yollar (her biri
+/// bir renk dizisi): ışıkta kendi renginden bir bileşen varsa cismi kendi
+/// renginde sanmak, her cismi ışığın renginde sanmak, ışığı yok saymak,
+/// cismin rengiyle ışığı birleştirmek; filtreli demette filtreleri yok saymak
+/// ya da ışığı filtrenin renginde sanmak; iki demette yalnız birini hesaba
+/// katmak ya da ışıkları boya gibi karıştırmak.
+List<List<int>> _cisimYanlis(List<int> cisim, List<(int, int)> demet) {
+  final renkler = demet.map(_demetRengi).toList();
+  final c = _veya(renkler);
+  List<int> her(int Function(int) f) => [for (final o in cisim) f(o)];
+  return [
+    her((o) => o & c != 0 ? o : 0),
+    her((_) => c),
+    her((o) => o),
+    if (_filtreli(demet)) her((o) => o & _veya(demet.map((d) => d.$1))),
+    if (_filtreli(demet)) her((o) => o & _veya(demet.map(_filtreRengi))),
+    if (demet.length == 2) ...[
+      her((o) => o & renkler[0]),
+      her((o) => o & renkler[1]),
+      her((o) => o & renkler[0] & renkler[1]),
+    ],
+    her((o) => o | c),
+  ];
+}
+
+bool _cisimUygun(List<int> cisim, List<(int, int)> demet) {
+  final c = _veya(demet.map(_demetRengi));
+  if (c == 7) return false;
+  final y = [for (final o in cisim) o & c];
+  return !_cisimYanlis(cisim, demet).any((x) => _ayniDizi(x, y));
+}
+
+/// Beyaz ışıkta renkleri verilen üç ya da dört cisim, bir ya da iki renkli
+/// ışık demetiyle aydınlatılıyor.
+AdvancedItem _renkCisim(List<int> cisim, List<(int, int)> demet) {
+  final c = _veya(demet.map(_demetRengi));
+  final aydinlatma = demet.length == 1
+      ? 'karanlık bir odada yalnız ${_demetYazi(demet.first)}la '
+            'aydınlatılıyor.'
+      : 'karanlık bir odada aynı anda iki ışık demetiyle aydınlatılıyor. '
+            '${_demetTarif(demet)}.';
+  final isik = demet.length == 1
+      ? _bas(_demetCozum(demet.first))
+      : '${_bas([for (final d in demet) _demetCozum(d)].join('; '))}; iki '
+            'demet birlikte cisimlere ${_renkVe(c)} ışık ulaştırır';
+  return secenekli(
+    'Beyaz ışık altında ${_cisimListesi(cisim)} görünen '
+        '${_sayiAd[cisim.length]} cisim, $aydinlatma Bu durumda cisimler '
+        'sırasıyla hangi renklerde görünür? $_renkNot',
+    _dizi([for (final o in cisim) o & c]),
+    [
+      for (final x in _cisimYanlis(cisim, demet)) _dizi(x),
+      _dizi([for (final o in cisim) 7 - o]),
+      _dizi([for (final _ in cisim) 0]),
+    ],
+    '$isik. ${_cisimSonuc(cisim, c)}',
+  );
+}
+
+/// Beyaz ışık art arda iki filtreden geçip cisimlere düşüyor. Her iki filtre
+/// de ışığı değiştirir: geçen ışık tek bir ana renktir.
+List<List<int>> _filtreYanlis(int f1, int f2, List<int> cisim) {
+  final c = f1 & f2;
+  List<int> her(int Function(int) f) => [for (final o in cisim) f(o)];
+  return [
+    her((o) => o & f2),
+    her((o) => o & f1),
+    her((o) => o & (f1 | f2)),
+    her((o) => o & c != 0 ? o : 0),
+    her((_) => c),
+    her((o) => o),
+    her((o) => o | c),
+  ];
+}
+
+bool _filtreUygun(int f1, int f2, List<int> cisim) {
+  final y = [for (final o in cisim) o & f1 & f2];
+  return !_filtreYanlis(f1, f2, cisim).any((x) => _ayniDizi(x, y));
+}
+
+AdvancedItem _renkFiltre(int f1, int f2, List<int> cisim) {
+  final c = f1 & f2;
+  return secenekli(
+    'Beyaz ışık önce ${_renkAd[f1]}, sonra ${_renkAd[f2]} filtreden '
+        'geçirilerek, beyaz ışık altında ${_cisimListesi(cisim)} görünen '
+        '${_sayiAd[cisim.length]} cisme düşürülüyor. Bu ışık altında cisimler '
+        'sırasıyla hangi renklerde görünür? $_renkNot',
+    _dizi([for (final o in cisim) o & c]),
+    [
+      for (final x in _filtreYanlis(f1, f2, cisim)) _dizi(x),
+      _dizi([for (final o in cisim) 7 - o]),
+      _dizi([for (final _ in cisim) 0]),
+    ],
+    'Her filtre yalnız kendi rengindeki bileşenleri geçirir: ${_renkAd[f1]} '
+        'filtre beyaz ışıktan ${_renkVe(f1)} ışık geçirir, ${_renkAd[f2]} '
+        'filtre bunun yalnız ${_bilesenEk(c, 'bileşenini', 'bileşenlerini')} '
+        'geçirir. ${_cisimSonuc(cisim, c)}',
+  );
+}
+
+const _tumRenkler = [0, 1, 2, 3, 4, 5, 6, 7];
+
+List<List<int>> _cisimGruplari(int adet) => [
+  for (var x = 0; x < kombinasyonSayisi(8, adet); x++)
+    kombinasyon(_tumRenkler, adet, x, spread: false),
+];
+
+final _ikiliDemet = [
+  for (var x = 0; x < _demetler.length; x++)
+    for (var y = x + 1; y < _demetler.length; y++)
+      if (_toplamaUygun([_demetler[x], _demetler[y]]))
+        [_demetler[x], _demetler[y]],
+];
+final _ucluDemet = [
+  for (var x = 0; x < _demetler.length; x++)
+    for (var y = x + 1; y < _demetler.length; y++)
+      for (var z = y + 1; z < _demetler.length; z++)
+        if (_toplamaUygun([_demetler[x], _demetler[y], _demetler[z]]))
+          [_demetler[x], _demetler[y], _demetler[z]],
+];
+
+/// (cisimler, tek demet) ve (cisimler, iki demet) üçlü ve dörtlü gruplarla.
+List<(List<int>, List<(int, int)>)> _tekDemetli(int adet) => [
+  for (final o in _cisimGruplari(adet))
+    for (final d in _demetler)
+      if (_cisimUygun(o, [d])) (o, [d]),
+];
+List<(List<int>, List<(int, int)>)> _ciftDemetli(int adet) => [
+  for (final o in _cisimGruplari(adet))
+    for (var x = 0; x < _demetler.length; x++)
+      for (var y = x + 1; y < _demetler.length; y++)
+        if (_cisimUygun(o, [_demetler[x], _demetler[y]]))
+          (o, [_demetler[x], _demetler[y]]),
+];
+final _tekDemet3 = _tekDemetli(3), _tekDemet4 = _tekDemetli(4);
+final _ciftDemet3 = _ciftDemetli(3), _ciftDemet4 = _ciftDemetli(4);
+
+/// (birinci filtre, ikinci filtre, cisimler): iki ara renk filtresi.
+List<(int, int, List<int>)> _filtreZinciri(int adet) => [
+  for (final f1 in const [3, 5, 6])
+    for (final f2 in const [3, 5, 6])
+      if (f1 != f2)
+        for (final o in _cisimGruplari(adet))
+          if (_filtreUygun(f1, f2, o)) (f1, f2, o),
+];
+final _filtre3 = _filtreZinciri(3), _filtre4 = _filtreZinciri(4);
+
+/// İlk listenin tamamı, kalan sıra numaraları ikinci listeye yayılır.
+T _ikiListe<T>(List<T> ilk, List<T> ikinci, int j, int adet) =>
+    j < ilk.length ? ilk[j] : _yay(ikinci, j - ilk.length, adet - ilk.length);
+
+/// 0 … 749 perdede ışıkların toplanması, 750 … 1749 tek demetle aydınlatılan
+/// cisimler, 1750 … 4499 iki demetle aydınlatılan cisimler, 4500 … 4999 iki
+/// filtreden geçen ışıkta cisimler.
+AdvancedItem _renkSoru(int i) {
+  if (i < 750) return _renkToplama(_ikiListe(_ikiliDemet, _ucluDemet, i, 750));
+  if (i < 1750) {
+    final (o, d) = _ikiListe(_tekDemet3, _tekDemet4, i - 750, 1000);
+    return _renkCisim(o, d);
+  }
+  if (i < 4500) {
+    final j = i - 1750;
+    final (o, d) = j < 1375
+        ? _yay(_ciftDemet3, j, 1375)
+        : _yay(_ciftDemet4, j - 1375, 1375);
+    return _renkCisim(o, d);
+  }
+  final (f1, f2, o) = _ikiListe(_filtre3, _filtre4, i - 4500, 500);
+  return _renkFiltre(f1, f2, o);
+}
+
+final _f20 = lmSirali(
+  'fz_renk',
+  'Işık ve renk: renklerin toplanması ve filtreler',
+  Topic.physics,
+  Difficulty.medium,
+  BloomLevel.anlama,
+  _renkSoru,
+  exam: ExamKind.tyt,
+  lesson: _fizik,
+);
+
 final lmFizikEk = <AdvancedFamily>[
   _f01,
   _f02,
@@ -3478,4 +5095,9 @@ final lmFizikEk = <AdvancedFamily>[
   _f13,
   _f14,
   _f15,
+  _f16,
+  _f17,
+  _f18,
+  _f19,
+  _f20,
 ];

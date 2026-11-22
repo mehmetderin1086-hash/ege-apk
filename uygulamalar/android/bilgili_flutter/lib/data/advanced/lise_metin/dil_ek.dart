@@ -70,61 +70,99 @@ List<String> _digerleri(
 }
 
 /// Sıralı üçlü yanıt. [yanlis] her konum için o konumda kesin yanlış olan
-/// etiketleri taşır. Çeldiriciler bir ya da iki konumu bu etiketlerle
-/// değiştirerek kurulur; [karistir] doğruysa doğru etiketlerin, en az bir
-/// konumu kesin yanlış olan dizilimleri de çeldirici adayıdır. Böylece her
-/// çeldiricide en az bir konum kesin yanlıştır. [tekrarsiz] doğruysa aynı
-/// etiketi iki konumda taşıyan adaylar atılır (her konumun yanıtı ayrı bir
-/// ögeye ait olduğunda böyle bir seçenek kendi kendini eler).
-/// [kesinYanlis] verilirse dizilimlerde bir konumun kesin yanlış olup
-/// olmadığı onunla sınanır (ör. sayısal yanıtlarda doğrudan farklı her değer).
+/// etiketleri, önce tipik karıştırmaları taşır. Her konum için bunlardan biri
+/// (w) seçilir ve her çeldirici doğru üçlünün iki konumunu değiştirir:
+/// (w0, w1, d2), (w0, d1, w2), (d0, w1, w2). Böylece her çeldiricide iki konum
+/// kesin yanlıştır; her konumda doğru etiket de w de dört seçeneğin tam
+/// ikisinde görünür ve her iki seçenek birbirinden iki konumda ayrılır.
+/// “Seçeneklerde en sık geçen etiketleri seç” gibi bilgi gerektirmeyen bir
+/// yol yanıtı vermez (tek konumu değiştiren çeldiricilerde bu yol her vakada
+/// doğru seçeneği bulur). [tekrarsiz] doğruysa w'ler doğru etiketlerden ve
+/// birbirinden farklı seçilir (her konumun yanıtı ayrı bir ögeye ait
+/// olduğunda bir seçenek aynı etiketi iki kez taşımaz).
+///
+/// w'ler her konumun (sıra numarasına göre kaydırılan) ilk üç uygun adayı
+/// arasından birlikte seçilir: önce hiçbir seçeneğin ötekilerden göze
+/// çarpacak kadar uzun ya da kısa olmadığı, sonra uzunluğu doğru etikete
+/// yakın w'ler taşıyan, sonra kaydırma sırasında önce gelen üçlü alınır.
+/// Böylece “en uzun ya da en kısa seçenek” de yanıtı ele vermez ve
+/// çeldiriciler vakadan vakaya değişir.
 AdvancedItem _sirali(
   String kok,
   List<String> dogru,
   List<List<String>> yanlis,
   String aciklama,
   int i, {
-  bool karistir = false,
   bool tekrarsiz = false,
-  bool Function(int konum, String etiket)? kesinYanlis,
 }) {
   String yaz(List<String> v) => v.join(' – ');
-  List<String> degis(Map<int, int> secim) => [
-    for (var p = 0; p < 3; p++)
-      secim.containsKey(p) ? yanlis[p][secim[p]! % yanlis[p].length] : dogru[p],
-  ];
-  final dizilimler = <List<String>>[];
-  if (karistir) {
-    for (var r = 1; r < 6; r++) {
-      final d = ucluDizilimler[1 + (i + r) % 5];
-      final v = [for (final j in d) dogru[j]];
-      var birYanlis = false;
-      for (var p = 0; p < 3; p++) {
-        final kesin = kesinYanlis != null
-            ? kesinYanlis(p, v[p])
-            : yanlis[p].contains(v[p]);
-        if (v[p] != dogru[p] && kesin) birYanlis = true;
+  final adaylar = <List<String>>[];
+  for (var p = 0; p < 3; p++) {
+    final aday = yanlis[p];
+    final bas = (i ~/ 3 + p) % (aday.length < 3 ? aday.length : 3);
+    final c = <String>[];
+    for (var t = 0; t < aday.length && c.length < 3; t++) {
+      final s = aday[(bas + t) % aday.length];
+      if (s == dogru[p] || c.contains(s)) continue;
+      if (tekrarsiz && dogru.contains(s)) continue;
+      c.add(s);
+    }
+    if (c.isEmpty) {
+      throw StateError('Konum ${p + 1} için çeldirici etiket yok: $kok');
+    }
+    adaylar.add(c);
+  }
+  // Uzunluğu ötekilerin hepsinden en az 3 karakter ve %10 ayrılan seçenek
+  // sayısı; doğru seçeneğin göze çarpması, yanıtı ele verdiği için iki kat
+  // sayılır.
+  int gozeCarpan(List<int> u) {
+    var n = 0;
+    for (var j = 0; j < 4; j++) {
+      final agirlik = j == 0 ? 2 : 1;
+      var enUzun = 0, enKisa = 1 << 30;
+      for (var t = 0; t < 4; t++) {
+        if (t == j) continue;
+        if (u[t] > enUzun) enUzun = u[t];
+        if (u[t] < enKisa) enKisa = u[t];
       }
-      if (birYanlis) dizilimler.add(v);
+      if (u[j] - enUzun >= 3 && 10 * (u[j] - enUzun) >= u[j]) n += agirlik;
+      if (enKisa - u[j] >= 3 && 10 * (enKisa - u[j]) >= enKisa) n += agirlik;
+    }
+    return n;
+  }
+
+  List<String>? w;
+  var enAz = 1 << 30, sira = 0;
+  for (final a in adaylar[0]) {
+    for (final b in adaylar[1]) {
+      for (final c in adaylar[2]) {
+        sira++;
+        if (tekrarsiz && (a == b || a == c || b == c)) continue;
+        final u = [
+          yaz(dogru).length,
+          yaz([a, b, dogru[2]]).length,
+          yaz([a, dogru[1], c]).length,
+          yaz([dogru[0], b, c]).length,
+        ];
+        var uzak = 0;
+        final aday = [a, b, c];
+        for (var p = 0; p < 3; p++) {
+          final pay = dogru[p].length ~/ 5 > 2 ? dogru[p].length ~/ 5 : 2;
+          if ((aday[p].length - dogru[p].length).abs() > pay) uzak++;
+        }
+        final maliyet = gozeCarpan(u) * 1000 + uzak * 100 + sira;
+        if (maliyet < enAz) {
+          enAz = maliyet;
+          w = aday;
+        }
+      }
     }
   }
-  final tekli = [
-    for (var r = 0; r < 3; r++) degis({(i + r) % 3: i ~/ 3 + r}),
-  ];
-  final adaylar = <List<String>>[
-    if (dizilimler.isNotEmpty) dizilimler[0],
-    tekli[0],
-    if (dizilimler.length > 1 && i.isOdd) dizilimler[1],
-    tekli[1],
-    tekli[2],
-    for (var r = 0; r < 3; r++)
-      degis({(i + r) % 3: i ~/ 7 + r, (i + r + 1) % 3: i ~/ 11 + r + 1}),
-    for (var r = 0; r < 3; r++) degis({(i + r) % 3: i ~/ 3 + r + 1}),
-    for (var r = 0; r < 3; r++) degis({(i + r) % 3: i ~/ 3 + r + 2}),
-  ];
+  if (w == null) throw StateError('Ayrı çeldirici etiketler yok: $kok');
   return secenekli(kok, yaz(dogru), [
-    for (final v in adaylar)
-      if (!tekrarsiz || v.toSet().length == v.length) yaz(v),
+    yaz([w[0], w[1], dogru[2]]),
+    yaz([w[0], dogru[1], w[2]]),
+    yaz([dogru[0], w[1], w[2]]),
   ], aciklama);
 }
 
@@ -139,13 +177,33 @@ const _kumeAdi = {
 };
 
 /// “Hangileri?” sorusu. [maske] doğru numaraları bit olarak taşır (bit 0 = I).
+/// Çeldiriciler, her numara dört seçeneğin tam ikisinde yer alacak biçimde
+/// seçilir; böylece “seçeneklerin çoğunda geçen numaraları al” yolu yanıtı
+/// vermez. Yanıt üç numarayı da içeriyorsa çeldiriciler tek numaralı üç
+/// seçenektir; iki numaralı yanıtta (x, y) çeldiriciler {x, z}, {y}, {z};
+/// tek numaralı yanıtta (x) ya {y}, {z}, {x, y, z} ya da {y, z}, {y}, {x, z}.
 AdvancedItem _hangileri(String kok, int maske, String aciklama, int i) {
   assert(maske >= 1 && maske <= 7);
-  final adaylar = [
-    for (var r = 0; r < 3; r++) maske ^ (1 << ((i + r) % 3)),
-    maske ^ 7,
-    for (var m = 0; m < 7; m++) (m + i) % 7 + 1,
-  ].where((m) => m != 0 && m != maske);
+  final icinde = [
+    for (final m in const [1, 2, 4])
+      if (maske & m != 0) m,
+  ];
+  final disinda = [
+    for (final m in const [1, 2, 4])
+      if (maske & m == 0) m,
+  ];
+  final v = i ~/ 2;
+  final s = v ~/ 2 % 2;
+  final List<int> adaylar;
+  if (icinde.length == 3) {
+    adaylar = const [1, 2, 4];
+  } else if (icinde.length == 2) {
+    final z = disinda[0];
+    adaylar = [icinde[s] | z, icinde[1 - s], z];
+  } else {
+    final x = icinde[0], y = disinda[s], z = disinda[1 - s];
+    adaylar = v.isEven ? [y, z, 7] : [y | z, y, x | z];
+  }
   return secenekli(
     kok,
     _kumeAdi[maske]!,
@@ -546,7 +604,6 @@ final _deyim = lmSirali(
         ],
         '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede “${x[p].$1}” deyimi “${x[p].$2}” anlamında kullanılmıştır'].join('; ')}.',
         i,
-        karistir: true,
         tekrarsiz: true,
       );
     }
@@ -562,7 +619,6 @@ final _deyim = lmSirali(
       ],
       '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. “${x[p].$2}” anlamını “${x[p].$1}” deyimi karşılar'].join('; ')}.',
       i,
-      karistir: true,
       tekrarsiz: true,
     );
   },
@@ -675,7 +731,6 @@ final _atasozu = lmSirali(
         ],
         aciklama,
         i,
-        karistir: true,
         tekrarsiz: true,
       );
     }
@@ -691,7 +746,6 @@ final _atasozu = lmSirali(
       ],
       aciklama,
       i,
-      karistir: true,
       tekrarsiz: true,
     );
   },
@@ -748,6 +802,12 @@ const _esZitler = [
 
 final _esAnlamlilar = [for (final e in _esZitler) e.$2];
 final _zitAnlamlilar = [for (final e in _esZitler) e.$3];
+
+// Başka bir sözcüğün zıt anlamlısı olup bu sözcüğe de karşıt sayılabilecek
+// sözcükler (“düz yol” ile “yokuş”); bunlar o konuma çeldirici yazılmaz.
+const _zitDisi = {
+  'yokuş': ['düz'],
+};
 
 // (cümle, eş sesli sözcük, cümledeki anlamı, aynı sözcüğün öteki anlamları)
 const _esSesliler = [
@@ -1131,7 +1191,6 @@ final _esZit = lmSirali(
         ],
         '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede “${x[p].$2}” sözcüğü “${x[p].$3}” anlamındadır'].join('; ')}.',
         i,
-        karistir: true,
         tekrarsiz: true,
       );
     }
@@ -1152,12 +1211,13 @@ final _esZit = lmSirali(
               esMi ? _esAnlamlilar : _zitAnlamlilar,
               dogru[p],
               i + 11 * p,
+            ).where(
+              (s) => esMi || !(_zitDisi[x[p].$1] ?? const []).contains(s),
             ),
           ],
       ],
       '${[for (final e in x) '${e.$1}: eş anlamlısı “${e.$2}”, zıt anlamlısı “${e.$3}”'].join('; ')}.',
       i,
-      karistir: true,
       tekrarsiz: true,
     );
   },
@@ -1272,18 +1332,20 @@ const _noktalamalar = [
     [_nvirgul],
     'sıralı cümleler arasına virgül konur',
   ),
+  // TDK, seslenme ve hitap sözlerinden sonra ünlem de konabileceğini yazar;
+  // bu yüzden bu iki cümlede ünlem ne çeldirici yapılır ne de sorulur.
   (
     'Ayşe( ) bana şu kitabı uzatır mısın?',
     _virgul,
-    [_ikinokta, _nokta, _unlem],
-    <String>[],
+    [_ikinokta, _nokta, _nvirgul],
+    [_unlem],
     'hitap sözünden sonra virgül konur',
   ),
   (
     'Sevgili Elif( ) mektubunu büyük bir sevinçle okudum.',
     _virgul,
     [_ikinokta, _nokta, _nvirgul],
-    <String>[],
+    [_unlem],
     'hitap sözünden sonra virgül konur',
   ),
   (
@@ -1632,7 +1694,6 @@ final _noktalama = lmSirali(
       [for (final e in x) e.$3],
       aciklama,
       i,
-      karistir: true,
     );
   },
   exam: ExamKind.tyt,
@@ -1647,8 +1708,9 @@ const _zarfFiil = 'zarf-fiil';
 const _fiilimsiTurleri = [_isimFiil, _sifatFiil, _zarfFiil];
 
 // (cümle, tırnak içindeki fiilimsi, türü, ekin temel biçimi, çözümleme).
-// Cümlelerde tırnak içindeki sözcükten başka fiilimsi yoktur; kalıcı ad olmuş
-// sözcükler (dondurma, yakacak, gelecek gibi) alınmamıştır.
+// Bütün soru biçimleri yalnız tırnak içindeki sözcüğü sorar (birkaç cümlede
+// başka bir fiilimsi de vardır: sandığım, olduğunu); kalıcı ad olmuş sözcükler
+// (dondurma, yakacak, gelecek gibi) alınmamıştır.
 const _fiilimsiler = [
   (
     'Her sabah parkta “yürümek” bana iyi geliyor.',
@@ -1713,8 +1775,10 @@ const _fiilimsiler = [
     '-ma',
     'konuş-ma-sı',
   ),
+  // -ış biçimleri kalıcı ad sayılmasın diye eylem anlamını koruyan bir tümleç
+  // ya da zarfla birlikte verilir (bana öyle bakış, bize sevgiyle gülüş).
   (
-    'Dedemin sıcacık “gülüşü” bana hep güven verirdi.',
+    'Dedemin bize sevgiyle “gülüşü” içimizi ısıtırdı.',
     'gülüşü',
     _isimFiil,
     '-ış',
@@ -1733,6 +1797,20 @@ const _fiilimsiler = [
     _isimFiil,
     '-mak',
     'iç-mek',
+  ),
+  (
+    'Yağmurda “ıslanmak” hiç hoşuma gitmez.',
+    'ıslanmak',
+    _isimFiil,
+    '-mak',
+    'ıslan-mak',
+  ),
+  (
+    'Dedemin olayları “anlatışı” hepimizi etkiledi.',
+    'anlatışı',
+    _isimFiil,
+    '-ış',
+    'anlat-ış-ı',
   ),
   (
     'Bahçede “oynayan” çocuklar çok neşeliydi.',
@@ -1819,6 +1897,20 @@ const _fiilimsiler = [
     'unut-ul-muş',
   ),
   (
+    'Pazardan “alacağımız” meyveleri listeye yazdık.',
+    'alacağımız',
+    _sifatFiil,
+    '-acak',
+    'al-acağ-ımız',
+  ),
+  (
+    'Duvara “asılmış” tabloyu çok beğendim.',
+    'asılmış',
+    _sifatFiil,
+    '-mış',
+    'as-ıl-mış',
+  ),
+  (
     'Eve “gelince” hemen ödevini yaptı.',
     'gelince',
     _zarfFiil,
@@ -1884,11 +1976,26 @@ const _fiilimsiler = [
     '-arak',
     'bak-arak',
   ),
+  (
+    'Kütüphaneden “çıkar çıkmaz” arkadaşını aradı.',
+    'çıkar çıkmaz',
+    _zarfFiil,
+    '-ar … -maz',
+    'çık-ar çık-maz',
+  ),
+  (
+    'Kardeşim okuldan eve “koşa koşa” geldi.',
+    'koşa koşa',
+    _zarfFiil,
+    '-a … -a',
+    'koş-a koş-a',
+  ),
 ];
 
 const _fiilimsiEkleri = [
   '-ma', '-mak', '-ış', '-an', '-ası', '-dık', '-acak', '-mış', //
-  '-ınca', '-arak', '-ıp', '-madan', '-ken', '-alı', '-dıkça', '-a … -a',
+  '-ınca', '-arak', '-ıp', '-madan', '-ken', '-alı', '-dıkça', '-a … -a', //
+  '-ar … -maz',
 ];
 
 // Tipik karıştırmalar. “-madan” içinde “-ma”, “-dıkça” içinde “-dık” sesleri
@@ -1910,6 +2017,7 @@ const _ekKarisan = {
   '-alı': ['-a … -a', '-ınca'],
   '-dıkça': ['-ınca', '-madan'],
   '-a … -a': ['-arak', '-alı'],
+  '-ar … -maz': ['-ınca', '-a … -a'],
 };
 const _ekDisi = {
   '-madan': ['-ma'],
@@ -1965,7 +2073,6 @@ final _fiilimsi = lmSirali(
         ],
         aciklama,
         i,
-        karistir: true,
       );
     }
     return _sirali(
@@ -1981,7 +2088,6 @@ final _fiilimsi = lmSirali(
       ],
       aciklama,
       i,
-      karistir: true,
     );
   },
   exam: ExamKind.tyt,
@@ -2000,13 +2106,21 @@ const _gecissiz = 'geçişsiz';
 
 const _ozneGerekce = {
   _etken: 'eylemi özne kendisi yapar',
-  _edilgen: 'eylemi yapan belli değildir, özne eylemden etkilenendir',
+  _edilgen: 'özne eylemi yapan değil, eylemden etkilenendir (sözde özne)',
   _donuslu: 'özne eylemi kendi üzerine yapar',
   _istes: 'eylem birlikte ya da karşılıklı yapılır',
 };
 
+// Kimi kaynaklar dönüşlü ve işteş fiilleri de etken sayar (öznesi eylemi
+// yapandır). Bu yüzden bu iki çatının konumuna “etken” çeldirici yazılmaz ve
+// bunlardan biri bulunan soruda “hangileri etken çatılıdır?” sorulmaz.
+bool _etkenTartismali(String cati) => cati == _donuslu || cati == _istes;
+
 // (cümle, tırnak içindeki yüklem, öznesine göre çatı, nesnesine göre çatı).
-// Edilgen, dönüşlü ve işteş fiiller nesne almadığı için geçişsizdir.
+// Edilgen, dönüşlü ve işteş fiiller nesne almadığı için geçişsizdir. Ünlüyle
+// biten gövdelerde edilgenlik ve dönüşlülük eki aynıdır (-n: yıkandı,
+// tarandı); bu dönüşlü cümlelerde öznenin eylemi kendisinin yaptığı bağlamdan
+// açıkça anlaşılır (havlusunu alıp, kimseden yardım almadan).
 const _catilar = [
   ('Annem bize sıcak bir çorba “pişirdi”.', 'pişirdi', _etken, _gecisli),
   ('Kardeşim odasının duvarına bir resim “astı”.', 'astı', _etken, _gecisli),
@@ -2080,13 +2194,18 @@ const _catilar = [
   ('Toplantı salonu çiçeklerle “süslendi”.', 'süslendi', _edilgen, _gecissiz),
   ('Kardeşim sabah erkenden “giyindi”.', 'giyindi', _donuslu, _gecissiz),
   (
-    'Gelin, aynanın karşısında uzun uzun “süslendi”.',
+    'Gelin, kimseden yardım almadan aynanın karşısında uzun uzun “süslendi”.',
     'süslendi',
     _donuslu,
     _gecissiz,
   ),
-  ('Küçük kız aynanın önünde “tarandı”.', 'tarandı', _donuslu, _gecissiz),
-  ('Çocuk maçtan sonra duşta “yıkandı”.', 'yıkandı', _donuslu, _gecissiz),
+  (
+    'Küçük kız tarağını alıp aynanın önünde “tarandı”.',
+    'tarandı',
+    _donuslu,
+    _gecissiz,
+  ),
+  ('Çocuk maçtan sonra duşa girip “yıkandı”.', 'yıkandı', _donuslu, _gecissiz),
   (
     'Kardeşim yeni bisikletiyle arkadaşlarına “övündü”.',
     'övündü',
@@ -2102,7 +2221,7 @@ const _catilar = [
   ),
   ('Kedi korkup yatağın altına “gizlendi”.', 'gizlendi', _donuslu, _gecissiz),
   (
-    'Banyodan çıkan çocuk havluyla “kurulandı”.',
+    'Banyodan çıkan çocuk havlusunu alıp “kurulandı”.',
     'kurulandı',
     _donuslu,
     _gecissiz,
@@ -2176,7 +2295,16 @@ final _cati = lmSirali(
     final aciklama =
         '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. “${x[p].$2}”: ${x[p].$3} (${_ozneGerekce[x[p].$3]}), ${x[p].$4 == _gecisli ? 'geçişli (nesne alır)' : 'geçişsiz (nesne almaz)'}'].join('; ')}.';
     if (bicim == 2) {
-      final hedef = ozne[i ~/ 3 % 3];
+      var hedef = ozne[i ~/ 3 % 3];
+      if (hedef == _etken && ozne.any(_etkenTartismali)) {
+        for (var s = 1; s < 3; s++) {
+          final aday = ozne[(i ~/ 3 + s) % 3];
+          if (aday != _etken) {
+            hedef = aday;
+            break;
+          }
+        }
+      }
       return _hangileri(
         '$liste\nNumaralanmış cümlelerin hangilerinde tırnak içinde verilen '
         'yüklem $hedef çatılıdır?',
@@ -2196,17 +2324,25 @@ final _cati = lmSirali(
         ],
         aciklama,
         i,
-        karistir: true,
       );
     }
     return _sirali(
       '$liste\nNumaralanmış cümlelerde tırnak içinde verilen yüklemlerin '
       'öznesine göre çatıları sırasıyla hangi seçenekte doğru verilmiştir?',
       ozne,
-      [for (var p = 0; p < 3; p++) _digerleri(_ozneCatilari, ozne[p], i + p)],
+      [
+        for (var p = 0; p < 3; p++)
+          _digerleri(
+            [
+              for (final c in _ozneCatilari)
+                if (!(c == _etken && _etkenTartismali(ozne[p]))) c,
+            ],
+            ozne[p],
+            i + p,
+          ),
+      ],
       aciklama,
       i,
-      karistir: true,
     );
   },
   exam: ExamKind.tyt,
@@ -2366,7 +2502,6 @@ final _tamlama = lmSirali(
       ],
       aciklama,
       i,
-      karistir: true,
     );
   },
   exam: ExamKind.tyt,
@@ -2376,7 +2511,8 @@ final _tamlama = lmSirali(
 // ──────────────────────────────── 8 · Kök ve ek ──────────────────────────────
 
 // (sözcük, artı ile ayrılmış parçaları, parça türleri: k ad kökü, f fiil
-//  kökü, y yapım eki, ç çekim eki). Çözümlemesi tartışmalı sözcükler (okul, arkadaş, yazar),
+//  kökü, y yapım eki, ç çekim eki). Çözümlemesi tartışmalı sözcükler (okul,
+//  arkadaş, yazar; kaynağa göre sev-in-ç ya da sev-inç diye ayrılan sevinç),
 //  fiilimsi ekleri ile “-ki” ve “-ca” ekleri alınmamıştır.
 const _kokEkler = [
   ('gözlükçüler', 'göz+lük+çü+ler', 'kyyç'),
@@ -2429,7 +2565,7 @@ const _kokEkler = [
   ('dağcılarımız', 'dağ+cı+lar+ımız', 'kyçç'),
   ('tuzsuz', 'tuz+suz', 'ky'),
   ('renkli', 'renk+li', 'ky'),
-  ('sevinçli', 'sev+inç+li', 'fyy'),
+  ('çalgıcılar', 'çal+gı+cı+lar', 'fyyç'),
 ];
 
 int _ekSayisi(String turler, String t) =>
@@ -2482,11 +2618,11 @@ final _kokEk = lmSirali(
         '$liste\nNumaralanmış sözcüklerin kökleri sırasıyla hangi seçenekte '
         'doğru verilmiştir?',
         kok,
+        // Başka sözcüklerin kökleriyle kurulan dizilimler kolayca elendiği
+        // için çeldiriciler yalnız kökü ekleriyle birlikte alma hatasıdır.
         [for (final e in x) _kokYanlislari(e.$2)],
         aciklama,
         i,
-        karistir: true,
-        kesinYanlis: (p, s) => s != kok[p],
       );
     }
     final hedef = bicim == 1 ? 'y' : 'ç';
@@ -2513,8 +2649,6 @@ final _kokEk = lmSirali(
       ],
       aciklama,
       i,
-      karistir: true,
-      kesinYanlis: (p, s) => s != '${dogru[p]}',
     );
   },
   exam: ExamKind.tyt,
@@ -2651,9 +2785,6 @@ final _heceOlcu = lmSirali(
         [for (final e in x) _heceKarisan[e.$2]!],
         aciklama,
         i,
-        karistir: true,
-        // Her dize yalnız kendi kalıbına uyar; başka her kalıp yanlıştır.
-        kesinYanlis: (p, s) => s != x[p].$2,
       );
     }
     return _sirali(
@@ -2665,8 +2796,6 @@ final _heceOlcu = lmSirali(
       ],
       aciklama,
       i,
-      karistir: true,
-      kesinYanlis: (p, s) => s != '${sayi[p]}',
     );
   },
   exam: ExamKind.tyt,
@@ -2740,6 +2869,10 @@ const _nazimlar = [
     _kosma,
   ),
   (
+    'Âşık edebiyatında en yaygın biçim olan, genellikle 3 ile 5 dörtlük arasında yazılan 11 heceli nazım biçimi',
+    _kosma,
+  ),
+  (
     'Genellikle 7 heceli tek bir dörtlükten oluşan, aaxa uyaklı anonim halk şiiri nazım biçimi',
     _mani,
   ),
@@ -2753,6 +2886,14 @@ const _nazimlar = [
   ),
   (
     'Halk arasında düğün ve eğlencelerde söylenen, tek dörtlükten oluşan, 7 heceli anonim nazım biçimi',
+    _mani,
+  ),
+  (
+    'Halk şiirinde tek dörtlükten oluşan, çoğunlukla aaxa uyak düzeniyle kurulan ve söyleyeni bilinmeyen nazım biçimi',
+    _mani,
+  ),
+  (
+    'İlk dizesi 7 heceden az olan türüne “kesik” adı verilen, tek dörtlüklük anonim halk şiiri nazım biçimi',
     _mani,
   ),
   (
@@ -2784,6 +2925,14 @@ const _nazimlar = [
     _gazel,
   ),
   (
+    'Divan şiirinin en çok kullanılan nazım biçimi olan, aşk ve sevgili konulu beyitlerden oluşan biçim',
+    _gazel,
+  ),
+  (
+    'Divan şiirinde son beytine makta denen, aşkı işleyen ve genellikle 5 ile 15 beyitten oluşan nazım biçimi',
+    _gazel,
+  ),
+  (
     'Divan şiirinde din ve devlet büyüklerini övmek amacıyla yazılan, 33 ile 99 beyit arasındaki nazım biçimi',
     _kaside,
   ),
@@ -2800,6 +2949,10 @@ const _nazimlar = [
     _kaside,
   ),
   (
+    'Divan şiirinde övgü bölümüne methiye, şairin kendini övdüğü bölüme fahriye denen nazım biçimi',
+    _kaside,
+  ),
+  (
     'Divan şiirinde aruzun 24 özel kalıbıyla yazılan, dört dizelik, aaxa uyaklı nazım biçimi',
     _rubai,
   ),
@@ -2809,6 +2962,14 @@ const _nazimlar = [
   ),
   (
     'Hayat, ölüm ve varlığın anlamı gibi felsefi düşünceleri dört dizede işleyen, aruzun özel kalıplarıyla yazılan nazım biçimi',
+    _rubai,
+  ),
+  (
+    'Divan şiirinde aruzun ahreb ve ahrem kalıplarından türetilen kalıplarla yazılan dört dizelik nazım biçimi',
+    _rubai,
+  ),
+  (
+    'Türk edebiyatında Yahya Kemal’in de örneklerini verdiği, aruzla yazılan dört dizelik felsefi nazım biçimi',
     _rubai,
   ),
   (
@@ -2824,6 +2985,10 @@ const _nazimlar = [
     _tuyug,
   ),
   (
+    'Aruzla yazılan ve yalnız Türk şairlerince kullanılan, aaba uyaklı dört dizelik nazım biçimi',
+    _tuyug,
+  ),
+  (
     'Divan şiirinde bestelenmek amacıyla yazılan, nakarat dizesi bulunan, genellikle dörder dizelik bentlerden oluşan nazım biçimi',
     _sarki,
   ),
@@ -2833,6 +2998,14 @@ const _nazimlar = [
   ),
   (
     'Nedim ve Enderunlu Vâsıf’ın sevilen örneklerini verdiği, nakaratlı divan şiiri nazım biçimi',
+    _sarki,
+  ),
+  (
+    'Divan şiirinde musikiyle birlikte gelişen, bentlerinde nakarat yinelenen nazım biçimi',
+    _sarki,
+  ),
+  (
+    'Divan şiirinde Lale Devri’nde Nedim’le en parlak dönemini yaşayan, bestelenmek için yazılan nazım biçimi',
     _sarki,
   ),
 ];
@@ -2894,7 +3067,7 @@ const _temsilciler = [
   ('Balzac', _realizm, <String>[]),
   ('Flaubert', _realizm, [_naturalizm]),
   ('Stendhal', _realizm, [_romantizm]),
-  ('Dostoyevski', _realizm, <String>[]),
+  ('Dostoyevski', _realizm, [_varolusculuk]),
   ('Tolstoy', _realizm, <String>[]),
   ('Turgenyev', _realizm, <String>[]),
   ('Charles Dickens', _realizm, [_romantizm]),
@@ -2948,8 +3121,6 @@ final _nazimAkim = lmSirali(
         ],
         '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. açıklama: ${dogru[p]} (${_nazimOzet[dogru[p]]})'].join('; ')}.',
         i,
-        karistir: true,
-        kesinYanlis: (p, s) => s != dogru[p],
       );
     }
     final x = _bicimSecki(_temsilciSerpik, i, 2);
@@ -2976,7 +3147,6 @@ final _nazimAkim = lmSirali(
       ],
       '${[for (final e in x) '${e.$1}: ${e.$2}'].join('; ')}.',
       i,
-      karistir: true,
     );
   },
   exam: ExamKind.ayt,
@@ -3597,7 +3767,9 @@ const _relThat =
 // (cümle, boşluğa gelen sözcük, o boşlukta kesin yanlış sözcükler, gerekçe).
 // Tanımlayan yan cümlelerde that de doğru olduğundan oralarda that çeldirici
 // yapılmaz; zaman adlarından sonra “that” ve edatlı “which” kullanılabildiği
-// için when sorularında bu ikisi seçeneklere girmez.
+// için when sorularında bu ikisi seçeneklere girmez. where cümlelerinde
+// boşluktan sonra gelen ad “whose” ile de bağlanabiliyorsa (“a country whose
+// people …”) cümle alınmamıştır.
 const _relatives = [
   (
     "The woman ___ lives next door is a doctor.",
@@ -3684,7 +3856,7 @@ const _relatives = [
     _relThat,
   ),
   (
-    "Istanbul, ___ is the largest city in Turkey, lies on two continents.",
+    "Istanbul, ___ is the largest city in Türkiye, lies on two continents.",
     "which",
     ["that", "who", "where"],
     _relVirgulSey,
@@ -3834,13 +4006,13 @@ const _relatives = [
     _relSey,
   ),
   (
-    "Can you name a country ___ people drive on the left?",
+    "Can you name a country ___ it never snows?",
     "where",
     ["which", "who", "whose"],
     _relYer,
   ),
   (
-    "1923 is the year ___ the Republic of Turkey was founded.",
+    "1923 is the year ___ the Republic of Türkiye was founded.",
     "when",
     ["where", "who", "whose"],
     _relZaman,
@@ -4491,7 +4663,7 @@ const _tags = [
   (
     "You are a student, ___?",
     "aren't you",
-    ["are you", "don't you", "isn't you"],
+    ["aren't they", "don't you", "isn't you"],
     "$_tagOlumlu; yardımcı fiil “are” yinelenir",
   ),
   (
@@ -4503,13 +4675,13 @@ const _tags = [
   (
     "They play football on Sundays, ___?",
     "don't they",
-    ["do they", "aren't they", "doesn't they"],
+    ["don't you", "aren't they", "doesn't they"],
     "$_tagOlumlu; geniş zamanda “do” kullanılır",
   ),
   (
     "Your brother works in a bank, ___?",
     "doesn't he",
-    ["don't he", "does he", "isn't he"],
+    ["don't he", "doesn't she", "isn't he"],
     "$_tagOlumlu; üçüncü tekil kişide “does” kullanılır",
   ),
   (
@@ -4521,31 +4693,31 @@ const _tags = [
   (
     "Ali has finished his homework, ___?",
     "hasn't he",
-    ["doesn't he", "has he", "isn't he"],
+    ["doesn't he", "didn't he", "isn't he"],
     "$_tagOlumlu; yardımcı fiil “has” yinelenir",
   ),
   (
     "We can swim here, ___?",
     "can't we",
-    ["can we", "don't we", "couldn't we"],
+    ["can't you", "don't we", "couldn't we"],
     "$_tagOlumlu; kip “can” yinelenir",
   ),
   (
     "It will rain tomorrow, ___?",
     "won't it",
-    ["will it", "doesn't it", "isn't it"],
+    ["wouldn't it", "doesn't it", "isn't it"],
     "$_tagOlumlu; “will” olumsuzda “won't” olur",
   ),
   (
     "You should study harder, ___?",
     "shouldn't you",
-    ["should you", "don't you", "wouldn't you"],
+    ["shouldn't they", "don't you", "wouldn't you"],
     "$_tagOlumlu; kip “should” yinelenir",
   ),
   (
     "I am late again, ___?",
     "aren't I",
-    ["isn't I", "am I", "don't I"],
+    ["isn't I", "aren't you", "don't I"],
     "$_tagOlumlu; “I am” cümlesinde eklenti “aren't I” olur",
   ),
   (
@@ -4557,19 +4729,19 @@ const _tags = [
   (
     "There is a bank near here, ___?",
     "isn't there",
-    ["isn't it", "is there", "doesn't there"],
+    ["isn't it", "aren't there", "doesn't there"],
     "$_tagOlumlu; “there is” yapısında “there” yinelenir",
   ),
   (
     "Your parents were at the meeting, ___?",
     "weren't they",
-    ["wasn't they", "were they", "didn't they"],
+    ["wasn't they", "weren't you", "didn't they"],
     "$_tagOlumlu; yardımcı fiil “were” yinelenir",
   ),
   (
     "Mert was ill last week, ___?",
     "wasn't he",
-    ["weren't he", "was he", "didn't he"],
+    ["weren't he", "wasn't she", "didn't he"],
     "$_tagOlumlu; yardımcı fiil “was” yinelenir",
   ),
   (
@@ -4593,7 +4765,7 @@ const _tags = [
   (
     "Ayşe went to Izmir last summer, ___?",
     "didn't she",
-    ["did she", "wasn't she", "doesn't she"],
+    ["didn't he", "wasn't she", "doesn't she"],
     "$_tagOlumlu; geçmiş zamanda “did” kullanılır",
   ),
   (
@@ -4617,19 +4789,19 @@ const _tags = [
   (
     "We have met before, ___?",
     "haven't we",
-    ["didn't we", "have we", "don't we"],
+    ["didn't we", "haven't you", "don't we"],
     "$_tagOlumlu; yardımcı fiil “have” yinelenir",
   ),
   (
     "The film was boring, ___?",
     "wasn't it",
-    ["didn't it", "was it", "wasn't the film"],
+    ["didn't it", "weren't it", "wasn't the film"],
     "$_tagOlumlu; eklentide ad yerine zamir (“it”) kullanılır",
   ),
   (
     "You would like some tea, ___?",
     "wouldn't you",
-    ["won't you", "would you", "don't you"],
+    ["won't you", "wouldn't they", "don't you"],
     "$_tagOlumlu; kip “would” yinelenir",
   ),
   (
@@ -4641,13 +4813,13 @@ const _tags = [
   (
     "Your friends live in Ankara, ___?",
     "don't they",
-    ["doesn't they", "do they", "aren't they"],
+    ["doesn't they", "don't we", "aren't they"],
     "$_tagOlumlu; geniş zamanda “do” kullanılır",
   ),
   (
     "The children are sleeping, ___?",
     "aren't they",
-    ["are they", "don't they", "isn't they"],
+    ["aren't we", "don't they", "isn't they"],
     "$_tagOlumlu; yardımcı fiil “are” yinelenir",
   ),
   (
@@ -4659,55 +4831,55 @@ const _tags = [
   (
     "You could help me, ___?",
     "couldn't you",
-    ["could you", "can't you", "don't you"],
+    ["couldn't I", "can't you", "don't you"],
     "$_tagOlumlu; kip “could” yinelenir",
   ),
   (
     "This is your bag, ___?",
     "isn't it",
-    ["isn't this", "is it", "doesn't it"],
+    ["isn't this", "aren't it", "doesn't it"],
     "$_tagOlumlu; “this” eklentide “it” olur",
   ),
   (
     "Those are your shoes, ___?",
     "aren't they",
-    ["aren't those", "isn't it", "are they"],
+    ["aren't those", "isn't it", "don't they"],
     "$_tagOlumlu; “those” eklentide “they” olur",
   ),
   (
     "We must hurry, ___?",
     "mustn't we",
-    ["must we", "don't we", "needn't we"],
+    ["mustn't you", "don't we", "needn't we"],
     "$_tagOlumlu; kip “must” yinelenir",
   ),
   (
     "Everyone enjoyed the trip, ___?",
     "didn't they",
-    ["didn't he", "did they", "wasn't it"],
+    ["didn't he", "doesn't they", "wasn't it"],
     "$_tagOlumlu; “everyone” için eklentide “they” kullanılır",
   ),
   (
     "Selin and Can are married, ___?",
     "aren't they",
-    ["isn't it", "are they", "aren't we"],
+    ["isn't it", "isn't she", "aren't we"],
     "$_tagOlumlu; iki kişilik özne için “they” kullanılır",
   ),
   (
     "You were born in 2009, ___?",
     "weren't you",
-    ["wasn't you", "were you", "didn't you"],
+    ["wasn't you", "weren't they", "didn't you"],
     "$_tagOlumlu; yardımcı fiil “were” yinelenir",
   ),
   (
     "The shop opens at nine, ___?",
     "doesn't it",
-    ["isn't it", "does it", "don't it"],
+    ["isn't it", "doesn't they", "don't it"],
     "$_tagOlumlu; üçüncü tekil kişide “does” kullanılır",
   ),
   (
     "Your mother can drive, ___?",
     "can't she",
-    ["doesn't she", "can she", "can't he"],
+    ["doesn't she", "couldn't she", "can't he"],
     "$_tagOlumlu; kip “can” yinelenir",
   ),
   (
@@ -4725,13 +4897,13 @@ const _tags = [
   (
     "They will be here soon, ___?",
     "won't they",
-    ["will they", "don't they", "aren't they"],
+    ["won't we", "don't they", "aren't they"],
     "$_tagOlumlu; “will” olumsuzda “won't” olur",
   ),
   (
     "It was a great match, ___?",
     "wasn't it",
-    ["was it", "didn't it", "isn't it"],
+    ["wasn't he", "didn't it", "isn't it"],
     "$_tagOlumlu; yardımcı fiil “was” yinelenir",
   ),
   (
@@ -4743,7 +4915,7 @@ const _tags = [
   (
     "Emre plays the violin very well, ___?",
     "doesn't he",
-    ["don't he", "does he", "isn't he"],
+    ["don't he", "doesn't she", "isn't he"],
     "$_tagOlumlu; üçüncü tekil kişide “does” kullanılır",
   ),
 ];
@@ -4780,12 +4952,13 @@ const _dilekSimdi =
 const _dilekGecmis = 'geçmişe ilişkin pişmanlık: wish + had + V3';
 
 // (cümle, boşluğa gelen biçim, o boşlukta kesin yanlış biçimler, kural).
+// Sonuç cümlelerindeki “would had + V3” yaygın bir öğrenci yanlışıdır.
 // Zaman ifadeleri (yesterday, last week, now, these days) koşulun ya da
 // dileğin geçmişe mi şimdiye mi ait olduğunu belirler; karma koşul
 // cümlesinin kurulabileceği boşluk bırakılmamıştır.
 const _ucuncuKosul = [
   (
-    "If you ___ (study) harder, you would have passed the exam last week.",
+    "If you ___ (study) harder last month, you would have passed the exam.",
     "had studied",
     ["studied", "have studied", "would study"],
     _ucKosul,
@@ -4803,13 +4976,13 @@ const _ucuncuKosul = [
     _ucKosul,
   ),
   (
-    "If she ___ (leave) home earlier, she wouldn't have missed the bus this morning.",
+    "If she ___ (leave) home five minutes earlier yesterday, she wouldn't have missed the bus.",
     "had left",
     ["left", "has left", "would leave"],
     _ucKosul,
   ),
   (
-    "If we ___ (take) a taxi, we would have arrived on time yesterday.",
+    "If we ___ (take) a taxi yesterday, we would have arrived on time.",
     "had taken",
     ["took", "have taken", "would take"],
     _ucKosul,
@@ -4823,55 +4996,55 @@ const _ucuncuKosul = [
   (
     "If you had told me the truth, I ___ (not / be) so angry yesterday.",
     "wouldn't have been",
-    ["wouldn't be", "won't be", "hadn't been"],
+    ["wouldn't be", "won't be", "hadn't been", "wouldn't had been"],
     _ucSonuc,
   ),
   (
     "If he had driven more carefully, he ___ (not / have) the accident last week.",
     "wouldn't have had",
-    ["wouldn't have", "won't have", "hadn't had"],
+    ["wouldn't have", "won't have", "hadn't had", "wouldn't had"],
     _ucSonuc,
   ),
   (
-    "If I had seen you at the concert last night, I ___ (say) hello.",
+    "If I had seen you at the concert last night, I ___ (say) hello to you there.",
     "would have said",
-    ["would say", "will say", "had said"],
+    ["would say", "will say", "had said", "would had said"],
     _ucSonuc,
   ),
   (
-    "If we had left earlier, we ___ (catch) the train this morning.",
+    "If we had left home earlier, we ___ (catch) the last train last night.",
     "would have caught",
-    ["would catch", "will catch", "had caught"],
+    ["would catch", "will catch", "had caught", "would had caught"],
     _ucSonuc,
   ),
   (
-    "If Ali had set his alarm, he ___ (wake up) on time this morning.",
+    "If Ali had set his alarm, he ___ (wake up) on time yesterday.",
     "would have woken up",
-    ["would wake up", "will wake up", "had woken up"],
+    ["would wake up", "will wake up", "had woken up", "would had woken up"],
     _ucSonuc,
   ),
   (
-    "If you had asked me last week, I ___ (help) you.",
+    "If you had asked me, I ___ (help) you last week.",
     "would have helped",
-    ["would help", "will help", "had helped"],
+    ["would help", "will help", "had helped", "would had helped"],
     _ucSonuc,
   ),
   (
-    "If the team had played better, they ___ (win) the match on Saturday.",
+    "If the team had played better, they ___ (win) the match last Saturday.",
     "would have won",
-    ["would win", "will win", "had won"],
+    ["would win", "will win", "had won", "would had won"],
     _ucSonuc,
   ),
   (
-    "If I had had more money last year, I ___ (buy) that car.",
+    "If I had had more money last year, I ___ (buy) that car then.",
     "would have bought",
-    ["would buy", "will buy", "had bought"],
+    ["would buy", "will buy", "had bought", "would had bought"],
     _ucSonuc,
   ),
   (
     "If she had listened to the doctor, she ___ (recover) more quickly last winter.",
     "would have recovered",
-    ["would recover", "will recover", "had recovered"],
+    ["would recover", "will recover", "had recovered", "would had recovered"],
     _ucSonuc,
   ),
   (
@@ -4893,7 +5066,7 @@ const _ucuncuKosul = [
     _ucKosul,
   ),
   (
-    "If the bus ___ (come) on time, we wouldn't have been late for school yesterday.",
+    "If the bus ___ (come) on time yesterday, we wouldn't have been late for school.",
     "had come",
     ["came", "has come", "would come"],
     _ucKosul,
@@ -4901,23 +5074,23 @@ const _ucuncuKosul = [
   (
     "If you had worn a coat, you ___ (not / catch) a cold last week.",
     "wouldn't have caught",
-    ["wouldn't catch", "won't catch", "hadn't caught"],
+    ["wouldn't catch", "won't catch", "hadn't caught", "wouldn't had caught"],
     _ucSonuc,
   ),
   (
     "If Can had saved his work, he ___ (not / lose) it when the computer crashed.",
     "wouldn't have lost",
-    ["wouldn't lose", "won't lose", "hadn't lost"],
+    ["wouldn't lose", "won't lose", "hadn't lost", "wouldn't had lost"],
     _ucSonuc,
   ),
   (
     "If we had booked a table, we ___ (not / wait) so long at the restaurant last night.",
     "wouldn't have waited",
-    ["wouldn't wait", "won't wait", "hadn't waited"],
+    ["wouldn't wait", "won't wait", "hadn't waited", "wouldn't had waited"],
     _ucSonuc,
   ),
   (
-    "If my parents ___ (not / help) me, I wouldn't have finished the project last month.",
+    "If my parents ___ (not / help) me last month, I wouldn't have finished the project.",
     "hadn't helped",
     ["didn't help", "haven't helped", "wouldn't help"],
     _ucKosul,
@@ -4925,7 +5098,7 @@ const _ucuncuKosul = [
   (
     "If she had seen the sign, she ___ (stop) the car yesterday.",
     "would have stopped",
-    ["would stop", "will stop", "had stopped"],
+    ["would stop", "will stop", "had stopped", "would had stopped"],
     _ucSonuc,
   ),
   (
@@ -5198,7 +5371,6 @@ final _vocabulary = lmSirali(
         ],
         aciklama,
         i,
-        karistir: true,
         tekrarsiz: true,
       );
     }
@@ -5216,7 +5388,6 @@ final _vocabulary = lmSirali(
       ],
       aciklama,
       i,
-      karistir: true,
       tekrarsiz: true,
     );
   },
@@ -5297,7 +5468,7 @@ const _soSuch = [
     "enough + ad: yeterlilik",
   ),
   (
-    "I have two cousins, but ___ of them lives in Turkey.",
+    "I have two cousins, but ___ of them lives in Türkiye.",
     "neither",
     ["either", "both", "all"],
     "iki kişiden hiçbiri: neither of + tekil fiil",
@@ -5550,7 +5721,7 @@ const _edatKaliplari = [
     "proud of",
   ),
   (
-    "Turkey is famous ___ its delicious food.",
+    "Türkiye is famous ___ its delicious food.",
     "for",
     ["of", "with", "about"],
     "famous for",

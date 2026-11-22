@@ -95,14 +95,19 @@ AdvancedItem _kesenAcisi(int a, int b, int j) {
   final x = 7 + a;
   final (p, r) = _kesenKatsayi[b % 10];
   final butunler = j == 3;
-  var t = 31 + 2 * a + 50 * (b ~/ 10);
+  // Açı bağıntıya göre de değişir: aynı (a, b) için yöndeş, iç ters ve dış
+  // ters vakaları farklı sayılarla kurulur (yalnız ad değişmez).
+  var t = 31 + 2 * a + 50 * (b ~/ 10) + 10 * j;
   late int q, s;
   for (; ; t += 2) {
     q = t - p * x;
     s = (butunler ? 180 - t : t) - r * x;
     final yazili = {p, r, q.abs(), s.abs()};
     final buyuk = butunler && 180 - t > t ? 180 - t : t;
-    if (!yazili.contains(x) && !yazili.contains(buyuk)) break;
+    // q ya da s sıfırsa işaret hatası da doğru x değerini verir.
+    if (!yazili.contains(x) && !yazili.contains(buyuk) && q != 0 && s != 0) {
+      break;
+    }
   }
   final tanim = butunler
       ? 'kesenin aynı tarafında ve paralel doğruların arasında kalan karşı '
@@ -129,7 +134,13 @@ AdvancedItem _kesenAcisi(int a, int b, int j) {
     return sayisal(
       '$veri Buna göre x kaçtır?',
       x,
-      [t, ?xKarisik, ?_bol(q + s, (p - r).abs())],
+      // İşaret hatası: eşit açılarda sabitleri yanlış tarafa taşıma, bütünler
+      // açılarda sabitleri 180 ile toplama.
+      [
+        t,
+        ?xKarisik,
+        ?(butunler ? _bol(180 + q + s, p + r) : _bol(q + s, (p - r).abs())),
+      ],
       cozum,
       positive: true,
     );
@@ -166,7 +177,13 @@ AdvancedItem _kirikZ(int a, int b, int j) {
       'E noktasından d₁ doğrusuna çizilen paralel, AEB açısını iç ters açılar '
       'yoluyla CAE ve DBE açılarına eşit iki parçaya ayırır';
   if (j == 2) {
-    final y = 11 + b, t = 32 + a, x = y + t, z = x + y;
+    // AEB = 90° olursa "CAE + DBE + AEB = 180°" sanan öğrenci de doğru yanıtı
+    // bulur; bu değer atlanır (y değerleri yine her vakada farklıdır).
+    final t = 32 + a;
+    // DBE hem a hem b ile değişir (fark t yalnız bağlamı değiştirmesin).
+    var y = 11 + a + b;
+    if (t.isEven && 2 * y + t >= 90) y++;
+    final x = y + t, z = x + y;
     return _aci(
       '$_kirikGiris$yer AEB açısının ölçüsü $z° ve CAE açısının ölçüsü DBE '
           'açısının ölçüsünden $t° fazla olduğuna göre DBE açısının ölçüsü kaç '
@@ -177,8 +194,16 @@ AdvancedItem _kirikZ(int a, int b, int j) {
           '$z°, DBE = ($z° − $t°) / 2 = $y°.',
     );
   }
-  final x = 20 + 2 * a, y = 17 + 2 * b, z = x + y;
   if (j == 1) {
+    // Aranan DBE hem a hem b ile değişir. DBE = CAE (iç ters açıları
+    // karıştırma) ve AEB = 90° ("üç açının toplamı 180°" sanma) değerleri
+    // sırayı koruyarak atlanır.
+    final x = 20 + 2 * a;
+    var y = 15 + a + b;
+    for (final f in x < 90 - x ? [x, 90 - x] : [90 - x, x]) {
+      if (y >= f) y++;
+    }
+    final z = x + y;
     return _aci(
       '$_kirikGiris$yer CAE açısının ölçüsü $x°, AEB açısının ölçüsü $z° '
           'olduğuna göre DBE açısının ölçüsü kaç derecedir?',
@@ -187,6 +212,7 @@ AdvancedItem _kirikZ(int a, int b, int j) {
       '$paralel: $z° = $x° + DBE, buradan DBE = $z° − $x° = $y°.',
     );
   }
+  final x = 20 + 2 * a, y = 17 + 2 * b, z = x + y;
   return _aci(
     '$_kirikGiris$yer CAE açısının ölçüsü $x°, DBE açısının ölçüsü $y° '
         'olduğuna göre AEB açısının ölçüsü kaç derecedir?',
@@ -221,12 +247,15 @@ AdvancedItem _kirikU(int a, int b, int j) {
     );
   }
   if (j == 1) {
-    final al = 125 + 2 * a, be = 120 + 2 * b, z = 360 - al - be;
+    // Aranan DBE hem a hem b ile değişir; CAE ile eşit çıkmasın.
+    final al = 125 + 2 * a, be = 112 + a + b + (b >= a + 13 ? 1 : 0);
+    final z = 360 - al - be;
     return _aci(
       '$_kirikGiris$yer CAE açısının ölçüsü $al°, AEB açısının ölçüsü $z° '
           'olduğuna göre DBE açısının ölçüsü kaç derecedir?',
       be,
-      [al + z - 180, 180 - z, 180 - be],
+      // Z kuralı (|CAE − AEB|), bütünler açı ve AEB'yi çıkarmayı unutma.
+      [(al - z).abs(), 180 - be, 180 - z, 360 - al],
       '$paralel. DBE = 360° − $al° − $z° = $be°.',
     );
   }
@@ -362,7 +391,8 @@ bool _yukseklikTemiz(int k, int m, int kenar) {
 final _yukseklikCiftleri = [
   for (final t in _heron50)
     for (final s in {t.$1, t.$2, t.$3})
-      if (_yukseklikTemiz(t.$4, t.$5, s)) (t, s),
+      // Kenar 2 olunca yükseklik alana eşit çıkar; bu kenarlar alınmaz.
+      if (s > 2 && _yukseklikTemiz(t.$4, t.$5, s)) (t, s),
 ];
 final _enUzunKenarli = [
   for (final t in _heron60)
@@ -370,7 +400,7 @@ final _enUzunKenarli = [
 ];
 final _enKisaKenarli = [
   for (final t in _heron50)
-    if (_yukseklikTemiz(t.$4, t.$5, t.$1)) t,
+    if (t.$1 > 2 && _yukseklikTemiz(t.$4, t.$5, t.$1)) t,
 ];
 
 /// Yükseklik vakası: (üçgen, yüksekliği sorulan kenar, ölçek). c = 3…5 ortak
@@ -667,12 +697,14 @@ final _suKup = [
   for (var e = 3; e <= 25; e++)
     for (var w = e + 2; w <= 70; w++)
       for (var l = w; l <= 90; l++)
-        if (_temizAralik(e * e * e, l * w, 0.5, 30)) (e, l, w),
+        // e = 6 alınmaz: 6 cm ayrıtlı küpte yüzey alanı hacme eşittir.
+        if (e != 6 && _temizAralik(e * e * e, l * w, 0.5, 30)) (e, l, w),
 ];
 
 /// N bilye (yarıçap r) silindir kaba (yarıçap R): 4Nr³ / (3R²).
 final _suBilye = [
-  for (var n = 1; n <= 20; n++)
+  // En az iki bilye: tek bilyede "N ile çarpmayı unutma" hatası doğru çıkar.
+  for (var n = 2; n <= 20; n++)
     for (var r = 1; r <= 8; r++)
       for (var R = 2 * r + 1; R <= 50; R++)
         if (_temizAralik(4 * n * r * r * r, 3 * R * R, 0.5, 30)) (n, r, R),
@@ -715,7 +747,9 @@ final _suKoni = [
   for (var r1 = 2; r1 <= 30; r1++)
     for (var h = 3; h <= 60; h++)
       for (var r2 = 2; r2 <= 30; r2++)
-        if (_temizAralik(h * r1 * r1, 3 * r2 * r2, 0.5, 30)) (r1, h, r2),
+        // Eşit yarıçaplarda doğrusal ve karesel oran aynı sonucu verir.
+        if (r1 != r2 && _temizAralik(h * r1 * r1, 3 * r2 * r2, 0.5, 30))
+          (r1, h, r2),
 ];
 
 /// Prizma kaptan çıkarılan blok (x × y × z): düşüş xyz / (L·W).
@@ -763,8 +797,16 @@ final _suKoniCisim = [
         if (_temizAralik(r * r * h, 3 * R * R, 0.5, 30)) (r, h, R),
 ];
 
-/// Listeden 500 vakayı eşit aralıkla seçer.
-T _yay<T>(List<T> l, int i) => l[i * l.length ~/ 500];
+/// Listeden 500 vakayı eşit aralıkla seçer: i numaralı vaka kendi bloğunda
+/// (öteki vakalarla ortak olmayan dilimde) [temiz] koşulunu sağlayan ilk
+/// ögeyi, yoksa bloğun ilk ögesini alır.
+T _yaySec<T>(List<T> l, int i, bool Function(T) temiz) {
+  final bas = i * l.length ~/ 500, son = (i + 1) * l.length ~/ 500;
+  for (var j = bas; j < son; j++) {
+    if (temiz(l[j])) return l[j];
+  }
+  return l[bas];
+}
 
 // ---------------------------------------------------------------------------
 // 15 · Benzer cisimler
@@ -927,6 +969,11 @@ String _kesirli(int n, int d) => kesir(n, d).replaceFirst('-', '−');
 int? _bolIsaretli(int pay, int payda) =>
     payda != 0 && pay % payda == 0 ? pay ~/ payda : null;
 
+/// Yanıtın mutlak değeri kökte yazılı sayılardan birinin mutlak değerine eşit
+/// mi? ("Kökte görünen sayıyı seçme" yolu doğru yanıtı vermesin.)
+bool _yazili(int yanit, Iterable<int> sayilar) =>
+    sayilar.any((s) => s.abs() == yanit.abs());
+
 /// Sıfırdan farklı koordinat: a − 12 sıfıra düşerse 13 alınır.
 int _sifirsiz(int v, int yerine) => v == 0 ? yerine : v;
 
@@ -959,8 +1006,10 @@ final lmGeometriEk = <AdvancedFamily>[
     (a, b, c) {
       final j = c ~/ 3;
       if (c % 3 == 2) {
-        // ABD üçgeni üst sınırı, CBD üçgeni alt sınırı belirler.
-        final l = 16 + a, n = 2 + b % 10, o = b ~/ 10, ust = l + n + 1;
+        // ABD üçgeni üst sınırı, CBD üçgeni alt sınırı belirler. Sayımda n,
+        // en küçük değerde l iki koordinatla birlikte değişir.
+        final o = b ~/ 10, l = 16 + a + (j == 2 ? b : 0);
+        final n = 2 + (j == 0 ? (a + b) % 10 : b % 10), ust = l + n + 1;
         final p = ust ~/ 2 - 2 * o, q = ust - p;
         final r = n + 2 + o, s = r + l;
         final veri =
@@ -999,13 +1048,18 @@ final lmGeometriEk = <AdvancedFamily>[
       }
       final cevre = c % 3 == 1;
       final cesit = cevre && j == 2;
-      final p = cesit ? 4 + a : 3 + a;
-      var q = p + 1 + b;
-      // Yanıtın kökteki bir kenara eşit çıktığı değerler atlanır.
-      final atla = cesit
-          ? 2 * p - 3
-          : (!cevre && j != 1 && j != 3 ? 2 * p - 1 : 0);
-      if (atla > p && q >= atla) q++;
+      // Kısa kenar p, fark d = q − p. Yanıtı yalnız p'ye bağlı sayım
+      // biçimlerinde ve yalnız d'ye bağlı en az değer biçiminde p ve d iki
+      // koordinatla birlikte değişir (a + b ve 2b + a mod 5 birlikte bire bir).
+      final sayim = cesit || (!cevre && j == 0);
+      final p = sayim ? (cesit ? 4 : 3) + a + b : 3 + a;
+      var d = sayim
+          ? 1 + 2 * b + a % 5
+          : (!cevre && j == 2 ? 1 + a + b : 1 + b);
+      // Yanıtın kökteki bir kenara eşit çıktığı fark atlanır (sıra korunur).
+      final atla = cesit ? p - 3 : (!cevre && j != 1 && j != 3 ? p - 1 : 0);
+      if (atla > 0 && d >= atla) d++;
+      final q = p + d;
       final ters = (a + b + c).isOdd;
       final ab = ters ? q : p, ac = ters ? p : q;
       final lo = q - p + 1, hi = p + q - 1, adet = 2 * p - 1;
@@ -1138,7 +1192,9 @@ final lmGeometriEk = <AdvancedFamily>[
       }
       if (c < 6) {
         final s1 = 5 + a, s2 = s1 + 1 + b % 5, s3 = s2 + 1 + b ~/ 5;
-        final d = ucluDizilimler[(c - 3) * 2 + a % 2];
+        // Kenarların köşelere dağılımı a ve b ile değişir; aynı (a, b) için
+        // c = 3, 4, 5 farklı dizilim alır.
+        final d = ucluDizilimler[(a + b + 2 * (c - 3)) % 6];
         final uz = [s1, s2, s3];
         final ab = uz[d[0]], bc = uz[d[1]], ac = uz[d[2]];
         // Kenarın karşısındaki açı: |AB| → C, |BC| → A, |AC| → B.
@@ -1160,7 +1216,11 @@ final lmGeometriEk = <AdvancedFamily>[
       if (c < 8) {
         final x = 8 + a;
         final (p1, p2, p3) = _ucluKatsayi[b % 5];
-        final (t1, t2, t3) = _ucluAci[(b ~/ 5) * 2 + (c - 6)];
+        // Açı üçlüsü ve köşelere dağılımı a ve b ile birlikte değişir.
+        final taban = _ucluAci[((b ~/ 5 + a) % 4) * 2 + (c - 6)];
+        final dz = ucluDizilimler[(a + b) % 6];
+        final ts = [taban.$1, taban.$2, taban.$3];
+        final t1 = ts[dz[0]], t2 = ts[dz[1]], t3 = ts[dz[2]];
         final q1 = t1 - p1 * x, q2 = t2 - p2 * x, q3 = t3 - p3 * x;
         final aci = {'A': t1, 'B': t2, 'C': t3};
         final artan = _artanKose(aci);
@@ -1180,7 +1240,9 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       final dar = c == 9;
-      final p = dar ? 8 + a : 3 + a, q = p + 1 + b;
+      // Geniş açılı sayımda yanıt kısa kenarla değiştiğinden kısa kenar da
+      // iki koordinata bağlıdır.
+      final p = dar ? 8 + a : 3 + a + b, q = p + 1 + b;
       final ters = (a + b).isOdd;
       final ab = ters ? q : p, ac = ters ? p : q;
       final kare = p * p + q * q;
@@ -1223,6 +1285,7 @@ final lmGeometriEk = <AdvancedFamily>[
     },
     exam: ExamKind.tyt,
     lesson: _tm,
+    shortAnswer: false,
   ),
   // 4 · Dik üçgende sinüs, kosinüs ve tanjant.
   lmAile(
@@ -1232,7 +1295,9 @@ final lmGeometriEk = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.uygulama,
     (a, b, c) {
-      final (l1, l2, w) = _yonluUclu(a);
+      // Oran ve çevre/alan biçimlerinde üçlü a + b ile seçilir: ölçek
+      // sadeleştiği için b yalnız ölçeği değil üçlüyü de değiştirir.
+      final (l1, l2, w) = _yonluUclu(c < 4 || c >= 7 ? (a + b) % 26 : a);
       if (c < 4) {
         final k = 1 + b % 4, g = b ~/ 4;
         // (dik köşe, P1, P2, verilen kenarlar).
@@ -1310,7 +1375,9 @@ final lmGeometriEk = <AdvancedFamily>[
       final v = b % 5;
       var k = 2 + b ~/ 5;
       // 6-8-10 üçgeninde alan çevreye eşittir; bu vaka ölçek 6 ile sorulur.
-      if (c == 9 && k * l1 * l2 == 2 * (l1 + l2 + w)) k = 6;
+      if (c >= 8 && k * l1 * l2 == 2 * (l1 + l2 + w)) k = 6;
+      // Çevre 90 cm çıkarsa kökteki 90° ile aynı sayı olur; ölçek 6 alınır.
+      if (c == 7 && k * (l1 + l2 + w) == 90) k = 6;
       final (r, p1, p2) = c < 7 ? _dikKoseler[c - 4] : _dikKoseler[v % 3];
       final kom = _kenar(p1, r), kar = _kenar(p2, r), hip = _kenar(p1, p2);
       final sinP = kesir(l2, w), cosP = kesir(l1, w), tanP = kesir(l2, l1);
@@ -1391,7 +1458,12 @@ final lmGeometriEk = <AdvancedFamily>[
               'çevresi $cevre cm olarak veriliyor. Buna göre ABC üçgeninin alanı '
               'kaç cm² olur?',
           alan,
-          [k * k * l1 * l2, l1 * l2 ~/ 2, k * k * l1 * w ~/ 2, cevre],
+          [
+            k * k * l1 * l2,
+            l1 * l2 ~/ 2,
+            if ((k * k * l1 * w).isEven) k * k * l1 * w ~/ 2,
+            cevre,
+          ],
           'Oran $deger olduğundan kenarlar ${l1}t, ${l2}t ve ${w}t biçimindedir. '
               'Çevre ${l1 + l2 + w}t = $cevre eşitliğinden t = $k olur; '
               '$kenarlar. Alan ${k * l1}·${k * l2} / 2 = $alan cm².',
@@ -1551,8 +1623,10 @@ final lmGeometriEk = <AdvancedFamily>[
             '$soru uzunluğu kaç cm olur?';
       }
       final yanlis = <String>[
+        // İkizkenar üçgende eş kenara ait yükseklik aynıdır; çeldirici olmaz.
         for (final d in digerleri)
-          if (_kokluDeger(2 * kk, d, m) case final v?) '$v cm',
+          if (d != s)
+            if (_kokluDeger(2 * kk, d, m) case final v?) '$v cm',
         if (_kokluDeger(kk, s, m) case final v?) '$v cm',
         if (_kokluDeger(4 * kk, s, m) case final v?) '$v cm',
         '${_kok(kk, m)} cm',
@@ -1795,7 +1869,10 @@ final lmGeometriEk = <AdvancedFamily>[
         final x = 10 + a;
         final (p, r) = _dortgenKatsayi[b % 10];
         final ardisik = c == 0, sorC = (a + b).isEven;
-        var t = 51 + 3 * (b % 10) + 40 * (b ~/ 10);
+        // A açısı a ile de değişir (a yalnız x değerini değiştirmesin); dik
+        // açı (dikdörtgen) atlanır.
+        var t = 51 + a + 3 * (b % 10) + 40 * (b ~/ 10);
+        if (t == 90) t++;
         // Yanıt kökte yazılı bir sayıya eşit çıkarsa A açısı bir derece
         // kaydırılır (kaydırılan değerler hiçbir vakanın asıl değeri değildir).
         int yanitAci(int u) => ardisik && sorC ? u : 180 - u;
@@ -1841,7 +1918,9 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       if (c <= 3) {
-        final p = 4 + a, q = 1 + b, cevre = 2 * (2 * p + q);
+        // |AD| = |EC| olursa "çevre / 2 − |EC|" hatası doğru yanıtı verir.
+        final p = 4 + a, q = 1 + b == p ? 21 + b : 1 + b;
+        final cevre = 2 * (2 * p + q);
         const giris =
             'ABCD paralelkenarında A açısının açıortayı [DC] kenarını E '
             'noktasında kesiyor.';
@@ -1969,7 +2048,10 @@ final lmGeometriEk = <AdvancedFamily>[
       }
       if (c == 8) {
         final p = 4 + a, q = p + 1 + b % 10;
-        final e = b < 10 ? q - p + 1 : p + q - 1;
+        // Verilen köşegen ne yassı ne dikdörtgen: |q − p| + 1 + p/2 ya da
+        // p + q − 1 − p/2; köşegenler eşit çıkarsa (dikdörtgen) bir artırılır.
+        var e = b < 10 ? q - p + 1 + p ~/ 2 : p + q - 1 - p ~/ 2;
+        if (e * e == p * p + q * q) e++;
         final f2 = 2 * p * p + 2 * q * q - e * e;
         final alt = (p + q) * (p + q) - e * e;
         return secenekli(
@@ -1989,7 +2071,10 @@ final lmGeometriEk = <AdvancedFamily>[
               '|BD| = ${_kok(1, f2)} cm.',
         );
       }
-      final ic = b >= 10, q = 1 + b % 10, p = (ic ? 11 : 5) + a;
+      final ic = b >= 10, q = 1 + b % 10;
+      var p = (ic ? 11 : 5) + a;
+      // İç düzende p = 2q olursa tek açıortaylı çevre doğru yanıta eşit çıkar.
+      if (ic && p == 2 * q) p += 25;
       final dc = ic ? 2 * p - q : 2 * p + q, cevre = 2 * (p + dc);
       final sira = ic ? 'D, F, E, C' : 'D, E, F, C';
       return sayisal(
@@ -2021,9 +2106,13 @@ final lmGeometriEk = <AdvancedFamily>[
     (a, b, c) {
       if (c <= 2) {
         final q = 4 + a;
-        var p = q + 2 + b;
+        // |KL| = (|AB| − |DC|) / 2 sorusunda fark iki koordinatla değişir.
+        var p = q + 2 + b + (c == 2 ? a : 0);
         // |KL| = |DC| çakışması (|AB| = 3·|DC|) kaydırılır.
-        if (c == 2 && p == 3 * q) p += 20;
+        // |AB| = 2·|DC| ya da 3·|DC| olursa hatalı yollar doğru yanıtı verir.
+        while (p == 2 * q || p == 3 * q) {
+          p += 20;
+        }
         const giris = 'ABCD yamuğunda [AB] ∥ [DC] olup';
         const orta =
             '[AD] ve [BC] kenarlarının orta noktalarını birleştiren orta taban';
@@ -2065,7 +2154,9 @@ final lmGeometriEk = <AdvancedFamily>[
           positive: true,
         );
       }
-      final (l1, l2, w) = _yonluUclu(a);
+      // Dik üçgen üçlüsü a + b ile seçilir: küçük taban b ile değiştiği için
+      // tabanlar kaysa da istenen uzunluk her iki koordinatla değişir.
+      final (l1, l2, w) = _yonluUclu((a + b) % 26);
       if (c == 5) {
         // Köşegen: (|AB| + |DC|) / 2, yükseklik ve köşegen bir Pisagor üçlüsü.
         final k = 1 + 20 ~/ l1, dd = k * l1, h = k * l2, kg = k * w;
@@ -2182,7 +2273,9 @@ final lmGeometriEk = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.analiz,
     (a, b, c) {
-      final (m, n) = _orantilar[a];
+      // c = 9 sorusunda |DC| = 2·|BD| olursa A(EDC) verilen A(ABD) değerine
+      // eşit çıkar; bu oran yerine tabloda olmayan 2 : 9 alınır.
+      final (m, n) = c == 9 && _orantilar[a] == (1, 2) ? (2, 9) : _orantilar[a];
       // Alan birimi 10 cm² ve üstü: alanlar kökteki uzunluklarla karışmaz.
       final u = 10 + b;
       const ortak =
@@ -2243,7 +2336,24 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 4 || 5:
-          final (p, q) = _orantilar[b];
+          var (p, q) = _orantilar[b];
+          // n·q = m·p olursa "S − 10·n·q" hatası, A(ADE) tüm alanın yarısı
+          // olursa "ADE'yi yanıt sanma" doğru yanıtı verir. Böyle bir oran b ile
+          // seçilmeyen son beş orandan, sıra gözetilerek (vakalar çakışmadan)
+          // uygun olanla değiştirilir.
+          bool kotu((int, int) o) =>
+              n * o.$2 == m * o.$1 || 2 * m * o.$1 == (m + n) * (o.$1 + o.$2);
+          if (c == 5 && kotu((p, q))) {
+            var sira = 0;
+            for (var bb = 0; bb < b; bb++) {
+              if (kotu(_orantilar[bb])) sira++;
+            }
+            final yedek = [
+              for (var j = 20; j < 25; j++)
+                if (!kotu(_orantilar[j])) _orantilar[j],
+            ];
+            (p, q) = yedek[sira];
+          }
           final s = 10 * (m + n) * (p + q), ade = 10 * m * p;
           final veri =
               'ABC üçgeninde D noktası [AB], E noktası [AC] kenarı üzerindedir. '
@@ -2303,8 +2413,11 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 8:
-          final x = 1 + a % 5, z = 1 + a ~/ 5, y = 1 + b % 10;
-          final v = 10 + 5 * (b ~/ 10);
+          final x = 1 + a % 5, z = 1 + a ~/ 5;
+          var y = 1 + b % 10;
+          // x + z = 2y olursa "3·A(ADE)" hatası doğru yanıtı verir.
+          if (x + z == 2 * y) y += 20;
+          final v = 11 + 5 * (b ~/ 10);
           return sayisal(
             'ABC üçgeninin [BC] kenarı üzerinde B, D, E, C sırasıyla dizilen D '
                 've E noktaları alınıyor. |BD| = $x cm, |DE| = $y cm, |EC| = $z cm '
@@ -2350,7 +2463,9 @@ final lmGeometriEk = <AdvancedFamily>[
         var l = 8 + b + a ~/ 3;
         final yr = 3 + (a + 2 * b) % 9;
         // Teğet uzunluğu kökteki bir katsayıya eşit çıkmasın.
-                if ({(l - p * x).abs(), (l - r * x).abs(), p, r, x}.contains(l)) {
+        while ({(l - p * x).abs(), (l - r * x).abs(), p, r, x}.contains(l) ||
+            l - p * x == 0 ||
+            l - r * x == 0) {
           l += 30;
         }
         final q = l - p * x, s = l - r * x;
@@ -2384,7 +2499,14 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       if (c <= 2) {
-        final ta = 2 + 2 * a, tb = 3 + 2 * b, tc = 2 + 2 * ((a + 2 * b) % 8);
+        // Sorulan teğet parçası iki koordinatla değişir. |BD| tek, öteki iki
+        // parça çift olduğundan yanlış köşe seçimi doğru yanıtı vermez;
+        // çevre sorusunda |BC| tek, |AD| çift olduğundan |BC| / 2 tam sayı
+        // olmaz ve |AD| kökteki |BC| değerine eşit çıkmaz.
+        final ta = c == 1 ? 2 + 2 * a : 2 + 2 * ((a + b) % 23);
+        final tb = c == 1 ? 3 + 2 * ((a + b) % 20) : 3 + 2 * a;
+        // Çevre sorusunda kökte yalnız çevre ve |BC| = 7 + 2a görünür.
+        final tc = c == 1 ? 2 + 2 * ((a + 2 * b) % 8) : 4;
         final ab = ta + tb, bc = tb + tc, ac = ta + tc, s = ta + tb + tc;
         const giris =
             'ABC üçgeninin iç teğet çemberi [AB], [BC] ve [AC] kenarlarına '
@@ -2416,7 +2538,9 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       if (c <= 4) {
-        final r1 = 2 + a, r2 = r1 + 2 + b;
+        // Küçük yarıçap en az 5 cm: ortak teğet sayısı (0–4) kökte yazılı bir
+        // yarıçapa eşit çıkmaz.
+        final r1 = 5 + a, r2 = r1 + 2 + b;
         final tur = (c == 3 ? a + b : a + 2 * b) % 5;
         final d = _konumUzaklik(tur, r1, r2, a + b);
         final veri =
@@ -2446,25 +2570,28 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       if (c == 5) {
-        final r1 = 2 + a;
-        var r2 = r1 + 1 + b;
-        // Yanıt 2r₁ − 1 büyük yarıçapa eşit çıkmasın.
-        if (r2 == 2 * r1 - 1) r2 += 20;
+        // Değer sayısı yalnız küçük yarıçapa bağlı olduğundan değerlerin
+        // toplamı sorulur; toplam iki yarıçapla da değişir.
+        final r1 = 2 + a, r2 = r1 + 1 + b, adet = 2 * r1 - 1;
         return sayisal(
           'Yarıçapları $r1 cm ve $r2 cm olan iki çember iki farklı noktada '
               'kesişiyor. Merkezler arasındaki uzaklık cm cinsinden bir tam sayı '
-              'olduğuna göre bu uzaklık kaç farklı değer alabilir?',
-          2 * r1 - 1,
-          [2 * r1 + 1, 2 * r1, r1 + r2 - 1],
+              'olduğuna göre bu uzaklığın alabileceği değerlerin toplamı kaç cm '
+              'olur?',
+          adet * r2,
+          [(adet + 2) * r2, (adet + 1) * r2, adet, 2 * r2],
           'Kesişen çemberlerde r₂ − r₁ < d < r₁ + r₂, yani ${r2 - r1} < d < '
-              '${r1 + r2} olur. Uygun tam sayılar en küçüğü ${r2 - r1 + 1}, en '
-              'büyüğü ${r1 + r2 - 1} olmak üzere ${2 * r1 - 1} tanedir.',
+              '${r1 + r2} olur. Uygun tam sayılar ${r2 - r1 + 1}, '
+              '${r2 - r1 + 2}, …, ${r1 + r2 - 1} olup $adet tanedir; toplamları '
+              '$adet·(${r2 - r1 + 1} + ${r1 + r2 - 1}) / 2 = ${adet * r2} cm.',
+          unit: 'cm',
           positive: true,
         );
       }
       if (c == 6) {
         final r1 = 2 + a;
-        var r2 = r1 + 2 + b;
+        // Yarıçap farkı iki koordinatla değişir (iç içe durumun yanıtı).
+        var r2 = r1 + 2 + a + b;
         // İç içe durumda yanıt r₂ − r₁ − 1 küçük yarıçapa eşit çıkmasın.
         if (r2 == 2 * r1 + 1) r2 += 20;
         if ((a + b).isEven) {
@@ -2494,7 +2621,9 @@ final lmGeometriEk = <AdvancedFamily>[
           positive: true,
         );
       }
-      final (l1, l2, w) = _yonluUclu(a);
+      // Üçlü a + b ile seçilir: yarıçaplar b ile kaysa da teğet parçası iki
+      // koordinatla değişir.
+      final (l1, l2, w) = _yonluUclu((a + b) % 26);
       if (c == 7) {
         var r1 = 2 + b;
         if (l2 == r1 || l2 == r1 + l1) r1 += 20;
@@ -2583,7 +2712,11 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 1:
-          final r = 1 + a, R = r + 1 + b, fark = R * R - r * r;
+          // r = 1 için r² = r, R = 2r için R − r = r olur; bu değerler atlanır.
+          // Küçük yarıçap iki koordinatla değişir (b yalnız R'yi kaydırmasın).
+          final r = 2 + (a + b) % 25;
+          final R = r + 1 + b == 2 * r ? r + 21 + b : r + 1 + b;
+          final fark = R * R - r * r;
           return sayisal(
             '$esMerkez farklı olan iki çemberden büyüğünün yarıçapı $R cm, iki '
                 'çember arasında kalan daire halkasının alanı $farkπ cm² olduğuna '
@@ -2748,7 +2881,9 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       if (c == 1) {
-        final n = 2 + a;
+        // Bir kenardaki karo sayısı n iki koordinatla değişir; karo kenarı t
+        // yalnız ölçeği değiştirdiğinden tek başına yanıtı değiştirmez.
+        final n = 2 + (a + b) % 25;
         var t = 5 + b;
         if (6 * n * n == n * t || 6 * n * n == t) t += 20;
         final kenar = n * t;
@@ -2770,8 +2905,9 @@ final lmGeometriEk = <AdvancedFamily>[
         final x = 2 + a;
         var y = 3 + b;
         // Oran tam sayı olup kökteki bir kenara eşitse üçgenin kenarı değişir.
-        if ((6 * x * x) % (y * y) == 0 &&
-            {x, y}.contains(6 * x * x ~/ (y * y))) {
+        if (y == x ||
+            (6 * x * x) % (y * y) == 0 &&
+                {x, y}.contains(6 * x * x ~/ (y * y))) {
           y += 20;
         }
         return kesirli(
@@ -2790,7 +2926,8 @@ final lmGeometriEk = <AdvancedFamily>[
         final x = 2 + a;
         final kisa = c == 3;
         final (p, r) = kisa ? _dortgenKatsayi[b % 10] : _altigenKatsayi[b % 10];
-        final kenar = 4 + b + a ~/ 2;
+        // Kenar x değerinden büyük olduğundan "6x" hatası çevreyi vermez.
+        final kenar = 4 + a + b;
         // Kısa köşegen: |AC| = kenar·√3; uzun köşegen: |AD| = 2·kenar.
         final hedef = kisa ? kenar : 2 * kenar;
         final q = hedef - p * x, s = kenar - r * x;
@@ -2899,8 +3036,9 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 1:
+          // Yükseklik iki koordinatla değişir (taban yalnız hacmi ölçeklemesin).
           final t = 4 + a;
-          var h = 3 + 3 * b;
+          var h = 3 + 3 * ((a + b) % 20);
           if (h == t) h += 60;
           final v = t * t * h ~/ 3;
           return sayisal(
@@ -3018,7 +3156,8 @@ final lmGeometriEk = <AdvancedFamily>[
           );
         case 5 || 8:
           final t = c == 5 ? 2 + 2 * a : 6 + 2 * a;
-          var h = 3 + 3 * b;
+          // Yükseklik sorusunda yanıt iki koordinatla değişir.
+          var h = 3 + 3 * (c == 8 ? (a + b) % 20 : b);
           // Yanıt kökteki bir sayıya eşit çıkmasın.
           if (c == 8 ? h == t : {t, h}.contains(t * t * h ~/ 12)) h += 60;
           final k = t * t * h ~/ 12;
@@ -3090,9 +3229,15 @@ final lmGeometriEk = <AdvancedFamily>[
       String cm(num x) => '${tr(x)} cm';
       switch (c) {
         case 0:
-          final (e, l, w) = _yay(_suKup, i);
-          final d = _ondalik(e * e * e, l * w)!, h0 = e + 2 + (l + w) % 7;
           final sor = i.isEven;
+          final (e, l, w) = _yaySec(_suKup, i, (t) {
+            final (e, l, w) = t;
+            final h0 = e + 2 + (l + w) % 7;
+            final d = e * e * e / (l * w);
+            // e = 6 için yüzey alanı (6e²) hacme (e³) eşittir.
+            return e != 6 && !{e, l, w, h0}.contains(sor ? d : h0 + d);
+          });
+          final d = _ondalik(e * e * e, l * w)!, h0 = e + 2 + (l + w) % 7;
           final yanit = sor ? d : h0 + d;
           return ondalikli(
             'Taban ayrıtları $l cm ve $w cm olan dikdörtgenler prizması '
@@ -3116,7 +3261,15 @@ final lmGeometriEk = <AdvancedFamily>[
           );
         case 1:
           if (i < 250) {
-            final (n, r, R) = _yay(_suBilye, 2 * i);
+            final (n, r, R) = _yaySec(
+              _suBilye,
+              2 * i,
+              (t) => !{
+                t.$1,
+                t.$2,
+                t.$3,
+              }.contains(4 * t.$1 * t.$2 * t.$2 * t.$2 / (3 * t.$3 * t.$3)),
+            );
             final d = _ondalik(4 * n * r * r * r, 3 * R * R)!;
             return ondalikli(
               'Taban yarıçapı $R cm olan dik dairesel silindir biçimindeki bir '
@@ -3138,7 +3291,16 @@ final lmGeometriEk = <AdvancedFamily>[
               positive: true,
             );
           }
-          final (x, y, z, R) = _yay(_suBlokSilindir, 2 * (i - 250));
+          final (x, y, z, R) = _yaySec(
+            _suBlokSilindir,
+            2 * (i - 250),
+            (t) => !{
+              t.$1,
+              t.$2,
+              t.$3,
+              t.$4,
+            }.contains(t.$1 * t.$2 * t.$3 / (3 * t.$4 * t.$4)),
+          );
           final v = x * y * z, d = _ondalik(v, 3 * R * R)!;
           return ondalikli(
             'Taban yarıçapı $R cm olan dik dairesel silindir biçimindeki bir '
@@ -3154,7 +3316,15 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 2:
-          final (r1, h1, r2) = _yay(_suSilindir, i);
+          final (r1, h1, r2) = _yaySec(
+            _suSilindir,
+            i,
+            (t) => !{
+              t.$1,
+              t.$2,
+              t.$3,
+            }.contains(t.$2 * t.$1 * t.$1 / (t.$3 * t.$3)),
+          );
           final d = _ondalik(h1 * r1 * r1, r2 * r2)!;
           return ondalikli(
             'Taban yarıçapı $r1 cm olan dik dairesel silindir biçimindeki bir '
@@ -3175,7 +3345,21 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 3:
-          final (l1, w1, h1, l2, w2) = _yay(_suPrizma, i);
+          final (l1, w1, h1, l2, w2) = _yaySec(
+            _suPrizma,
+            i,
+            // Çevre oranıyla bulunan yükseklik doğru yanıta eşit olmasın.
+            (t) =>
+                !{
+                  t.$1,
+                  t.$2,
+                  t.$3,
+                  t.$4,
+                  t.$5,
+                }.contains(t.$3 * t.$1 * t.$2 / (t.$4 * t.$5)) &&
+                t.$3 * (t.$1 + t.$2) * t.$4 * t.$5 !=
+                    t.$3 * t.$1 * t.$2 * (t.$4 + t.$5),
+          );
           final d = _ondalik(h1 * l1 * w1, l2 * w2)!;
           return ondalikli(
             'Taban ayrıtları $l1 cm ve $w1 cm olan dikdörtgenler prizması '
@@ -3196,7 +3380,15 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 4:
-          final (r1, h, r2) = _yay(_suKoni, i);
+          final (r1, h, r2) = _yaySec(
+            _suKoni,
+            i,
+            (t) => !{
+              t.$1,
+              t.$2,
+              t.$3,
+            }.contains(t.$2 * t.$1 * t.$1 / (3 * t.$3 * t.$3)),
+          );
           final d = _ondalik(h * r1 * r1, 3 * r2 * r2)!;
           return ondalikli(
             'Taban yarıçapı $r1 cm, yüksekliği $h cm olan dik dairesel koni '
@@ -3217,7 +3409,11 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 5:
-          final (x, y, z, l, w) = _yay(_suBlok, i);
+          final (x, y, z, l, w) = _yaySec(_suBlok, i, (t) {
+            final (x, y, z, l, w) = t;
+            final h0 = z + 3 + (x + l) % 6;
+            return !{x, y, z, l, w, h0}.contains(x * y * z / (l * w));
+          });
           final d = _ondalik(x * y * z, l * w)!, h0 = z + 3 + (x + l) % 6;
           return ondalikli(
             'Taban ayrıtları $l cm ve $w cm olan dikdörtgenler prizması '
@@ -3237,7 +3433,11 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 6:
-          final (r, h, R) = _yay(_suCubuk, i);
+          final (r, h, R) = _yaySec(_suCubuk, i, (t) {
+            final (r, h, R) = t;
+            final h0 = h + 2 + (r + R) % 5;
+            return !{r, h, R, h0}.contains(r * r * h / (R * R));
+          });
           final d = _ondalik(r * r * h, R * R)!, h0 = h + 2 + (r + R) % 5;
           return ondalikli(
             'Taban yarıçapı $R cm olan dik dairesel silindir biçimindeki bir '
@@ -3253,7 +3453,16 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 7:
-          final (l, w, h, r) = _yay(_suPrizmaSilindir, i);
+          final (l, w, h, r) = _yaySec(
+            _suPrizmaSilindir,
+            i,
+            (t) => !{
+              t.$1,
+              t.$2,
+              t.$3,
+              t.$4,
+            }.contains(t.$1 * t.$2 * t.$3 / (3 * t.$4 * t.$4)),
+          );
           final d = _ondalik(l * w * h, 3 * r * r)!;
           return ondalikli(
             'Taban ayrıtları $l cm ve $w cm olan dikdörtgenler prizması '
@@ -3274,7 +3483,16 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 8:
-          final (r, h, l, w) = _yay(_suSilindirPrizma, i);
+          final (r, h, l, w) = _yaySec(
+            _suSilindirPrizma,
+            i,
+            (t) => !{
+              t.$1,
+              t.$2,
+              t.$3,
+              t.$4,
+            }.contains(3 * t.$1 * t.$1 * t.$2 / (t.$3 * t.$4)),
+          );
           final d = _ondalik(3 * r * r * h, l * w)!;
           return ondalikli(
             'Taban yarıçapı $r cm olan dik dairesel silindir biçimindeki bir '
@@ -3295,7 +3513,11 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         default:
-          final (r, h, R) = _yay(_suKoniCisim, i);
+          final (r, h, R) = _yaySec(_suKoniCisim, i, (t) {
+            final (r, h, R) = t;
+            final h0 = h + 2 + (r + R) % 5;
+            return !{r, h, R, h0}.contains(r * r * h / (3 * R * R));
+          });
           final d = _ondalik(r * r * h, 3 * R * R)!, h0 = h + 2 + (r + R) % 5;
           return ondalikli(
             'Taban yarıçapı $R cm olan dik dairesel silindir biçimindeki bir '
@@ -3361,7 +3583,9 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 2:
-          final h = 1 + b == n * n ? 21 + b : 1 + b;
+          // m³ L hacimli kabın yüksekliği en az 5m cm olsun (1 L kap 1 cm
+          // yüksek olamaz).
+          final h = 5 + b == n * n ? 25 + b : 5 + b;
           return sayisal(
             'Benzer iki kaptan küçüğünün hacmi $m3 L, büyüğünün hacmi $n3 L '
                 'olarak veriliyor. Küçük kabın yüksekliği ${m * h} cm olduğuna göre '
@@ -3377,9 +3601,11 @@ final lmGeometriEk = <AdvancedFamily>[
         case 3 || 4:
           // 1/10 ölçeğinde kütle sorusunun yanıtı (kg) gram değerine eşit çıkar;
           // kütle sorusunda 10 yerine 12 kullanılır.
+          // Boya sorusunda k = 2 olunca iki katı ile karesi aynıdır; ölçek 3
+          // ile başlar.
           final k = c == 4
               ? const [2, 3, 4, 5, 6, 7, 8, 9, 12][b % 9]
-              : 2 + b % 9;
+              : 3 + b % 9;
           final q = b ~/ 9;
           if (c == 3) {
             final x = 10 + 5 * a + 125 * q;
@@ -3475,7 +3701,10 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         default:
-          final w = 1 + b == n ? 21 + b : 1 + b;
+          // Yüzey alanı / hacim^(2/3) oranı w en az 8: bu cisimlerde oran
+          // 5,5–7,3 değerinin altına inemez (hacmi 1 cm³ olan cismin yüzey alanı
+          // 1 cm² olamaz).
+          final w = 8 + b == n ? 28 + b : 8 + b;
           return sayisal(
             'Benzer iki $cisim biçimindeki cisimden küçüğünün hacmi $m3 cm³, '
                 'büyüğünün hacmi $n3 cm³ olarak veriliyor. Küçüğünün yüzey alanı '
@@ -3502,7 +3731,11 @@ final lmGeometriEk = <AdvancedFamily>[
     BloomLevel.uygulama,
     (a, b, c) {
       if (c <= 2) {
-        final x0 = a - 12, y0 = b - 9;
+        final x0 = _sifirsiz(a - 12, 13);
+        var y0 = _sifirsiz(b - 9, 11);
+        // Eşit ya da zıt koordinatlarda yer değiştirme ve işaret hataları doğru
+        // noktayı verir; ordinat 30 birim kaydırılır.
+        if (y0.abs() == x0.abs()) y0 += y0 > 0 ? 30 : -30;
         if (c == 1) {
           // Birinci doğru eğimli biçimde: y = mx + n.
           final m = _egimler[(a + 2 * b) % 8], n = y0 - m * x0;
@@ -3524,7 +3757,23 @@ final lmGeometriEk = <AdvancedFamily>[
                 '${n == 0 ? '' : (n < 0 ? ' − ${-n}' : ' + $n')} = ${_m(y0)} olur.',
           );
         }
-        final ((p1, q1), (p2, q2)) = _kesisimKatsayi[(a + b + c) % 8];
+        // a + b sorusunda x + y = … biçimli doğru kullanılmaz (yanıtı verir);
+        // toplam kökte yazılı bir sayıya eşit çıkarsa sıradaki çift alınır.
+        const toplamCiftleri = [1, 2, 4, 5, 6, 7];
+        var ci = c == 2 ? toplamCiftleri[(a + b) % 6] : (a + b + c) % 8;
+        if (c == 2) {
+          for (var j = 0; j < 6; j++) {
+            final aday = toplamCiftleri[(a + b + j) % 6];
+            final ((u1, v1), (u2, v2)) = _kesisimKatsayi[aday];
+            final yazilan = [u1, v1, u2, v2];
+            yazilan.addAll([u1 * x0 + v1 * y0, u2 * x0 + v2 * y0]);
+            if (!_yazili(x0 + y0, yazilan)) {
+              ci = aday;
+              break;
+            }
+          }
+        }
+        final ((p1, q1), (p2, q2)) = _kesisimKatsayi[ci];
         final c1 = p1 * x0 + q1 * y0, c2 = p2 * x0 + q2 * y0;
         final det = p1 * q2 - p2 * q1, sag = c1 * q2 - c2 * q1;
         final cozum =
@@ -3554,30 +3803,61 @@ final lmGeometriEk = <AdvancedFamily>[
       if (c <= 5) {
         final x1 = a - 12, ham = b % 10 - 4, y1 = ham == 0 ? 6 : ham;
         if (c == 5) {
-          const tek = [(1, 1), (2, 1), (1, -1), (3, 1), (2, -1), (3, -1)];
+          // Eğim ±1 olmaz (eğimi ters çevirme hatası aynı sonucu verir).
+          const tek = [(2, 1), (3, 1), (2, -1), (3, -1), (4, 1), (4, -1)];
           final (dx, dy) = tek[(b ~/ 10) * 3 + a % 3];
-          final adim = y1 + dy == 0 ? 2 : 1;
-          final bx = x1 + adim * dx, by = y1 + adim * dy;
-          final k = x1 - y1 * dx ~/ dy;
+          // Doğru orijinden geçerse (k = 0) ya da k kökte yazılı bir sayıya
+          // eşit çıkarsa A noktası 20 birim yukarı alınır.
+          bool uygun(int y) {
+            final ad = y + dy == 0 ? 2 : 1, kk = x1 - y * dx ~/ dy;
+            return kk != 0 && !_yazili(kk, [x1, y, x1 + ad * dx, y + ad * dy]);
+          }
+
+          // En çok altı deneme; uygun değer yoksa k ≠ 0 olan ilk değer alınır.
+          final yAday = [
+            for (var j = 0; j < 6; j++)
+              if (x1 - (y1 + 20 * j) * dx ~/ dy != 0) y1 + 20 * j,
+          ];
+          final ya = yAday.firstWhere(uygun, orElse: () => yAday.first);
+          final adim = ya + dy == 0 ? 2 : 1;
+          final bx = x1 + adim * dx, by = ya + adim * dy;
+          final k = x1 - ya * dx ~/ dy;
           return _tam(
-            'Analitik düzlemde A${_n(x1, y1)}, B${_n(bx, by)} ve C(k, 0) '
+            'Analitik düzlemde A${_n(x1, ya)}, B${_n(bx, by)} ve C(k, 0) '
                 'noktaları doğrusal olduğuna göre k kaçtır?',
             k,
-            [x1 + y1 * dx ~/ dy, ?_bolIsaretli(x1 * dx - y1 * dy, dx), -k],
+            [x1 + ya * dx ~/ dy, ?_bolIsaretli(x1 * dx - ya * dy, dx), -k],
             'Doğrusal noktalarda AB ve AC doğrularının eğimleri eşittir. AB '
-                'doğrusunun eğimi (${_m(by)} − ${_pz(y1)}) / (${_m(bx)} − '
+                'doğrusunun eğimi (${_m(by)} − ${_pz(ya)}) / (${_m(bx)} − '
                 '${_pz(x1)}) = ${_kesirli(adim * dy, adim * dx)} olur. AC için '
-                '(0 − ${_pz(y1)}) / (k − ${_pz(x1)}) = '
+                '(0 − ${_pz(ya)}) / (k − ${_pz(x1)}) = '
                 '${_kesirli(adim * dy, adim * dx)} eşitliğinden k = ${_m(k)} '
                 'bulunur.',
           );
         }
         final (dx, dy) = _yonler[(b ~/ 10) * 3 + a % 3];
-        var t = 2 + (a + b) % 3;
+        final bx = x1 + dx, by = y1 + dy;
         // c = 3 sorusunda C noktası x ekseni üzerine düşerse c = 5 köküyle
-        // çakışır; bu durumda C noktası ötelenir.
-        if (c == 3 && y1 + t * dy == 0) t += 3;
-        final bx = x1 + dx, by = y1 + dy, cx = x1 + t * dx, cy = y1 + t * dy;
+        // çakışır; yanıt kökte yazılı bir koordinata eşit çıkarsa da C noktası
+        // doğru üzerinde ötelenir.
+        bool eksende(int t) => c == 3 && y1 + t * dy == 0;
+        bool yazilida(int t) {
+          final ux = x1 + t * dx, uy = y1 + t * dy;
+          return _yazili(c == 3 ? ux : uy, [x1, y1, bx, by, c == 3 ? uy : ux]);
+        }
+
+        // Adaylar sınırlıdır; uygun aday yoksa eksende olmayan ilk aday alınır
+        // (|x| = |y| kalan doğrularda yazılı sayıdan kaçınmak olanaksızdır).
+        final t0 = 2 + (a + b) % 3;
+        final adaylar = [
+          for (var j = 0; j < 7; j++)
+            if (!eksende(t0 + 3 * j)) t0 + 3 * j,
+        ];
+        final t = adaylar.firstWhere(
+          (t) => !yazilida(t),
+          orElse: () => adaylar.first,
+        );
+        final cx = x1 + t * dx, cy = y1 + t * dy;
         final egim = _kesirli(dy, dx);
         if (c == 3) {
           return _tam(
@@ -3602,7 +3882,10 @@ final lmGeometriEk = <AdvancedFamily>[
               'k = ${_m(cy)} bulunur.',
         );
       }
-      final x0 = _sifirsiz(a - 12, 13), y0 = _sifirsiz(b - 9, 11);
+      final x0 = _sifirsiz(a - 12, 13);
+      var y0 = _sifirsiz(b - 9, 11);
+      // x₀ = y₀ olursa koordinatların yer değiştirmesi doğru sonucu verir.
+      if (y0 == x0) y0 += 30;
       final ((p1, q1), (p2, q2)) = _kesisimKatsayi[(a + 2 * b) % 8];
       final c1 = p1 * x0 + q1 * y0, c2 = p2 * x0 + q2 * y0;
       final iki =
@@ -3612,8 +3895,18 @@ final lmGeometriEk = <AdvancedFamily>[
           'İlk iki denklem birlikte çözülürse kesişim noktası '
           '${_n(x0, y0)} bulunur.';
       if (c == 6 || c == 7) {
-        final k = const [2, -3, 4, -1, 5, -2, 3, 1][(a + b) % 8];
         final e = const [1, 2, -1, 3, -2][b % 5];
+        // k kökte yazılı bir sabite eşit çıkarsa sıradaki değer alınır.
+        const kler = [6, -7, 8, -9, 7, -6, 9, -8];
+        var k = kler[(a + b) % 8];
+        for (var j = 0; j < 8; j++) {
+          final aday = kler[(a + b + j) % 8];
+          final sabit3 = c == 6 ? aday * x0 + e * y0 : e * x0 + aday * y0;
+          if (!_yazili(aday, [c1, c2, sabit3])) {
+            k = aday;
+            break;
+          }
+        }
         if (c == 6) {
           final c3 = k * x0 + e * y0;
           final ucuncu = _dogruEsit(1, e, c3).replaceFirst('x', 'kx');
@@ -3643,8 +3936,18 @@ final lmGeometriEk = <AdvancedFamily>[
       if (c == 8) {
         const ikinci = [(1, 1), (2, -1), (3, 1), (1, -1), (2, 1), (4, -1)];
         final (r, s) = ikinci[(a + b) % 6];
-        final m = const [2, -3, 4, -1, 5, -2, 3, 1][b % 8];
-        final d2 = r * x0 + s * y0, d1 = m * x0 + y0;
+        // m kökte yazılı bir sayıya eşit çıkarsa sıradaki değer alınır.
+        const mler = [6, -7, 8, -9, 7, -6, 9, -8];
+        final d2 = r * x0 + s * y0;
+        var m = mler[(a + 3 * b) % 8];
+        for (var j = 0; j < 8; j++) {
+          final aday = mler[(a + 3 * b + j) % 8];
+          if (!_yazili(aday, [aday * x0 + y0, d2, x0])) {
+            m = aday;
+            break;
+          }
+        }
+        final d1 = m * x0 + y0;
         return _tam(
           'Analitik düzlemde mx + y = ${_m(d1)} ve ${_dogruEsit(r, s, d2)} '
               'doğrularının kesişim noktasının apsisi ${_m(x0)} olduğuna göre m '
@@ -3656,7 +3959,20 @@ final lmGeometriEk = <AdvancedFamily>[
               'sağlar: m·${_pz(x0)} + ${_pz(y0)} = ${_m(d1)}, m = ${_m(m)}.',
         );
       }
-      final m = const [2, -3, 4, -1, 5, -2, 3, 1][(a + 3 * b) % 8];
+      // Eğim −1 olmaz; doğru orijinden geçmez (n ≠ 0).
+      const egim9 = [2, -3, 4, -2, 5, -4, 3, -5];
+      // Doğru orijinden geçmez (n ≠ 0); n kökte yazılı bir sayıya eşit
+      // çıkarsa sıradaki eğim alınır.
+      var mi = (a + 3 * b) % 8;
+      for (var j = 0; j < 8; j++) {
+        final aday = egim9[(a + 3 * b + j) % 8], nn = y0 - aday * x0;
+        if (nn != 0 && !_yazili(nn, [p1, q1, c1, p2, q2, c2, aday])) {
+          mi = (a + 3 * b + j) % 8;
+          break;
+        }
+      }
+      if (y0 - egim9[mi] * x0 == 0) mi = (mi + 1) % 8;
+      final m = egim9[mi];
       final n = y0 - m * x0;
       return _tam(
         'Analitik düzlemde $iki ile eğimi ${_m(m)} olan bir doğru üzerindedir. '
@@ -3682,12 +3998,21 @@ final lmGeometriEk = <AdvancedFamily>[
     (a, b, c) {
       final x1 = a - 12, y1 = b - 10;
       if (c <= 3) {
-        final (u1, v1, u2, v2) = switch (c) {
+        final (u1, v1, u2, v0) = switch (c) {
           0 => (3 + a % 5, -(1 + b % 4), 1 + b % 6, 4 + a % 7),
           1 => (-(2 + a % 4), 3 + b % 5, 5 + b % 4, 1 + a % 6),
           2 => (4 + b % 5, 2 + a % 3, -(1 + a % 4), 5 + b % 6),
           _ => (6 + a % 4, -(3 + b % 5), 2 + b % 3, 2 + a % 5),
         };
+        // Yarım çarpraz toplam (x₁y₂ + x₂y₃ + x₃y₁) / 2 alana eşit çıkarsa C
+        // noktası bir birim yukarı alınır.
+        var v2 = v0;
+        int ikiKatAlan(int v) => (u1 * v - u2 * v1).abs();
+        int yarimCapraz(int v) =>
+            (x1 * (y1 + v1) + (x1 + u1) * (y1 + v) + (x1 + u2) * y1).abs();
+        while (ikiKatAlan(v2) == yarimCapraz(v2)) {
+          v2++;
+        }
         final x2 = x1 + u1, y2 = y1 + v1, x3 = x1 + u2, y3 = y1 + v2;
         final t = x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2);
         final yarim = x1 * y2 + x2 * y3 + x3 * y1;
@@ -3755,8 +4080,18 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       if (c == 7) {
-        final taban = 2 + b % 10, xb = x1 + taban, xc = x1 + a % 4 - 1;
-        final yc = (3 + (a + b) % 9) * (b < 10 ? 1 : -1);
+        // Taban en az 3: taban 2 olunca alan yüksekliğe eşit çıkar.
+        final taban = 3 + b % 10, xb = x1 + taban;
+        // |x_C| tabana eşitse "x_C·|y_C| / 2" hatası doğru alanı verir.
+        final xc0 = x1 + a % 4 - 1, xc = xc0.abs() == taban ? xc0 + 20 : xc0;
+        // Alan kökte yazılı bir koordinata eşit çıkarsa C noktasının x
+        // eksenine uzaklığı 9 birim artırılır.
+        var yc = (3 + (a + b) % 9) * (b < 10 ? 1 : -1);
+        for (var j = 0; j < 3; j++) {
+          final iki = taban * yc.abs();
+          if (iki.isOdd || !_yazili(iki ~/ 2, [x1, xb, xc, yc])) break;
+          yc += yc > 0 ? 9 : -9;
+        }
         final alan = taban * yc.abs() / 2;
         return ondalikli(
           'Analitik düzlemde köşeleri A(${_m(x1)}, 0), B(${_m(xb)}, 0) ve '
@@ -3774,10 +4109,21 @@ final lmGeometriEk = <AdvancedFamily>[
           positive: true,
         );
       }
-      final h = 1 + (a + 2 * b) % 9, w = 2 + 4 * (b ~/ 10) + a % 3;
+      var h = 1 + (a + 2 * b) % 9;
+      final w = 2 + 4 * (b ~/ 10) + a % 3;
+      // Bulunan k kökteki bir koordinata eşit çıkarsa yükseklik 9 artırılır.
+      // Tabanın ordinatı (apsisi) 0 olmaz: "k − 0" hatası yanıtı vermesin.
+      final yy = b % 10 == 5 ? 5 : b % 10 - 5;
+      // Alan tam sayıysa o da kökte yazılıdır; k ona da eşit çıkmasın.
+      for (var j = 0; j < 4; j++) {
+        final yazilan = [x1, x1 + w, x1 + a % 3, yy];
+        if ((w * h).isEven) yazilan.add(w * h ~/ 2);
+        if (!_yazili(yy + h, yazilan)) break;
+        h += 9;
+      }
       final alan = w * h / 2;
       if (c == 8) {
-        final yy = b % 10 - 5, xc = x1 + a % 3;
+        final xc = x1 + a % 3;
         return _tam(
           'Analitik düzlemde A${_n(x1, yy)}, B${_n(x1 + w, yy)} ve '
               'C(${_m(xc)}, k) noktaları veriliyor. k > ${_m(yy)} olmak üzere ABC '
@@ -3789,7 +4135,7 @@ final lmGeometriEk = <AdvancedFamily>[
               '${tr(alan)}, k − ${_pz(yy)} = $h ve k = ${_m(yy + h)}.',
         );
       }
-      final xx = b % 10 - 5, yc = x1 + a % 3;
+      final xx = yy, yc = x1 + a % 3;
       return _tam(
         'Analitik düzlemde A${_n(xx, x1)}, B${_n(xx, x1 + w)} ve '
             'C(k, ${_m(yc)}) noktaları veriliyor. k > ${_m(xx)} olmak üzere ABC '
@@ -3812,14 +4158,21 @@ final lmGeometriEk = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.anlama,
     (a, b, c) {
-      final x = a - 12, y = b - 9;
+      final x = _sifirsiz(a - 12, 13);
+      var y = _sifirsiz(b - 9, 11);
+      // A noktası y = x ya da y = −x doğrusu üzerinde olmaz; aksi hâlde yer
+      // değiştirme ve işaret hataları doğru yanıtı verir.
+      if (y.abs() == x.abs()) y += y > 0 ? 30 : -30;
       String giris(String eksen) =>
           'Analitik düzlemde A${_n(x, y)} noktasının $eksen göre simetriği '
           'olan noktanın koordinatları hangisidir?';
       switch (c) {
         case 0:
+          // k = 0 (eksen) ya da 2k = x olunca "2'yi unutma" hataları doğru çıkar.
           var k = (a + 2 * b) % 9 - 4;
-          if (k == x) k += 9;
+          while (k == 0 || k == x || 2 * k == x) {
+            k += 9;
+          }
           return _noktali(
             giris('x = ${_m(k)} doğrusuna'),
             (2 * k - x, y),
@@ -3830,7 +4183,9 @@ final lmGeometriEk = <AdvancedFamily>[
           );
         case 1:
           var k = (2 * a + b) % 9 - 4;
-          if (k == y) k += 9;
+          while (k == 0 || k == y || 2 * k == y) {
+            k += 9;
+          }
           return _noktali(
             giris('y = ${_m(k)} doğrusuna'),
             (x, 2 * k - y),
@@ -3854,7 +4209,7 @@ final lmGeometriEk = <AdvancedFamily>[
           );
         case 4 || 5:
           // c = 4 negatif olmayan, c = 5 negatif c değerleri kullanır.
-          var k = c == 4 ? (2 * a + b) % 6 : -(1 + (a + 3 * b) % 6);
+          var k = c == 4 ? 1 + (2 * a + b) % 6 : -(1 + (a + 3 * b) % 6);
           if (x + y == k) k += k >= 0 ? 1 : -1;
           final dogru = 'y = ${_ifade([(-1, 'x'), (k, '')])} doğrusuna';
           return _noktali(
@@ -3868,7 +4223,12 @@ final lmGeometriEk = <AdvancedFamily>[
         case 6 || 7:
           var p = (a + b) % 9 - 4;
           final q = c == 6 ? (a + 2 * b) % 4 : -1 - (2 * a + b) % 4;
-          if (p == x && q == y) p += 1;
+          // M orijin olmaz (eksen simetrisi), p = q olmaz (yer değiştirme).
+          if (p == q) p += 9;
+          // M = A ya da A = 2M (görüntü orijin) olmasın.
+          while ((p == x && q == y) || (x == 2 * p && y == 2 * q) || p == q) {
+            p += 1;
+          }
           return _noktali(
             giris('M${_n(p, q)} noktasına'),
             (2 * p - x, 2 * q - y),
@@ -3883,7 +4243,11 @@ final lmGeometriEk = <AdvancedFamily>[
             '${_n(2 * p - x, 2 * q - y)}.',
           );
         case 8:
-          final k = (a + 3 * b) % 13 - 6;
+          var k = (a + 3 * b) % 13 - 6;
+          // k ortak ordinata eşit, sıfır ya da x / 2 olmasın.
+          while (k == y || k == 0 || 2 * k == x || k == x) {
+            k += 13;
+          }
           var x2 = 2 * k - x;
           final yy = y;
           if (x2 == x) x2 = x + 2 * (b % 3 + 1);
@@ -3897,7 +4261,13 @@ final lmGeometriEk = <AdvancedFamily>[
                 'k = (${_m(x)} + ${_pz(x2)}) / 2 = ${_m(kk)}.',
           );
         default:
-          final k = (a + b) % 7 - 3, m = (2 * a + 3 * b) % 7 - 3;
+          // Eksenler (k = 0, m = 0) ve tek adımda sonuç veren değerler atlanır.
+          var k = (a + b) % 7 - 3, m = (2 * a + 3 * b) % 7 - 3;
+          if (m == 0) m = 4;
+          if (m == y) m += 7;
+          while (k == 0 || k == x || k == m) {
+            k += 7;
+          }
           final ilk = (2 * k - x, y), son = (2 * k - x, 2 * m - y);
           return _noktali(
             'Analitik düzlemde A${_n(x, y)} noktasının önce x = ${_m(k)} '
@@ -3968,14 +4338,29 @@ final lmGeometriEk = <AdvancedFamily>[
           3 => (s * l2, s * l1),
           _ => (-d, 0),
         };
-        final mx = (a + b) % 7 - 3, my = (a + 2 * b) % 5 - 2;
+        // Merkez (a + b) ve (a + 2b) ile seçilir; |PT| kökte yazılı bir sayıya
+        // eşit çıkarsa merkez 35 olası konum arasında sıradakine kaydırılır
+        // (yanıt merkeze bağlı değildir, kökün tekliğini üçlü ve yön sağlar).
+        int sabitTerim(int x, int y) => x * x + y * y - r * r;
+        var mx = (a + b) % 7 - 3, my = (a + 2 * b) % 5 - 2;
+        for (var j = 0; j < 35; j++) {
+          final ux = (a + b + j) % 7 - 3, uy = (a + 2 * b + 3 * j) % 5 - 2;
+          final yazilan = c == 3
+              ? [ux, uy, r * r, ux + dx, uy + dy]
+              : [2 * ux, 2 * uy, sabitTerim(ux, uy), ux + dx, uy + dy];
+          if (!_yazili(uz, yazilan)) {
+            mx = ux;
+            my = uy;
+            break;
+          }
+        }
         final px = mx + dx, py = my + dy;
         final String denklem;
         if (c == 3) {
           denklem = _cember(mx, my, r * r);
         } else {
           denklem =
-              '${_ifade([(1, 'x²'), (1, 'y²'), (-2 * mx, 'x'), (-2 * my, 'y'), (mx * mx + my * my - r * r, '')])} = 0';
+              '${_ifade([(1, 'x²'), (1, 'y²'), (-2 * mx, 'x'), (-2 * my, 'y'), (sabitTerim(mx, my), '')])} = 0';
         }
         return sayisal(
           'Analitik düzlemde $denklem çemberine, dışındaki P${_n(px, py)} '
@@ -3991,17 +4376,27 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       if (c <= 6) {
-        final r = 1 + (a + b) % 6;
-        final (pa, pb, nn) = _normaller[(a + 2 * b) % 6];
-        final e = pa * h + pb * k;
+        var r = 1 + (a + b) % 6;
+        // Merkez orijin olmaz; pa·h + pb·k = 0 olursa sonraki doğru seçilir
+        // (aksi hâlde işaret hatası da doğru toplamı verir).
+        final hh = h == 0 && k == 0 ? 13 : h;
+        var ni = (a + 2 * b) % 6;
+        while (_normaller[ni].$1 * hh + _normaller[ni].$2 * k == 0) {
+          ni = (ni + 1) % 6;
+        }
+        final (pa, pb, nn) = _normaller[ni];
+        final e = pa * hh + pb * k;
+        // |e| = r·√(A² + B²) olursa teğet değerlerinden biri 0 olur ve
+        // "±r·√(A² + B²)" hataları doğru yanıtı verir; yarıçap büyütülür.
+        if (e.abs() == r * nn) r++;
         final dogru = '${_ifade([(pa, 'x'), (pb, 'y')])} + n = 0';
         final kural =
             'Doğru çembere teğet ise merkezin doğruya uzaklığı yarıçapa '
-            'eşittir: |$pa·${_pz(h)} + ${_pz(pb)}·${_pz(k)} + n| / $nn = $r, '
+            'eşittir: |$pa·${_pz(hh)} + ${_pz(pb)}·${_pz(k)} + n| / $nn = $r, '
             'yani |${_m(e)} + n| = ${r * nn}. Buradan n = ${_m(-e + r * nn)} '
             'ya da n = ${_m(-e - r * nn)} bulunur.';
         final veri =
-            'Analitik düzlemde $dogru doğrusu ${_cember(h, k, r * r)} çemberine '
+            'Analitik düzlemde $dogru doğrusu ${_cember(hh, k, r * r)} çemberine '
             'teğet olduğuna göre';
         if (c == 5) {
           return _tam(
@@ -4045,7 +4440,19 @@ final lmGeometriEk = <AdvancedFamily>[
       }
       if (c == 8) {
         final m = const [1, -1, 2, -2, 3, -3][(a + b) % 6], oran = 1 + m * m;
-        final j = 1 + (a + 2 * b) % 4, sabit = k - m * h;
+        final sabit = k - m * h;
+        var j = 1 + (a + 2 * b) % 4;
+        // n₁ = 0 olursa işaret hatası (−n₁) da doğru yanıtı verir; n₁ kökte
+        // yazılı bir sayıya eşit çıkarsa da yarıçap büyütülür.
+        if (sabit + j * oran == 0) j++;
+        for (var deneme = 0; deneme < 6; deneme++) {
+          final u = j + 1;
+          if (!_yazili(sabit + j * oran, [m, h, k, j * j * oran]) ||
+              sabit + u * oran == 0) {
+            break;
+          }
+          j = u;
+        }
         final n1 = sabit + j * oran, n2 = sabit - j * oran;
         return _tam(
           'Analitik düzlemde y = ${_ifade([(m, 'x')])} + n doğrusu '
@@ -4062,8 +4469,17 @@ final lmGeometriEk = <AdvancedFamily>[
       }
       final r = 2 + (a + b) % 7;
       final (pa, pb, nn) = _normaller[(a + b) % 6];
-      final fark = 1 + (a + 2 * b) % 9, isaret = a.isEven ? 1 : -1;
-      final t = (r + fark) * nn, cc = isaret * t - (pa * h + pb * k);
+      var fark = 1 + (a + 2 * b) % 9;
+      final isaret = a.isEven ? 1 : -1;
+      int sabitOf(int f) => isaret * (r + f) * nn - (pa * h + pb * k);
+      // En küçük uzaklık yarıçapa ya da kökte yazılı bir sayıya eşit çıkmasın.
+      for (var deneme = 0; deneme < 8; deneme++) {
+        if (fark != r && !_yazili(fark, [h, k, r * r, pa, pb, sabitOf(fark)])) {
+          break;
+        }
+        fark += 9;
+      }
+      final t = (r + fark) * nn, cc = sabitOf(fark);
       return sayisal(
         'Analitik düzlemde ${_cember(h, k, r * r)} çemberi ile '
             '${_dnk(pa, pb, cc)} doğrusu kesişmiyor. Çember üzerindeki noktaların '
@@ -4089,7 +4505,11 @@ final lmGeometriEk = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.uygulama,
     (a, b, c) {
-      final x = _sifirsiz(a - 12, 13), y = _sifirsiz(b - 9, 11);
+      final x = _sifirsiz(a - 12, 13);
+      var y = _sifirsiz(b - 9, 11);
+      // A noktası y = ±x doğrusu üzerinde olmaz (yer değiştirme ve işaret
+      // hataları doğru yanıtı vermesin).
+      if (y.abs() == x.abs()) y += y > 0 ? 30 : -30;
       const pozitif = 'pozitif yönde (saatin dönme yönünün tersine)';
       final hepsi = [
         for (var n = 1; n <= 3; n++) _dondur(n, (x, y)),
@@ -4101,7 +4521,11 @@ final lmGeometriEk = <AdvancedFamily>[
         for (final p in hepsi)
           if (p != d) p,
       ];
-      final p = 1 + (a + 2 * b) % 6, q = (2 * a + b) % 7 - 3;
+      var p = 1 + (a + 2 * b) % 6;
+      if (x + p == 0) p += 6;
+      var q = (2 * a + b) % 7 - 3;
+      // Öteleme sonrası bir koordinat 0 olursa işaret hataları doğru çıkar.
+      if (y + q == 0) q += 7;
       final oteleme = 'u = ${_n(p, q)} vektörü kadar';
       switch (c) {
         case 0 || 1 || 2 || 3:
@@ -4157,6 +4581,8 @@ final lmGeometriEk = <AdvancedFamily>[
         case 7:
           final mx = (a + b) % 7 - 3;
           var my = (a + 3 * b) % 7 - 3;
+          // Döndürme merkezi orijin ya da A olmaz.
+          if (mx == 0 && my == 0) my = 4;
           if (mx == x && my == y) my++;
           final g = (x - mx, y - my), r = _dondur(1, g);
           final d = (mx + r.$1, my + r.$2);
@@ -4176,7 +4602,8 @@ final lmGeometriEk = <AdvancedFamily>[
                 '= ${_n(d.$1, d.$2)} bulunur.',
           );
         case 8:
-          final n = 1 + (a + b) % 3, goruntu = _dondur(n, (x, y));
+          // 180° döndürme kendi tersidir; ters soru yalnız 90° ve 270° ile kurulur.
+          final n = 1 + 2 * ((a + b) % 2), goruntu = _dondur(n, (x, y));
           return _noktali(
             'Analitik düzlemde bir A noktası orijin etrafında $pozitif '
                 '${90 * n}° döndürüldüğünde A′${_n(goruntu.$1, goruntu.$2)} '

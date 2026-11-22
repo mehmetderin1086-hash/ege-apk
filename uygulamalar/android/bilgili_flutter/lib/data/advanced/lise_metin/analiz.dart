@@ -175,10 +175,12 @@ AdvancedItem _tam(
   String birim = '',
   bool pozitif = false,
 }) {
+  if (adaylar.contains(yanit) || _yazili(kok).contains(_R(yanit))) {
+    _kirli = true;
+  }
   final adim = yanit.abs() >= 200 ? 10 : (yanit.abs() >= 40 ? 5 : 1);
   final havuz = [
-    for (final x in adaylar)
-      if (x != null) x,
+    for (final x in adaylar) ?x,
     yanit + adim,
     yanit - adim,
     yanit + 2 * adim,
@@ -204,9 +206,9 @@ AdvancedItem _ras(
   String aciklama, {
   bool pozitif = false,
 }) {
+  if (adaylar.contains(yanit) || _yazili(kok).contains(yanit)) _kirli = true;
   final havuz = <_R>[
-    for (final x in adaylar)
-      if (x != null) x,
+    for (final x in adaylar) ?x,
     -yanit,
     if (!yanit.sifir && !yanit.tam) _R(yanit.q, yanit.p),
     if (yanit.tam) ...[
@@ -226,6 +228,150 @@ AdvancedItem _ras(
   ].where((x) => !pozitif || x.p > 0);
   return secenekli(kok, '$yanit', havuz.map((x) => '$x'), aciklama);
 }
+
+// ---------------------------------------------------------------------------
+// Rastlantı denetimi
+// ---------------------------------------------------------------------------
+
+/// Son kurulan sorunun yanıtı kökte yazılı bir sayıya ya da hatalı bir yolun
+/// verdiği değere (çeldirici adaylarından birine) eşitse true olur. [_yeniden]
+/// ve [_temizSec] bu bayrağa bakarak temiz seçeneği arar.
+var _kirli = false;
+
+final _sayiDeseni = RegExp(r'(?<![\d,])(−?)(\d+)(?:,(\d+))?(?:/(\d+))?');
+final _sinirDeseni = RegExp('∫([₋₀₁₂₃₄₅₆₇₈₉]+)([⁻⁰¹²³⁴⁵⁶⁷⁸⁹]+)');
+
+/// Alt ya da üst simgeyle yazılmış tam sayı: `₋₂` → −2.
+int _simgeSayi(String s) {
+  var n = 0, eksi = false;
+  for (final r in s.runes) {
+    final ch = String.fromCharCode(r);
+    if (ch == '₋' || ch == '⁻') {
+      eksi = true;
+      continue;
+    }
+    final i = _altRakam.indexOf(ch);
+    n = n * 10 + (i >= 0 ? i : _ustRakam.indexOf(ch));
+  }
+  return eksi ? -n : n;
+}
+
+/// Kökte yazılı sayılar: tam ve ondalıklı sayılar, kesirler ve payları,
+/// integral sınırları. "x − 3" gibi ayrık eksiyle yazılan sayı iki işaretiyle
+/// de alınır.
+Set<_R> _yazili(String kok) {
+  final s = <_R>{};
+  for (final m in _sayiDeseni.allMatches(kok)) {
+    var d = _R(int.parse(m[2]!));
+    final ond = m[3];
+    if (ond != null) {
+      var payda = 1;
+      for (var i = 0; i < ond.length; i++) {
+        payda *= 10;
+      }
+      d = d + _R(int.parse(ond), payda);
+    }
+    final bitisik = m[1]!.isNotEmpty;
+    final ayrik =
+        !bitisik && m.start >= 2 && kok.substring(m.start - 2, m.start) == '− ';
+    for (final x in [d, if (m[4] != null) d / _R(int.parse(m[4]!))]) {
+      s.add(bitisik ? -x : x);
+      if (ayrik) s.add(-x);
+    }
+  }
+  for (final m in _sinirDeseni.allMatches(kok)) {
+    s
+      ..add(_R(_simgeSayi(m[1]!)))
+      ..add(_R(_simgeSayi(m[2]!)));
+  }
+  return s;
+}
+
+/// Seçenekli soru; çeldirici adaylarından biri yanıta eşitse soru kirli
+/// sayılır.
+AdvancedItem _secenek(
+  String kok,
+  String dogru,
+  List<String> adaylar,
+  String aciklama,
+) {
+  if (adaylar.any((x) => ayniSecenek(x, dogru))) _kirli = true;
+  return secenekli(kok, dogru, adaylar, aciklama);
+}
+
+/// [kur] ile kurulan soru: 0 temiz, 1 kirli, 2 kurulamıyor.
+int _durum(AdvancedItem Function() kur) {
+  final once = _kirli;
+  _kirli = false;
+  var sonuc = 2;
+  try {
+    kur();
+    sonuc = _kirli ? 1 : 0;
+  } on StateError {
+    sonuc = 2;
+  }
+  _kirli = once;
+  return sonuc;
+}
+
+class _TemizDurum {
+  var konum = 0;
+  final temiz = <int>[], kirli = <int>[];
+}
+
+final _temizOnbellek = <String, _TemizDurum>{};
+
+/// 0 … adet − 1 adaylarından temiz soru kuranlar sırayla, ardından (yetmezse)
+/// kirli olanlar dizilir; bu dizinin i'inci öğesini verir. Adaylar gerektikçe
+/// ve anahtar başına bir kez denenir.
+int _temizSec(
+  String anahtar,
+  int adet,
+  AdvancedItem Function(int t) kur,
+  int i,
+) {
+  final d = _temizOnbellek.putIfAbsent(anahtar, _TemizDurum.new);
+  while (d.temiz.length <= i && d.konum < adet) {
+    final t = d.konum++;
+    switch (_durum(() => kur(t))) {
+      case 0:
+        d.temiz.add(t);
+      case 1:
+        d.kirli.add(t);
+    }
+  }
+  return i < d.temiz.length ? d.temiz[i] : d.kirli[i - d.temiz.length];
+}
+
+/// Listeden [kur] ile temiz soru veren i'inci öğe (temizler yetmezse kirli
+/// öğelerle devam edilir).
+T _temizOge<T>(
+  String anahtar,
+  List<T> liste,
+  int i,
+  AdvancedItem Function(T) kur,
+) => liste[_temizSec(anahtar, liste.length, (t) => kur(liste[t]), i)];
+
+/// deneme = 0, 1, … seçeneklerinden yanıtı rastlantıya düşmeyen ilkini kurar;
+/// hiçbiri temiz değilse kurulabilen ilk seçenek kullanılır.
+LmUretec _yeniden(
+  AdvancedItem Function(int a, int b, int c, int deneme) kur, [
+  int sayi = 8,
+]) => (a, b, c) {
+  AdvancedItem? ilk;
+  for (var d = 0; d < sayi; d++) {
+    _kirli = false;
+    try {
+      final soru = kur(a, b, c, d);
+      if (!_kirli) return soru;
+      ilk ??= soru;
+    } on StateError {
+      continue;
+    }
+  }
+  _kirli = false;
+  return ilk ?? kur(a, b, c, 0);
+};
 
 AdvancedFamily _aile(
   String key,
@@ -301,11 +447,15 @@ AdvancedItem _toplamFarkUclu(int a, int b, int e) {
   final fx = a < 10 ? 0 : (a < 20 ? 1 : 2);
   final x = _dar(a % 10);
   // y, x ile aynı üçlüden seçilmez: tümler açılar tan(x + y) değerini
-  // tanımsız, eş açılar sin(x − y) değerini sıfır yapardı.
+  // tanımsız, eş açılar sin(x − y) değerini sıfır yapardı. (3, 4, 5) ile
+  // (7, 24, 25) üçlüleri de eşleştirilmez: 7-24-25 açısı 3-4-5 açısının
+  // iki katının tümleyenidir ve x ± y yeniden 3-4-5 açısı çıkar; yanıt kökte
+  // yazılı bir orana eşit olurdu.
   final aday = [
     for (final f in const [1, 0, 3, 2])
       for (var j = 0; j < 10; j++)
-        if (j ~/ 2 != x.uclu) (f, j),
+        if (j ~/ 2 != x.uclu && {x.uclu, j ~/ 2}.difference({0, 3}).isNotEmpty)
+          (f, j),
   ];
   final (fy, jy) = aday[b];
   final y = _dar(jy);
@@ -996,8 +1146,8 @@ AdvancedItem _trigDenklemOzel(int a, int b, int c) {
 /// İkinci dereceden trigonometrik denklemlerin kök çiftleri ((p1, q1),
 /// (p2, q2)): birinci kök [−1, 1] içindedir; ikinci kök ya listede sonra
 /// gelen bir geçerli kök ya da [−1, 1] dışında kalan, çözüm vermeyen bir
-/// köktür. Katsayıları (dönüştürülmüş biçimin sabit terimi de) en küçük olan
-/// 500 çift alınır; en büyük katsayı 18'dir.
+/// köktür. Çiftler katsayıların (dönüştürülmüş biçimin sabit terimi de)
+/// büyüklüğüne göre sıralanır.
 final List<((int, int), (int, int))> _trigKokCiftleri = () {
   final gecerli = <(int, int)>[(0, 1)];
   for (var q = 1; q <= 6; q++) {
@@ -1038,8 +1188,51 @@ final List<((int, int), (int, int))> _trigKokCiftleri = () {
     if (x.$2 != y.$2) return x.$2.compareTo(y.$2);
     return x.$3.compareTo(y.$3);
   });
-  return [for (final e in l.take(500)) (e.$4, e.$5)];
+  return [for (final e in l) (e.$4, e.$5)];
 }();
+
+/// Kökün [0°, 360°) aralığındaki çözüm sayısı ve çözümlerin toplamı.
+(int, int) _trigKokSayi(int p, int q, bool sinus) {
+  if (p.abs() > q) return (0, 0);
+  if (sinus) {
+    if (p == q) return (1, 90);
+    if (p == -q) return (1, 270);
+    return p >= 0 ? (2, 180) : (2, 540);
+  }
+  if (p == q) return (1, 0);
+  if (p == -q) return (1, 180);
+  return (2, 360);
+}
+
+/// c = 6, 7 kök sayısı (sin, cos), c = 8 dönüştürülmüş, c = 9 doğrudan
+/// sinüs denkleminde kökler toplamı. Kök sayısı kökte yazılı bir katsayıya,
+/// toplam 0 ya da 360 sayısına eşit çıkan çiftler atlanır; kosinüs
+/// denkleminde her geçerli kök 360° toplam verdiğinden toplam sorulmaz.
+/// c = 8 ve c = 9 süzülmüş listenin çift ve tek sıralarını kullanır.
+final Map<int, List<((int, int), (int, int))>> _trigKokSlot = {
+  for (final c in const [6, 7, 8, 9])
+    c: () {
+      final sinus = c != 7;
+      final l = <((int, int), (int, int))>[];
+      for (final e in _trigKokCiftleri) {
+        final ((p1, q1), (p2, q2)) = e;
+        final ka = q1 * q2, kb = -(q1 * p2 + q2 * p1), kc = p1 * p2;
+        final (n1, t1) = _trigKokSayi(p1, q1, sinus);
+        final (n2, t2) = _trigKokSayi(p2, q2, sinus);
+        if (c <= 7) {
+          final yazili = {ka.abs(), kb.abs(), kc.abs(), 0, 360};
+          if (!yazili.contains(n1 + n2)) l.add(e);
+        } else if (t1 + t2 != 0 && t1 + t2 != 360) {
+          l.add(e);
+        }
+      }
+      final secilen = c <= 7
+          ? l
+          : [for (var i = c == 8 ? 0 : 1; i < l.length; i += 2) l[i]];
+      if (secilen.length < 500) throw StateError('Kök çifti az: $c');
+      return secilen.sublist(0, 500);
+    }(),
+};
 
 String _ikinciDerece(int a, int b, int c, String u2, String u1) {
   final parca = <String>[];
@@ -1068,15 +1261,16 @@ String _carpan(int q, int p, String g) {
 }
 
 AdvancedItem _trigDenklemKare(int a, int b, int c) {
-  final sinus = c.isEven; // c = 6, 8: sinüs; 7, 9: kosinüs
+  final sinus = c != 7; // c = 7 kosinüs, diğerleri sinüs
   final sayi = c <= 7; // 6, 7: kök sayısı; 8, 9: kökler toplamı
-  final ((p1, q1), (p2, q2)) = _trigKokCiftleri[a + 25 * b];
+  final karma = c == 8; // cos² x ile yazılmış biçim
+  final ((p1, q1), (p2, q2)) = _trigKokSlot[c]![a + 25 * b];
   final ka = q1 * q2, kb = -(q1 * p2 + q2 * p1), kc = p1 * p2;
   final g = sinus ? 'sin x' : 'cos x', g2 = sinus ? 'sin² x' : 'cos² x';
   final h2 = sinus ? 'cos² x' : 'sin² x';
-  final denklem = sayi
-      ? '${_ikinciDerece(ka, kb, kc, g2, g)} = 0'
-      : '${_ikinciDerece(ka, -kb, -(ka + kc), h2, g)} = 0';
+  final denklem = karma
+      ? '${_ikinciDerece(ka, -kb, -(ka + kc), h2, g)} = 0'
+      : '${_ikinciDerece(ka, kb, kc, g2, g)} = 0';
   // Kökün [0°, 360°) aralığındaki çözümleri: (sayı, toplam, açıklama).
   (int, int, String) coz(int p, int q) {
     final r = _R(p, q);
@@ -1121,7 +1315,7 @@ AdvancedItem _trigDenklemKare(int a, int b, int c) {
 
   final (n1, t1, a1) = coz(p1, q1);
   final (n2, t2, a2) = coz(p2, q2);
-  final donusum = sayi
+  final donusum = !karma
       ? ''
       : '$h2 = 1 − $g2 yazılırsa denklem '
             '${_ikinciDerece(ka, kb, kc, g2, g)} = 0 biçimine gelir. ';
@@ -1240,7 +1434,7 @@ const _sinKesir = [
 
 /// Kenar çiftleri (p, q): aralarında asal, toplamlarına göre sıralı.
 final List<(int, int)> _kenarCiftleri = [
-  for (var s = 5; s <= 40; s++)
+  for (var s = 5; s <= 50; s++)
     for (var p = 2; p <= s - 2; p++)
       if (p.gcd(s - p) == 1) (p, s - p),
 ];
@@ -1277,14 +1471,19 @@ final List<(int, int, int, int)> _cevrelVeri = () {
   final l = <(int, int, int, int)>[];
   for (final (p, q) in _sinKesir) {
     final birim = q ~/ q.gcd(2 * p);
-    for (var r = birim; r <= 66; r += birim) {
-      l
-        ..add((0, p, q, r))
-        ..add((1, p, q, r));
+    for (var r = birim; r <= 70; r += birim) {
+      // R yanıtı kökte yazılı sayılara (sinüsün payı, paydası, kenar) eşit
+      // olmasın; sin A = 1/2 iken R = |BC| çıkar.
+      final kenar = 2 * r * p ~/ q;
+      if (!{p, q, kenar}.contains(r)) l.add((0, p, q, r));
+      l.add((1, p, q, r));
     }
   }
   for (final aci in const [30, 45, 60, 120, 135, 150]) {
+    final kokIci = _sinOzel[aci]!.$3;
     for (var m = 1; m <= 20; m++) {
+      // Çap 2m; açıya ya da kök içine eşit olmasın.
+      if (2 * m == aci || 2 * m == kokIci) continue;
       l.add((2, aci, 0, m));
     }
   }
@@ -1295,14 +1494,33 @@ final List<(int, int, int, int)> _cevrelVeri = () {
   return [for (final e in sirali.take(1000)) l[e.$2]];
 }();
 
+/// Özel açılı sinüs teoremi verileri (A, B, sunuş, ölçek). Yanıtın kökte
+/// yazılı bir sayıya (verilen açılar, kenarın katsayısı ya da kök içi) eşit
+/// olduğu veriler atlanır.
+final List<(int, int, int, int)> _sinusOzelVeri = () {
+  final l = <(int, int, int, int)>[];
+  for (var t = 1; l.length < 1000; t++) {
+    for (final (ax, by) in _sinusCiftleri) {
+      final (kap, f) = _sinusOran(ax, by);
+      final cevap = t * kap.q, katsayi = t * kap.p;
+      for (var sunus = 0; sunus < 3; sunus++) {
+        final acilar = switch (sunus) {
+          0 => {ax, by},
+          1 => {ax, 180 - ax - by},
+          _ => {by, 180 - ax - by},
+        };
+        final yazili = {...acilar, katsayi, if (f > 1) f};
+        if (!yazili.contains(cevap)) l.add((ax, by, sunus, t));
+      }
+    }
+  }
+  return l.sublist(0, 1000);
+}();
+
 AdvancedItem _sinusTeoremi(int a, int b, int c) {
   if (c <= 1) {
     // Özel açılar: j → (çift, sunuş, ölçek).
-    final j = a + 25 * b + 500 * c;
-    final varyant = j % (_sinusCiftleri.length * 3);
-    final t = j ~/ (_sinusCiftleri.length * 3) + 1;
-    final (ax, by) = _sinusCiftleri[varyant ~/ 3];
-    final sunus = varyant % 3;
+    final (ax, by, sunus, t) = _sinusOzelVeri[a + 25 * b + 500 * c];
     final cz = 180 - ax - by;
     final (kap, f) = _sinusOran(ax, by);
     final bKenar = t * kap.q, katsayi = t * kap.p;
@@ -1346,7 +1564,14 @@ AdvancedItem _sinusTeoremi(int a, int b, int c) {
       final diger = c == 5
           ? verilen * _R(e.$1, e.$2)
           : verilen * _R(e.$2, e.$1);
-      return diger.p < diger.q && diger.q <= 36;
+      if (diger.p >= diger.q || diger.q > 36) return false;
+      // Kenar yanıtı kökte yazılı bir sayıya eşit olmasın.
+      final yazili = {verilen.p, verilen.q, diger.p, diger.q};
+      return switch (c) {
+        2 => !{...yazili, e.$1}.contains(e.$2),
+        3 => !{...yazili, e.$2}.contains(e.$1),
+        _ => true,
+      };
     });
     final sa = c == 5 ? verilen * _R(p, q) : verilen;
     final sb = c == 5 ? verilen : verilen * _R(q, p);
@@ -1944,25 +2169,36 @@ final List<(int, int, int)> _tersPeriyot = () {
 /// a·sin x + b·cos x için (a, b) ikilileri; √(a² + b²) tam sayıdır.
 const _genlikCifti = [
   (3, 4),
-  (4, 3),
   (6, 8),
-  (8, 6),
   (5, 12),
-  (12, 5),
   (9, 12),
-  (12, 9),
   (8, 15),
-  (15, 8),
   (12, 16),
-  (16, 12),
-  (7, 24),
-  (24, 7),
   (15, 20),
-  (20, 15),
+  (7, 24),
   (10, 24),
-  (24, 10),
   (20, 21),
-  (21, 20),
+  (18, 24),
+  (16, 30),
+  (21, 28),
+  (12, 35),
+  (15, 36),
+  (24, 32),
+  (9, 40),
+  (27, 36),
+  (14, 48),
+  (30, 40),
+];
+
+/// a·sin x + b·cos x + d sorularında sabit terim adayları.
+final _genlikKayma = [
+  for (var x = -12; x <= 12; x++) x,
+  -13,
+  13,
+  -14,
+  14,
+  -15,
+  15,
 ];
 
 /// Faz kayması süsleri: (pay, payda) → pay·π/payda.
@@ -2000,144 +2236,182 @@ final Map<bool, List<(int, int, int)>> _acikPeriyot = {
 };
 
 AdvancedItem _periyotSoru(int a, int b, int c) {
+  final j = a + 25 * b;
   if (c <= 4) {
-    final (g, k, fi) = _tersPeriyot[500 * c + a + 25 * b];
-    final (fp, fq) = _frekans[fi];
-    final frek = _R(fp, fq), ters = _R(fq, fp);
-    final maks = k + g, min = k - g;
-    final t = _periyot(fp, fq);
-    final buyuk = 'en büyük değeri ${_n(maks)}, en küçük değeri ${_n(min)}';
-    final pozitif = 'a, b pozitif gerçek sayılardır.';
-    final perAc = 'Esas periyot 2π/b = $t olduğundan b = $frek olur.';
-    final kYaz = '${k < 0 ? '−' : '+'} ${k.abs()}';
-    switch (c) {
-      case 0:
-        final yanit = _R(g) + frek + _R(k);
-        return _ras(
-          'f(x) = a·sin(bx) + c fonksiyonunun $buyuk ve esas periyodu $t '
-              'olduğuna göre a + b + c toplamı kaçtır? ($pozitif)',
-          yanit,
-          [
-            _R(maks - min) + frek + _R(k),
-            _R(g) + ters + _R(k),
-            _R(g) + frek - _R(k),
-            _R(g) + frek + _R(maks),
-          ],
-          'En büyük ve en küçük değerin farkının yarısı genliktir: a = '
-              '(${_n(maks)} − ${_p(min)})/2 = $g. Ortalamaları kaymadır: c = '
-              '(${_n(maks)} + ${_p(min)})/2 = ${_n(k)}. $perAc a + b + c = $g + '
-              '${_rs(frek)} + ${_p(k)} = $yanit.',
-        );
-      case 1:
-        final yanit = _R(k) + _R(g) + frek;
-        return _ras(
-          'f(x) = a + b·cos(cx) fonksiyonunun görüntü kümesi [${_n(min)}, '
-              '${_n(maks)}] ve esas periyodu $t olduğuna göre a + b + c toplamı '
-              'kaçtır? (b ve c pozitif gerçek sayılardır.)',
-          yanit,
-          [
-            _R(k) + _R(maks - min) + frek,
-            _R(k) + _R(g) + ters,
-            _R(-k) + _R(g) + frek,
-            _R(maks) + _R(g) + frek,
-          ],
-          'Kosinüsün görüntü kümesi [−1, 1] olduğundan b = ($maks − '
-              '${_p(min)})/2 = $g ve a = (${_n(maks)} + ${_p(min)})/2 = ${_n(k)} olur. '
-              'Esas periyot 2π/c = $t olduğundan c = $frek bulunur. a + b + c = '
-              '${_n(k)} + $g + ${_rs(frek)} = $yanit.',
-        );
-      case 2:
-        final yanit = _R(g) * frek;
-        return _ras(
-          'f(x) = a·sin(bx) $kYaz fonksiyonunun en büyük değeri ${_n(maks)} ve esas '
-              'periyodu $t olduğuna göre a·b çarpımı kaçtır? ($pozitif)',
-          yanit,
-          [
-            _R(maks) * frek,
-            _R(g) * ters,
-            _R((g + 2 * k).abs()) * frek,
-            _R(g) + frek,
-          ],
-          'En büyük değer a $kYaz = ${_n(maks)} olduğundan a = $g olur. $perAc '
-              'a·b = $g·${_rs(frek)} = $yanit.',
-          pozitif: true,
-        );
-      case 3:
-        final yanit = _R(g) * frek;
-        return _ras(
-          'f(x) = a·cos(bx) $kYaz fonksiyonunun en küçük değeri ${_n(min)} ve '
-              'esas periyodu $t olduğuna göre a·b çarpımı kaçtır? ($pozitif)',
-          yanit,
-          [
-            _R(min.abs()) * frek,
-            _R(g) * ters,
-            _R(maks.abs()) * frek,
-            _R(g) + frek,
-          ],
-          'En küçük değer −a $kYaz = ${_n(min)} olduğundan a = $g olur. '
-              '$perAc a·b = $g·${_rs(frek)} = $yanit.',
-          pozitif: true,
-        );
-      default:
-        final yanit = _R(g) * frek * _R(k);
-        return _ras(
-          'f(x) = a·sin(bx) + c fonksiyonunun $buyuk ve esas periyodu $t '
-              'olduğuna göre a·b·c çarpımı kaçtır? ($pozitif)',
-          yanit,
-          [
-            _R(maks - min) * frek * _R(k),
-            _R(g) * ters * _R(k),
-            _R(g) * frek * _R(maks),
-            _R(g) * frek * _R(min),
-          ],
-          'a = (${_n(maks)} − ${_p(min)})/2 = $g ve c = (${_n(maks)} + ${_p(min)})/2 = '
-              '${_n(k)} olur. $perAc a·b·c = $g·${_rs(frek)}·${_p(k)} = $yanit.',
-        );
-    }
+    // Yanıtı kökte yazılı bir sayıya ya da hatalı bir yolun sonucuna eşit
+    // olmayan veriler; her c için listede başka bir yerden başlanır.
+    final n = _tersPeriyot.length;
+    final t = _temizSec(
+      'periyot$c',
+      n,
+      (t) => _periyotTers(c, (t + 500 * c) % n),
+      j,
+    );
+    return _periyotTers(c, (t + 500 * c) % n);
   }
   if (c <= 6) {
-    // Açık biçim: en büyük (c = 5) ya da en küçük (c = 6) değer ile esas
-    // periyodun çarpımı. Genlik g, kayma k ve frekans hesaba girer; katsayının
-    // işareti, fonksiyonun adı ve faz kayması yalnız süstür.
-    final maks = c == 5;
-    final j = a + 25 * b;
-    final (g, k, fi) = _acikPeriyot[maks]![j];
-    final (fp, fq) = _frekans[fi];
-    final uc = maks ? k + g : k - g;
-    final isaret = j.isEven ? 1 : -1;
-    final fonk = (j ~/ 2).isEven ? 'sin' : 'cos';
-    final faz = _faz[j % _faz.length];
-    final katsayi = g == 1 ? '' : '$g';
-    final terim = '$fonk(${_fazliArg(fp, fq, faz)})';
-    final ifade = j % 3 == 0
-        ? '${_n(k)} ${isaret < 0 ? '−' : '+'} $katsayi$terim'
-        : '${isaret < 0 ? '−' : ''}$katsayi$terim ${k < 0 ? '−' : '+'} '
-              '${k.abs()}';
-    final yanit = _pi(uc * 2 * fq, fp);
-    final ad = maks ? 'büyük' : 'küçük';
-    return secenekli(
-      'f(x) = $ifade fonksiyonunun en $ad değeri a ve esas periyodu T '
-          'olduğuna göre a·T çarpımı kaçtır?',
-      yanit,
-      [
-        _pi(uc * fq, fp),
-        _pi((maks ? g : -g) * 2 * fq, fp),
-        _pi((maks ? k - g : k + g) * 2 * fq, fp),
-        _pi(uc * 4 * fq, fp),
-        _pi(-uc * 2 * fq, fp),
-        _pi((uc + 1) * 2 * fq, fp),
-        _pi((uc - 1) * 2 * fq, fp),
-      ],
-      '$fonk fonksiyonu −1 ile 1 arasında değer aldığından en $ad değer '
-          'a = ${_n(k)} ${maks ? '+' : '−'} $g = ${_n(uc)} olur. Esas periyot '
-          'T = 2π/${_rs(_R(fp, fq))} = ${_periyot(fp, fq)} bulunur. a·T = '
-          '${_p(uc)}·${_sar(_periyot(fp, fq))} = $yanit.',
+    final t = _temizSec(
+      'periyot$c',
+      _acikPeriyot[c == 5]!.length,
+      (t) => _periyotAcik(c, t),
+      j,
     );
+    return _periyotAcik(c, t);
   }
-  // a·sin x + b·cos x + d: genlik √(a² + b²).
-  final (p0, q0) = _genlikCifti[b];
-  final d = a - 12;
-  final sa = (a + b).isEven ? 1 : -1, sb = (a ~/ 2 + b).isEven ? 1 : -1;
+  final t = _temizSec(
+    'periyot$c-$b',
+    _genlikKayma.length,
+    (t) => _genlikSoru(b, t, c),
+    a,
+  );
+  return _genlikSoru(b, t, c);
+}
+
+/// Uç değerleri ve periyodu verilen a·sin(bx) + c biçimleri (c ≤ 4).
+AdvancedItem _periyotTers(int c, int sira) {
+  final (g, k, fi) = _tersPeriyot[sira];
+  final (fp, fq) = _frekans[fi];
+  final frek = _R(fp, fq), ters = _R(fq, fp);
+  final maks = k + g, min = k - g;
+  final t = _periyot(fp, fq);
+  final buyuk = 'en büyük değeri ${_n(maks)}, en küçük değeri ${_n(min)}';
+  final pozitif = 'a, b pozitif gerçek sayılardır.';
+  final perAc = 'Esas periyot 2π/b = $t olduğundan b = $frek olur.';
+  final kYaz = '${k < 0 ? '−' : '+'} ${k.abs()}';
+  switch (c) {
+    case 0:
+      final yanit = _R(g) + frek + _R(k);
+      return _ras(
+        'f(x) = a·sin(bx) + c fonksiyonunun $buyuk ve esas periyodu $t '
+            'olduğuna göre a + b + c toplamı kaçtır? ($pozitif)',
+        yanit,
+        [
+          _R(maks - min) + frek + _R(k),
+          _R(g) + ters + _R(k),
+          _R(g) + frek - _R(k),
+          _R(g) + frek + _R(maks),
+        ],
+        'En büyük ve en küçük değerin farkının yarısı genliktir: a = '
+            '(${_n(maks)} − ${_p(min)})/2 = $g. Ortalamaları kaymadır: c = '
+            '(${_n(maks)} + ${_p(min)})/2 = ${_n(k)}. $perAc a + b + c = $g + '
+            '${_rs(frek)} + ${_p(k)} = $yanit.',
+      );
+    case 1:
+      final yanit = _R(k) + _R(g) + frek;
+      return _ras(
+        'f(x) = a + b·cos(cx) fonksiyonunun görüntü kümesi [${_n(min)}, '
+            '${_n(maks)}] ve esas periyodu $t olduğuna göre a + b + c toplamı '
+            'kaçtır? (b ve c pozitif gerçek sayılardır.)',
+        yanit,
+        [
+          _R(k) + _R(maks - min) + frek,
+          _R(k) + _R(g) + ters,
+          _R(-k) + _R(g) + frek,
+          _R(maks) + _R(g) + frek,
+        ],
+        'Kosinüsün görüntü kümesi [−1, 1] olduğundan b = ($maks − '
+            '${_p(min)})/2 = $g ve a = (${_n(maks)} + ${_p(min)})/2 = ${_n(k)} olur. '
+            'Esas periyot 2π/c = $t olduğundan c = $frek bulunur. a + b + c = '
+            '${_n(k)} + $g + ${_rs(frek)} = $yanit.',
+      );
+    case 2:
+      final yanit = _R(g) * frek;
+      return _ras(
+        'f(x) = a·sin(bx) $kYaz fonksiyonunun en büyük değeri ${_n(maks)} ve esas '
+            'periyodu $t olduğuna göre a·b çarpımı kaçtır? ($pozitif)',
+        yanit,
+        [
+          _R(maks) * frek,
+          _R(g) * ters,
+          _R((g + 2 * k).abs()) * frek,
+          _R(g) + frek,
+        ],
+        'En büyük değer a $kYaz = ${_n(maks)} olduğundan a = $g olur. $perAc '
+            'a·b = $g·${_rs(frek)} = $yanit.',
+        pozitif: true,
+      );
+    case 3:
+      final yanit = _R(g) * frek;
+      return _ras(
+        'f(x) = a·cos(bx) $kYaz fonksiyonunun en küçük değeri ${_n(min)} ve '
+            'esas periyodu $t olduğuna göre a·b çarpımı kaçtır? ($pozitif)',
+        yanit,
+        [
+          _R(min.abs()) * frek,
+          _R(g) * ters,
+          _R(maks.abs()) * frek,
+          _R(g) + frek,
+        ],
+        'En küçük değer −a $kYaz = ${_n(min)} olduğundan a = $g olur. '
+            '$perAc a·b = $g·${_rs(frek)} = $yanit.',
+        pozitif: true,
+      );
+    default:
+      final yanit = _R(g) * frek * _R(k);
+      return _ras(
+        'f(x) = a·sin(bx) + c fonksiyonunun $buyuk ve esas periyodu $t '
+            'olduğuna göre a·b·c çarpımı kaçtır? ($pozitif)',
+        yanit,
+        [
+          _R(maks - min) * frek * _R(k),
+          _R(g) * ters * _R(k),
+          _R(g) * frek * _R(maks),
+          _R(g) * frek * _R(min),
+        ],
+        'a = (${_n(maks)} − ${_p(min)})/2 = $g ve c = (${_n(maks)} + ${_p(min)})/2 = '
+            '${_n(k)} olur. $perAc a·b·c = $g·${_rs(frek)}·${_p(k)} = $yanit.',
+      );
+  }
+}
+
+/// Açık biçim: en büyük (c = 5) ya da en küçük (c = 6) değer ile esas
+/// periyodun çarpımı.
+AdvancedItem _periyotAcik(int c, int j) {
+  // Açık biçim: en büyük (c = 5) ya da en küçük (c = 6) değer ile esas
+  // periyodun çarpımı. Genlik g, kayma k ve frekans hesaba girer; katsayının
+  // işareti, fonksiyonun adı ve faz kayması yalnız süstür.
+  final maks = c == 5;
+  final (g, k, fi) = _acikPeriyot[maks]![j];
+  final (fp, fq) = _frekans[fi];
+  final uc = maks ? k + g : k - g;
+  final isaret = j.isEven ? 1 : -1;
+  final fonk = (j ~/ 2).isEven ? 'sin' : 'cos';
+  final faz = _faz[j % _faz.length];
+  final katsayi = g == 1 ? '' : '$g';
+  final terim = '$fonk(${_fazliArg(fp, fq, faz)})';
+  final ifade = j % 3 == 0
+      ? '${_n(k)} ${isaret < 0 ? '−' : '+'} $katsayi$terim'
+      : '${isaret < 0 ? '−' : ''}$katsayi$terim ${k < 0 ? '−' : '+'} '
+            '${k.abs()}';
+  final yanit = _pi(uc * 2 * fq, fp);
+  final ad = maks ? 'büyük' : 'küçük';
+  return _secenek(
+    'f(x) = $ifade fonksiyonunun en $ad değeri a ve esas periyodu T '
+        'olduğuna göre a·T çarpımı kaçtır?',
+    yanit,
+    [
+      _pi(uc * fq, fp),
+      _pi((maks ? g : -g) * 2 * fq, fp),
+      _pi((maks ? k - g : k + g) * 2 * fq, fp),
+      _pi(uc * 4 * fq, fp),
+      _pi(-uc * 2 * fq, fp),
+      _pi((uc + 1) * 2 * fq, fp),
+      _pi((uc - 1) * 2 * fq, fp),
+    ],
+    '$fonk fonksiyonu −1 ile 1 arasında değer aldığından en $ad değer '
+        'a = ${_n(k)} ${maks ? '+' : '−'} $g = ${_n(uc)} olur. Esas periyot '
+        'T = 2π/${_rs(_R(fp, fq))} = ${_periyot(fp, fq)} bulunur. a·T = '
+        '${_p(uc)}·${_sar(_periyot(fp, fq))} = $yanit.',
+  );
+}
+
+/// a·sin x + b·cos x + d: genlik √(a² + b²). t sabit terimi ve işaretleri
+/// seçer.
+AdvancedItem _genlikSoru(int b, int t, int c) {
+  final (u0, v0) = _genlikCifti[b];
+  final (p0, q0) = (t ~/ 4).isEven ? (u0, v0) : (v0, u0);
+  final d = _genlikKayma[t];
+  final sa = (t + b).isEven ? 1 : -1, sb = (t ~/ 2 + b).isEven ? 1 : -1;
   final pa = sa * p0, qb = sb * q0;
   final r = _kokAyir(p0 * p0 + q0 * q0).$1;
   final ifade =
@@ -2338,7 +2612,8 @@ final List<(int, int, int, int)> _tersToplam = () {
       l
         ..add((1, u, v, 0))
         ..add((2, u, v, 0))
-        ..add((6, u, v, 0));
+        ..add((6, u, v, 0))
+        ..add((8, u, v, 0));
       for (var t = 0; t < 7; t++) {
         l.add((7, u, v, t));
       }
@@ -2347,7 +2622,8 @@ final List<(int, int, int, int)> _tersToplam = () {
       l
         ..add((3, u, 0, t))
         ..add((4, u, 0, t))
-        ..add((5, u, 0, t));
+        ..add((5, u, 0, t))
+        ..add((9, u, 0, t));
     }
   }
   return [for (var i = 0; i < l.length; i++) l[i * 389 % l.length]];
@@ -2355,185 +2631,234 @@ final List<(int, int, int, int)> _tersToplam = () {
 
 /// Denklem iç ifadeleri (p, q, r): (px + q)/r.
 List<(int, int, int)> _icIfadeler(int qSinir, List<int> rler) => [
-  for (final r in rler)
-    for (var q = 0; q <= qSinir; q++)
-      for (final qq in q == 0 ? [0] : [q, -q])
+  for (var q = 0; q <= qSinir; q++)
+    for (final qq in q == 0 ? [0] : [q, -q])
+      for (final r in rler)
         for (var p = 1; p <= 5; p++)
           if (p.gcd(qq).gcd(r) == 1) (p, qq, r),
 ];
 
+/// Ters trigonometrik denklemlerde c'ye göre iç ifadeler.
+final Map<int, List<(int, int, int)>> _tersIcListe = {
+  6: _icIfadeler(20, [1, 2]),
+  7: _icIfadeler(20, [1, 2]),
+  8: _icIfadeler(20, [1, 2, 3]),
+  9: _icIfadeler(20, [3, 4]),
+};
+
 String _icYaz((int, int, int) ic) {
   final (p, q, r) = ic;
   final lin = _pol([p, q]);
-  return r == 1 ? lin : '($lin)/$r';
+  return r == 1 ? lin : (q == 0 ? '$lin/$r' : '($lin)/$r');
 }
 
 AdvancedItem _tersTrig(int a, int b, int c) {
   final j = a + 25 * b;
   if (c <= 2) {
-    // c = 0: arcsin(sin θ) ya da arcsin(cos θ); c = 1: arccos; c = 2: arctan.
-    final ters = c == 0 ? 'arcsin' : (c == 1 ? 'arccos' : 'arctan');
-    final dogal = c == 0 ? 'sin' : (c == 1 ? 'cos' : 'tan');
-    final capraz = c == 0 ? 'cos' : (c == 1 ? 'sin' : 'cot');
     final liste = c == 0 ? _asinAcilar : (c == 1 ? _acosAcilar : _atanAcilar);
-    final teta = liste[j ~/ 2];
-    final caprazMi = j.isOdd;
-    final ic = caprazMi ? '$capraz(${_piR(teta)})' : '$dogal(${_piR(teta)})';
-    // Çapraz biçim tümler açıya çevrilir: cos θ = sin(π/2 − θ) vb.
-    final aci = caprazMi ? _yarimR - teta : teta;
-    final (son, adim) = _esasDeger(dogal, aci);
-    final aralik = switch (c) {
-      0 => '[−π/2, π/2]',
-      1 => '[0, π]',
-      _ => '(−π/2, π/2)',
-    };
-    final cevir = caprazMi
-        ? '$capraz(${_piR(teta)}) = $dogal(π/2 − '
-              '${teta.p < 0 ? '(${_piR(teta)})' : _piR(teta)}) = '
-              '$dogal(${_piR(aci)}) olur. '
-        : '';
-    return secenekli(
-      '$ters($ic) ifadesinin değeri kaçtır?',
-      _piR(son),
-      [
-        _piR(teta),
-        _piR(aci),
-        _piR(-son),
-        _piR(_modR(aci, c == 2 ? 1 : 2)),
-        _piR(son + _R(1, 2)),
-        _piR(son - _R(1, 3)),
-        _piR(son + _R(1, 6)),
-      ],
-      '$ters fonksiyonunun değeri $aralik aralığındadır. $cevir'
-          '${adim.isEmpty ? '' : '$adim olur. '}${_piR(son)} bu aralıkta '
-          'bulunduğundan sonuç '
-          '${_piR(son)} olur.',
-    );
+    final t = _temizSec('ters$c', 2 * liste.length, (t) => _tersOzel(c, t), j);
+    return _tersOzel(c, t);
   }
   if (c == 3) {
-    final tur = j % 8;
-    final kalan = j ~/ 8;
-    final (p0, q0, h) = _pisagorTers[kalan ~/ 4];
-    final (kar, kom) = kalan.isEven ? (p0, q0) : (q0, p0);
-    final s = (kalan ~/ 2).isEven ? 1 : -1;
-    final (dis, icF) = _bileske[tur];
-    final _R v, sinT, cosT;
-    final String aralik;
-    switch (icF) {
-      case 'arcsin':
-        v = _R(s * kar, h);
-        sinT = v;
-        cosT = _R(kom, h);
-        aralik = '[−π/2, π/2]';
-      case 'arccos':
-        v = _R(s * kom, h);
-        cosT = v;
-        sinT = _R(kar, h);
-        aralik = '[0, π]';
-      default:
-        v = _R(s * kar, kom);
-        sinT = _R(s * kar, h);
-        cosT = _R(kom, h);
-        aralik = '(−π/2, π/2)';
-    }
-    final tanT = sinT / cosT;
-    final yanit = switch (dis) {
-      'sin' => sinT,
-      'cos' => cosT,
-      'tan' => tanT,
-      _ => _R(1) / tanT,
-    };
-    final bilinen = switch (icF) {
-      'arcsin' => 'sin θ = $v',
-      'arccos' => 'cos θ = $v',
-      _ => 'tan θ = $v',
-    };
-    final isaretNot = switch (icF) {
-      'arcsin' => 'bu aralıkta kosinüs negatif değildir: cos θ = $cosT',
-      'arccos' => 'bu aralıkta sinüs negatif değildir: sin θ = $sinT',
-      _ => 'bu aralıkta kosinüs pozitiftir: cos θ = $cosT, sin θ = $sinT',
-    };
-    final hesap = switch (dis) {
-      'tan' => ' tan θ = sin θ/cos θ = ${_rs(sinT)}/${_rs(cosT)} = $tanT.',
-      'cot' =>
-        ' cot θ = cos θ/sin θ = ${_rs(cosT)}/${_rs(sinT)} = ${_R(1) / tanT}.',
-      _ => '',
-    };
-    return _ras('$dis($icF($v)) ifadesinin değeri kaçtır?', yanit, [
-      -yanit,
-      dis == 'sin' ? cosT : (dis == 'cos' ? sinT : _R(1) / yanit),
-      dis == 'tan' || dis == 'cot' ? -_R(1) / yanit : _R(1) / yanit,
-      _R(kar, kom),
-      _R(kom, kar),
-    ], 'θ = $icF($v) dersek $bilinen ve θ ∈ $aralik olur; $isaretNot.$hesap');
+    final t = _temizSec('ters3', 32 * _pisagorTers.length, _tersBileske, j);
+    return _tersBileske(t);
   }
   if (c <= 5) {
-    final (sablon, u, v, t) = _tersToplam[j + 500 * (c - 4)];
-    final (uy, us, uc) = _ozelSinDeg[u];
-    final (vy, vs, vc) = _ozelSinDeg[v];
-    final (ty, tt) = _ozelTanDeg[t];
-    // Terimler: (yazım, değer, sık hata değeri).
-    (String, int, int) asin(String y, int d) =>
-        ('arcsin($y)', d, d.abs()); // işareti yok sayma
-    (String, int, int) acos(String y, int d) =>
-        ('arccos($y)', d, d > 6 ? d - 12 : d); // arccos(−a) = −arccos(a)
-    (String, int, int) atan(String y, int d) => ('arctan($y)', d, d.abs());
-    final terimler = <(int, (String, int, int))>[
-      ...switch (sablon) {
-        0 => [(1, asin(uy, us)), (1, acos(vy, vc))],
-        1 => [(1, asin(uy, us)), (-1, acos(vy, vc))],
-        2 => [(1, acos(uy, uc)), (-1, asin(vy, vs))],
-        3 => [(1, acos(uy, uc)), (1, atan(ty, tt))],
-        4 => [(1, asin(uy, us)), (1, atan(ty, tt))],
-        5 => [(1, acos(uy, uc)), (-1, atan(ty, tt))],
-        6 => [(2, asin(uy, us)), (1, acos(vy, vc))],
-        _ => [(1, asin(uy, us)), (1, acos(vy, vc)), (1, atan(ty, tt))],
-      },
-    ];
-    var ifade = '';
-    for (final (k, (y, _, _)) in terimler) {
-      final kat = k.abs() == 1 ? y : '${k.abs()}·$y';
-      ifade = ifade.isEmpty
-          ? (k < 0 ? '−$kat' : kat)
-          : '$ifade ${k < 0 ? '−' : '+'} $kat';
-    }
-    final toplam = terimler.fold(0, (s, e) => s + e.$1 * e.$2.$2);
-    final hatali = terimler.fold(0, (s, e) => s + e.$1 * e.$2.$3);
-    var isaretli = 0;
-    for (var i = 0; i < terimler.length; i++) {
-      final e = terimler[i];
-      isaretli += (i == terimler.length - 1 ? -e.$1 : e.$1) * e.$2.$2;
-    }
-    var islem = '';
-    for (final (k, (_, d, _)) in terimler) {
-      final deg = _pi(d, 12);
-      final kat = k.abs() == 1 ? _sar(deg) : '${k.abs()}·${_sar(deg)}';
-      islem = islem.isEmpty
-          ? (k < 0 ? '−$kat' : kat)
-          : '$islem ${k < 0 ? '−' : '+'} $kat';
-    }
-    final degerler = [
-      for (final (_, (y, d, _)) in terimler) '$y = ${_pi(d, 12)}',
-    ].join(', ');
-    return secenekli(
-      '$ifade ifadesinin değeri kaçtır?',
-      _pi(toplam, 12),
-      [
-        _pi(hatali, 12),
-        _pi(isaretli, 12),
-        _pi(toplam + 2, 12),
-        _pi(toplam - 2, 12),
-        _pi(toplam + 3, 12),
-        _pi(-toplam, 12),
-      ],
-      'Esas değerler $degerler olduğundan ifadenin değeri $islem = '
-          '${_pi(toplam, 12)} bulunur.',
+    // c = 4 ve c = 5 aynı kalıbı kullanır: temiz listenin ayrı yarıları.
+    final t = _temizSec(
+      'ters45',
+      _tersToplam.length,
+      _tersToplamSoru,
+      j + 500 * (c - 4),
     );
+    return _tersToplamSoru(t);
   }
+  final n = const {6: 4, 7: 5, 8: 2, 9: 4}[c]!;
+  final ai = j % n;
+  final t = _temizSec(
+    'ters$c-$ai',
+    _tersIcListe[c]!.length,
+    (t) => _tersDenklem(c, ai, t),
+    j ~/ n,
+  );
+  return _tersDenklem(c, ai, t);
+}
+
+/// arcsin(sin θ), arccos(cos θ), arctan(tan θ) ve çapraz biçimleri; j tek
+/// ise çapraz biçim.
+AdvancedItem _tersOzel(int c, int j) {
+  // c = 0: arcsin(sin θ) ya da arcsin(cos θ); c = 1: arccos; c = 2: arctan.
+  final ters = c == 0 ? 'arcsin' : (c == 1 ? 'arccos' : 'arctan');
+  final dogal = c == 0 ? 'sin' : (c == 1 ? 'cos' : 'tan');
+  final capraz = c == 0 ? 'cos' : (c == 1 ? 'sin' : 'cot');
+  final liste = c == 0 ? _asinAcilar : (c == 1 ? _acosAcilar : _atanAcilar);
+  final teta = liste[j ~/ 2];
+  final caprazMi = j.isOdd;
+  final ic = caprazMi ? '$capraz(${_piR(teta)})' : '$dogal(${_piR(teta)})';
+  // Çapraz biçim tümler açıya çevrilir: cos θ = sin(π/2 − θ) vb.
+  final aci = caprazMi ? _yarimR - teta : teta;
+  final (son, adim) = _esasDeger(dogal, aci);
+  final aralik = switch (c) {
+    0 => '[−π/2, π/2]',
+    1 => '[0, π]',
+    _ => '(−π/2, π/2)',
+  };
+  final cevir = caprazMi
+      ? '$capraz(${_piR(teta)}) = $dogal(π/2 − '
+            '${teta.p < 0 ? '(${_piR(teta)})' : _piR(teta)}) = '
+            '$dogal(${_piR(aci)}) olur. '
+      : '';
+  return _secenek(
+    '$ters($ic) ifadesinin değeri kaçtır?',
+    _piR(son),
+    [
+      _piR(teta),
+      _piR(aci),
+      _piR(-son),
+      _piR(_modR(aci, c == 2 ? 1 : 2)),
+      _piR(son + _R(1, 2)),
+      _piR(son - _R(1, 3)),
+      _piR(son + _R(1, 6)),
+    ],
+    '$ters fonksiyonunun değeri $aralik aralığındadır. $cevir'
+        '${adim.isEmpty ? '' : '$adim olur. '}${_piR(son)} bu aralıkta '
+        'bulunduğundan sonuç '
+        '${_piR(son)} olur.',
+  );
+}
+
+/// sin, cos, tan, cot ile ters fonksiyon bileşkesi (Pisagor üçlüleri).
+AdvancedItem _tersBileske(int j) {
+  final tur = j % 8;
+  final kalan = j ~/ 8;
+  final (p0, q0, h) = _pisagorTers[kalan ~/ 4];
+  final (kar, kom) = kalan.isEven ? (p0, q0) : (q0, p0);
+  final s = (kalan ~/ 2).isEven ? 1 : -1;
+  final (dis, icF) = _bileske[tur];
+  final _R v, sinT, cosT;
+  final String aralik;
+  switch (icF) {
+    case 'arcsin':
+      v = _R(s * kar, h);
+      sinT = v;
+      cosT = _R(kom, h);
+      aralik = '[−π/2, π/2]';
+    case 'arccos':
+      v = _R(s * kom, h);
+      cosT = v;
+      sinT = _R(kar, h);
+      aralik = '[0, π]';
+    default:
+      v = _R(s * kar, kom);
+      sinT = _R(s * kar, h);
+      cosT = _R(kom, h);
+      aralik = '(−π/2, π/2)';
+  }
+  final tanT = sinT / cosT;
+  final yanit = switch (dis) {
+    'sin' => sinT,
+    'cos' => cosT,
+    'tan' => tanT,
+    _ => _R(1) / tanT,
+  };
+  final bilinen = switch (icF) {
+    'arcsin' => 'sin θ = $v',
+    'arccos' => 'cos θ = $v',
+    _ => 'tan θ = $v',
+  };
+  final isaretNot = switch (icF) {
+    'arcsin' => 'bu aralıkta kosinüs negatif değildir: cos θ = $cosT',
+    'arccos' => 'bu aralıkta sinüs negatif değildir: sin θ = $sinT',
+    _ => 'bu aralıkta kosinüs pozitiftir: cos θ = $cosT, sin θ = $sinT',
+  };
+  final hesap = switch (dis) {
+    'tan' => ' tan θ = sin θ/cos θ = ${_rs(sinT)}/${_rs(cosT)} = $tanT.',
+    'cot' =>
+      ' cot θ = cos θ/sin θ = ${_rs(cosT)}/${_rs(sinT)} = ${_R(1) / tanT}.',
+    _ => '',
+  };
+  return _ras('$dis($icF($v)) ifadesinin değeri kaçtır?', yanit, [
+    -yanit,
+    dis == 'sin' ? cosT : (dis == 'cos' ? sinT : _R(1) / yanit),
+    dis == 'tan' || dis == 'cot' ? -_R(1) / yanit : _R(1) / yanit,
+    _R(kar, kom),
+    _R(kom, kar),
+  ], 'θ = $icF($v) dersek $bilinen ve θ ∈ $aralik olur; $isaretNot.$hesap');
+}
+
+/// Esas değerlerin toplamı.
+AdvancedItem _tersToplamSoru(int sira) {
+  final (sablon, u, v, t) = _tersToplam[sira];
+  final (uy, us, uc) = _ozelSinDeg[u];
+  final (vy, vs, vc) = _ozelSinDeg[v];
+  final (ty, tt) = _ozelTanDeg[t];
+  // Terimler: (yazım, değer, sık hata değeri).
+  (String, int, int) asin(String y, int d) =>
+      ('arcsin($y)', d, d.abs()); // işareti yok sayma
+  (String, int, int) acos(String y, int d) =>
+      ('arccos($y)', d, d > 6 ? d - 12 : d); // arccos(−a) = −arccos(a)
+  (String, int, int) atan(String y, int d) => ('arctan($y)', d, d.abs());
+  final terimler = <(int, (String, int, int))>[
+    ...switch (sablon) {
+      0 => [(1, asin(uy, us)), (1, acos(vy, vc))],
+      1 => [(1, asin(uy, us)), (-1, acos(vy, vc))],
+      2 => [(1, acos(uy, uc)), (-1, asin(vy, vs))],
+      3 => [(1, acos(uy, uc)), (1, atan(ty, tt))],
+      4 => [(1, asin(uy, us)), (1, atan(ty, tt))],
+      5 => [(1, acos(uy, uc)), (-1, atan(ty, tt))],
+      6 => [(2, asin(uy, us)), (1, acos(vy, vc))],
+      8 => [(2, acos(uy, uc)), (-1, asin(vy, vs))],
+      9 => [(1, asin(uy, us)), (-2, atan(ty, tt))],
+      _ => [(1, asin(uy, us)), (1, acos(vy, vc)), (1, atan(ty, tt))],
+    },
+  ];
+  var ifade = '';
+  for (final (k, (y, _, _)) in terimler) {
+    final kat = k.abs() == 1 ? y : '${k.abs()}·$y';
+    ifade = ifade.isEmpty
+        ? (k < 0 ? '−$kat' : kat)
+        : '$ifade ${k < 0 ? '−' : '+'} $kat';
+  }
+  final toplam = terimler.fold(0, (s, e) => s + e.$1 * e.$2.$2);
+  // Sıfır çıkan toplamlar önemsizdir.
+  if (toplam == 0) _kirli = true;
+  final hatali = terimler.fold(0, (s, e) => s + e.$1 * e.$2.$3);
+  var isaretli = 0;
+  for (var i = 0; i < terimler.length; i++) {
+    final e = terimler[i];
+    isaretli += (i == terimler.length - 1 ? -e.$1 : e.$1) * e.$2.$2;
+  }
+  var islem = '';
+  for (final (k, (_, d, _)) in terimler) {
+    final deg = _pi(d, 12);
+    final kat = k.abs() == 1 ? _sar(deg) : '${k.abs()}·${_sar(deg)}';
+    islem = islem.isEmpty
+        ? (k < 0 ? '−$kat' : kat)
+        : '$islem ${k < 0 ? '−' : '+'} $kat';
+  }
+  final degerler = [for (final (_, (y, d, _)) in terimler) '$y = ${_pi(d, 12)}']
+      .join(', ');
+  return _secenek(
+    '$ifade ifadesinin değeri kaçtır?',
+    _pi(toplam, 12),
+    [
+      _pi(hatali, 12),
+      _pi(isaretli, 12),
+      _pi(toplam + 2, 12),
+      _pi(toplam - 2, 12),
+      _pi(toplam + 3, 12),
+      _pi(-toplam, 12),
+    ],
+    'Esas değerler $degerler olduğundan ifadenin değeri $islem = '
+        '${_pi(toplam, 12)} bulunur.',
+  );
+}
+
+/// Ters trigonometrik denklem: ai açı, t iç ifade sırası.
+AdvancedItem _tersDenklem(int c, int ai, int t) {
   // c = 6..9: ters trigonometrik denklem.
   final String f, ters;
   final List<(String, _R)> acilar; // (açı yazımı, fonksiyon değeri)
-  final List<(int, int, int)> icler;
   switch (c) {
     case 6:
       f = 'sin';
@@ -2544,7 +2869,6 @@ AdvancedItem _tersTrig(int a, int b, int c) {
         ('π/6', _R(1, 2)),
         ('π/2', _R(1)),
       ];
-      icler = _icIfadeler(7, [1, 2]);
     case 7:
       f = 'cos';
       ters = 'arccos';
@@ -2555,12 +2879,10 @@ AdvancedItem _tersTrig(int a, int b, int c) {
         ('2π/3', _R(-1, 2)),
         ('π', _R(-1)),
       ];
-      icler = _icIfadeler(9, [1, 2]);
     case 8:
       f = 'tan';
       ters = 'arctan';
       acilar = [('−π/4', _R(-1)), ('π/4', _R(1))];
-      icler = _icIfadeler(12, [1, 2, 3]);
     default:
       f = 'sin';
       ters = 'arcsin';
@@ -2570,10 +2892,9 @@ AdvancedItem _tersTrig(int a, int b, int c) {
         ('arccos(0)', _R(1)),
         ('arctan(√3/3)', _R(1, 2)),
       ];
-      icler = _icIfadeler(7, [3, 4]);
   }
-  final (aciYaz, deger) = acilar[j % acilar.length];
-  final ic = icler[j ~/ acilar.length];
+  final (aciYaz, deger) = acilar[ai];
+  final ic = _tersIcListe[c]![t];
   final (p, q, r) = ic;
   final yanit = (deger * _R(r) - _R(q)) / _R(p);
   final ozel = c == 9
@@ -2674,27 +2995,87 @@ bool _basamakKesin(int binlik, BigInt gercek) {
 
 BigInt _bigUs((int, int, int, int) t, int n) => BigInt.from(t.$1).pow(n);
 
-AdvancedItem _logBasamak(int a, int b, int c) {
-  if (c <= 3) {
-    final t = _basTaban[a];
-    final lg = _logBin(t);
-    final n = _uygun(
-      [for (var x = 11; x <= 160; x++) x],
-      b + 20 * c,
-      (x) => _basamakKesin(x * lg, _bigUs(t, x)),
-    );
-    final bin = n * lg;
-    final yanit = bin ~/ 1000 + 1;
+/// Tek kuvvetin basamak sayısı; yuvarlanmış logaritma kesin değilse kurulmaz.
+/// k basamak koşulu yuvarlanmış logaritmayla kesin çözülüyor mu?
+bool _basamakSinirUygun((int, int, int, int) t, bool enAz, int x) {
+  final lg = _logBin(t);
+  final sinir = enAz ? x - 1 : x;
+  final oran = sinir * 1000 % lg;
+  if (oran * 100 < lg || (lg - oran) * 100 < lg) return false;
+  final n = enAz ? (sinir * 1000 + lg - 1) ~/ lg : sinir * 1000 ~/ lg;
+  int basamak(BigInt v) => v.toString().length;
+  if (enAz) {
+    return basamak(_bigUs(t, n)) >= x && basamak(_bigUs(t, n - 1)) < x;
+  }
+  return basamak(_bigUs(t, n)) == x && basamak(_bigUs(t, n + 1)) > x;
+}
+
+/// c = 6: en az k basamaklı olması için en küçük n; c = 7: k basamaklı ise
+/// n en çok kaç.
+AdvancedItem _basamakSinir(int c, (int, int, int, int) t, int k) {
+  final lg = _logBin(t);
+  final enAz = c == 6;
+  if (!_basamakSinirUygun(t, enAz, k)) {
+    throw StateError('Basamak sınırı kesin çözülmüyor');
+  }
+  if (enAz) {
+    final sinir = k - 1;
+    final n = (sinir * 1000 + lg - 1) ~/ lg;
     return _tam(
-      '${t.$1}${_ust(n)} sayısı kaç basamaklıdır? $_logNot',
-      yanit,
-      [yanit - 1, yanit + 1, (n * lg / 100).round(), n],
-      '${_logAcilim(t)} olur. log(${t.$1}${_ust(n)}) = $n·log ${t.$1} = '
-          '${tr(bin / 1000, 3)} bulunur. Bu sayı ${bin ~/ 1000} ile '
-          '${bin ~/ 1000 + 1} arasında olduğundan ${t.$1}${_ust(n)} sayısı '
-          '$yanit basamaklıdır.',
+      '${t.$1}ⁿ sayısının en az $k basamaklı olması için n doğal sayısı en '
+          'az kaç olmalıdır? $_logNot',
+      n,
+      [n - 1, n + 1, (k * 1000 + lg - 1) ~/ lg, k],
+      '${_logAcilim(t)} olur. ${t.$1}ⁿ sayısının en az $k basamaklı olması '
+          'için ${t.$1}ⁿ ≥ 10${_ust(sinir)}, yani n·${tr(lg / 1000, 3)} ≥ '
+          '$sinir olmalıdır. $sinir/${tr(lg / 1000, 3)} ≈ '
+          '${tr(sinir * 1000 / lg, 2)} olduğundan n en az $n olur.',
       pozitif: true,
     );
+  }
+  final n = k * 1000 ~/ lg;
+  return _tam(
+    '${t.$1}ⁿ sayısı $k basamaklı olduğuna göre n doğal sayısı en çok kaç '
+        'olabilir? $_logNot',
+    n,
+    [n + 1, n - 1, ((k - 1) * 1000 + lg - 1) ~/ lg, k],
+    '${_logAcilim(t)} olur. ${t.$1}ⁿ sayısının $k basamaklı olması için '
+        '10${_ust(k - 1)} ≤ ${t.$1}ⁿ < 10${_ust(k)}, yani n·${tr(lg / 1000, 3)} '
+        '< $k olmalıdır. $k/${tr(lg / 1000, 3)} ≈ ${tr(k * 1000 / lg, 2)} '
+        'olduğundan n en çok $n olur.',
+    pozitif: true,
+  );
+}
+
+AdvancedItem _basamakTek((int, int, int, int) t, int n) {
+  final lg = _logBin(t);
+  if (!_basamakKesin(n * lg, _bigUs(t, n))) {
+    throw StateError('Yuvarlanmış logaritma kesin değil');
+  }
+  final bin = n * lg;
+  final yanit = bin ~/ 1000 + 1;
+  return _tam(
+    '${t.$1}${_ust(n)} sayısı kaç basamaklıdır? $_logNot',
+    yanit,
+    [yanit - 1, yanit + 1, (n * lg / 100).round(), n],
+    '${_logAcilim(t)} olur. log(${t.$1}${_ust(n)}) = $n·log ${t.$1} = '
+        '${tr(bin / 1000, 3)} bulunur. Bu sayı ${bin ~/ 1000} ile '
+        '${bin ~/ 1000 + 1} arasında olduğundan ${t.$1}${_ust(n)} sayısı '
+        '$yanit basamaklıdır.',
+    pozitif: true,
+  );
+}
+
+AdvancedItem _logBasamak(int a, int b, int c, int deneme) {
+  if (c <= 3) {
+    final t = _basTaban[a];
+    final n = _temizSec(
+      'basamak$a',
+      390,
+      (x) => _basamakTek(t, 11 + x),
+      b + 20 * c,
+    );
+    return _basamakTek(t, 11 + n);
   }
   if (c == 4) {
     // 2 ve 5 kuvvetleri: 10'un kuvveti ayrılır.
@@ -2705,7 +3086,7 @@ AdvancedItem _logBasamak(int a, int b, int c) {
     final m = 3 + a ~/ 15 * 20 + b; // 3 … 42
     final k = _uygun(
       [for (var x = 2; x <= 60; x++) x],
-      c - 4 + (a % 5 + b) % 7,
+      (a % 5 + b + deneme) % 7,
       (x) => i2 * m != i5 * x,
     );
     final p2 = i2 * m, p5 = i5 * k;
@@ -2729,8 +3110,8 @@ AdvancedItem _logBasamak(int a, int b, int c) {
   if (c == 5) {
     // İki tabanın kuvvetlerinin çarpımı.
     final t1 = _basTaban[a];
-    final t2 =
-        _basTaban[(a + 3 + b) % 25 == a ? (a + 4) % 25 : (a + 3 + b) % 25];
+    final i2 = (a + 3 + b + 5 * deneme) % 25;
+    final t2 = _basTaban[i2 == a ? (a + 4) % 25 : i2];
     final n1 = 10 + b;
     final n2 = _uygun(
       [for (var x = 8; x <= 90; x++) x],
@@ -2759,56 +3140,21 @@ AdvancedItem _logBasamak(int a, int b, int c) {
     );
   }
   if (c <= 7) {
-    // c = 6: en az k basamaklı olması için en küçük n;
-    // c = 7: k basamaklı ise n en çok kaç.
     final t = _basTaban[a];
-    final lg = _logBin(t);
-    final enAz = c == 6;
-    final k = _uygun([for (var x = 12; x <= 200; x++) x], b * 3 + a % 3, (x) {
-      final sinir = enAz ? x - 1 : x;
-      final oran = sinir * 1000 % lg;
-      if (oran * 100 < lg || (lg - oran) * 100 < lg) return false;
-      final n = enAz ? (sinir * 1000 + lg - 1) ~/ lg : sinir * 1000 ~/ lg;
-      final basamak = (BigInt v) => v.toString().length;
-      if (enAz) {
-        return basamak(_bigUs(t, n)) >= x && basamak(_bigUs(t, n - 1)) < x;
-      }
-      return basamak(_bigUs(t, n)) == x && basamak(_bigUs(t, n + 1)) > x;
-    });
-    if (enAz) {
-      final sinir = k - 1;
-      final n = (sinir * 1000 + lg - 1) ~/ lg;
-      return _tam(
-        '${t.$1}ⁿ sayısının en az $k basamaklı olması için n doğal sayısı en '
-            'az kaç olmalıdır? $_logNot',
-        n,
-        [n - 1, n + 1, (k * 1000 + lg - 1) ~/ lg, k],
-        '${_logAcilim(t)} olur. ${t.$1}ⁿ sayısının en az $k basamaklı olması '
-            'için ${t.$1}ⁿ ≥ 10${_ust(sinir)}, yani n·${tr(lg / 1000, 3)} ≥ '
-            '$sinir olmalıdır. $sinir/${tr(lg / 1000, 3)} ≈ '
-            '${tr(sinir * 1000 / lg, 2)} olduğundan n en az $n olur.',
-        pozitif: true,
-      );
-    }
-    final n = k * 1000 ~/ lg;
-    return _tam(
-      '${t.$1}ⁿ sayısı $k basamaklı olduğuna göre n doğal sayısı en çok kaç '
-          'olabilir? $_logNot',
-      n,
-      [n + 1, n - 1, ((k - 1) * 1000 + lg - 1) ~/ lg, k],
-      '${_logAcilim(t)} olur. ${t.$1}ⁿ sayısının $k basamaklı olması için '
-          '10${_ust(k - 1)} ≤ ${t.$1}ⁿ < 10${_ust(k)}, yani n·${tr(lg / 1000, 3)} '
-          '< $k olmalıdır. $k/${tr(lg / 1000, 3)} ≈ ${tr(k * 1000 / lg, 2)} '
-          'olduğundan n en çok $n olur.',
-      pozitif: true,
+    final k = _temizSec(
+      'basamak$c-$a',
+      389,
+      (x) => _basamakSinir(c, t, 12 + x),
+      b * 3 + a % 3,
     );
+    return _basamakSinir(c, t, 12 + k);
   }
   // c = 8, 9: üç sayının karşılaştırılması.
   final p = 40 + 2 * a;
   // z = 5^r, x = 2^p ile en az 0,2 farklı logaritma alsın.
   final r = _uygun(
     [for (var x = 18; x <= 75; x++) x],
-    (a * 7 + b * 3) % 20,
+    (a * 7 + b * 3 + deneme) % 20,
     (x) => (699 * x - 301 * p).abs() >= 200,
   );
   final q = _uygun([for (var x = 20; x <= 120; x++) x], b, (x) {
@@ -2989,7 +3335,7 @@ final List<(int, int, int, int, int)> _logSureVeri = () {
       final n = (klg + mutlak - 1) ~/ mutlak;
       final kalan = klg % mutlak;
       if (kalan * 50 < mutlak || (mutlak - kalan) * 50 < mutlak) continue;
-      if (n > 80 || n == kat || n == yuzde.abs()) continue;
+      if (n > 80 || n <= 3 || n == kat || n == yuzde.abs()) continue;
       final (cp, cq) = _oranCarpan(yuzde);
       final (bp, bq) = yuzde > 0 ? (cp, cq) : (cq, cp);
       bool yeter(int m) =>
@@ -3013,7 +3359,7 @@ final List<(int, int, int, int, int)> _logSureVeri = () {
         final n = (pay + lg - 1) ~/ lg;
         final kalan = pay % lg;
         if (kalan * 50 < lg || (lg - kalan) * 50 < lg) continue;
-        if (n == kat || n == t || n > 120) continue;
+        if (n == kat || n == t || n > 120 || n <= 3) continue;
         // ca^(n/t) ≥ kat ⇔ ca^n ≥ kat^t
         bool yeter(int m) => BigInt.from(ca).pow(m) >= BigInt.from(kat).pow(t);
         if (!yeter(n) || yeter(n - 1)) continue;
@@ -3027,8 +3373,9 @@ final List<(int, int, int, int, int)> _logSureVeri = () {
     if (i < l0.length) l.add(l0[i]);
     if (i < l1.length) l.add(l1[i]);
   }
-  if (l.length < 500)
+  if (l.length < 500) {
     throw StateError('Logaritmalı süre verisi az: ${l.length}');
+  }
   return l;
 }();
 
@@ -3077,7 +3424,9 @@ final List<(String, int, int)> _yarilanma = [
 final List<(int, int, int)> _acikModel = [
   for (var t = 2; t <= 26; t++)
     for (final (a, ks) in const [(2, 10), (3, 6), (4, 5), (5, 4), (10, 3)])
-      for (var k = 2; k <= ks; k++) (a, t, k),
+      for (var k = 2; k <= ks; k++)
+        // Süre yanıtı tabana eşit olmasın.
+        if (k * t != a) (a, t, k),
 ];
 
 int _us(int taban, int kuvvet) {
@@ -3094,7 +3443,11 @@ AdvancedItem _logModel(int a, int b, int c) {
     case 0 || 1 || 8:
       final (ca, tt, k) = _katlanma[(j * 7 + 11 * c) % _katlanma.length];
       final t = k * tt;
-      final n0 = _susSec(_baslangic, j + c, {t, tt});
+      final n0 = _susSec(_baslangic, j + c, {
+        t,
+        tt,
+        if (t % _us(ca, k) == 0) t ~/ _us(ca, k),
+      });
       final n = n0 * _us(ca, k);
       final kat = ca == 2 ? 'iki' : 'üç';
       if (c == 0) {
@@ -3141,7 +3494,11 @@ AdvancedItem _logModel(int a, int b, int c) {
     case 2 || 3 || 9:
       final (birim, tt, k) = _yarilanma[(j * 7 + 13 * c) % _yarilanma.length];
       final t = k * tt;
-      final m = _susSec(_kalanKutle, j + c, {t, tt});
+      final m = _susSec(_kalanKutle, j + c, {
+        t,
+        tt,
+        if (t % _us(2, k) == 0) t ~/ _us(2, k),
+      });
       final m0 = m * _us(2, k);
       if (c == 2) {
         return _tam(
@@ -3233,7 +3590,11 @@ AdvancedItem _logModel(int a, int b, int c) {
       // Azalma modeli m(t) = m₀·(1/2)^(t/T): kütlenin verilen değere inme süresi.
       final (birim, tt, k) = _yarilanma[(j * 11 + 5) % _yarilanma.length];
       final t = k * tt;
-      final m = _susSec(_kalanKutle, j + 3, {t, tt});
+      final m = _susSec(_kalanKutle, j + 3, {
+        t,
+        tt,
+        if (t % _us(2, k) == 0) t ~/ _us(2, k),
+      });
       final m0 = m * _us(2, k);
       return _tam(
         'Bir maddenin kütlesi t $birim sonunda m(t) = $m0·(1/2)^(t/$tt) gram '
@@ -3249,7 +3610,10 @@ AdvancedItem _logModel(int a, int b, int c) {
       // c = 6, 7: N(t) = N₀·a^(t/T) açık modeli.
       final (ta, tt, k) = _acikModel[(j * 7 + 19 * c) % _acikModel.length];
       final t = k * tt;
-      final n0 = _susSec(_baslangic, j + 2 * c, {t});
+      final n0 = _susSec(_baslangic, j + 2 * c, {
+        t,
+        if (t % _us(ta, k) == 0) t ~/ _us(ta, k),
+      });
       final n = n0 * _us(ta, k);
       final ifade = 'N(t) = $n0·$ta^(t/$tt)';
       if (c == 6) {
@@ -3416,7 +3780,16 @@ final List<(int, int)> _parcaAday = [
 
     bool temiz(int x) {
       final ic = f.deger(x), y = f.deger(ic);
-      return gecis(x) && y != x && y != ic && y != k && y.abs() <= 150;
+      // Yanıt kökte yazılı sayılara ve hatalı yolların sonuçlarına eşit
+      // olmasın.
+      final yazili = {
+        for (final v in [...e1, ...e2, k, x]) ...[v, -v],
+      };
+      final hata = {f.ters(ic), ic, 2 * ic, f.ters(f.ters(x))};
+      return gecis(x) &&
+          !yazili.contains(y) &&
+          !hata.contains(y) &&
+          y.abs() <= 150;
     }
 
     for (final x in adaylar) {
@@ -3434,16 +3807,21 @@ final List<(int, int)> _parcaAday = [
   return yedek;
 }
 
-AdvancedItem _parcaliSoru(int a, int b, int c) {
+AdvancedItem _parcaliSoru(int a, int b, int c, int deneme) {
   if (c <= 5) {
     final (al, be) = _parcaDog[a];
     final (mu, nu, ro) = _parcaKare[b];
     final tur = (a + b) % 2;
     if (c <= 2) {
-      final k = const [-1, 1, 2][c];
+      final k = const [
+        [-1, -4, 4],
+        [1, -3, 5],
+        [2, 3, -2],
+      ][c][deneme % 3];
       final f = _Parcali([al, be], [mu, nu, ro], k, tur);
       // Her parçadan bir nokta; sınır noktası hangi parçadaysa ona yazılır.
-      final p = tur == 0 ? k - 2 : k, q = tur == 0 ? k : k + 2;
+      final ofs = const [2, 3, 1][deneme ~/ 3 % 3];
+      final p = tur == 0 ? k - ofs : k, q = tur == 0 ? k : k + ofs;
       final yanit = f.deger(p) + f.deger(q);
       return _tam(
         '${f.tanim} Buna göre f(${_n(p)}) + f(${_n(q)}) toplamı kaçtır?',
@@ -3483,13 +3861,20 @@ AdvancedItem _parcaliSoru(int a, int b, int c) {
     final derin = c == 6 ? 3 : 2;
     // Zincirde tek kural en az bir kez kullanılsın; yanıt başlangıç değerine
     // ya da kuraldaki sayılara eşit olmasın.
-    final n0 = _uygun([for (var x = 3; x <= 80; x++) x], a, (x) {
-      var y = x, tek = false;
+    int karisik(int n) => n.isOdd ? n ~/ 2 : al * n + be;
+    final n0 = _uygun([for (var x = 3; x <= 120; x++) x], a, (x) {
+      var y = x, yk = x, tek = false;
+      final ara = <int>[];
       for (var i = 0; i < derin; i++) {
         if (y.isOdd) tek = true;
+        ara.add(y);
         y = f(y);
+        yk = karisik(yk);
       }
-      return tek && y != x && y != al && y != be && y.abs() <= 999;
+      // Yanıt başlangıca, ara değerlere, kuraldaki sayılara ve hatalı
+      // yolların sonuçlarına eşit olmasın.
+      final hata = {...ara, yk, f(y), 2 * y, 2, al, be, -be};
+      return tek && !hata.contains(y) && y.abs() <= 999;
     });
     final adim = <String>[];
     var y = n0;
@@ -3505,7 +3890,6 @@ AdvancedItem _parcaliSoru(int a, int b, int c) {
     }
     final ifade = derin == 3 ? 'f(f(f(${_n(n0)})))' : 'f(f(${_n(n0)}))';
     // Hatalı yollar: tek/çift kuralını karıştırma, bir adım eksik ya da fazla.
-    int karisik(int n) => n.isOdd ? n ~/ 2 : al * n + be;
     var yk = n0, ye = n0;
     for (var i = 0; i < derin; i++) {
       yk = karisik(yk);
@@ -3524,9 +3908,16 @@ AdvancedItem _parcaliSoru(int a, int b, int c) {
   }
   // c = 8, 9: f(t) = v eşitliğini sağlayan t değerlerinin toplamı.
   final (al, be) = _parcaDog[a];
-  final gamma = b % 10 - 5; // −5 … 4
-  final s = c == 8 ? 3 + b ~/ 10 : 1 + b ~/ 10; // 3, 4 ya da 1, 2
-  final k = c == 8 ? 0 : -2;
+  final s = c == 8 ? 5 + b ~/ 10 : 3 + b ~/ 10; // 5, 6 ya da 3, 4
+  // γ = ±s iken yanıt s kökte yazılı kalırdı.
+  final gamma = _uygun(
+    const [-4, -3, -2, -1, 1, 2, 3, 4, 7, -7, 8, -8],
+    b % 10,
+    (x) => x != s && x != -s,
+  );
+  final k = c == 8
+      ? const [0, 1, -1, 2, 3, -2, 4, -3, 5][deneme % 9]
+      : const [-3, -4, -2, -5, -1, 2, 3, 1, 0][deneme % 9];
   final tur = (a + b) % 2;
   final v = s * s + gamma;
   bool birinci(_R x) => tur == 0 ? x.p < k * x.q : x.p <= k * x.q;
@@ -3540,6 +3931,7 @@ AdvancedItem _parcaliSoru(int a, int b, int c) {
     for (final e in adaylar)
       if (e.$2) e.$1,
   ];
+  if (gecerli.isEmpty) _kirli = true;
   final yanit = gecerli.fold(_R(0), (t, e) => t + e);
   final s1 = tur == 0 ? '<' : '≤', s2 = tur == 0 ? '≥' : '>';
   String kokYaz(int r, bool g) =>
@@ -3575,11 +3967,11 @@ String _kayik(int h) => h > 0 ? 'x − $h' : 'x + ${-h}';
 
 String _sabitEk(int k) => k == 0 ? '' : (k > 0 ? ' + $k' : ' − ${-k}');
 
-AdvancedItem _grafikDonusum(int a, int b, int c) {
+AdvancedItem _grafikDonusum(int a, int b, int c, int deneme) {
   final p = _sifirsiz(a, 12);
   final q = _sifirsiz(b, 10);
-  final h = (1 + (a + 2 * b) % 6) * ((a + b).isEven ? 1 : -1);
-  final k = (1 + (2 * a + b) % 7) * ((a ~/ 3 + b).isEven ? 1 : -1);
+  final h = (1 + (a + 2 * b + deneme) % 6) * ((a + b).isEven ? 1 : -1);
+  final k = (1 + (2 * a + b + 3 * deneme) % 7) * ((a ~/ 3 + b).isEven ? 1 : -1);
   if (c <= 3) {
     final (ifade, x, y, adim) = switch (c) {
       0 => (
@@ -3625,7 +4017,9 @@ AdvancedItem _grafikDonusum(int a, int b, int c) {
       2 => [_nokta(p, q + k), _nokta(-p, k - q), _nokta(-p, q - k)],
       _ => [_nokta(p - h, -q), _nokta(p + h, q), _nokta(-p - h, -q)],
     };
-    return secenekli(
+    // Yanıt verilen noktaya eşit olmasın.
+    if (x == p && y == q) _kirli = true;
+    return _secenek(
       'f fonksiyonunun grafiği A${_nokta(p, q)} noktasından geçmektedir. '
           'Buna göre y = $ifade fonksiyonunun grafiği hangi noktadan kesinlikle '
           'geçer?',
@@ -3669,7 +4063,8 @@ AdvancedItem _grafikDonusum(int a, int b, int c) {
       5 => [_nokta(bx, by - k), _nokta(bx, -by - k), _nokta(-bx, k - by)],
       _ => [_nokta(bx, by - k), _nokta(-bx, by + k), _nokta(bx, k - by)],
     };
-    return secenekli(
+    if (bx == p && by == q) _kirli = true;
+    return _secenek(
       'y = $ifade fonksiyonunun grafiği B${_nokta(bx, by)} noktasından '
           'geçtiğine göre y = f(x) fonksiyonunun grafiği hangi noktadan '
           'kesinlikle geçer?',
@@ -3730,13 +4125,19 @@ AdvancedItem _grafikDonusum(int a, int b, int c) {
 
 String _sagSol(int k, bool sag) => 'lim (x → ${_n(k)}${sag ? '⁺' : '⁻'}) f(x)';
 
-AdvancedItem _sureklilik(int a, int b, int c) {
+AdvancedItem _sureklilik(int a, int b, int c, int deneme) {
   if (c <= 2) {
     final (al, be) = _parcaDog[a];
     final (mu, nu, ro) = _parcaKare[b];
-    final k = const [1, 2, -1][c];
+    final k = const [
+      [1, -2, 3, 0],
+      [2, -1, -3, 1],
+      [-1, 2, -2, 3],
+    ][c][deneme % 4];
     final f = _Parcali([al, be], [mu, nu, ro], k, (a + b) % 2);
     final sol = _deg(f.p1, k), sag = _deg(f.p2, k), fk = f.deger(k);
+    // Sürekli noktada sağ ve sol limitler eşittir; soru önemsizleşir.
+    if (sol == sag) _kirli = true;
     final limitler =
         'x değeri ${_n(k)} sayısına soldan yaklaşırken birinci, sağdan '
         'yaklaşırken ikinci kural kullanılır: ${_sagSol(k, false)} = '
@@ -3781,8 +4182,27 @@ AdvancedItem _sureklilik(int a, int b, int c) {
     // x = k noktasında süreklilik: m·k + β = k² + γk + δ.
     final gamma = const [-3, -2, -1, 1, 2][a % 5];
     final delta = const [-4, -1, 2, 5, 3][a ~/ 5];
-    final m = _sifirsiz(b, 10);
-    final k = const [2, -1, 3][c - 3];
+    // m kökteki katsayılara eşit olmasın.
+    final m = _uygun(
+      [
+        for (var x = -10; x <= 10; x++)
+          if (x != 0) x,
+        -11,
+        11,
+        -12,
+        12,
+        -13,
+        13,
+      ],
+      b,
+      (x) => !{gamma, -gamma, delta, -delta}.contains(x),
+    );
+    // c'ye göre ayrık kırılma noktaları: kalıp aynı, kökler farklı kalsın.
+    final k = const [
+      [2, -2, 4],
+      [-1, 1, -4],
+      [3, -3, 5],
+    ][c - 3][deneme % 3];
     final sag = [1, gamma, delta];
     final hedef = _deg(sag, k);
     final be = hedef - m * k;
@@ -3809,46 +4229,65 @@ AdvancedItem _sureklilik(int a, int b, int c) {
   if (c == 6) {
     // Kaldırılabilir süreksizlik: (x − r)(x − s)/(x − r).
     final r = _sifirsiz(a, 12);
-    final s = _uygun(_sifirsizAralik(-11, 11), b, (x) => x != r);
-    final pay = [1, -(r + s), r * s];
-    final yanit = r - s;
-    return _tam(
-      'Gerçek sayılarda tanımlı f fonksiyonu x ≠ ${_n(r)} için f(x) = '
-          '(${_pol(pay)})/(${_pol([1, -r])}), x = ${_n(r)} için f(x) = m '
-          'biçiminde tanımlanıyor. f fonksiyonu x = ${_n(r)} noktasında sürekli '
-          'olduğuna göre m kaçtır?',
-      yanit,
-      [r + s, s - r, r * s, 0],
-      'Pay (${_pol([1, -r])})·(${_pol([1, -s])}) biçiminde çarpanlarına '
-          'ayrılır; x ≠ ${_n(r)} için f(x) = ${_pol([1, -s])} olur. Süreklilik '
-          'için m = ${_n(r)} − ${_p(s)} = ${_n(yanit)} olmalıdır.',
+    AdvancedItem kur(int s) {
+      final pay = [1, -(r + s), r * s];
+      final yanit = r - s;
+      return _tam(
+        'Gerçek sayılarda tanımlı f fonksiyonu x ≠ ${_n(r)} için f(x) = '
+            '(${_pol(pay)})/(${_pol([1, -r])}), x = ${_n(r)} için f(x) = m '
+            'biçiminde tanımlanıyor. f fonksiyonu x = ${_n(r)} noktasında sürekli '
+            'olduğuna göre m kaçtır?',
+        yanit,
+        [r + s, s - r, r * s, 0],
+        'Pay (${_pol([1, -r])})·(${_pol([1, -s])}) biçiminde çarpanlarına '
+            'ayrılır; x ≠ ${_n(r)} için f(x) = ${_pol([1, -s])} olur. Süreklilik '
+            'için m = ${_n(r)} − ${_p(s)} = ${_n(yanit)} olmalıdır.',
+      );
+    }
+
+    return kur(
+      _temizOge(
+        'sureklilik6-$a',
+        [
+          for (final x in _sifirsizAralik(-15, 15))
+            if (x != r) x,
+        ],
+        b,
+        kur,
+      ),
     );
   }
   if (c == 7) {
     const kokler = [1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6];
     final r = kokler[a % 12];
     final al = 1 + a ~/ 12;
-    final d = _sifirsiz(b, 10);
-    final kup = r * r * r;
-    final pay = [al, 0, 0, -al * kup];
-    final yanit = 3 * al * r * r + d;
-    return _tam(
-      'Gerçek sayılarda tanımlı f fonksiyonu x ≠ ${_n(r)} için f(x) = '
-          '(${_pol(pay)})/(${_pol([1, -r])})${_sabitEk(d)}, x = ${_n(r)} için '
-          'f(x) = m biçiminde tanımlanıyor. f fonksiyonu x = ${_n(r)} noktasında '
-          'sürekli olduğuna göre m kaçtır?',
-      yanit,
-      [al * r * r + d, 3 * al * r * r, 2 * al * r * r + d, d],
-      '${_pol([1, 0, 0, -kup])} = (${_pol([1, -r])})·(${_pol([1, r, r * r])}) '
-          'olduğundan x ≠ ${_n(r)} için f(x) = ${al == 1 ? '' : '$al·'}'
-          '(${_pol([1, r, r * r])})${_sabitEk(d)} olur. Süreklilik için m, bu '
-          'ifadenin x = ${_n(r)} için değeridir: ${al == 1 ? '' : '$al·'}'
-          '${3 * r * r}${_sabitEk(d)} = ${_n(yanit)}.',
-    );
+    AdvancedItem kur(int d) {
+      final kup = r * r * r;
+      final pay = [al, 0, 0, -al * kup];
+      final yanit = 3 * al * r * r + d;
+      return _tam(
+        'Gerçek sayılarda tanımlı f fonksiyonu x ≠ ${_n(r)} için f(x) = '
+            '(${_pol(pay)})/(${_pol([1, -r])})${_sabitEk(d)}, x = ${_n(r)} için '
+            'f(x) = m biçiminde tanımlanıyor. f fonksiyonu x = ${_n(r)} noktasında '
+            'sürekli olduğuna göre m kaçtır?',
+        yanit,
+        [al * r * r + d, 3 * al * r * r, 2 * al * r * r + d, d],
+        '${_pol([1, 0, 0, -kup])} = (${_pol([1, -r])})·(${_pol([1, r, r * r])}) '
+            'olduğundan x ≠ ${_n(r)} için f(x) = ${al == 1 ? '' : '$al·'}'
+            '(${_pol([1, r, r * r])})${_sabitEk(d)} olur. Süreklilik için m, bu '
+            'ifadenin x = ${_n(r)} için değeridir: ${al == 1 ? '' : '$al·'}'
+            '${3 * r * r}${_sabitEk(d)} = ${_n(yanit)}.',
+      );
+    }
+
+    return kur(_temizOge('sureklilik7-$a', _sifirsizAralik(-15, 15), b, kur));
   }
   // c = 8, 9: iki kırılma noktası, iki parametre.
   final aa = _sifirsiz(a, 12), bb = _sifirsiz(b, 10);
-  final (k1, k2, gamma) = c == 8 ? (-1, 2, 1) : (1, 3, -2);
+  final (k1, k2, gamma) = const [
+    [(-1, 2, 1), (-2, 1, 1), (-1, 3, 2), (1, 3, -1)],
+    [(1, 3, -2), (-1, 2, -2), (2, 4, -1), (-2, 1, 3)],
+  ][c - 8][deneme % 4];
   final orta = [1, 0, gamma];
   final c1 = _deg(orta, k1) - aa * k1, c3 = _deg(orta, k2) - bb * k2;
   final yanit = c == 8 ? aa + bb : aa * bb;
@@ -3877,14 +4316,19 @@ AdvancedItem _sureklilik(int a, int b, int c) {
 // 14 · Zincir kuralı
 // ---------------------------------------------------------------------------
 
-/// (p, x₀) çiftleri: 2x₀ + p ve 3x₀² + p sıfır olmaz (türev sıfır çıkmaz).
+/// (p, x₀) çiftleri: 2x₀ + p ve 3x₀² + p ne 0 ne 1 olur (türev sıfır çıkmaz;
+/// iç türevi unutan doğru yanıtı bulmaz).
 final List<(int, int)> _zincirCift = [
   for (final x0 in const [1, 2, -1, 3, -2])
     for (final p in const [-3, -2, -1, 1, 2, 3, -4, 4])
-      if (2 * x0 + p != 0 && 3 * x0 * x0 + p != 0) (p, x0),
+      if (2 * x0 + p != 0 &&
+          3 * x0 * x0 + p != 0 &&
+          2 * x0 + p != 1 &&
+          3 * x0 * x0 + p != 1)
+        (p, x0),
 ].take(25).toList();
 
-AdvancedItem _zincirKurali(int a, int b, int c) {
+AdvancedItem _zincirKurali(int a, int b, int c, int deneme) {
   switch (c) {
     case 0 || 1:
       // (αx + β)^n ya da (αx² + β)^n; iç ifadenin değeri u.
@@ -3894,56 +4338,79 @@ AdvancedItem _zincirKurali(int a, int b, int c) {
       final kare = c == 1;
       final icDeg = kare ? al * x0 * x0 : al * x0;
       // İç ifadenin sabit terimi sıfır olmasın: (αx)ⁿ zincir kuralı gerektirmez.
-      final u = _uygun(const [-2, -1, 1, 2, 3], b % 4, (x) => x != icDeg);
-      final be = u - icDeg;
-      final ic = kare ? _pol([al, 0, be]) : _pol([al, be]);
-      final icTurev = kare ? 2 * al * x0 : al;
-      final yanit = n * _us(u, n - 1) * icTurev;
-      return _tam(
-        'f(x) = (${ic})${_ust(n)} olduğuna göre f′(${_n(x0)}) değeri kaçtır?',
-        yanit,
-        [
-          n * _us(u, n - 1),
-          _us(u, n - 1) * icTurev,
-          n * _us(u, n) * icTurev,
-          (n - 1) * _us(u, n - 1) * icTurev,
-        ],
-        'Zincir kuralına göre f′(x) = $n·($ic)${n - 1 == 1 ? '' : _ust(n - 1)}'
-            '·(${kare ? _pol([2 * al, 0]) : _n(al)}) olur. x = ${_n(x0)} için iç '
-            'ifade ${_n(u)}, iç türev ${_n(icTurev)} olduğundan f′(${_n(x0)}) = '
-            '$n·${_p(u)}${n - 1 == 1 ? '' : _ust(n - 1)}·${_p(icTurev)} = '
-            '${_n(yanit)}.',
+      AdvancedItem kur(int u) {
+        final be = u - icDeg;
+        final ic = kare ? _pol([al, 0, be]) : _pol([al, be]);
+        final icTurev = kare ? 2 * al * x0 : al;
+        final yanit = n * _us(u, n - 1) * icTurev;
+        return _tam(
+          'f(x) = ($ic)${_ust(n)} olduğuna göre f′(${_n(x0)}) değeri kaçtır?',
+          yanit,
+          [
+            n * _us(u, n - 1),
+            _us(u, n - 1) * icTurev,
+            n * _us(u, n) * icTurev,
+            (n - 1) * _us(u, n - 1) * icTurev,
+          ],
+          'Zincir kuralına göre f′(x) = $n·($ic)${n - 1 == 1 ? '' : _ust(n - 1)}'
+              '·(${kare ? _pol([2 * al, 0]) : _n(al)}) olur. x = ${_n(x0)} için iç '
+              'ifade ${_n(u)}, iç türev ${_n(icTurev)} olduğundan f′(${_n(x0)}) = '
+              '$n·${_p(u)}${n - 1 == 1 ? '' : _ust(n - 1)}·${_p(icTurev)} = '
+              '${_n(yanit)}.',
+        );
+      }
+
+      return kur(
+        _temizOge(
+          'zincir$c-$a-${b ~/ 4}',
+          [
+            for (final x in const [-2, -1, 1, 2, 3, -3, 4, -4])
+              if (x != icDeg) x,
+          ],
+          b % 4,
+          kur,
+        ),
       );
     case 2 || 3:
       // (x² + px + q)^n ya da (x³ + px + q)^n.
       final (p, x0) = _zincirCift[a];
       final n = 2 + b ~/ 4;
-      final u = const [-2, -1, 1, 2][b % 4];
-      final kup = c == 3;
-      final ic0 = kup ? x0 * x0 * x0 + p * x0 : x0 * x0 + p * x0;
-      final q = u - ic0;
-      final ic = kup ? _pol([1, 0, p, q]) : _pol([1, p, q]);
-      final icTurev = kup ? 3 * x0 * x0 + p : 2 * x0 + p;
-      final icTurevYaz = kup ? _pol([3, 0, p]) : _pol([2, p]);
-      final yanit = n * _us(u, n - 1) * icTurev;
-      return _tam(
-        'f(x) = (${ic})${_ust(n)} olduğuna göre f′(${_n(x0)}) değeri kaçtır?',
-        yanit,
-        [
-          n * _us(u, n - 1),
-          _us(u, n - 1) * icTurev,
-          n * _us(u, n - 1) * (kup ? 3 * x0 * x0 : 2 * x0),
-          n * _us(icTurev, n - 1),
-        ],
-        'Zincir kuralına göre f′(x) = $n·($ic)${n - 1 == 1 ? '' : _ust(n - 1)}'
-            '·($icTurevYaz) olur. x = ${_n(x0)} için iç ifade ${_n(u)}, iç türev '
-            '${_n(icTurev)} olduğundan f′(${_n(x0)}) = $n·${_p(u)}'
-            '${n - 1 == 1 ? '' : _ust(n - 1)}·${_p(icTurev)} = ${_n(yanit)}.',
+      AdvancedItem kur(int u) {
+        final kup = c == 3;
+        final ic0 = kup ? x0 * x0 * x0 + p * x0 : x0 * x0 + p * x0;
+        final q = u - ic0;
+        final ic = kup ? _pol([1, 0, p, q]) : _pol([1, p, q]);
+        final icTurev = kup ? 3 * x0 * x0 + p : 2 * x0 + p;
+        final icTurevYaz = kup ? _pol([3, 0, p]) : _pol([2, p]);
+        final yanit = n * _us(u, n - 1) * icTurev;
+        return _tam(
+          'f(x) = ($ic)${_ust(n)} olduğuna göre f′(${_n(x0)}) değeri kaçtır?',
+          yanit,
+          [
+            n * _us(u, n - 1),
+            _us(u, n - 1) * icTurev,
+            n * _us(u, n - 1) * (kup ? 3 * x0 * x0 : 2 * x0),
+            n * _us(icTurev, n - 1),
+          ],
+          'Zincir kuralına göre f′(x) = $n·($ic)${n - 1 == 1 ? '' : _ust(n - 1)}'
+              '·($icTurevYaz) olur. x = ${_n(x0)} için iç ifade ${_n(u)}, iç türev '
+              '${_n(icTurev)} olduğundan f′(${_n(x0)}) = $n·${_p(u)}'
+              '${n - 1 == 1 ? '' : _ust(n - 1)}·${_p(icTurev)} = ${_n(yanit)}.',
+        );
+      }
+
+      return kur(
+        _temizOge(
+          'zincir$c-$a-${b ~/ 4}',
+          const [-2, -1, 1, 2, 3, -3, 4, -4],
+          b % 4,
+          kur,
+        ),
       );
     case 4 || 5:
       // h = f∘g; c = 4: f ikinci, g birinci derece; c = 5: f üçüncü, g ikinci
       // derece.
-      final x0 = 1 + (a + b) % 3;
+      final x0 = const [1, 2, 3, -1, -2][(a + b + deneme) % 5];
       if (c == 4) {
         final f = [
           1,
@@ -3969,7 +4436,7 @@ AdvancedItem _zincirKurali(int a, int b, int c) {
       }
       final ep = const [1, 2, -1, 3, -2][a % 5];
       final be = const [-4, -1, 2, 5, -3][a ~/ 5];
-      final ze = const [1, 2, -1, -2][b % 4];
+      final ze = const [3, 2, -1, -2][b % 4];
       final u = const [-2, -1, 1, 2, 3][b ~/ 4];
       final f = [ep, 0, be, 0];
       final g = [ze, u - ze * x0];
@@ -3992,8 +4459,9 @@ AdvancedItem _zincirKurali(int a, int b, int c) {
         a ~/ 4 + (c == 7 ? 7 : 0),
         (x) => x != k,
       );
-      final s = _sifirsiz(b, 10);
-      final t = _sifirsiz((a + 3 * b) % 12, 6);
+      // g′(k) = ±1 olmasın: iç türevi unutan da doğru yanıtı bulurdu.
+      final s = b < 10 ? b - 11 : b - 8;
+      final t = _sifirsiz((a + 3 * b + 5 * deneme) % 12, 6);
       // Kökte süs olarak verilen dış fonksiyon türevi; yanlış noktada türev
       // alan öğrencinin kullanacağı değer.
       final yaniltici = s == -1 ? t + 2 : t + s + 1;
@@ -4014,18 +4482,23 @@ AdvancedItem _zincirKurali(int a, int b, int c) {
       // √(αx + β); αx₀ + β = s².
       final al = const [2, 4, 6, -2, 3, 1, -4, 8, 5, -6][a % 10];
       final x0 = const [1, 2, -1][a ~/ 10];
-      final s = 1 + b;
-      final be = s * s - al * x0;
-      final yanit = _R(al, 2 * s);
-      return _ras(
-        'f(x) = √(${_pol([al, be])}) olduğuna göre f′(${_n(x0)}) değeri '
-            'kaçtır?',
-        yanit,
-        [_R(1, 2 * s), _R(al, s), _R(al * s, 2), _R(al, 2 * s * s)],
-        'f(x) = (${_pol([al, be])})^(1/2) olduğundan f′(x) = '
-            '$al/(2√(${_pol([al, be])})) olur. x = ${_n(x0)} için kök içi '
-            '${s * s} ve kökü $s olduğundan f′(${_n(x0)}) = $al/(2·$s) = '
-            '$yanit.',
+      AdvancedItem kur(int s) {
+        final be = s * s - al * x0;
+        final yanit = _R(al, 2 * s);
+        return _ras(
+          'f(x) = √(${_pol([al, be])}) olduğuna göre f′(${_n(x0)}) değeri '
+              'kaçtır?',
+          yanit,
+          [_R(1, 2 * s), _R(al, s), _R(al * s, 2), _R(al, 2 * s * s)],
+          'f(x) = (${_pol([al, be])})^(1/2) olduğundan f′(x) = '
+              '$al/(2√(${_pol([al, be])})) olur. x = ${_n(x0)} için kök içi '
+              '${s * s} ve kökü $s olduğundan f′(${_n(x0)}) = $al/(2·$s) = '
+              '$yanit.',
+        );
+      }
+
+      return kur(
+        _temizOge('zincir8-$a', [for (var x = 1; x <= 30; x++) x], b, kur),
       );
     default:
       // √(x² + q); x₀² + q = s².
@@ -4053,14 +4526,23 @@ const _konumGiris =
     'Doğrusal bir yolda hareket eden bir cismin t saniyedeki konumu metre '
     'cinsinden';
 
-AdvancedItem _konumHiz(int a, int b, int c) {
+/// Hızın sıfır olduğu anlar t₁, t₁ + fark ve |a₃|. fark = 2t₁ iken x(t₂)
+/// sabit terime, a(t₁) t² katsayısına eşit çıkardı; bu üçlüler atlanır.
+final List<(int, int, int)> _konumUclu = [
+  for (final m in const [1, 2])
+    for (final fark in const [2, 4, 6, 8])
+      for (var t1 = 1; t1 <= 5; t1++)
+        if (fark != 2 * t1) (t1, fark, m),
+].take(25).toList();
+
+AdvancedItem _konumHiz(int a, int b, int c, int deneme) {
   if (c <= 1) {
     final a3 = 1 + a % 2;
     final a2 = const [-6, -4, -3, -1, 2, 3][a ~/ 2 % 6];
     final a1 = _sifirsiz(b, 10);
     final a0 = 2 + (a + b) % 9;
     final x = [a3, a2, a1, a0];
-    final t0 = 1 + (a ~/ 12 + b) % 5;
+    final t0 = 1 + (a ~/ 12 + b + deneme) % 5;
     final v = _turevK(x), ivme = _turevK(v);
     if (c == 0) {
       final yanit = _deg(v, t0);
@@ -4094,7 +4576,7 @@ AdvancedItem _konumHiz(int a, int b, int c) {
     // x(t) = −p·t² + q·t + r: en uzak konum (hızın sıfır olduğu an).
     final p = 1 + a % 5;
     final ts = 1 + a ~/ 5 + (b % 4);
-    final r = 2 + b;
+    final r = 2 + b + 20 * (deneme % 4);
     final q = 2 * p * ts;
     final x = [-p, q, r];
     final yanit = _deg(x, ts);
@@ -4112,11 +4594,10 @@ AdvancedItem _konumHiz(int a, int b, int c) {
   // Hızı t₁ ve t₂ anlarında sıfır olan hareket:
   // x(t) = a₃t³ − (3a₃/2)(t₁ + t₂)t² + 3a₃t₁t₂t + x₀, t₁ + t₂ çift.
   // a → (t₁, t₂ − t₁, |a₃|), b → (a₃ işareti, x₀); hepsi farklıdır.
-  final t1 = 1 + a % 5;
-  final fark = 2 + 2 * ((a ~/ 5) % 3); // 2, 4, 6
+  final (t1, fark, buyukluk) = _konumUclu[a];
   final t2 = t1 + fark;
-  final a3 = (a < 15 ? 1 : 2) * (b < 10 ? 1 : -1);
-  final x0 = 3 + b % 10;
+  final a3 = buyukluk * (b < 10 ? 1 : -1);
+  final x0 = 3 + b % 10 + 10 * (deneme % 3);
   final x = [a3, -3 * a3 * (t1 + t2) ~/ 2, 3 * a3 * t1 * t2, x0];
   final v = _turevK(x), ivme = _turevK(v);
   final pol = _pol(x, 't');
@@ -4187,6 +4668,1262 @@ AdvancedItem _konumHiz(int a, int b, int c) {
             '${_pol(ivme, 't')} olduğundan a($t1) = ${_yerine(ivme, t1)} = '
             '${_n(yanit)} m/s².',
         birim: 'm/s²',
+      );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 16 · Türevle en büyük ve en küçük değer problemleri
+// ---------------------------------------------------------------------------
+
+/// Çit problemleri: (tel uzunluğu L, bölme sayısı k, duvar var mı).
+final List<(int, int, bool)> _citVeri = () {
+  final l = <(int, int, bool)>[];
+  for (var uzun = 40; uzun <= 800; uzun += 2) {
+    for (var k = 1; k <= 4; k++) {
+      for (final duvar in const [true, false]) {
+        // Duvarlı: 2(k + 1) | L; duvarsız: 4 | L ve 2(k + 1) | L.
+        final ok = duvar
+            ? uzun % (2 * (k + 1)) == 0
+            : uzun % 4 == 0 && uzun % (2 * (k + 1)) == 0;
+        if (ok) l.add((uzun, k, duvar));
+      }
+    }
+  }
+  // Ardışık sıralar farklı k ve duvar durumlarına dağılsın.
+  return [for (var i = 0; i < l.length; i++) l[i * 233 % l.length]];
+}();
+
+/// Bütçeli çit: (a, b, duvar, B); a ve b telin metre fiyatıdır (TL).
+final List<(int, int, bool, int)> _butceCit = () {
+  const fiyat = [10, 15, 20, 25, 30, 40, 50, 60];
+  final l = <(int, int, bool, int)>[];
+  for (final a in fiyat) {
+    for (final b in fiyat) {
+      if (a == b) continue;
+      for (final duvar in const [false, true]) {
+        final x = 4 * a, y = duvar ? 2 * b : 4 * b;
+        final ek = x * y ~/ x.gcd(y);
+        for (var t = 1; t <= 5; t++) {
+          if (ek * t > 40000) break;
+          l.add((a, b, duvar, ek * t));
+        }
+      }
+    }
+  }
+  return [for (var i = 0; i < l.length; i++) l[i * 101 % l.length]];
+}();
+
+/// Kenarlardan biri eksenlerde, karşı köşesi x/p + y/q = 1 doğrusunda olan
+/// dikdörtgenler için (p, q) çiftleri (p, q çift).
+final List<(int, int)> _dogruAlti = [
+  for (var p = 2; p <= 70; p += 2)
+    for (var q = 2; q <= 70; q += 2)
+      if (p != q) (p, q),
+];
+
+/// Sabit toplam ax + by = S ile en büyük çarpım: (a, b, S); a ile b
+/// aralarında asaldır.
+final List<(int, int, int)> _toplamSabit = () {
+  final l = <(int, int, int)>[];
+  for (var a = 1; a <= 10; a++) {
+    for (var b = a; b <= 10; b++) {
+      if (a.gcd(b) != 1) continue;
+      for (var s = 2 * a * b; s <= 480; s += 2 * a * b) {
+        if (a == 1 && b == 1 && s > 120) continue;
+        l.add((a, b, s));
+      }
+    }
+  }
+  return [for (var i = 0; i < l.length; i++) l[i * 211 % l.length]];
+}();
+
+/// Dikdörtgen karton kutular: (a, b, x, hacim); x tam sayıdır.
+const _kutuDikdortgen = [
+  (9, 24, 2, 200),
+  (10, 16, 2, 144),
+  (13, 48, 3, 882),
+  (14, 30, 3, 576),
+  (15, 24, 3, 486),
+  (16, 21, 3, 450),
+  (18, 48, 4, 1600),
+  (20, 32, 4, 1152),
+  (24, 45, 5, 2450),
+  (25, 40, 5, 2250),
+  (28, 60, 6, 4608),
+  (30, 48, 6, 3888),
+  (32, 42, 6, 3600),
+  (33, 40, 6, 3528),
+  (35, 56, 7, 6174),
+];
+
+/// Karışık liste: (tür, u, v, w). Tür 0–6 kutu ve parabol altı dikdörtgen,
+/// 7 sabit çarpım (u·x + v·y en küçük, xy = w), 8 sabit toplamla x²y ya da
+/// xy² en büyük (u = 1 ise x²y).
+final List<(int, int, int, int)> _karmaOpt = () {
+  final l = <(int, int, int, int)>[];
+  for (var m = 1; m <= 12; m++) {
+    l
+      ..add((0, m, 0, 0))
+      ..add((1, m, 0, 0));
+  }
+  for (var i = 0; i < _kutuDikdortgen.length; i++) {
+    l
+      ..add((2, i, 0, 0))
+      ..add((3, i, 0, 0));
+  }
+  for (var m = 1; m <= 15; m++) {
+    l.add((4, m, 0, 0));
+  }
+  for (var m = 2; m <= 21; m++) {
+    l.add((5, m, 0, 0));
+  }
+  for (var m = 1; m <= 10; m++) {
+    l.add((6, m, 0, 0));
+  }
+  for (var a = 1; a <= 6; a++) {
+    for (var b = a; b <= 9; b++) {
+      if (a.gcd(b) != 1) continue;
+      for (var p = 2; p <= 2000; p++) {
+        if (_kokAyir(a * b * p).$2 == 1) l.add((7, a, b, p));
+      }
+    }
+  }
+  for (var s = 6; s <= 60; s += 3) {
+    l
+      ..add((8, 1, s, 0))
+      ..add((8, 2, s, 0));
+  }
+  // 678 öğe; 7 ile 678 aralarında asaldır.
+  return [for (var i = 0; i < l.length; i++) l[i * 7 % l.length]];
+}();
+
+/// Kapalı aralıkta mutlak uç değer: (a, r1, r2, d, p, q);
+/// f′(x) = 3a(x − r1)(x − r2).
+final List<(int, int, int, int, int, int)> _aralikUc = () {
+  final l = <(int, int, int, int, int, int)>[];
+  for (final a in const [1, -1, 2, -2]) {
+    for (var r1 = -3; r1 <= 3; r1++) {
+      for (var fark = 2; fark <= 4; fark += 2) {
+        final r2 = r1 + fark;
+        for (final d in const [-5, 1, 6, -2, 3]) {
+          for (final (dp, dq) in const [
+            (1, 1),
+            (2, 1),
+            (1, 2),
+            (0, 2),
+            (2, 0),
+            (3, 1),
+          ]) {
+            l.add((a, r1, r2, d, r1 - dp, r2 + dq));
+          }
+        }
+      }
+    }
+  }
+  return [for (var i = 0; i < l.length; i++) l[i * 151 % l.length]];
+}();
+
+AdvancedItem _optimizasyon(int a, int b, int c) {
+  final adet = switch (c) {
+    0 || 1 => _citVeri.length,
+    2 || 3 => _butceCit.length,
+    4 => _dogruAlti.length,
+    5 => _toplamSabit.length,
+    6 => _karmaOpt.length,
+    _ => _aralikUc.length,
+  };
+  final t = _temizSec('opt$c', adet, (t) => _optimizasyonHam(t, c), a + 25 * b);
+  return _optimizasyonHam(t, c);
+}
+
+/// j: c'ye göre veri listesindeki sıra.
+AdvancedItem _optimizasyonHam(int j, int c) {
+  if (c <= 1) {
+    final (uzun, k, duvar) = _citVeri[j];
+    final x = uzun ~/ (2 * (k + 1));
+    final y = duvar ? uzun ~/ 2 : uzun ~/ 4;
+    final alan = x * y;
+    final bolme = k == 1
+        ? ''
+        : ' ve alanı ${duvar ? 'duvara dik' : 'bir kenarına paralel'} '
+              '${k - 1} tel çitle $k eş bölmeye ayıracaktır';
+    final giris =
+        'Bir çiftçi $uzun m uzunluğundaki tel ile '
+        '${duvar ? 'bir kenarı düz bir duvar olan ' : ''}dikdörtgen biçimli bir '
+        'alanı ${k == 1 ? 'çevirecektir' : 'çevirecek$bolme'}. '
+        '${duvar ? 'Duvar tarafına tel çekilmeyecektir. ' : ''}';
+    final adlar = duvar
+        ? 'Duvara dik kenarların her biri x m, duvara paralel kenar y m olsun'
+        : (k == 1
+              ? 'Karşılıklı iki kenarın her biri x m, öteki iki kenarın her '
+                    'biri y m olsun'
+              : 'Bölme çitlerine paralel kenarların her biri x m, öteki '
+                    'kenarlar y m olsun');
+    final kur = duvar
+        ? '${k + 1}x + y = $uzun ve A = x·y = x·($uzun − ${k + 1}x)'
+        : '${k + 1}x + 2y = $uzun ve A = x·y = x·($uzun − ${k + 1}x)/2';
+    final turev = duvar
+        ? 'A′(x) = $uzun − ${2 * (k + 1)}x = 0'
+        : 'A′(x) = ($uzun − ${2 * (k + 1)}x)/2 = 0';
+    final cozum =
+        '$adlar: $kur olur. $turev eşitliğinden x = $x m, y = $y m bulunur.';
+    if (c == 0) {
+      return _tam(
+        '$girisÇevrilebilecek alan en çok kaç m² olur?',
+        alan,
+        k == 1
+            // Bölmesiz: duvarı unutma ya da duvar varsayma.
+            ? (duvar
+                  ? [uzun * uzun ~/ 16, x * (uzun - x), 2 * alan]
+                  : [uzun * uzun ~/ 8, uzun * uzun ~/ 4])
+            : [
+                duvar ? uzun * uzun ~/ 8 : uzun * uzun ~/ 16,
+                (uzun ~/ 4) * (uzun ~/ 4),
+                duvar ? x * (uzun - k * x) : x * (uzun - (k + 1) * x),
+                2 * alan,
+              ],
+        '$cozum En büyük alan $x·$y = $alan m² olur.',
+        birim: 'm²',
+        pozitif: true,
+      );
+    }
+    return _tam(
+      '$girisÇevrilen alanın en büyük olması için '
+      '${duvar ? 'duvara dik her bir kenar' : (k == 1 ? 'dikdörtgenin bir kenarı' : 'bölme çitlerine paralel her bir kenar')} '
+      'kaç metre olmalıdır?',
+      x,
+      [uzun ~/ 4, y, 2 * x, x + k],
+      cozum,
+      birim: 'm',
+      pozitif: true,
+    );
+  }
+  if (c <= 3) {
+    // Bütçeli çit: 2a·x + 2b·y = B (duvarsız) ya da 2a·x + b·y = B (duvarlı).
+    final (fa, fb, duvar, butce) = _butceCit[j];
+    final x = butce ~/ (4 * fa);
+    final y = duvar ? butce ~/ (2 * fb) : butce ~/ (4 * fb);
+    final alan = x * y;
+    final giris = duvar
+        ? 'Bir kenarı duvar olan dikdörtgen biçimli bir bahçenin öteki üç '
+              'kenarına tel çekilecektir. Duvara dik kenarlar için telin '
+              'metresi $fa TL, duvara paralel kenar için $fb TL\'dir.'
+        : 'Dikdörtgen biçimli bir bahçenin dört kenarına tel çekilecektir. '
+              'Karşılıklı iki kenar için telin metresi $fa TL, diğer iki kenar '
+              'için $fb TL\'dir.';
+    final kur = duvar
+        ? '${2 * fa}x + ${fb}y = $butce'
+        : '${2 * fa}x + ${2 * fb}y = $butce';
+    final cozum =
+        'Fiyatı $fa TL olan kenarlar x m, öteki ${duvar ? 'kenar' : 'kenarlar'} '
+        'y m olsun: $kur olur. A = x·y ifadesinde y yerine yazılıp türev '
+        'sıfıra eşitlenirse x = $x m ve y = $y m bulunur.';
+    if (c == 2) {
+      return _tam(
+        '$giris Bu iş için $butce TL harcanacağına göre bahçenin alanı en çok '
+            'kaç m² olur?',
+        alan,
+        [
+          duvar
+              ? butce * butce ~/ (16 * fa * fb)
+              : butce * butce ~/ (8 * fa * fb),
+          2 * alan,
+          (butce ~/ (2 * (fa + fb))) * (butce ~/ (2 * (fa + fb))),
+          x * x,
+        ],
+        '$cozum En büyük alan $x·$y = $alan m² olur.',
+        birim: 'm²',
+        pozitif: true,
+      );
+    }
+    final tel = duvar ? 2 * x + y : 2 * x + 2 * y;
+    return _tam(
+      '$giris Bu iş için $butce TL harcanacaktır. Bahçenin alanı en büyük '
+          'olduğunda kullanılan telin toplam uzunluğu kaç metre olur?',
+      tel,
+      [x + y, 2 * tel, duvar ? 2 * x + 2 * y : 2 * x + y, 4 * x],
+      '$cozum Kullanılan tel ${duvar ? '2·$x + $y' : '2·$x + 2·$y'} = $tel m '
+          'olur.',
+      birim: 'm',
+      pozitif: true,
+    );
+  }
+  if (c == 4) {
+    final (p, q) = _dogruAlti[j * 11 % _dogruAlti.length];
+    final g = p.gcd(q);
+    final dogru =
+        '${_pol([q ~/ g, 0])} + ${_pol([p ~/ g, 0], 'y')} = ${p * q ~/ g}';
+    final alan = p * q ~/ 4;
+    return _tam(
+      'Analitik düzlemin birinci bölgesinde bir köşesi orijinde, iki kenarı '
+          'koordinat eksenleri üzerinde ve orijinin karşısındaki köşesi $dogru '
+          'doğrusu üzerinde olan dikdörtgenlerin alanı en çok kaç birimkaredir?',
+      alan,
+      [p * q ~/ 2, p * q, p * q ~/ 8, (p + q) * (p + q) ~/ 16],
+      'Doğru x eksenini x = $p, y eksenini y = $q noktasında keser. Köşe '
+          '(x, y) için y = $q − ${_q(q, p)}x olur; A(x) = x·($q − ${_q(q, p)}x). '
+          'A′(x) = $q − ${_q(2 * q, p)}x = 0 eşitliğinden x = ${p ~/ 2}, y = '
+          '${q ~/ 2} ve en büyük alan ${p ~/ 2}·${q ~/ 2} = $alan bulunur.',
+      pozitif: true,
+    );
+  }
+  if (c == 5) {
+    final (ka, kb, s) = _toplamSabit[j];
+    final x = s ~/ (2 * ka), y = s ~/ (2 * kb);
+    final yanit = x * y;
+    final kisit = '${_pol([ka, 0])} + ${_pol([kb, 0], 'y')} = $s';
+    return _tam(
+      'Pozitif x ve y gerçek sayıları için $kisit olduğuna göre x·y '
+          'çarpımının en büyük değeri kaçtır?',
+      yanit,
+      [s * s ~/ 4, (s ~/ (ka + kb)) * (s ~/ (ka + kb)), 2 * yanit, yanit ~/ 2],
+      'y = ($s − ${_pol([ka, 0])})/$kb yazılırsa x·y = x·($s − '
+          '${_pol([ka, 0])})/$kb olur. Türev ($s − ${_pol([2 * ka, 0])})/$kb = 0 '
+          'eşitliğinden x = $x, y = $y bulunur. En büyük çarpım $x·$y = $yanit.',
+      pozitif: true,
+    );
+  }
+  if (c == 6) {
+    final (tur, u, v, w) = _karmaOpt[j];
+    switch (tur) {
+      case 0 || 1:
+        final s = 6 * u, hacim = 16 * u * u * u;
+        final giris =
+            'Bir kenarı $s cm olan kare biçimindeki bir kartonun dört '
+            'köşesinden eş kareler kesilip kenarlar katlanarak üstü açık bir '
+            'kutu yapılacaktır.';
+        final cozum =
+            'Kesilen karenin kenarı x ise V(x) = x·($s − 2x)² olur. V′(x) = '
+            '($s − 2x)·($s − 6x) = 0 ve 0 < x < ${s ~/ 2} koşulundan x = $u '
+            'cm bulunur.';
+        if (tur == 0) {
+          return _tam(
+            '$giris Kutunun hacminin en büyük olması için kesilen karelerin '
+            'bir kenarı kaç cm olmalıdır?',
+            u,
+            [s ~/ 4, s ~/ 2, 2 * u, s ~/ 3],
+            cozum,
+            birim: 'cm',
+            pozitif: true,
+          );
+        }
+        return _tam(
+          '$giris Kutunun hacmi en çok kaç cm³ olur?',
+          hacim,
+          [
+            u * (s - 4 * u) * (s - 4 * u),
+            2 * hacim,
+            (s ~/ 3) * (s ~/ 3) * (s ~/ 6),
+            u * s * s,
+          ],
+          '$cozum En büyük hacim $u·${s - 2 * u}² = $hacim cm³ olur.',
+          birim: 'cm³',
+          pozitif: true,
+        );
+      case 2 || 3:
+        final (ka, kb, x, hacim) = _kutuDikdortgen[u];
+        final giris =
+            'Kenarları $ka cm ve $kb cm olan dikdörtgen biçimindeki bir '
+            'kartonun dört köşesinden eş kareler kesilip kenarlar katlanarak '
+            'üstü açık bir kutu yapılacaktır.';
+        final cozum =
+            'Kesilen karenin kenarı x ise V(x) = x·($ka − 2x)·($kb − 2x) olur. '
+            'V′(x) = 12x² − ${4 * (ka + kb)}x + ${ka * kb} = 0 eşitliğinin '
+            '0 < x < ${_R(ka, 2)} aralığındaki kökü x = $x cm olur.';
+        if (tur == 2) {
+          return _tam(
+            '$giris Kutunun hacminin en büyük olması için kesilen karelerin '
+            'bir kenarı kaç cm olmalıdır?',
+            x,
+            [x + 1, ka ~/ 6, kb ~/ 6, 2 * x],
+            cozum,
+            birim: 'cm',
+            pozitif: true,
+          );
+        }
+        return _tam(
+          '$giris Kutunun hacmi en çok kaç cm³ olur?',
+          hacim,
+          [
+            (x + 1) * (ka - 2 * x - 2) * (kb - 2 * x - 2),
+            (x - 1) * (ka - 2 * x + 2) * (kb - 2 * x + 2),
+            x * ka * kb,
+            2 * hacim,
+          ],
+          '$cozum En büyük hacim $x·${ka - 2 * x}·${kb - 2 * x} = $hacim cm³ '
+              'olur.',
+          birim: 'cm³',
+          pozitif: true,
+        );
+      case 4:
+        final hacim = 4 * u * u * u, yuzey = 12 * u * u;
+        return _tam(
+          'Tabanı kare biçiminde, üstü açık ve hacmi $hacim cm³ olan bir kutu '
+              'yapılacaktır. Bu kutunun yapımında en az kaç cm² malzeme '
+              'kullanılır?',
+          yuzey,
+          [6 * u * u, 10 * u * u, 16 * u * u, 2 * yuzey],
+          'Taban kenarı x, yükseklik h ise x²·h = $hacim ve S = x² + 4xh = '
+              'x² + ${4 * hacim}/x olur. S′(x) = 2x − ${4 * hacim}/x² = 0 '
+              'eşitliğinden x³ = ${2 * hacim}, x = ${2 * u} cm ve h = $u cm '
+              'bulunur. En az yüzey ${4 * u * u} + 4·${2 * u}·$u = $yuzey cm².',
+          birim: 'cm²',
+          pozitif: true,
+        );
+      case 5:
+        final hacim = u * u * u, yuzey = 6 * u * u;
+        return _tam(
+          'Tabanı kare biçiminde, kapalı ve hacmi $hacim cm³ olan bir kutu '
+              'yapılacaktır. Bu kutunun yapımında en az kaç cm² malzeme '
+              'kullanılır?',
+          yuzey,
+          [5 * u * u, 4 * u * u, 8 * u * u, 2 * yuzey],
+          'Taban kenarı x, yükseklik h ise x²·h = $hacim ve S = 2x² + 4xh = '
+              '2x² + ${4 * hacim}/x olur. S′(x) = 4x − ${4 * hacim}/x² = 0 '
+              'eşitliğinden x³ = $hacim, x = $u cm ve h = $u cm bulunur; kutu '
+              'küptür. En az yüzey 6·$u² = $yuzey cm².',
+          birim: 'cm²',
+          pozitif: true,
+        );
+      case 6:
+        final h = 3 * u * u, alan = 4 * u * u * u;
+        return _tam(
+          'Bir kenarı x ekseni üzerinde, diğer iki köşesi y = $h − x² '
+              'parabolü üzerinde olan ve x ekseninin üst tarafında kalan '
+              'dikdörtgenlerin alanı en çok kaç birimkaredir?',
+          alan,
+          [2 * alan, u * h, 2 * u * u * u, alan + h],
+          'Köşeler (−x, $h − x²) ve (x, $h − x²) olsun: A(x) = 2x·($h − x²) = '
+              '${2 * h}x − 2x³. A′(x) = ${2 * h} − 6x² = 0 eşitliğinden x = $u '
+              'bulunur. En büyük alan 2·$u·${h - u * u} = $alan.',
+          pozitif: true,
+        );
+      case 7:
+        final (ka, kb, p) = (u, v, w);
+        final yanit = 2 * _kokAyir(ka * kb * p).$1;
+        final ifade = '${_pol([ka, 0])} + ${_pol([kb, 0], 'y')}';
+        return _tam(
+          'Pozitif x ve y gerçek sayıları için x·y = $p olduğuna göre $ifade '
+              'toplamının en küçük değeri kaçtır?',
+          yanit,
+          [
+            ka * p + kb,
+            if (_kokAyir(p).$2 == 1) (ka + kb) * _kokAyir(p).$1,
+            yanit ~/ 2,
+            2 * yanit,
+          ],
+          'y = $p/x yazılırsa toplam ${_pol([ka, 0])} + ${kb * p}/x olur. '
+              'Türev $ka − ${kb * p}/x² = 0 eşitliğinden x² = ${_R(kb * p, ka)} '
+              'bulunur; en küçük değer 2·√(${ka * kb * p}) = $yanit olur.',
+          pozitif: true,
+        );
+      default:
+        // x + y = S, x²·y (u = 1) ya da x·y² (u = 2) en büyük.
+        final s = v, buyukX = u == 1;
+        final x = buyukX ? 2 * s ~/ 3 : s ~/ 3, y = s - x;
+        final yanit =
+            x * x * y * (buyukX ? 1 : 0) + x * y * y * (buyukX ? 0 : 1);
+        final ifade = buyukX ? 'x²·y' : 'x·y²';
+        return _tam(
+          'Pozitif x ve y gerçek sayıları için x + y = $s olduğuna göre '
+              '$ifade ifadesinin en büyük değeri kaçtır?',
+          yanit,
+          [
+            (s ~/ 2) * (s ~/ 2) * (s - s ~/ 2),
+            buyukX ? x * y * y : x * x * y,
+            2 * yanit,
+            yanit ~/ 2,
+          ],
+          'y = $s − x yazılırsa ${buyukX ? 'x²·($s − x)' : 'x·($s − x)²'} '
+              'ifadesinin türevi ${buyukX ? 'x·(${2 * s} − 3x)' : '($s − x)·($s − 3x)'} '
+              'olur. Türevin sıfır olduğu uygun nokta x = $x, y = $y bulunur. En '
+              'büyük değer ${buyukX ? '$x²·$y' : '$x·$y²'} = $yanit.',
+          pozitif: true,
+        );
+    }
+  }
+  // c = 7, 8, 9: kapalı aralıkta en büyük ve en küçük değer.
+  final (ka, r1, r2, d, p, q) =
+      _aralikUc[(j + 500 * (c - 7)) % _aralikUc.length];
+  final f = [ka, -3 * ka * (r1 + r2) ~/ 2, 3 * ka * r1 * r2, d];
+  final noktalar = <int>{p, q, r1, r2};
+  final degerler = {for (final x in noktalar) x: _deg(f, x)};
+  final sirali = noktalar.toList()..sort();
+  final maks = degerler.values.reduce((x, y) => x > y ? x : y);
+  final min = degerler.values.reduce((x, y) => x < y ? x : y);
+  final yerelMaks = _deg(f, ka > 0 ? r1 : r2);
+  final yerelMin = _deg(f, ka > 0 ? r2 : r1);
+  final liste = [for (final x in sirali) 'f(${_n(x)}) = ${_n(degerler[x]!)}']
+      .join(', ');
+  final c1 = r1 == 0 ? 'x' : '(${_pol([1, -r1])})';
+  final c2 = r2 == 0 ? 'x' : '(${_pol([1, -r2])})';
+  final giris =
+      'f′(x) = ${_pol(_turevK(f))} = ${_n(3 * ka)}·$c1·$c2 olduğundan kritik '
+      'noktalar x = ${_n(r1)} ve x = ${_n(r2)} olur. Aralığın uçlarıyla '
+      'birlikte $liste bulunur.';
+  final aralik = '[${_n(p)}, ${_n(q)}]';
+  switch (c) {
+    case 7:
+      return _tam(
+        'f(x) = ${_pol(f)} fonksiyonunun $aralik aralığındaki en büyük değeri '
+            'kaçtır?',
+        maks,
+        // Uç değer ya bir kritik noktada ya bir uçtadır; ikisinden yanıta
+        // eşit olanı çeldirici olamaz.
+        [
+          for (final v in [yerelMaks, degerler[p]!, degerler[q]!])
+            if (v != maks) v,
+          min,
+        ],
+        '$giris En büyük değer ${_n(maks)} olur.',
+      );
+    case 8:
+      return _tam(
+        'f(x) = ${_pol(f)} fonksiyonunun $aralik aralığındaki en küçük değeri '
+            'kaçtır?',
+        min,
+        [
+          for (final v in [yerelMin, degerler[p]!, degerler[q]!])
+            if (v != min) v,
+          maks,
+        ],
+        '$giris En küçük değer ${_n(min)} olur.',
+      );
+    default:
+      return _tam(
+        'f(x) = ${_pol(f)} fonksiyonunun $aralik aralığındaki en büyük değeri '
+            'M, en küçük değeri m olduğuna göre M + m toplamı kaçtır?',
+        maks + min,
+        [yerelMaks + yerelMin, degerler[p]! + degerler[q]!, maks - min, maks],
+        '$giris M = ${_n(maks)}, m = ${_n(min)}; M + m = ${_n(maks + min)}.',
+      );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 17 · Belirsiz integral ve başlangıç koşulu
+// ---------------------------------------------------------------------------
+
+/// Kesirli katsayılı polinom yazımı: `[4/3, −2, 1, 0]` → `(4/3)x³ − 2x² + x`.
+String _polR(List<_R> k) {
+  final sb = StringBuffer();
+  final n = k.length - 1;
+  for (var i = 0; i <= n; i++) {
+    final c = k[i];
+    if (c.sifir) continue;
+    final d = n - i;
+    final m = _R(c.p.abs(), c.q);
+    final kat = m.tam ? (m.p == 1 && d > 0 ? '' : '${m.p}') : '($m)';
+    final govde = d == 0 ? '$m' : '$kat${d == 1 ? 'x' : 'x${_ust(d)}'}';
+    if (sb.isEmpty) {
+      sb.write(c.p < 0 ? '−$govde' : govde);
+    } else {
+      sb.write(c.p < 0 ? ' − $govde' : ' + $govde');
+    }
+  }
+  return sb.isEmpty ? '0' : sb.toString();
+}
+
+_R _degR(List<_R> k, int x) => k.fold(_R(0), (t, c) => t * _R(x) + c);
+
+AdvancedItem _belirsizIntegral(int a, int b, int c, int deneme) {
+  // c = 4, 5 (teğet biçimi) c = 0, 1 ile aynı veriyi kullanmasın.
+  final teget = c == 4 || c == 5;
+  final x0 = (teget ? const [1, -1, 2, 0] : const [0, 1, -1, 2])[b % 4];
+  final v = (teget ? const [4, -1, 6, -3, 2] : const [3, -2, 5, 7, -4])[b ~/ 4];
+  final fark = const [2, 3, -2, 4, -3, 1, -1][(a + b + deneme) % 7];
+  final x1 = x0 + fark;
+  if (c <= 2 || c == 4 || c == 5) {
+    // F′ polinomu, ilkeli tam katsayılı olacak biçimde ilkelden kurulur.
+    final p = const [1, 2, 3, -1, -2][a % 5];
+    final q = const [-4, -1, 2, 5, 3][a ~/ 5];
+    final r = const [2, -3, 1, 4, -5][(a + 2 * b + deneme) % 5];
+    final ilkel = switch (c) {
+      0 || 4 => [p, q, 0],
+      1 || 5 => [p, q, r, 0],
+      _ => [p, 0, q, r, 0],
+    };
+    final turev = _turevK(ilkel);
+    final sabit = v - _deg(ilkel, x0);
+    final tam = [...ilkel.sublist(0, ilkel.length - 1), sabit];
+    final yanit = _deg(tam, x1);
+    final kok = teget
+        ? 'y = f(x) eğrisinin her (x, y) noktasındaki teğetinin eğimi '
+              '${_pol(turev)} olup eğri (${_n(x0)}, ${_n(v)}) noktasından '
+              'geçmektedir. Buna göre f(${_n(x1)}) değeri kaçtır?'
+        : 'F′(x) = ${_pol(turev)} ve F(${_n(x0)}) = ${_n(v)} olduğuna göre '
+              'F(${_n(x1)}) değeri kaçtır?';
+    final ad = teget ? 'f' : 'F';
+    return _tam(
+      kok,
+      yanit,
+      [
+        _deg(ilkel, x1), // sabiti unutma
+        _deg(turev, x1), // türevin değerini yanıt sanma
+        // x₀ = 0 iken sabit verilen değerin kendisidir; o zaman işaret
+        // hataları kullanılır.
+        if (x0 == 0) ...[
+          v - _deg(ilkel, x1),
+          _deg(ilkel, x1) - v,
+        ] else ...[
+          _deg(ilkel, x1) + v, // sabiti doğrudan verilen değer sanma
+          yanit + 2 * _deg(ilkel, x0), // sabitte işaret hatası
+        ],
+      ],
+      '${teget ? 'Teğetin eğimi türevdir: f′(x) = ${_pol(turev)}. ' : ''}'
+      '$ad(x) = ∫(${_pol(turev)}) dx = ${_pol(ilkel)} + C olur. '
+      '$ad(${_n(x0)}) = ${_n(v)} koşulundan ${_n(_deg(ilkel, x0))} + C = '
+      '${_n(v)}, C = ${_n(sabit)} bulunur. $ad(${_n(x1)}) = '
+      '${_yerine(tam, x1)} = ${_n(yanit)}.',
+    );
+  }
+  if (c == 3) {
+    // F′(x) = (αx + β)²: önce açılır; ilkelin katsayıları kesirli olabilir.
+    final al = const [1, 2, 3, -1, -2][a % 5];
+    final be = const [1, -2, 3, 2, -1][a ~/ 5];
+    final turev = [al * al, 2 * al * be, be * be];
+    final ilkel = [_R(al * al, 3), _R(al * be), _R(be * be), _R(0)];
+    final sabit = _R(v) - _degR(ilkel, x0);
+    final yanit = _degR(ilkel, x1) + sabit;
+    return _ras(
+      'F′(x) = (${_pol([al, be])})² ve F(${_n(x0)}) = ${_n(v)} olduğuna göre '
+          'F(${_n(x1)}) değeri kaçtır?',
+      yanit,
+      [
+        _degR(ilkel, x1),
+        _R(_deg(turev, x1)),
+        x0 == 0 ? _R(v) - _degR(ilkel, x1) : _degR(ilkel, x1) + _R(v),
+        // İç türevi unutma (α = 1 iken bu yol doğrudur; 3'e bölmeyi unutma).
+        al == 1
+            ? _R(_us(x1 + be, 3) - _us(x0 + be, 3)) + _R(v)
+            : _R(_us(al * x1 + be, 3) - _us(al * x0 + be, 3), 3) + _R(v),
+      ],
+      'Kare açılırsa F′(x) = ${_pol(turev)} olur. F(x) = ${_polR(ilkel)} + C '
+          've F(${_n(x0)}) = ${_n(v)} koşulundan C = $sabit bulunur. '
+          'F(${_n(x1)}) = $yanit.',
+    );
+  }
+  if (c <= 7) {
+    // İkinci türevden fonksiyona: f″(x) = 6px + 2q.
+    final p = const [1, 2, -1, 3, -2][a % 5];
+    final q = const [-3, 1, 2, -1, 4][a ~/ 5];
+    final r = _sifirsiz(b, 10);
+    final s = const [2, -3, 5, 1, -4][(a + b + deneme) % 5];
+    final t0 = c == 6 ? 0 : 1;
+    final ikinci = [6 * p, 2 * q];
+    final aa = r - (3 * p * t0 * t0 + 2 * q * t0);
+    final bb = s - (p * t0 * t0 * t0 + q * t0 * t0 + aa * t0);
+    final f = [p, q, aa, bb];
+    final xs = t0 + const [2, 3, -1, -2][(a ~/ 5 + b + deneme) % 4];
+    final yanit = _deg(f, xs);
+    return _tam(
+      'f″(x) = ${_pol(ikinci)}, f′(${_n(t0)}) = ${_n(r)} ve f(${_n(t0)}) = '
+          '${_n(s)} olduğuna göre f(${_n(xs)}) değeri kaçtır?',
+      yanit,
+      [
+        _deg([3 * p, 2 * q, aa], xs), // f′ değeri
+        _deg(ikinci, xs), // f″ değeri
+        _deg([p, q, 0, s], xs), // birinci sabiti unutma
+        // t₀ = 0 iken verilen değerler sabitlerin kendisidir.
+        t0 == 0
+            ? _deg([p, q, aa, 0], xs) // ikinci sabiti unutma
+            : _deg([p, q, r, s], xs), // verilen değerleri sabit sanma
+      ],
+      'f′(x) = ${_pol([3 * p, 2 * q, 0])} + C₁ ve f′(${_n(t0)}) = ${_n(r)} '
+          'koşulundan C₁ = ${_n(aa)} olur. f(x) = ${_pol([p, q, aa, 0])} + C₂ ve '
+          'f(${_n(t0)}) = ${_n(s)} koşulundan C₂ = ${_n(bb)} bulunur. '
+          'f(${_n(xs)}) = ${_yerine(f, xs)} = ${_n(yanit)}.',
+    );
+  }
+  // c = 8, 9: belirsiz integralden integrali alınan fonksiyona ya da
+  // katsayılara.
+  final p = const [1, 2, -1, 3, -2][a % 5];
+  // p + q ve 2p + q sıfır olmaz: a + b + c ile katsayılar toplamı ya da c
+  // aynı çıkmasın.
+  final q = const [3, -5, 5, 6, -7][a ~/ 5];
+  if (c == 8) {
+    final r = _sifirsiz(b, 10);
+    final ilkel = [p, q, r, 0];
+    final f = _turevK(ilkel);
+    final xs = const [2, -1, 3, 1, -2][(a + b + deneme) % 5];
+    final yanit = _deg(f, xs);
+    return _tam(
+      '∫ f(x) dx = ${_pol(ilkel)} + C olduğuna göre f(${_n(xs)}) değeri '
+          'kaçtır?',
+      yanit,
+      [
+        _deg(ilkel, xs),
+        _deg(_turevK(f), xs),
+        _deg([p, q, r], xs),
+        yanit + r,
+      ],
+      'Belirsiz integralin türevi integrali alınan fonksiyonu verir: '
+          'f(x) = ${_pol(f)}. f(${_n(xs)}) = ${_yerine(f, xs)} = ${_n(yanit)}.',
+    );
+  }
+  AdvancedItem kur(int r) {
+    final f = [3 * p, 2 * q, r];
+    final yanit = p + q + r;
+    return _tam(
+      '∫ (${_pol(f)}) dx = ax³ + bx² + cx + C olduğuna göre a + b + c toplamı '
+          'kaçtır?',
+      yanit,
+      [3 * p + 2 * q + r, p + q, 3 * p + q + r, yanit + 1],
+      'Kuvvet kuralıyla ∫ (${_pol(f)}) dx = ${_pol([p, q, r, 0])} + C olur. '
+          'a = ${_n(p)}, b = ${_n(q)}, c = ${_n(r)} olduğundan a + b + c = '
+          '${_n(yanit)}.',
+    );
+  }
+
+  return kur(_temizOge('belirsiz9-$a', _sifirsizAralik(-15, 15), b, kur));
+}
+
+// ---------------------------------------------------------------------------
+// 18 · İki eğri arasındaki alan
+// ---------------------------------------------------------------------------
+
+/// (k, e): üçüncü dereceden eğri ile doğru arasındaki alan için.
+final List<(int, int)> _kupAlan = [
+  for (var e = 1; e <= 4; e++)
+    for (final k in const [1, -1, 2, -2, 3, -3]) (k, e),
+  (4, 1),
+];
+
+AdvancedItem _ikiEgriAlan(int a, int b, int c, int deneme) {
+  if (c <= 5) {
+    // a → (α, d); b → (r₁, doğru ya da ikinci parabol).
+    final al = const [1, -1, 2, -2, 3][a % 5];
+    final d = 1 + a ~/ 5; // 1 … 5
+    // t: (r₁, doğrunun eğimi ya da ikinci parabolün baş katsayısı) çifti; b,
+    // yanıtı kökte yazılı bir sayıya eşit olmayan çiftlerin b'incisini seçer.
+    AdvancedItem kur(int t) {
+      final r1 = const [-3, -2, -1, 0, 1][(t + c) % 5];
+      final r2 = r1 + d;
+      final m = const [2, -1, 3, -2, 4, -3][(t ~/ 5 + c) % 6];
+      final n = const [1, -3, 4, 2, -2][(a + t) % 5];
+      // İkinci parabolün baş katsayısı ±4, ±5 ya da ±6: farkla sıfırlanmaz.
+      final egri2 = c <= 2
+          ? [0, m, n]
+          : [
+              const [4, -4, 5, -5, 6, -6][t ~/ 5],
+              const [-1, 2, -3, 1][(a + t) % 4],
+              n,
+            ];
+      final carpim = [al, -al * (r1 + r2), al * r1 * r2];
+      final egri1 = [for (var i = 0; i < 3; i++) egri2[i] + carpim[i]];
+      final alan = _R(al.abs() * d * d * d, 6);
+      final String ikinci;
+      if (c <= 2) {
+        ikinci = switch (c) {
+          0 => 'y = ${_pol([m, n])} doğrusu',
+          1 =>
+            '${_pol([m, 0])} − y ${n < 0 ? '−' : '+'} ${n.abs()} = 0 doğrusu',
+          _ =>
+            'A(${_n(r1 - 1)}, ${_n(m * (r1 - 1) + n)}) ve '
+                'B(${_n(r2 + 1)}, ${_n(m * (r2 + 1) + n)}) noktalarından geçen '
+                'doğru',
+        };
+      } else {
+        ikinci = switch (c) {
+          3 => 'y = ${_pol(egri2)} parabolü',
+          4 => 'y = ${_pol(egri2)} eğrisi',
+          _ => 'y = ${_pol(egri2)} fonksiyonunun grafiği',
+        };
+      }
+      final kup = al.abs() * d * d * d;
+      final carpanlar =
+          '${_n(al)}·${r1 == 0 ? 'x' : '(${_pol([1, -r1])})'}·(${_pol([1, -r2])})';
+      return _ras(
+        'y = ${_pol(egri1)} parabolü ile $ikinci arasında kalan kapalı '
+            'bölgenin alanı kaç birimkaredir?',
+        alan,
+        [
+          _R(kup, 3),
+          _R(kup, 2),
+          _R(d * d * d, 6),
+          alan * _R(2),
+          _R(al.abs() * d * d, 2),
+        ],
+        '${c == 2 ? 'Doğrunun denklemi y = ${_pol([m, n])} olur. ' : ''}'
+            '${c == 1 ? 'Doğru y = ${_pol([m, n])} biçiminde yazılır. ' : ''}'
+            'İki eğrinin farkı ${_pol(carpim)} = $carpanlar olduğundan eğriler '
+            'x = ${_n(r1)} ve x = ${_n(r2)} noktalarında kesişir. Alan '
+            '∫${_alt(r1)}${_ust(r2)} |${_pol(carpim)}| dx = ${al.abs()}·$d³/6 = '
+            '$alan birimkaredir.',
+        pozitif: true,
+      );
+    }
+
+    return kur(
+      _temizOge('alan$c-$a', [for (var t = 0; t < 30; t++) t], b, kur),
+    );
+  }
+  // c = 6 … 9: üçüncü dereceden eğri ile doğru; kesişimler r − e, r, r + e.
+  final (ka, e) = _kupAlan[a];
+  final r = const [0, 1, -1, 2][c - 6];
+  // Doğru adayları: (eğim, sabit).
+  final dogrular = [
+    for (final n0 in const [2, -1, 4, -3, 5, -2])
+      for (final m0 in const [3, -2, 1, -1, 2, 4, -3]) [m0, n0],
+  ];
+  AdvancedItem kur(List<int> dogru) {
+    final kup = [
+      ka,
+      -3 * ka * r,
+      3 * ka * r * r - ka * e * e + dogru[0],
+      -ka * r * r * r + ka * e * e * r + dogru[1],
+    ];
+    final alan = _R(ka.abs() * e * e * e * e, 2);
+    final fark = r == 0
+        ? '${_n(ka)}·x·(x² − ${e * e})'
+        : '${_n(ka)}·(${_pol([1, -r])})·((${_pol([1, -r])})² − ${e * e})';
+    return _ras(
+      'y = ${_pol(kup)} eğrisi ile y = ${_pol(dogru)} doğrusu arasında kalan '
+          'bölgelerin alanları toplamı kaç birimkaredir?',
+      alan,
+      [_R(0), alan / _R(2), alan * _R(2), _R(ka.abs() * e * e * e * e, 4)],
+      'Eğri ile doğrunun farkı $fark olduğundan kesişim noktaları '
+          'x = ${_n(r - e)}, x = ${_n(r)} ve x = ${_n(r + e)} olur. İki bölge '
+          'simetriktir; her birinin alanı ${ka.abs()}·$e⁴/4 = ${alan / _R(2)} '
+          'olduğundan toplam alan $alan birimkaredir.',
+      pozitif: true,
+    );
+  }
+
+  return kur(_temizOge('alan$c-$a', dogrular, b, kur));
+}
+
+// ---------------------------------------------------------------------------
+// 19 · Belirli integralin özellikleri
+// ---------------------------------------------------------------------------
+
+String _intYaz(int alt, int ust, String f) => '∫${_alt(alt)}${_ust(ust)} $f dx';
+
+AdvancedItem _integralOzellik(int a, int b, int c, int deneme) {
+  final p = _sifirsiz(a, 12); // −12 … 13
+  // c = 0'da p + q = 0 ya da p + q = pq, c = 1'de q = p ya da q = 2p iken bir
+  // hatalı yol doğru yanıtı verirdi; bu q değerleri atlanır.
+  final q = _uygun(
+    [
+      for (var x = -10; x <= 10; x++)
+        if (x != 0) x,
+      -11,
+      11,
+      -12,
+      12,
+    ],
+    b,
+    (x) => switch (c) {
+      0 => x != -p && p + x != p * x,
+      1 => x != p && x != 2 * p,
+      _ => true,
+    },
+  );
+  switch (c) {
+    case 0 || 1:
+      final x0 = const [-2, 0, 1, -1, 2][(a + b + deneme) % 5];
+      final x1 = x0 + 2 + (b + deneme) % 3, x2 = x1 + 1 + (a + deneme) % 4;
+      if (c == 0) {
+        return _tam(
+          '${_intYaz(x0, x1, 'f(x)')} = ${_n(p)} ve ${_intYaz(x1, x2, 'f(x)')} '
+              '= ${_n(q)} olduğuna göre ${_intYaz(x0, x2, 'f(x)')} değeri kaçtır?',
+          p + q,
+          [p - q, q - p, p * q, -(p + q)],
+          'Belirli integralde ardışık aralıklar birleştirilebilir: '
+              '${_intYaz(x0, x2, 'f(x)')} = ${_intYaz(x0, x1, 'f(x)')} + '
+              '${_intYaz(x1, x2, 'f(x)')} = ${_n(p)} + ${_p(q)} = ${_n(p + q)}.',
+        );
+      }
+      return _tam(
+        '${_intYaz(x0, x2, 'f(x)')} = ${_n(p)} ve ${_intYaz(x1, x2, 'f(x)')} '
+            '= ${_n(q)} olduğuna göre ${_intYaz(x1, x0, 'f(x)')} değeri kaçtır?',
+        q - p,
+        [p - q, p + q, -(p + q), p],
+        '${_intYaz(x0, x1, 'f(x)')} = ${_n(p)} − ${_p(q)} = ${_n(p - q)} olur. '
+            'Sınırlar yer değiştirince işaret değişir: '
+            '${_intYaz(x1, x0, 'f(x)')} = ${_n(q - p)}.',
+      );
+    case 2 || 3:
+      // Aralık uzunluğu en az 2: sabit terimi uzunlukla çarpmayı unutan
+      // doğru yanıtı bulmasın.
+      final x0 = const [0, 1, -1, 2, -2][(a + deneme) % 5];
+      final x1 = x0 + 2 + (b + deneme) % 4;
+      final al = const [2, 3, -1, -2, 4][a ~/ 5];
+      final be = c == 2 ? const [1, -3, 2, -2, 3][b ~/ 4] : 0;
+      // c = 3'te sabit terim q'dur; b'yi kökte o taşır.
+      final ga = c == 2 ? const [5, -2, 3, 1, -4][(a + b + deneme) % 5] : q;
+      final fYaz = _pol([al, 0], 'f(x)');
+      final gYaz = be.abs() == 1 ? 'g(x)' : '${be.abs()}g(x)';
+      final ifade = c == 2
+          ? '($fYaz ${be < 0 ? '−' : '+'} $gYaz${_sabitEk(ga)})'
+          : '($fYaz${_sabitEk(ga)})';
+      final yanit = al * p + be * q + ga * (x1 - x0);
+      final veri = c == 2
+          ? '${_intYaz(x0, x1, 'f(x)')} = ${_n(p)} ve '
+                '${_intYaz(x0, x1, 'g(x)')} = ${_n(q)}'
+          : '${_intYaz(x0, x1, 'f(x)')} = ${_n(p)}';
+      final gTerim = c == 2
+          ? ' ${be < 0 ? '−' : '+'} ${be.abs()}·${_p(q)}'
+          : '';
+      return _tam(
+        '$veri olduğuna göre ${_intYaz(x0, x1, ifade)} değeri kaçtır?',
+        yanit,
+        c == 2
+            ? [
+                al * p + be * q + ga,
+                al * p + be * q,
+                p + q + ga * (x1 - x0),
+                al * p - be * q + ga * (x1 - x0),
+              ]
+            : [
+                al * p + ga, // uzunlukla çarpmayı unutma
+                al * p, // sabiti unutma
+                p + ga * (x1 - x0), // katsayıyı unutma
+                al * p - ga * (x1 - x0), // işaret hatası
+              ],
+        'İntegral terimlere ayrılır ve sabit çarpanlar dışarı alınır: '
+            '${_n(al)}·${_p(p)}$gTerim + ${_n(ga)}·(${_n(x1)} − ${_p(x0)}) = '
+            '${_n(yanit)}.',
+      );
+    case 4 || 5:
+      final ust = 2 + (b + deneme) % 5;
+      final k = q;
+      if (c == 4) {
+        // f tek: ∫₋ᵤ⁰ f = −∫₀ᵘ f.
+        final yanit = -p + k * ust;
+        return _tam(
+          'f tek fonksiyon ve ${_intYaz(0, ust, 'f(x)')} = ${_n(p)} olduğuna '
+              'göre ${_intYaz(-ust, 0, '(f(x)${_sabitEk(k)})')} değeri kaçtır?',
+          yanit,
+          [p + k * ust, -p, -p - k * ust, k * ust],
+          'f tek olduğundan ${_intYaz(-ust, 0, 'f(x)')} = −${_p(p)} = '
+              '${_n(-p)} olur. Sabitin integrali ${_n(k)}·$ust = ${_n(k * ust)} '
+              'olduğundan sonuç ${_n(yanit)} bulunur.',
+        );
+      }
+      // f çift: ∫₋ᵤᵘ f = 2∫₀ᵘ f.
+      final yanit = 2 * p + 2 * k * ust;
+      return _tam(
+        'f çift fonksiyon ve ${_intYaz(0, ust, 'f(x)')} = ${_n(p)} olduğuna '
+            'göre ${_intYaz(-ust, ust, '(f(x)${_sabitEk(k)})')} değeri kaçtır?',
+        yanit,
+        [p + 2 * k * ust, 2 * p + k * ust, 2 * k * ust, 2 * p],
+        'f çift olduğundan ${_intYaz(-ust, ust, 'f(x)')} = 2·${_p(p)} = '
+            '${_n(2 * p)} olur. Sabitin integrali ${_n(k)}·(${_n(ust)} − '
+            '(−$ust)) = ${_n(2 * k * ust)} olduğundan sonuç ${_n(yanit)} '
+            'bulunur.',
+      );
+    case 6 || 7:
+      // Simetrik aralıkta polinom: tek dereceli terimler sıfırlanır.
+      final ust = 1 + a ~/ 5;
+      final k2 =
+          3 *
+          (c == 6
+              ? const [1, -1, 2, -2, 3][a % 5]
+              : const [4, -4, 5, -5, -3][a % 5]);
+      final k0 = _sifirsiz(b, 10);
+      final k3 = const [1, -2, 3, -1, 2][(a + b + deneme) % 5];
+      final k1 = const [-4, 5, -3, 2, 1][(a + 2 * b + deneme) % 5];
+      final f = [k3, k2, k1, k0];
+      final cift = k2 * ust * ust * ust ~/ 3 + k0 * ust;
+      final yanit = 2 * cift;
+      final tumu =
+          _R(k3 * _us(ust, 4), 4) +
+          _R(k2 * _us(ust, 3), 3) +
+          _R(k1 * ust * ust, 2) +
+          _R(k0 * ust);
+      return _ras(
+        '${_intYaz(-ust, ust, '(${_pol(f)})')} değeri kaçtır?',
+        _R(yanit),
+        [tumu, _R(cift), tumu * _R(2), _R(2 * k0 * ust)],
+        '${_pol([k3, 0, k1, 0])} tek fonksiyon olduğundan [−$ust, $ust] '
+            'aralığındaki integrali sıfırdır. Geriye 2·∫₀${_ust(ust)} '
+            '(${_pol([k2, 0, k0])}) dx = 2·(${_n(k2 * _us(ust, 3) ~/ 3)} + '
+            '${_p(k0 * ust)}) = ${_n(yanit)} kalır.',
+      );
+    default:
+      // Aralık farkı ve doğrusallık birlikte.
+      final x0 = const [0, 1, -1, 2, -2][(a + deneme) % 5];
+      final x1 = x0 + 2 + (a ~/ 5 + deneme) % 3;
+      final x2 = x1 + 1 + (b + deneme) % 3;
+      final al = c == 8 ? 2 : 3;
+      final ga = const [1, -2, 3, -1, 4][(b ~/ 4 + deneme) % 5];
+      final toplam = p + q;
+      final yanit = al * p + ga * (x1 - x0);
+      return _tam(
+        '${_intYaz(x0, x2, 'f(x)')} = ${_n(toplam)} ve '
+            '${_intYaz(x1, x2, 'f(x)')} = ${_n(q)} olduğuna göre '
+            '${_intYaz(x0, x1, '(${al}f(x)${_sabitEk(ga)})')} değeri kaçtır?',
+        yanit,
+        [
+          al * toplam + ga * (x1 - x0),
+          al * p + ga,
+          p + ga * (x1 - x0),
+          al * (toplam + q) + ga * (x1 - x0),
+        ],
+        '${_intYaz(x0, x1, 'f(x)')} = ${_n(toplam)} − ${_p(q)} = ${_n(p)} '
+            'olur. İstenen integral $al·${_p(p)} + ${_n(ga)}·(${_n(x1)} − '
+            '${_p(x0)}) = ${_n(yanit)} bulunur.',
+      );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 20 · İkinci türev: büküm noktası ve çukurluk yönü
+// ---------------------------------------------------------------------------
+
+/// Çukurluk yönü soruları: (tür, a₄ ya da k, r₁ ya da h, r₂ ya da yön).
+/// Tür 0: dördüncü derece, n − m; tür 1: dördüncü derece, m + n; tür 2:
+/// üçüncü derece, eşik değeri.
+final List<(int, int, int, int)> _cukurluk = () {
+  final l = <(int, int, int, int)>[];
+  for (final a4 in const [1, 2, 3, 4]) {
+    for (var r1 = -5; r1 <= 4; r1++) {
+      for (var r2 = r1 + 1; r2 <= 5; r2++) {
+        l
+          ..add((0, a4, r1, r2))
+          ..add((1, a4, r1, r2));
+      }
+    }
+  }
+  for (final k in const [1, -1, 2, -2, 3, -3, 4, -4]) {
+    for (var h = -8; h <= 8; h++) {
+      if (h == 0) continue;
+      l
+        ..add((2, k, h, 1))
+        ..add((2, k, h, -1));
+    }
+  }
+  return [for (var i = 0; i < l.length; i++) l[i * 101 % l.length]];
+}();
+
+/// Çukurluk yönü soruları: t, [_cukurluk] listesindeki sıradır.
+AdvancedItem _bukumCukur(int t) {
+  final (tur, ka, x1, x2) = _cukurluk[t];
+  if (tur < 2) {
+    final e = const [3, -5, 2, -1, 4][t % 5];
+    final g = const [1, -2, 6, -4, 3][(t ~/ 5) % 5];
+    final f = [ka, -2 * ka * (x1 + x2), 6 * ka * x1 * x2, e, g];
+    final f2 = _turevK(_turevK(f));
+    final yanit = tur == 0 ? x2 - x1 : x1 + x2;
+    return _tam(
+      'f(x) = ${_pol(f)} fonksiyonunun grafiğinin çukurluk yönünün aşağı '
+          'doğru olduğu en geniş aralık (m, n) olduğuna göre '
+          '${tur == 0 ? 'n − m farkı' : 'm + n toplamı'} kaçtır?',
+      yanit,
+      tur == 0
+          ? [x1 + x2, x1 * x2, 2 * (x2 - x1), x2 - x1 + 1]
+          : [x2 - x1, -(x1 + x2), x1 * x2, x1 + x2 + 1],
+      'f″(x) = ${_pol(f2)} = ${12 * ka}·${x1 == 0 ? 'x' : '(${_pol([1, -x1])})'}·'
+          '${x2 == 0 ? 'x' : '(${_pol([1, -x2])})'} olur. f″(x) < 0 olan aralık '
+          '(${_n(x1)}, ${_n(x2)}) olduğundan m = ${_n(x1)}, n = ${_n(x2)}; '
+          '${tur == 0 ? 'n − m = ${x2 - x1}' : 'm + n = ${_n(x1 + x2)}'}.',
+      pozitif: tur == 0,
+    );
+  }
+  // Üçüncü derece: f″ işaret değiştirdiği x = h noktası eşiktir.
+  final k = ka, h = x1, yukari = x2 == 1;
+  final m = const [2, -3, 5, -1, 4][t % 5];
+  final n0 = const [1, -4, 3, -2, 6][(t ~/ 5) % 5];
+  final f = [k, -3 * k * h, 3 * k * h * h + m, -k * h * h * h - m * h + n0];
+  final buyuk = (k > 0) == yukari;
+  return _tam(
+    'f(x) = ${_pol(f)} fonksiyonunun grafiğinin çukurluk yönü, x '
+        'değerlerinin bir t sayısından ${buyuk ? 'büyük' : 'küçük'} olduğu her '
+        'yerde ${yukari ? 'yukarı' : 'aşağı'} doğrudur. Buna göre t kaçtır?',
+    h,
+    [-h, 3 * h, h + 1, -3 * k * h],
+    'f″(x) = ${_pol(_turevK(_turevK(f)))} = 0 eşitliğinden x = ${_n(h)} '
+        'bulunur. ${k > 0 ? 'Baş katsayı pozitif olduğundan' : 'Baş katsayı negatif olduğundan'} '
+        'f″(x), x > ${_n(h)} için ${k > 0 ? 'pozitif' : 'negatif'}tir. '
+        'Çukurluk yönü f″ > 0 iken yukarı, f″ < 0 iken aşağı doğrudur; '
+        't = ${_n(h)}.',
+  );
+}
+
+AdvancedItem _bukum(int a, int b, int c, int deneme) {
+  if (c == 5) {
+    final t = _temizSec('bukum5', _cukurluk.length, _bukumCukur, a + 25 * b);
+    return _bukumCukur(t);
+  }
+  if (c <= 3 || c == 9) {
+    // Üçüncü derece: f(x) = k(x − h)³ + m(x − h) + n; büküm noktası (h, n),
+    // oradaki teğetin eğimi m.
+    // c = 9'da öncül katsayı 1'dir; a yalnız büküm noktasını seçer.
+    final k = const [1, -1, 2, -2, 3][a % 5];
+    final h = const [-2, -1, 1, 2, 3][c == 9 ? a % 5 : a ~/ 5];
+    // Büküm noktasındaki eğim m kökteki katsayılara, sabit terim ise
+    // ordinata eşit çıkmasın (m = −kh² iken sabit terim n olur).
+    final yasak = {
+      k,
+      -k,
+      3 * k * h,
+      -3 * k * h,
+      -k * h * h,
+      if ((3 * k * h * h).isEven) -3 * k * h * h ~/ 2,
+    };
+    final m = _uygun(
+      [
+        for (var x = -10; x <= 10; x++)
+          if (x != 0) x,
+        -11,
+        11,
+        -12,
+        12,
+        -13,
+        13,
+        -14,
+        14,
+      ],
+      b,
+      (x) {
+        if (c != 9) return !yasak.contains(x);
+        // c = 9: a + b + c = x(1 − h) + n − h³ + 3h² − 3h, kökteki h, n ve
+        // eğime eşit olmasın (h = 1 iken yanıt n − 1'dir, eğimden bağımsız).
+        if (h == 1) return true;
+        final nn = const [3, -4, 5, -1, 6][a ~/ 5];
+        final y = x * (1 - h) + nn - h * h * h + 3 * h * h - 3 * h;
+        return !{x, -x, h, -h, nn, -nn}.contains(y);
+      },
+    );
+    final n = c == 9
+        ? const [3, -4, 5, -1, 6][a ~/ 5]
+        : const [3, -4, 5, -1, 2][(a + b + deneme) % 5];
+    final f = [k, -3 * k * h, 3 * k * h * h + m, -k * h * h * h - m * h + n];
+    final f1 = _turevK(f), f2 = _turevK(f1);
+    final bas =
+        'f″(x) = ${_pol(f2)} = 0 eşitliğinden x = ${_n(h)} bulunur; ikinci '
+        'türev bu noktada işaret değiştirir.';
+    switch (c) {
+      case 0:
+        return _tam(
+          'f(x) = ${_pol(f)} fonksiyonunun büküm noktasının ordinatı kaçtır?',
+          n,
+          [_deg(f, -h), f[3], _deg(f, h + 1), n + m],
+          '$bas Büküm noktasının ordinatı f(${_n(h)}) = ${_yerine(f, h)} = '
+              '${_n(n)} olur.',
+        );
+      case 1:
+        return _tam(
+          'f(x) = ${_pol(f)} fonksiyonunun grafiğine büküm noktasında çizilen '
+              'teğetin eğimi kaçtır?',
+          m,
+          [f[2], _deg(f1, -h), _deg(f2, h + 1), m + 3 * k],
+          '$bas Teğetin eğimi f′(${_n(h)}) = ${_yerine(f1, h)} = ${_n(m)} '
+              'olur.',
+        );
+      case 2:
+        return _tam(
+          'f(x) = ${_pol(f)} fonksiyonunun büküm noktası (a, b) olduğuna göre '
+              'a + b toplamı kaçtır?',
+          h + n,
+          [n - h, h + f[3], _deg(f, -h) - h, h * n],
+          '$bas f(${_n(h)}) = ${_yerine(f, h)} = ${_n(n)} olduğundan büküm '
+              'noktası (${_n(h)}, ${_n(n)}) ve a + b = ${_n(h + n)} olur.',
+        );
+      case 3:
+        // f(x) = x³ + px² + qx + r: büküm noktası (h₂, n₂) verilir.
+        final h2 = const [-2, -1, 1, 2, 3][a % 5];
+        final r = const [4, -3, 2, -5, 1][a ~/ 5];
+        AdvancedItem kur(int q) {
+          final p = -3 * h2;
+          final n2 = _deg([1, p, q, r], h2);
+          return _tam(
+            'f(x) = x³ + px² + qx${_sabitEk(r)} fonksiyonunun büküm noktası '
+                '(${_n(h2)}, ${_n(n2)}) olduğuna göre p + q toplamı kaçtır?',
+            p + q,
+            [q - p, p, 3 * h2 + q, p * q],
+            'f″(x) = 6x + 2p olur. f″(${_n(h2)}) = 0 eşitliğinden p = ${_n(p)} '
+                'bulunur. f(${_n(h2)}) = ${_n(n2)} eşitliğinden '
+                '${_n(h2 * h2 * h2 + p * h2 * h2 + r)} + ${_p(h2)}·q = ${_n(n2)} ve '
+                'q = ${_n(q)} olur. p + q = ${_n(p + q)}.',
+          );
+        }
+
+        return kur(_temizOge('bukum3-$a', _sifirsizAralik(-15, 15), b, kur));
+      default:
+        // f(x) = x³ + px² + qx + r; büküm noktası (h, n), eğim m.
+        final p = -3 * h;
+        final q = m - 3 * h * h - 2 * p * h;
+        final r = n - h * h * h - p * h * h - q * h;
+        final yanit = p + q + r;
+        return _tam(
+          'f(x) = x³ + ax² + bx + c fonksiyonunun büküm noktası '
+              '(${_n(h)}, ${_n(n)}) ve bu noktadaki teğetinin eğimi ${_n(m)} '
+              'olduğuna göre a + b + c toplamı kaçtır?',
+          yanit,
+          [p + q, yanit + 1, -yanit, p + r],
+          'f″(x) = 6x + 2a = 0 eşitliği x = ${_n(h)} için a = ${_n(p)} verir. '
+              'f′(${_n(h)}) = 3·${_p(h)}² + 2·${_p(p)}·${_p(h)} + b = ${_n(m)} '
+              'eşitliğinden b = ${_n(q)}; f(${_n(h)}) = ${_n(n)} eşitliğinden '
+              'c = ${_n(r)} bulunur. a + b + c = ${_n(yanit)}.',
+        );
+    }
+  }
+  // c = 4, 6, 7, 8: dördüncü derece; f″(x) = 12(x − r₁)(x − r₂).
+  // c = 6'da büyük, c = 8'de küçük büküm apsisi 0 olmasın: yanıt kökteki
+  // katsayıya eşit çıkardı. c = 6'da r₂ = 3r₁, c = 7'de f(r₁) = f(r₂) olan
+  // çiftler de (yanıt x'in katsayısına eşit çıkardı) atlanır.
+  final r1 = switch (c) {
+    6 => const [-6, -7, 4, 5, 3][a % 5],
+    7 => const [-3, -4, 0, 1, 2][a % 5],
+    8 => const [-3, -2, -1, 1, 2][a % 5],
+    _ => const [-3, -2, -1, 0, 1][a % 5],
+  };
+  final r2 = r1 + 1 + a ~/ 5;
+  final e = _sifirsiz(b, 10);
+  final g = const [2, -5, 1, 4, -3][(a + b + deneme) % 5];
+  final f = [1, -2 * (r1 + r2), 6 * r1 * r2, e, g];
+  final f1 = _turevK(f), f2 = _turevK(f1);
+  final bas =
+      'f″(x) = ${_pol(f2)} = 12·${r1 == 0 ? 'x' : '(${_pol([1, -r1])})'}·'
+      '${r2 == 0 ? 'x' : '(${_pol([1, -r2])})'} olur; ikinci türev x = '
+      '${_n(r1)} ve x = ${_n(r2)} noktalarında işaret değiştirir.';
+  switch (c) {
+    case 4:
+      final yanit = _deg(f, r1) + _deg(f, r2);
+      return _tam(
+        'f(x) = ${_pol(f)} fonksiyonunun büküm noktalarının ordinatları '
+            'toplamı kaçtır?',
+        yanit,
+        [_deg(f, r1), _deg(f, r2), r1 + r2, yanit - 2 * g],
+        '$bas f(${_n(r1)}) = ${_n(_deg(f, r1))} ve f(${_n(r2)}) = '
+            '${_n(_deg(f, r2))} olduğundan toplam ${_n(yanit)} olur.',
+      );
+    case 6:
+      final yanit = _deg(f1, r2);
+      return _tam(
+        'f(x) = ${_pol(f)} fonksiyonunun apsisi büyük olan büküm noktasında '
+            'çizilen teğetin eğimi kaçtır?',
+        yanit,
+        [_deg(f1, r1), _deg(f, r2), _deg(f2, r2 + 1), e],
+        '$bas Büyük apsisli büküm noktası x = ${_n(r2)} olur. f′(x) = '
+            '${_pol(f1)} olduğundan f′(${_n(r2)}) = ${_yerine(f1, r2)} = '
+            '${_n(yanit)}.',
+      );
+    case 7:
+      // İki büküm noktasından geçen doğrunun eğimi.
+      final dy = _deg(f, r2) - _deg(f, r1);
+      final yanit = dy ~/ (r2 - r1);
+      return _tam(
+        'f(x) = ${_pol(f)} fonksiyonunun grafiğinin iki büküm noktasından '
+            'geçen doğrunun eğimi kaçtır?',
+        yanit,
+        [dy, _deg(f1, r1), _deg(f1, r2), -yanit],
+        '$bas f(${_n(r1)}) = ${_n(_deg(f, r1))} ve f(${_n(r2)}) = '
+            '${_n(_deg(f, r2))} olduğundan eğim (${_n(_deg(f, r2))} − '
+            '${_p(_deg(f, r1))})/(${_n(r2)} − ${_p(r1)}) = ${_n(yanit)} bulunur.',
+      );
+    default:
+      final yanit = _deg(f, r1);
+      return _tam(
+        'f(x) = ${_pol(f)} fonksiyonunun apsisi küçük olan büküm noktasının '
+            'ordinatı kaçtır?',
+        yanit,
+        [_deg(f, r2), _deg(f, -r1), _deg(f1, r1), yanit + g],
+        '$bas Küçük apsisli büküm noktası x = ${_n(r1)} olur. f(${_n(r1)}) = '
+            '${_yerine(f, r1)} = ${_n(yanit)}.',
       );
   }
 }
@@ -4288,7 +6025,7 @@ final lmAnaliz = <AdvancedFamily>[
     'Logaritmayla basamak sayısı ve büyüklük karşılaştırma',
     Difficulty.hard,
     BloomLevel.analiz,
-    _logBasamak,
+    _yeniden(_logBasamak),
   ),
 
   // 10 · Üstel modeller: katlanma ve yarılanma süreleri, logaritmalı süre,
@@ -4307,7 +6044,7 @@ final lmAnaliz = <AdvancedFamily>[
     'Parçalı tanımlı fonksiyonun değeri ve f(f(a))',
     Difficulty.medium,
     BloomLevel.uygulama,
-    _parcaliSoru,
+    _yeniden(_parcaliSoru, 9),
   ),
 
   // 12 · Grafik dönüşümleri: c ≤ 3 dönüşen grafiğin noktası, c ≤ 6 ters yön,
@@ -4317,7 +6054,7 @@ final lmAnaliz = <AdvancedFamily>[
     'Fonksiyon grafiklerinde öteleme ve yansıma',
     Difficulty.medium,
     BloomLevel.anlama,
-    _grafikDonusum,
+    _yeniden(_grafikDonusum),
     shortAnswer: false,
   ),
 
@@ -4328,7 +6065,7 @@ final lmAnaliz = <AdvancedFamily>[
     'Parçalı fonksiyonda limit ve süreklilik',
     Difficulty.medium,
     BloomLevel.uygulama,
-    _sureklilik,
+    _yeniden(_sureklilik),
   ),
 
   // 14 · Zincir kuralı: (ax + b)ⁿ biçimleri, f(g(x)), değerlerle bileşke
@@ -4338,7 +6075,7 @@ final lmAnaliz = <AdvancedFamily>[
     'Zincir kuralıyla bileşke fonksiyonun türevi',
     Difficulty.medium,
     BloomLevel.uygulama,
-    _zincirKurali,
+    _yeniden(_zincirKurali),
   ),
 
   // 15 · Konum, hız ve ivme: anlık hız ve ivme, hızın sıfır olduğu anlar,
@@ -4348,20 +6085,54 @@ final lmAnaliz = <AdvancedFamily>[
     'Konum fonksiyonundan hız ve ivme',
     Difficulty.medium,
     BloomLevel.uygulama,
-    _konumHiz,
+    _yeniden(_konumHiz),
   ),
-  // GEÇİCİ: ara denetimler için yer tutucular; son sürümde yoktur.
-  for (var k = 16; k <= 20; k++)
-    _aile(
-      'gecici_$k',
-      'Geçici yer tutucu aile $k',
-      Difficulty.easy,
-      BloomLevel.uygulama,
-      (a, b, c) => _tam(
-        'Geçici soru $k: $a + ${10 * b} + ${200 * c} toplamı kaçtır?',
-        a + 10 * b + 200 * c,
-        [a + 10 * b + 200 * c + 1],
-        'Toplama işlemi yapılır.',
-      ),
-    ),
+  // 16 · En büyük ve en küçük değer problemleri: çit, bütçeli çit, doğru
+  // altında dikdörtgen, sabit toplam, kutu ve sabit çarpım, kapalı aralık.
+  _aile(
+    'optimizasyon',
+    'Türevle en büyük ve en küçük değer problemleri',
+    Difficulty.hard,
+    BloomLevel.analiz,
+    _optimizasyon,
+  ),
+
+  // 17 · Belirsiz integral: F′ ve F(a) verilir; teğet eğimi, ikinci türev ve
+  // ters yönde katsayı soruları.
+  _aile(
+    'belirsiz_integral',
+    'Belirsiz integral ve başlangıç koşulu',
+    Difficulty.medium,
+    BloomLevel.uygulama,
+    _yeniden(_belirsizIntegral, 20),
+  ),
+
+  // 18 · İki eğri arasındaki alan: parabol ve doğru, iki parabol, üçüncü
+  // dereceden eğri ve doğru.
+  _aile(
+    'iki_egri_alan',
+    'İki eğri arasında kalan bölgenin alanı',
+    Difficulty.hard,
+    BloomLevel.analiz,
+    _yeniden(_ikiEgriAlan, 20),
+  ),
+
+  // 19 · Belirli integralin özellikleri: aralık birleştirme, doğrusallık, tek
+  // ve çift fonksiyon simetrisi.
+  _aile(
+    'integral_ozellik',
+    'Belirli integralin özellikleri ve simetri',
+    Difficulty.medium,
+    BloomLevel.anlama,
+    _yeniden(_integralOzellik, 20),
+  ),
+
+  // 20 · İkinci türev: büküm noktası, teğet eğimi, çukurluk yönü aralıkları.
+  _aile(
+    'bukum',
+    'İkinci türevle büküm noktası ve çukurluk yönü',
+    Difficulty.hard,
+    BloomLevel.analiz,
+    _yeniden(_bukum, 10),
+  ),
 ];
