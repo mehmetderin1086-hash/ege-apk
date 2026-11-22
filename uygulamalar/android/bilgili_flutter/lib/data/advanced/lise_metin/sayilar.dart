@@ -3263,7 +3263,7 @@ AdvancedItem _fonksiyonDegerUret(int a, int b, int c, int w) {
       );
     default:
       final m = const [2, 3, 4, 5, 6, -2, -3, 7, -4, 8][b % 10];
-      final n = const [4, -3, 5, -6, 7][a % 5] + (b ~/ 10) * 9;
+      final n = const [4, -3, 5, -6, 7][a % 5] + (b ~/ 10) * 9 + 40 * (w ~/ 3);
       final h = 1 + (a ~/ 5 + w) % 3; // f(x + h) − f(x − h) = 2mh
       final k = const [3, -2, 5, 4, -3][a ~/ 5];
       final v = m * k + n;

@@ -205,7 +205,7 @@ AdvancedItem _kirikU(int a, int b, int j) {
       'açılarıyla karşı durumlu açılar oluşturur; bu yüzden CAE + AEB + DBE '
       '= 360° olur';
   if (j == 0) {
-        var al = 100 + 2 * a;
+    var al = 100 + 2 * a;
     final be = 101 + 2 * b;
     // AEB açısı verilen DBE açısına eşit çıkmasın; tek sayıya kayan CAE
     // değeri başka bir vakanın CAE değeriyle çakışmaz.
@@ -1073,25 +1073,26 @@ final lmGeometriEk = <AdvancedFamily>[
           unit: 'cm',
           positive: true,
         ),
-                // $p değeri aralıkta yalnız q < 2p olduğunda bulunur.
-        _ => q < 2 * p
-            ? sayisal(
-                '$veri |BC| kaç farklı değer alabilir?',
-                adet - 2,
-                [adet, adet - 1, adet + 2],
-                '$kural Bu aralıktaki $adet tam sayıdan üçgeni ikizkenar yapan '
-                '$p ve $q değerleri çıkarılır: $adet − 2 = ${adet - 2}.',
-                positive: true,
-              )
-            : sayisal(
-                '$veri |BC| kaç farklı değer alabilir?',
-                adet - 1,
-                [adet, adet - 2, adet + 1],
-                '$kural Bu aralıktaki $adet tam sayıdan yalnız $q değeri üçgeni '
-                'ikizkenar yapar ($p değeri aralıkta değildir): $adet − 1 = '
-                '${adet - 1}.',
-                positive: true,
-              ),
+        // $p değeri aralıkta yalnız q < 2p olduğunda bulunur.
+        _ =>
+          q < 2 * p
+              ? sayisal(
+                  '$veri |BC| kaç farklı değer alabilir?',
+                  adet - 2,
+                  [adet, adet - 1, adet + 2],
+                  '$kural Bu aralıktaki $adet tam sayıdan üçgeni ikizkenar yapan '
+                      '$p ve $q değerleri çıkarılır: $adet − 2 = ${adet - 2}.',
+                  positive: true,
+                )
+              : sayisal(
+                  '$veri |BC| kaç farklı değer alabilir?',
+                  adet - 1,
+                  [adet, adet - 2, adet + 1],
+                  '$kural Bu aralıktaki $adet tam sayıdan yalnız $q değeri üçgeni '
+                      'ikizkenar yapar ($p değeri aralıkta değildir): $adet − 1 = '
+                      '${adet - 1}.',
+                  positive: true,
+                ),
       };
     },
     exam: ExamKind.tyt,
@@ -1305,7 +1306,7 @@ final lmGeometriEk = <AdvancedFamily>[
           '$eksik $tanim = $ham${ham == sade ? '' : ' = $sade'}.',
         );
       }
-            // Ölçek en az 2: kenarlar orandaki sayılarla aynı çıkmaz.
+      // Ölçek en az 2: kenarlar orandaki sayılarla aynı çıkmaz.
       final v = b % 5;
       var k = 2 + b ~/ 5;
       // 6-8-10 üçgeninde alan çevreye eşittir; bu vaka ölçek 6 ile sorulur.
@@ -1734,7 +1735,7 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       if (c == 5) {
-                // r = 1 ve r = 2 için alan yarı çevreye ya da çevreye eşit çıkar.
+        // r = 1 ve r = 2 için alan yarı çevreye ya da çevreye eşit çıkar.
         final r = 3 + a, s = 6 * r + b, cevre = 2 * s;
         return sayisal(
           'Çevresi $cevre cm olan bir üçgenin iç teğet çemberinin yarıçapı $r '
@@ -1763,7 +1764,7 @@ final lmGeometriEk = <AdvancedFamily>[
           positive: true,
         );
       }
-            final m = 2 + a, n = m + 1 + b;
+      final m = 2 + a, n = m + 1 + b;
       return sayisal(
         'Bir dik üçgenin iç teğet çemberi hipotenüse D noktasında değiyor. D '
             'noktası hipotenüsü $m cm ve $n cm uzunluğunda iki parçaya ayırdığına '
@@ -1793,13 +1794,18 @@ final lmGeometriEk = <AdvancedFamily>[
       if (c <= 1) {
         final x = 10 + a;
         final (p, r) = _dortgenKatsayi[b % 10];
-                final ardisik = c == 0, sorC = (a + b).isEven;
+        final ardisik = c == 0, sorC = (a + b).isEven;
         var t = 51 + 3 * (b % 10) + 40 * (b ~/ 10);
         // Yanıt kökte yazılı bir sayıya eşit çıkarsa A açısı bir derece
         // kaydırılır (kaydırılan değerler hiçbir vakanın asıl değeri değildir).
         int yanitAci(int u) => ardisik && sorC ? u : 180 - u;
-        if ({(t - p * x).abs(), ((ardisik ? 180 - t : t) - r * x).abs(), p, r, x}
-            .contains(yanitAci(t))) {
+        if ({
+          (t - p * x).abs(),
+          ((ardisik ? 180 - t : t) - r * x).abs(),
+          p,
+          r,
+          x,
+        }.contains(yanitAci(t))) {
           t++;
         }
         final q = t - p * x, s = (ardisik ? 180 - t : t) - r * x;
@@ -1810,7 +1816,7 @@ final lmGeometriEk = <AdvancedFamily>[
                   '${(p + r) * x}, x = $x. m(A) = $t°, m(B) = ${180 - t}°.'
             : 'Paralelkenarda karşılıklı açıların ölçüleri eşittir: '
                   '${_dx(p, q)} = ${_dx(r, s)}, x = $x. m(A) = m(C) = $t°.';
-                // Ardışık sorusunda C ya da D, karşılıklı sorusunda B ya da D sorulur.
+        // Ardışık sorusunda C ya da D, karşılıklı sorusunda B ya da D sorulur.
         final (sorulan, yanit) = ardisik
             ? (sorC ? ('C', t) : ('D', 180 - t))
             : (sorC ? ('B', 180 - t) : ('D', 180 - t));
@@ -1906,12 +1912,16 @@ final lmGeometriEk = <AdvancedFamily>[
       if (c == 6) {
         final x = 5 + a;
         final (p, r) = _dortgenKatsayi[b % 10];
-                // ABD açısı 3'e bölümünden 1 kalan değerler alır (45° hiç çıkmaz);
+        // ABD açısı 3'e bölümünden 1 kalan değerler alır (45° hiç çıkmaz);
         // yanıt kökteki bir sayıya eşitse bir derece kaydırılır.
         var be = 22 + 3 * (b % 10) + 30 * (b ~/ 10);
         final xSor = (a + b).isEven;
-        if ({(be - p * x).abs(), (180 - 2 * be - r * x).abs(), p, r}
-            .contains(xSor ? x : 2 * be)) {
+        if ({
+          (be - p * x).abs(),
+          (180 - 2 * be - r * x).abs(),
+          p,
+          r,
+        }.contains(xSor ? x : 2 * be)) {
           be++;
         }
         final q = be - p * x, s = 180 - 2 * be - r * x;
@@ -2010,7 +2020,7 @@ final lmGeometriEk = <AdvancedFamily>[
     BloomLevel.uygulama,
     (a, b, c) {
       if (c <= 2) {
-                final q = 4 + a;
+        final q = 4 + a;
         var p = q + 2 + b;
         // |KL| = |DC| çakışması (|AB| = 3·|DC|) kaydırılır.
         if (c == 2 && p == 3 * q) p += 20;
@@ -2073,7 +2083,7 @@ final lmGeometriEk = <AdvancedFamily>[
           positive: true,
         );
       }
-            var q = 2 + b;
+      var q = 2 + b;
       // Sorulan uzunluk kökte yazılı bir tabana eşit çıkarsa küçük taban
       // 20 cm uzatılır (kaydırılan değerler başka vakada kullanılmaz).
       final sorulanUz = switch (c) {
@@ -2173,7 +2183,7 @@ final lmGeometriEk = <AdvancedFamily>[
     BloomLevel.analiz,
     (a, b, c) {
       final (m, n) = _orantilar[a];
-            // Alan birimi 10 cm² ve üstü: alanlar kökteki uzunluklarla karışmaz.
+      // Alan birimi 10 cm² ve üstü: alanlar kökteki uzunluklarla karışmaz.
       final u = 10 + b;
       const ortak =
           'Bu üçgenlerin A köşesinden [BC] doğrusuna inen yükseklikleri '
@@ -2234,7 +2244,7 @@ final lmGeometriEk = <AdvancedFamily>[
           );
         case 4 || 5:
           final (p, q) = _orantilar[b];
-                    final s = 10 * (m + n) * (p + q), ade = 10 * m * p;
+          final s = 10 * (m + n) * (p + q), ade = 10 * m * p;
           final veri =
               'ABC üçgeninde D noktası [AB], E noktası [AC] kenarı üzerindedir. '
               '|AD| = $m cm, |DB| = $n cm, |AE| = $p cm, |EC| = $q cm ve ABC '
@@ -2247,7 +2257,7 @@ final lmGeometriEk = <AdvancedFamily>[
             return sayisal(
               '$veri Buna göre ADE üçgeninin alanı kaç cm² olur?',
               ade,
-                            [10 * m * (p + q), 10 * p * (m + n), ?_bol(s * m * p, n * q)],
+              [10 * m * (p + q), 10 * p * (m + n), ?_bol(s * m * p, n * q)],
               cozum,
               unit: 'cm²',
               positive: true,
@@ -2256,7 +2266,7 @@ final lmGeometriEk = <AdvancedFamily>[
           return sayisal(
             '$veri Buna göre DBCE dörtgeninin alanı kaç cm² olur?',
             s - ade,
-                        [ade, s - 10 * m * (p + q), s - 10 * n * q],
+            [ade, s - 10 * m * (p + q), s - 10 * n * q],
             '$cozum A(DBCE) = $s − $ade = ${s - ade} cm².',
             unit: 'cm²',
             positive: true,
@@ -2294,7 +2304,7 @@ final lmGeometriEk = <AdvancedFamily>[
           );
         case 8:
           final x = 1 + a % 5, z = 1 + a ~/ 5, y = 1 + b % 10;
-                    final v = 10 + 5 * (b ~/ 10);
+          final v = 10 + 5 * (b ~/ 10);
           return sayisal(
             'ABC üçgeninin [BC] kenarı üzerinde B, D, E, C sırasıyla dizilen D '
                 've E noktaları alınıyor. |BD| = $x cm, |DE| = $y cm, |EC| = $z cm '
@@ -2337,10 +2347,12 @@ final lmGeometriEk = <AdvancedFamily>[
       if (c == 0) {
         final x = 3 + a;
         final (p, r) = _kesenKatsayi[b % 10];
-                var l = 8 + b + a ~/ 3;
+        var l = 8 + b + a ~/ 3;
         final yr = 3 + (a + 2 * b) % 9;
         // Teğet uzunluğu kökteki bir katsayıya eşit çıkmasın.
-        if ({(l - p * x).abs(), (l - r * x).abs(), p, r, x}.contains(l)) l += 30;
+                if ({(l - p * x).abs(), (l - r * x).abs(), p, r, x}.contains(l)) {
+          l += 30;
+        }
         final q = l - p * x, s = l - r * x;
         final veri =
             'O merkezli çembere dışındaki P noktasından çizilen iki teğet '
@@ -2434,7 +2446,7 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       if (c == 5) {
-                final r1 = 2 + a;
+        final r1 = 2 + a;
         var r2 = r1 + 1 + b;
         // Yanıt 2r₁ − 1 büyük yarıçapa eşit çıkmasın.
         if (r2 == 2 * r1 - 1) r2 += 20;
@@ -2450,7 +2462,7 @@ final lmGeometriEk = <AdvancedFamily>[
           positive: true,
         );
       }
-            if (c == 6) {
+      if (c == 6) {
         final r1 = 2 + a;
         var r2 = r1 + 2 + b;
         // İç içe durumda yanıt r₂ − r₁ − 1 küçük yarıçapa eşit çıkmasın.
@@ -2484,7 +2496,7 @@ final lmGeometriEk = <AdvancedFamily>[
       }
       final (l1, l2, w) = _yonluUclu(a);
       if (c == 7) {
-                var r1 = 2 + b;
+        var r1 = 2 + b;
         if (l2 == r1 || l2 == r1 + l1) r1 += 20;
         final r2 = r1 + l1;
         return sayisal(
@@ -2504,7 +2516,7 @@ final lmGeometriEk = <AdvancedFamily>[
       }
       if (c == 8) {
         final k = 1 + 40 ~/ l1, top = k * l1, uz = k * l2, d = k * w;
-                var r1 = 1 + b;
+        var r1 = 1 + b;
         if (uz == r1 || uz == top - r1) r1 += 20;
         final r2 = top - r1;
         return sayisal(
@@ -2521,7 +2533,7 @@ final lmGeometriEk = <AdvancedFamily>[
           positive: true,
         );
       }
-            final r1 = 1 + a;
+      final r1 = 1 + a;
       var r2 = r1 + 1 + b;
       // r₂ = 4r₁ olursa 2√(r₁r₂) büyük yarıçapa eşit çıkar.
       if (r2 == 4 * r1) r2 += 20;
@@ -2585,7 +2597,12 @@ final lmGeometriEk = <AdvancedFamily>[
           );
         case 2:
           final aci = _halkaAci[b % 10], adim = _halkaAdim(aci);
-          final r = 1 + a, R = r + adim * (1 + b ~/ 10);
+          final r = 1 + a;
+          var R = r + adim * (1 + b ~/ 10);
+          // Dilim alanı kökteki açıya ya da bir yarıçapa eşit çıkarsa yarıçap
+          // farkı üç adım alınır (bu fark başka vakada kullanılmaz).
+          int dilim(int rr) => (rr * rr - r * r) * aci ~/ 360;
+          if ({aci, r, R}.contains(dilim(R))) R = r + 3 * adim;
           final fark = R * R - r * r, alan = fark * aci ~/ 360;
           return sayisal(
             '$esMerkez $r cm ve $R cm olan iki çember veriliyor. Ortak merkezden '
@@ -2731,7 +2748,10 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       if (c == 1) {
-        final n = 2 + a, t = 5 + b, kenar = n * t;
+        final n = 2 + a;
+        var t = 5 + b;
+        if (6 * n * n == n * t || 6 * n * n == t) t += 20;
+        final kenar = n * t;
         return sayisal(
           'Bir kenarı $kenar cm olan düzgün altıgen biçimindeki bir salonun '
               'zemini, bir kenarı $t cm olan eşkenar üçgen biçimindeki karolarla '
@@ -2747,7 +2767,13 @@ final lmGeometriEk = <AdvancedFamily>[
         );
       }
       if (c == 2) {
-        final x = 2 + a, y = 3 + b;
+        final x = 2 + a;
+        var y = 3 + b;
+        // Oran tam sayı olup kökteki bir kenara eşitse üçgenin kenarı değişir.
+        if ((6 * x * x) % (y * y) == 0 &&
+            {x, y}.contains(6 * x * x ~/ (y * y))) {
+          y += 20;
+        }
         return kesirli(
           'Bir kenarı $x cm olan düzgün altıgenin alanı, bir kenarı $y cm olan '
               'eşkenar üçgenin alanının kaç katıdır?',
@@ -2823,7 +2849,16 @@ final lmGeometriEk = <AdvancedFamily>[
       // c == 6: düzgün sekizgende çevre ve kenar.
       final x = 2 + a;
       final (p, r) = _sekizgenKatsayi[b % 10];
-      final kenar = 3 + b + a % 3;
+      var kenar = 14 + b + a % 3;
+      if ({
+        (8 * kenar - p * x).abs(),
+        (kenar - r * x).abs(),
+        p,
+        r,
+        x,
+      }.contains(kenar)) {
+        kenar += 30;
+      }
       final q = 8 * kenar - p * x, s = kenar - r * x;
       return sayisal(
         'ABCDEFGH düzgün sekizgeninin çevresi (${_dx(p, q)}) cm ve bir '
@@ -2864,7 +2899,10 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 1:
-          final t = 4 + a, h = 3 + 3 * b, v = t * t * h ~/ 3;
+          final t = 4 + a;
+          var h = 3 + 3 * b;
+          if (h == t) h += 60;
+          final v = t * t * h ~/ 3;
           return sayisal(
             'Taban ayrıtı $t cm olan bir kare dik piramidin hacmi $v cm³ '
                 'olduğuna göre yüksekliği kaç cm olur?',
@@ -2940,7 +2978,9 @@ final lmGeometriEk = <AdvancedFamily>[
             ),
           };
         case 3 || 4 || 7:
-          final t = 2 + 2 * a, ys = a + 2 + b;
+          final t = 2 + 2 * a;
+          var ys = a + 2 + b;
+          if (c == 7 && ys == t) ys += 30;
           final yanal = 2 * t * ys, tum = t * t + yanal;
           if (c == 3) {
             return sayisal(
@@ -2977,7 +3017,10 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 5 || 8:
-          final t = c == 5 ? 2 + 2 * a : 6 + 2 * a, h = 3 + 3 * b;
+          final t = c == 5 ? 2 + 2 * a : 6 + 2 * a;
+          var h = 3 + 3 * b;
+          // Yanıt kökteki bir sayıya eşit çıkmasın.
+          if (c == 8 ? h == t : {t, h}.contains(t * t * h ~/ 12)) h += 60;
           final k = t * t * h ~/ 12;
           const ucgen = 'düzgün üçgen piramidin';
           final taban = 'Taban alanı ($t²·√3) / 4 = ${t * t ~/ 4}√3 cm² olur.';
@@ -3318,7 +3361,7 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 2:
-          final h = 1 + b;
+          final h = 1 + b == n * n ? 21 + b : 1 + b;
           return sayisal(
             'Benzer iki kaptan küçüğünün hacmi $m3 L, büyüğünün hacmi $n3 L '
                 'olarak veriliyor. Küçük kabın yüksekliği ${m * h} cm olduğuna göre '
@@ -3332,7 +3375,12 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 3 || 4:
-          final k = 2 + b % 9, q = b ~/ 9;
+          // 1/10 ölçeğinde kütle sorusunun yanıtı (kg) gram değerine eşit çıkar;
+          // kütle sorusunda 10 yerine 12 kullanılır.
+          final k = c == 4
+              ? const [2, 3, 4, 5, 6, 7, 8, 9, 12][b % 9]
+              : 2 + b % 9;
+          final q = b ~/ 9;
           if (c == 3) {
             final x = 10 + 5 * a + 125 * q;
             return sayisal(
@@ -3362,7 +3410,8 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 5 || 6:
-          final hacim = n3 * u, kucuk = m3 * u;
+          final v = {4 * m, 4 * n}.contains(m3 * u) ? u + 20 : u;
+          final hacim = n3 * v, kucuk = m3 * v;
           final veri =
               'Yüksekliği ${4 * n} cm ve hacmi $hacim cm³ olan bir dik dairesel '
               'koni, tepe noktasından ${4 * m} cm uzaklıkta tabana paralel bir '
@@ -3395,7 +3444,8 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         case 7 || 8:
-          final hacim = n3 * u, su = m3 * u;
+          final v = {m, n}.contains(m3 * u) ? u + 20 : u;
+          final hacim = n3 * v, su = m3 * v;
           const kap =
               'Tepe noktası aşağıda ve ekseni düşey olan dik dairesel koni '
               'biçimindeki bir kap';
@@ -3425,7 +3475,7 @@ final lmGeometriEk = <AdvancedFamily>[
             positive: true,
           );
         default:
-          final w = 1 + b;
+          final w = 1 + b == n ? 21 + b : 1 + b;
           return sayisal(
             'Benzer iki $cisim biçimindeki cisimden küçüğünün hacmi $m3 cm³, '
                 'büyüğünün hacmi $n3 cm³ olarak veriliyor. Küçüğünün yüzey alanı '

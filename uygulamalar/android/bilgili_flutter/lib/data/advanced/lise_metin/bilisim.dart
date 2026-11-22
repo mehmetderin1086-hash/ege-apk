@@ -129,7 +129,7 @@ AdvancedItem _ikilikDonusum(int a, int b, int c) {
   final ters = int.parse(_ters(s), radix: 2);
   final ust = x - (1 << (s.length - 1));
   final cevir = '${_tabanli(s, 2)} = ${_kuvvetToplami(x)} = $x';
-  if ((q + r).isEven || x <= y) {
+  if ((q + r).isEven || x <= y || x == 2 * y) {
     return sayisal(
       'İkilik tabanda yazılmış ${_tabanli(s, 2)} sayısı ile onluk tabandaki $y '
           'sayısının toplamı onluk tabanda kaçtır?',
@@ -162,12 +162,14 @@ final _onaltiHavuzu = [
     if (!_palindrom(_onaltilik(n))) n,
 ];
 
-/// Üç basamaklı sekizlik sayıların tamamı ve dört basamaklılardan bir seçki.
+/// Üç basamaklı sekizlik sayıların tamamı ve dört basamaklılardan bir seçki;
+/// dört basamaklılarda 8² basamağı sıfır değildir (8² yerine 16 alma hatası
+/// anahtarı vermez).
 final _sekizHavuzu = [
   for (var n = 64; n < 512; n++)
     if (!_palindrom(_sekizlik(n))) n,
-  for (var n = 515; n < 4096; n += 9)
-    if (!_palindrom(_sekizlik(n))) n,
+  for (var n = 515; n < 4096; n += 8)
+    if (!_palindrom(_sekizlik(n)) && _sekizlik(n)[1] != '0') n,
 ];
 
 /// "1·256 + 10·16 + 7" biçiminde basamak açılımı.
@@ -450,7 +452,7 @@ final _toplamaCiftleri = [
 final _cikarmaCiftleri = [
   for (var x = 40; x < 256; x += 3)
     for (var y = 9; y < x - 4; y += 2)
-      if (~x & y != 0) (x, y),
+      if (~x & y != 0 && x != 2 * y) (x, y),
 ];
 
 /// İlk elde (ya da ödünç) oluşan basamak: elde sayılmazsa sonuç 2^(p+1)
@@ -753,7 +755,25 @@ final _goruntuHavuzu = [
     for (var q = 8; q <= 120; q++)
       if (q <= p && 5 * p <= 12 * q)
         for (final d in _renkDerinlikleri)
-          if ((256 * p * q * d) % 2048 == 0) (16 * p, 16 * q, d),
+          if ((256 * p * q * d) % 2048 == 0 &&
+              ![16 * p, 16 * q, d, 1, 8, 256, 1024].contains(
+                _goruntuBoyutu(16 * p, 16 * q, d),
+              ))
+            (16 * p, 16 * q, d),
+];
+
+/// Görüntü verisinin soruda istenen birimdeki (KB ya da MB) boyutu.
+double _goruntuBoyutu(int w, int h, int d) {
+  final bayt = w * h * d ~/ 8;
+  final mb = bayt >= 4 * 1048576 && bayt % 262144 == 0;
+  return bayt / (mb ? 1048576 : 1024);
+}
+
+/// Renk derinliğini bulma sorusu: 16, 24 ya da 32 bit (kökte 1 bayt = 8 bit
+/// yazdığı için 8 bit yanıtı kullanılmaz).
+final _derinlikHavuzu = [
+  for (final x in _goruntuHavuzu)
+    if (x.$3 >= 16) x,
 ];
 
 String _derinlikYaz(int d) => switch (d) {
@@ -771,7 +791,11 @@ final _sesHavuzu = [
     for (final bd in const [8, 16, 24])
       for (final k in const [1, 2])
         for (var t = 5; t <= 240; t++)
-          if ((f * bd * k * t * 100) % 8192 == 0 && ![8, 16, 24].contains(t))
+          if ((f * bd * k * t * 100) % 8192 == 0 &&
+              ![8, 16, 24].contains(t) &&
+              ![f, bd, k, t, t ~/ 60, 1, 8, 1024].contains(
+                f * bd * k * t / 8192,
+              ))
             (f, bd, k, t),
 ];
 
@@ -831,11 +855,7 @@ AdvancedItem _dosyaBoyut(int a, int b, int c) {
   }
   final m = j + 500 * (c - 7);
   if (m.isEven) {
-    final (w, h, d) = _dolas(
-      _goruntuHavuzu.where((x) => x.$3 >= 8).toList(),
-      m ~/ 2,
-      4999,
-    );
+    final (w, h, d) = _dolas(_derinlikHavuzu, m ~/ 2, 4999);
     final kb = w * h * d / 8192;
     return ondalikli(
       'Genişliği $w piksel, yüksekliği $h piksel olan sıkıştırılmamış bir '

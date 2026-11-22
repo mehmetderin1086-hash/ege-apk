@@ -2604,21 +2604,607 @@ final _f17 = lmSirali(
   lesson: 'Coğrafya',
 );
 
-// ── YER TUTUCU (geçici) ──
-AdvancedFamily _tmp(int n) => lmAile(
-  'cg_tmp_$n',
-  'Geçici yer tutucu aile $n',
-  Topic.geography,
-  Difficulty.easy,
-  BloomLevel.uygulama,
-  (a, b, c) => sayisal(
-    'Yer tutucu $n numaralı soru: ${a * 1000 + b * 10 + c} sayısının birler basamağı kaçtır?',
-    c,
-    [c + 11, c + 12, c + 13],
-    'Birler basamağı $c olur.',
+// ─────────────────────── 18 · Göç türleri ve nedenleri ──────────────────────
+
+const _icGoc = 'iç göç', _disGoc = 'dış göç', _beyin = 'beyin göçü';
+const _mevsim = 'mevsimlik göç',
+    _zorunlu = 'zorunlu göç',
+    _gonullu = 'gönüllü göç';
+const _gocTurleri = [_icGoc, _disGoc, _beyin, _mevsim, _zorunlu, _gonullu];
+const _gocaYonelme = {
+  _icGoc: 'iç göçe',
+  _disGoc: 'dış göçe',
+  _beyin: 'beyin göçüne',
+  _mevsim: 'mevsimlik göçe',
+  _zorunlu: 'zorunlu göçe',
+  _gonullu: 'gönüllü göçe',
+};
+// Her örnek iç ya da dış göçtür ve gönüllü ya da zorunludur; beyin göçü ile
+// mevsimlik göç ayrıca işaretlenmiştir.
+const _gocOrnekleri = <(String, List<String>)>[
+  (
+    'Kırsal kesimden iş bulmak amacıyla büyük kentlere yerleşen aileler',
+    [_icGoc, _gonullu],
   ),
+  (
+    "1960'lı yıllarda çalışmak için Almanya'ya giden işçiler",
+    [_disGoc, _gonullu],
+  ),
+  (
+    'Daha iyi araştırma olanakları için yurt dışındaki üniversitelere yerleşen bilim insanları',
+    [_disGoc, _beyin, _gonullu],
+  ),
+  (
+    'Yüksek ücretle yurt dışındaki bir şirkette çalışmaya başlayan yazılım mühendisleri',
+    [_disGoc, _beyin, _gonullu],
+  ),
+  (
+    'Yurt dışındaki hastanelerde çalışmak üzere ülkesinden ayrılan uzman doktorlar',
+    [_disGoc, _beyin, _gonullu],
+  ),
+  (
+    'Yurt dışında doktora yapıp eğitim aldığı ülkede kalarak çalışmaya başlayan araştırmacılar',
+    [_disGoc, _beyin, _gonullu],
+  ),
+  (
+    "Fındık hasadı için her yıl Karadeniz'e gidip hasattan sonra memleketine dönen tarım işçileri",
+    [_icGoc, _mevsim, _gonullu],
+  ),
+  (
+    "Pamuk toplamak için her yıl Çukurova'ya gidip mevsim sonunda geri dönen tarım işçileri",
+    [_icGoc, _mevsim, _gonullu],
+  ),
+  (
+    "Turizm sezonunda Antalya'daki otellerde çalışıp sezon bitince evine dönen gençler",
+    [_icGoc, _mevsim, _gonullu],
+  ),
+  (
+    'Yaz aylarında hayvanlarıyla yaylaya çıkıp sonbaharda köyüne dönen hayvancılar',
+    [_icGoc, _mevsim, _gonullu],
+  ),
+  (
+    'Komşu ülkeden her yıl hasat döneminde gelip mevsim sonunda ülkesine dönen tarım işçileri',
+    [_disGoc, _mevsim, _gonullu],
+  ),
+  (
+    'Savaş nedeniyle evlerini terk ederek komşu ülkeye sığınan aileler',
+    [_disGoc, _zorunlu],
+  ),
+  (
+    '1923 yılında Türkiye ile Yunanistan arasında yapılan nüfus mübadelesi',
+    [_disGoc, _zorunlu],
+  ),
+  (
+    'Siyasi baskılar nedeniyle ülkesini terk etmek zorunda kalan kişiler',
+    [_disGoc, _zorunlu],
+  ),
+  (
+    'Baraj gölünün altında kalan köyden başka bir ile yerleştirilen aileler',
+    [_icGoc, _zorunlu],
+  ),
+  (
+    'Depremde evleri yıkıldığı için başka bir kente taşınmak zorunda kalan aileler',
+    [_icGoc, _zorunlu],
+  ),
+  (
+    'Sel felaketinde köyleri yaşanamaz hâle gelince başka bir ilçeye yerleştirilen aileler',
+    [_icGoc, _zorunlu],
+  ),
+  (
+    'Kuraklık nedeniyle tarım yapılamayan köylerinden kentlere göç etmek zorunda kalan aileler',
+    [_icGoc, _zorunlu],
+  ),
+  (
+    'Heyelan tehlikesi nedeniyle devlet tarafından başka bir yere taşınan köy halkı',
+    [_icGoc, _zorunlu],
+  ),
+  (
+    'Emekli olduktan sonra Ege kıyısındaki bir ilçeye kalıcı olarak yerleşen kişiler',
+    [_icGoc, _gonullu],
+  ),
+  (
+    'Sanayi kentlerindeki fabrikalarda çalışmak için doğduğu ilden ayrılıp oraya yerleşen gençler',
+    [_icGoc, _gonullu],
+  ),
+  (
+    'Daha iyi iş olanakları için başka bir ülkeye yerleşen inşaat işçileri',
+    [_disGoc, _gonullu],
+  ),
+  (
+    'Kentteki yaşam koşulları daha iyi olduğu için ailesiyle birlikte köyünden kente taşınan bir '
+        'esnaf',
+    [_icGoc, _gonullu],
+  ),
+];
+
+const _itici = 'itici etmen', _cekici = 'çekici etmen';
+const _gocEtmenleri = <_Etiketli>[
+  ('Kırsal kesimde tarım arazilerinin miras yoluyla küçülmesi', _itici, null),
+  (
+    'Tarımda makineleşmeyle kırsal kesimde iş gücüne duyulan ihtiyacın azalması',
+    _itici,
+    null,
+  ),
+  ('Köylerde eğitim ve sağlık hizmetlerinin yetersiz olması', _itici, null),
+  ('Kırsal kesimde iş olanaklarının az olması', _itici, null),
+  (
+    'Kırsal kesimde nüfusun hızla artması ve toprağın yetersiz kalması',
+    _itici,
+    null,
+  ),
+  ('Yaşanılan yerde sık görülen doğal afetler', _itici, null),
+  ('Kırsal kesimde kan davaları ve güvenlik sorunları', _itici, null),
+  ('Köylerde gelir düzeyinin düşük olması', _itici, null),
+  ('Tarım ürünlerinden elde edilen gelirin yetersiz kalması', _itici, null),
+  ('Kentlerde sanayi kuruluşlarının iş olanağı sağlaması', _cekici, null),
+  ('Kentlerde eğitim ve sağlık hizmetlerinin gelişmiş olması', _cekici, null),
+  ('Kentlerde ücretlerin daha yüksek olması', _cekici, null),
+  ('Kentlerde ulaşım ve altyapı olanaklarının gelişmiş olması', _cekici, null),
+  ('Kentlerde kültürel ve sosyal etkinliklerin fazla olması', _cekici, null),
+  (
+    'Turizm merkezlerinde hizmet sektöründe iş olanaklarının artması',
+    _cekici,
+    null,
+  ),
+  ('Kentlerde ticaret ve hizmet sektörünün gelişmiş olması', _cekici, null),
+  ('Büyük kentlerde iş bulma olasılığının yüksek olması', _cekici, null),
+  ('Gelişmiş ülkelerde yaşam standartlarının yüksek olması', _cekici, null),
+];
+
+AdvancedItem _goc(int i) {
+  final r = i % 5, tur = i ~/ 5;
+  if (r < 3) {
+    // Seçki ve sorulan göç türü birlikte kökü belirler; her örnek en az iki
+    // türe girdiğinden aynı üçlü iki farklı türle sorulabilir.
+    final j = tur * 3 + r;
+    final toplam = kombinasyonSayisi(_gocOrnekleri.length, 3);
+    final t = j % toplam, kat = j ~/ toplam;
+    final u = kombinasyon(_gocOrnekleri, 3, t, spread: false);
+    final d = ucluDizilimler[t % 6];
+    final x = [u[d[0]], u[d[1]], u[d[2]]];
+    final birlesim = [
+      for (final g in _gocTurleri)
+        if (x.any((e) => e.$2.contains(g))) g,
+    ];
+    final hedef = birlesim[(t + kat) % birlesim.length];
+    var maske = 0;
+    for (var p = 0; p < 3; p++) {
+      if (x[p].$2.contains(hedef)) maske |= 1 << p;
+    }
+    return _hangileri(
+      '${_liste([for (final e in x) e.$1])}\nBu göç örneklerinden hangileri '
+          '${_gocaYonelme[hedef]} örnektir?',
+      maske,
+      3,
+      '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. örnek: ${x[p].$2.join(', ')}'].join('; ')}.',
+      j,
+    );
+  }
+  return _etiketli(
+    tur * 2 + r - 3,
+    2000,
+    _gocEtmenleri,
+    const [_itici, _cekici],
+    k: 4,
+    siraSoru:
+        'Bu etmenler göçün itici mi yoksa çekici etmeni mi olduklarına göre sırasıyla nasıl '
+        'sınıflandırılır?',
+    hangiSoru: (h, _) =>
+        'Bu etmenlerden hangileri göçün ${h == _itici ? 'itici' : 'çekici'} etmenlerindendir?',
+    aciklama: (x) => '${x.map((e) => '${e.$1}: ${e.$2}').join('; ')}.',
+  );
+}
+
+final _f18 = lmSirali(
+  'cg_goc',
+  'Göç türleri, itici ve çekici etmenler',
+  Topic.geography,
+  Difficulty.medium,
+  BloomLevel.anlama,
+  _goc,
+  exam: ExamKind.tyt,
   lesson: 'Coğrafya',
 );
+
+// ─────────────── 19 · Doğal afetler: nedenler, alanlar ve önlemler ──────────
+
+const _afDeprem = 'deprem',
+    _afHeyelan = 'heyelan',
+    _afSel = 'sel',
+    _afCig = 'çığ';
+const _afErozyon = 'erozyon',
+    _afKurak = 'kuraklık',
+    _afYangin = 'orman yangını';
+const _afTsunami = 'tsunami', _afVolkan = 'volkan patlaması';
+const _afetler = <_Etiketli>[
+  (
+    'Yer kabuğunda biriken enerjinin fay hatları boyunca aniden boşalmasıyla oluşur.',
+    _afDeprem,
+    null,
+  ),
+  (
+    "Türkiye'de Kuzey Anadolu ve Doğu Anadolu fay hatları boyunca sık yaşanır.",
+    _afDeprem,
+    null,
+  ),
+  (
+    'Eşyaların duvara sabitlenmesi ve binalarda taşıyıcı kolonların kesilmemesi zararını azaltır.',
+    _afDeprem,
+    null,
+  ),
+  (
+    'Odak noktasından yayılan sarsıntı dalgalarıyla geniş alanlarda yıkıma yol açar.',
+    _afDeprem,
+    null,
+  ),
+  (
+    'Eğimli yamaçlarda kil gibi kaygan tabakaların suya doyarak yer çekimiyle kaymasıyla oluşur.',
+    _afHeyelan,
+    null,
+  ),
+  (
+    "Türkiye'de en sık, eğimli ve yağışlı yamaçların bulunduğu Karadeniz Bölgesi'nde görülen "
+        'kütle hareketidir.',
+    _afHeyelan,
+    null,
+  ),
+  (
+    'Yamaç eteklerinin yol ve bina yapımı için kazılmaması ve istinat duvarları yapılması '
+        'zararını azaltır.',
+    _afHeyelan,
+    null,
+  ),
+  (
+    'Kısa sürede düşen sağanak yağışlar ya da ani kar erimeleriyle akarsuların yatağından '
+        'taşmasıyla oluşur.',
+    _afSel,
+    null,
+  ),
+  (
+    'Dere yataklarına yapı yapılmaması ve akarsu yataklarının ıslah edilmesi zararını azaltır.',
+    _afSel,
+    null,
+  ),
+  (
+    'Ani yağışlarla dar vadilerde kısa sürede yükselen sular can ve mal kaybına yol açar.',
+    _afSel,
+    null,
+  ),
+  (
+    'Eğimli dağ yamaçlarında biriken kar kütlesinin aniden kayarak aşağı inmesidir.',
+    _afCig,
+    null,
+  ),
+  (
+    "Türkiye'de en çok Doğu Anadolu'nun ve Doğu Karadeniz'in yüksek kesimlerinde görülür.",
+    _afCig,
+    null,
+  ),
+  (
+    'Yamaçlara kar tutucu çitler ve bariyerler kurulması zararını azaltır.',
+    _afCig,
+    null,
+  ),
+  (
+    'Bitki örtüsünden yoksun eğimli arazilerde toprağın rüzgâr ve sularla taşınmasıdır.',
+    _afErozyon,
+    null,
+  ),
+  (
+    'Eğimli arazilerde taraçalama yapılması ve eğime dik sürüm uygulanması etkisini azaltır.',
+    _afErozyon,
+    null,
+  ),
+  (
+    'Toprağın verimli üst katmanının taşınmasına yol açarak tarım alanlarını verimsizleştirir.',
+    _afErozyon,
+    null,
+  ),
+  (
+    'Yağışın uzun süre normalin altında kalmasıyla su kaynaklarının azalmasıdır.',
+    _afKurak,
+    null,
+  ),
+  (
+    'Damla sulamaya geçilmesi ve suyun tasarruflu kullanılması etkisini azaltır.',
+    _afKurak,
+    null,
+  ),
+  (
+    'Uzun süre yağış almayan tarım alanlarında ürün kaybına ve su sıkıntısına yol açar.',
+    _afKurak,
+    null,
+  ),
+  (
+    "Türkiye'de en çok yazları sıcak ve kurak geçen Akdeniz ve Ege kıyılarında görülür.",
+    _afYangin,
+    null,
+  ),
+  (
+    'Ormanlarda yangın şeritleri açılması ve gözetleme kuleleri kurulması zararını azaltır.',
+    _afYangin,
+    null,
+  ),
+  (
+    'Çoğu insan kaynaklı olup kızılçam ormanlarının yaygın olduğu kıyılarda büyük zarar verir.',
+    _afYangin,
+    null,
+  ),
+  (
+    'Deniz tabanında oluşan deprem ya da volkan patlamalarının yol açtığı dev dalgalardır.',
+    _afTsunami,
+    null,
+  ),
+  (
+    'Kıyılarda dev dalgalara karşı erken uyarı sistemleri kurulması zararını azaltır.',
+    _afTsunami,
+    null,
+  ),
+  (
+    'Magmanın yer kabuğundaki çatlaklardan lav ve kül olarak yeryüzüne çıkmasıyla oluşur.',
+    _afVolkan,
+    null,
+  ),
+  (
+    "İtalya'daki Etna ve Vezüv dağlarında lav ve kül çıkışıyla yaşanan afettir.",
+    _afVolkan,
+    null,
+  ),
+];
+
+final _f19 = lmSirali(
+  'cg_afet',
+  'Doğal afetler: nedenleri, görüldüğü yerler ve önlemler',
+  Topic.geography,
+  Difficulty.medium,
+  BloomLevel.anlama,
+  (i) => _etiketli(
+    i,
+    lmAileBoyu,
+    _afetler,
+    const [
+      _afDeprem,
+      _afHeyelan,
+      _afSel,
+      _afCig,
+      _afErozyon,
+      _afKurak,
+      _afYangin,
+      _afTsunami,
+      _afVolkan,
+    ],
+    siraSoru: 'Bu bilgilerin ilgili olduğu doğal afetler sırasıyla hangisidir?',
+    hangiSoru: (h, _) => 'Bu bilgilerden hangileri “$h” ile ilgilidir?',
+    aciklama: (x) => 'Sırasıyla: ${x.map((e) => e.$2).join(', ')}.',
+  ),
+  exam: ExamKind.tyt,
+  lesson: 'Coğrafya',
+);
+
+// ─────────────── 20 · Göl türleri, Türkiye'den örnekler ve akarsu rejimi ────
+
+const _gTek = 'tektonik göl', _gVol = 'volkanik göl', _gKar = 'karstik göl';
+const _gHey = 'heyelan set gölü',
+    _gLav = 'volkanik set gölü',
+    _gAlu = 'alüvyal set gölü';
+const _gKiy = 'kıyı set gölü';
+const _setGolleri = {_gHey, _gLav, _gAlu, _gKiy};
+const _goller = <(String, String)>[
+  ('Tuz Gölü', _gTek),
+  ('Burdur Gölü', _gTek),
+  ('Acıgöl (Denizli-Afyonkarahisar)', _gTek),
+  ('Hazar Gölü', _gTek),
+  ('Sapanca Gölü', _gTek),
+  ('İznik Gölü', _gTek),
+  ('Manyas (Kuş) Gölü', _gTek),
+  ('Uluabat Gölü', _gTek),
+  ('Eber Gölü', _gTek),
+  ('Akşehir Gölü', _gTek),
+  ('Nemrut Krater Gölü', _gVol),
+  ('Meke Gölü', _gVol),
+  ('Gölcük Gölü (Isparta)', _gVol),
+  ('Salda Gölü', _gKar),
+  ('Avlan Gölü', _gKar),
+  ('Suğla Gölü', _gKar),
+  ('Hafik Gölü', _gKar),
+  ('Tödürge Gölü', _gKar),
+  ('Kızören Obruğu', _gKar),
+  ('Tortum Gölü', _gHey),
+  ('Sera Gölü', _gHey),
+  ('Yedigöller', _gHey),
+  ('Borabay Gölü', _gHey),
+  ('Zinav Gölü', _gHey),
+  ('Van Gölü', _gLav),
+  ('Çıldır Gölü', _gLav),
+  ('Nazik Gölü', _gLav),
+  ('Haçlı Gölü', _gLav),
+  ('Bafa Gölü', _gAlu),
+  ('Marmara Gölü (Manisa)', _gAlu),
+  ('Eymir Gölü', _gAlu),
+  ('Mogan Gölü', _gAlu),
+  ('Terkos (Durusu) Gölü', _gKiy),
+  ('Küçükçekmece Gölü', _gKiy),
+  ('Büyükçekmece Gölü', _gKiy),
+  ('Akyatan Gölü', _gKiy),
+  ('Paradeniz Gölü', _gKiy),
+];
+const _golIfade = {
+  _gTek: 'tektonik kökenlidir',
+  _gVol: 'volkanik bir çanakta (krater, kaldera ya da maar) oluşmuştur',
+  _gKar: 'karstik kökenlidir',
+  _gHey: 'heyelan set gölüdür',
+  _gLav: 'volkanik set (lav seti) gölüdür',
+  _gAlu: 'alüvyal set gölüdür',
+  _gKiy: 'kıyı set gölüdür',
+};
+
+const _rejimOnerme = <_Onerme>[
+  (
+    'Ekvatoral iklim bölgesindeki akarsuların',
+    'akımı yıl boyunca yüksektir ve rejimleri düzenlidir.',
+    [
+      'akımı yaz aylarında kesilir.',
+      'en yüksek akımı kar erimeleriyle ilkbaharda görülür.',
+    ],
+  ),
+  (
+    'Akdeniz iklim bölgesindeki akarsuların',
+    'akımı kışın artar, yazın azalır.',
+    ['akımı yazın en yüksek düzeye çıkar.', 'akımı yıl boyunca aynı kalır.'],
+  ),
+  (
+    'Ilıman okyanusal iklim bölgesindeki akarsuların',
+    'rejimi, yağış yıla dengeli dağıldığından düzenlidir.',
+    [
+      'rejimi çok düzensizdir ve yazın kururlar.',
+      'akımı yalnız kış aylarında görülür.',
+    ],
+  ),
+  (
+    'Muson iklim bölgesindeki akarsuların',
+    'akımı yaz yağışlarıyla yazın en yüksek düzeye ulaşır.',
+    ['akımı kışın en yüksek düzeye ulaşır.', 'akımı yıl boyunca aynı kalır.'],
+  ),
+  (
+    'Sert karasal iklim bölgesindeki akarsular',
+    'kışın donar, ilkbaharda buzların çözülmesiyle taşkınlara yol açar.',
+    ['kışın en yüksek akıma ulaşır.', 'yıl boyunca donmadan akar.'],
+  ),
+  (
+    'Karasal iklim bölgesindeki akarsuların',
+    'akımı ilkbaharda kar erimeleri ve yağışlarla artar, yazın azalır.',
+    ['akımı yazın en yüksek düzeye çıkar.', 'akımı yıl boyunca aynı kalır.'],
+  ),
+  (
+    'Fırat ve Dicle nehirlerinin',
+    'en yüksek akımı kar erimelerinin etkisiyle ilkbaharda görülür.',
+    [
+      'en yüksek akımı sonbaharda görülür.',
+      'en düşük akımı ilkbaharda görülür.',
+    ],
+  ),
+  (
+    "Doğu Karadeniz'deki akarsuların",
+    "rejimi Türkiye'nin diğer bölgelerindeki akarsulara göre daha düzenlidir.",
+    [
+      "rejimi Türkiye'deki akarsular arasında en düzensiz olanıdır.",
+      'akımı yaz aylarında tamamen kesilir.',
+    ],
+  ),
+  (
+    "Akdeniz Bölgesi'ndeki akarsuların",
+    'akımı yaz aylarında en düşük düzeye iner.',
+    [
+      'akımı yaz aylarında en yüksek düzeye çıkar.',
+      'akımı kış aylarında en düşük düzeye iner.',
+    ],
+  ),
+  (
+    'Karstik kaynaklardan beslenen akarsuların',
+    'rejimi daha düzenlidir.',
+    ['rejimi çok düzensizdir.', 'akımı yağışlardan hemen sonra kesilir.'],
+  ),
+  (
+    'Bir gölden beslenen akarsuların',
+    'rejimi, göl suyu düzenlediği için daha düzenlidir.',
+    [
+      'rejimi, göl suyu biriktirdiği için çok düzensizdir.',
+      'akımı yalnız kar erimesiyle oluşur.',
+    ],
+  ),
+  (
+    'Buzullarla beslenen akarsuların',
+    'akımı buzulların eridiği yaz aylarında artar.',
+    [
+      'akımı kış aylarında en yüksek düzeye çıkar.',
+      'akımı yaz aylarında kesilir.',
+    ],
+  ),
+  (
+    'Akarsular üzerine kurulan barajlar',
+    'akarsuların rejimini düzenler.',
+    [
+      'akarsuların rejimini düzensizleştirir.',
+      'akarsuların taşıdığı su miktarını artırır.',
+    ],
+  ),
+  (
+    'Yağışın yıl içinde düzensiz dağıldığı yerlerdeki akarsuların',
+    'rejimi de düzensizdir.',
+    ['rejimi çok düzenlidir.', 'akımı yıl boyunca değişmez.'],
+  ),
+];
+
+AdvancedItem _golAkarsu(int i) {
+  final r = i % 10, tur = i ~/ 10;
+  if (r >= 7) {
+    return _dogruYanlis(
+      tur * 3 + r - 7,
+      _rejimOnerme,
+      'Akarsu rejimleriyle ilgili bu bilgilerden hangileri doğrudur?',
+    );
+  }
+  final j = tur * 7 + r, s = j ~/ 2;
+  final x = _secki(_goller, 3, s, 1750);
+  final tur3 = [for (final e in x) e.$2];
+  final liste = '${_liste([for (final e in x) e.$1])}\n';
+  final aciklama = '${x.map((e) => '${e.$1}: ${e.$2}').join('; ')}.';
+  if (j.isEven) {
+    return secenekli(
+      '${liste}Bu göllerin oluşumlarına göre türleri sırasıyla hangisidir?',
+      tur3.join(' – '),
+      _siraYanlis(tur3, const [
+        _gTek,
+        _gVol,
+        _gKar,
+        _gHey,
+        _gLav,
+        _gAlu,
+        _gKiy,
+      ], s),
+      aciklama,
+    );
+  }
+  final setVar = tur3.any(_setGolleri.contains);
+  if (s % 3 == 0 && setVar) {
+    var maske = 0;
+    for (var p = 0; p < 3; p++) {
+      if (_setGolleri.contains(tur3[p])) maske |= 1 << p;
+    }
+    return _hangileri(
+      '${liste}Bu göllerden hangileri set gölüdür?',
+      maske,
+      3,
+      aciklama,
+      s,
+    );
+  }
+  final hedef = tur3[s % 3];
+  var maske = 0;
+  for (var p = 0; p < 3; p++) {
+    if (tur3[p] == hedef) maske |= 1 << p;
+  }
+  return _hangileri(
+    '${liste}Bu göllerden hangileri ${_golIfade[hedef]}?',
+    maske,
+    3,
+    aciklama,
+    s,
+  );
+}
+
+final _f20 = lmSirali(
+  'cg_gol_akarsu',
+  "Göl türleri, Türkiye'deki örnekleri ve akarsu rejimi",
+  Topic.geography,
+  Difficulty.medium,
+  BloomLevel.hatirlama,
+  _golAkarsu,
+  exam: ExamKind.tyt,
+  lesson: 'Coğrafya',
+);
+
+// ─────────────────────────────── Aile listesi ───────────────────────────────
 
 final lmCografyaEk = <AdvancedFamily>[
   _f01,
@@ -2638,5 +3224,7 @@ final lmCografyaEk = <AdvancedFamily>[
   _f15,
   _f16,
   _f17,
-  for (var n = 18; n <= 20; n++) _tmp(n),
+  _f18,
+  _f19,
+  _f20,
 ];
