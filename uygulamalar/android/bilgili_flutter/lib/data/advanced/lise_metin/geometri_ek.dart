@@ -1040,25 +1040,29 @@ AdvancedItem _tam(
 );
 
 /// İşaretli tam sayı yanıtlı soru; anahtarın değer sırası [sira] ile seçilir.
-/// Tipik hatalardan sonra anahtarın iki yanındaki komşular denenir.
+/// Tipik hatalardan sonra anahtarın iki yanındaki komşular (büyüklüğe göre
+/// 1, 5 ya da 10 adım) denenir.
 AdvancedItem _tamSirali(
   String prompt,
   int dogru,
   List<int> yanlis,
   String aciklama,
   int sira,
-) => AdvancedItem(
-  prompt,
-  _m(dogru),
-  siraliCeldiriciler(dogru, _m(dogru), [
-    for (final x in [
-      ...yanlis,
-      for (var k = 1; k <= 4; k++) ...[dogru + k, dogru - k],
-    ])
-      (x, _m(x)),
-  ], sira),
-  aciklama,
-);
+) {
+  final adim = dogru.abs() >= 200 ? 10 : (dogru.abs() >= 40 ? 5 : 1);
+  return AdvancedItem(
+    prompt,
+    _m(dogru),
+    siraliCeldiriciler(dogru, _m(dogru), [
+      for (final x in [
+        ...yanlis,
+        for (var k = 1; k <= 4; k++) ...[dogru + k * adim, dogru - k * adim],
+      ])
+        (x, _m(x)),
+    ], sira),
+    aciklama,
+  );
+}
 
 /// Kesişim sorularında katsayı çiftleri (determinant sıfırdan farklı).
 const _kesisimKatsayi = [
@@ -5049,7 +5053,7 @@ final lmGeometriEk = <AdvancedFamily>[
     Difficulty.hard,
     BloomLevel.analiz,
     (a, b, c) {
-      final h = a - 12, k = b - 10;
+      final h = a - 12, k = b - 10, sira = hedefSira(_no(a, b, c));
       if (c <= 2) {
         final r = 2 + (a + b) % 7;
         final (pa, pb, nn) = _normaller[(c + a) % 6];
@@ -5107,16 +5111,19 @@ final lmGeometriEk = <AdvancedFamily>[
           denklem =
               '${_ifade([(1, 'x²'), (1, 'y²'), (-2 * mx, 'x'), (-2 * my, 'y'), (sabitTerim(mx, my), '')])} = 0';
         }
-        return sayisal(
+        // |PM| değerini yanıt sanma, uzunlukları çıkarma, karekök almayı
+        // unutma, toplama ve teğet uzunluğunu yarıçap sanma.
+        return sayisalSirali(
           'Analitik düzlemde $denklem çemberine, dışındaki P${_n(px, py)} '
               'noktasından çizilen teğet çembere T noktasında değiyor. Buna göre '
               '|PT| kaç birimdir?',
           uz,
-          [d, d - r, uz * uz, r + uz],
+          [d, d - r, uz * uz, r + uz, r],
           '${c == 4 ? 'Denklem tam kareye tamamlanırsa ${_cember(mx, my, r * r)} olur. ' : ''}'
               'Merkez M${_n(mx, my)}, yarıçap $r birimdir. |PM|² = ${_pz(dx)}² + '
               '${_pz(dy)}² = ${d * d}. Teğet yarıçapa dik olduğundan |PT|² = '
               '${d * d} − ${r * r} = ${uz * uz} ve |PT| = $uz birim.',
+          sira,
           positive: true,
         );
       }
@@ -5144,20 +5151,34 @@ final lmGeometriEk = <AdvancedFamily>[
             'Analitik düzlemde $dogru doğrusu ${_cember(hh, k, r * r)} çemberine '
             'teğet olduğuna göre';
         if (c == 5) {
-          return _tam(
+          // İşaret hatası, tek değer, iki değerin farkı; değerleri ±r√(A² +
+          // B²) sanıp toplamı 0 bulma, toplam yerine çarpımı alma ve işaretli
+          // yarısı.
+          return _tamSirali(
             '$veri n sayısının alabileceği değerlerin toplamı kaçtır?',
             -2 * e,
-            [2 * e, -e, 2 * r * nn],
+            [2 * e, -e, 2 * r * nn, 0, e * e - r * r * nn * nn, e, -2 * r * nn],
             '$kural Toplam ${_m(-2 * e)}.',
+            sira,
           );
         }
         final carpim = e * e - r * r * nn * nn;
-        return _tam(
+        // İşaret hataları, √(A² + B²) çarpanının karesini almama ya da onu
+        // unutma, ikinci terimi yazmama ve çarpım yerine toplamı alma.
+        return _tamSirali(
           '$veri n sayısının alabileceği değerlerin çarpımı kaçtır?',
           carpim,
-          [e * e + r * r * nn * nn, -carpim, e * e - r * r],
+          [
+            e * e + r * r * nn * nn,
+            -carpim,
+            e * e - r * r,
+            -2 * e,
+            e * e,
+            e * e - r * r * nn,
+          ],
           '$kural Çarpım (${_m(-e + r * nn)})·(${_m(-e - r * nn)}) = '
               '${_m(carpim)}.',
+          sira,
         );
       }
       if (c == 7) {
@@ -5169,17 +5190,25 @@ final lmGeometriEk = <AdvancedFamily>[
           e++;
         }
         final adet = 2 * e + 1;
-        return sayisal(
+        // (1 + m²) çarpanını unutan öğrencinin sınırı n² < R olur.
+        var e0 = 0;
+        while ((e0 + 1) * (e0 + 1) < R) {
+          e0++;
+        }
+        // Uçları katma, yalnız pozitifleri ya da sıfırı saymama, (1 + m²)
+        // çarpanını unutma ve kareyi almadan |n| < sınır sanma.
+        return sayisalSirali(
           'Analitik düzlemde y = ${_ifade([(m, 'x')])} + n doğrusu x² + y² = '
               '$R çemberini iki farklı noktada kestiğine göre n sayısının '
               'alabileceği kaç farklı tam sayı değeri vardır?',
           adet,
-          [2 * e + 3, e, 2 * e],
+          [2 * e + 3, e, 2 * e, 2 * e0 + 1, 2 * sinir - 1],
           'Doğru denklemi çemberde yerine yazılırsa '
               '${_ifade([(oran, 'x²'), (2 * m, 'nx')])} + n² − $R = 0 olur. İki '
               'noktada kesişme için diskriminant pozitif olmalıdır: n² < $R·$oran '
               '= $sinir. Bu koşulu sağlayan tam sayılar −$e ile $e arasındaki '
               '(uçlar dâhil) $adet sayıdır.',
+          sira,
           positive: true,
         );
       }
@@ -5199,17 +5228,20 @@ final lmGeometriEk = <AdvancedFamily>[
           j = u;
         }
         final n1 = sabit + j * oran, n2 = sabit - j * oran;
-        return _tam(
+        // Küçük değer, merkez terimi, işaret hataları ve yarıçap yerine
+        // yalnız j alma.
+        return _tamSirali(
           'Analitik düzlemde y = ${_ifade([(m, 'x')])} + n doğrusu '
               '${_cember(h, k, j * j * oran)} çemberine teğet olduğuna göre n '
               'sayısının alabileceği değerlerden büyük olanı kaçtır?',
           n1,
-          [n2, sabit, -n1],
+          [n2, sabit, -n1, -n2, sabit + j],
           'Merkez M${_n(h, k)}, yarıçap √${j * j * oran} = ${_kok(j, oran)} '
               'birimdir. Merkezin ${_ifade([(m, 'x')])} − y + n = 0 doğrusuna '
               'uzaklığı |${_m(m)}·${_pz(h)} − ${_pz(k)} + n| / √$oran olur. Bu '
               'uzaklık yarıçapa eşitlenirse |n − ${_pz(sabit)}| = ${j * oran}, n = '
               '${_m(n1)} ya da n = ${_m(n2)} bulunur; büyük olanı ${_m(n1)}.',
+          sira,
         );
       }
       final r = 2 + (a + b) % 7;
@@ -5225,16 +5257,19 @@ final lmGeometriEk = <AdvancedFamily>[
         fark += 9;
       }
       final t = (r + fark) * nn, cc = sabitOf(fark);
-      return sayisal(
+      // Merkezin uzaklığı, en büyük uzaklık, yarıçap; çapı çıkarma ve
+      // √(A² + B²) ile bölmeyi unutma.
+      return sayisalSirali(
         'Analitik düzlemde ${_cember(h, k, r * r)} çemberi ile '
             '${_dnk(pa, pb, cc)} doğrusu kesişmiyor. Çember üzerindeki noktaların '
             'bu doğruya olan uzaklıklarının en küçüğü kaç birimdir?',
         fark,
-        [r + fark, 2 * r + fark, r],
+        [r + fark, 2 * r + fark, r, fark - r, t - r],
         'Merkez M${_n(h, k)}, yarıçap $r birimdir. Merkezin doğruya uzaklığı '
             '|$pa·${_pz(h)} + ${_pz(pb)}·${_pz(k)} + ${_pz(cc)}| / $nn = $t / $nn '
             '= ${r + fark} birim olur. En yakın nokta merkezle doğru arasındadır: '
             '${r + fark} − $r = $fark birim.',
+        sira,
         positive: true,
       );
     },

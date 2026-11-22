@@ -183,9 +183,11 @@ AdvancedItem _sd(
   // (k/10 ile 10k, k − d ile k + d gibi) "ortadakini seç" ipucu doğar; o
   // çiftin sonraki öncelikli adayı atılıp aynı sırayla yeniden seçilir.
   // Dört seçenek eşit aralıklı bir dizi oluşturursa da (anahtar hep bir
-  // uçta kalır) en son öncelikli çeldirici atılır. Bir komşu, iki seçenekle
-  // eşit aralıklı bir üçlü kurarsa (k, k + s, k + 2s gibi) ya da başka bir
-  // çeldiriciye çok yakın düşerse (%2'den az) o komşu atılır.
+  // uçta kalır) en son öncelikli çeldirici atılır. Herhangi üç seçenek eşit
+  // aralıklı bir üçlü kurarsa (k, k + s, k + 2s ya da m·(v₁ − v₂), m·v₁,
+  // m·(v₁ + v₂) gibi; anahtar uçta ya da dışarıda kalır) üçlüdeki komşu, komşu
+  // yoksa en son öncelikli çeldirici atılır. Başka bir çeldiriciye çok yakın
+  // düşen (%2'den az) komşu da atılır.
   var secilen = sec();
   for (var deneme = 0; deneme < 12; deneme++) {
     int? at;
@@ -209,7 +211,9 @@ AdvancedItem _sd(
         for (var t = q + 1; t < 4 && at == null; t++) {
           final g1 = d[q] - d[p], g2 = d[t] - d[q];
           if ((g1 - g2).abs() <= 0.1 * math.max(g1, g2)) {
-            at = sonKomsu([d[p], d[q], d[t]]);
+            final uc = [d[p], d[q], d[t]].where((y) => y != kY);
+            at = sonKomsu(uc) ??
+                uc.reduce((x, y) => aday.indexOf(x) > aday.indexOf(y) ? x : y);
           }
         }
       }

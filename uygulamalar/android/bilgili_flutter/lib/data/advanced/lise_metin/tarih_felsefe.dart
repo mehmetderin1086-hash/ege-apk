@@ -170,10 +170,11 @@ class _Ozneli {
   /// değer kullanır (ör. partiler ile olaylar birbirine karıştırılmaz).
   final List<int>? grup;
 
-  /// İsteğe bağlı: yanlış önermede ögenin önüne konabilecek değerlerin bit
-  /// maskesi (öge metniyle; −1 öbekteki bütün değerler). Anlamca ögeye uymayan
-  /// bir özne (ör. bir isyana seçim yöntemi, bir sözleşmeye “ittifaktır”)
-  /// yanlış önermeyi bilgi gerektirmeden elenebilir kılar.
+  /// İsteğe bağlı: yanlış önermede ve sıralı biçimin çeldiricilerinde ögeye
+  /// yakıştırılabilecek değerlerin bit maskesi (öge metniyle; −1 öbekteki
+  /// bütün değerler). Anlamca ögeye uymayan bir özne (ör. bir isyana seçim
+  /// yöntemi, bir sözleşmeye “ittifaktır”) yanlış seçeneği bilgi gerektirmeden
+  /// elenebilir kılar.
   final Map<String, int>? uyum;
 
   int _uyumsuz((String, int, int) e) => ~(uyum?[e.$1] ?? -1);

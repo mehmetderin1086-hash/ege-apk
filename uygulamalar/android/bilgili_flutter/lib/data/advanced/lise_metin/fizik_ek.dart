@@ -5316,6 +5316,7 @@ AdvancedItem _uBorusuDenge(int a, int b, int k) {
   const denge =
       'Ayrılma yüzeyinden geçen yatay düzeyde iki koldaki basınçlar eşittir: '
       'h(X)·d(X) = h(Y)·d(Y).';
+  final s = _hs(a, b, 3 * k);
   switch (v) {
     case 0:
       return _s(
@@ -5323,9 +5324,17 @@ AdvancedItem _uBorusuDenge(int a, int b, int k) {
             'g/cm³ olarak veriliyor. $duzey X sıvısının yüksekliği $h1 cm '
             'olduğuna göre öbür koldaki Y sıvısının yüksekliği kaç cm olur?',
         h2,
-        [h1 * d2 / d1, h1 - h2, h1.toDouble()],
+        // Ek: oranı iki kez uygulamak, yoğunlukların toplamına bölmek.
+        [
+          h1 * d2 / d1,
+          h1 - h2,
+          h1.toDouble(),
+          h2 * d1 / d2,
+          h1 * d1 / (d1 + d2),
+        ],
         '$denge Buradan h(Y) = $h1·$r1 / $r2 = ${_n(h2)} cm bulunur.',
         unit: 'cm',
+        sira: s,
       );
     case 1:
       return _s(
@@ -5333,8 +5342,16 @@ AdvancedItem _uBorusuDenge(int a, int b, int k) {
             'sıvısının yüksekliği $h1 cm, öbür koldaki Y sıvısının yüksekliği '
             '${_n(h2)} cm olduğuna göre X sıvısının yoğunluğu kaç g/cm³ olur?',
         d1 / 100,
-        [h1 * d2 / (100 * h2), d2 / 100, h2 / h1],
+        // Ek: yükseklik farkını ya da toplam yüksekliği kullanmak.
+        [
+          h1 * d2 / (100 * h2),
+          d2 / 100,
+          h2 / h1,
+          d2 * (h1 - h2) / (100 * h1),
+          d2 * h2 / (100 * (h1 + h2)),
+        ],
         '$denge Buradan d(X) = ${_n(h2)}·$r2 / $h1 = $r1 g/cm³ bulunur.',
+        sira: s,
       );
     default:
       final fark = h1 - h2;
@@ -5344,11 +5361,12 @@ AdvancedItem _uBorusuDenge(int a, int b, int k) {
             'olduğuna göre iki koldaki sıvıların serbest yüzeyleri arasındaki '
             'düzey farkı kaç cm olur?',
         fark,
-        [h2, h1 * d2 / d1 - h1, h1 + h2],
+        [h2, h1 * d2 / d1 - h1, h1 + h2, fark * d1 / d2, fark / 2],
         '$denge Y sıvısının yüksekliği h(Y) = $h1·$r1 / $r2 = ${_n(h2)} cm olur. '
             'Serbest yüzeyler arasındaki fark $h1 − ${_n(h2)} = ${_n(fark)} cm '
             'bulunur.',
         unit: 'cm',
+        sira: s,
       );
   }
 }
@@ -5381,6 +5399,7 @@ const _civaNot = '(Cıvanın yoğunluğu 13,6 g/cm³ alınız.)';
 
 AdvancedItem _acikHava(int a, int b, int k) {
   final n = a + 25 * (b ~/ 2) + 250 * k; // 0 … 749
+  final s = _hs(a, b, 3 * k + 1);
   if (b.isEven) {
     final (p0, d) = _yay(
       n % 3 == 2 ? _torricelli : _torricelliSusuz,
@@ -5396,9 +5415,11 @@ AdvancedItem _acikHava(int a, int b, int k) {
             'yerine yoğunluğu $ds g/cm³ olan bir sıvıyla yapılıyor. Tüpte '
             'yükselen sıvı sütununun yüksekliği kaç cm olur? $_civaNot',
         h,
-        [p0 * d / 1360, p0 * 13.6, p0],
+        // Ek: cıvanın yoğunluğunu unutmak, sıvının yoğunluğuyla çarpmak.
+        [p0 * d / 1360, p0 * 13.6, p0, p0 * 100 / d, p0 * 13.6 * d / 100],
         '$esit $p0·13,6 = h·$ds. Buradan h = $hs cm bulunur.',
         unit: 'cm',
+        sira: s,
       ),
       1 => _s(
         'Bir yerde Torricelli deneyi cıva yerine yoğunluğu $ds g/cm³ olan bir '
@@ -5408,8 +5429,10 @@ AdvancedItem _acikHava(int a, int b, int k) {
         p0,
         // Cıvanın yoğunluğuna bölmeyi ya da sıvının yoğunluğunu unutmak,
         // santimetreyi milimetre sanmak.
-        [h * d / 100, h / 13.6, 10 * p0],
+        // Ek: açık hava basıncını her yerde 76 cmHg sanmak.
+        [h * d / 100, h / 13.6, 10 * p0, 76],
         '$esit P₀·13,6 = $hs·$ds. Buradan P₀ = $p0 cmHg bulunur.',
+        sira: s,
       ),
       _ => _s(
         'Açık hava basıncının $p0 cmHg olduğu bir yerde Torricelli deneyi cıva '
@@ -5421,6 +5444,7 @@ AdvancedItem _acikHava(int a, int b, int k) {
         // 76 cmHg almak.
         [p0 / h, h / (13.6 * p0), if (p0 != 76) 13.6 * 76 / h],
         '$esit $p0·13,6 = $hs·d. Buradan d = $ds g/cm³ bulunur.',
+        sira: s,
       ),
     };
   }
@@ -5432,10 +5456,19 @@ AdvancedItem _acikHava(int a, int b, int k) {
         '${_n(h / 100)} m olarak ölçülüyor. Açık hava basıncı kaç Pa olur? '
         '$_g10',
     p,
-    [p * 100, d * h / 1000, p / 10],
+    // Ek: sıvı yerine cıvanın ya da suyun yoğunluğunu kullanmak.
+    [
+      p * 100,
+      d * h / 1000,
+      p / 10,
+      if (d != 13600) 1360 * h,
+      if (d != 1000) 100 * h,
+      p * 10,
+    ],
     'Açık hava basıncı sütunun yaptığı basınca eşittir: P = h·d·g = '
         '${_n(h / 100)}·$d·10 = ${_n(p)} Pa.',
     unit: 'Pa',
+    sira: s,
   );
 }
 
@@ -5453,6 +5486,14 @@ AdvancedItem _manometre(int a, int b, int k) {
   final y = pa ? pGaz * 1360.0 : pGaz.toDouble();
   final ters = (asagi ? p0 - dh : p0 + dh) * (pa ? 1360 : 1);
   final gazYazi = _n(pGaz), dhYazi = _n(dh);
+  // Ek: düzey farkını iki kez eklemek ya da yarısını eklemek, açık hava
+  // basıncını 76 cmHg almak.
+  final isaret = asagi ? 1 : -1, cp = pa ? 1360 : 1;
+  final ekler = [
+    (p0 + 2 * isaret * dh) * cp,
+    if (p0 != 76) (76 + isaret * dh) * cp,
+    (p0 + isaret * dh / 2) * cp,
+  ];
   return _s(
     'Açık uçlu cıvalı bir manometre, gaz dolu bir kaba bağlanmıştır. Açık '
         'hava basıncı $p0 cmHg olan bir ortamda, manometrenin gaza bağlı '
@@ -5460,11 +5501,12 @@ AdvancedItem _manometre(int a, int b, int k) {
         '${asagi ? 'aşağıdadır' : 'yukarıdadır'}. Kaptaki gazın basıncı kaç '
         '${pa ? 'Pa' : 'cmHg'} olur?${pa ? ' (1 cmHg = 1360 Pa alınız.)' : ''}',
     y,
-    [ters, dh * (pa ? 1360 : 1), p0 * (pa ? 1360 : 1)],
+    [ters, dh * (pa ? 1360 : 1), p0 * (pa ? 1360 : 1), ...ekler],
     'Gaza bağlı koldaki cıva düzeyi ${asagi ? 'aşağıda olduğundan gaz basıncı açık hava basıncından büyüktür' : 'yukarıda olduğundan gaz basıncı açık hava basıncından küçüktür'}: '
         'P = $p0 ${asagi ? '+' : '−'} $dhYazi = $gazYazi cmHg'
         '${pa ? ' = $gazYazi·1360 = ${_n(y)} Pa' : ''}.',
     unit: pa ? 'Pa' : '',
+    sira: _hs(a, b, 3 * k + 2),
   );
 }
 
