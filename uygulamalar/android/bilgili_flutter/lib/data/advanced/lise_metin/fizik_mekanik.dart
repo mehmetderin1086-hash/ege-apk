@@ -96,6 +96,7 @@ AdvancedItem _sd(
   num? adim,
   num komsuAlt = 0,
   num? komsuUst,
+  bool ucluHata = false,
 }) {
   final k = (dogru * 100).roundToDouble() / 100;
   if ((dogru - k).abs() > 1e-7 || k <= 0) {
@@ -184,10 +185,11 @@ AdvancedItem _sd(
   // çiftin sonraki öncelikli adayı atılıp aynı sırayla yeniden seçilir.
   // Dört seçenek eşit aralıklı bir dizi oluşturursa da (anahtar hep bir
   // uçta kalır) en son öncelikli çeldirici atılır. Herhangi üç seçenek eşit
-  // aralıklı bir üçlü kurarsa (k, k + s, k + 2s ya da m·(v₁ − v₂), m·v₁,
-  // m·(v₁ + v₂) gibi; anahtar uçta ya da dışarıda kalır) üçlüdeki komşu, komşu
-  // yoksa en son öncelikli çeldirici atılır. Başka bir çeldiriciye çok yakın
-  // düşen (%2'den az) komşu da atılır.
+  // aralıklı bir üçlü kurarsa (k, k + s, k + 2s gibi; anahtar uçta ya da
+  // dışarıda kalır) üçlüdeki komşu atılır; [ucluHata] verilmişse komşu yoksa
+  // üçlünün en son öncelikli tipik hatası da atılır (m·(v₁ − v₂), m·v₁,
+  // m·(v₁ + v₂) gibi). Başka bir çeldiriciye çok yakın düşen (%2'den az) komşu
+  // da atılır.
   var secilen = sec();
   for (var deneme = 0; deneme < 12; deneme++) {
     int? at;
@@ -213,7 +215,10 @@ AdvancedItem _sd(
           if ((g1 - g2).abs() <= 0.1 * math.max(g1, g2)) {
             final uc = [d[p], d[q], d[t]].where((y) => y != kY);
             at = sonKomsu(uc) ??
-                uc.reduce((x, y) => aday.indexOf(x) > aday.indexOf(y) ? x : y);
+                (ucluHata
+                    ? uc.reduce(
+                        (x, y) => aday.indexOf(x) > aday.indexOf(y) ? x : y)
+                    : null);
           }
         }
       }
@@ -462,6 +467,7 @@ final _f03 = lmAile(
       '${tr(x)} m bulunur.',
       _hs(a, b, c),
       unit: 'm',
+      ucluHata: true,
     );
   },
   exam: _ayt,
@@ -715,6 +721,7 @@ final _f06 = lmAile(
         '$y m bulunur.',
         _hs(a, b, c),
         unit: 'm',
+        ucluHata: true,
       );
     }
     if (c % 3 == 1) {
@@ -1455,6 +1462,7 @@ final _f13 = lmAile(
         'F = ${tr(dp)} / ${tr(sure)} = $kuvvet N bulunur.',
         _hs(a, b, c),
         unit: 'N',
+        ucluHata: true,
       );
     }
     final m1 = 2 * (a + 1); // 2 … 50 kg
@@ -1601,6 +1609,7 @@ final _f14 = lmAile(
       '${tr(t1)} − ${tr(t2)} = ${tr(t1 - t2)} N·m olur.',
       _hs(a, b, c),
       unit: 'N·m',
+      ucluHata: true,
     );
   },
   exam: _ayt,
@@ -1642,6 +1651,7 @@ final _f15 = lmAile(
         '$n = $kuvvet N olur.',
         _hs(a, b, c),
         unit: 'N',
+        ucluHata: true,
       );
     }
     if (c % 3 == 1) {

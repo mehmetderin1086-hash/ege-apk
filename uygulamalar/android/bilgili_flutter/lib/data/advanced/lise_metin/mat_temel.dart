@@ -736,7 +736,7 @@ AdvancedItem _ondalik(int a, int b, int c) {
       _K(tum - on, 9), // paydada 0 unutulmuş
       _K(tum - a, 90), // yalnız tam kısım çıkarılmış
       _K(tum - on, 100), // çıkarılıp 100 alınmış
-      _K(9 * a + d, 9), // ondalık kısmın tamamı devreden sanılmış
+      _K(9 * a + d, 9), // devretmeyen rakam atlanmış: a,ddd… sanılmış
     ],
     'Sayının virgülsüz yazılışından devretmeyen kısım çıkarılır; paydaya '
         'devreden basamak için 9, devretmeyen ondalık basamak için 0 yazılır: '

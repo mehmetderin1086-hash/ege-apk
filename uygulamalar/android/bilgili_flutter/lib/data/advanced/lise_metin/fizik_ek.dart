@@ -5695,9 +5695,108 @@ bool _cisimUygun(List<int> cisim, List<(int, int)> demet) {
   return !_cisimYanlis(cisim, demet).any((x) => _ayniDizi(x, y));
 }
 
+/// Renk dizisi seçeneklerinin ipucu ölçüleri (tool/lise_metin/ipucu.dart ile
+/// aynı tanımlar): konum uyuşması, öge kümesi uyuşması, sözcük benzerliği ve
+/// uzunluk. Renk adları tek sözcük olduğundan öge kümesi ile sözcük kümesi
+/// renklerin kümesidir.
+List<List<double>> _renkOlcu(List<List<int>> se) {
+  final kume = [for (final x in se) x.toSet()];
+  final evren = {for (final k in kume) ...k};
+  double konum(int a) {
+    var t = 0;
+    for (var b = 0; b < se.length; b++) {
+      if (b == a) continue;
+      for (var p = 0; p < se[a].length; p++) {
+        if (se[a][p] == se[b][p]) t++;
+      }
+    }
+    return t.toDouble();
+  }
+
+  double ogeler(int a) {
+    var t = 0;
+    for (final e in evren) {
+      for (var b = 0; b < se.length; b++) {
+        if (b != a && kume[b].contains(e) == kume[a].contains(e)) t++;
+      }
+    }
+    return t.toDouble();
+  }
+
+  double sozcuk(int a) {
+    var t = 0.0;
+    for (var b = 0; b < se.length; b++) {
+      if (b == a) continue;
+      t +=
+          kume[a].intersection(kume[b]).length /
+          kume[a].union(kume[b]).length;
+    }
+    return t;
+  }
+
+  double uzunluk(int a) => _dizi(se[a]).length.toDouble();
+  return [
+    for (final f in [konum, ogeler, sozcuk, uzunluk])
+      [for (var a = 0; a < se.length; a++) f(a)],
+  ];
+}
+
+/// Yanlış yolların dizilerinden ([adaylar]) üç çeldirici seçer. Her yanlış
+/// yol anahtarı yalnız birkaç konumda değiştirdiğinden ilk üç yol alınırsa
+/// anahtar, konum konum çoğunluğa en yakın seçenek olurdu. Bu yüzden tüm
+/// üçlüler denenir ve anahtarın benzerlik sırası (0: en az, 3: en çok
+/// benzeyen; eşitlikte yarım) vakanın hedef sırasına en yakın olan üçlü
+/// alınır; böylece anahtar vakadan vakaya en benzeyen, en az benzeyen ya da
+/// aradaki seçenek olur. Uzunluk sırası ayrı bir hedefle dengelenir.
+List<List<int>> _renkCeldiriciler(
+  List<int> anahtar,
+  Iterable<List<int>> adaylar,
+  int i,
+) {
+  final havuz = <List<int>>[];
+  for (final x in adaylar) {
+    if (_ayniDizi(x, anahtar) || havuz.any((y) => _ayniDizi(x, y))) continue;
+    havuz.add(x);
+  }
+  if (havuz.length < 3) throw StateError('Eksik çeldirici: ${_dizi(anahtar)}');
+  final hedef = hedefSira(i).toDouble(), boyHedef = hedefSira(i, 1).toDouble();
+  var enIyi = double.infinity;
+  final adaylarIyi = <List<List<int>>>[];
+  for (var x = 0; x < havuz.length; x++) {
+    for (var y = x + 1; y < havuz.length; y++) {
+      for (var z = y + 1; z < havuz.length; z++) {
+        final uclu = [havuz[x], havuz[y], havuz[z]];
+        final olcu = _renkOlcu([anahtar, ...uclu]);
+        var maliyet = 0.0;
+        for (var m = 0; m < olcu.length; m++) {
+          final s = olcu[m];
+          var r = 0.0;
+          for (var o = 1; o < 4; o++) {
+            if (s[o] < s[0] - 1e-9) {
+              r += 1;
+            } else if ((s[o] - s[0]).abs() < 1e-9) {
+              r += 0.5;
+            }
+          }
+          maliyet += m == 3 ? 0.5 * (r - boyHedef).abs() : (r - hedef).abs();
+        }
+        if (maliyet < enIyi - 1e-9) {
+          enIyi = maliyet;
+          adaylarIyi
+            ..clear()
+            ..add(uclu);
+        } else if ((maliyet - enIyi).abs() < 1e-9) {
+          adaylarIyi.add(uclu);
+        }
+      }
+    }
+  }
+  return adaylarIyi[(i * 7919 + 13) % adaylarIyi.length];
+}
+
 /// Beyaz ışıkta renkleri verilen üç ya da dört cisim, bir ya da iki renkli
 /// ışık demetiyle aydınlatılıyor.
-AdvancedItem _renkCisim(List<int> cisim, List<(int, int)> demet) {
+AdvancedItem _renkCisim(List<int> cisim, List<(int, int)> demet, int i) {
   final c = _veya(demet.map(_demetRengi));
   final aydinlatma = demet.length == 1
       ? 'karanlık bir odada yalnız ${_demetYazi(demet.first)}la '
@@ -5708,15 +5807,19 @@ AdvancedItem _renkCisim(List<int> cisim, List<(int, int)> demet) {
       ? _bas(_demetCozum(demet.first))
       : '${_bas([for (final d in demet) _demetCozum(d)].join('; '))}; iki '
             'demet birlikte cisimlere ${_renkVe(c)} ışık ulaştırır';
-  return secenekli(
+  final anahtar = [for (final o in cisim) o & c];
+  return AdvancedItem(
     'Beyaz ışık altında ${_cisimListesi(cisim)} görünen '
         '${_sayiAd[cisim.length]} cisim, $aydinlatma Bu durumda cisimler '
         'sırasıyla hangi renklerde görünür? $_renkNot',
-    _dizi([for (final o in cisim) o & c]),
+    _dizi(anahtar),
     [
-      for (final x in _cisimYanlis(cisim, demet)) _dizi(x),
-      _dizi([for (final o in cisim) 7 - o]),
-      _dizi([for (final _ in cisim) 0]),
+      for (final x in _renkCeldiriciler(anahtar, [
+        ..._cisimYanlis(cisim, demet),
+        [for (final o in cisim) 7 - o],
+        [for (final _ in cisim) 0],
+      ], i))
+        _dizi(x),
     ],
     '$isik. ${_cisimSonuc(cisim, c)}',
   );
@@ -5743,18 +5846,22 @@ bool _filtreUygun(int f1, int f2, List<int> cisim) {
   return !_filtreYanlis(f1, f2, cisim).any((x) => _ayniDizi(x, y));
 }
 
-AdvancedItem _renkFiltre(int f1, int f2, List<int> cisim) {
+AdvancedItem _renkFiltre(int f1, int f2, List<int> cisim, int i) {
   final c = f1 & f2;
-  return secenekli(
+  final anahtar = [for (final o in cisim) o & c];
+  return AdvancedItem(
     'Beyaz ışık önce ${_renkAd[f1]}, sonra ${_renkAd[f2]} filtreden '
         'geçirilerek, beyaz ışık altında ${_cisimListesi(cisim)} görünen '
         '${_sayiAd[cisim.length]} cisme düşürülüyor. Bu ışık altında cisimler '
         'sırasıyla hangi renklerde görünür? $_renkNot',
-    _dizi([for (final o in cisim) o & c]),
+    _dizi(anahtar),
     [
-      for (final x in _filtreYanlis(f1, f2, cisim)) _dizi(x),
-      _dizi([for (final o in cisim) 7 - o]),
-      _dizi([for (final _ in cisim) 0]),
+      for (final x in _renkCeldiriciler(anahtar, [
+        ..._filtreYanlis(f1, f2, cisim),
+        [for (final o in cisim) 7 - o],
+        [for (final _ in cisim) 0],
+      ], i))
+        _dizi(x),
     ],
     'Her filtre yalnız kendi rengindeki bileşenleri geçirir: ${_renkAd[f1]} '
         'filtre beyaz ışıktan ${_renkVe(f1)} ışık geçirir, ${_renkAd[f2]} '
@@ -5821,17 +5928,17 @@ AdvancedItem _renkSoru(int i) {
   if (i < 750) return _renkToplama(_ikiListe(_ikiliDemet, _ucluDemet, i, 750));
   if (i < 1750) {
     final (o, d) = _ikiListe(_tekDemet3, _tekDemet4, i - 750, 1000);
-    return _renkCisim(o, d);
+    return _renkCisim(o, d, i);
   }
   if (i < 4500) {
     final j = i - 1750;
     final (o, d) = j < 1375
         ? _yay(_ciftDemet3, j, 1375)
         : _yay(_ciftDemet4, j - 1375, 1375);
-    return _renkCisim(o, d);
+    return _renkCisim(o, d, i);
   }
   final (f1, f2, o) = _ikiListe(_filtre3, _filtre4, i - 4500, 500);
-  return _renkFiltre(f1, f2, o);
+  return _renkFiltre(f1, f2, o, i);
 }
 
 final _f20 = lmSirali(

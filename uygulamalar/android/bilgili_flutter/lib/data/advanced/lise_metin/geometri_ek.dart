@@ -1562,7 +1562,9 @@ final lmGeometriEk = <AdvancedFamily>[
         };
         // Çeldiriciler: öteki oranlar, Pisagor yerine kenarları toplama ya da
         // çıkarma (eksik kenar hipotenüsse l1 + l2, dik kenarsa w − l1) ve
-        // oranı ters yazma (hipotenüs paya).
+        // oranı ters yazma (hipotenüs paya). sin ve cos 1'den büyük
+        // olamayacağından bu sorularda 1'den büyük çeldirici en çok ikidir
+        // (tan ya da cot ile ters oran).
         final hipHesap = g == 0 || g == 3;
         final (ad, kose, pay, payda, yanlis, tanim) = switch (c) {
           0 => (
@@ -1576,7 +1578,6 @@ final lmGeometriEk = <AdvancedFamily>[
               (l1, l2),
               hipHesap ? (l2, l1 + l2) : (w - l1, w),
               (w, l2),
-              (w, l1),
             ],
             'sin $p1 = karşı dik kenar / hipotenüs = $kar / $hip',
           ),
@@ -1585,14 +1586,7 @@ final lmGeometriEk = <AdvancedFamily>[
             p1,
             l1,
             w,
-            [
-              (l2, w),
-              (l2, l1),
-              (l1, l2),
-              if (hipHesap) (l1, l1 + l2),
-              (w, l1),
-              (w, l2),
-            ],
+            [(l2, w), (l2, l1), (l1, l2), if (hipHesap) (l1, l1 + l2), (w, l1)],
             'cos $p1 = komşu dik kenar / hipotenüs = $kom / $hip',
           ),
           2 => (
@@ -1615,14 +1609,7 @@ final lmGeometriEk = <AdvancedFamily>[
             p2,
             l1,
             w,
-            [
-              (l2, w),
-              (l1, l2),
-              (l2, l1),
-              if (hipHesap) (l1, l1 + l2),
-              (w, l1),
-              (w, l2),
-            ],
+            [(l2, w), (l1, l2), (l2, l1), if (hipHesap) (l1, l1 + l2), (w, l1)],
             'sin $p2 = karşı dik kenar / hipotenüs = $kom / $hip',
           ),
         };
@@ -1633,14 +1620,26 @@ final lmGeometriEk = <AdvancedFamily>[
           _ => '${k * l1}/${k * w}',
         };
         final sade = kesir(pay, payda);
-        return kesirliSirali(
+        // Son çare komşu kesirler; sin ve cos sorularında yalnız 1'den
+        // küçük olanlar.
+        final komsu = [
+          (pay + 1, payda),
+          (pay - 1, payda),
+          (pay, payda + 1),
+          (pay, payda - 1),
+          (pay + 1, payda + 1),
+          (pay + 2, payda),
+          (pay - 2, payda),
+          (pay + 3, payda),
+        ].where((f) => f.$1 > 0 && f.$2 > 0 && (c == 2 || f.$1 < f.$2));
+        return AdvancedItem(
           'ABC üçgeninde $r açısının ölçüsü 90° olup $veri olarak veriliyor. '
               'Buna göre $ad $kose değeri kaçtır?',
-          pay,
-          payda,
-          yanlis,
+          sade,
+          siraliCeldiriciler(pay / payda, sade, [
+            for (final (n, d) in [...yanlis, ...komsu]) (n / d, kesir(n, d)),
+          ], sira),
           '$eksik $tanim = $ham${ham == sade ? '' : ' = $sade'}.',
-          sira,
         );
       }
       // Ölçek en az 2: kenarlar orandaki sayılarla aynı çıkmaz.
