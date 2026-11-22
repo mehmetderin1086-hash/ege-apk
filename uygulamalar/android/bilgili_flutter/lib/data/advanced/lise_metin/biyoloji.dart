@@ -3439,7 +3439,15 @@ final _f20 = lmAile(
       List<int> hatalar,
       String aciklama, {
       int? adim,
-    }) => _sayiDengeli(kok, anahtar, hatalar, aciklama, no, adim: adim);
+    }) => _sayiDengeli(
+      kok,
+      anahtar,
+      hatalar,
+      aciklama,
+      no,
+      adim: adim,
+      agirlik: const [1, 1, 1, 2],
+    );
     const deger =
         'Karbonhidrat ve protein gram başına 4 kcal, yağ gram başına 9 kcal '
         'enerji verir.';
@@ -3539,7 +3547,8 @@ final _f20 = lmAile(
           'protein ve $yag g yağ vardır. Öğünün toplam enerjisi $toplam kcal '
           'olduğuna göre öğündeki karbonhidrat miktarı kaç gramdır?',
           kh,
-          [kh + 10, kh - 10, 4 * kh ~/ 9, kh + 20, 4 * kh],
+          // 4 yerine 9'a bölme, bölmeyi unutma, işlem kayması.
+          [kh + 10, kh - 10, 4 * kh ~/ 9, kh + 20, 4 * kh, kh - 20],
           'Protein ve yağdan gelen enerji 4 · $pro + 9 · $yag = '
           '${4 * pro + 9 * yag} kcal olur. Karbonhidrattan gelen enerji '
           '$toplam − ${4 * pro + 9 * yag} = ${4 * kh} kcal, miktarı '
@@ -3567,8 +3576,11 @@ final _f20 = lmAile(
           'protein tüketmesi gerekirdi?',
           toplam / 4,
           // 4 yerine 9'a ya da 2'ye bölme, bölmeyi unutma, gram toplamını
-          // verme.
-          [toplam / 9, (kh + pro + yag).toDouble(), toplam / 2, toplam.toDouble()],
+          // verme, öğündeki proteini çıkarma ya da ekleme.
+          [
+            (toplam / 9 * 100).round() / 100, (kh + pro + yag).toDouble(),
+            toplam / 2, toplam.toDouble(), toplam / 4 - pro, toplam / 4 + pro,
+          ],
           '$hesap Protein gram başına 4 kcal verdiğinden $toplam / 4 = '
           '${tr(toplam / 4)} g protein gerekir.',
           no,

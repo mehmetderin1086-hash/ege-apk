@@ -1061,7 +1061,7 @@ AdvancedItem _yuzyil(int i) {
       mo + ms,
       // Tipik hatalar anahtarın iki yanında: toplamak yerine çıkarma, toplamada yüzler
       // basamağında elde hatası (çıkarma hatasıyla birlikte de), sıfır yılını sayma,
-      // onlar basamağında elde hatası.
+      // onlar basamağında elde hatası. Kökteki yıllarla aynı olan değer atlanır.
       [
         fark,
         mo + ms + 100,
@@ -1070,7 +1070,7 @@ AdvancedItem _yuzyil(int i) {
         mo + ms + 1,
         mo + ms + 10,
         mo + ms - 10,
-      ],
+      ].where((x) => x != mo && x != ms),
       'Tarihlerden biri milattan önce, diğeri milattan sonra olduğundan yıllar toplanır: '
       '$mo + $ms = ${mo + ms} yıl.',
       hedefSira(i),

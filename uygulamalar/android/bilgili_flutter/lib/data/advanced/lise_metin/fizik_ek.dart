@@ -25,6 +25,11 @@ String _sabit(num x, int d) =>
 /// tipik hatalardan gelen sayılar ya da hazır yazılmış seçeneklerdir
 /// (ör. `12√3 N`); yetmezse anahtarın komşu değerleriyle tamamlanır.
 /// [basamak] verilirse bütün sayılar o kadar ondalıkla yazılır.
+///
+/// [sira] verilirse çeldiriciler, anahtardan küçük olanların sayısı [sira]
+/// olacak biçimde seçilir (bkz. [siraliCeldiriciler]); hazır yazılmış
+/// seçenekler bu durumda (değer, yazım) ikilisi olarak verilir ve komşu
+/// değerler anahtarın iki yanına eklenir.
 AdvancedItem _s(
   String kok,
   num dogru,
@@ -33,7 +38,11 @@ AdvancedItem _s(
   String unit = '',
   bool pozitif = true,
   int? basamak,
+  int? sira,
 }) {
+  if (sira != null) {
+    return _sSirali(kok, dogru, hatalar, aciklama, sira, unit, pozitif, basamak);
+  }
   final k = _iki(dogru);
   if ((dogru - k).abs() > 1e-7) {
     throw StateError('Kesin olmayan anahtar $dogru: $kok');
