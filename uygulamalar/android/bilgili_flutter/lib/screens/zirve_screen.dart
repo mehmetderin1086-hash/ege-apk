@@ -43,7 +43,7 @@ const _turuncu = Color(0xFFFF9A1F);
 const _dogruYesil = Color(0xFF22B455);
 const _yanlisKirmizi = Color(0xFFD6333F);
 
-enum _Evre { soru, bekle, acikla, bitti }
+enum _Evre { giris, soru, bekle, acikla, bitti }
 
 class ZirveScreen extends StatefulWidget {
   final ArenaController controller;
@@ -68,6 +68,7 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
   String? _danismanSozu;
   int _kalan = 0;
   Timer? _saat;
+  Timer? _sonMuzik;
   int _kazanc = 0;
   String _bitisNedeni = '';
   late final AnimationController _isik =
@@ -76,20 +77,36 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
   ArenaController get ctrl => widget.controller;
   Question get _q => _sorular[_i];
 
+  static const _klipler = ['zirve_soru', 'zirve_sec', 'zirve_dogru', 'zirve_yanlis', 'zirve_baraj', 'zirve_zafer', 'zirve_joker', 'zirve_cekil'];
+
   @override
   void initState() {
     super.initState();
+    // Efektleri önceden yükle (sessiz çalma ilk gecikmeyi önler).
+    for (final k in _klipler) {
+      NativeBridge.playClip(k, enabled: ctrl.sfxEnabled, volume: 0);
+    }
     _yeniOyun();
   }
 
   @override
   void dispose() {
     _saat?.cancel();
+    _sonMuzik?.cancel();
     _isik.dispose();
+    ctrl.ozelMuzikAyarla(null);
     super.dispose();
   }
 
-  void _ses(String tur) => NativeBridge.playSfx(tur, enabled: ctrl.sfxEnabled, haptics: ctrl.hapticsEnabled);
+  void _ses(String tur) => NativeBridge.playSfx(tur, enabled: false, haptics: ctrl.hapticsEnabled);
+
+  /// Zirve Merdiveni'ne özgü ses efekti; titreşim ayarı da uygulanır.
+  void _klip(String ad, {String titresim = 'tick'}) {
+    NativeBridge.playClip('zirve_$ad', enabled: ctrl.sfxEnabled, volume: .9);
+    _ses(titresim);
+  }
+
+  void _muzik(String? parca) => ctrl.ozelMuzikAyarla(parca == null ? 'sessiz' : 'zirve_$parca');
 
   void _yeniOyun() {
     final paket = ctrl.zirveSorulari(topic: widget.konu);
@@ -105,9 +122,11 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
       _kazanc = 0;
       _yariKullanildi = _salonKullanildi = _danismanKullanildi = _degistirKullanildi = false;
       _bitisNedeni = '';
+      _evre = _Evre.giris;
     });
-    _soruyaBasla();
-    _ses('start');
+    _saat?.cancel();
+    _sonMuzik?.cancel();
+    _muzik('giris');
   }
 
   void _soruyaBasla() {
@@ -120,6 +139,8 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
       _danismanSozu = null;
       _kalan = ZirveMerdiveni.sure(_i);
     });
+    _muzik('gerilim_${_i < 5 ? 1 : (_i < 10 ? 2 : 3)}');
+    _klip('soru');
     if (_kalan > 0) {
       _saat = Timer.periodic(const Duration(seconds: 1), (t) {
         if (!mounted || _evre != _Evre.soru) return;
@@ -127,7 +148,8 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
         if (_kalan <= 5 && _kalan > 0) NativeBridge.playSfx('tick', enabled: ctrl.sfxEnabled, haptics: false, volume: .4);
         if (_kalan <= 0) {
           t.cancel();
-          _ses('timeout');
+          _muzik(null);
+          _klip('yanlis', titresim: 'timeout');
           _bitir(dogru: false, neden: 'Süre doldu.');
         }
       });
@@ -154,11 +176,16 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
     }
     _saat?.cancel();
     setState(() => _evre = _Evre.bekle);
+    _muzik(null);
+    _klip('sec');
     await Future<void>.delayed(Duration(milliseconds: _i < 5 ? 900 : 1800));
     if (!mounted) return;
     final dogru = i == _q.answer;
     setState(() => _evre = _Evre.acikla);
-    _ses(dogru ? 'correct' : 'wrong');
+    final sonSoru = dogru && _i == 14;
+    final barajSorusu = dogru && ZirveMerdiveni.barajlar.contains(_i);
+    _klip(sonSoru ? 'zafer' : (barajSorusu ? 'baraj' : (dogru ? 'dogru' : 'yanlis')),
+        titresim: dogru ? 'correct' : 'wrong');
     await Future<void>.delayed(const Duration(milliseconds: 1600));
     if (!mounted) return;
     if (!dogru) {
@@ -194,6 +221,10 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
       _evre = _Evre.bitti;
       _bitisNedeni = neden;
     });
+    _sonMuzik?.cancel();
+    _sonMuzik = Timer(Duration(seconds: dogru ? 6 : 3), () {
+      if (mounted && _evre == _Evre.bitti) _muzik('giris');
+    });
   }
 
   Future<void> _cekil() async {
@@ -210,6 +241,8 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
     );
     if (ok != true || !mounted || _evre != _Evre.soru) return;
     _kazanc = kazanc;
+    _muzik(null);
+    _klip('cekil');
     _bitir(dogru: false, neden: 'Çekildin.');
   }
 
@@ -228,7 +261,7 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
       _yariKullanildi = true;
       _gizli = {..._gizli, ...yanlislar.take(max(0, yanlislar.length - 1))};
     });
-    _ses('joker');
+    _klip('joker', titresim: 'joker');
   }
 
   void _salon() {
@@ -250,7 +283,7 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
       _salonKullanildi = true;
       _salonOylari = oylar;
     });
-    _ses('joker');
+    _klip('joker', titresim: 'joker');
   }
 
   void _danisman() {
@@ -266,7 +299,7 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
           ? '"Bundan oldukça eminim: $harf. %$emin eminim."'
           : '"Tam emin değilim ama $harf olabilir. Ancak %$emin eminim."';
     });
-    _ses('joker');
+    _klip('joker', titresim: 'joker');
   }
 
   void _degistir() {
@@ -277,7 +310,7 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
       _degistirKullanildi = true;
       _sorular[_i] = yeni;
     });
-    _ses('joker');
+    _klip('joker', titresim: 'joker');
     _soruyaBasla();
   }
 
@@ -307,11 +340,61 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
                 builder: (_, _) => CustomPaint(painter: _IsikHuzmeleri(_isik.value)),
               ),
             ),
-          SafeArea(child: !_hazir ? _yetersiz() : (_evre == _Evre.bitti ? _sonuc() : _oyun())),
+          SafeArea(
+              child: !_hazir
+                  ? _yetersiz()
+                  : switch (_evre) {
+                      _Evre.giris => _acilis(),
+                      _Evre.bitti => _sonuc(),
+                      _ => _oyun(),
+                    }),
         ],
       ),
     );
   }
+
+  Widget _acilis() => ListView(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: IconButton(
+              tooltip: 'Geri',
+              onPressed: () => Navigator.of(context).maybePop(),
+              icon: const Icon(Icons.close_rounded, color: Colors.white70),
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Icon(Icons.stairs_rounded, color: _altin, size: 96),
+          const SizedBox(height: 8),
+          const Text('Zirve Merdiveni',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: _altin, fontSize: 34, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 10),
+          const Text('15 soru, giderek zorlaşır. 5. ve 10. basamaklar baraj.\nDört jokerin var; istediğin an çekilebilirsin.',
+              textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 16, height: 1.4)),
+          const SizedBox(height: 18),
+          Center(
+            child: Text('Zirve ödülü: ${puanYaz(ZirveMerdiveni.odul.last)} puan',
+                style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
+          ),
+          if (ctrl.zirveEnIyi > 0)
+            Center(
+              child: Text('En iyi kazancın: ${puanYaz(ctrl.zirveEnIyi)} puan',
+                  style: const TextStyle(color: Colors.white60)),
+            ),
+          const SizedBox(height: 28),
+          _AltinDugme(metin: 'Başla', onTap: _soruyaBasla),
+          const SizedBox(height: 12),
+          Center(
+            child: TextButton.icon(
+              onPressed: _merdiveniGoster,
+              icon: const Icon(Icons.format_list_numbered_rounded, color: _altin),
+              label: const Text('Ödül merdivenini gör', style: TextStyle(color: _altin)),
+            ),
+          ),
+        ],
+      );
 
   Widget _yetersiz() => Center(
         child: Padding(

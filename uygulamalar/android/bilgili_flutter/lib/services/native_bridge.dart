@@ -152,6 +152,14 @@ class NativeBridge {
     } catch (_) {}
   }
 
+  /// res/raw altındaki kısa bir ses dosyasını çalar (ör. 'zirve_dogru').
+  static Future<void> playClip(String name, {bool enabled = true, double volume = 0.8}) async {
+    if (testMode || !enabled) return;
+    try {
+      await _channel.invokeMethod('playClip', {'name': name, 'volume': volume});
+    } catch (_) {}
+  }
+
   static Future<void> playSfx(
     String kind, {
     bool enabled = true,

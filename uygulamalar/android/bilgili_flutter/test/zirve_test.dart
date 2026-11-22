@@ -48,6 +48,9 @@ void main() {
     )));
     await tester.pump();
     expect(tester.takeException(), isNull);
+    expect(find.text('Zirve Merdiveni'), findsOneWidget);
+    await tester.tap(find.text('Başla'));
+    await tester.pump();
     expect(find.textContaining('Soru 1'), findsOneWidget);
     await tester.tap(find.text('50:50'));
     await tester.pump();

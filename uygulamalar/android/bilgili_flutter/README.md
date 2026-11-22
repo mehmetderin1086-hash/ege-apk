@@ -1,4 +1,12 @@
-# Bilgili 3.14.0
+# Bilgili 3.15.0
+
+3.15.0 sürümünde Zirve Merdiveni'ne özgün müzik ve ses efektleri eklendi. Bütün sesler `tool/ses/zirve_sesleri.py` ile sentezlenir (hazır kayıt yok) ve `res/raw/zirve_*.ogg` olarak gelir:
+
+- Müzik: açılış teması ve üç gerilim döngüsü (kolay, orta ve zor basamaklar; son basamaklarda kalp atışı).
+- Efektler: yeni soru, kesin cevap bekleyişi, doğru, yanlış, baraj, zirve zaferi, joker ve çekilme.
+- Ayarlar'daki oyun müziği ve ses efekti anahtarlarına uyar. Yarışma açılış ekranıyla başlar.
+
+## 3.14.0
 
 3.14.0 sürümünde **Gece Stüdyosu** teması (lacivert sahne, altın vurgular; yeni kurulumlarda varsayılan) ve **Zirve Merdiveni** modu eklendi:
 

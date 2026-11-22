@@ -407,7 +407,20 @@ class ArenaController extends ChangeNotifier {
     unawaited(_savePersistedState());
   }
 
+  /// Özel ekranların (Zirve Merdiveni) çaldığı müzik parçası; null ise
+  /// menü/oyun müziği kuralı geçerlidir.
+  String? ozelMuzik;
+
+  void ozelMuzikAyarla(String? parca) {
+    ozelMuzik = parca;
+    _syncBackgroundMusic();
+  }
+
   void _syncBackgroundMusic() {
+    if (ozelMuzik != null) {
+      NativeBridge.setMusic(gameMusicEnabled ? ozelMuzik : null, volume: musicVolume);
+      return;
+    }
     if (activeRound != null && !activeRound!.finished && !activeRound!.paused) {
       if (gameMusicEnabled) {
         NativeBridge.setMusic('game', volume: musicVolume);
