@@ -37,9 +37,9 @@ def notsuz(r):
 # Anlamsal tekrar taraması kararları: <kok>/tekrar/<topic>/sil.json, secenek.json
 SIL=set(); SEC={}
 import glob as _g
-for f in _g.glob(f'{kok_dir}/tekrar/*/sil.json'):
+for f in _g.glob(f'{kok_dir}/tekrar*/*/sil.json'):
     for e in json.load(open(f,encoding='utf-8')): SIL.add(e['id'])
-for f in _g.glob(f'{kok_dir}/tekrar/*/secenek.json'):
+for f in _g.glob(f'{kok_dir}/tekrar*/*/secenek.json'):
     for e in json.load(open(f,encoding='utf-8')): SEC.setdefault(e['id'],[]).append((e['eski'],e['yeni']))
 _geri=f'{kok_dir}/tekrar/geri_al.json'
 if os.path.exists(_geri): SIL-=set(json.load(open(_geri,encoding='utf-8')))
