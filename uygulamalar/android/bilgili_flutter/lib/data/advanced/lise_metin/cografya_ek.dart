@@ -864,12 +864,14 @@ List<int> _anCeldiricileri(
 }
 
 /// (an, hata maliyeti) listesindeki her saate verilen tarihleri (tarih,
-/// maliyet) de uygular: "saat doğru, tarih yanlış" ya da "saat yanlış, tarih
-/// doğru" gibi iki boyutlu hata seçenekleri. İlk öge anahtardır.
+/// maliyet, yön) de uygular: "saat doğru, tarih yanlış" ya da "saat yanlış,
+/// tarih doğru" gibi iki boyutlu hata seçenekleri. İlk öge anahtardır. Yönü
+/// sıfırdan farklı bir tarih gereksiz bir gün kaydırmadır; öğrencinin
+/// hesapladığı saat kaymasının ([kayma]) tersine giden kaydırma çelişkili
+/// olduğundan alınmaz.
 List<(int, double)> _tarihleIslenmis(
   List<(int, double)> dogal,
-  List<(int, double)> tarihler, [
-  int? kok,
+  List<(int, double, int)> tarihler, [
   List<int>? kayma,
 ]) {
   final c = <(int, double)>[];
@@ -878,14 +880,12 @@ List<(int, double)> _tarihleIslenmis(
     final (m, cc) = dogal[j];
     final d = m ~/ 1440, cl = m % 1440;
     if (j > 0 && gorulen.add(m)) c.add((m, cc));
-    for (final (dd, dc) in tarihler) {
+    for (final (dd, dc, yon) in tarihler) {
       final x = dd * 1440 + cl;
       if (dd == d || gorulen.contains(x)) continue;
       gorulen.add(x);
-      // Hesaplanan kaymanın tersine giden tarih değişikliği daha zayıf bir
-      // çeldiricidir.
-      final ters = kok != null && kayma != null && (dd - kok) * kayma[j] < 0;
-      c.add((x, cc + dc + (ters ? 2 : 0)));
+      if (yon != 0 && kayma != null && yon * kayma[j] < 0) continue;
+      c.add((x, cc + dc));
     }
   }
   return c;
@@ -923,16 +923,15 @@ AdvancedItem _saatDilimi(int a, int b, int c) {
       if (isaret) (t0 - y * 60 * hataFark, 4, -y * 60 * hataFark),
     ];
     // Tarih: doğru tarih, değişmemiş tarih ya da gereksiz bir gün kaydırma.
-    final tarihler = <(int, double)>[
-      (dk, 0),
-      dk != kok ? (kok, 1) : (kok + y, 2),
+    final tarihler = <(int, double, int)>[
+      (dk, 0, 0),
+      dk != kok ? (kok, 1, 0) : (kok + y, 2, y),
     ];
     final secilen = _anCeldiricileri(
       dogru,
       _tarihleIslenmis(
         [for (final (m, mc, _) in dogal) (m, mc)],
         tarihler,
-        kok,
         [for (final (_, _, d) in dogal) d],
       ),
       hedefSira(i),
@@ -971,7 +970,7 @@ AdvancedItem _saatDilimi(int a, int b, int c) {
       final dk = k ~/ 1440;
       final adaylar = _tarihleIslenmis(
         [(k, 0.0), ...hatalar, (k + 60, 3.0), (k - 60, 3.0)],
-        [(dk, 1.0), if (kok != dk) (kok, 1.0)],
+        [(dk, 1.0, 0), if (kok != dk) (kok, 1.0, 0)],
       );
       // Saati doğru, tarihi hatalı bir hesabın tarihi olan seçenekler.
       final gorulen = {k, for (final (m, _) in adaylar) m};

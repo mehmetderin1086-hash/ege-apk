@@ -1373,7 +1373,7 @@ final _f05 = lmAile(
             mk * adet,
             pay,
             kalan,
-            ak * mk / kalan,
+            _olcekte(ak * mk / kalan, mk),
             mk / (adet * adet),
             mk * 2,
             mk / 2,
@@ -1763,9 +1763,9 @@ final _f08 = lmAile(
             na * mb,
             na * ters * mb,
             _olcekte(kb * mb, gb),
-            nb,
             gb * 2,
             gb / 2,
+            nb,
           ],
           '${_t(ga)} / ${_t(ma)} = ${_t(na)} mol $fa harcanır. $oran '
               '${_t(nb)} mol $fb oluşur; kütlesi ${_t(nb)}·${_t(mb)} = ${_t(gb)} '
@@ -1784,10 +1784,10 @@ final _f08 = lmAile(
             na * kb * 22.4,
             ga / mb * 22.4,
             _olcekte(kb * 22.4, v),
-            nb,
-            gb,
             v * 2,
             v / 2,
+            nb,
+            gb,
           ],
           '${_t(ga)} / ${_t(ma)} = ${_t(na)} mol $fa harcanır. $oran '
               '${_t(nb)} mol $fb oluşur; hacmi ${_t(nb)}·22,4 = ${_t(v)} L olur.',
@@ -1804,10 +1804,10 @@ final _f08 = lmAile(
             nb * kb / ka * ma,
             na * mb,
             _olcekte(ka * ma, ga),
-            gb,
-            na,
             ga * 2,
             ga / 2,
+            gb,
+            na,
           ],
           '${_t(v)} / 22,4 = ${_t(nb)} mol $fb oluşur. $oran ${_t(na)} mol $fa '
               'harcanır; kütlesi ${_t(na)}·${_t(ma)} = ${_t(ga)} gramdır.',
@@ -1825,10 +1825,10 @@ final _f08 = lmAile(
             nb * kb / ka * ma,
             na * mb,
             _olcekte(ka * ma, ga),
-            na,
-            gb,
             ga * 2,
             ga / 2,
+            na,
+            gb,
           ],
           '${_t(gb)} / ${_t(mb)} = ${_t(nb)} mol $fb oluşur. $oran ${_t(na)} '
               'mol $fa harcanır; kütlesi ${_t(na)}·${_t(ma)} = ${_t(ga)} gramdır.',
@@ -1970,10 +1970,10 @@ final _f09 = lmAile(
             yanlisUrun * mc,
             ns * mc,
             x * mc,
-            nc,
             ns * ms,
             nc * mc / 2,
             nc * mc * 2,
+            nc,
           ],
           '$cevir $karar Oluşan $fc miktarı ${_t(nc)} mol, kütlesi '
               '${_t(nc)}·${_t(mc)} = ${_t(nc * mc)} gram olur.',
@@ -1991,10 +1991,10 @@ final _f09 = lmAile(
             ne * me,
             (ne - x) * me,
             ke * x * me,
-            artan,
             (ne - ns) * me,
             artan * me / 2,
             artan * me * 2,
+            artan,
           ],
           '$cevir $karar Artan $fe miktarı ${_t(ne)} − ${_t(ke * x)} = '
               '${_t(artan)} mol, kütlesi ${_t(artan)}·${_t(me)} = '
@@ -2012,10 +2012,10 @@ final _f09 = lmAile(
             ns * mc,
             (na + nb) * mc,
             x * mc,
-            nc,
             ne * mc,
             nc * mc / 2,
             nc * mc * 2,
+            nc,
           ],
           '$karar Oluşan $fc miktarı ${_t(nc)} mol, kütlesi ${_t(nc)}·${_t(mc)} '
               '= ${_t(nc * mc)} gram olur.',
@@ -2503,9 +2503,9 @@ final _f12 = lmAile(
             p * v / (0.082 * tc) * mk,
             v / 22.4 * mk,
             v / rt * mk,
-            n,
             n * mk / 2,
             n * mk * 2,
+            n,
           ],
           '$kelvin n = P·V / (R·T) = ${_t(p)}·${_t(v)} / (0,082·$tk) = '
               '${_t(n)} mol olur. Kütle ${_t(n)}·${_t(mk)} = ${_t(n * mk)} gramdır.',
@@ -2584,7 +2584,6 @@ final _f13 = lmAile(
               [
                 pt * m2 / (m1 + m2),
                 pt - p2,
-                pt * m1 / (m1 + m2),
                 pt / 2,
                 pt * n2 / (n1 + 2 * n2),
                 pt * n2 / n1,
@@ -3182,7 +3181,7 @@ final _f16 = lmAile(
                   -sabit * n * i,
                   -diger * k / 2,
                   -k / 2,
-                  -sabit / (k / 2),
+                  _olcekte(-sabit / (k / 2), -dt),
                   -dt / i,
                   -dt * i,
                   -dt * 2,
@@ -3192,11 +3191,11 @@ final _f16 = lmAile(
                   100 - dt,
                   100 + sabit * n * i,
                   100 + diger * k / 2,
-                  dt,
                   100 + dt / i,
                   100 + dt * i,
                   100 + dt * 2,
                   100 + dt / 2,
+                  dt,
                 ],
           'n = ${_t(ms)} / ${_t(mk)} = ${_t(n)} mol. $tanecik $dtYazi; '
               '$noktaYazi bulunur.',
@@ -3211,7 +3210,7 @@ final _f16 = lmAile(
               'basınçtaki $olay başlama sıcaklığı ${_t(nokta)} °C oluyor. Çözünen '
               'madde kaç gramdır? ($kut; $sabitYazi; $iyonYazi)',
           ms,
-          [k / 2 * mk, n, k / 2 * mk / i, ms * i, ms / i, ms * 2, ms / 2],
+          [k / 2 * mk, k / 2 * mk / i, ms * i, ms / i, ms * 2, ms / 2, n],
           '$geri $su gram suda ${_t(k / 2)}·${_t(kg)} = ${_t(n * i)} mol '
               'tanecik, yani ${_t(n)} mol madde bulunur. Kütle ${_t(n)}·${_t(mk)} '
               '= ${_t(ms)} gramdır.',
@@ -3270,7 +3269,7 @@ final _f16 = lmAile(
             sabit * n * i,
             diger * k / 2,
             k / 2,
-            sabit / (k / 2),
+            _olcekte(sabit / (k / 2), dt),
             dt / i,
             dt * i,
             dt * 2,
@@ -4237,7 +4236,17 @@ final _f19 = lmAile(
           '${_t(m)} gram $baz bazını tamamen nötrleştirmek için ${_t(d)} mol/L '
               'derişimli $asit çözeltisinden kaç mL gerekir? (${_kut([baz])})',
           v,
-          [v * na, v / nb, v * nb / na, v / na, v * nb, v / 2, v * 2, v + 100],
+          [
+            v * na,
+            v / nb,
+            v * nb / na,
+            v / na,
+            v * nb,
+            v / 2,
+            v * 2,
+            v + 100,
+            v / 10,
+          ],
           '${_t(m)} / ${_t(mk)} = ${_t(bMol, 3)} mol $baz ${_t(hMol)} mol OH⁻ '
               'verir. Gereken asit ${_t(hMol)} / $na = ${_t(hMol / na, 3)} moldür; '
               'hacmi ${_t(hMol / na, 3)} / ${_t(d)} = ${_t(v / 1000)} L = $v mL '
@@ -4400,6 +4409,7 @@ final _f20 = lmAile(
   Difficulty.hard,
   BloomLevel.uygulama,
   (a, b, c) {
+    final sira = _sira(a, b, c);
     switch (c) {
       case 0:
       case 5:
@@ -4412,22 +4422,37 @@ final _f20 = lmAile(
             'yüküne eşittir: $f1 içinde $e1 ${_isaretli(s1)}, $f2 içinde $e2 '
             '${_isaretli(s2)} değerini alır.';
         if (c == 0) {
-          return _say('$t1 ile ${t2}nın toplamı kaçtır?', s1 + s2, [
-            s2 - s1,
-            s2,
-            s1.abs() + s2,
-            s1 + s2 + 1,
-            s1 + s2 - 1,
-            s1 + s2 + 2,
-          ], '$bilgi Toplam ${_par(s1)} + $s2 = ${s1 + s2} olur.');
+          return _saySirali(
+            '$t1 ile ${t2}nın toplamı kaçtır?',
+            s1 + s2,
+            [
+              s2 - s1,
+              s2,
+              s1.abs() + s2,
+              s1 + s2 + 1,
+              s1 + s2 - 1,
+              s1 + s2 + 2,
+              s1 + s2 - 2,
+            ],
+            '$bilgi Toplam ${_par(s1)} + $s2 = ${s1 + s2} olur.',
+            sira,
+          );
         }
-        return _say('$t2, ${t1}ndan kaç fazladır?', s2 - s1, [
-          s1 + s2,
-          s2,
-          (s2 - s1.abs()).abs(),
-          s2 - s1 + 1,
-          s2 - s1 - 1,
-        ], '$bilgi Fark $s2 − ${_par(s1)} = ${s2 - s1} olur.');
+        return _saySirali(
+          '$t2, ${t1}ndan kaç fazladır?',
+          s2 - s1,
+          [
+            s1 + s2,
+            s2,
+            (s2 - s1.abs()).abs(),
+            s2 - s1 + 1,
+            s2 - s1 - 1,
+            s2 - s1 + 2,
+            s2 - s1 - 2,
+          ],
+          '$bilgi Fark $s2 − ${_par(s1)} = ${s2 - s1} olur.',
+          sira,
+        );
       case 1:
         final sira = a * 20 + b;
         final cift = kombinasyon(_yariHucreler, 2, sira % 171, spread: false);
@@ -4444,7 +4469,7 @@ final _f20 = lmAile(
           case 0:
             final ilk = '$ia/$ma için ${_isaretli(ea)} V';
             final son = '$ic/$mc için ${_isaretli(ec)} V';
-            return _say(
+            return _saySirali(
               'Standart indirgenme potansiyelleri '
                   '${once ? '$ilk, $son' : '$son, $ilk'} olarak verilmiştir. Bu iki '
                   'yarı hücreden oluşturulan galvanik pilin standart potansiyeli '
@@ -4452,12 +4477,13 @@ final _f20 = lmAile(
               pil,
               [(ec + ea).abs(), ec.abs(), ea.abs(), pil / 2, pil * 2],
               '$karar $hesap bulunur.',
+              sira,
               birim: 'V',
             );
           case 1:
             final ilk = '$ma/$ia için ${_isaretli(-ea)} V';
             final son = '$mc/$ic için ${_isaretli(-ec)} V';
-            return _say(
+            return _saySirali(
               'Standart yükseltgenme potansiyelleri '
                   '${once ? '$ilk, $son' : '$son, $ilk'} olarak verilmiştir. Bu iki '
                   'yarı hücreden oluşturulan galvanik pilin standart potansiyeli '
@@ -4467,6 +4493,7 @@ final _f20 = lmAile(
               'Yükseltgenme potansiyeli büyük olan $ma anot, küçük olan $mc '
                   'katot olur. E°pil = E°yük(anot) − E°yük(katot) = ${_t(-ea)} − '
                   '${_par(-ec)} = ${_t(pil)} V bulunur.',
+              sira,
               birim: 'V',
             );
           default:
@@ -4489,17 +4516,20 @@ final _f20 = lmAile(
         final fark = (s1 - s2).abs(), e = fark * adet;
         final n = (b + 1) / 10;
         final alir = s1 > s2;
-        return _say(
+        return _saySirali(
           'Bir tepkimede ${_t(n)} mol $ilk taneciğinin tamamı $son taneciğine '
               'dönüşüyor. Bu dönüşümde $ilk tarafından '
               '${alir ? 'alınan' : 'verilen'} elektron kaç moldür?',
           e * n,
           [
+            n * fark,
+            n * s1.abs(),
+            n * s2.abs(),
             n * (e + 1),
             if (e > 1) n * (e - 1),
+            n,
             n * e * 2,
             n * e / 2,
-            n,
             n * (e + 2),
           ],
           '$el atomunun yükseltgenme basamağı ${_isaretli(s1)} değerinden '
@@ -4507,6 +4537,7 @@ final _f20 = lmAile(
               '$fark elektron ${alir ? 'alınır' : 'verilir'}. '
               '${adet == 1 ? '' : 'Bir $ilk taneciğinde $adet tane $el atomu bulunduğundan tanecik başına $e elektron aktarılır. '}'
               '${_t(n)} mol için ${_t(n)}·$e = ${_t(e * n)} mol elektron bulunur.',
+          sira,
           birim: 'mol',
         );
       case 3:
@@ -4515,17 +4546,18 @@ final _f20 = lmAile(
         final k = b + 1;
         final sure = const [500, 250, 125, 100, 50][a ~/ 5] * k;
         final ne = k / 20, v = 22.4 * ne / ze;
-        return _say(
+        return _saySirali(
           '$olay $gaz gazı açığa çıkmaktadır. Hücreden ${_t(akim)} amperlik '
               'akım $sure saniye boyunca geçirildiğinde normal koşullarda kaç '
               'litre $gaz gazı elde edilir? ($_faraday; normal koşullarda 1 mol '
               'gaz 22,4 L hacim kaplar)',
           v,
-          [22.4 * ne, v * 2, v / 2, ne / ze, 22.4 * ne * ze],
+          [22.4 * ne, 22.4 * ne * ze, v * 2, v / 2, ne / ze, ne],
           'Q = ${_t(akim)}·$sure = ${4825 * k} C, n(e⁻) = ${4825 * k} / 96500 '
               '= ${_t(ne)} mol olur. 1 mol $gaz için $ze mol elektron gerektiğinden '
               '${_t(ne)} / $ze = ${_t(ne / ze, 4)} mol gaz oluşur; hacmi '
               '${_t(v)} L bulunur.',
+          sira,
           birim: 'L',
         );
       case 8:
@@ -4541,7 +4573,7 @@ final _f20 = lmAile(
         final k1 = _atomKutlesi[m1]!, k2 = _atomKutlesi[m2]!;
         final ne = 6 * (b + 1) / 100;
         final g1 = ne / z1 * k1, g2 = ne / z2 * k2;
-        return _say(
+        return _saySirali(
           'Seri bağlı iki elektroliz hücresinden birincisinde $y1 iyonları $m1 '
               'metaline, ikincisinde $y2 iyonları $m2 metaline indirgenmektedir. '
               'Devreden bir süre akım geçirildiğinde birinci hücrenin katodunda '
@@ -4553,6 +4585,7 @@ final _f20 = lmAile(
               '${_t(ne / z1)}·$z1 = ${_t(ne)} mol elektron geçer. Seri bağlı '
               'hücrelerden aynı yük geçtiğinden ikinci hücrede ${_t(ne)} / $z2 = '
               '${_t(ne / z2)} mol $m2, yani ${_t(g2)} gram metal toplanır.',
+          sira,
           birim: 'g',
         );
       default:
@@ -4573,46 +4606,54 @@ final _f20 = lmAile(
               '${_t(m)} gram $metal ${_t(mol)} moldür ve ${_t(mol)}·$z = '
               '${_t(mol * z)} mol elektron gerektirir.';
           if (c == 2) {
-            return _say(
+            return _saySirali(
               '$giris ${_t(akim)} amperlik akım $sure saniye boyunca '
                   'geçiriliyor. Katotta kaç gram $metal toplanır? ($metal: '
                   '${_t(ak)}; $_faraday)',
               m,
-              [m * z, mol * z, m * 2, m / 2, m / z, m + ak / 100],
+              [m * z, m / z, m * 2, m / 2, m + ak / 100, mol * z, mol],
               'Q = ${_t(akim)}·$sure = $yuk C, n(e⁻) = $yuk / 96500 = '
                   '${_t(mol * z)} mol olur. 1 mol $metal için $z mol elektron '
                   'gerektiğinden ${_t(mol)} mol, yani ${_t(m)} gram $metal '
                   'toplanır.',
+              sira,
               birim: 'g',
             );
           }
-          return sayisal(
+          return _saySirali(
             '$giris ${_t(akim)} amperlik akım geçiriliyor. Katotta ${_t(m)} '
                 'gram $metal toplanması için akım kaç saniye geçirilmelidir? '
                 '($metal: ${_t(ak)}; $_faraday)',
             sure,
-            [sure ~/ z, sure * z, sure * 2, sure ~/ 2, sure + 100],
+            [sure / z, sure * z, sure * 2, sure / 2, sure + 100],
             '$yol Q = ${_t(mol * z)}·96500 = $yuk C olur. t = Q / I = $yuk / '
                 '${_t(akim)} = $sure saniye bulunur.',
-            unit: 's',
-            positive: true,
+            sira,
+            birim: 's',
           );
         }
         final k = b + 1 + 20 * (a ~/ 5);
         final mol = k / 100, m = mol * ak;
         final yuk = 965 * k * z;
         if (c == 4) {
-          return sayisal(
+          return _saySirali(
             '$giris akım geçiriliyor. Katotta ${_t(m)} gram $metal toplanması '
                 'için devreden kaç coulomb yük geçmelidir? ($metal: ${_t(ak)}; '
                 '$_faraday)',
             yuk,
-            [965 * k, 965 * k * (z + 1), yuk * 2, yuk ~/ 2, 96500 * z],
+            [
+              965 * k,
+              965 * k * (z + 1),
+              yuk / z,
+              _olcekte(96500 * z, yuk, 10),
+              yuk * 2,
+              yuk / 2,
+            ],
             '${_t(m)} gram $metal ${_t(mol)} moldür ve ${_t(mol)}·$z = '
                 '${_t(mol * z)} mol elektron gerektirir. Q = ${_t(mol * z)}·96500 '
                 '= $yuk C bulunur.',
-            unit: 'C',
-            positive: true,
+            sira,
+            birim: 'C',
           );
         }
         return _say(

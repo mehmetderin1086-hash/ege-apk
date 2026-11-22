@@ -3135,7 +3135,15 @@ int _sabitDegil(List<int> a, List<int> b) =>
     case 6:
       return (
         cift * tek * _kuvvet(n, m - 2),
-        [hepsi, cift * tek, cift * tek * _kuvvet(n, m - 1)],
+        [
+          hepsi,
+          cift * tek,
+          cift * tek * _kuvvet(n, m - 1),
+          // Çarpmak yerine toplamak; diğer elemanlara seçilen iki değeri
+          // yeniden vermemek.
+          cift + tek + (m - 2) * n,
+          cift * tek * _kuvvet(n - 2, m - 2),
+        ],
       );
     case 7:
       return (
@@ -3887,26 +3895,44 @@ AdvancedItem _rasyonelUret(int a, int b, int c, int r, int pk, int qk) {
       '$adim En sade biçim $dogruYazi olur.',
     );
   }
-  // Sadeleşmiş ifadenin, ilk ifadeyi tanımsız yapan x = r noktasındaki değeri.
-  // Tam kare payda bu değer hep 0 olacağından x0 = qk + 2 alınır.
-  final x0 = tur == 2
-      ? _uygun([qk + 2, qk - 2, qk + 3, qk - 3], 0, (x) => x != r && x != pk)
-      : r;
+  // Değer sorusu: x0, ilk ifadenin tanımlı olduğu ve köklerden uzak bir
+  // sayıdır (sadeleşmiş ifadenin payı ya da paydası 100 ya da 50 olur).
+  // Doğrudan yerine koymak uzun sürdüğünden sadeleştirmek beklenir. İlk
+  // ifadeyi tanımsız yapan x = r (sadeleşen çarpanın kökü) sorulmaz.
+  final dayanak = tur == 3 ? [r] : [qk, pk];
+  final secenek = [
+    for (final u in const [100, 50, 20, 10])
+      for (final t in dayanak) t + u,
+  ];
+  final bas0 = (a + 2 * b + c) % (2 * dayanak.length);
+  final x0 = _uygun(
+    [...secenek.sublist(bas0), ...secenek.sublist(0, bas0)],
+    0,
+    (x) => x != r && x != -r && x != pk && x != qk && 2 * x != pk + qk,
+  );
   final n = tur == 3 ? k : x0 - pk, d = x0 - qk;
+  final (hn, hd) = d < 0 ? (-n, -d) : (n, d);
+  final ham = '${_n(hn)}/$hd';
   return _kes(
-    '$ifade ifadesi sadeleştirildiğinde elde edilen ifadenin x = ${_n(x0)} için '
-        'değeri kaçtır?',
+    '$ifade ifadesinin x = ${_n(x0)} için değeri kaçtır?',
     n,
     d,
     [
+      // Çarpanlarda işaret hatası.
       if (tur != 3 && x0 + pk != 0) (x0 + pk, d),
       if (x0 + qk != 0) (n, x0 + qk),
+      // x² − r² ifadesini (x − r)² sanmak (tür 0 payda, tür 1 paydada).
+      if (tur == 0) (x0 - r, d),
+      if (tur == 1) (n, x0 - r),
+      // Kareyi tümüyle sadeleştirmek (tür 2) ya da katsayıyı unutmak (tür 3).
+      if (tur == 2 || tur == 3) (1, d),
       if (n != 0) (d, n),
       (-n, d),
     ],
-    '$adim Sadeleşmiş ifade $dogruYazi olur; x = ${_n(x0)} için '
-        '${tur == 3 ? '$k' : _sayiYerine(x0, pk)} / ${_sayiYerine(x0, qk)} = '
-        '${_q(n, d)} bulunur.',
+    '$adim x = ${_n(x0)} paydayı sıfır yapmadığından sadeleşmiş ifade '
+        '$dogruYazi kullanılır: ${tur == 3 ? '$k' : _sayiYerine(x0, pk)} / '
+        '${_sayiYerine(x0, qk)} = $ham${_q(n, d) == ham ? '' : ' = ${_q(n, d)}'} '
+        'bulunur.',
   );
 }
 
@@ -3955,6 +3981,12 @@ int _katsayiAl(List<int> p, int derece) {
   return i < 0 || i >= p.length ? 0 : p[i];
 }
 
+/// kx tek terimlisi: `_xTek(1)` → `x`, `_xTek(-1)` → `−x`, `_xTek(-3)` → `−3x`.
+String _xTek(int k) => k == 1 ? 'x' : (k == -1 ? '−x' : '${_n(k)}x');
+
+/// Çarpımın ikinci çarpanı olarak tek terimli; negatifse parantez içinde.
+String _pxTek(int k) => k < 0 ? '(${_xTek(k)})' : _xTek(k);
+
 String _terimAdi(int d) => d == 0
     ? 'sabit terimi'
     : (d == 1 ? 'x teriminin katsayısı' : 'x${_ust(d)} teriminin katsayısı');
@@ -4002,11 +4034,11 @@ AdvancedItem _polinomEsitlikUret(int a, int b, int c, int w) {
             ? [p * r, p * r - q, q * r + p, p + r]
             : [q * r, p * sv, p * sv - q * r, q + sv],
         d == 2
-            ? 'x² terimi ${_n(p)}x · ${_n(r)}x ve ${_n(q)} · x² çarpımlarından gelir: '
-                  '${_n(p * r)} ${q < 0 ? '−' : '+'} ${q.abs()} = ${_n(yanit)}.'
-            : 'x terimi ${_n(p)}x · ${_p(sv)} ve ${_n(q)} · ${_n(r)}x çarpımlarından '
-                  'gelir: ${_n(p * sv)} ${q * r < 0 ? '−' : '+'} ${(q * r).abs()} = '
-                  '${_n(yanit)}.',
+            ? 'x² terimi ${_xTek(p)} · ${_pxTek(r)} ve ${_n(q)} · x² çarpımlarından '
+                  'gelir: ${_n(p * r)} ${q < 0 ? '−' : '+'} ${q.abs()} = ${_n(yanit)}.'
+            : 'x terimi ${_xTek(p)} · ${_p(sv)} ve ${_n(q)} · ${_pxTek(r)} '
+                  'çarpımlarından gelir: ${_n(p * sv)} ${q * r < 0 ? '−' : '+'} '
+                  '${(q * r).abs()} = ${_n(yanit)}.',
       );
     case 2:
       // p = 1 alınmaz: (x + 1)(mx + n) açılımında m + n doğrudan x katsayısıdır.
@@ -4180,12 +4212,12 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c, int w) {
         yanit,
         d == 2 ? [q + sv, p * r, q * sv] : [p * sv, q * r, p + r],
         d == 2
-            ? 'x² terimi x² · ${_p(sv)}, ${_n(p)}x · ${_n(r)}x ve ${_n(q)} · x² '
+            ? 'x² terimi x² · ${_p(sv)}, ${_xTek(p)} · ${_pxTek(r)} ve ${_n(q)} · x² '
                   'çarpımlarından gelir: ${_n(sv)} ${p * r < 0 ? '−' : '+'} ${(p * r).abs()} '
                   '${q < 0 ? '−' : '+'} ${q.abs()} = ${_n(yanit)}.'
-            : 'x terimi ${_n(p)}x · ${_p(sv)} ve ${_n(q)} · ${_n(r)}x çarpımlarından '
-                  'gelir: ${_n(p * sv)} ${q * r < 0 ? '−' : '+'} ${(q * r).abs()} = '
-                  '${_n(yanit)}.',
+            : 'x terimi ${_xTek(p)} · ${_p(sv)} ve ${_n(q)} · ${_pxTek(r)} '
+                  'çarpımlarından gelir: ${_n(p * sv)} ${q * r < 0 ? '−' : '+'} '
+                  '${(q * r).abs()} = ${_n(yanit)}.',
       );
     case 8:
       final m = 11 + a;
@@ -4668,7 +4700,7 @@ AdvancedItem _ikinciDereceUret(int a, int b, int c, int w) {
       final delta = 4 * p * p - 4 * (p * p - q);
       final (dk, dm) = _kokSade(delta);
       final adim =
-          'Δ = (${_n(-2 * p)})² − 4 · 1 · ${_p(p * p - q)} = $delta olur. x = '
+          'Δ = ${_p(-2 * p)}² − 4 · 1 · ${_p(p * p - q)} = $delta olur. x = '
                   '(${_n(2 * p)} ± √$delta) / 2 = (${_n(2 * p)} ± ${_kokYaz(dk, dm)}) / 2 = '
                   '${_surd(p, kk, mm, true).replaceAll(' + ', ' ± ')}.'
               .replaceAll('(0 ± ', '(± ');
@@ -4693,7 +4725,8 @@ AdvancedItem _ikinciDereceUret(int a, int b, int c, int w) {
         [
           _kokYaz(kk, mm),
           _kokYaz(4 * kk, mm),
-          '${2 * p.abs() + 2}',
+          // Kökler farkı √Δ / |a| iken karekökü almayı unutmak: Δ.
+          '$delta',
           _kokYaz(kk * 3, mm),
         ],
         '$adim Kökler farkı (${_surd(p, kk, mm, true)}) − (${_surd(p, kk, mm, false)}) = '
@@ -5079,8 +5112,10 @@ AdvancedItem _saatSoru(int i) {
   // Hedef: 5,5t = 30h ± θ + 360j, yani 11t = 60h ± 2θ + 720j.
   final hedef = t11 ~/ 2 * 2 == t11 ? '${t11 ~/ 2}' : '${t11 ~/ 2},5';
   final saf = 2 * teta; // başlangıç açısını unutup θ = 5,5t alan yol
-  final akrepsiz = (60 * (h % 12) - 2 * teta)
-      .abs(); // 12t = 60h − 2θ … (akrep sabit)
+  // Akrebi sabit sanıp yelkovanın 6° yolunu kullanan yol: 12t = 60h ∓ 2θ.
+  final akrepsiz = (60 * (h % 12) - 2 * teta).abs();
+  final akrepsiz2 = 60 * (h % 12) + 2 * teta;
+  // Süre sorusunda yanıtın tersi (11/60 dakika gibi) bir hata yolu değildir.
   return _kes(
     'Saat tam $h olduktan kaç dakika sonra $olay?',
     t11,
@@ -5090,6 +5125,7 @@ AdvancedItem _saatSoru(int i) {
       (anlar[2], 11),
       if (saf > 0) (saf, 11),
       if (akrepsiz > 0) (akrepsiz, 12),
+      if (akrepsiz2 > 0) (akrepsiz2, 12),
     ],
     'Saat tam $h iken akrep 12 rakamından ${(30 * h) % 360}°, yelkovan 0° '
         'konumundadır; aralarındaki küçük açı $bas° olur. Yelkovan akrebe göre '
@@ -5099,6 +5135,7 @@ AdvancedItem _saatSoru(int i) {
         'dakikadır; $neZaman çözüm 5,5t = $hedef eşitliğinden t = ${_q(t11, 11)} '
         'bulunur.',
     pozitif: true,
+    ters: false,
   );
 }
 
@@ -5188,11 +5225,15 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
   final k1 = q1 - p1, k2 = q2 - p2; // kalan kesirlerin payları
   final birim = q1 * q2; // başlangıç miktarının bu sayının katı olması yeterli
   final carpan = 1 + (a + 2 * b) % 4;
+  // Başlangıç miktarı: [taban] değerinden büyük ilk [kat] katı, ardından
+  // [kat] adımlarıyla artar; böylece miktar bağlamına uygun dar bir aralıkta
+  // kalır (ör. maaş 42000 … 64000 TL, buğday 2400 … 5200 kg).
+  int miktar(int kat, int taban, int adimSayisi) =>
+      kat * ((taban + kat - 1) ~/ kat + adimSayisi);
   switch (c) {
     case 0 || 4:
-      // Maaş: kira ve mutfak. Maaş 9000 … 60000 TL aralığında kalır.
-      final adim = (9000 + birim - 1) ~/ birim;
-      final m = birim * (adim + 20 * carpan);
+      // Maaş: kira ve mutfak. Maaş 42000 … 64000 TL aralığında kalır.
+      final m = miktar(birim, 42000, 40 * carpan);
       final ilk = m * p1 ~/ q1, kalan1 = m - ilk;
       final ikinci = kalan1 * p2 ~/ q2, kalan = kalan1 - ikinci;
       final kok =
@@ -5216,7 +5257,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
         );
       }
       return _tam(
-        '$kok Memurun mutfak giderlerine ayırdığı para kaç TL olur?',
+        '$kok Buna göre memur mutfak giderlerine kaç TL ayırır?',
         ikinci,
         [m * p2 ~/ q2, kalan, ilk, kalan1 - ilk],
         'Kiraya $m · ${_kesYaz(f1)} = $ilk TL ayrılır ve $kalan1 TL kalır. Mutfak '
@@ -5228,8 +5269,8 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
     case 1 || 8:
       // Kalandan başlangıç miktarı: buğday (kg) ya da depodaki su (L).
       final su = c == 8;
-      final olcek = 10 * (1 + (a + b) % 6);
-      final bas = birim * olcek;
+      // Buğday 2400 … 5200 kg, depodaki su 2400 … 5200 L.
+      final bas = miktar(birim, 2400, 4 * ((a + b) % 6));
       final kalan = bas * k1 * k2 ~/ (q1 * q2);
       final kok = su
           ? 'Bir depodaki suyun ${_kesYaz(f1)} kadarı bahçe sulamada, kalan suyun '
@@ -5260,7 +5301,8 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
       final f3 = _kesirB[(b + 7) % 20];
       final (p3, q3) = f3;
       final k3 = q3 - p3;
-      final bas = birim * q3 * (1 + (a + b) % 3) * 10;
+      // Harçlık 2000 … 6000 TL.
+      final bas = miktar(birim * q3, 2000, (a + b) % 3);
       final kalan = bas * k1 * k2 * k3 ~/ (q1 * q2 * q3);
       return _tam(
         'Bir öğrenci harçlığının ${_kesYaz(f1)} kadarını kitaba, kalan paranın '
@@ -5310,6 +5352,10 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
         'İlk adımdan sonra $k1/$q1, ikinci adımdan sonra $k1/$q1 · $k2/$q2 = '
         '${_q(kn, kd)} kalır. ${kullanilan ? 'Kullanılan kısım 1 − ${_q(kn, kd)} = ${_q(n, kd)} olur.' : 'Kalan para harçlığın ${_q(kn, kd)} kadarıdır.'}',
         pozitif: true,
+        // Bütünün bir parçası sorulduğundan 1 ya da daha büyük kesir (yanıtın
+        // tersi gibi) çeldirici olmaz.
+        ters: false,
+        birdenKucuk: true,
       );
     case 5:
       // İlk harcama ikinci harcamadan D TL fazla ya da az; iki harcamanın eşit
@@ -5322,7 +5368,8 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
       final (r2, s2) = g2;
       final ilkPay = p1 * s2, ikinciPay = k1 * r2; // payda q1·s2
       final farkPay = ilkPay - ikinciPay;
-      final bas = q1 * s2 * 10 * (2 + (a + b) % 4);
+      // Harçlık 1500 … 2500 TL.
+      final bas = miktar(q1 * s2, 1500, 2 * ((a + b) % 4));
       final fark = (bas * farkPay ~/ (q1 * s2)).abs();
       final fazla = farkPay > 0;
       return _tam(
@@ -5349,7 +5396,8 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
       // Kesir + sabit tutar: x · (1 − f1) − T = x · (1 − f1) · h.
       final (hp, hq) = f2;
       final gn = k1 * hp, gd = q1 * hq;
-      final bas = q1 * hq * 10 * (3 + (a + b) % 4);
+      // Para 4000 … 5400 TL; fatura birkaç yüz ile birkaç bin TL arasında.
+      final bas = miktar(q1 * hq, 4000, 3 * ((a + b) % 4));
       final T = bas * k1 * (hq - hp) ~/ (q1 * hq);
       final g = _q(gn, gd);
       final (gp, gq) = (gn ~/ gn.gcd(gd), gd ~/ gn.gcd(gd));
@@ -5373,8 +5421,8 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
         pozitif: true,
       );
     default:
-      // Kitap sayfaları.
-      final sayfa = birim * (2 + (a + b) % 4) * (birim < 60 ? 4 : 1);
+      // Roman 160 … 660 sayfa.
+      final sayfa = miktar(birim, 160, (a + b) % 4);
       final kalan = sayfa * k1 * k2 ~/ (q1 * q2);
       return _tam(
         'Bir öğrenci okuduğu romanın önce ${_kesYaz(f1)} kadarını, sonra kalan '

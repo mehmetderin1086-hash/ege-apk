@@ -273,7 +273,6 @@ AdvancedItem _ebobEkok(int a, int b, int c) {
           t ~/ y, // yalnız bir fenerin yanışları
           t ~/ x,
           t ~/ (x * y), // EKOK yerine çarpım
-          t ~/ g, // EKOK yerine EBOB
         ],
         'Fenerler EKOK($x, $y) = $l saniyede bir aynı anda yanar. $t saniyenin '
             'içinde $l sayısının ${s + 2} tam katı bulunduğundan ${s + 2} kez daha '
@@ -317,7 +316,7 @@ AdvancedItem _ebobEkok(int a, int b, int c) {
           'dakikada tamamlamaktadır. İkisi başlangıç noktasında ilk kez yeniden '
           'buluştuğunda $soru',
       yanit,
-      [n, m, m + n, n - m, g, m * n, l], // l: buluşma süresi (dakika)
+      [n, m, m + n, n - m, g, m * n],
       'İkisi başlangıç noktasında EKOK($x, $y) = $l dakika sonra buluşur. Bu '
           'sürede hızlı olan $l / $x = $n, yavaş olan $l / $y = $m tur atar; '
           'istenen değer $yanit olur.',
@@ -451,13 +450,12 @@ String _n(int x) => x < 0 ? '−${-x}' : '$x';
 
 /// (a, b, c) vakasının sıra numarası için hedef değer sırası (0 … 3): anahtardan
 /// küçük çeldirici sayısı vakadan vakaya dengeli değişir.
-int _sira(int a, int b, int c, [int tuz = 0]) =>
-    hedefSira(a + 25 * b + 500 * c, tuz);
+int _sira(int a, int b, int c) => hedefSira(a + 25 * b + 500 * c);
 
 /// Tam sayı yanıtlı soru; negatif değerler “−” işaretiyle yazılır. Anahtardan
 /// küçük çeldirici sayısı [sira] olur. [adaylar] önce tipik hata değerleridir;
-/// yetmezse anahtarın iki yanındaki komşu değerlerle tamamlanır. [enAz] ve [enCok] verilirse bu aralığın dışındaki adaylar
-/// elenir.
+/// yetmezse anahtarın iki yanındaki komşu değerlerle tamamlanır. [enAz] ve
+/// [enCok] verilirse bu aralığın dışındaki adaylar elenir.
 AdvancedItem _tamSirali(
   String kok,
   int yanit,
@@ -2058,8 +2056,10 @@ AdvancedItem _isciHavuz(int a, int b, int c) {
         adet * (x + y) ~/ 2, // sürelerin ortalaması
         adet * x, // usta tek başına
         adet * (y - x),
-        if ((adet * x).isEven) adet * x ~/ 2, // iki kişi ustanın hızında sanılmış
-        if ((adet * y).isEven) adet * y ~/ 2, // iki kişi kalfanın hızında sanılmış
+        if ((adet * x).isEven)
+          adet * x ~/ 2, // iki kişi ustanın hızında sanılmış
+        if ((adet * y).isEven)
+          adet * y ~/ 2, // iki kişi kalfanın hızında sanılmış
         (adet - 1) * t,
       ],
       'Birlikte bir saatte duvarın 1/$x + 1/$y = 1/$t kadarını örerler. Bir '

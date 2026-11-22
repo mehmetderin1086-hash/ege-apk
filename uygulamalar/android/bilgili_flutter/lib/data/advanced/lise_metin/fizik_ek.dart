@@ -3,6 +3,7 @@
 // metin sorusu üretir; kökteki veriler a, b ve c ile birebir belirlenir.
 import 'dart:math' as math;
 
+import 'denge.dart';
 import 'ortak.dart';
 
 const _fizik = 'Fizik';
@@ -76,6 +77,66 @@ AdvancedItem _s(
   ];
   return secenekli(kok, yaz(k), adaylar, aciklama);
 }
+
+/// [_s] işlevinin sıralı biçimi: [hatalar] sayılar ya da (değer, yazım)
+/// ikilileridir; anahtarın değer sırası [sira] olur.
+AdvancedItem _sSirali(
+  String kok,
+  num dogru,
+  Iterable<Object?> hatalar,
+  String aciklama,
+  int sira,
+  String unit,
+  bool pozitif,
+  int? basamak,
+) {
+  final k = _iki(dogru);
+  if ((dogru - k).abs() > 1e-7) {
+    throw StateError('Kesin olmayan anahtar $dogru: $kok');
+  }
+  if (pozitif && k <= 0) throw StateError('Pozitif olmayan anahtar $k: $kok');
+  final tam = k == k.roundToDouble();
+  num adim = tam
+      ? (k.abs() >= 200 ? 10 : (k.abs() >= 40 ? 5 : 1))
+      : (k.abs() >= 20 ? 1 : (k.abs() >= 2 ? 0.5 : 0.1));
+  for (var j = 0; 40 * adim < k.abs(); j++) {
+    adim *= const [2, 2.5, 2][j % 3];
+  }
+  String yaz(num x) =>
+      birimli(basamak == null ? _n(x) : _sabit(x, basamak), unit);
+  final adaylar = <(num, String)>[];
+  for (final h in hatalar) {
+    if (h is (num, String)) {
+      if (!pozitif || h.$1 > 0) adaylar.add(h);
+    } else if (h is num) {
+      if (h.isFinite && (!pozitif || _iki(h) > 0)) {
+        adaylar.add((_iki(h), yaz(_iki(h))));
+      }
+    } else if (h != null) {
+      throw StateError('Değeri bilinmeyen çeldirici $h: $kok');
+    }
+  }
+  for (final m in const [1, -1, 2, -2, 3, -3, 4, -4, 5, 6]) {
+    final x = _iki(k + m * adim);
+    if (!pozitif || x > 0) adaylar.add((x, yaz(x)));
+  }
+  final anahtar = yaz(k);
+  return AdvancedItem(
+    kok,
+    anahtar,
+    siraliCeldiriciler(k, anahtar, adaylar, sira),
+    aciklama,
+  );
+}
+
+/// Vakanın sıra numarasından hedef değer sırası (0 … 3).
+int _hs(int a, int b, int c) => hedefSira(a + 25 * b + 500 * c);
+
+/// Tam sayı katsayılı k√3 değerinin (değer, yazım) ikilisi.
+(num, String) _r3(num k, String unit) => (k * math.sqrt(3), '${_k3(k)} $unit');
+
+/// Tam sayı katsayılı k√2 değerinin (değer, yazım) ikilisi.
+(num, String) _r2(num k, String unit) => (k * math.sqrt2, '${_k2(k)} $unit');
 
 /// Tam kare ise karekökü, değilse null.
 int? _tamKok(int x) {
@@ -338,6 +399,7 @@ String _ipAcilari(int x, int y) => x == y
 AdvancedItem _ikiIp(int a, int b, int k) {
   final v = b % 10;
   final n = 1 + a + 25 * (b ~/ 10) + 50 * k; // 1 … 200
+  final s = _hs(a, b, 3 * k);
   String ad(num w) => _asili(w, a + b);
   String agirlikli(num w, String yazi) =>
       'Ağırlığı $yazi N olan ${ad(w)}, $_ikiIpler';
@@ -350,11 +412,14 @@ AdvancedItem _ikiIp(int a, int b, int k) {
         '${agirlikli(w, '$w')} ${_ipAcilari(37, 53)} Tavanla ${ilk ? 37 : 53}° '
             'açı yapan ipteki gerilme kuvveti kaç N olur? ($_sc3753)',
         ilk ? t1 : t2,
-        ilk ? [t2, 2.5 * n, w] : [t1, 2.5 * n, w],
+        ilk
+            ? [t2, 2.5 * n, w, 2.4 * n, 3.75 * n, 1.8 * n, 6.25 * n]
+            : [t1, 2.5 * n, w, 6.25 * n, 3.2 * n, 2.4 * n],
         '$_t3753 Yatay denge T₁·0,8 = T₂·0,6, düşey denge T₁·0,6 + T₂·0,8 = '
             '$w verir. Bu denklemlerden T₁ = $w·0,6 = $t1 N ve T₂ = $w·0,8 = $t2 N '
             'bulunur.',
         unit: 'N',
+        sira: s,
       );
     case 2:
       // 30° ipteki gerilme her zaman G/2 çıktığından (ağırlığı iplere eşit
@@ -366,11 +431,12 @@ AdvancedItem _ikiIp(int a, int b, int k) {
             'gerilme kuvveti ${_k3(m)} N olarak ölçüldüğüne göre cismin ağırlığı '
             'kaç N olur? ($_sc3060)',
         w,
-        ['${_k3(w)} N', 1.5 * m, 3 * m],
+        [1.5 * m, 3 * m, _r3(m, 'N'), m, 4 * m],
         '$_t3060 Yatay denge T₁·cos 30° = T₂·cos 60°, düşey denge '
             'T₁·sin 30° + T₂·sin 60° = G verir. İpler birbirine dik olduğundan bu '
             'denklemlerden T₂ = G·sin 60° bulunur: G = ${_k3(m)} / (√3/2) = $w N.',
         unit: 'N',
+        sira: s,
       );
     case 3:
       final m = _atla(n, const {10, 20});
@@ -378,12 +444,13 @@ AdvancedItem _ikiIp(int a, int b, int k) {
         '${agirlikli(2 * m * 1.732, _k3(2 * m))} ${_ipAcilari(30, 60)} Tavanla '
             '60° açı yapan ipteki gerilme kuvveti kaç N olur? ($_sc3060)',
         3 * m,
-        ['${_k3(m)} N', 4 * m, '${_k3(2 * m)} N'],
+        [_r3(m, 'N'), 4 * m, _r3(2 * m, 'N'), 1.5 * m, 6 * m, 2 * m],
         '$_t3060 Yatay denge T₁·cos 30° = T₂·cos 60°, düşey denge '
             'T₁·sin 30° + T₂·sin 60° = G verir. İpler birbirine dik olduğundan bu '
             'denklemlerden T₂ = G·sin 60° bulunur: T₂ = ${_k3(2 * m)}·√3/2 = '
             '${3 * m} N.',
         unit: 'N',
+        sira: s,
       );
     case 4 || 5:
       final aci = v == 4 ? 37 : 53;
@@ -393,11 +460,14 @@ AdvancedItem _ikiIp(int a, int b, int k) {
         '${agirlikli(w, '$w')} ${_ipAcilari(aci, aci)} İplerden birindeki '
             'gerilme kuvveti kaç N olur? (${_sc[aci]})',
         t,
-        v == 4 ? [3 * n, 3.75 * n, 10 * n] : [4 * n, 10 * n, 3.2 * n],
+        v == 4
+            ? [3 * n, 3.75 * n, 10 * n, 6 * n, 1.8 * n, 7.5 * n]
+            : [4 * n, 10 * n, 3.2 * n, 8 * n, 2.4 * n, 6.4 * n],
         'Simetrik iplerdeki gerilmeler eşittir ve yatay bileşenler birbirini '
             'dengeler. Düşey denge 2·T·sin $aci° = G verir: T = $w / (2·$sinus) = '
             '$t N.',
         unit: 'N',
+        sira: s,
       );
     case 6 || 7:
       final w = 5 * n, t1 = 3 * n, t2 = 4 * n;
@@ -408,7 +478,9 @@ AdvancedItem _ikiIp(int a, int b, int k) {
         '${agirlik ? 'cismin ağırlığı' : 'tavanla 37° açı yapan ipteki gerilme kuvveti'} '
         'kaç N olur? ($_sc3753)',
         agirlik ? w : t1,
-        agirlik ? [7 * n, 3.2 * n, 8 * n] : [t2, 2.4 * n, 3.2 * n],
+        agirlik
+            ? [7 * n, 3.2 * n, 8 * n, 3 * n, 2.4 * n, 6.4 * n]
+            : [t2, 2.4 * n, 3.2 * n, 2 * n, 5 * n, 1.8 * n],
         agirlik
             ? '$_t3753 Yatay denge T₁·0,8 = T₂·0,6 eşitliğinden T₁ = '
                   '$t2·0,6 / 0,8 = $t1 N olur. Düşey denge G = T₁·0,6 + '
@@ -416,6 +488,7 @@ AdvancedItem _ikiIp(int a, int b, int k) {
             : '$_t3753 Yatay bileşenler birbirini dengelediğinden '
                   'T₁·cos 37° = T₂·cos 53° olur: T₁·0,8 = $t2·0,6, T₁ = $t1 N.',
         unit: 'N',
+        sira: s,
       );
     case 8:
       final w = 8 * n, t = 5 * n;
@@ -424,10 +497,11 @@ AdvancedItem _ikiIp(int a, int b, int k) {
             '$t N olarak ölçüldüğüne göre cismin ağırlığı kaç N olur? '
             '(${_sc[53]})',
         w,
-        [10 * n, 4 * n, 6 * n],
+        [10 * n, 4 * n, 6 * n, 12.5 * n, 5 * n],
         'Simetrik iplerdeki gerilmeler eşittir ve yatay bileşenler birbirini '
             'dengeler. Düşey denge G = 2·T·sin 53° = 2·$t·0,8 = $w N verir.',
         unit: 'N',
+        sira: s,
       );
     default:
       final w = 6 * n, t = 5 * n;
@@ -436,10 +510,11 @@ AdvancedItem _ikiIp(int a, int b, int k) {
             '$t N olarak ölçüldüğüne göre cismin ağırlığı kaç N olur? '
             '(${_sc[37]})',
         w,
-        [10 * n, 3 * n, 8 * n],
+        [10 * n, 3 * n, 8 * n, 5 * n, 12.5 * n, 4 * n],
         'Simetrik iplerdeki gerilmeler eşittir ve yatay bileşenler birbirini '
             'dengeler. Düşey denge G = 2·T·sin 37° = 2·$t·0,6 = $w N verir.',
         unit: 'N',
+        sira: s,
       );
   }
 }
@@ -448,6 +523,7 @@ AdvancedItem _ikiIp(int a, int b, int k) {
 AdvancedItem _yatayIp(int a, int b, int k) {
   final v = b % 10;
   final n = 1 + a + 25 * (b ~/ 10) + 50 * k; // 1 … 150
+  final s = _hs(a, b, 3 * k + 1);
   String ad(num w) => _asili(w, a + b);
   String duzen(int aci) =>
       'ağırlığı önemsiz iki iple dengede tutuluyor. İplerden biri yatay olup '
@@ -468,10 +544,13 @@ AdvancedItem _yatayIp(int a, int b, int k) {
       return _s(
         '${agirlikli(w, '$w', 37)} ${ilk ? tavan : yatay} (${_sc[37]})',
         ilk ? 5 * n : 4 * n,
-        ilk ? [1.8 * n, 3.75 * n, 4 * n] : [2.25 * n, 5 * n, 2.4 * n],
+        ilk
+            ? [1.8 * n, 3.75 * n, 4 * n, 7 * n, 6.25 * n, 3 * n]
+            : [2.25 * n, 5 * n, 2.4 * n, 6.25 * n, 3 * n],
         '${esas(37)} T₁ = $w / 0,6 = ${5 * n} N'
             '${ilk ? '' : ', T₂ = ${5 * n}·0,8 = ${4 * n} N'} bulunur.',
         unit: 'N',
+        sira: s,
       );
     case 2 || 3:
       final w = 4 * n;
@@ -479,38 +558,44 @@ AdvancedItem _yatayIp(int a, int b, int k) {
       return _s(
         '${agirlikli(w, '$w', 53)} ${ilk ? tavan : yatay} (${_sc[53]})',
         ilk ? 5 * n : 3 * n,
-        ilk ? [3.2 * n, 3 * n, w] : [5 * n, 2.4 * n, 3.2 * n],
+        ilk
+            ? [3.2 * n, 3 * n, w, 7 * n, 6.25 * n, 3.75 * n]
+            : [5 * n, 2.4 * n, 3.2 * n, 4 * n, 2 * n, 1.8 * n],
         '${esas(53)} T₁ = $w / 0,8 = ${5 * n} N'
             '${ilk ? '' : ', T₂ = ${5 * n}·0,6 = ${3 * n} N'} bulunur.',
         unit: 'N',
+        sira: s,
       );
     case 4:
       final m = _atla(n, const {15});
       return _s(
         '${agirlikli(m, '$m', 30)} $tavan (${_sc[30]})',
         2 * m,
-        [m / 2, '${_k3(m)} N', m],
+        [m / 2, _r3(m, 'N'), m, 4 * m],
         '${esas(30)} T₁ = $m / (1/2) = ${2 * m} N bulunur.',
         unit: 'N',
+        sira: s,
       );
     case 5:
       final m = _atla(n, const {1, 10}); // √3 yazımındaki 3 ile karışmasın
       return _s(
         '${agirlikli(m * 1.732, _k3(m), 30)} $yatay (${_sc[30]})',
         3 * m,
-        ['${_k3(2 * m)} N', m, '${_k3(m)} N'],
+        [_r3(2 * m, 'N'), m, _r3(m, 'N'), 6 * m, 1.5 * m],
         '${esas(30)} T₁ = ${_k3(m)} / (1/2) = ${_k3(2 * m)} N, T₂ = '
             '${_k3(2 * m)}·√3/2 = ${3 * m} N bulunur.',
         unit: 'N',
+        sira: s,
       );
     case 6:
       final m = _atla(n, const {30});
       return _s(
         '${agirlikli(m * 1.732, _k3(m), 60)} $tavan (${_sc[60]})',
         2 * m,
-        [1.5 * m, m, '${_k3(2 * m)} N'],
+        [1.5 * m, m, _r3(m, 'N'), 3 * m, 4 * m],
         '${esas(60)} T₁ = ${_k3(m)} / (√3/2) = ${2 * m} N bulunur.',
         unit: 'N',
+        sira: s,
       );
     case 7:
       final w = 3 * n;
@@ -518,10 +603,11 @@ AdvancedItem _yatayIp(int a, int b, int k) {
         '${yalniz(w, 37)} Yatay ipteki gerilme kuvveti ${4 * n} N olarak '
             'ölçüldüğüne göre cismin ağırlığı kaç N olur? (${_sc[37]})',
         w,
-        [2.4 * n, 3.2 * n, 5 * n],
+        [2.4 * n, 3.2 * n, 5 * n, 4 * n, 2 * n],
         '${esas(37)} T₁ = ${4 * n} / 0,8 = ${5 * n} N olur. Buradan '
             'G = ${5 * n}·0,6 = $w N bulunur.',
         unit: 'N',
+        sira: s,
       );
     case 8:
       return _s(
@@ -529,9 +615,10 @@ AdvancedItem _yatayIp(int a, int b, int k) {
             'olarak ölçüldüğüne göre yatay ipteki gerilme kuvveti kaç N olur? '
             '(${_sc[53]})',
         3 * n,
-        [4 * n, 5 * n, 2.4 * n],
+        [4 * n, 5 * n, 2.4 * n, 2.5 * n, 6.25 * n, 1.8 * n],
         '${esas(53)} T₂ = ${5 * n}·0,6 = ${3 * n} N bulunur.',
         unit: 'N',
+        sira: s,
       );
     default:
       final w = 3 * n;
@@ -539,9 +626,10 @@ AdvancedItem _yatayIp(int a, int b, int k) {
         '${yalniz(w, 37)} Tavana bağlı ipteki gerilme kuvveti ${5 * n} N '
             'olarak ölçüldüğüne göre cismin ağırlığı kaç N olur? (${_sc[37]})',
         w,
-        [4 * n, 5 * n, 3.75 * n],
+        [4 * n, 5 * n, 3.75 * n, 2.5 * n, 2.4 * n, 1.8 * n],
         '${esas(37)} G = ${5 * n}·0,6 = $w N bulunur.',
         unit: 'N',
+        sira: s,
       );
   }
 }
@@ -550,6 +638,7 @@ AdvancedItem _yatayIp(int a, int b, int k) {
 AdvancedItem _yatayKuvvet(int a, int b, int k) {
   final v = b % 10;
   final n = 1 + a + 25 * (b ~/ 10) + 50 * k; // 1 … 150
+  final s = _hs(a, b, 3 * k + 2);
   String ad(num w) => _asili(w, a + b);
   const asili = 'tavana bağlı ağırlığı önemsiz bir ipin ucuna asılıdır.';
   String sapma(int aci) =>
@@ -569,10 +658,13 @@ AdvancedItem _yatayKuvvet(int a, int b, int k) {
       return _s(
         '${agirlikli(w, '$w', 37)} ${f ? fSoru : tSoru} (${_sc[37]})',
         f ? 3 * n : 5 * n,
-        f ? [2.4 * n, 3.2 * n, 5 * n] : [3.2 * n, 3 * n, 7 * n],
+        f
+            ? [2.4 * n, 3.2 * n, 5 * n, 4 * n, 2 * n, 1.92 * n]
+            : [3.2 * n, 3 * n, 7 * n, 4 * n, 6.25 * n],
         '${esas(37)} T = $w / 0,8 = ${5 * n} N'
             '${f ? ' ve F = ${5 * n}·0,6 = ${3 * n} N' : ''} bulunur.',
         unit: 'N',
+        sira: s,
       );
     case 2 || 3:
       final w = 3 * n;
@@ -580,38 +672,44 @@ AdvancedItem _yatayKuvvet(int a, int b, int k) {
       return _s(
         '${agirlikli(w, '$w', 53)} ${f ? fSoru : tSoru} (${_sc[53]})',
         f ? 4 * n : 5 * n,
-        f ? [2.4 * n, 2.25 * n, 5 * n] : [1.8 * n, 3.75 * n, 7 * n],
+        f
+            ? [2.4 * n, 2.25 * n, 5 * n, 3 * n, 6.25 * n, 3.75 * n]
+            : [1.8 * n, 3.75 * n, 7 * n, 4 * n, 6.25 * n],
         '${esas(53)} T = $w / 0,6 = ${5 * n} N'
             '${f ? ' ve F = ${5 * n}·0,8 = ${4 * n} N' : ''} bulunur.',
         unit: 'N',
+        sira: s,
       );
     case 4:
       final m = _atla(n, const {30});
       return _s(
         '${agirlikli(m, '$m', 60)} $tSoru (${_sc[60]})',
         2 * m,
-        [m / 2, m, '${_k3(m)} N'],
+        [m / 2, m, _r3(m, 'N'), 4 * m],
         '${esas(60)} T = $m / (1/2) = ${2 * m} N bulunur.',
         unit: 'N',
+        sira: s,
       );
     case 5:
       final m = _atla(n, const {1, 20}); // √3 yazımındaki 3 ile karışmasın
       return _s(
         '${agirlikli(m * 1.732, _k3(m), 60)} $fSoru (${_sc[60]})',
         3 * m,
-        [m, '${_k3(2 * m)} N', 1.5 * m],
+        [m, _r3(2 * m, 'N'), 1.5 * m, 6 * m, _r3(m, 'N')],
         '${esas(60)} T = ${_k3(m)} / (1/2) = ${_k3(2 * m)} N ve F = '
             '${_k3(2 * m)}·√3/2 = ${3 * m} N bulunur.',
         unit: 'N',
+        sira: s,
       );
     case 6:
       final m = _atla(n, const {15});
       return _s(
         '${agirlikli(m * 1.732, _k3(m), 30)} $tSoru (${_sc[30]})',
         2 * m,
-        [1.5 * m, m, '${_k3(2 * m)} N'],
+        [1.5 * m, m, 3 * m, _r3(m, 'N'), 4 * m],
         '${esas(30)} T = ${_k3(m)} / (√3/2) = ${2 * m} N bulunur.',
         unit: 'N',
+        sira: s,
       );
     case 7:
       final (f1, f2, r) = _bileske[90]![n - 1];
@@ -621,12 +719,13 @@ AdvancedItem _yatayKuvvet(int a, int b, int k) {
             'büyüklüğünde bir kuvvet uygulandığında cisim, ip düşeyle bir açı '
             'yapacak biçimde dengede kalıyor. $tSoru',
         r,
-        [w + f, (w - f).abs(), math.max(w, f)],
+        [w + f, (w - f).abs(), math.max(w, f), math.min(w, f)],
         'Cisim üç kuvvetin etkisinde dengede olduğundan ipteki gerilme, ağırlık '
             'ile yatay kuvvetin bileşkesine eşit büyüklüktedir. Bu iki kuvvet '
             'birbirine dik olduğundan T = √($w² + $f²) = √(${w * w} + ${f * f}) = '
             '$r N olur.',
         unit: 'N',
+        sira: s,
       );
     case 8:
       final w = 4 * n;
@@ -635,10 +734,11 @@ AdvancedItem _yatayKuvvet(int a, int b, int k) {
             'bir kuvvet uygulandığında cisim, ${sapma(37)} Cismin ağırlığı kaç N '
             'olur? (${_sc[37]})',
         w,
-        [2.25 * n, 2.4 * n, 5 * n],
+        [2.25 * n, 2.4 * n, 5 * n, 3 * n, 6.25 * n, 3.75 * n],
         '${esas(37)} T = ${3 * n} / 0,6 = ${5 * n} N olur. Buradan '
             'G = ${5 * n}·0,8 = $w N bulunur.',
         unit: 'N',
+        sira: s,
       );
     default:
       return _s(
@@ -646,9 +746,10 @@ AdvancedItem _yatayKuvvet(int a, int b, int k) {
             'büyüklüğünde bir kuvvet uygulandığında cisim, ${sapma(53)} $tSoru '
             '(${_sc[53]})',
         5 * n,
-        [3.2 * n, 7 * n, 3 * n],
+        [3.2 * n, 7 * n, 3 * n, 4 * n, 6.25 * n],
         '${esas(53)} T = ${4 * n} / 0,8 = ${5 * n} N bulunur.',
         unit: 'N',
+        sira: s,
       );
   }
 }
@@ -724,7 +825,9 @@ AdvancedItem _zitItme(int a, int b, int k) {
     'olduğuna göre kasaya etki eden sürtünme kuvvetinin büyüklüğü kaç N olur? '
     '$_g10',
     dogru,
-    kayar ? [fs, p, p - fk, f1] : [fs, fk, f1, f1 + f2],
+    kayar
+        ? [fs, p, p - fk, f1, fk / 10, fs / 10, f1 + f2]
+        : [fs, fk, f1, f1 + f2, fs / 10, fk / 10, fs - p],
     kayar
         ? '$itme ${_n(p)} > ${_n(fs)}; kasa harekete geçer. Kayan kasaya '
               'kinetik sürtünme kuvveti etki eder: μk·m·g = ${_mu(mk)}·$m·10 = '
@@ -732,6 +835,7 @@ AdvancedItem _zitItme(int a, int b, int k) {
         : '$itme ${_n(p)} < ${_n(fs)}; kasa hareket etmez. Statik sürtünme '
               'kuvveti net itmeyi dengeler ve büyüklüğü ${_n(p)} N olur.',
     unit: 'N',
+    sira: _hs(a, b, 3 * k),
   );
 }
 
@@ -740,6 +844,7 @@ AdvancedItem _surtunmeKatsayi(int a, int b, int k) {
   final v = b % 4, q = b ~/ 4; // q: 0 … 4
   final j = q + 5 * k; // 0 … 14
   final m = 6 + a; // 6 … 30 kg
+  final s = _hs(a, b, 3 * k + 1);
   switch (v) {
     case 0:
       final ms = 20 + 5 * j; // 0,2 … 0,9
@@ -750,12 +855,13 @@ AdvancedItem _surtunmeKatsayi(int a, int b, int k) {
             'geçirebilmek için zemine paralel olarak en az kaç N kuvvet '
             'uygulanmalıdır? $_g10',
         f,
-        [ms * m / 100, 10 * m, 1000 * m / ms],
+        [ms * m / 100, 10 * m, 1000 * m / ms, ms / 10, f + 10 * m],
         'Dolap, uygulanan kuvvet en büyük statik sürtünme kuvvetini aştığı '
             'anda harekete geçer. En büyük statik sürtünme kuvveti μs·m·g = '
             '${_mu(ms)}·$m·10 = ${_n(f)} N olduğundan en az ${_n(f)} N kuvvet '
             'gerekir.',
         unit: 'N',
+        sira: s,
       );
     case 1:
       final (ms, mk) = _muFark[j];
@@ -767,12 +873,13 @@ AdvancedItem _surtunmeKatsayi(int a, int b, int k) {
             'harekete geçirildikten sonra sabit hızla çekilmek isteniyor. Bunun '
             'için uygulanan yatay kuvvet kaç N azaltılmalıdır? $_g10',
         fark,
-        [fs, fk, (ms - mk) * m / 100],
+        [fs, fk, (ms - mk) * m / 100, fs + fk, (ms - mk) / 10],
         'Harekete geçirmek için gereken en küçük kuvvet μs·m·g = '
             '${_mu(ms)}·$m·10 = ${_n(fs)} N, sabit hız için gereken kuvvet ise '
             'kinetik sürtünmeye eşit olup μk·m·g = ${_mu(mk)}·$m·10 = ${_n(fk)} N '
             'olur. Kuvvet ${_n(fs)} − ${_n(fk)} = ${_n(fark)} N azaltılmalıdır.',
         unit: 'N',
+        sira: s,
       );
     case 2:
       final (ms, mk) = _muFark[j];
@@ -790,6 +897,8 @@ AdvancedItem _surtunmeKatsayi(int a, int b, int k) {
           (kinetik ? fk : fs) / m,
           (kinetik ? ms : mk) / 100,
           10 * m / (kinetik ? fk : fs),
+          (ms - mk) / 100,
+          (ms + mk) / 100,
         ],
         kinetik
             ? 'Sabit hızda uygulanan kuvvet kinetik sürtünme kuvvetine eşittir: '
@@ -797,6 +906,7 @@ AdvancedItem _surtunmeKatsayi(int a, int b, int k) {
             : 'Harekete geçiren en küçük kuvvet en büyük statik sürtünme '
                   'kuvvetine eşittir: μs·m·g = ${_n(fs)}, μs = ${_n(fs)} / '
                   '($m·10) = ${_n(dogru)}.',
+        sira: s,
       );
     default:
       final ms = const [20, 25, 40, 50, 80][q];
@@ -813,12 +923,13 @@ AdvancedItem _surtunmeKatsayi(int a, int b, int k) {
             'duvar arasındaki statik sürtünme katsayısı ${_mu(ms)} olduğuna göre '
             'bastırma kuvveti en az kaç N olmalıdır? $_g10',
         f,
-        [w * ms / 100, w, m10 * 10 / ms],
+        [w * ms / 100, w, m10 * 10 / ms, f + w],
         'Bastırma kuvveti F, duvarın cisme uyguladığı tepki kuvvetine eşittir. '
             'Cismin kaymaması için en büyük statik sürtünme kuvveti ağırlığı '
             'karşılamalıdır: μs·F ≥ m·g, yani F ≥ ${_n(w)} / ${_mu(ms)} = '
             '${_n(f)} N.',
         unit: 'N',
+        sira: s,
       );
   }
 }
@@ -931,6 +1042,7 @@ AdvancedItem _kayarakDurma(int a, int b, int k) {
             'sonra $yalniz'
       : '$ozne, ${_n(v0)} m/s hızla kaymaya başladıktan sonra $yalniz';
   final baslangic = yamac ? 'düz alana girdikten' : 'kaymaya başladıktan';
+  final s = _hs(a, b, 3 * k + 2);
   switch (v) {
     case 0:
       return _s(
@@ -938,10 +1050,11 @@ AdvancedItem _kayarakDurma(int a, int b, int k) {
             '${_n(mu)} olduğuna göre $ad duruncaya kadar '
             '${yamac ? 'düz alanda ' : ''}kaç metre yol alır? $_g10',
         d,
-        [2 * d, 10 * d, v0 / (2 * ivme)],
+        [2 * d, 10 * d, v0 / (2 * ivme), d * mu, d / 2],
         '$ivmeYazi v₀² = 2·a·x bağıntısından x = ${_n(v0)}² / (2·${_n(ivme)}) '
             '= ${_n(d)} m bulunur.',
         unit: 'm',
+        sira: s,
       );
     case 1:
       return _s(
@@ -949,20 +1062,22 @@ AdvancedItem _kayarakDurma(int a, int b, int k) {
             '${_n(mu)} olduğuna göre $ad $baslangic kaç saniye sonra durur? '
             '$_g10',
         t,
-        [v0 / mu, t / 2, 2 * t],
+        [v0 / mu, t / 2, 2 * t, t * mu],
         '$ivmeYazi v = v₀ − a·t = 0 eşitliğinden t = ${_n(v0)} / ${_n(ivme)} '
             '= ${_n(t)} s bulunur.',
         unit: 's',
+        sira: s,
       );
     case 2:
       return _s(
         '$hizla ${_n(d)} m yol alıp duruyor. $yuzey arasındaki kinetik '
             'sürtünme katsayısı kaçtır? $_g10',
         mu,
-        [2 * mu, ivme, mu / 2],
+        [2 * mu, ivme, mu / 2, mu / v0],
         'v₀² = 2·a·x bağıntısından yavaşlama ivmesi a = ${_n(v0)}² / '
             '(2·${_n(d)}) = ${_n(ivme)} m/s² olur. a = μ·g olduğundan '
             'μ = ${_n(ivme)} / 10 = ${_n(mu)} bulunur.',
+        sira: s,
       );
     default:
       return _s(
@@ -972,10 +1087,18 @@ AdvancedItem _kayarakDurma(int a, int b, int k) {
             '${yamac ? 'düz alana girdiği' : 'kaymaya başladığı'} andaki hızı '
             'kaç m/s idi? $_g10',
         v0,
-        [v0 * v0, v0 * v0 / 2, 2 * v0],
+        [
+          v0 * v0,
+          v0 * v0 / 2,
+          2 * v0,
+          v0 / math.sqrt2,
+          v0 / math.sqrt(10),
+          v0 / math.sqrt(mu),
+        ],
         '$ivmeYazi v₀² = 2·a·x = 2·${_n(ivme)}·${_n(d)} = ${_n(v0 * v0)} '
             'olduğundan v₀ = ${_n(v0)} m/s bulunur.',
         unit: 'm/s',
+        sira: s,
       );
   }
 }

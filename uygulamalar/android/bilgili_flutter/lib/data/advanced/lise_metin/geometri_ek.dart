@@ -1,6 +1,7 @@
 // Lise geometri ve analitik geometri ek aileleri: paralel doğrularda açılar,
 // üçgen eşitsizliği, Heron, çemberler, düzgün çokgenler, piramit, hacim
 // korunumu ve analitik düzlemde kesişim, alan, simetri ve döndürme.
+import 'denge.dart';
 import 'ortak.dart';
 
 const _mat = Topic.mathematics;
@@ -71,6 +72,35 @@ AdvancedItem _aci(
   return secenekli(prompt, '$dogru°', havuz.map((x) => '$x°'), aciklama);
 }
 
+/// Derece yanıtlı soru; anahtarın seçenekler arasındaki değer sırası [sira]
+/// (0 … 3) ile seçilir. Önce tipik hata değerleri, en sonda anahtarın iki
+/// yanındaki komşu değerler denenir; hepsi (0°, üst) aralığında tutulur.
+AdvancedItem _aciSirali(
+  String prompt,
+  int dogru,
+  List<int> yanlis,
+  String aciklama,
+  int sira, {
+  int ust = 180,
+}) {
+  final adim = dogru < 30 ? 2 : 5;
+  final havuz = [
+    ...yanlis,
+    for (var k = 1; k <= 6; k++) ...[dogru + k * adim, dogru - k * adim],
+  ].where((x) => x > 0 && x < ust);
+  return AdvancedItem(
+    prompt,
+    '$dogru°',
+    siraliCeldiriciler(dogru, '$dogru°', [
+      for (final x in havuz) (x, '$x°'),
+    ], sira),
+    aciklama,
+  );
+}
+
+/// lmAile koordinatlarından vaka numarası.
+int _no(int a, int b, int c) => a + 25 * b + 500 * c;
+
 /// Çeldiriciler için yalnız tam ve pozitif bölümleri alır.
 int? _bol(int pay, int payda) =>
     payda != 0 && pay % payda == 0 && pay ~/ payda > 0 ? pay ~/ payda : null;
@@ -98,7 +128,7 @@ const _kesenKural = [
   'Paralel doğrularda karşı durumlu açıların ölçüleri toplamı 180° olur',
 ];
 
-AdvancedItem _kesenAcisi(int a, int b, int j) {
+AdvancedItem _kesenAcisi(int a, int b, int j, int i) {
   final x = 7 + a;
   final (p, r) = _kesenKatsayi[b % 10];
   final butunler = j == 3;
@@ -139,38 +169,55 @@ AdvancedItem _kesenAcisi(int a, int b, int j) {
       'x = $x bulunur.';
   // Bağıntıyı karıştıran öğrencinin bulacağı x değeri.
   final xKarisik = butunler ? _bol(s - q, p - r) : _bol(180 - q - s, p + r);
+  // İşaret hatası: eşit açılarda sabitleri yanlış tarafa taşıma, bütünler
+  // açılarda sabitleri 180 ile toplama.
+  final xIsaret = butunler
+      ? _bol(180 + q + s, p + r)
+      : _bol(q + s, (p - r).abs());
+  final sira = hedefSira(i);
   if ((a + b).isEven) {
-    return sayisal(
+    final d = (p - r).abs();
+    return sayisalSirali(
       '$veri Buna göre x kaçtır?',
       x,
-      // İşaret hatası: eşit açılarda sabitleri yanlış tarafa taşıma, bütünler
-      // açılarda sabitleri 180 ile toplama.
       [
         t,
         ?xKarisik,
-        ?(butunler ? _bol(180 + q + s, p + r) : _bol(q + s, (p - r).abs())),
+        ?xIsaret,
+        // x'li terimleri yanlış işaretle bir araya toplama: (p + r)x = |s − q|.
+        if (!butunler) ?_bol(d * x, p + r),
+        // Ara sonucu yanıt sanma: katsayıya bölmeyi unutma.
+        if (butunler) (p + r) * x else if (d > 1) d * x,
+        // Bütünler açılarda öteki açıyı x sanma.
+        if (butunler) 180 - t,
       ],
       cozum,
+      sira,
       positive: true,
     );
   }
   final yanlisAci = xKarisik == null ? null : p * xKarisik + q;
+  final isaretAci = xIsaret == null ? null : p * xIsaret + q;
   if (butunler) {
     final buyuk = t > 180 - t ? t : 180 - t;
-    return _aci(
+    // Büyük açının ifadesinde sabit terimi eklemeyi unutma.
+    final sabitsiz = t > 180 - t ? p * x : r * x;
+    return _aciSirali(
       '$veri Buna göre bu iki açıdan büyük olanının ölçüsü kaç derecedir?',
       buyuk,
-      [180 - buyuk, x, ?yanlisAci],
+      [180 - buyuk, x, ?yanlisAci, ?isaretAci, sabitsiz],
       '$cozum Açıların ölçüleri $t° ve ${180 - t}° olur; büyük olanı '
           '$buyuk°.',
+      sira,
     );
   }
-  return _aci(
+  return _aciSirali(
     '$veri Buna göre bu açılardan her birinin ölçüsü kaç derecedir?',
     t,
-    [180 - t, x, ?yanlisAci],
+    [180 - t, x, ?yanlisAci, ?isaretAci, p * x],
     '$cozum Her bir açı ${_dx(p, q)} ifadesinde x = $x yazılarak $t° '
         'bulunur.',
+    sira,
   );
 }
 
@@ -178,7 +225,7 @@ const _kirikGiris =
     'd₁ ∥ d₂ olmak üzere A noktası d₁, B noktası d₂ doğrusu üzerindedir. İki '
     'doğrunun arasında kalan bir E noktası A ve B noktalarıyla birleştiriliyor.';
 
-AdvancedItem _kirikZ(int a, int b, int j) {
+AdvancedItem _kirikZ(int a, int b, int j, int i) {
   const yer =
       ' d₁ üzerindeki C noktası ve d₂ üzerindeki D noktası, AB doğrusuna göre '
       'E noktasıyla aynı taraftadır.';
@@ -193,14 +240,17 @@ AdvancedItem _kirikZ(int a, int b, int j) {
     var y = 11 + a + b;
     if (t.isEven && 2 * y + t >= 90) y++;
     final x = y + t, z = x + y;
-    return _aci(
+    return _aciSirali(
       '$_kirikGiris$yer AEB açısının ölçüsü $z° ve CAE açısının ölçüsü DBE '
           'açısının ölçüsünden $t° fazla olduğuna göre DBE açısının ölçüsü kaç '
           'derecedir?',
       y,
-      [x, z - t, ?_bol(180 - z - t, 2)],
+      // CAE'yi yanıt sanma, ikiye bölmeyi unutma, üçgen kuralı; yalnız $z
+      // değerini bölme (z / 2 − t) ve farkı hiç kullanmama (z / 2).
+      [x, z - t, ?_bol(180 - z - t, 2), ?_bol(z - 2 * t, 2), ?_bol(z, 2)],
       '$paralel: CAE + DBE = $z°. CAE = DBE + $t° olduğundan 2·DBE + $t° = '
           '$z°, DBE = ($z° − $t°) / 2 = $y°.',
+      hedefSira(i),
     );
   }
   if (j == 1) {
@@ -213,25 +263,28 @@ AdvancedItem _kirikZ(int a, int b, int j) {
       if (y >= f) y++;
     }
     final z = x + y;
-    return _aci(
+    return _aciSirali(
       '$_kirikGiris$yer CAE açısının ölçüsü $x°, AEB açısının ölçüsü $z° '
           'olduğuna göre DBE açısının ölçüsü kaç derecedir?',
       y,
-      [z + x, 180 - z - x, 180 - y],
+      // Toplama, üçgen kuralı, bütünler açı ve DBE = CAE sanma.
+      [z + x, 180 - z - x, 180 - y, x],
       '$paralel: $z° = $x° + DBE, buradan DBE = $z° − $x° = $y°.',
+      hedefSira(i),
     );
   }
   final x = 20 + 2 * a, y = 17 + 2 * b, z = x + y;
-  return _aci(
+  return _aciSirali(
     '$_kirikGiris$yer CAE açısının ölçüsü $x°, DBE açısının ölçüsü $y° '
         'olduğuna göre AEB açısının ölçüsü kaç derecedir?',
     z,
     [180 - z, (x - y).abs(), 180 - (x - y).abs()],
     '$paralel: AEB = $x° + $y° = $z°.',
+    hedefSira(i),
   );
 }
 
-AdvancedItem _kirikU(int a, int b, int j) {
+AdvancedItem _kirikU(int a, int b, int j, int i) {
   const yer =
       ' d₁ üzerindeki C noktası ve d₂ üzerindeki D noktası, AB doğrusuna göre '
       'E noktasının karşı tarafındadır.';
@@ -247,37 +300,51 @@ AdvancedItem _kirikU(int a, int b, int j) {
     if (360 - al - be == be) al++;
     if (al + be == 270) al += 2;
     final z = 360 - al - be;
-    return _aci(
+    return _aciSirali(
       '$_kirikGiris$yer CAE açısının ölçüsü $al°, DBE açısının ölçüsü $be° '
           'olduğuna göre AEB açısının ölçüsü kaç derecedir?',
       z,
-      [al + be - 180, (al - be).abs(), 180 - al + be, al + 180 - be],
+      // Ara sonucu yanıt sanma: E'den çizilen paralelin ayırdığı parçalar.
+      [
+        al + be - 180,
+        (al - be).abs(),
+        180 - al + be,
+        al + 180 - be,
+        180 - al,
+        180 - be,
+      ],
       '$paralel. AEB = 360° − $al° − $be° = $z°.',
+      hedefSira(i),
     );
   }
   if (j == 1) {
     // Aranan DBE hem a hem b ile değişir; CAE ile eşit çıkmasın.
     final al = 125 + 2 * a, be = 112 + a + b + (b >= a + 13 ? 1 : 0);
     final z = 360 - al - be;
-    return _aci(
+    return _aciSirali(
       '$_kirikGiris$yer CAE açısının ölçüsü $al°, AEB açısının ölçüsü $z° '
           'olduğuna göre DBE açısının ölçüsü kaç derecedir?',
       be,
-      // Z kuralı (|CAE − AEB|), bütünler açı ve AEB'yi çıkarmayı unutma.
-      [(al - z).abs(), 180 - be, 180 - z, 360 - al],
+      // Z kuralı (|CAE − AEB|), bütünler açı, AEB'yi çıkarmayı unutma ve
+      // DBE = CAE sanma.
+      [(al - z).abs(), 180 - be, 180 - z, 360 - al, al],
       '$paralel. DBE = 360° − $al° − $z° = $be°.',
+      hedefSira(i),
     );
   }
   final z = 44 + 2 * a, t = 2 + 2 * b;
   final be = (360 - z - t) ~/ 2, al = be + t;
-  return _aci(
+  return _aciSirali(
     '$_kirikGiris$yer AEB açısının ölçüsü $z° ve CAE açısının ölçüsü DBE '
         'açısının ölçüsünden $t° fazla olduğuna göre DBE açısının ölçüsü kaç '
         'derecedir?',
     be,
-    [al, 360 - z - t, 180 - be],
+    // CAE'yi yanıt sanma, ikiye bölmeyi unutma, bütünler açı; farkı hiç
+    // kullanmama ((360 − z) / 2) ve yalnız 360 − z değerini bölme.
+    [al, 360 - z - t, 180 - be, 180 - z ~/ 2, 180 - z ~/ 2 - t],
     '$paralel. CAE + DBE = 360° − $z° = ${360 - z}° ve CAE = DBE + $t° '
         'olduğundan 2·DBE = ${360 - z - t}°, DBE = $be°.',
+    hedefSira(i),
   );
 }
 
@@ -1051,11 +1118,11 @@ final lmGeometriEk = <AdvancedFamily>[
     Difficulty.easy,
     BloomLevel.uygulama,
     (a, b, c) {
-      final j = c ~/ 3;
+      final j = c ~/ 3, i = _no(a, b, c);
       return switch (c % 3) {
-        0 => _kesenAcisi(a, b, j),
-        1 => _kirikZ(a, b, j),
-        _ => _kirikU(a, b, j),
+        0 => _kesenAcisi(a, b, j, i),
+        1 => _kirikZ(a, b, j, i),
+        _ => _kirikU(a, b, j, i),
       };
     },
     exam: ExamKind.tyt,
@@ -1069,7 +1136,7 @@ final lmGeometriEk = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.analiz,
     (a, b, c) {
-      final j = c ~/ 3;
+      final j = c ~/ 3, sira = hedefSira(_no(a, b, c));
       if (c % 3 == 2) {
         // ABD üçgeni üst sınırı, CBD üçgeni alt sınırı belirler. Sayımda n,
         // en küçük değerde l iki koordinatla birlikte değişir.
@@ -1085,27 +1152,33 @@ final lmGeometriEk = <AdvancedFamily>[
             'ABD üçgeninde ${(q - p).abs()} < |BD| < $ust, CBD üçgeninde $l < '
             '|BD| < ${r + s} olur. İki koşul birlikte $l < |BD| < $ust verir;';
         return switch (j) {
-          0 => sayisal(
+          // Tek üçgenle sayma, uçları katma ve n − 1 (son − ilk) sayımı.
+          0 => sayisalSirali(
             '$veri bu uzunluk kaç farklı değer alabilir?',
             n,
-            [2 * (p < q ? p : q) - 1, 2 * r - 1, n + 2, n + 1],
+            [2 * (p < q ? p : q) - 1, 2 * r - 1, n + 2, n + 1, n - 1],
             '$cozum uygun tam sayılar en küçüğü ${l + 1}, en büyüğü '
                 '${ust - 1} olmak üzere $n tanedir.',
+            sira,
             positive: true,
           ),
-          1 => sayisal(
+          // CBD üst sınırı, sınırı katma; en az değeri ya da ABD alt
+          // sınırını yanıt sanma.
+          1 => sayisalSirali(
             '$veri |BD| en çok kaç cm olabilir?',
             ust - 1,
-            [r + s - 1, ust, l + 1],
+            [r + s - 1, ust, l + 1, l],
             '$cozum en büyük tam sayı değeri ${ust - 1} cm olur.',
+            sira,
             unit: 'cm',
             positive: true,
           ),
-          _ => sayisal(
+          _ => sayisalSirali(
             '$veri |BD| en az kaç cm olabilir?',
             l + 1,
-            [(q - p).abs() + 1, l, ust - 1],
+            [(q - p).abs() + 1, l, ust - 1, r + s - 1, ust],
             '$cozum en küçük tam sayı değeri ${l + 1} cm olur.',
+            sira,
             unit: 'cm',
             positive: true,
           ),
@@ -1139,79 +1212,105 @@ final lmGeometriEk = <AdvancedFamily>[
           '${q - p} < |BC| < ${p + q} olur.';
       if (!cevre) {
         return switch (j) {
-          0 => sayisal(
+          // Uçları katma, son − ilk sayımı (hi − lo), en büyük ya da en küçük
+          // değeri sayı sanma.
+          0 => sayisalSirali(
             '$veri bu uzunluk kaç farklı değer alabilir?',
             adet,
-            [adet + 2, adet + 1, hi, 2 * p],
+            [adet + 2, adet - 1, adet + 1, hi, lo, q - p],
             '$kural Uygun tam sayılar en küçüğü $lo, en büyüğü $hi olmak '
                 'üzere $adet tanedir.',
+            sira,
             positive: true,
           ),
-          1 => sayisal(
+          // Sınırı katma; en az değeri ya da alt sınırı yanıt sanma.
+          1 => sayisalSirali(
             '$veri |BC| en çok kaç cm olabilir?',
             hi,
-            [p + q, p + q + 1, lo],
+            [p + q, lo, q - p, p + q + 1],
             '$kural En büyük tam sayı değeri $hi cm olur.',
+            sira,
             unit: 'cm',
             positive: true,
           ),
           // Sınırı dahil etme, en çok değeri yanıt sanma ve ikisini birlikte
           // yapma (yanıtın bir fazlası bir hata değildir).
-          2 => sayisal(
+          2 => sayisalSirali(
             '$veri |BC| en az kaç cm olabilir?',
             lo,
             [q - p, hi, p + q],
             '$kural En küçük tam sayı değeri $lo cm olur.',
+            sira,
             unit: 'cm',
             positive: true,
           ),
-          _ => sayisal(
+          // Uçları katma, bir değer eksik ya da fazla sayma, ikiye bölmeyi
+          // unutma.
+          _ => sayisalSirali(
             '$veri |BC| uzunluğunun alabileceği değerlerin toplamı kaçtır?',
             adet * q,
-            [(adet + 2) * q, p * (2 * q + 1), (adet - 2) * q],
+            [
+              (adet + 2) * q,
+              (adet - 1) * q,
+              p * (2 * q + 1),
+              (adet - 2) * q,
+              (adet + 1) * q,
+              2 * adet * q,
+            ],
             '$kural Değerler $lo, ${lo + 1}, …, $hi olup $adet tanedir; '
                 'toplamları $adet·($lo + $hi) / 2 = ${adet * q}.',
+            sira,
             positive: true,
           ),
         };
       }
       return switch (j) {
-        0 => sayisal(
+        // Sınırı katma; |BC| değerini, en az çevreyi ya da yalnız iki kenarı
+        // yanıt sanma.
+        0 => sayisalSirali(
           '$veri ABC üçgeninin çevresi en çok kaç cm olabilir?',
           p + q + hi,
-          [2 * (p + q), hi, p + q + lo, 2 * (p + q) + 1],
+          [2 * (p + q), hi, p + q + lo, 2 * (p + q) + 1, p + q],
           '$kural |BC| en çok $hi cm olduğundan çevre en çok $p + $q + $hi = '
               '${p + q + hi} cm olur.',
+          sira,
           unit: 'cm',
           positive: true,
         ),
-        1 => sayisal(
+        // Sınırı katma; |BC| değerini, en çok çevreyi ya da yalnız iki kenarı
+        // yanıt sanma.
+        1 => sayisalSirali(
           '$veri ABC üçgeninin çevresi en az kaç cm olabilir?',
           p + q + lo,
-          [2 * q, lo, p + q + hi, 2 * q + 2],
+          [2 * q, lo, p + q + hi, 2 * q + 2, p + q],
           '$kural |BC| en az $lo cm olduğundan çevre en az $p + $q + $lo = '
               '${p + q + lo} cm olur.',
+          sira,
           unit: 'cm',
           positive: true,
         ),
         // $p değeri aralıkta yalnız q < 2p olduğunda bulunur.
         _ =>
           q < 2 * p
-              ? sayisal(
+              // İkizkenarları çıkarmama, birini çıkarma, uçları katma ve
+              // son − ilk sayımı.
+              ? sayisalSirali(
                   '$veri |BC| kaç farklı değer alabilir?',
                   adet - 2,
-                  [adet, adet - 1, adet + 2],
+                  [adet, adet - 1, adet + 2, adet - 3],
                   '$kural Bu aralıktaki $adet tam sayıdan üçgeni ikizkenar yapan '
                       '$p ve $q değerleri çıkarılır: $adet − 2 = ${adet - 2}.',
+                  sira,
                   positive: true,
                 )
-              : sayisal(
+              : sayisalSirali(
                   '$veri |BC| kaç farklı değer alabilir?',
                   adet - 1,
-                  [adet, adet - 2, adet + 1],
+                  [adet, adet - 2, adet + 1, adet - 3],
                   '$kural Bu aralıktaki $adet tam sayıdan yalnız $q değeri üçgeni '
                       'ikizkenar yapar ($p değeri aralıkta değildir): $adet − 1 = '
                       '${adet - 1}.',
+                  sira,
                   positive: true,
                 ),
       };

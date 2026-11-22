@@ -40,19 +40,37 @@ List<String> _celdirici(
       if (x.$2.trim().isNotEmpty && alinan.add(x.$1)) x,
   ];
   final h = ayikla(hatalar), k = ayikla(komsular);
-  final hA = [for (final x in h) if (x.$1 < anahtar) x.$2];
-  final hU = [for (final x in h) if (x.$1 > anahtar) x.$2];
-  final kA = [for (final x in k) if (x.$1 < anahtar) x.$2];
-  final kU = [for (final x in k) if (x.$1 > anahtar) x.$2];
+  final hA = [
+    for (final x in h)
+      if (x.$1 < anahtar) x.$2,
+  ];
+  final hU = [
+    for (final x in h)
+      if (x.$1 > anahtar) x.$2,
+  ];
+  final kA = [
+    for (final x in k)
+      if (x.$1 < anahtar) x.$2,
+  ];
+  final kU = [
+    for (final x in k)
+      if (x.$1 > anahtar) x.$2,
+  ];
   int eksik(int r) => max(0, r - hA.length) + max(0, 3 - r - hU.length);
   bool olur(int r) =>
       r - hA.length <= kA.length && 3 - r - hU.length <= kU.length;
-  final olasi = [for (var r = 0; r < 4; r++) if (olur(r)) r];
+  final olasi = [
+    for (var r = 0; r < 4; r++)
+      if (olur(r)) r,
+  ];
   if (olasi.isEmpty) {
     throw StateError('Eksik çeldirici: $yazim → $hatalar');
   }
   final enAz = olasi.map(eksik).reduce(min);
-  final izin = [for (final r in olasi) if (eksik(r) <= max(1, enAz)) r];
+  final izin = [
+    for (final r in olasi)
+      if (eksik(r) <= max(1, enAz)) r,
+  ];
   final hedef = sira % 4;
   final r = izin.contains(hedef) ? hedef : izin[sira ~/ 4 % izin.length];
   return [
@@ -83,10 +101,9 @@ AdvancedItem _sayi(
   String aciklama,
   int sira, {
   String unit = '',
-  int alt = 1,
-  int? ust,
 }) {
-  bool gecer(int x) => x >= alt && (ust == null || x < ust);
+  // Uzunluk, alan, hacim ve sayım yanıtlarında yalnız pozitif değerler.
+  bool gecer(int x) => x > 0;
   final adim = dogru.abs() >= 200 ? 10 : (dogru.abs() >= 40 ? 5 : 1);
   final yazim = birimli('$dogru', unit);
   return AdvancedItem(
@@ -95,7 +112,10 @@ AdvancedItem _sayi(
     _celdirici(
       dogru,
       yazim,
-      [for (final x in yanlis) if (gecer(x)) (x, birimli('$x', unit))],
+      [
+        for (final x in yanlis)
+          if (gecer(x)) (x, birimli('$x', unit)),
+      ],
       [
         for (final x in _komsu(dogru, adim))
           if (gecer(x as int)) (x, birimli('$x', unit)),
@@ -173,7 +193,10 @@ AdvancedItem _aci(
     _celdirici(
       dogru,
       '$dogru°',
-      [for (final x in yanlis) if (gecer(x)) (x, '$x°')],
+      [
+        for (final x in yanlis)
+          if (gecer(x)) (x, '$x°'),
+      ],
       [
         for (final x in _komsu(dogru, 5))
           if (gecer(x as int)) (x, '$x°'),
@@ -193,14 +216,7 @@ AdvancedItem _tam(
 ) => secenekli(
   prompt,
   _m(dogru),
-  [
-    ...yanlis,
-    dogru + 1,
-    dogru - 1,
-    dogru + 2,
-    dogru - 2,
-    dogru + 3,
-  ].map(_m),
+  [...yanlis, dogru + 1, dogru - 1, dogru + 2, dogru - 2, dogru + 3].map(_m),
   aciklama,
 );
 
@@ -356,7 +372,7 @@ final lmGeometri = <AdvancedFamily>[
             if (al.isOdd) (180 - al) ~/ 2,
           ],
           'Bir dış açının ölçüsü, kendisine komşu olmayan iki iç açının '
-          'ölçüleri toplamına eşittir: $al° + B = $d°, B = $d° − $al° = $be°.',
+              'ölçüleri toplamına eşittir: $al° + B = $d°, B = $d° − $al° = $be°.',
           sira,
         );
       }
@@ -372,8 +388,8 @@ final lmGeometri = <AdvancedFamily>[
           // C açısını verme, yarım açıyı yanıt sanma, B'nin dış açısı.
           [180 - be - y, al + be, be - y, ga, y, 180 - be],
           'Açıortay A açısını $y° ölçülü iki açıya ayırır. ADC açısı ABD '
-          'üçgeninin D köşesindeki dış açısıdır: B + BAD = $be° + $y° = '
-          '${be + y}°.',
+              'üçgeninin D köşesindeki dış açısıdır: B + BAD = $be° + $y° = '
+              '${be + y}°.',
           sira,
         );
       }
@@ -385,11 +401,11 @@ final lmGeometri = <AdvancedFamily>[
         'açının ölçüsü kaç derecedir?',
         g,
         // C'nin dış açısını verme, dış açıları çıkarma, iç açıları çıkarma,
-        // ara sonuç olan A ya da B iç açısını yanıt sanma, verilen dış açıyı
+        // ara sonuç olan A ya da B iç açısını yanıt sanma, A'daki dış açıyı
         // yanıt sanma.
-        [p + q, (p - q).abs(), 180 - (p - q).abs(), p, q, x, y],
+        [p + q, (p - q).abs(), 180 - (p - q).abs(), p, q, x],
         'A ve B köşelerindeki iç açılar 180° − $x° = $p° ve 180° − $y° = $q° '
-        'olur. C = 180° − ($p° + $q°) = $g°.',
+            'olur. C = 180° − ($p° + $q°) = $g°.',
         sira,
       );
     },
@@ -414,19 +430,13 @@ final lmGeometri = <AdvancedFamily>[
           'göre ABC üçgeninin çevresi kaç cm olur?',
           2 * kol + tab,
           // Tabanı iki kez, bacağı bir kez alma; tabanı ya da bir bacağı
-          // unutma; 2·(a + b) yazma; eşkenar sanma; x değerini yanıt sanma.
-          [
-            kol + 2 * tab,
-            2 * kol,
-            2 * (kol + tab),
-            kol + tab,
-            3 * tab,
-            3 * kol,
-            x,
-          ],
+          // unutma; tabanı kenar alıp eşkenar sanma; x değerini yanıt sanma.
+          // (3·bacak ile 2·(bacak + taban) eklenmez: ikisi de başka bir
+          // çeldiriciyle anahtarın tam iki yanında kalırdı.)
+          [kol + 2 * tab, 2 * kol, kol + tab, 3 * tab, x],
           'Eş kenarlar eşitlenir: ${p}x − $q = x + $r, buradan x = $x bulunur. '
-          '|AB| = |AC| = $kol cm ve |BC| = $tab cm olduğundan çevre '
-          '2·$kol + $tab = ${2 * kol + tab} cm olur.',
+              '|AB| = |AC| = $kol cm ve |BC| = $tab cm olduğundan çevre '
+              '2·$kol + $tab = ${2 * kol + tab} cm olur.',
           sira,
           unit: 'cm',
         );
@@ -440,11 +450,18 @@ final lmGeometri = <AdvancedFamily>[
           60 + x - y,
           // y'yi çıkarmama, ADB'yi verme, toplama, işaretleri karıştırma,
           // DEC açısını ya da ADE'nin bütünlerini verme.
-          [60 + x, 60 + y - x, 120 - x, 60 + x + y, 120 - x - y, 120 - y,
-            120 - x + y],
+          [
+            60 + x,
+            60 + y - x,
+            120 - x,
+            60 + x + y,
+            120 - x - y,
+            120 - y,
+            120 - x + y,
+          ],
           'Eşkenar üçgende her açı 60° olduğundan ABD üçgeninde ADB = 180° − '
-          '60° − $x° = ${120 - x}° olur. ADE = 180° − ${120 - x}° − $y° = '
-          '${60 + x - y}°.',
+              '60° − $x° = ${120 - x}° olur. ADE = 180° − ${120 - x}° − $y° = '
+              '${60 + x - y}°.',
           sira,
         );
       }
@@ -524,11 +541,10 @@ final lmGeometri = <AdvancedFamily>[
             dx > dy ? dx : dy,
             u.$3 * (s + 1),
             u.$3 * (s - 1),
-            u.$3 * (s + 2),
           ],
           'Doğu yönünde toplam $x1 + $x2 = $dx $br, kuzey yönünde $dy $br yol '
-          'alınmıştır. Uzaklık √($dx² + $dy²) = √${dx * dx + dy * dy} = $h $br '
-          'olur (${u.$1}-${u.$2}-${u.$3} üçgeninin $s katı).',
+              'alınmıştır. Uzaklık √($dx² + $dy²) = √${dx * dx + dy * dy} = $h $br '
+              'olur (${u.$1}-${u.$2}-${u.$3} üçgeninin $s katı).',
           _hs(a, b, c),
           unit: br,
         );
@@ -714,8 +730,7 @@ final lmGeometri = <AdvancedFamily>[
           q,
           // Tek tarafta ikiye bölmeyi unutma (iki yönde), çarpım yerine toplam
           // eşitliği kurma, yükseklikleri eşit sanma, oranı ters kurma, oranı
-          // karesiyle uygulama, alanı yanıt sanma, kenarlarla yükseklikleri
-          // çapraz çarpma.
+          // karesiyle uygulama, kenarlarla yükseklikleri çapraz çarpma.
           [
             2 * q,
             if (q.isEven) q ~/ 2,
@@ -723,13 +738,12 @@ final lmGeometri = <AdvancedFamily>[
             r,
             if (r * u % t == 0) r * u ~/ t,
             if (q * t % u == 0) q * t ~/ u,
-            if ((t * r).isEven) t * r ~/ 2,
             u - r,
             if (t * u % r == 0) t * u ~/ r,
           ],
           'Üçgenin alanı iki ayrı kenar ve o kenara ait yükseklik ile '
-          'yazılır: $t·$r / 2 = $u·h / 2. Buradan h = ${t * r} / $u = $q cm '
-          'bulunur.',
+              'yazılır: $t·$r / 2 = $u·h / 2. Buradan h = ${t * r} / $u = $q cm '
+              'bulunur.',
           _hs(a, b, c),
           unit: 'cm',
         );
@@ -752,8 +766,8 @@ final lmGeometri = <AdvancedFamily>[
       final yanlisKok = kokIci == 3 ? 2 : 3;
       return AdvancedItem(
         'ABC üçgeninde |AB| = ${2 * x} cm, |AC| = ${2 * y} cm ve bu iki '
-        'kenarın oluşturduğu A açısının ölçüsü $th° olduğuna göre ABC '
-        'üçgeninin alanı kaç cm² olur?',
+            'kenarın oluşturduğu A açısının ölçüsü $th° olduğuna göre ABC '
+            'üçgeninin alanı kaç cm² olur?',
         _kok(k, kokIci),
         [_kok(k2, kokIci), _kok(k, yanlisKok), _kok(k2, yanlisKok)],
         '$sinus olduğundan alan (1/2)·|AB|·|AC|·sin A = (1/2)·${2 * x}·'
@@ -796,8 +810,8 @@ final lmGeometri = <AdvancedFamily>[
             n * s,
           ],
           'ADE ve ABC üçgenleri benzerdir: |AD| / |AB| = |DE| / |BC|. |AB| = '
-          '$ad + $db = ${n * s} cm olduğundan $ad / ${n * s} = $de / |BC|, '
-          '|BC| = $de·${n * s} / $ad = $bc cm.',
+              '$ad + $db = ${n * s} cm olduğundan $ad / ${n * s} = $de / |BC|, '
+              '|BC| = $de·${n * s} / $ad = $bc cm.',
           sira,
           unit: 'cm',
         );
@@ -819,7 +833,7 @@ final lmGeometri = <AdvancedFamily>[
               bol(n * n * n * k, m),
             ],
             'Alanlar oranı benzerlik oranının karesidir: ($m/$n)² = '
-            '${m * m}/${n * n}. Büyük alan $s1·${n * n} / ${m * m} = $s2 cm².',
+                '${m * m}/${n * n}. Büyük alan $s1·${n * n} / ${m * m} = $s2 cm².',
             sira,
             unit: 'cm²',
           );
@@ -839,7 +853,7 @@ final lmGeometri = <AdvancedFamily>[
               bol(m * m * m * k, n),
             ],
             'Alanlar oranı benzerlik oranının karesidir: ($m/$n)² = '
-            '${m * m}/${n * n}. Küçük alan $s2·${m * m} / ${n * n} = $s1 cm².',
+                '${m * m}/${n * n}. Küçük alan $s2·${m * m} / ${n * n} = $s1 cm².',
             sira,
             unit: 'cm²',
           );
@@ -860,7 +874,7 @@ final lmGeometri = <AdvancedFamily>[
               n * n * (k + 2),
             ],
             'Çevreler oranı benzerlik oranına eşittir: $p1 / Ç = $m/$n, '
-            'Ç = $p1·$n / $m = $p2 cm.',
+                'Ç = $p1·$n / $m = $p2 cm.',
             sira,
             unit: 'cm',
           );
@@ -882,7 +896,7 @@ final lmGeometri = <AdvancedFamily>[
               n * n * (k + 1),
             ],
             'Alanlar oranı $s1/$s2 = ${m * m}/${n * n} olduğundan benzerlik '
-            'oranı $m/$n olur. Karşılık gelen kenar $e1·$n / $m = $e2 cm.',
+                'oranı $m/$n olur. Karşılık gelen kenar $e1·$n / $m = $e2 cm.',
             sira,
             unit: 'cm',
           );
@@ -904,8 +918,8 @@ final lmGeometri = <AdvancedFamily>[
               bol(n * n * n * k, m),
             ],
             'Benzerlik oranı $e1/$e2 = $m/$n, alanlar oranı bunun karesi olan '
-            '${m * m}/${n * n} olur. Büyük alan $s1·${n * n} / ${m * m} = '
-            '$s2 cm².',
+                '${m * m}/${n * n} olur. Büyük alan $s1·${n * n} / ${m * m} = '
+                '$s2 cm².',
             sira,
             unit: 'cm²',
           );
@@ -950,7 +964,7 @@ final lmGeometri = <AdvancedFamily>[
               w,
             ],
             'Açıortay teoremine göre |BD| / |DC| = |AB| / |AC| = $ab/$ac = '
-            '$m/$n olur. $bd / |DC| = $m/$n eşitliğinden |DC| = $dc cm.',
+                '$m/$n olur. $bd / |DC| = $m/$n eşitliğinden |DC| = $dc cm.',
             sira,
             unit: 'cm',
           );
@@ -971,7 +985,7 @@ final lmGeometri = <AdvancedFamily>[
             if (ab.isEven) ab ~/ 2,
           ],
           'Açıortay teoremine göre |BD| / |DC| = |AB| / |AC| = $ab/$ac = '
-          '$m/$n olur. |BD| = $bc·$m / ${m + n} = $bd cm.',
+              '$m/$n olur. |BD| = $bc·$m / ${m + n} = $bd cm.',
           sira,
           unit: 'cm',
         );
@@ -1006,8 +1020,8 @@ final lmGeometri = <AdvancedFamily>[
           yanit,
           [...yanlis, 3 * p + 3 * q],
           'Ağırlık merkezi her kenarortayı köşeden başlayarak 2:1 oranında '
-          'böler: |AG| = ${2 * p}, |GD| = $p, |BG| = ${2 * q} ve |GE| = $q '
-          'cm olur. $ad = $yanit cm.',
+              'böler: |AG| = ${2 * p}, |GD| = $p, |BG| = ${2 * q} ve |GE| = $q '
+              'cm olur. $ad = $yanit cm.',
           sira,
           unit: 'cm',
         );
@@ -1087,7 +1101,7 @@ final lmGeometri = <AdvancedFamily>[
           // açıların ortalamasını alma.
           [180 - x, bol(ic, n), bol(t, n - 1), bol(360, n)],
           '$n kenarlı çokgenin iç açıları toplamı ($n − 2)·180° = $ic° olur. '
-          'Aranan açı $ic° − $t° = $x°.',
+              'Aranan açı $ic° − $t° = $x°.',
           sira,
         );
       }
@@ -1111,9 +1125,9 @@ final lmGeometri = <AdvancedFamily>[
             (n - 1) * (n - 4) ~/ 2,
           ],
           'Dışarıda bırakılan açı 0° ile 180° arasında olduğundan iç açılar '
-          'toplamı, $t° değerinden büyük ilk 180° katı olan $ic° olur. '
-          '(n − 2)·180° = $ic° eşitliğinden n = $n bulunur. Köşegen sayısı '
-          'n·(n − 3) / 2 = $n·${n - 3} / 2 = $d.',
+              'toplamı, $t° değerinden büyük ilk 180° katı olan $ic° olur. '
+              '(n − 2)·180° = $ic° eşitliğinden n = $n bulunur. Köşegen sayısı '
+              'n·(n − 3) / 2 = $n·${n - 3} / 2 = $d.',
           sira,
         );
       }
@@ -1139,8 +1153,8 @@ final lmGeometri = <AdvancedFamily>[
             bol(ic - ver, m - 1),
           ],
           'İç açılar toplamı ($n − 2)·180° = $ic° olur. Kalan $m açının '
-          'toplamı $ic° − $ver° = ${ic - ver}°, her biri ${ic - ver}° / $m = '
-          '${180 - y}°.',
+              'toplamı $ic° − $ver° = ${ic - ver}°, her biri ${ic - ver}° / $m = '
+              '${180 - y}°.',
           sira,
         );
       }
@@ -1204,12 +1218,13 @@ final lmGeometri = <AdvancedFamily>[
           'yamuğun yüksekliği $h cm olarak veriliyor. Buna göre ABCD yamuğunun '
           'alanı kaç cm² olur?',
           alan,
-          // İkiye bölmeyi unutma ya da iki kez bölme, tek tabanla çarpma,
-          // tabanları çıkarma.
-          [(p + q) * h, q * h, p * h, (p - q) * h ~/ 2, bol((p + q) * h, 4)],
+          // İkiye bölmeyi unutma ya da iki kez bölme, uzun tabanla çarpma,
+          // tabanları çıkarma. (Kısa tabanla çarpım eklenmez: uzun tabanla
+          // çarpımla birlikte anahtarın tam iki yanında kalırdı.)
+          [(p + q) * h, p * h, (p - q) * h ~/ 2, bol((p + q) * h, 4)],
           'Yamuğun alanı, taban uzunlukları toplamı ile yüksekliğin '
-          'çarpımının yarısıdır: ($p + $q)·$h / 2 = ${p + q}·$h / 2 = '
-          '$alan cm².',
+              'çarpımının yarısıdır: ($p + $q)·$h / 2 = ${p + q}·$h / 2 = '
+              '$alan cm².',
           sira,
           unit: 'cm²',
         );
@@ -1235,7 +1250,7 @@ final lmGeometri = <AdvancedFamily>[
               bol(e * f, 8),
             ],
             'Eşkenar dörtgenin alanı köşegen uzunlukları çarpımının yarısıdır: '
-            '$e·$f / 2 = ${e * f ~/ 2} cm².',
+                '$e·$f / 2 = ${e * f ~/ 2} cm².',
             sira,
             unit: 'cm²',
           );
@@ -1254,7 +1269,7 @@ final lmGeometri = <AdvancedFamily>[
               bol(e * g, 8),
             ],
             'Deltoidin alanı köşegen uzunlukları çarpımının yarısıdır: '
-            '$e·$g / 2 = ${e * g ~/ 2} cm².',
+                '$e·$g / 2 = ${e * g ~/ 2} cm².',
             sira,
             unit: 'cm²',
           );
@@ -1269,7 +1284,7 @@ final lmGeometri = <AdvancedFamily>[
             // yarısı sanma.
             [bol(s, e), 2 * f, e, bol(s, 2), bol(f, 4)],
             'Alan köşegenler çarpımının yarısıdır: $e·k / 2 = $s. Buradan '
-            'k = ${2 * s} / $e = $f cm.',
+                'k = ${2 * s} / $e = $f cm.',
             sira,
             unit: 'cm',
           );
@@ -1283,7 +1298,7 @@ final lmGeometri = <AdvancedFamily>[
             // alanını ayrı ayrı p·h alma.
             [bol(p * h, 2), 2 * (p + h), p + h, 2 * p * h],
             'Paralelkenarın alanı bir kenar ile o kenara ait yüksekliğin '
-            'çarpımıdır: $p·$h = ${p * h} cm².',
+                'çarpımıdır: $p·$h = ${p * h} cm².',
             sira,
             unit: 'cm²',
           );
@@ -1296,19 +1311,11 @@ final lmGeometri = <AdvancedFamily>[
             'ait yükseklik $hp cm olduğuna göre [AD] kenarına ait yükseklik '
             'kaç cm olur?',
             hq,
-            // Yükseklikleri eşit sanma, oranı ters kurma, alanı yanıt sanma,
-            // üçgen formülüyle iki katını ya da yarısını bulma, toplama
-            // eşitliği kurma.
-            [
-              hp,
-              bol(q * hp, p),
-              p * hp,
-              2 * hq,
-              bol(hq, 2),
-              p + hp - q,
-            ],
+            // Yükseklikleri eşit sanma, oranı ters kurma, üçgen formülüyle
+            // iki katını ya da yarısını bulma, toplama eşitliği kurma.
+            [hp, bol(q * hp, p), 2 * hq, bol(hq, 2), p + hp - q],
             'Alan iki ayrı kenar ve yükseklikle yazılır: $p·$hp = $q·h. '
-            'Buradan h = ${p * hp} / $q = $hq cm.',
+                'Buradan h = ${p * hp} / $q = $hq cm.',
             sira,
             unit: 'cm',
           );
@@ -1460,7 +1467,7 @@ final lmGeometri = <AdvancedFamily>[
               if (uc) y,
             ],
             'Yay uzunluğu 2πr·(α / 360) = 2π·$r·$al / 360 = ${sim(y)} cm olur.'
-            '${son(y)}',
+                '${son(y)}',
             sira,
           );
         case 1:
@@ -1475,7 +1482,7 @@ final lmGeometri = <AdvancedFamily>[
               if (uc) s,
             ],
             'Dilimin alanı πr²·(α / 360) = π·${r * r}·$al / 360 = ${sim(s)} cm² '
-            'olur.${son(s)}',
+                'olur.${son(s)}',
             sira,
           );
         case 2:
@@ -1494,7 +1501,7 @@ final lmGeometri = <AdvancedFamily>[
               if (uc) 3 * r,
             ],
             'Yay uzunluğu 2πr·($al / 360) = ${yaz(y)} eşitliğinden '
-            'r = $r cm bulunur.',
+                'r = $r cm bulunur.',
             sira,
             unit: 'cm',
           );
@@ -1517,7 +1524,7 @@ final lmGeometri = <AdvancedFamily>[
                 if (k * k == s) k,
             ],
             'Dilimin alanı πr²·($al / 360) = ${yaz(s)} eşitliğinden '
-            'r² = ${r * r}, r = $r cm bulunur.',
+                'r² = ${r * r}, r = $r cm bulunur.',
             sira,
             unit: 'cm',
           );
@@ -1530,8 +1537,8 @@ final lmGeometri = <AdvancedFamily>[
             // π = 3 iken π'ye bölmeme.
             [yari(al), 2 * al, 360 - al, 180 - al, if (uc) 3 * al],
             'Çemberin çevresi 2πr = ${yaz(2 * r)} cm olur. Yay çevrenin '
-            '${kesir(y, 2 * r)} kadarı olduğundan merkez açı '
-            '360°·${kesir(y, 2 * r)} = $al°.',
+                '${kesir(y, 2 * r)} kadarı olduğundan merkez açı '
+                '360°·${kesir(y, 2 * r)} = $al°.',
             sira,
             ust: 360,
           );
@@ -1567,8 +1574,8 @@ final lmGeometri = <AdvancedFamily>[
               // bütünler açıyı verme.
               [360 - th - x, 2 * th, 360 - 2 * th, 180 - th, th, 2 * th - x],
               'ABC çevre açısının gördüğü, B noktasını içermeyen AC yayı '
-              '2·$th° = $kalan° olur. Üç yayın toplamı 360° olduğundan BC yayı '
-              '360° − $kalan° − $x° = $y°.',
+                  '2·$th° = $kalan° olur. Üç yayın toplamı 360° olduğundan BC yayı '
+                  '360° − $kalan° − $x° = $y°.',
               sira,
               ust: 360,
             );
@@ -1581,7 +1588,7 @@ final lmGeometri = <AdvancedFamily>[
             // yarısını alma.
             [kalan, (x + y) ~/ 2, x ~/ 2, y ~/ 2, x + y, 180 - kalan ~/ 2],
             '$cozum ABC çevre açısı bu yayı gördüğünden ölçüsü $kalan° / 2 = '
-            '${kalan ~/ 2}°.',
+                '${kalan ~/ 2}°.',
             sira,
           );
         case 1:
@@ -1599,7 +1606,7 @@ final lmGeometri = <AdvancedFamily>[
               // yay, yarıya bölme.
               [t, 2 * (u + v), 2 * u, 2 * v, 360 - 2 * t, u + v],
               'T, A ve K doğrusal olduğundan BAC = 180° − $u° − $v° = $t° '
-              'olur. BAC çevre açısının gördüğü BC yayı 2·$t° = ${2 * t}°.',
+                  'olur. BAC çevre açısının gördüğü BC yayı 2·$t° = ${2 * t}°.',
               sira,
               ust: 360,
             );
@@ -1607,11 +1614,11 @@ final lmGeometri = <AdvancedFamily>[
           return _aci(
             '$veri BAC açısının ölçüsü kaç derecedir?',
             t,
-            // Teğet-kiriş açılarını toplama, bütünler açılar, TAB'yi BAC
-            // sanma, farkı alma, yayı verme.
-            [u + v, 180 - u, 180 - v, (u - v).abs(), u, v, 2 * t],
+            // Teğet-kiriş açılarını toplama, bütünler açılar, farkı alma,
+            // TAB'yi BAC sanma, yayı verme.
+            [u + v, 180 - u, 180 - v, (u - v).abs(), u, 2 * t],
             'T, A ve K noktaları doğrusal olduğundan TAB + BAC + KAC = 180° '
-            'olur. BAC = 180° − $u° − $v° = $t°.',
+                'olur. BAC = 180° − $u° − $v° = $t°.',
             sira,
           );
         case 2:
@@ -1622,10 +1629,10 @@ final lmGeometri = <AdvancedFamily>[
               'açısının ölçüsü $u° olduğuna göre ACB açısının ölçüsü kaç '
               'derecedir?',
               180 - al - u,
-              [al - u, 180 - al, 180 - u, u, al, 180 - al + u],
+              [al - u, 180 - al, 180 - u, u, 180 - al + u],
               'ABD üçgeninde ADB = 180° − $al° − $u° = ${180 - al - u}° olur. '
-              'ACB ve ADB çevre açıları aynı AB yayını gördüğünden ACB = '
-              '${180 - al - u}°.',
+                  'ACB ve ADB çevre açıları aynı AB yayını gördüğünden ACB = '
+                  '${180 - al - u}°.',
               sira,
             );
           }
@@ -1633,10 +1640,10 @@ final lmGeometri = <AdvancedFamily>[
             'ABCD kirişler dörtgeninde BAD açısının ölçüsü $al°, CBD açısının '
             'ölçüsü $u° olduğuna göre BDC açısının ölçüsü kaç derecedir?',
             al - u,
-            [180 - al - u, 180 - al + u, al + u, 180 - al, al, u],
+            [180 - al - u, 180 - al + u, al + u, 180 - al, al],
             'Kirişler dörtgeninde karşılıklı açılar bütünlerdir: BCD = 180° − '
-            '$al° = ${180 - al}°. BCD üçgeninde BDC = 180° − ${180 - al}° − '
-            '$u° = ${al - u}°.',
+                '$al° = ${180 - al}°. BCD üçgeninde BDC = 180° − ${180 - al}° − '
+                '$u° = ${al - u}°.',
             sira,
           );
         case 3:
@@ -1652,7 +1659,7 @@ final lmGeometri = <AdvancedFamily>[
             return _aci(
               '$veri ABC açısının ölçüsü kaç derecedir?',
               t,
-              [2 * t, 180 - t, 180 - 2 * t, (u - v).abs(), u, v],
+              [2 * t, 180 - t, 180 - 2 * t, (u - v).abs(), u],
               cozum,
               sira,
             );
@@ -1662,7 +1669,7 @@ final lmGeometri = <AdvancedFamily>[
             2 * t,
             [t, 180 - t, 360 - 2 * t, 180 - 2 * t, 4 * t],
             '$cozum Merkez açı aynı yayı gören çevre açının iki katıdır: AOC = '
-            '2·$t° = ${2 * t}°.',
+                '2·$t° = ${2 * t}°.',
             sira,
             ust: 360,
           );
@@ -1680,7 +1687,7 @@ final lmGeometri = <AdvancedFamily>[
               90 - u + v,
               [u + v, 90 + u - v, 180 - u - v, 90 - u, 90 + v, 90 - v],
               '$cap ABC üçgeninde CBA = 90° − $u° = ${90 - u}° bulunur. '
-              'CBD = ${90 - u}° + $v° = ${90 - u + v}°.',
+                  'CBD = ${90 - u}° + $v° = ${90 - u + v}°.',
               sira,
             );
           }
@@ -1689,7 +1696,7 @@ final lmGeometri = <AdvancedFamily>[
             90 + u - v,
             [u + v, 90 - u + v, 180 - u - v, 90 - v, 90 + u, 90 - u],
             '$cap ABD üçgeninde DAB = 90° − $v° = ${90 - v}° bulunur. '
-            'CAD = $u° + ${90 - v}° = ${90 + u - v}°.',
+                'CAD = $u° + ${90 - v}° = ${90 + u - v}°.',
             sira,
           );
       }
@@ -1956,7 +1963,7 @@ final lmGeometri = <AdvancedFamily>[
               2 * r * r * h,
             ],
             'Silindirin hacmi πr²h = π·$r²·$h = π·${r * r}·$h = '
-            '${r * r * h}π cm³.',
+                '${r * r * h}π cm³.',
             sira,
           );
         case 1:
@@ -1975,7 +1982,7 @@ final lmGeometri = <AdvancedFamily>[
               2 * r * h + r * r,
             ],
             'Yanal yüzey, taban çevresi ile yüksekliğin çarpımıdır: 2πrh = '
-            '2π·$r·$h = ${2 * r * h}π cm².',
+                '2π·$r·$h = ${2 * r * h}π cm².',
             sira,
           );
         case 2:
@@ -1995,7 +2002,7 @@ final lmGeometri = <AdvancedFamily>[
               4 * r * (r + h),
             ],
             'Tüm yüzey alanı iki taban ile yanal yüzeyin toplamıdır: 2πr² + '
-            '2πrh = 2π·$r·($r + $h) = ${2 * r * (r + h)}π cm².',
+                '2πrh = 2π·$r·($r + $h) = ${2 * r * (r + h)}π cm².',
             sira,
           );
         case 3:
@@ -2017,7 +2024,7 @@ final lmGeometri = <AdvancedFamily>[
                 3 * r * n,
               ],
               'Koninin hacmi πr²h / 3 = π·${r * r}·${3 * n} / 3 = '
-              '${r * r * n}π cm³.',
+                  '${r * r * n}π cm³.',
               sira,
             );
           }
@@ -2043,8 +2050,8 @@ final lmGeometri = <AdvancedFamily>[
               4 * v,
             ],
             'Koninin hacmi π·${r * r}·$yuk / 3, yarım kürenin hacmi '
-            '(2/3)·π·$r³ olur. Toplam π·${r * r}·($yuk + ${2 * r}) / 3 = '
-            '$vπ cm³.',
+                '(2/3)·π·$r³ olur. Toplam π·${r * r}·($yuk + ${2 * r}) / 3 = '
+                '$vπ cm³.',
             sira,
           );
         default:
@@ -2067,8 +2074,8 @@ final lmGeometri = <AdvancedFamily>[
               r * r * h,
             ],
             'Dış yüzey; alt taban πr², yanal yüzey 2πrh ve yarım kürenin '
-            'yüzeyi 2πr² toplamıdır: π·${r * r} + 2π·$r·$h + 2π·${r * r} = '
-            '$sπ cm².',
+                'yüzeyi 2πr² toplamıdır: π·${r * r} + 2π·$r·$h + 2π·${r * r} = '
+                '$sπ cm².',
             sira,
           );
       }
@@ -2279,7 +2286,10 @@ final lmGeometri = <AdvancedFamily>[
       // anahtar tek tam sayı seçenek kalmaz.
       List<String> celdir(int pay, Iterable<int> paylar) {
         final yazim = kesir(pay, h);
-        final farkli = {for (final e in paylar) if (e > 0 && e != pay) e};
+        final farkli = {
+          for (final e in paylar)
+            if (e > 0 && e != pay) e,
+        };
         return _celdirici(
           pay / h,
           yazim,
@@ -2306,18 +2316,19 @@ final lmGeometri = <AdvancedFamily>[
         final n = (t + k).abs();
         return AdvancedItem(
           'Analitik düzlemde A${_n(x0, y0)} noktasının ${_dnk(ka, kb, k)} '
-          'doğrusuna uzaklığı kaç birimdir?',
+              'doğrusuna uzaklığı kaç birimdir?',
           kesir(n, h),
           // Sabit terimin işaretini çevirme, x ile y katsayılarını karıştırma,
-          // sabit terimi unutma, bir terimin işaretini çevirme, mutlak değeri
-          // terim terim alma.
+          // bir terimin işaretini çevirme, mutlak değeri terim terim alma,
+          // sabit terimi unutma. (Sonuncusu, işareti çevrilmiş sabitle
+          // birlikte anahtarla eşit aralıklı dizi kurduğu için en sondadır.)
           celdir(n, [
             (t - k).abs(),
             (kb * x0 + ka * y0 + k).abs(),
-            t.abs(),
             (ka * x0 - kb * y0 + k).abs(),
             (kb * y0 - ka * x0 + k).abs(),
             (ka * x0).abs() + (kb * y0).abs() + k.abs(),
+            t.abs(),
           ]),
           'Pay |$ka·${_pz(x0)} + ${_pz(kb)}·${_pz(y0)} + ${_pz(k)}| = $n, '
           'payda $payda olur. Uzaklık ${sonuc(n)} birimdir.',
@@ -2327,18 +2338,19 @@ final lmGeometri = <AdvancedFamily>[
       final kat = (a + b).isEven ? 1 : 2;
       return AdvancedItem(
         'Analitik düzlemde ${_dnk(ka, kb, c1)} ve '
-        '${_dnk(kat * ka, kat * kb, kat * c2)} paralel doğruları arasındaki '
-        'uzaklık kaç birimdir?',
+            '${_dnk(kat * ka, kat * kb, kat * c2)} paralel doğruları arasındaki '
+            'uzaklık kaç birimdir?',
         kesir(d, h),
         // Sabitleri toplama, ikinci denklemi sadeleştirmeden sabitleri
         // çıkarma ya da yalnız birinci denklemi 2 ile genişletme, doğrulardan
-        // birinin orijine uzaklığını verme.
+        // birinin orijine uzaklığını verme. Orijine uzaklıklardan, anahtar
+        // ile sabitleri toplama hatasının tam ortasına düşen eklenmez.
         celdir(d, [
           (c1 + c2).abs(),
           if (kat == 2) (c1 - 2 * c2).abs(),
           if (kat == 2) 2 * d,
-          c2.abs(),
-          c1.abs(),
+          for (final e in [c2.abs(), c1.abs()])
+            if (2 * e != d + (c1 + c2).abs()) e,
         ]),
         '${kat == 2 ? 'İkinci denklem 2 ile sadeleştirilirse '
                   '${_dnk(ka, kb, c2)} olur. ' : ''}Katsayıları aynı olan '
@@ -2361,21 +2373,15 @@ final lmGeometri = <AdvancedFamily>[
       final h = a - 12, k = b - 10, r = 2 + (a + b) % 6 + (ikinci ? 6 : 0);
       final sx = a.isEven ? 1 : -1, sy = b.isEven ? 1 : -1;
       final std = _cember(h, k, r * r);
-      final genel = '${_ifade([
-        (1, 'x²'),
-        (1, 'y²'),
-        (-2 * h, 'x'),
-        (-2 * k, 'y'),
-        (h * h + k * k - r * r, ''),
-      ])} = 0';
-      final tamKare =
-          'Denklem tam kareye tamamlanırsa $std biçimine gelir';
+      final genel =
+          '${_ifade([(1, 'x²'), (1, 'y²'), (-2 * h, 'x'), (-2 * k, 'y'), (h * h + k * k - r * r, '')])} = 0';
+      final tamKare = 'Denklem tam kareye tamamlanırsa $std biçimine gelir';
       switch (c % 5) {
         case 0:
           final top = h + k + r;
           return AdvancedItem(
             'Analitik düzlemde denklemi $std olan çemberin merkezi M(a, b) ve '
-            'yarıçapı r birim olduğuna göre a + b + r toplamı kaçtır?',
+                'yarıçapı r birim olduğuna göre a + b + r toplamı kaçtır?',
             _m(top),
             // Merkezin ya da bir koordinatın işaretini çevirme, r yerine r²
             // alma (işaret hatasıyla birlikte de), karekök yerine ikiye bölme,
@@ -2461,12 +2467,8 @@ final lmGeometri = <AdvancedFamily>[
                 if (i != durum) _konum[i],
             ],
             'Merkez M${_n(h, k)}, yarıçap $r birimdir. |PM|² = ${_pz(dx)}² + '
-            '${_pz(dy)}² = $d2 ve r² = ${r * r} olur. $d2 $isaret ${r * r} '
-            'olduğundan P noktası ${const [
-              'çemberin iç bölgesindedir',
-              'çemberin dış bölgesindedir',
-              'çemberin üzerindedir',
-            ][durum]}.',
+                '${_pz(dy)}² = $d2 ve r² = ${r * r} olur. $d2 $isaret ${r * r} '
+                'olduğundan P noktası ${const ['çemberin iç bölgesindedir', 'çemberin dış bölgesindedir', 'çemberin üzerindedir'][durum]}.',
           );
         default:
           final dx = sx * (1 + (a + b) % 4);

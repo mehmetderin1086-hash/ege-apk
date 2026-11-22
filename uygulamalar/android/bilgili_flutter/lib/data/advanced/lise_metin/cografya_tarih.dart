@@ -18,6 +18,88 @@ int _ucaYakinSira(int i) {
   return s;
 }
 
+/// Anahtarın değer sırasını [sira] yapan çeldiriciler; `siraliCeldiriciler`
+/// gibi çalışır, ancak anahtarın hemen yanındaki [komsu] değerleri yalnız
+/// [tipik] hatalardan üç ayrı çeldirici çıkmadığında kullanır. Bir yanda tipik
+/// hata yetmezse eksik çeldirici öbür yandaki tipik hatalardan gelir (sıra
+/// kayar); böylece anahtara çok yakın, hiçbir hataya karşılık gelmeyen değerler
+/// seçeneklere girmez.
+List<String> _tipikSirali(
+  num anahtar,
+  String yazim,
+  List<(num, String)> tipik,
+  List<(num, String)> komsu,
+  int sira,
+) {
+  final ayri = <String>[];
+  for (final (_, y) in tipik) {
+    if (!ayniSecenek(y, yazim) && !ayri.any((w) => ayniSecenek(w, y))) ayri.add(y);
+  }
+  return siraliCeldiriciler(anahtar, yazim, [
+    ...tipik,
+    if (ayri.length < 3) ...komsu,
+  ], sira);
+}
+
+/// Pozitif tam sayı yanıtlı soru; çeldiriciler [_tipikSirali] ile seçilir.
+AdvancedItem _sayisalTipik(
+  String prompt,
+  int answer,
+  Iterable<int> alternatives,
+  String explanation,
+  int sira, {
+  String unit = '',
+}) {
+  final step = answer.abs() >= 200 ? 10 : (answer.abs() >= 40 ? 5 : 1);
+  final yazim = birimli('$answer', unit);
+  (int, String) aday(int x) => (x, birimli('$x', unit));
+  return AdvancedItem(
+    prompt,
+    yazim,
+    _tipikSirali(answer, yazim, [
+      for (final x in alternatives)
+        if (x > 0) aday(x),
+    ], [
+      for (var k = 1; k <= 6; k++) ...[
+        aday(answer + k * step),
+        if (answer - k * step > 0) aday(answer - k * step),
+      ],
+    ], sira),
+    explanation,
+  );
+}
+
+/// Pozitif ondalıklı yanıtlı soru; değerler [digits] basamakla yazılır, sıra
+/// yazılan değere göre bulunur ve çeldiriciler [_tipikSirali] ile seçilir.
+AdvancedItem _ondalikliTipik(
+  String prompt,
+  double answer,
+  Iterable<double> alternatives,
+  String explanation,
+  int sira, {
+  String unit = '',
+  int digits = 2,
+}) {
+  final step = answer.abs() >= 20 ? 1.0 : (answer.abs() >= 2 ? 0.5 : 0.1);
+  double yuvarla(double x) => double.parse(tr(x, digits).replaceFirst(',', '.'));
+  (double, String) aday(double x) => (yuvarla(x), birimli(tr(x, digits), unit));
+  final yazim = birimli(tr(answer, digits), unit);
+  return AdvancedItem(
+    prompt,
+    yazim,
+    _tipikSirali(yuvarla(answer), yazim, [
+      for (final x in alternatives)
+        if (x.isFinite && yuvarla(x) > 0) aday(x),
+    ], [
+      for (var k = 1; k <= 6; k++) ...[
+        aday(answer + k * step),
+        if (yuvarla(answer - k * step) > 0) aday(answer - k * step),
+      ],
+    ], sira),
+    explanation,
+  );
+}
+
 /// Dakikayı 24 saatlik gösterime çevirir: 574 → 09:34.
 String _saat(int dk) =>
     '${(dk ~/ 60).toString().padLeft(2, '0')}:${(dk % 60).toString().padLeft(2, '0')}';
@@ -109,7 +191,7 @@ AdvancedItem _yerelSaat(int a, int b, int c) {
   final diger = ayni ? lonK.abs() + lonL.abs() : (lonK.abs() - lonL.abs()).abs();
   final buyuk = lonK.abs() > lonL.abs() ? lonK.abs() : lonL.abs();
   final kucuk = lonK.abs() > lonL.abs() ? lonL.abs() : lonK.abs();
-  return sayisalSirali(
+  return _sayisalTipik(
     'K merkezi ${_boylam(lonK)}, L merkezi ${_boylam(lonL)} boylamındadır. '
     'Ardışık iki boylam arasında 4 dakikalık yerel saat farkı bulunduğuna göre '
     'bu iki merkezin yerel saatleri arasındaki fark kaç dakikadır?',
@@ -134,7 +216,6 @@ AdvancedItem _yerelSaat(int a, int b, int c) {
             '${lonK.abs()} + ${lonL.abs()} = $fark° olur. Yerel saat farkı $fark × 4 = ${4 * fark} dakikadır.',
     sira,
     unit: 'dakika',
-    positive: true,
   );
 }
 
@@ -208,38 +289,53 @@ AdvancedItem _olcekUzunluk(int a, int b, int c) {
     final cm10 = 20 + b + 20 * k; // 2,0 … 11,9 cm
     final km = cm10 * (6 + a) * 2 / 100;
     final ters = cm10 / 10 / s;
-    return ondalikliSirali(
+    return _ondalikliTipik(
       '1/$payda ölçekli bir haritada $baglam ${tr(cm10 / 10)} cm olarak ölçülmüştür. '
       'Bu uzaklık gerçekte kaç kilometredir?',
       km,
       // Tipik hatalar anahtarın iki yanında: çarpmak yerine bölme, km'ye çevirirken
       // bir ya da iki basamak kaydırma (×10, ÷10, ×100, ÷100) ve bölme hatasının
       // basamak kaymalı biçimleri. Anahtarın değer sırası vakadan vakaya değişir.
-      [ters, km * 10, km / 10, km * 100, km / 100, ters * 10, ters * 100],
+      // Bu ölçekteki bir haritada gerçekçi olmayan 2000 km üstü değerler kullanılmaz.
+      [
+        ters,
+        km * 10,
+        km / 10,
+        if (km * 100 <= 2000) km * 100,
+        km / 100,
+        ters * 10,
+        ters * 100,
+      ],
       'Haritadaki 1 cm gerçekte $payda cm, yani ${tr(s)} km eder. '
       '${tr(cm10 / 10)} × ${tr(s)} = ${tr(km)} km bulunur.',
       sira,
       unit: 'km',
       digits: 3,
-      positive: true,
     );
   }
   final cm10 = 15 + b + 20 * k; // 1,5 … 11,4 cm
   final km = cm10 * (6 + a) * 2 / 100;
   final cm = cm10 / 10;
-  return ondalikliSirali(
+  return _ondalikliTipik(
     'Gerçekte ${tr(km)} km olan $baglam, 1/$payda ölçekli bir haritada kaç santimetre '
     'ile gösterilir?',
     cm,
     // Tipik hatalar: bölmek yerine çarpma, cm'ye çevirirken basamak kaydırma ve
     // orantıyı ters kurma (ölçek değerini uzunluğa bölme).
-    [(km * s * 10).round() / 10, cm * 10, cm / 10, cm * 100, cm / 100, s / km],
+    // Haritada 2 m'yi aşan iki basamaklı kaydırma gerçekçi olmadığından kullanılmaz.
+    [
+      (km * s * 10).round() / 10,
+      cm * 10,
+      cm / 10,
+      if (cm * 100 <= 200) cm * 100,
+      cm / 100,
+      s / km,
+    ],
     'Bu ölçekte haritadaki 1 cm gerçekte $payda cm, yani ${tr(s)} km eder. '
     '${tr(km)} / ${tr(s)} = ${tr(cm)} cm bulunur.',
     sira,
     unit: 'cm',
     digits: 3,
-    positive: true,
   );
 }
 
@@ -287,18 +383,20 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
     final harita = 2 + b + 20 * q; // cm²
     final gercek = harita * (a + 3) * (a + 3) / 4;
     final unut = harita * s; // ölçeğin karesini almayı unutma
-    return ondalikliSirali(
+    return _ondalikliTipik(
       '1/$payda ölçekli bir haritada $harita cm² yer kaplayan ${yer.$1} gerçek alanı '
       'kaç kilometrekaredir?',
       gercek,
       // Tipik hatalar: kareyi almayı unutma, kare yerine 2 ile çarpma, birim
       // çevirmede basamak kaydırma (uzunlukta bir basamak alanda ×100 / ÷100 eder)
       // ve kareyi unutmanın basamak kaymalı biçimleri.
+      // Türkiye'nin yüz ölçümüne yaklaşan (100000 km² üstü) iki basamaklı kaydırma
+      // gerçekçi olmadığından kullanılmaz.
       [
         unut,
         gercek * 10,
         gercek / 10,
-        gercek * 100,
+        if (gercek * 100 <= 100000) gercek * 100,
         gercek / 100,
         harita * 2 * s,
         unut * 10,
@@ -309,7 +407,6 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
       _ucaYakinSira(i),
       unit: 'km²',
       digits: 3,
-      positive: true,
     );
   }
   final harita = 3 + b + 20 * q; // cm²
@@ -320,17 +417,18 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
   // Tam sayı anahtarın rakamlarını ondalık kısmında taşıyan kaydırmalar ("23" için
   // "0,23") sona alınır; yoksa sözcük benzerliği anahtarı öne çıkarır.
   bool paylasir(double x) => tr(x, 3).split(RegExp('[^0-9]+')).contains('$harita');
+  // Haritada 2000 cm²'yi aşan iki basamaklı kaydırma gerçekçi değildir.
   final adaylar = [
     unut,
     harita * 10.0,
     harita / 10,
-    harita * 100.0,
+    if (harita * 100 <= 2000) harita * 100.0,
     harita / 100,
     harita * s / 2,
     unut / 10,
     unut / 100,
   ];
-  return ondalikliSirali(
+  return _ondalikliTipik(
     'Gerçek alanı ${tr(gercek)} km² olan ${yer.$2}, 1/$payda ölçekli bir haritada kaç '
     'santimetrekarelik yer kaplar?',
     harita.toDouble(),
@@ -340,7 +438,6 @@ AdvancedItem _olcekAlan(int a, int b, int c) {
     _ucaYakinSira(i),
     unit: 'cm²',
     digits: 3,
-    positive: true,
   );
 }
 
@@ -382,14 +479,14 @@ AdvancedItem _egim(int a, int b, int c) {
       // Tipik hatalar: 100 yerine 1000 ile çarpma, 100 ile çarpmayı unutma, oranı ters
       // kurma (yatay uzaklık / yükselti farkı), yükselti farkı yerine yerlerden birinin
       // yükseltisini ya da iki yükseltinin toplamını kullanma, 100 yerine 10 ile çarpma.
-      // Yuvarlanan değerler öğrencinin bulacağı sonuca en yakın tam sayıdır.
+      // Yuvarlanan değerler öğrencinin bulacağı sonuca en yakın tam sayıdır; %100'ü
+      // (45°) aşan yükselti kaynaklı değerler gerçekçi olmadığından kullanılmaz.
       _egimCeldirici('%', p, [
         (10 * p, 0),
         (p / 100, 2),
         ((100 / p).round(), 0),
-        ((h2 * 100 / yatay).round(), 0),
-        ((h1 * 100 / yatay).round(), 0),
-        (((h1 + h2) * 100 / yatay).round(), 0),
+        for (final h in [h2, h1, h1 + h2])
+          if (h * 100 / yatay <= 100) ((h * 100 / yatay).round(), 0),
         (p / 10, 1),
       ], sira),
       'Yükselti farkı $h2 − $h1 = $fark m, yatay uzaklık '
@@ -678,7 +775,7 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
   if (bicim == 0) {
     final dogum = 16 + b, olum = 5 + 2 * q;
     final hiz = dogum - olum, artis = bin * hiz;
-    return sayisalSirali(
+    return _sayisalTipik(
       'Yıl ortası nüfusu $nufus olan bir ilçede bir yıl içinde doğum oranı ‰$dogum, ölüm oranı '
       '‰$olum olarak gerçekleşmiştir. Göçler dikkate alınmadığında bu ilçenin nüfusu bir yılda '
       'doğal yolla kaç kişi artmıştır?',
@@ -701,7 +798,6 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
       '$nufus × $hiz / 1000 = ${bin * hiz} kişi.',
       sira,
       unit: 'kişi',
-      positive: true,
     );
   }
   if (bicim == 1) {
@@ -714,7 +810,8 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
       '‰$hiz',
       // Bütün seçenekler kökün sorduğu binde (‰) ile yazılır. Tipik hatalar: ölümleri
       // düşmeme (doğum hızı), 1000 yerine 100 ile çarpma, ölüm hızını verme, doğum ile
-      // ölümü toplama, 1000 ile çarpmayı unutma, 1000 yerine 10000 ile çarpma.
+      // ölümü toplama, 1000 ile çarpmayı unutma, 1000 yerine 10000 ile çarpma (yalnız
+      // gerçekçi kaldığında, ‰40'a kadar); en sonda binde birlik komşu değerler.
       siraliCeldiriciler(hiz, '‰$hiz', [
         for (final (x, d) in [
           (hiz + olumOrani, 0),
@@ -722,7 +819,9 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
           (olumOrani, 0),
           (hiz + 2 * olumOrani, 0),
           (hiz / 1000, 3),
-          (hiz * 10, 0),
+          if (hiz * 10 <= 40) (hiz * 10, 0),
+          (hiz + 1, 0),
+          (hiz - 1, 0),
         ])
           (x, binde(x, d)),
       ], sira),
@@ -738,7 +837,7 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
   if (q == 2) {
     final son = nufus + dogal + net;
     final toplam = son - nufus;
-    return sayisalSirali(
+    return _sayisalTipik(
       'Yıl başında nüfusu $nufus olan bir ilçede yıl içinde $dogum doğum ve $olum ölüm '
       'gerçekleşmiş, yıl sonunda nüfus $son olarak belirlenmiştir. Bu ilçenin yıl içindeki net '
       'göçü (aldığı göç ile verdiği göç arasındaki fark) kaç kişidir?',
@@ -751,7 +850,6 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
       'kişidir. Net göç ${son - nufus} − $dogal = $net kişi olur.',
       sira,
       unit: 'kişi',
-      positive: true,
     );
   }
   const giris = 'yıl içinde';
@@ -760,7 +858,7 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
       'ilçe dışarıdan $gelen kişi göç almış, dışarıya $giden kişi göç vermiştir.';
   if (q == 0) {
     final son = nufus + dogal + net;
-    return sayisalSirali(
+    return _sayisalTipik(
       '$veri Bu ilçenin yıl sonundaki nüfusu kaç kişidir?',
       son,
       // Tipik hatalar: göçü unutma, göçleri toplama, ölümleri ekleme, doğal artışı
@@ -778,10 +876,9 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
       '$nufus + $dogal + $net = $son kişi.',
       sira,
       unit: 'kişi',
-      positive: true,
     );
   }
-  return sayisalSirali(
+  return _sayisalTipik(
     '$veri Bu ilçenin nüfusu bir yılda toplam kaç kişi artmıştır?',
     dogal + net,
     // Tipik hatalar: göçü unutma, göçleri toplama, ölümleri ekleme, doğal artışı
@@ -800,7 +897,6 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
     'Toplam artış $dogal + $net = ${dogal + net} kişi.',
     sira,
     unit: 'kişi',
-    positive: true,
   );
 }
 
@@ -894,7 +990,7 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
   }
   final pay = const [55, 62, 68, 72, 78][k];
   final yasli = bagimli * (100 - pay) ~/ 100, genc = bagimli - yasli;
-  return sayisalSirali(
+  return _sayisalTipik(
     'Bir ilçede 15–64 yaş grubundaki nüfus $calisan, 65 ve üzeri yaş grubundaki nüfus $yasli '
     'kişidir. Bağımlı nüfus oranı (0–14 ile 65 ve üzeri yaş nüfusunun 15–64 yaş nüfusuna '
     'oranının 100 katı) %$oran olduğuna göre bu ilçede 0–14 yaş grubunda kaç kişi yaşamaktadır?',
@@ -907,7 +1003,7 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
       bagimli,
       calisan - bagimli,
       bagimli + yasli,
-      calisan - bagimli - yasli,
+      if (calisan - bagimli - yasli >= genc / 4) calisan - bagimli - yasli,
       genc * 9 ~/ 10,
       genc * 11 ~/ 10,
       genc * 8 ~/ 10,
@@ -916,7 +1012,6 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
     '0–14 yaş nüfusu = $bagimli − $yasli = $genc kişi.',
     sira,
     unit: 'kişi',
-    positive: true,
   );
 }
 
@@ -1054,7 +1149,7 @@ AdvancedItem _yuzyil(int i) {
     final mo = 110 + 37 * (k % 50), ms = 105 + 73 * (k ~/ 50);
     final olay = sec(_sureOlay, k);
     final fark = (mo - ms).abs();
-    return sayisalSirali(
+    return _sayisalTipik(
       '${olay.$1} M.Ö. $mo yılında ${olay.$2}, M.S. $ms yılında ${olay.$3}. Milattan önceki bir '
       'tarih ile milattan sonraki bir tarih arasındaki süre iki tarihin toplanmasıyla '
       'bulunduğuna göre bu iki olay arasında kaç yıl vardır?',
@@ -1075,7 +1170,6 @@ AdvancedItem _yuzyil(int i) {
       '$mo + $ms = ${mo + ms} yıl.',
       hedefSira(i),
       unit: 'yıl',
-      positive: true,
     );
   }
   final mo = bicim == 2;

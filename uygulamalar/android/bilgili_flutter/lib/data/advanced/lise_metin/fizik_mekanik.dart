@@ -373,7 +373,8 @@ final _f03 = lmAile(
           0.5 * ivme * t * t, // ilk hızı unutma
           v * t, // son hızla sabit hareket
           v0 * t, // ivmeyi unutma
-          v * v / (2 * ivme), // durgun hâlden başladığını sanma
+          if (v * v / (2 * ivme) <= 4 * x)
+            v * v / (2 * ivme), // durgun hâlden başladığını sanma
           v0 * t + 0.5 * ivme * t, // t² yerine t
         ],
         'x = v₀·t + ½·a·t² bağıntısından x = $v0 · $t + ½ · ${tr(ivme)} · $t² = '
@@ -537,7 +538,8 @@ final _f04 = lmAile(
         (v0 - v) / ivme, // yavaşlama süresini yol sanma
         v0 * v0 / (2 * ivme), // durana kadarki yol
         v * (v0 - v) / ivme, // son hızla sabit hareket
-        (v0 * v0 + v * v) / (2 * ivme), // işaret hatası
+        if ((v0 * v0 + v * v) / (2 * ivme) <= 4 * x)
+          (v0 * v0 + v * v) / (2 * ivme), // işaret hatası
         v0 * (v0 - v) / ivme, // ilk hızla sabit hareket
       ],
       'v² = v₀² − 2·a·x bağıntısından x = ($v0² − $v²) / (2 · ${tr(ivme)}) = '

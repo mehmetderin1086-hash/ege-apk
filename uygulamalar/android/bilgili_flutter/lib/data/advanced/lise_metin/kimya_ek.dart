@@ -140,7 +140,8 @@ AdvancedItem _say(
 /// [sira] (0 … 3) olacak biçimde seçilir (`siraliCeldiriciler`). [adaylar]
 /// anahtarın iki yanındaki tipik hata değerleridir; bir yanda yetmezse o yana
 /// en çok [komsu] adım uzaklıktaki komşu değerler eklenir. [adim] verilmezse
-/// `_say`'daki komşu adımı kullanılır. [son] adayları (akla yatmayan
+/// `_say`'daki komşu adımı kullanılır; adım, yanıtın %5'inden küçükse adımın
+/// katına büyütülür. [son] adayları (akla yatmayan
 /// büyüklükteki hata sonuçları) yalnız başka yoldan üç çeldirici
 /// bulunamazsa kullanılır.
 AdvancedItem _saySirali(
@@ -171,6 +172,10 @@ AdvancedItem _saySirali(
                       ? 0.5
                       : (m >= 0.3 ? 0.1 : (m >= 0.03 ? 0.01 : 0.001)))));
   if (a < enKucuk) a = enKucuk;
+  // Komşu değer yanıttan en az %5 uzak olsun (yuvarlama farkı gibi durmasın);
+  // adım [a] ızgarasının katı olarak büyütülür.
+  final kat = (0.05 * m / a).ceil();
+  if (kat > 1) a *= kat;
   final esik = 0.5 / _on(basamak);
   final yazim = birimli(_t(dogru, basamak), birim);
   List<(num, String)> ciftler(Iterable<num> v) => [
@@ -228,6 +233,13 @@ bool _anahtarAykiri(List<String> se) {
     if (p[j] <= p[0] + 1e-9) return false;
   }
   return true;
+}
+
+/// Mol yanıtlı sorularda komşu değer adımı: tam sayı yanıtta 1, ötekilerde
+/// yanıtın büyüklüğüne göre 1, 0,5, 0,1 ya da 0,05 (0,05 molün katları).
+double _molAdimi(double v) {
+  if ((v - v.roundToDouble()).abs() < 1e-9) return 1;
+  return v >= 20 ? 1 : (v >= 2 ? 0.5 : (v >= 0.3 ? 0.1 : 0.05));
 }
 
 /// İki bağımsız hedef sıradan 0 … 15 arasında eşit dağılımlı bir değer.
@@ -4011,8 +4023,8 @@ final _f17 = lmAile(
   Difficulty.medium,
   BloomLevel.uygulama,
   (a, b, c) {
-    // Anahtarın değer sırası vakadan vakaya değişir; komşu değerler yanıtın
-    // ızgarasında (0,05 mol ya da 0,05 molün kütlesi) alınır.
+    // Anahtarın değer sırası vakadan vakaya değişir; mol yanıtlarında komşu
+    // değerler yanıtla aynı basamakta ve 0,05 molün katı olarak alınır.
     final sira = hedefSira(a + 25 * b + 500 * c);
     final (k, n) = _hidrokarbon(a);
     final h = _hSayisi(k, n), mk = 12 * n + h;
@@ -4066,7 +4078,7 @@ final _f17 = lmAile(
           cozum,
           sira,
           birim: 'mol',
-          adim: 0.05,
+          adim: _molAdimi(deger),
         );
       }
       final g = deger * molKutle;
@@ -4084,7 +4096,6 @@ final _f17 = lmAile(
         '$cozum Bu ${_t(deger)} mol $nicelik ${_t(g)} gram eder.',
         sira,
         birim: 'g',
-        adim: 0.05 * molKutle,
       );
     }
 
@@ -4204,7 +4215,7 @@ final _f17 = lmAile(
             yol,
             sira,
             birim: 'mol',
-            adim: 0.05,
+            adim: _molAdimi(co2),
           );
         }
         return _saySirali(
@@ -4214,7 +4225,6 @@ final _f17 = lmAile(
           '$yol Bu ${_t(co2)} mol CO₂ ${_t(co2 * 44)} gram eder.',
           sira,
           birim: 'g',
-          adim: 2.2,
         );
       case 5:
         final g = h2o * 18;
@@ -4233,7 +4243,6 @@ final _f17 = lmAile(
               '${_t(h2o)} mol, yani ${_t(h2o)}·18 = ${_t(g)} gram H₂O oluşur.',
           sira,
           birim: 'g',
-          adim: 0.9,
         );
       case 6:
         final kok =
@@ -4318,7 +4327,7 @@ final _f17 = lmAile(
               '${tur == 'toplam' ? 'atom' : '$tur atomu'} vardır.',
           sira,
           birim: 'mol',
-          adim: 0.05,
+          adim: _molAdimi(deger),
         );
       default:
         final top = co2 + h2o;
@@ -5094,20 +5103,25 @@ final _f19 = lmSirali(
       final yapi = (yol.length, dallar);
       // Yatay yazılan zincir en uzun zincir değilse çeldiriciler o zincirin
       // iki yönden numaralanmış adları ile anahtarın tek hatalı bir biçimidir
-      // (zincir seçimi × numaralama düzeni); değilse 2 × 2 düzen.
+      // (ters numaralama, zinciri yanlış sayma ya da çarpan ön ekini unutma;
+      // vakadan vakaya sırayla); değilse 2 × 2 düzen.
       List<String>? duzen;
       if (cizimTuzak) {
         final (z, tz) = _zincirYonleri(adj, p);
-        for (final u in [
-          if (hedefSira(i).isEven) _tersNumara(yapi),
-          for (final m in _yanlisZincirBoylari(yapi)) (m, yapi.$2),
-          _tersNumara(yapi),
-        ]) {
-          final aday = [_adYazi(z), _adYazi(tz), _adYazi(u)];
-          if (_adKurulur(u) && {ad, ...aday}.length == 4) {
-            duzen = aday;
-            break;
-          }
+        final boylar = _yanlisZincirBoylari(yapi);
+        final tekHatali = [
+          _adKurulur(_tersNumara(yapi)) ? _adYazi(_tersNumara(yapi)) : null,
+          boylar.isEmpty ? null : _adYazi((boylar.first, yapi.$2)),
+          dallar.length > {for (final d in dallar) d.$2}.length
+              ? _alkanAdiYaz(yol.length, dallar, carpan: false)
+              : null,
+        ];
+        final kay = _onAlti(i) % 3;
+        for (var r = 0; r < 3 && duzen == null; r++) {
+          final u = tekHatali[(kay + r) % 3];
+          if (u == null) continue;
+          final aday = [_adYazi(z), _adYazi(tz), u];
+          if ({ad, ...aday}.length == 4) duzen = aday;
         }
       }
       final yedek = _yedekAdlar(yapi, [

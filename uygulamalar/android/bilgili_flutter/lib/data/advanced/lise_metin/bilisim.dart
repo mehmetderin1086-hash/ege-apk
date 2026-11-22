@@ -138,10 +138,14 @@ List<int> _ikiHataliSayisal(
   int sira, {
   bool Function(int)? uygun,
 }) {
+  // Hesap hatası sayının işaretini değiştirmez (7 yerine −3 gibi bir ödünç
+  // hatası doğal değildir).
+  bool ayniIsaret(int u, int v) => (u < 0) == (v < 0);
   final tasarimlar = [
     if (yanlislar.length >= 3) yanlislar.sublist(0, 3),
     for (final w in yanlislar)
-      for (final e in kaymalar) [w, n + e, w + e],
+      for (final e in kaymalar)
+        if (ayniIsaret(n, n + e) && ayniIsaret(w, w + e)) [w, n + e, w + e],
   ];
   List<int>? enIyi;
   var fark = 9;
@@ -216,6 +220,9 @@ List<String> _ikiHataliTasarim(
       final a1 = f > 0 ? h(n) : null, a2 = f > 0 ? h(f) : null;
       if (a1 == null || a2 == null) continue;
       final t = [a1, yaz(f), a2];
+      // Baştaki sıfırları atılınca çok kısalan yazımlar (ör. 1000000
+      // tersinden "1") seçenek olarak kullanılmaz.
+      if (t.any((x) => x.length < _enKisa(anahtar.length))) continue;
       final hepsi = [anahtar, ...t];
       var ayri = true;
       for (var x = 0; x < 4; x++) {
@@ -234,6 +241,10 @@ List<String> _ikiHataliTasarim(
   }
   return enIyi!;
 }
+
+/// [l] basamaklı bir gösterimin çeldiricilerinde izin verilen en kısa
+/// uzunluk: anahtarın yarısından ve üç basamak eksiğinden kısa olamaz.
+int _enKisa(int l) => l - 3 > (l + 1) ~/ 2 ? l - 3 : (l + 1) ~/ 2;
 
 /// Verilen konumlardaki bitlerden birini değiştiren B hataları.
 List<int Function(int)> _bitDegisimleri(List<int> konumlar) => [
@@ -262,6 +273,7 @@ List<String> _ikilikCeldiricileri(int n, int sira) {
   var fark = 9;
   for (final t in tasarimlar) {
     final yazim = [for (final x in t) _ikilik(x)];
+    if (yazim.any((x) => x.length < _enKisa(l))) continue;
     final hepsi = [s, ...yazim];
     var ayri = true;
     for (var x = 0; x < 4; x++) {
@@ -470,7 +482,8 @@ AdvancedItem _onaltilikDonusum(int a, int b, int c) {
       final harfli = r.any((d) => d >= 10);
       // Tipik hatalar: basamak değerlerini 10, 8 ya da 16 ile başlayan
       // kuvvetler alma, harf değerlerini kaydırma, ters okuma, 16² yerine 32
-      // alma, harf değerlerini yan yana yazma; sonda komşu değerler.
+      // alma, birler basamağını eklemeyi unutma, harf değerlerini yan yana
+      // yazma; sonda komşu değerler.
       return sayisalSirali(
         'Onaltılık tabanda ${_tabanli(s, 16)} olarak yazılan sayının onluk '
             'tabandaki değeri kaçtır? $_harfNotu',
@@ -484,6 +497,7 @@ AdvancedItem _onaltilikDonusum(int a, int b, int c) {
           int.parse(_ters(s), radix: 16),
           if (s.length == 3) _agirlikli(r, (e) => e == 2 ? 32 : _kuvvet(16, e)),
           _agirlikli(r, (e) => _kuvvet(8, e)),
+          if (r.last != 0) n - r.last,
           if (harfli) int.parse(r.join()),
           16 * n,
           n + 16,
@@ -508,6 +522,10 @@ AdvancedItem _onaltilikDonusum(int a, int b, int c) {
         int.parse(_ters(s), radix: 8),
         _agirlikli(r, (e) => e == 2 ? 16 : _kuvvet(8, e)),
         _agirlikli(r, (e) => _kuvvet(16, e)),
+        // Birler basamağını eklemeyi unutma, en büyük rakam 7 olduğu için
+        // 7 tabanının kuvvetlerini alma.
+        if (r.last != 0) n - r.last,
+        _agirlikli(r, (e) => _kuvvet(7, e)),
         n + 8,
         8 * n,
         n - 8,
@@ -3008,8 +3026,10 @@ AdvancedItem _dizi(int a, int b, int c) {
     final x = al(k), y = al(x);
     final x0 = al(k + 1);
     // Ek hatalar: erişimlerden yalnız birini 0 ile başlayan indisle okuma
-    // (bir sağdaki ya da soldaki eleman).
-    return sayisalSirali(
+    // (bir sağdaki ya da soldaki eleman), zinciri bir adım fazla izleme; en
+    // sonda değerlerden birini yanlış okuma (rakamlar dizideki 1 … 8
+    // değerleri arasında kalır).
+    return _sirali(
       _kod(
         'A = ${_diziYaz(d)} dizisi veriliyor. $_diziNotu Aşağıdaki sözde '
         'kodda ← atama işlemidir.',
@@ -3017,20 +3037,29 @@ AdvancedItem _dizi(int a, int b, int c) {
         _yazSorusu,
       ),
       10 * x + y,
+      '${10 * x + y}',
       [
-        if (x0 < n) 10 * x0 + al(x0 + 1),
-        11 * x,
-        10 * k + x,
-        10 * y + x,
-        if (x < n) 10 * x + al(x + 1),
-        10 * x0 + al(x0),
-        if (x > 1) 10 * x + al(x - 1),
-        if (k > 1) 10 * al(k - 1) + al(al(k - 1)),
+        for (final v in [
+          if (x0 < n) 10 * x0 + al(x0 + 1),
+          11 * x,
+          10 * k + x,
+          10 * y + x,
+          if (x < n) 10 * x + al(x + 1),
+          10 * x0 + al(x0),
+          if (x > 1) 10 * x + al(x - 1),
+          if (k > 1) 10 * al(k - 1) + al(al(k - 1)),
+          10 * x + al(y),
+          10 * y + al(y),
+          for (final e in const [1, -1, 2, -2, 3, -3]) ...[
+            if (y + e >= 1 && y + e <= n) 10 * x + y + e,
+            if (x + e >= 1 && x + e <= n) 10 * (x + e) + y,
+          ],
+        ])
+          (v, '$v'),
       ],
       'A[$k] = $x olduğundan x = $x olur. y = A[$x] = $y bulunur. Yazdırılan '
-      'değer 10 · $x + $y = ${10 * x + y} olur.',
-      hedefSira(_no(a, b, c)),
-      positive: true,
+          'değer 10 · $x + $y = ${10 * x + y} olur.',
+      _no(a, b, c),
     );
   }
   if (c < 6) {

@@ -146,8 +146,7 @@ double _ipucuUzakligi(List<String> se, List<int> hedef) {
       [
         for (var b = 0; b < se.length; b++)
           if (b != a)
-            soz[a].intersection(soz[b]).length /
-                soz[a].union(soz[b]).length,
+            soz[a].intersection(soz[b]).length / soz[a].union(soz[b]).length,
       ].fold<double>(0, (t, x) => t + x),
   ];
   double uzaklik(double p, int hedef) {
@@ -230,9 +229,10 @@ List<String> _dengeli(
     for (final y in secimler(ust.length.clamp(0, 6), 3 - r)) {
       final uclu = [for (final j in x) alt[j], for (final j in y) ust[j]];
       final puan =
-          _ipucuUzakligi([yazim, ...uclu], [
-            for (var t = 5; t <= 6; t++) hedefSira(no, t) == 0 ? 1 : 0,
-          ]) +
+          _ipucuUzakligi(
+            [yazim, ...uclu],
+            [for (var t = 5; t <= 6; t++) hedefSira(no, t) == 0 ? 1 : 0],
+          ) +
           1e-4 * [...x, ...y].fold<int>(0, (t, j) => t + j);
       if (puan < enIyiPuan - 1e-12) {
         enIyiPuan = puan;
@@ -341,10 +341,15 @@ AdvancedItem _olasilikDengeli(
   int genislik = 1,
   bool yansiz = true,
   bool birDahil = false,
+  bool sinirsiz = false,
   List<int> agirlik = const [1, 1, 1, 1],
 }) {
+  // [sinirsiz] doğruysa yanıt bir olasılık değil, oran olduğundan 1'den büyük
+  // adaylar da kullanılır.
   bool uygun((int, int) x) =>
-      x.$1 > 0 && x.$2 > 0 && (x.$1 < x.$2 || birDahil && x.$1 == x.$2);
+      x.$1 > 0 &&
+      x.$2 > 0 &&
+      (sinirsiz || x.$1 < x.$2 || birDahil && x.$1 == x.$2);
   (num, String) yaz((int, int) x) => (x.$1 / x.$2, kesir(x.$1, x.$2));
   final yazim = kesir(n, d);
   return AdvancedItem(
@@ -368,17 +373,47 @@ AdvancedItem _olasilikDengeli(
 
 const _tekKarakter = <(String, _Karakter)>[
   ('Bezelyelerde', ('uzun boy', 'kısa boy', 'U', 'uzun boylu', 'kısa boylu')),
-  ('Bezelyelerde', ('sarı tohum', 'yeşil tohum', 'S', 'sarı tohumlu', 'yeşil tohumlu')),
-  ('Bezelyelerde', ('düzgün tohum', 'buruşuk tohum', 'D', 'düzgün tohumlu', 'buruşuk tohumlu')),
-  ('Bezelyelerde', ('mor çiçek', 'beyaz çiçek', 'M', 'mor çiçekli', 'beyaz çiçekli')),
-  ('Bezelyelerde', ('yeşil meyve', 'sarı meyve', 'Y', 'yeşil meyveli', 'sarı meyveli')),
-  ('Bezelyelerde', ('şişkin meyve', 'boğumlu meyve', 'B', 'şişkin meyveli', 'boğumlu meyveli')),
+  (
+    'Bezelyelerde',
+    ('sarı tohum', 'yeşil tohum', 'S', 'sarı tohumlu', 'yeşil tohumlu'),
+  ),
+  (
+    'Bezelyelerde',
+    ('düzgün tohum', 'buruşuk tohum', 'D', 'düzgün tohumlu', 'buruşuk tohumlu'),
+  ),
+  (
+    'Bezelyelerde',
+    ('mor çiçek', 'beyaz çiçek', 'M', 'mor çiçekli', 'beyaz çiçekli'),
+  ),
+  (
+    'Bezelyelerde',
+    ('yeşil meyve', 'sarı meyve', 'Y', 'yeşil meyveli', 'sarı meyveli'),
+  ),
+  (
+    'Bezelyelerde',
+    ('şişkin meyve', 'boğumlu meyve', 'B', 'şişkin meyveli', 'boğumlu meyveli'),
+  ),
   ('Bezelyelerde', ('yan çiçek', 'uç çiçek', 'A', 'yan çiçekli', 'uç çiçekli')),
-  ('Meyve sineklerinde', ('uzun kanat', 'körelmiş kanat', 'K', 'uzun kanatlı', 'körelmiş kanatlı')),
-  ('Meyve sineklerinde', ('gri gövde', 'siyah gövde', 'G', 'gri gövdeli', 'siyah gövdeli')),
-  ('Domateslerde', ('kırmızı meyve', 'sarı meyve', 'R', 'kırmızı meyveli', 'sarı meyveli')),
-  ('Mısır bitkisinde', ('mor tane', 'sarı tane', 'M', 'mor taneli', 'sarı taneli')),
-  ('Mısır bitkisinde', ('dolgun tane', 'buruşuk tane', 'D', 'dolgun taneli', 'buruşuk taneli')),
+  (
+    'Meyve sineklerinde',
+    ('uzun kanat', 'körelmiş kanat', 'K', 'uzun kanatlı', 'körelmiş kanatlı'),
+  ),
+  (
+    'Meyve sineklerinde',
+    ('gri gövde', 'siyah gövde', 'G', 'gri gövdeli', 'siyah gövdeli'),
+  ),
+  (
+    'Domateslerde',
+    ('kırmızı meyve', 'sarı meyve', 'R', 'kırmızı meyveli', 'sarı meyveli'),
+  ),
+  (
+    'Mısır bitkisinde',
+    ('mor tane', 'sarı tane', 'M', 'mor taneli', 'sarı taneli'),
+  ),
+  (
+    'Mısır bitkisinde',
+    ('dolgun tane', 'buruşuk tane', 'D', 'dolgun taneli', 'buruşuk taneli'),
+  ),
 ];
 
 final _f01 = lmAile(
@@ -428,19 +463,19 @@ final _f01 = lmAile(
       case 0:
         return say(
           '$hetIki toplam $n yavru elde ediliyor. Bu yavrulardan kaç tanesinin '
-          '$domF olması beklenir?',
+              '$domF olması beklenir?',
           3 * m,
           // n'nin 1/4, 1/2, tamamı, 2/3, 9/16, 15/16 ve 3/16 kadarı.
           [(1, 1), (2, 1), (4, 1), (8, 3), (9, 4), (15, 4), (3, 4)],
           '$oran $dom ve $het genotipliler $domF olduğundan beklenen sayı '
-          '$n · 3/4 = ${3 * m} olur.',
+              '$n · 3/4 = ${3 * m} olur.',
           enCok: n,
           agirlik: ustUc,
         );
       case 1:
         return say(
           '$hetIki toplam $n yavru elde ediliyor. Bu yavrulardan kaç tanesinin '
-          'heterozigot genotipli olması beklenir?',
+              'heterozigot genotipli olması beklenir?',
           2 * m,
           // n'nin 1/4, 3/4, tamamı, 2/3, 1/3, 9/16 ve 3/16 kadarı.
           [(1, 1), (3, 1), (4, 1), (8, 3), (4, 3), (9, 4), (3, 4)],
@@ -451,81 +486,81 @@ final _f01 = lmAile(
       case 2:
         return say(
           '$giris $het genotipli bir birey ile $rec genotipli bir bireyin '
-          'çaprazlanmasıyla toplam $n yavru elde ediliyor. Bu yavrulardan kaç '
-          'tanesinin $recF olması beklenir?',
+              'çaprazlanmasıyla toplam $n yavru elde ediliyor. Bu yavrulardan kaç '
+              'tanesinin $recF olması beklenir?',
           2 * m,
           // n'nin 1/4, 3/4, tamamı, 1/3 ve 2/3 kadarı.
           [(1, 1), (3, 1), (4, 1), (4, 3), (8, 3)],
           '$het × $rec çaprazlamasında yavruların yarısı $het, yarısı $rec '
-          'genotipli olur. Beklenen $recF yavru sayısı $n · 1/2 = ${2 * m} '
-          'olur.',
+              'genotipli olur. Beklenen $recF yavru sayısı $n · 1/2 = ${2 * m} '
+              'olur.',
           enCok: n,
           agirlik: altUc,
         );
       case 3:
         return say(
           '$hetIki elde edilen yavrulardan $m tanesi $recF çıkıyor. Buna göre '
-          '$domF yavru sayısının kaç olması beklenir?',
+              '$domF yavru sayısının kaç olması beklenir?',
           3 * m,
           // Toplamı verme; 1 : 1, 2 : 1 ya da 9 : 1 oranı kullanma; 3'e
           // bölme.
           [(4, 1), (2, 1), (1, 1), (9, 1), (1, 3), (15, 1)],
           '$oran Fenotip oranı 3 $domF : 1 $recF olduğundan $domF yavru '
-          'sayısı $m · 3 = ${3 * m} olur.',
+              'sayısı $m · 3 = ${3 * m} olur.',
           agirlik: ustUc,
         );
       case 4:
         return say(
           '$hetIki elde edilen yavrulardan ${3 * m} tanesi $domF çıkıyor. Bu '
-          '$domF yavrulardan kaç tanesinin heterozigot genotipli olması '
-          'beklenir?',
+              '$domF yavrulardan kaç tanesinin heterozigot genotipli olması '
+              'beklenir?',
           2 * m,
           // Baskın fenotiplilerin 1/3, 1/2, tamamı, 3/4 ve 1/4 kadarı.
           [(1, 1), (3, 2), (3, 1), (9, 4), (3, 4)],
           'Fenotipi $domF olan yavruların genotip oranı 1 $dom : 2 $het '
-          'biçimindedir; 2/3 kadarı heterozigottur: ${3 * m} · 2/3 = '
-          '${2 * m}.',
+              'biçimindedir; 2/3 kadarı heterozigottur: ${3 * m} · 2/3 = '
+              '${2 * m}.',
           enCok: 3 * m,
           agirlik: ustUc,
         );
       case 5:
         return say(
           '$giris $dom genotipli bir birey ile $het genotipli bir bireyin '
-          'çaprazlanmasıyla toplam $n yavru elde ediliyor. Bu yavrulardan kaç '
-          'tanesinin heterozigot genotipli olması beklenir?',
+              'çaprazlanmasıyla toplam $n yavru elde ediliyor. Bu yavrulardan kaç '
+              'tanesinin heterozigot genotipli olması beklenir?',
           2 * m,
           // n'nin 1/4, 3/4, tamamı, 2/3 ve 1/3 kadarı.
           [(1, 1), (3, 1), (4, 1), (8, 3), (4, 3)],
           '$dom × $het çaprazlamasında yavruların yarısı $dom, yarısı $het '
-          'genotipli olur; hepsi $domF olsa da heterozigot sayısı '
-          '$n · 1/2 = ${2 * m} olur.',
+              'genotipli olur; hepsi $domF olsa da heterozigot sayısı '
+              '$n · 1/2 = ${2 * m} olur.',
           enCok: n,
           agirlik: altUc,
         );
       case 6:
         return say(
           '$hetIki toplam $n yavru elde ediliyor. Bu yavrularda $domF '
-          'olanların sayısının, $recF olanların sayısından kaç fazla olması '
-          'beklenir?',
+              'olanların sayısının, $recF olanların sayısından kaç fazla olması '
+              'beklenir?',
           2 * m,
           // Baskın ya da çekinik sayıyı verme, toplamı verme, 1/3 oranı.
           [(3, 1), (1, 1), (4, 1), (4, 3)],
           'Beklenen $domF yavru sayısı $n · 3/4 = ${3 * m}, $recF yavru '
-          'sayısı $n · 1/4 = $m olur. Fark ${3 * m} − $m = ${2 * m} bulunur.',
+              'sayısı $n · 1/4 = $m olur. Fark ${3 * m} − $m = ${2 * m} bulunur.',
           enCok: n,
           agirlik: altUc,
         );
       case 7:
         return say(
           '$hetIki elde edilen yavrulardan ${2 * m} tanesinin heterozigot '
-          'genotipli olduğu belirleniyor. Buna göre toplam yavru sayısının kaç '
-          'olması beklenir?',
+              'genotipli olduğu belirleniyor. Buna göre toplam yavru sayısının kaç '
+              'olması beklenir?',
           n,
           // Heterozigotları toplamın 1/4, 1/3, 2/3 ya da 3/4 kadarı sanma;
           // verilen sayıyı yanıt sanma.
           [(8, 1), (6, 1), (3, 1), (8, 3), (2, 1)],
           '$oran Heterozigotlar toplamın yarısı olduğundan toplam yavru '
-          'sayısı ${2 * m} · 2 = $n olur.',
+              'sayısı ${2 * m} · 2 = $n olur.',
           agirlik: ustUc,
         );
       case 8:
@@ -537,34 +572,44 @@ final _f01 = lmAile(
         ][(a + b) % 3];
         return _olasilikDengeli(
           '$giris Fenotipi $domF olan iki bireyin çaprazlanmasıyla elde edilen '
-          '$n yavrudan $m tanesi $recF çıkıyor. Aynı ebeveynlerden oluşacak '
-          'yeni bir yavrunun $olay olma olasılığı kaçtır?',
+              '$n yavrudan $m tanesi $recF çıkıyor. Aynı ebeveynlerden oluşacak '
+              'yeni bir yavrunun $olay olma olasılığı kaçtır?',
           pay,
           4,
           // Başka bir genotip ya da fenotip sınıfının oranı, 2/3 ve 1/3
           // (baskın fenotiplilerin içindeki oranlar), dihibrit oranları.
           // Tümü baskın sanma (1) ve dihibritteki 15/16 da eklenir.
           [
-            (1, 4), (1, 2), (3, 4), (2, 3), (1, 3), (9, 16), (3, 16),
-            (1, 16), (3, 8), (1, 8), (1, 1), (15, 16),
+            (1, 4),
+            (1, 2),
+            (3, 4),
+            (2, 3),
+            (1, 3),
+            (9, 16),
+            (3, 16),
+            (1, 16),
+            (3, 8),
+            (1, 8),
+            (1, 1),
+            (15, 16),
           ],
           'Çaprazlamada $recF yavru oluştuğuna göre ebeveynlerin ikisi de $het '
-          'genotiplidir ($m / $n = 1/4). $oran İstenen olasılık '
-          '${kesir(pay, 4)} bulunur.',
+              'genotiplidir ($m / $n = 1/4). $oran İstenen olasılık '
+              '${kesir(pay, 4)} bulunur.',
           _no(a, b, c),
           birDahil: true,
         );
       default:
         return say(
           '$giris Fenotipi $domF olan iki bireyin çaprazlanmasıyla elde edilen '
-          '$n yavrudan $m tanesi $recF çıkıyor. Buna göre yavrulardan kaç '
-          'tanesinin heterozigot genotipli olması beklenir?',
+              '$n yavrudan $m tanesi $recF çıkıyor. Buna göre yavrulardan kaç '
+              'tanesinin heterozigot genotipli olması beklenir?',
           2 * m,
           // n'nin 3/4, 1/4, tamamı, 2/3, 1/3 ve 3/8 kadarı.
           [(3, 1), (1, 1), (4, 1), (8, 3), (4, 3), (3, 2)],
           'Çaprazlamada $recF yavru oluştuğuna göre ebeveynlerin ikisi de $het '
-          'genotiplidir ($m / $n = 1/4). $het × $het çaprazlamasında '
-          'heterozigot yavru sayısı $n · 1/2 = ${2 * m} olur.',
+              'genotiplidir ($m / $n = 1/4). $het × $het çaprazlamasında '
+              'heterozigot yavru sayısı $n · 1/2 = ${2 * m} olur.',
           enCok: n,
           agirlik: altUc,
         );
@@ -689,13 +734,21 @@ final _f02 = lmAile(
     for (var i = 0; i < 3; i++) {
       for (var j = 0; j < 3; j++) {
         final g1 = _gt(h1, i), g2 = _gt(h2, j);
-        carpim(tanim(i, j), g1, s1[i], g2, s2[j], [
-          for (var x = 0; x < 3; x++)
-            if (x != i) s1[x],
-        ], [
-          for (var y = 0; y < 3; y++)
-            if (y != j) s2[y],
-        ]);
+        carpim(
+          tanim(i, j),
+          g1,
+          s1[i],
+          g2,
+          s2[j],
+          [
+            for (var x = 0; x < 3; x++)
+              if (x != i) s1[x],
+          ],
+          [
+            for (var y = 0; y < 3; y++)
+              if (y != j) s2[y],
+          ],
+        );
       }
     }
     for (final x in [(k1.$4, d1), (k1.$5, 4 - d1)]) {
@@ -723,8 +776,13 @@ final _f02 = lmAile(
           '$cap2 çaprazlamasında ${kesir(hom2, 4)} olur. Çarpım: '
           '${kesir(hom1 * hom2, 16)}.',
       [
-        (hom1, 4), (hom2, 4), (hom1 + hom2, 8), (16 - hom1 * hom2, 16),
-        (s1[1] * s2[1], 16), (hom1 + hom2, 4), ...ezber,
+        (hom1, 4),
+        (hom2, 4),
+        (hom1 + hom2, 8),
+        (16 - hom1 * hom2, 16),
+        (s1[1] * s2[1], 16),
+        (hom1 + hom2, 4),
+        ...ezber,
       ],
     );
     bilesik(
@@ -734,8 +792,13 @@ final _f02 = lmAile(
           '$cap2 çaprazlamasında ${kesir(s2[1], 4)} olur. Çarpım: '
           '${kesir(s1[1] * s2[1], 16)}.',
       [
-        (s1[1], 4), (s1[1] + s2[1], 8), (16 - s1[1] * s2[1], 16),
-        (hom1 * hom2, 16), (s2[1], 4), (s1[1] + s2[1], 4), ...ezber,
+        (s1[1], 4),
+        (s1[1] + s2[1], 8),
+        (16 - s1[1] * s2[1], 16),
+        (hom1 * hom2, 16),
+        (s2[1], 4),
+        (s1[1] + s2[1], 4),
+        ...ezber,
       ],
     );
     final tekHet = s1[1] * hom2 + hom1 * s2[1];
@@ -747,8 +810,13 @@ final _f02 = lmAile(
           '${kesir(s1[1], 4)} · ${kesir(hom2, 4)} + ${kesir(hom1, 4)} · '
           '${kesir(s2[1], 4)} = ${kesir(tekHet, 16)}.',
       [
-        (s1[1] * s2[1], 16), (s1[1] * hom2, 16), (16 - tekHet, 16),
-        (s1[1], 4), (hom1 * s2[1], 16), (s2[1], 4), ...ezber,
+        (s1[1] * s2[1], 16),
+        (s1[1] * hom2, 16),
+        (16 - tekHet, 16),
+        (s1[1], 4),
+        (hom1 * s2[1], 16),
+        (s2[1], 4),
+        ...ezber,
       ],
     );
     bilesik(
@@ -759,8 +827,12 @@ final _f02 = lmAile(
           'İstenen olasılık 1 − ${kesir(d1 * d2, 16)} = '
           '${kesir(16 - d1 * d2, 16)} bulunur.',
       [
-        (d1 * d2, 16), ((4 - d1) * (4 - d2), 16), (8 - d1 - d2, 8),
-        (8 - d1 - d2, 4), ((4 - d1) * d2 + d1 * (4 - d2), 16), ...ezber,
+        (d1 * d2, 16),
+        ((4 - d1) * (4 - d2), 16),
+        (8 - d1 - d2, 8),
+        (8 - d1 - d2, 4),
+        ((4 - d1) * d2 + d1 * (4 - d2), 16),
+        ...ezber,
       ],
     );
     final (hedef, n, aciklama, aday) = hedefler[(c + a) % hedefler.length];
@@ -789,7 +861,20 @@ final _f02 = lmAile(
 
 // Gen harfleri seçkiyle belirlenir; böylece kökler harf büyüklüğünden
 // bağımsız olarak da birbirinden ayrılır.
-const _genHarfleri = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'K', 'L', 'M', 'N'];
+const _genHarfleri = [
+  'A',
+  'B',
+  'C',
+  'D',
+  'E',
+  'F',
+  'G',
+  'H',
+  'K',
+  'L',
+  'M',
+  'N',
+];
 
 /// k genli genotiplerden j numaralısı (0 = homozigot baskın, 1 = heterozigot,
 /// 2 = homozigot çekinik). Önce en az iki geni heterozigot olanlar, ikinci
@@ -828,9 +913,8 @@ List<int> _genotipSec(int k, int j) {
   return d;
 }
 
-String _genotipYaz(List<String> harf, List<int> d) => [
-  for (var q = 0; q < d.length; q++) _gt(harf[q], d[q]),
-].join();
+String _genotipYaz(List<String> harf, List<int> d) =>
+    [for (var q = 0; q < d.length; q++) _gt(harf[q], d[q])].join();
 
 final _f03 = lmAile(
   'biy_gamet',
@@ -885,12 +969,18 @@ final _f03 = lmAile(
         final gamet = [for (var q = 0; q < k; q++) alel(q)].join();
         return _olasilik(
           '$giris Bu bireyin oluşturduğu bir gametin $gamet alel bileşiminde '
-          'olma olasılığı kaçtır?',
+              'olma olasılığı kaçtır?',
           1,
           1 << n,
-          [(1, 1 << k), (1, 2 * n), (1, 1 << (n + 1)), (1, 1 << (n - 1)), (1, k)],
+          [
+            (1, 1 << k),
+            (1, 2 * n),
+            (1, 1 << (n + 1)),
+            (1, 1 << (n - 1)),
+            (1, k),
+          ],
           '$ortak Gamet çeşitleri eşit olasılıkla oluştuğundan $gamet '
-          'gametinin oluşma olasılığı 1/${1 << n} olur.',
+              'gametinin oluşma olasılığı 1/${1 << n} olur.',
         );
       case 2:
         final q0 = (a + b) % k;
@@ -935,8 +1025,8 @@ final _f03 = lmAile(
         );
       case 3 || 8:
         final p = hetler.first;
-        final secim = (c == 3 ? [p, (p + 2) % k, (p + 4) % k] : [p, (p + 3) % k])
-          ..sort();
+        final secim =
+            (c == 3 ? [p, (p + 2) % k, (p + 4) % k] : [p, (p + 3) % k])..sort();
         final h = secim.where((q) => d[q] == 1).length;
         final adlar = secim.map(alel).toList();
         final liste = c == 3
@@ -944,14 +1034,20 @@ final _f03 = lmAile(
             : '${adlar[0]} ve ${adlar[1]}';
         return _olasilik(
           '$giris Bu bireyin oluşturduğu bir gametin $liste alellerini '
-          'birlikte taşıma olasılığı kaçtır?',
+              'birlikte taşıma olasılığı kaçtır?',
           1,
           1 << h,
-          [(1, 1 << n), (1, 1 << secim.length), (1, 1 << (h + 1)), (1, 1 << (h - 1)), (1, secim.length)],
+          [
+            (1, 1 << n),
+            (1, 1 << secim.length),
+            (1, 1 << (h + 1)),
+            (1, 1 << (h - 1)),
+            (1, secim.length),
+          ],
           'Heterozigot gen çiftinden gelen bir alelin gamete geçme olasılığı '
-          '1/2, homozigot gen çiftinden gelen alelin 1 olur. Sorulan '
-          'alellerden $h tanesi heterozigot gen çiftine aittir: '
-          '(1/2)${_ust(h)} = 1/${1 << h}.',
+              '1/2, homozigot gen çiftinden gelen alelin 1 olur. Sorulan '
+              'alellerden $h tanesi heterozigot gen çiftine aittir: '
+              '(1/2)${_ust(h)} = 1/${1 << h}.',
         );
       default:
         final z = [...d];
@@ -974,9 +1070,9 @@ final _f03 = lmAile(
         }
         return kesirli(
           'Genleri bağımsız olan iki bireyden birincisinin genotipi $g, '
-          'ikincisinin genotipi ${_genotipYaz(harf, z)} biçimindedir. Birinci bireyin '
-          'oluşturabileceği gamet çeşidi sayısı, ikinci bireyin '
-          'oluşturabileceği gamet çeşidi sayısının kaç katıdır?',
+              'ikincisinin genotipi ${_genotipYaz(harf, z)} biçimindedir. Birinci bireyin '
+              'oluşturabileceği gamet çeşidi sayısı, ikinci bireyin '
+              'oluşturabileceği gamet çeşidi sayısının kaç katıdır?',
           1 << n,
           1 << n2,
           [
@@ -988,8 +1084,8 @@ final _f03 = lmAile(
             (1 << n2, 1),
           ],
           'Birinci bireyde $n, ikinci bireyde $n2 heterozigot gen çifti vardır. '
-          'Gamet çeşidi sayıları 2${_ust(n)} = ${1 << n} ve 2${_ust(n2)} = '
-          '${1 << n2} olur; oran ${kesir(1 << n, 1 << n2)} bulunur.',
+              'Gamet çeşidi sayıları 2${_ust(n)} = ${1 << n} ve 2${_ust(n2)} = '
+              '${1 << n2} olur; oran ${kesir(1 << n, 1 << n2)} bulunur.',
         );
     }
   },
@@ -1046,8 +1142,12 @@ const _rhDurumlar = [
   ('rr', 'Rr', 'Rh(+)', 2), ('rr', 'Rr', 'Rh(−)', 2), //
   ('RR', 'Rr', _rhBaskin, 2), ('RR', 'Rr', _rhHet, 2), //
   ('Rr', 'RR', _rhBaskin, 2), ('Rr', 'RR', _rhHet, 2), //
-  ('RR', 'Rr', 'Rh(+)', 4), ('Rr', 'RR', 'Rh(+)', 4), ('RR', 'rr', 'Rh(+)', 4), //
-  ('rr', 'RR', 'Rh(+)', 4), ('rr', 'rr', 'Rh(−)', 4), ('RR', 'RR', 'Rh(+)', 4), //
+  ('RR', 'Rr', 'Rh(+)', 4),
+  ('Rr', 'RR', 'Rh(+)', 4),
+  ('RR', 'rr', 'Rh(+)', 4), //
+  ('rr', 'RR', 'Rh(+)', 4),
+  ('rr', 'rr', 'Rh(−)', 4),
+  ('RR', 'RR', 'Rh(+)', 4), //
   ('', '', '', 4), ('Rr', 'Rr', _rhCekinik, 1),
 ];
 
@@ -1103,8 +1203,8 @@ final _f04 = lmAile(
               'bir babanın';
     return _olasilikDengeli(
       'AB0 kan grubu sisteminde A ve B alelleri eş baskın, 0 aleli '
-      'çekiniktir${rhVar ? '; Rh(+) aleli (R), Rh(−) aleline (r) baskındır' : ''}. '
-      '$ebeveynler doğacak bir çocuğunun $hedef olma olasılığı kaçtır?',
+          'çekiniktir${rhVar ? '; Rh(+) aleli (R), Rh(−) aleline (r) baskındır' : ''}. '
+          '$ebeveynler doğacak bir çocuğunun $hedef olma olasılığı kaçtır?',
       n,
       d,
       [
@@ -1128,14 +1228,22 @@ final _f04 = lmAile(
           for (final x in _rhSonuclari(anneRh, babaRh))
             if (x != rhPay) (aboPay * x, d),
         // Ezber oranları (9 : 3 : 3 : 1 ya da 3 : 1 ve 1 : 2 : 1) uygulama.
-        if (rhVar) ...[(1, d), (3, d), (9, d)] else ...[(4, d), (12, d), (8, d)],
+        if (rhVar) ...[
+          (1, d),
+          (3, d),
+          (9, d),
+        ] else ...[
+          (4, d),
+          (12, d),
+          (8, d),
+        ],
       ],
       '$anne × $baba çaprazlamasında istenen AB0 sonucunun olasılığı '
-      '${kesir(aboPay, 4)} olur'
-      '${rhVar ? '; $anneRh × $babaRh çaprazlamasında istenen Rh sonucunun olasılığı ${kesir(rhPay, 4)} olur' : ''}'
-      '${cins != 0 ? '; istenen cinsiyetin olasılığı 1/2 olur' : ''}. '
-      '${carpanlar.length == 1 ? 'İstenen olasılık' : 'Bağımsız olasılıklar çarpılır: ${carpanlar.join(' · ')} ='} '
-      '${kesir(n, d)}${carpanlar.length == 1 ? ' bulunur' : ''}.',
+          '${kesir(aboPay, 4)} olur'
+          '${rhVar ? '; $anneRh × $babaRh çaprazlamasında istenen Rh sonucunun olasılığı ${kesir(rhPay, 4)} olur' : ''}'
+          '${cins != 0 ? '; istenen cinsiyetin olasılığı 1/2 olur' : ''}. '
+          '${carpanlar.length == 1 ? 'İstenen olasılık' : 'Bağımsız olasılıklar çarpılır: ${carpanlar.join(' · ')} ='} '
+          '${kesir(n, d)}${carpanlar.length == 1 ? ' bulunur' : ''}.',
       _no(a, b, c),
       // Küçük anahtarlarda anahtardan küçük tipik hata az olduğundan bu
       // sıralar kurulabildiğinde öne alınır.
@@ -1241,9 +1349,9 @@ final _f05 = lmAile(
     final n = xPay * aboPay, d = xPayda * 4;
     return _olasilikDengeli(
       '$ad, X kromozomunda taşınan çekinik bir alelle kalıtılır. AB0 kan '
-      'grubu sisteminde A ve B alelleri eş baskın, 0 aleli çekiniktir. Kan '
-      'grubu genotipi $anne olan, $anneSoz bir anne ile kan grubu genotipi '
-      '$baba olan, $babaSoz bir babanın $soru olasılığı kaçtır?',
+          'grubu sisteminde A ve B alelleri eş baskın, 0 aleli çekiniktir. Kan '
+          'grubu genotipi $anne olan, $anneSoz bir anne ile kan grubu genotipi '
+          '$baba olan, $babaSoz bir babanın $soru olasılığı kaçtır?',
       n,
       d,
       [
@@ -1266,9 +1374,9 @@ final _f05 = lmAile(
         (9, 16),
       ],
       '$xAciklama; X kromozomuna bağlı özellik için istenen sonucun olasılığı '
-      '${kesir(xPay, xPayda)} olur. $anne × $baba çaprazlamasında istenen kan '
-      'grubu sonucunun olasılığı ${kesir(aboPay, 4)} olur. Çarpım: '
-      '${kesir(xPay, xPayda)} · ${kesir(aboPay, 4)} = ${kesir(n, d)}.',
+          '${kesir(xPay, xPayda)} olur. $anne × $baba çaprazlamasında istenen kan '
+          'grubu sonucunun olasılığı ${kesir(aboPay, 4)} olur. Çarpım: '
+          '${kesir(xPay, xPayda)} · ${kesir(aboPay, 4)} = ${kesir(n, d)}.',
       _no(a, b, c),
       agirlik: const [2, 2, 2, 5],
     );
@@ -1436,7 +1544,10 @@ const _kromozomNicelikleri = [
   ('mayozun metafaz II evresindeki bir hücrenin kromatit sayısı', 2),
   ('mayozun anafaz II evresindeki bir hücrenin toplam kromozom sayısı', 2),
   ('mayoz sonunda oluşan gametlerin her birindeki kromozom sayısı', 1),
-  ('mayozun profaz I evresinde sinapsis yapan homolog kromozom çifti sayısı', 1),
+  (
+    'mayozun profaz I evresinde sinapsis yapan homolog kromozom çifti sayısı',
+    1,
+  ),
   ('mayozun anafaz II evresinde her bir kutba çekilen kromozom sayısı', 1),
   ('interfazın G2 evresindeki bir vücut hücresinin kromatit sayısı', 4),
 ];
@@ -1473,6 +1584,37 @@ final _f07 = lmAile(
   Difficulty.hard,
   BloomLevel.analiz,
   (a, b, c) {
+    // Kromozom ve DNA nicelikleri n'nin (ya da x'in) 1/2, 1, 2, 4 ve 8 katı
+    // arasında karıştırılır: n ile 2n'yi, kromozom ile kromatidi, kutup
+    // başına ile hücre başına sayıyı karıştırma, iki kez yarılama, verilen
+    // sayıyı yanıt sanma. Anahtarın katsayısına göre bu değerlerin çoğu
+    // anahtarın bir yanında kaldığından sıralar katsayıya göre ağırlıklandırılır.
+    AdvancedItem say(
+      String kok,
+      int kat,
+      int birim,
+      int verilenKat,
+      String aciklama,
+    ) => _sayiDengeli(
+      kok,
+      kat * birim,
+      [
+        birim,
+        2 * birim,
+        4 * birim,
+        8 * birim,
+        verilenKat * birim,
+        if (birim.isEven) birim ~/ 2,
+      ],
+      aciklama,
+      _no(a, b, c),
+      genislik: 1,
+      agirlik: switch (kat) {
+        1 => const [2, 1, 1, 1],
+        2 => const [1, 1, 2, 1],
+        _ => const [1, 1, 1, 3],
+      },
+    );
     if (c % 5 == 4) {
       // DNA miktarı: 40 ayrı (sorulan, verilen) ikilisi.
       final x = a + 2; // gametteki DNA miktarı (pikogram)
@@ -1482,16 +1624,16 @@ final _f07 = lmAile(
       final (verilen, mv) = _dnaNicelikleri[i1].$2 != ms
           ? _dnaNicelikleri[i1]
           : _dnaNicelikleri[i2];
-      return sayisal(
+      return say(
         'Bir canlı türünde $verilen ${mv * x} pikogram olarak ölçülmüştür. '
-        'Buna göre bu türde $sorulan kaç pikogramdır?',
-        ms * x,
-        [x, 2 * x, 4 * x, 8 * x, mv * x],
+            'Buna göre bu türde $sorulan kaç pikogramdır?',
+        ms,
+        x,
+        mv,
         'Gametteki DNA miktarı x ile gösterilirse G1 evresinde 2x, eşlenmeden '
-        'sonra 4x, mayoz I sonunda 2x, mayoz II sonunda x olur. Verilen değer '
-        '${_kat(mv, 'x')} olduğundan x = $x pikogramdır. Sorulan değer '
-        '${_kat(ms, 'x')} = ${ms * x} pikogram olur.',
-        positive: true,
+            'sonra 4x, mayoz I sonunda 2x, mayoz II sonunda x olur. Verilen değer '
+            '${_kat(mv, 'x')} olduğundan x = $x pikogramdır. Sorulan değer '
+            '${_kat(ms, 'x')} = ${ms * x} pikogram olur.',
       );
     }
     final n = a + 3; // haploit kromozom sayısı
@@ -1500,15 +1642,15 @@ final _f07 = lmAile(
     final (verilen, mv) = _kromozomNicelikleri[i1].$2 != ms
         ? _kromozomNicelikleri[i1]
         : _kromozomNicelikleri[i2];
-    return sayisal(
+    return say(
       'Bir canlı türünde $verilen ${mv * n} olarak belirlenmiştir. Buna göre '
-      'bu türde $sorulan kaçtır?',
-      ms * n,
-      [n, 2 * n, 4 * n, 8 * n, mv * n],
+          'bu türde $sorulan kaçtır?',
+      ms,
+      n,
+      mv,
       'Haploit kromozom sayısı n ile gösterilirse verilen sayı '
-      '${_kat(mv, 'n')} değerine karşılık gelir; buradan n = $n, 2n = ${2 * n} '
-      'bulunur. Sorulan sayı ${_kat(ms, 'n')} = ${ms * n} olur.',
-      positive: true,
+          '${_kat(mv, 'n')} değerine karşılık gelir; buradan n = $n, 2n = ${2 * n} '
+          'bulunur. Sorulan sayı ${_kat(ms, 'n')} = ${ms * n} olur.',
     );
   },
   exam: ExamKind.tyt,
@@ -1556,7 +1698,7 @@ final _f08 = lmAile(
       case 0:
         return say(
           '$bakteri Başlangıçta $k bakteri bulunduğuna göre ${n * dk} dakika '
-          'sonra besiyerinde kaç bakteri bulunur?',
+              'sonra besiyerinde kaç bakteri bulunur?',
           son,
           // 2ⁿ yerine 2n ya da n ile çarpma, bir bölünme eksik ya da fazla
           // sayma, çarpmak yerine toplama, iki bölünme fazla sayma.
@@ -1566,7 +1708,7 @@ final _f08 = lmAile(
       case 1:
         return say(
           '$kultur Başlangıçta $k hücre bulunduğuna göre ${n * sa} saat sonra '
-          'kültürde kaç hücre bulunur?',
+              'kültürde kaç hücre bulunur?',
           son,
           [k * 2 * n, k * n, son ~/ 2, son * 2, k + kat, son * 4],
           '$bolunmeSa Hücre sayısı $k · 2${_ust(n)} = $son olur.',
@@ -1574,113 +1716,130 @@ final _f08 = lmAile(
       case 2:
         return say(
           '$bakteri Başlangıçta $k bakteri bulunduğuna göre bakteri sayısının '
-          '$son olması için kaç dakika geçmesi gerekir?',
+              '$son olması için kaç dakika geçmesi gerekir?',
           n * dk,
           // Kat sayısını bölünme sayısı sanma, bir ya da iki bölünme eksik
           // ya da fazla sayma, tek bölünmenin süresini verme.
           [kat * dk, (n - 1) * dk, (n + 1) * dk, 2 * n * dk, (n - 2) * dk, dk],
           'Bakteri sayısı $son / $k = $kat katına, yani 2${_ust(n)} katına '
-          'çıkmıştır; bunun için $n bölünme gerekir. Süre $n · $dk = '
-          '${n * dk} dakika olur.',
+              'çıkmıştır; bunun için $n bölünme gerekir. Süre $n · $dk = '
+              '${n * dk} dakika olur.',
         );
       case 3:
         return say(
           'Bir doku kültüründeki hücreler eşit aralıklarla mitozla bölünüyor '
-          've hiçbir hücre ölmüyor. Başlangıçta $k hücre bulunan kültürde '
-          '${n * sa} saat sonra $son hücre sayıldığına göre bir hücrenin art '
-          'arda iki bölünmesi arasında kaç saat geçmektedir?',
+              've hiçbir hücre ölmüyor. Başlangıçta $k hücre bulunan kültürde '
+              '${n * sa} saat sonra $son hücre sayıldığına göre bir hücrenin art '
+              'arda iki bölünmesi arasında kaç saat geçmektedir?',
           sa,
           // Bölünme sayısını bir fazla ya da eksik alma, süreyi kat sayısına
           // bölme, iki katını ya da yarısını alma.
           [
-            sa * 2, sa ~/ 2, n * sa ~/ (n + 1), n * sa ~/ (n - 1), sa + 6,
-            sa - 6, if (n * sa % kat == 0) n * sa ~/ kat,
+            sa * 2,
+            sa ~/ 2,
+            n * sa ~/ (n + 1),
+            n * sa ~/ (n - 1),
+            sa + 6,
+            sa - 6,
+            if (n * sa % kat == 0) n * sa ~/ kat,
           ],
           'Hücre sayısı $son / $k = $kat = 2${_ust(n)} katına çıkmıştır; '
-          '${n * sa} saatte $n bölünme olmuştur. Bölünme aralığı '
-          '${n * sa} / $n = $sa saat bulunur.',
+              '${n * sa} saatte $n bölünme olmuştur. Bölünme aralığı '
+              '${n * sa} / $n = $sa saat bulunur.',
         );
       case 4:
         return say(
           '$bakteri ${n * dk} dakika sonra besiyerinde $son bakteri '
-          'sayıldığına göre başlangıçta kaç bakteri ekilmiştir?',
+              'sayıldığına göre başlangıçta kaç bakteri ekilmiştir?',
           k,
           // 2ⁿ yerine 2n ya da n'ye bölme, bir bölünme eksik ya da fazla
           // sayma, bölmek yerine çıkarma, kat sayısını fazladan bölme.
           [
-            2 * k, 4 * k, son ~/ (2 * n), k ~/ 2, k + n, son ~/ n,
-            if (k % n == 0) k ~/ n, son - kat,
+            2 * k,
+            4 * k,
+            son ~/ (2 * n),
+            k ~/ 2,
+            k + n,
+            son ~/ n,
+            if (k % n == 0) k ~/ n,
+            son - kat,
           ],
           '$bolunmeDk Başlangıçtaki sayı '
-          '$son / 2${_ust(n)} = $son / $kat = $k olur.',
+              '$son / 2${_ust(n)} = $son / $kat = $k olur.',
         );
       case 5:
         final mayoz = son * _kesirPay[j] ~/ 4;
         return say(
           'Bir memelinin testisinde $k eşey ana hücresi art arda $n kez mitoz '
-          'geçiriyor. Oluşan hücrelerin ${_kesirSoz[j]} mayoz geçirdiğine göre '
-          'en çok kaç sperm hücresi oluşur?',
+              'geçiriyor. Oluşan hücrelerin ${_kesirSoz[j]} mayoz geçirdiğine göre '
+              'en çok kaç sperm hücresi oluşur?',
           4 * mayoz,
           // Mayoz başına 1, 2 ya da 8 sperm sayma, 2ⁿ yerine n ile çarpma,
           // mitozları unutma, bütün hücrelerin mayoz geçirdiğini sanma.
           [mayoz, 2 * mayoz, 8 * mayoz, 4 * k * n, 4 * k, 4 * son, son],
           'Mitozlar sonunda $k · 2${_ust(n)} = $son hücre oluşur. Bunlardan '
-          '$mayoz tanesi mayoz geçirir ve her biri 4 sperm verir: '
-          '$mayoz · 4 = ${4 * mayoz}.',
+              '$mayoz tanesi mayoz geçirir ve her biri 4 sperm verir: '
+              '$mayoz · 4 = ${4 * mayoz}.',
         );
       case 6:
         final mayoz = son * _kesirPay[j] ~/ 4;
         return say(
           'Bir memelinin yumurtalığında $k eşey ana hücresi art arda $n kez '
-          'mitoz geçiriyor. Oluşan hücrelerin ${_kesirSoz[j]} mayoz '
-          'geçirdiğine göre en çok kaç yumurta hücresi oluşur?',
+              'mitoz geçiriyor. Oluşan hücrelerin ${_kesirSoz[j]} mayoz '
+              'geçirdiğine göre en çok kaç yumurta hücresi oluşur?',
           mayoz,
           // Mayoz başına 4, 3 ya da 2 yumurta sayma, bütün hücreleri sayma,
           // mitozları unutma, mayoz geçiren hücreyi 4'e bölme.
           [
-            4 * mayoz, 3 * mayoz, 2 * mayoz, son, k * n, k,
-            if (mayoz % 4 == 0) mayoz ~/ 4, if (mayoz.isEven) mayoz ~/ 2,
+            4 * mayoz,
+            3 * mayoz,
+            2 * mayoz,
+            son,
+            k * n,
+            k,
+            if (mayoz % 4 == 0) mayoz ~/ 4,
+            if (mayoz.isEven) mayoz ~/ 2,
           ],
           'Mitozlar sonunda $k · 2${_ust(n)} = $son hücre oluşur. Bunlardan '
-          '$mayoz tanesi mayoz geçirir; her mayozdan 1 yumurta ve 3 kutup '
-          'hücresi oluştuğundan yumurta sayısı $mayoz olur.',
+              '$mayoz tanesi mayoz geçirir; her mayozdan 1 yumurta ve 3 kutup '
+              'hücresi oluştuğundan yumurta sayısı $mayoz olur.',
         );
       case 7:
         return say(
           '$kultur Başlangıçta $k hücre bulunan kültürde ${n * sa} saat '
-          'içinde toplam kaç mitoz bölünme gerçekleşir?',
+              'içinde toplam kaç mitoz bölünme gerçekleşir?',
           son - k,
           // Hücre sayısını, bölünme sayısını ya da son bölünmeyi verme,
           // 2ⁿ yerine n ile çarpma, her bölünmeyi iki kez sayma.
           [son, k * n, son - 1, son ~/ 2, n, 2 * (son - k)],
           '$bolunmeSa Hücre sayısı $k · 2${_ust(n)} = $son olur. Her mitoz '
-          'hücre sayısını 1 artırdığından bölünme sayısı '
-          '$son − $k = ${son - k} bulunur.',
+              'hücre sayısını 1 artırdığından bölünme sayısı '
+              '$son − $k = ${son - k} bulunur.',
         );
       case 8:
         return say(
           '$bakteri Başlangıçta $k bakteri bulunan besiyerinde ${n * dk} '
-          'dakikalık sürenin son $dk dakikasında bakteri sayısı kaç artar?',
+              'dakikalık sürenin son $dk dakikasında bakteri sayısı kaç artar?',
           son ~/ 2,
           [son, k, son ~/ 4, son - k, k * n],
           '$bolunmeDk Son bölünmeden önce '
-          '$k · 2${_ust(n - 1)} = ${son ~/ 2}, sonra $son bakteri vardır; artış '
-          '$son − ${son ~/ 2} = ${son ~/ 2} olur.',
+              '$k · 2${_ust(n - 1)} = ${son ~/ 2}, sonra $son bakteri vardır; artış '
+              '$son − ${son ~/ 2} = ${son ~/ 2} olur.',
         );
       default:
         final mayoz = son * _kesirPay[j] ~/ 4;
         return say(
           'Bir memelinin yumurtalığında $k eşey ana hücresi art arda $n kez '
-          'mitoz geçiriyor. Oluşan hücrelerin ${_kesirSoz[j]} mayoz '
-          'geçirdiğine göre mayozlar sonunda en çok kaç kutup hücresi oluşur?',
+              'mitoz geçiriyor. Oluşan hücrelerin ${_kesirSoz[j]} mayoz '
+              'geçirdiğine göre mayozlar sonunda en çok kaç kutup hücresi oluşur?',
           3 * mayoz,
           // Mayoz başına 1, 2 ya da 4 kutup hücresi sayma, bütün hücreleri
           // sayma, 2ⁿ yerine n ile çarpma, mitozları unutma.
           [mayoz, 4 * mayoz, 2 * mayoz, 3 * son, 3 * k * n, 3 * k],
           'Mitozlar sonunda $k · 2${_ust(n)} = $son hücre oluşur. Bunlardan '
-          '$mayoz tanesi mayoz geçirir; ilk kutup hücresi de bölündüğünde her '
-          'mayozdan 1 yumurta ve en çok 3 kutup hücresi oluşur. Kutup hücresi '
-          'sayısı en çok $mayoz · 3 = ${3 * mayoz} olur.',
+              '$mayoz tanesi mayoz geçirir; ilk kutup hücresi de bölündüğünde her '
+              'mayozdan 1 yumurta ve en çok 3 kutup hücresi oluşur. Kutup hücresi '
+              'sayısı en çok $mayoz · 3 = ${3 * mayoz} olur.',
         );
     }
   },
@@ -1724,20 +1883,20 @@ final _f09 = lmAile(
       case 0:
         return sor(
           'Çift zincirli bir DNA molekülünde toplam $top nükleotit '
-          'bulunmaktadır ve bunların $ad tanesi adenin içerir. Bu DNA '
-          'molekülünde guanin içeren nükleotit sayısı kaçtır?',
+              'bulunmaktadır ve bunların $ad tanesi adenin içerir. Bu DNA '
+              'molekülünde guanin içeren nükleotit sayısı kaçtır?',
           gu,
           // A = T ya da G = C eşitliğini unutma, toplamın yarısı, adenin
           // sayısını yanıt sanma.
           [top - ad, 2 * gu, ad ~/ 2 + gu, top ~/ 2, ad],
           'A = T olduğundan A + T = ${2 * ad} olur. G + C = $top − ${2 * ad} = '
-          '${2 * gu} ve G = C olduğundan G = $gu bulunur.',
+              '${2 * gu} ve G = C olduğundan G = $gu bulunur.',
         );
       case 1:
         return sor(
           'Çift zincirli bir DNA molekülünde $ad adenin ve $gu guanin '
-          'nükleotidi vardır. Bu molekülün iki zinciri arasında toplam kaç '
-          'hidrojen bağı bulunur?',
+              'nükleotidi vardır. Bu molekülün iki zinciri arasında toplam kaç '
+              'hidrojen bağı bulunur?',
           hb,
           // Bağ sayılarını karıştırma, her çifte aynı sayıda bağ verme,
           // her çifti iki kez sayma.
@@ -1747,32 +1906,36 @@ final _f09 = lmAile(
       case 2:
         return sor(
           'Toplam $top nükleotit içeren çift zincirli bir DNA molekülünün iki '
-          'zinciri arasında $hb hidrojen bağı vardır. Bu moleküldeki adenin '
-          'sayısı kaçtır?',
+              'zinciri arasında $hb hidrojen bağı vardır. Bu moleküldeki adenin '
+              'sayısı kaçtır?',
           ad,
           // Guanin sayısını verme, çift sayısını verme, denklemleri yanlış
           // çözme, bağ sayısını 5'e (2 + 3) bölme.
           [gu, top ~/ 2, hb - top ~/ 2, 2 * ad, (hb - top ~/ 2) ~/ 2, hb ~/ 5],
           'A + G = $top / 2 = ${top ~/ 2} ve 2A + 3G = $hb olur. İkinci '
-          'eşitlikten birincinin iki katı çıkarılırsa G = $hb − $top = $gu, '
-          'A = ${top ~/ 2} − $gu = $ad bulunur.',
+              'eşitlikten birincinin iki katı çıkarılırsa G = $hb − $top = $gu, '
+              'A = ${top ~/ 2} − $gu = $ad bulunur.',
         );
       case 3:
         final si = 2 * (b + 2) * (50 - p);
         return sor(
           'Toplam $top2 nükleotit içeren çift zincirli bir DNA molekülünde '
-          'nükleotitlerin %$p kadarı adenin içerir. Bu moleküldeki sitozin '
-          'sayısı kaçtır?',
+              'nükleotitlerin %$p kadarı adenin içerir. Bu moleküldeki sitozin '
+              'sayısı kaçtır?',
           si,
           // Adenin sayısını verme, G + C toplamını verme, %(100 − p) ya da
           // yarısını alma, yarıya bölmeyi iki kez yapma.
           [
-            2 * (b + 2) * p, 2 * si, 2 * (b + 2) * (100 - p), si ~/ 2,
-            (b + 2) * (100 - p), (b + 2) * p,
+            2 * (b + 2) * p,
+            2 * si,
+            2 * (b + 2) * (100 - p),
+            si ~/ 2,
+            (b + 2) * (100 - p),
+            (b + 2) * p,
           ],
           'A = T olduğundan A + T = %${2 * p}, G + C = %${100 - 2 * p} ve '
-          'C = %${50 - p} olur. Sitozin sayısı $top2 · ${50 - p} / 100 = $si '
-          'bulunur.',
+              'C = %${50 - p} olur. Sitozin sayısı $top2 · ${50 - p} / 100 = $si '
+              'bulunur.',
         );
       case 4 || 5:
         final a1 = 20 + a, t1 = 15 + b;
@@ -1784,7 +1947,7 @@ final _f09 = lmAile(
           final h = 2 * (a1 + t1) + 3 * (g1 + c1);
           return sor(
             '$zincir Bu DNA molekülünün iki zinciri arasında toplam kaç '
-            'hidrojen bağı bulunur?',
+                'hidrojen bağı bulunur?',
             h,
             [
               // Bağ sayılarını karıştırma, yalnız A ile G'yi sayma, her
@@ -1797,63 +1960,67 @@ final _f09 = lmAile(
               a1 + t1 + g1 + c1,
             ],
             'Bir zincirdeki her A ve T karşı zincirle 2, her G ve C ise 3 '
-            'hidrojen bağı kurar: 2 · ($a1 + $t1) + 3 · ($g1 + $c1) = $h.',
+                'hidrojen bağı kurar: 2 · ($a1 + $t1) + 3 · ($g1 + $c1) = $h.',
           );
         }
         return sor(
           '$zincir Bu DNA molekülünün iki zincirinde toplam kaç adenin '
-          'nükleotidi bulunur?',
+              'nükleotidi bulunur?',
           a1 + t1,
           // Yalnız verilen zincirdeki adenini ya da timini sayma, eşleşmeyi
           // karıştırma, iki kez sayma.
           [2 * a1, a1, a1 + c1, 2 * (a1 + t1), t1, a1 + g1, 2 * t1],
           'Verilen zincirdeki her timinin karşısında diğer zincirde bir adenin '
-          'bulunur. Toplam adenin sayısı $a1 + $t1 = ${a1 + t1} olur.',
+              'bulunur. Toplam adenin sayısı $a1 + $t1 = ${a1 + t1} olur.',
         );
       case 6:
         final h = 2 * (b + 2) * (150 - p);
         return sor(
           'Toplam $top2 nükleotit içeren çift zincirli bir DNA molekülünde '
-          'nükleotitlerin %$p kadarı timin içerir. Bu molekülün iki zinciri '
-          'arasında toplam kaç hidrojen bağı bulunur?',
+              'nükleotitlerin %$p kadarı timin içerir. Bu molekülün iki zinciri '
+              'arasında toplam kaç hidrojen bağı bulunur?',
           h,
           // Bağ sayılarını karıştırma, ortalama 2,5 bağ alma, iki kez sayma,
           // her çifte 2 ya da 3 bağ verme, çift yerine nükleotit sayma.
           [
-            2 * (b + 2) * (100 + p), 2 * (b + 2) * 125, 2 * h, top2,
-            300 * (b + 2), h ~/ 2,
+            2 * (b + 2) * (100 + p),
+            2 * (b + 2) * 125,
+            2 * h,
+            top2,
+            300 * (b + 2),
+            h ~/ 2,
           ],
           'A = T = $top2 · $p / 100 = ${2 * (b + 2) * p}, G = C = $top2 · '
-          '${50 - p} / 100 = ${2 * (b + 2) * (50 - p)} olur. Hidrojen bağı '
-          'sayısı 2 · ${2 * (b + 2) * p} + 3 · ${2 * (b + 2) * (50 - p)} = $h '
-          'bulunur.',
+              '${50 - p} / 100 = ${2 * (b + 2) * (50 - p)} olur. Hidrojen bağı '
+              'sayısı 2 · ${2 * (b + 2) * p} + 3 · ${2 * (b + 2) * (50 - p)} = $h '
+              'bulunur.',
         );
       case 7:
         return sor(
           'Çift zincirli bir DNA molekülünde $gu guanin nükleotidi vardır ve '
-          'iki zincir arasında toplam $hb hidrojen bağı bulunur. Bu '
-          'moleküldeki toplam nükleotit sayısı kaçtır?',
+              'iki zincir arasında toplam $hb hidrojen bağı bulunur. Bu '
+              'moleküldeki toplam nükleotit sayısı kaçtır?',
           top,
           // Çift sayısını verme, eşleşmeyi unutma, bağ sayısını ya da adenin
           // sayısını yanıt sanma, iki kez sayma.
           [ad + gu, hb - gu, 2 * ad + gu, top + 2 * gu, hb, ad, 2 * top],
           'G–C çiftlerindeki bağ sayısı 3 · $gu = ${3 * gu} olur. A–T çifti '
-          'sayısı ($hb − ${3 * gu}) / 2 = $ad bulunur. Toplam nükleotit '
-          '2 · ($ad + $gu) = $top olur.',
+              'sayısı ($hb − ${3 * gu}) / 2 = $ad bulunur. Toplam nükleotit '
+              '2 · ($ad + $gu) = $top olur.',
         );
       case 8:
         final q = 100 - 2 * p;
         final say = 2 * (b + 2) * p;
         return sor(
           'Toplam $top2 nükleotit içeren çift zincirli bir DNA molekülünde '
-          'guanin ve sitozin nükleotitlerinin toplamı bütün nükleotitlerin '
-          '%$q kadarıdır. Bu moleküldeki adenin sayısı kaçtır?',
+              'guanin ve sitozin nükleotitlerinin toplamı bütün nükleotitlerin '
+              '%$q kadarıdır. Bu moleküldeki adenin sayısı kaçtır?',
           say,
           // A + T toplamını, G + C ya da guanin sayısını verme, bir zincir
           // için hesaplama.
           [2 * say, 2 * (b + 2) * q, (b + 2) * q, top2 ~/ 2 - say, (b + 2) * p],
           'A + T = %${100 - q} olur ve A = T olduğundan A = %$p bulunur. '
-          'Adenin sayısı $top2 · $p / 100 = $say olur.',
+              'Adenin sayısı $top2 · $p / 100 = $say olur.',
         );
       default:
         // Timin yüzdesi adenin yüzdesiyle aynı tekliktedir ve ona eşit olmaz.
@@ -1861,14 +2028,14 @@ final _f09 = lmAile(
         if (q >= p) q += 2;
         return sor(
           'Bir DNA molekülünün zincirlerinden birindeki nükleotitlerin %$p '
-          'kadarı adenin, %$q kadarı timin içerir. Bu DNA molekülünün '
-          'tamamında adenin içeren nükleotitlerin oranı yüzde kaçtır?',
+              'kadarı adenin, %$q kadarı timin içerir. Bu DNA molekülünün '
+              'tamamında adenin içeren nükleotitlerin oranı yüzde kaçtır?',
           (p + q) ~/ 2,
           // İki oranı toplama, yalnız bir zinciri alma, G + C oranını verme.
           [p + q, p, q, 50 - (p + q) ~/ 2, 100 - (p + q)],
           'Karşı zincirde adenin oranı %$q, timin oranı %$p olur. İki zincir '
-          'eşit uzunlukta olduğundan molekülün tamamında adenin oranı '
-          '($p + $q) / 2 = ${(p + q) ~/ 2} bulunur.',
+              'eşit uzunlukta olduğundan molekülün tamamında adenin oranı '
+              '($p + $q) / 2 = ${(p + q) ~/ 2} bulunur.',
           adim: 2,
         );
     }
@@ -1890,6 +2057,21 @@ final _f10 = lmAile(
     final n = 2 + b % 5, sure = const [20, 25, 30, 40][b ~/ 5];
     final n1 = 1 + b % 5, m = 1 + b ~/ 5; // iki aşamalı deney
     final top = k << n;
+    final no = _no(a, b, c);
+    AdvancedItem say(
+      String kok,
+      int anahtar,
+      List<int> hatalar,
+      String aciklama,
+    ) => _sayiDengeli(
+      kok,
+      anahtar,
+      hatalar,
+      aciklama,
+      no,
+      genislik: 2,
+      agirlik: const [2, 1, 1, 2],
+    );
     const tek = 'Her bakteride tek bir DNA molekülü bulunduğu kabul ediliyor.';
     final agirdan =
         "DNA'larındaki azotun tamamı ¹⁵N (ağır azot) olan $k bakteri, azot "
@@ -1912,112 +2094,143 @@ final _f10 = lmAile(
         'molekül oluşturur.';
     switch (c) {
       case 0:
-        return sayisal(
+        return say(
           '$agirdan Süre sonunda kaç DNA molekülü melezdir (bir zinciri ¹⁵N, '
-          'diğer zinciri ¹⁴N içerir)?',
+              'diğer zinciri ¹⁴N içerir)?',
           2 * k,
-          [k, top, top - 2 * k, 2 * top, k * n],
+          // Her ağır DNA'dan bir melez sanma, toplamı ya da yalnız ¹⁴N
+          // içerenleri verme, zincir sayısını verme, n ile çarpma, yarısını
+          // melez sanma, eşlenme sayısını yanıt sanma.
+          [k, top, top - 2 * k, 2 * top, k * n, top ~/ 2, n],
           '$ozet Melez molekül sayısı ${2 * k} olur.',
-          positive: true,
         );
       case 1:
-        return sayisal(
+        return say(
           '$agirdan Süre sonunda kaç DNA molekülünün her iki zinciri de ¹⁴N '
-          'içerir?',
+              'içerir?',
           top - 2 * k,
-          [top, 2 * k, top - k, top ~/ 2],
+          // Toplamı ya da melezleri verme, k çıkarma, yarısını alma, ağır
+          // zincirleri iki kez çıkarma.
+          [top, 2 * k, top - k, top ~/ 2, top - 4 * k],
           '$ozet Yalnız ¹⁴N içeren molekül sayısı $top − ${2 * k} = '
-          '${top - 2 * k} olur.',
-          positive: true,
+              '${top - 2 * k} olur.',
         );
       case 2:
-        return _olasilik(
+        return _olasilikDengeli(
           '$agirdan Süre sonunda melez DNA moleküllerinin (bir zinciri ¹⁵N, '
-          'diğer zinciri ¹⁴N) sayısının bütün DNA moleküllerinin sayısına '
-          'oranı kaçtır?',
+              'diğer zinciri ¹⁴N) sayısının bütün DNA moleküllerinin sayısına '
+              'oranı kaçtır?',
           2 * k,
           top,
-          [(1, 1 << n), (1, n), (top - 2 * k, top), (1, 2 * n), (2, n + 2)],
+          [
+            (1, 1 << n), (1, n), (top - 2 * k, top), (1, 2 * n), (2, n + 2),
+            // Bir eşlenme fazla ya da eksik sayma.
+            (1, 1 << (n + 1)), if (n >= 3) (1, 1 << (n - 2)),
+          ],
           '$ozet Oran ${2 * k} / $top = ${kesir(2 * k, top)} bulunur.',
+          no,
         );
       case 3:
-        return _olasilik(
+        return _olasilikDengeli(
           '$agirdan Süre sonunda her iki zinciri de ¹⁴N içeren DNA '
-          'moleküllerinin sayısının bütün DNA moleküllerinin sayısına oranı '
-          'kaçtır?',
+              'moleküllerinin sayısının bütün DNA moleküllerinin sayısına oranı '
+              'kaçtır?',
           top - 2 * k,
           top,
-          [(2 * k, top), (top - k, top), (1, 1 << n), (n - 1, n), (1, n)],
+          [
+            (2 * k, top), (top - k, top), (1, 1 << n), (n - 1, n), (1, n),
+            // Bir eşlenme fazla sayma, ağır zincirleri iki kez çıkarma.
+            ((1 << (n + 1)) - 1, 1 << (n + 1)), (top - 4 * k, top),
+          ],
           '$ozet Yalnız ¹⁴N içeren molekül sayısı ${top - 2 * k} olduğundan '
-          'oran ${top - 2 * k} / $top = ${kesir(top - 2 * k, top)} bulunur.',
+              'oran ${top - 2 * k} / $top = ${kesir(top - 2 * k, top)} bulunur.',
+          no,
         );
       case 4:
-        return sayisal(
+        return say(
           "DNA'larındaki azotun tamamı ¹⁴N olan $k bakteri, azot kaynağı "
-          'olarak yalnız ¹⁵N (ağır azot) içeren besiyerine aktarılıyor. $sure '
-          'dakikada bir bölünen bakteriler bu ortamda ${n * sure} dakika '
-          'çoğalıyor. $tek Süre sonunda DNA moleküllerindeki kaç '
-          'polinükleotit zinciri ¹⁵N içerir?',
+              'olarak yalnız ¹⁵N (ağır azot) içeren besiyerine aktarılıyor. $sure '
+              'dakikada bir bölünen bakteriler bu ortamda ${n * sure} dakika '
+              'çoğalıyor. $tek Süre sonunda DNA moleküllerindeki kaç '
+              'polinükleotit zinciri ¹⁵N içerir?',
           2 * top - 2 * k,
-          [2 * top, top - 2 * k, 2 * k, top - k],
+          // Bütün zincirleri sayma, molekül sayısıyla karıştırma, eski
+          // zincirleri k kadar sayma.
+          [2 * top, top - 2 * k, 2 * k, top - k, 2 * top - k, top],
           '${n * sure} / $sure = $n eşlenme sonunda $top DNA molekülü, yani '
-          '${2 * top} zincir bulunur. Başlangıçtaki ${2 * k} zincir ¹⁴N '
-          'içerir; ¹⁵N içeren zincir sayısı ${2 * top} − ${2 * k} = '
-          '${2 * top - 2 * k} olur.',
-          positive: true,
+              '${2 * top} zincir bulunur. Başlangıçtaki ${2 * k} zincir ¹⁴N '
+              'içerir; ¹⁵N içeren zincir sayısı ${2 * top} − ${2 * k} = '
+              '${2 * top - 2 * k} olur.',
         );
       case 5:
-        return sayisal(
+        return say(
           '$ikiAsama Son durumda kaç DNA molekülü melezdir (bir zinciri ¹⁵N, '
-          'diğer zinciri ¹⁴N içerir)?',
+              'diğer zinciri ¹⁴N içerir)?',
           melez2,
           [2 * k, top2 - melez2, top2, k << n1, k, 2 * melez2],
           '$ozet2 Melez molekül sayısı $melez2 olur.',
-          positive: true,
         );
       case 6:
-        return sayisal(
+        return say(
           '$ikiAsama Son durumda kaç DNA molekülünün her iki zinciri de ¹⁵N '
-          'içerir?',
+              'içerir?',
           top2 - melez2,
-          [melez2, top2, 2 * k, top2 - 2 * k],
+          // Melezleri ya da toplamı verme, yalnız ilk ağır zincirleri çıkarma,
+          // yarısını ya da iki katını alma.
+          [
+            melez2,
+            top2,
+            2 * k,
+            top2 - 2 * k,
+            (top2 - melez2) ~/ 2,
+            2 * (top2 - melez2),
+          ],
           '$ozet2 Toplam $k · 2${_ust(n1 + m)} = $top2 molekülün $melez2 '
-          'tanesi melezdir; kalan $top2 − $melez2 = ${top2 - melez2} molekül '
-          'yalnız ¹⁵N içerir.',
-          positive: true,
+              'tanesi melezdir; kalan $top2 − $melez2 = ${top2 - melez2} molekül '
+              'yalnız ¹⁵N içerir.',
         );
       case 7:
-        return sayisal(
+        return say(
           '$agirdan Süre sonunda DNA moleküllerindeki kaç polinükleotit '
-          'zinciri ¹⁴N içerir?',
+              'zinciri ¹⁴N içerir?',
           2 * top - 2 * k,
-          [2 * top, top - 2 * k, top, 2 * k],
+          // Bütün zincirleri sayma, molekül sayısıyla karıştırma, eski
+          // zincirleri k kadar sayma ya da ekleme.
+          [2 * top, top - 2 * k, top, 2 * k, 2 * top - k, 2 * top + 2 * k],
           '$ozet Toplam ${2 * top} zincirin ${2 * k} tanesi ¹⁵N içerir; ¹⁴N '
-          'içeren zincir sayısı ${2 * top} − ${2 * k} = ${2 * top - 2 * k} '
-          'olur.',
-          positive: true,
+              'içeren zincir sayısı ${2 * top} − ${2 * k} = ${2 * top - 2 * k} '
+              'olur.',
         );
       case 8:
-        return sayisal(
+        return say(
           "DNA'larındaki azotun tamamı ¹⁵N (ağır azot) olan bakteriler, azot "
-          'kaynağı olarak yalnız ¹⁴N içeren besiyerine aktarılıyor ve $sure '
-          'dakikada bir bölünüyor. $tek Bir süre sonra besiyerindeki $top DNA '
-          'molekülünden ${2 * k} tanesinin melez (bir zinciri ¹⁵N, diğer '
-          'zinciri ¹⁴N) olduğu belirleniyor. Bakteriler bu ortamda kaç dakika '
-          'çoğalmıştır?',
+              'kaynağı olarak yalnız ¹⁴N içeren besiyerine aktarılıyor ve $sure '
+              'dakikada bir bölünüyor. $tek Bir süre sonra besiyerindeki $top DNA '
+              'molekülünden ${2 * k} tanesinin melez (bir zinciri ¹⁵N, diğer '
+              'zinciri ¹⁴N) olduğu belirleniyor. Bakteriler bu ortamda kaç dakika '
+              'çoğalmıştır?',
           n * sure,
-          [(n - 1) * sure, (n + 1) * sure, (1 << n) * sure, 2 * n * sure],
+          // Eşlenme sayısını bir ya da iki eksik ya da fazla sayma, kat
+          // sayısını eşlenme sayısı sanma, tek bölünmenin süresini verme.
+          [
+            (n - 1) * sure,
+            (n + 1) * sure,
+            (1 << n) * sure,
+            2 * n * sure,
+            (n - 2) * sure,
+            sure,
+            (1 << (n - 1)) * sure,
+          ],
           'Her ağır DNA iki melez molekül verdiğinden başlangıçta '
-          '${2 * k} / 2 = $k bakteri vardır. $top / $k = ${1 << n} = '
-          '2${_ust(n)} olduğundan $n eşlenme olmuştur; süre $n · $sure = '
-          '${n * sure} dakikadır.',
-          positive: true,
+              '${2 * k} / 2 = $k bakteri vardır. $top / $k = ${1 << n} = '
+              '2${_ust(n)} olduğundan $n eşlenme olmuştur; süre $n · $sure = '
+              '${n * sure} dakikadır.',
         );
       default:
-        return _olasilik(
+        return _olasilikDengeli(
           '$ikiAsama Son durumda melez DNA moleküllerinin (bir zinciri ¹⁵N, '
-          'diğer zinciri ¹⁴N) sayısının bütün DNA moleküllerinin sayısına '
-          'oranı kaçtır?',
+              'diğer zinciri ¹⁴N) sayısının bütün DNA moleküllerinin sayısına '
+              'oranı kaçtır?',
           melez2,
           top2,
           [
@@ -2026,9 +2239,12 @@ final _f10 = lmAile(
             (1, 1 << m),
             (1, 1 << (n1 + m)),
             (1, n1 + m),
+            // Yarısını alma.
+            (melez2, 2 * top2),
           ],
           '$ozet2 Toplam $k · 2${_ust(n1 + m)} = $top2 molekülün $melez2 '
-          'tanesi melezdir; oran ${kesir(melez2, top2)} bulunur.',
+              'tanesi melezdir; oran ${kesir(melez2, top2)} bulunur.',
+          no,
         );
     }
   },
@@ -2060,45 +2276,45 @@ final _f11 = lmAile(
       case 0:
         return sayisal(
           '$iki Bu proteinin iki zincirinin sentezi sırasında toplam kaç '
-          'peptit bağı kurulur?',
+              'peptit bağı kurulur?',
           n1 + n2 - 2,
           [n1 + n2, n1 + n2 - 1, n1 + n2 + 2, 3 * (n1 + n2)],
           'Bir zincirdeki peptit bağı sayısı amino asit sayısından 1 eksiktir: '
-          '($n1 − 1) + ($n2 − 1) = ${n1 + n2 - 2}.',
+              '($n1 − 1) + ($n2 − 1) = ${n1 + n2 - 2}.',
           positive: true,
         );
       case 1:
         return sayisal(
           '$iki Bu zincirlerin sentezinde kalıp olarak kullanılan iki mRNA '
-          'molekülünün protein kodlayan bölgelerinde, durdurma kodonları da '
-          'sayıldığında toplam kaç kodon bulunur?',
+              'molekülünün protein kodlayan bölgelerinde, durdurma kodonları da '
+              'sayıldığında toplam kaç kodon bulunur?',
           n1 + n2 + 2,
           [n1 + n2, n1 + n2 + 1, 3 * (n1 + n2 + 2), n1 + n2 - 2],
           '$kodonKural Kodon sayısı ($n1 + 1) + ($n2 + 1) = ${n1 + n2 + 2} '
-          'olur.',
+              'olur.',
           positive: true,
         );
       case 2:
         return sayisal(
           '$iki Bu zincirlerin sentezinde kalıp olarak kullanılan iki mRNA '
-          'molekülünün protein kodlayan bölgelerinde, durdurma kodonları da '
-          'sayıldığında toplam kaç nükleotit bulunur?',
+              'molekülünün protein kodlayan bölgelerinde, durdurma kodonları da '
+              'sayıldığında toplam kaç nükleotit bulunur?',
           m1 + m2,
           [3 * (n1 + n2), n1 + n2 + 2, 6 * (n1 + n2 + 2), 3 * (n1 + n2 + 1)],
           '$kodonKural Kodon sayısı ($n1 + 1) + ($n2 + 1) = ${n1 + n2 + 2}, '
-          'nükleotit sayısı 3 · ${n1 + n2 + 2} = ${m1 + m2} olur.',
+              'nükleotit sayısı 3 · ${n1 + n2 + 2} = ${m1 + m2} olur.',
           positive: true,
         );
       case 3:
         return sayisal(
           '$iki Bu iki zinciri şifreleyen çift zincirli DNA bölgelerinde, '
-          'durdurma kodonlarının karşılıkları da sayıldığında toplam kaç '
-          'nükleotit bulunur?',
+              'durdurma kodonlarının karşılıkları da sayıldığında toplam kaç '
+              'nükleotit bulunur?',
           2 * (m1 + m2),
           [m1 + m2, 6 * (n1 + n2), 3 * (n1 + n2), 2 * (n1 + n2 + 2)],
           '$kodonKural mRNA üzerindeki kodon sayısı ${n1 + n2 + 2}, nükleotit '
-          'sayısı ${m1 + m2} olur. DNA çift zincirli olduğundan nükleotit '
-          'sayısı 2 · ${m1 + m2} = ${2 * (m1 + m2)} bulunur.',
+              'sayısı ${m1 + m2} olur. DNA çift zincirli olduğundan nükleotit '
+              'sayısı 2 · ${m1 + m2} = ${2 * (m1 + m2)} bulunur.',
           positive: true,
         );
       case 4 || 5:
@@ -2120,64 +2336,64 @@ final _f11 = lmAile(
         }
         return sayisal(
           '$mrna Bu iki zincirin sentezi sırasında toplam kaç peptit bağı '
-          'kurulur?',
+              'kurulur?',
           n1 + n2 - 2,
           [n1 + n2 + 2, n1 + n2, n1 + n2 - 1, n1 + n2 + 1],
           '$cozum Peptit bağı sayısı ($n1 − 1) + ($n2 − 1) = ${n1 + n2 - 2} '
-          'olur.',
+              'olur.',
           positive: true,
         );
       case 6:
         return sayisal(
           'Bir bakteride sentezlenen iki polipeptit zincirinden birinde '
-          '${n1 - 1}, diğerinde ${n2 - 1} peptit bağı vardır. Bu zincirlerin '
-          'mRNA moleküllerinde protein kodlayan bölgeler, durdurma kodonları '
-          'dâhil toplam kaç nükleotitten oluşur?',
+              '${n1 - 1}, diğerinde ${n2 - 1} peptit bağı vardır. Bu zincirlerin '
+              'mRNA moleküllerinde protein kodlayan bölgeler, durdurma kodonları '
+              'dâhil toplam kaç nükleotitten oluşur?',
           m1 + m2,
           [3 * (n1 + n2 - 2), 3 * (n1 + n2), n1 + n2 + 2, 3 * (n1 + n2 + 1)],
           'Amino asit sayıları ${n1 - 1} + 1 = $n1 ve ${n2 - 1} + 1 = $n2 '
-          'olur. $kodonKural Kodon sayısı ${n1 + n2 + 2}, nükleotit sayısı '
-          '3 · ${n1 + n2 + 2} = ${m1 + m2} bulunur.',
+              'olur. $kodonKural Kodon sayısı ${n1 + n2 + 2}, nükleotit sayısı '
+              '3 · ${n1 + n2 + 2} = ${m1 + m2} bulunur.',
           positive: true,
         );
       case 7:
         return sayisal(
           'Bir bakteride $n1 amino asitten oluşan bir polipeptidi şifreleyen '
-          'mRNA molekülü, $r ribozom tarafından birer kez okunuyor ve her '
-          'ribozom bir polipeptit zinciri sentezliyor. Bu sentezler sırasında '
-          'toplam kaç molekül su açığa çıkar?',
+              'mRNA molekülü, $r ribozom tarafından birer kez okunuyor ve her '
+              'ribozom bir polipeptit zinciri sentezliyor. Bu sentezler sırasında '
+              'toplam kaç molekül su açığa çıkar?',
           r * (n1 - 1),
           [r * n1, r * (n1 + 1), n1 - 1, r * (n1 - 1) - r],
           'Her zincirde $n1 − 1 = ${n1 - 1} peptit bağı kurulur ve her bağda '
-          '1 molekül su açığa çıkar. Toplam $r · ${n1 - 1} = ${r * (n1 - 1)} '
-          'molekül su oluşur.',
+              '1 molekül su açığa çıkar. Toplam $r · ${n1 - 1} = ${r * (n1 - 1)} '
+              'molekül su oluşur.',
           positive: true,
         );
       case 8:
         return sayisal(
           'Bir bakteride protein kodlayan bölgesi durdurma kodonu dâhil $m1 '
-          'nükleotitten oluşan bir mRNA molekülü, $r ribozom tarafından birer '
-          'kez okunuyor ve her ribozom bir polipeptit zinciri sentezliyor. Bu '
-          'sentezlerde toplam kaç amino asit kullanılır?',
+              'nükleotitten oluşan bir mRNA molekülü, $r ribozom tarafından birer '
+              'kez okunuyor ve her ribozom bir polipeptit zinciri sentezliyor. Bu '
+              'sentezlerde toplam kaç amino asit kullanılır?',
           r * n1,
           [r * (n1 + 1), r * (n1 - 1), n1, r * m1],
           '$kodonKural Kodon sayısı $m1 / 3 = ${n1 + 1}, bir zincirdeki amino '
-          'asit sayısı $n1 olur. $r zincir için $r · $n1 = ${r * n1} amino '
-          'asit kullanılır.',
+              'asit sayısı $n1 olur. $r zincir için $r · $n1 = ${r * n1} amino '
+              'asit kullanılır.',
           positive: true,
         );
       default:
         return sayisal(
           'Bir bakteride iki polipeptit zincirini şifreleyen çift zincirli DNA '
-          'bölgeleri, durdurma kodonlarının karşılıkları dâhil ${2 * m1} ve '
-          '${2 * m2} nükleotitten oluşur. Bu iki zincirin sentezi sırasında '
-          'ribozomlara toplam kaç amino asit taşınır?',
+              'bölgeleri, durdurma kodonlarının karşılıkları dâhil ${2 * m1} ve '
+              '${2 * m2} nükleotitten oluşur. Bu iki zincirin sentezi sırasında '
+              'ribozomlara toplam kaç amino asit taşınır?',
           n1 + n2,
           [n1 + n2 + 2, 2 * (n1 + n2), n1 + n2 - 2, n1 + n2 + 1],
           'Kalıp zincirlerdeki nükleotit sayıları ${2 * m1} / 2 = $m1 ve '
-          '${2 * m2} / 2 = $m2, kodon sayıları ${n1 + 1} ve ${n2 + 1} olur. '
-          'Durdurma kodonlarına amino asit taşınmadığından toplam '
-          '$n1 + $n2 = ${n1 + n2} amino asit taşınır.',
+              '${2 * m2} / 2 = $m2, kodon sayıları ${n1 + 1} ve ${n2 + 1} olur. '
+              'Durdurma kodonlarına amino asit taşınmadığından toplam '
+              '$n1 + $n2 = ${n1 + n2} amino asit taşınır.',
           positive: true,
         );
     }
@@ -2208,139 +2424,169 @@ final _f12 = lmAile(
         final p = 20 + 5 * a;
         return say(
           'Bir hücrede her biri $p amino asitten oluşan $y polipeptit zinciri '
-          'sentezleniyor. Bu sentezler sırasında toplam kaç molekül su açığa '
-          'çıkar?',
+              'sentezleniyor. Bu sentezler sırasında toplam kaç molekül su açığa '
+              'çıkar?',
           y * (p - 1),
           // Bağ yerine amino asit sayma, bir fazla ya da eksik sayma, tek
           // zincir için hesaplama, zincirleri tek zincir sanma.
-          [y * p, y * (p + 1), p - 1, y * (p - 1) - y, y * p - 1, (y - 1) * (p - 1)],
+          [
+            y * p,
+            y * (p + 1),
+            p - 1,
+            y * (p - 1) - y,
+            y * p - 1,
+            (y - 1) * (p - 1),
+          ],
           'Bir zincirde $p − 1 = ${p - 1} peptit bağı kurulur ve her bağda 1 '
-          'molekül su açığa çıkar: $y · ${p - 1} = ${y * (p - 1)}.',
+              'molekül su açığa çıkar: $y · ${p - 1} = ${y * (p - 1)}.',
         );
       case 1:
         final p = 200 + 40 * a;
         return say(
           'Sindirim sırasında her biri $p glikoz biriminden oluşan $y nişasta '
-          'molekülü tamamen glikoza hidroliz ediliyor. Bu olayda toplam kaç '
-          'molekül su harcanır?',
+              'molekülü tamamen glikoza hidroliz ediliyor. Bu olayda toplam kaç '
+              'molekül su harcanır?',
           y * (p - 1),
           // Bağ yerine glikoz sayma, bir fazla ya da eksik sayma, tek molekül
           // için hesaplama, molekülleri tek zincir sanma, yarıya bölme.
           [y * p, y * (p + 1), p - 1, y * p ~/ 2, y * p - 1, y * (p - 2)],
           'Bir moleküldeki $p − 1 = ${p - 1} glikozit bağının her biri 1 '
-          'molekül su harcanarak koparılır: $y · ${p - 1} = ${y * (p - 1)}.',
+              'molekül su harcanarak koparılır: $y · ${p - 1} = ${y * (p - 1)}.',
         );
       case 2:
         final p = 20 + 3 * b;
         return say(
           'Bir hücrede $x molekül trigliserit (nötr yağ) ile $p amino asitten '
-          'oluşan bir polipeptit zinciri sentezleniyor. Bu sentezler sırasında '
-          'toplam kaç molekül su açığa çıkar?',
+              'oluşan bir polipeptit zinciri sentezleniyor. Bu sentezler sırasında '
+              'toplam kaç molekül su açığa çıkar?',
           3 * x + p - 1,
           // Trigliserit başına 1, 2 ya da 4 su sayma, birini unutma, bir
           // fazla sayma.
-          [x + p - 1, 3 * x + p, 4 * x + p - 1, 3 * (x + p - 1), 2 * x + p - 1, 3 * x, p - 1],
+          [
+            x + p - 1,
+            3 * x + p,
+            4 * x + p - 1,
+            3 * (x + p - 1),
+            2 * x + p - 1,
+            3 * x,
+            p - 1,
+          ],
           'Bir trigliserit, 1 gliserol ile 3 yağ asidi arasında 3 ester bağı '
-          'kurulurken 3 su verir: 3 · $x = ${3 * x}. Polipeptitte $p − 1 = '
-          '${p - 1} su açığa çıkar. Toplam ${3 * x + p - 1} olur.',
+              'kurulurken 3 su verir: 3 · $x = ${3 * x}. Polipeptitte $p − 1 = '
+              '${p - 1} su açığa çıkar. Toplam ${3 * x + p - 1} olur.',
         );
       case 3:
         final p = 200 + 40 * b;
         return say(
           'Sindirim sırasında $x molekül trigliserit (nötr yağ) ile $p glikoz '
-          'biriminden oluşan bir glikojen molekülü yapı taşlarına kadar '
-          'hidroliz ediliyor. Bu olayda toplam kaç yapı taşı molekülü oluşur?',
+              'biriminden oluşan bir glikojen molekülü yapı taşlarına kadar '
+              'hidroliz ediliyor. Bu olayda toplam kaç yapı taşı molekülü oluşur?',
           4 * x + p,
           [3 * x + p, 3 * x + p - 1, 4 * x + p - 1, x + p],
           'Her trigliseritten 1 gliserol ve 3 yağ asidi, yani 4 molekül '
-          'oluşur: 4 · $x = ${4 * x}. Glikojenden $p glikoz oluşur. Toplam '
-          '${4 * x} + $p = ${4 * x + p} bulunur.',
+              'oluşur: 4 · $x = ${4 * x}. Glikojenden $p glikoz oluşur. Toplam '
+              '${4 * x} + $p = ${4 * x + p} bulunur.',
         );
       case 4:
         final p = 20 + 5 * a;
         return say(
           'Bir hücrede eşit sayıda amino asit içeren $y polipeptit zincirinin '
-          'sentezi sırasında toplam ${y * (p - 1)} molekül su açığa çıkıyor. '
-          'Bu zincirlerin her birinde kaç amino asit bulunur?',
+              'sentezi sırasında toplam ${y * (p - 1)} molekül su açığa çıkıyor. '
+              'Bu zincirlerin her birinde kaç amino asit bulunur?',
           p,
           // Bağ sayısını verme, bir fazla ya da eksik sayma, toplam suyu
           // verme, zincir sayısının bir fazlasına ya da eksiğine bölme.
           [
-            p - 1, p + 1, p - 2, y * (p - 1) ~/ (y + 1),
+            p - 1,
+            p + 1,
+            p - 2,
+            y * (p - 1) ~/ (y + 1),
             if (y * (p - 1) % (y - 1) == 0) y * (p - 1) ~/ (y - 1),
             y * (p - 1),
           ],
           'Bir zincir için açığa çıkan su ${y * (p - 1)} / $y = ${p - 1} '
-          'olur. Amino asit sayısı peptit bağı sayısından 1 fazladır: '
-          '${p - 1} + 1 = $p.',
+              'olur. Amino asit sayısı peptit bağı sayısından 1 fazladır: '
+              '${p - 1} + 1 = $p.',
         );
       case 5:
         final parca = a + 4, boy = 10 * (b + 3);
         return say(
           'Sindirim sırasında ${parca * boy} glikoz biriminden oluşan bir '
-          'nişasta molekülü, her biri $boy glikoz içeren parçalara ayrılacak '
-          'biçimde kısmen hidroliz ediliyor. Bu olayda kaç molekül su '
-          'harcanır?',
+              'nişasta molekülü, her biri $boy glikoz içeren parçalara ayrılacak '
+              'biçimde kısmen hidroliz ediliyor. Bu olayda kaç molekül su '
+              'harcanır?',
           parca - 1,
           // Parça sayısını verme, tam hidroliz sanma, parçalardaki bağları
           // sayma, bir fazla ya da eksik sayma.
           [parca, parca * boy - 1, parca * (boy - 1), parca + 1, parca - 2],
           'Molekül ${parca * boy} / $boy = $parca parçaya ayrılır. Bunun için '
-          '$parca − 1 = ${parca - 1} glikozit bağı koparılır ve her bağ için 1 '
-          'molekül su harcanır.',
+              '$parca − 1 = ${parca - 1} glikozit bağı koparılır ve her bağ için 1 '
+              'molekül su harcanır.',
         );
       case 6:
         final p = 200 + 12 * a;
         return say(
           'Bir hücrede toplam $p amino asit kullanılarak $y ayrı polipeptit '
-          'zinciri sentezleniyor. Bu sentezler sırasında toplam kaç peptit '
-          'bağı kurulur?',
+              'zinciri sentezleniyor. Bu sentezler sırasında toplam kaç peptit '
+              'bağı kurulur?',
           p - y,
           // Tek zincir sanma, amino asit sayısını verme, zincir sayısını
           // ekleme ya da iki kez çıkarma.
           [p - 1, p, p + y, p - y - 1, p - 2 * y],
           'Her zincirde peptit bağı sayısı amino asit sayısından 1 eksiktir; '
-          '$y zincir için toplam $p − $y = ${p - y} peptit bağı kurulur.',
+              '$y zincir için toplam $p − $y = ${p - y} peptit bağı kurulur.',
         );
       case 7:
         return say(
           'Bir hücrede $x molekül trigliserit (nötr yağ) ile $y molekül '
-          'disakkarit sentezleniyor. Bu sentezler sırasında toplam kaç molekül '
-          'su açığa çıkar?',
+              'disakkarit sentezleniyor. Bu sentezler sırasında toplam kaç molekül '
+              'su açığa çıkar?',
           3 * x + y,
           // Trigliserit başına 1, 2 ya da 4, disakkarit başına 2 su sayma;
           // disakkaritleri unutma.
           [x + y, 3 * x + 2 * y, 4 * x + 2 * y, 3 * (x + y), 2 * x + y, 3 * x],
           'Her trigliserit için 3, her disakkarit için 1 molekül su açığa '
-          'çıkar: 3 · $x + $y = ${3 * x + y}.',
+              'çıkar: 3 · $x + $y = ${3 * x + y}.',
         );
       case 8:
         final p1 = 300 + 40 * a, p2 = 205 + 50 * b; // biri çift, diğeri tek
         return say(
           'Karaciğerde biri $p1, diğeri $p2 glikoz biriminden oluşan iki '
-          'glikojen molekülü tamamen glikoza hidroliz ediliyor. Bu olayda '
-          'toplam kaç molekül su harcanır?',
+              'glikojen molekülü tamamen glikoza hidroliz ediliyor. Bu olayda '
+              'toplam kaç molekül su harcanır?',
           p1 + p2 - 2,
           // Bağ yerine glikoz sayma, tek molekül sanma, iki kez sayma, yalnız
           // bir molekülü hesaplama, ortalama alma.
           [
-            p1 + p2, p1 + p2 - 1, p1 + p2 + 2, 2 * (p1 + p2), p1 - 1, p2 - 1,
+            p1 + p2,
+            p1 + p2 - 1,
+            p1 + p2 + 2,
+            2 * (p1 + p2),
+            p1 - 1,
+            p2 - 1,
             (p1 + p2) ~/ 2 - 1,
           ],
           'Her molekülde glikozit bağı sayısı glikoz sayısından 1 eksiktir: '
-          '($p1 − 1) + ($p2 − 1) = ${p1 + p2 - 2}.',
+              '($p1 − 1) + ($p2 − 1) = ${p1 + p2 - 2}.',
         );
       default:
         return say(
           'Bir deney tüpünde ${x + 1} molekül dipeptit ile $y molekül tripeptit '
-          'tamamen amino asitlerine hidroliz ediliyor. Bu olayda toplam kaç '
-          'molekül su harcanır?',
+              'tamamen amino asitlerine hidroliz ediliyor. Bu olayda toplam kaç '
+              'molekül su harcanır?',
           x + 1 + 2 * y,
           // Bağ yerine amino asit sayma, tripeptitte 1 ya da 3 bağ sayma,
           // dipeptitleri ya da tripeptitleri unutma.
-          [x + 1 + y, 2 * (x + 1) + 3 * y, 2 * (x + 1) + 2 * y, x + 3 * y, 2 * y, x + 1],
+          [
+            x + 1 + y,
+            2 * (x + 1) + 3 * y,
+            2 * (x + 1) + 2 * y,
+            x + 3 * y,
+            2 * y,
+            x + 1,
+          ],
           'Bir dipeptitte 1, bir tripeptitte 2 peptit bağı vardır; her bağ '
-          'için 1 molekül su harcanır: ${x + 1} + 2 · $y = ${x + 1 + 2 * y}.',
+              'için 1 molekül su harcanır: ${x + 1} + 2 · $y = ${x + 1 + 2 * y}.',
         );
     }
   },
@@ -2466,8 +2712,8 @@ final _f13 = lmAile(
           yanit[sayi],
           [for (var j = 0; j < 4; j++) yanit[j], 'Yalnız K', 'K ve L'],
           'Hücre, derişimi kendi öz suyundan (%$x) yüksek olan çözeltilerde '
-          'su kaybeder. Bu koşulu sağlayan kap sayısı $sayi olduğundan yanıt '
-          '“${yanit[sayi]}” olur.',
+              'su kaybeder. Bu koşulu sağlayan kap sayısı $sayi olduğundan yanıt '
+              '“${yanit[sayi]}” olur.',
         );
       }
       final sayi = kaplar.where((k) => k < ic).length;
@@ -2477,8 +2723,8 @@ final _f13 = lmAile(
         yanit[sayi],
         [for (var j = 0; j < 4; j++) yanit[j], 'Yalnız M', 'L ve M'],
         'Hücre, derişimi kendi öz suyundan (%$x) düşük olan çözeltilerde su '
-        'alır. Bu koşulu sağlayan kap sayısı $sayi olduğundan yanıt '
-        '“${yanit[sayi]}” olur.',
+            'alır. Bu koşulu sağlayan kap sayısı $sayi olduğundan yanıt '
+            '“${yanit[sayi]}” olur.',
       );
     }
     final (kok, hiper, hipo, y1, y2) = _ozmozDurumlari[c];
@@ -2522,49 +2768,55 @@ final _f14 = lmAile(
       case 0:
         return ondalikli(
           'Oküleri $ok×, objektifi $ob× büyütmeli bir ışık mikroskobunda gerçek '
-          'boyu $boy mikrometre olan bir hücre inceleniyor. Hücrenin '
-          'görüntüsünün boyu kaç milimetre olur?',
+              'boyu $boy mikrometre olan bir hücre inceleniyor. Hücrenin '
+              'görüntüsünün boyu kaç milimetre olur?',
           goruntu,
-          uygun([goruntu * 10, boy * (ok + ob) / 1000, goruntu / 10, boy * ob / 1000, goruntu * 100]),
+          uygun([
+            goruntu * 10,
+            boy * (ok + ob) / 1000,
+            goruntu / 10,
+            boy * ob / 1000,
+            goruntu * 100,
+          ]),
           'Toplam büyütme $ok · $ob = $m olur. Görüntü boyu $boy · $m = '
-          '${boy * m} mikrometre, yani ${tr(goruntu)} mm bulunur ($birim).',
+              '${boy * m} mikrometre, yani ${tr(goruntu)} mm bulunur ($birim).',
           unit: 'mm',
           positive: true,
         );
       case 1:
         return sayisal(
           'Oküleri $ok×, objektifi $ob× büyütmeli bir ışık mikroskobunda bir '
-          'hücrenin görüntüsünün boyu ${tr(goruntu)} milimetre olarak '
-          'ölçülüyor. Bu hücrenin gerçek boyu kaç mikrometredir?',
+              'hücrenin görüntüsünün boyu ${tr(goruntu)} milimetre olarak '
+              'ölçülüyor. Bu hücrenin gerçek boyu kaç mikrometredir?',
           boy,
           [10 * boy, boy * ok, boy * ob, boy ~/ 10, 100 * boy],
           'Toplam büyütme $ok · $ob = $m olur. Görüntü boyu ${tr(goruntu)} mm '
-          '= ${boy * m} mikrometredir ($birim). Gerçek boy ${boy * m} / $m = '
-          '$boy mikrometre bulunur.',
+              '= ${boy * m} mikrometredir ($birim). Gerçek boy ${boy * m} / $m = '
+              '$boy mikrometre bulunur.',
           positive: true,
         );
       case 2:
         return sayisal(
           'Oküleri $ok× büyütmeli bir ışık mikroskobunda gerçek boyu $boy '
-          'mikrometre olan bir hücrenin görüntüsü ${tr(goruntu)} milimetre '
-          'boyunda görülüyor. Kullanılan objektifin büyütmesi kaç kattır?',
+              'mikrometre olan bir hücrenin görüntüsü ${tr(goruntu)} milimetre '
+              'boyunda görülüyor. Kullanılan objektifin büyütmesi kaç kattır?',
           ob,
           [...objektifler, m],
           'Görüntü boyu ${tr(goruntu)} mm = ${boy * m} mikrometredir ($birim). '
-          'Toplam büyütme ${boy * m} / $boy = $m, objektifin büyütmesi '
-          '$m / $ok = $ob olur.',
+              'Toplam büyütme ${boy * m} / $boy = $m, objektifin büyütmesi '
+              '$m / $ok = $ob olur.',
           positive: true,
         );
       case 3:
         return sayisal(
           'Objektifi $ob× büyütmeli bir ışık mikroskobunda gerçek boyu $boy '
-          'mikrometre olan bir hücrenin görüntüsü ${tr(goruntu)} milimetre '
-          'boyunda görülüyor. Kullanılan okülerin büyütmesi kaç kattır?',
+              'mikrometre olan bir hücrenin görüntüsü ${tr(goruntu)} milimetre '
+              'boyunda görülüyor. Kullanılan okülerin büyütmesi kaç kattır?',
           ok,
           const [5, 10, 15, 20],
           'Görüntü boyu ${tr(goruntu)} mm = ${boy * m} mikrometredir ($birim). '
-          'Toplam büyütme ${boy * m} / $boy = $m, okülerin büyütmesi '
-          '$m / $ob = $ok olur.',
+              'Toplam büyütme ${boy * m} / $boy = $m, okülerin büyütmesi '
+              '$m / $ob = $ok olur.',
           positive: true,
         );
       default:
@@ -2572,13 +2824,21 @@ final _f14 = lmAile(
         final yeni = boy * ok * ob2 / 1000;
         return ondalikli(
           'Oküleri $ok× büyütmeli bir ışık mikroskobunda $ob× objektifle '
-          'incelenen bir hücrenin görüntüsü ${tr(goruntu)} milimetre boyunda '
-          'görülüyor. Objektif $ob2× olanla değiştirildiğinde aynı hücrenin '
-          'görüntüsünün boyu kaç milimetre olur?',
+              'incelenen bir hücrenin görüntüsü ${tr(goruntu)} milimetre boyunda '
+              'görülüyor. Objektif $ob2× olanla değiştirildiğinde aynı hücrenin '
+              'görüntüsünün boyu kaç milimetre olur?',
           yeni,
-          uygun([goruntu * ob / ob2, goruntu * ob2, goruntu, goruntu * ok, yeni * 10, yeni / 10, yeni * 2]),
+          uygun([
+            goruntu * ob / ob2,
+            goruntu * ob2,
+            goruntu,
+            goruntu * ok,
+            yeni * 10,
+            yeni / 10,
+            yeni * 2,
+          ]),
           'Oküler değişmediğinden görüntü boyu objektifin büyütmesiyle doğru '
-          'orantılıdır: ${tr(goruntu)} · $ob2 / $ob = ${tr(yeni)} mm.',
+              'orantılıdır: ${tr(goruntu)} · $ob2 / $ob = ${tr(yeni)} mm.',
           unit: 'mm',
           positive: true,
         );
@@ -2614,129 +2874,204 @@ final _f15 = lmAile(
         'basamağındaki enerjinin %10 kadarı bir üst basamağa aktarılmaktadır.';
     final uretici = 'Zincirin üreticisi olan ${z[0]} basamağında';
     int enerji(int basamak) => e0 ~/ _us(10, basamak);
+    final no = _no(a, b, c);
+    AdvancedItem say(
+      String kok,
+      int anahtar,
+      List<int> hatalar,
+      String aciklama,
+    ) => _sayiDengeli(
+      kok,
+      anahtar,
+      hatalar,
+      aciklama,
+      no,
+      // Anahtardan küçük tipik hata az olduğundan bu sıra kurulabildiğinde
+      // öne alınır.
+      agirlik: const [1, 1, 1, 3],
+    );
     switch (c) {
       case 0:
-        return sayisal(
+        return say(
           '$giris $uretici $e0 kcal enerji bulunduğuna göre ${z[t]} '
-          'popülasyonuna aktarılan enerji kaç kcal olur?',
+              'popülasyonuna aktarılan enerji kaç kcal olur?',
           enerji(t),
-          [enerji(t - 1), enerji(t) ~/ 10, e0 * t ~/ 10, enerji(t) * 100, e0 ~/ (10 * t)],
+          // Bir ya da iki aktarım eksik ya da fazla sayma, 10'a bölmek
+          // yerine aktarım sayısıyla çarpma ya da bölme.
+          [
+            enerji(t - 1),
+            enerji(t) ~/ 10,
+            e0 * t ~/ 10,
+            enerji(t) * 100,
+            e0 ~/ (10 * t),
+            enerji(t) ~/ 100,
+          ],
           'Enerji her basamakta 10 kat azalır. Üreticiden ${z[t]} basamağına '
-          '$t aktarım olduğundan enerji $e0 / 10${_ust(t)} = ${enerji(t)} kcal '
-          'olur.',
-          positive: true,
+              '$t aktarım olduğundan enerji $e0 / 10${_ust(t)} = ${enerji(t)} kcal '
+              'olur.',
         );
       case 1:
-        return sayisal(
+        return say(
           '$giris Bu zincirde ${z[t]} popülasyonuna aktarılan enerji '
-          '${enerji(t)} kcal olduğuna göre zincirin üreticisi olan ${z[0]} '
-          'basamağındaki enerji kaç kcal olur?',
+              '${enerji(t)} kcal olduğuna göre zincirin üreticisi olan ${z[0]} '
+              'basamağındaki enerji kaç kcal olur?',
           e0,
-          [e0 ~/ 10, e0 * 10, enerji(t) * 10 * t, enerji(t) * 10, e0 ~/ 100],
+          // Bir ya da iki aktarım eksik ya da fazla sayma, 10 ile aktarım
+          // sayısını çarpma.
+          [
+            e0 ~/ 10,
+            e0 * 10,
+            enerji(t) * 10 * t,
+            enerji(t) * 10,
+            e0 ~/ 100,
+            e0 * 100,
+            enerji(t) * 100 * t,
+          ],
           'Üreticiden ${z[t]} basamağına $t aktarım vardır; her aktarımda '
-          'enerji 10 kat azaldığından üreticideki enerji ${enerji(t)} · '
-          '10${_ust(t)} = $e0 kcal olur.',
-          positive: true,
+              'enerji 10 kat azaldığından üreticideki enerji ${enerji(t)} · '
+              '10${_ust(t)} = $e0 kcal olur.',
         );
       case 2:
         final (s, u) = const [(1, 3), (2, 4), (1, 4), (1, 2)][v];
-        return sayisal(
+        return say(
           '$giris Bu zincirde ${z[s]} popülasyonundaki enerji ${enerji(s)} '
-          'kcal olduğuna göre ${z[u]} popülasyonuna aktarılan enerji kaç kcal '
-          'olur?',
+              'kcal olduğuna göre ${z[u]} popülasyonuna aktarılan enerji kaç kcal '
+              'olur?',
           enerji(u),
-          [enerji(u) * 10, enerji(u) * 100, enerji(s) ~/ 10, enerji(s) * 9 ~/ 10, enerji(u) ~/ 10],
+          // Aktarım sayısını yanlış sayma, kalan %90'ı aktarılan sanma.
+          [
+            enerji(u) * 10,
+            enerji(u) * 100,
+            enerji(s) ~/ 10,
+            enerji(s) * 9 ~/ 10,
+            enerji(u) ~/ 10,
+            enerji(u) ~/ 100,
+          ],
           'Bu iki basamak arasında ${u - s} aktarım vardır: ${enerji(s)} / '
-          '10${_ust(u - s)} = ${enerji(u)} kcal.',
-          positive: true,
+              '10${_ust(u - s)} = ${enerji(u)} kcal.',
         );
       case 3:
-        return sayisal(
+        return say(
           '$giris $uretici $e0 kcal enerji bulunduğuna göre bu enerjinin kaç '
-          'kcal kadarı ${z[t]} popülasyonuna ulaşmadan zincirden ayrılır?',
+              'kcal kadarı ${z[t]} popülasyonuna ulaşmadan zincirden ayrılır?',
           e0 - enerji(t),
-          [enerji(t), e0 * 9 ~/ 10, e0 - enerji(t) ~/ 10, e0 * (10 - t) ~/ 10, e0 * 99 ~/ 100, e0 * 8 ~/ 10],
+          // Ulaşan enerjiyi ya da tümünü verme, yalnız ilk aktarımı sayma,
+          // aktarım sayısını yanlış alma.
+          [
+            enerji(t),
+            e0 * 9 ~/ 10,
+            e0 - enerji(t) ~/ 10,
+            e0 * (10 - t) ~/ 10,
+            e0 * 99 ~/ 100,
+            e0 * 8 ~/ 10,
+            e0,
+          ],
           'Sorulan basamağa (${z[t]}) ulaşan enerji $e0 / 10${_ust(t)} = '
-          '${enerji(t)} kcal olur. Ulaşmayan enerji $e0 − ${enerji(t)} = '
-          '${e0 - enerji(t)} kcal bulunur.',
-          positive: true,
+              '${enerji(t)} kcal olur. Ulaşmayan enerji $e0 − ${enerji(t)} = '
+              '${e0 - enerji(t)} kcal bulunur.',
         );
       case 4:
         final kg = a + 2;
-        return sayisal(
+        return say(
           '$giris Biyokütle de aynı oranda aktarıldığına göre ${z[t]} '
-          'popülasyonunun biyokütlesinin $kg kg artması için ${z[0]} '
-          'basamağından en az kaç kg besin tüketilmelidir?',
+              'popülasyonunun biyokütlesinin $kg kg artması için ${z[0]} '
+              'basamağından en az kaç kg besin tüketilmelidir?',
           kg * _us(10, t),
-          [kg * 10 * t, kg * _us(10, t + 1), kg * _us(10, t - 1), kg * _us(10, t) ~/ 2, kg * 100 * t],
+          [
+            kg * 10 * t,
+            kg * _us(10, t + 1),
+            kg * _us(10, t - 1),
+            kg * _us(10, t) ~/ 2,
+            kg * 100 * t,
+          ],
           'Her basamakta biyokütlenin %10 kadarı aktarıldığından üreticiden '
-          '${z[t]} basamağına $t aktarım için $kg · 10${_ust(t)} = '
-          '${kg * _us(10, t)} kg besin gerekir.',
-          positive: true,
+              '${z[t]} basamağına $t aktarım için $kg · 10${_ust(t)} = '
+              '${kg * _us(10, t)} kg besin gerekir.',
         );
       case 5:
         final (s, u) = const [(1, 2), (2, 3), (3, 4), (1, 3)][v];
-        return sayisal(
+        return say(
           '$giris $uretici $e0 kcal enerji bulunduğuna göre ${z[s]} ve '
-          '${z[u]} popülasyonlarına aktarılan enerjilerin toplamı kaç kcal '
-          'olur?',
+              '${z[u]} popülasyonlarına aktarılan enerjilerin toplamı kaç kcal '
+              'olur?',
           enerji(s) + enerji(u),
-          [enerji(s), 2 * enerji(u), enerji(s - 1) + enerji(u - 1), enerji(s) + enerji(u) ~/ 10, 2 * enerji(s)],
+          // Birini unutma ya da ikisini eşit sanma, aktarım sayısını yanlış
+          // sayma.
+          [
+            enerji(s),
+            2 * enerji(u),
+            enerji(s - 1) + enerji(u - 1),
+            enerji(s) + enerji(u) ~/ 10,
+            2 * enerji(s),
+            (enerji(s) + enerji(u)) * 10,
+          ],
           'Aktarılan enerji ${z[s]} basamağı için $e0 / 10${_ust(s)} = '
-          '${enerji(s)} kcal, ${z[u]} basamağı için $e0 / 10${_ust(u)} = '
-          '${enerji(u)} kcal olur. Toplam '
-          '${enerji(s) + enerji(u)} kcal olur.',
-          positive: true,
+              '${enerji(s)} kcal, ${z[u]} basamağı için $e0 / 10${_ust(u)} = '
+              '${enerji(u)} kcal olur. Toplam '
+              '${enerji(s) + enerji(u)} kcal olur.',
         );
       case 6:
         final (s, u) = const [(1, 2), (2, 3), (3, 4), (1, 3)][v];
-        return sayisal(
+        return say(
           '$giris $uretici $e0 kcal enerji bulunduğuna göre ${z[s]} '
-          'popülasyonuna aktarılan enerji, ${z[u]} popülasyonuna aktarılan '
-          'enerjiden kaç kcal fazladır?',
+              'popülasyonuna aktarılan enerji, ${z[u]} popülasyonuna aktarılan '
+              'enerjiden kaç kcal fazladır?',
           enerji(s) - enerji(u),
-          [enerji(s), enerji(s) + enerji(u), enerji(u) * 10, enerji(s - 1) - enerji(u - 1), enerji(u)],
+          // Birinin enerjisini verme, toplama, aktarım sayısını yanlış
+          // sayma.
+          [
+            enerji(s),
+            enerji(s) + enerji(u),
+            enerji(u) * 10,
+            enerji(s - 1) - enerji(u - 1),
+            enerji(u),
+            (enerji(s) - enerji(u)) ~/ 10,
+          ],
           'Aktarılan enerji ${z[s]} basamağı için $e0 / 10${_ust(s)} = '
-          '${enerji(s)} kcal, ${z[u]} basamağı için $e0 / 10${_ust(u)} = '
-          '${enerji(u)} kcal olur. Fark '
-          '${enerji(s) - enerji(u)} kcal olur.',
-          positive: true,
+              '${enerji(s)} kcal, ${z[u]} basamağı için $e0 / 10${_ust(u)} = '
+              '${enerji(u)} kcal olur. Fark '
+              '${enerji(s) - enerji(u)} kcal olur.',
         );
       case 7:
         final gunluk = e0 ~/ 10; // üreticilerin günde bağladığı enerji
         final ay = gunluk * 30 ~/ _us(10, t);
-        return sayisal(
+        return say(
           '$giris Zincirin üreticisi olan ${z[0]} basamağı günde ortalama '
-          '$gunluk kcal enerji bağlamaktadır. Buna göre 30 günde ${z[t]} '
-          'popülasyonuna aktarılan toplam enerji kaç kcal olur?',
+              '$gunluk kcal enerji bağlamaktadır. Buna göre 30 günde ${z[t]} '
+              'popülasyonuna aktarılan toplam enerji kaç kcal olur?',
           ay,
           [gunluk ~/ _us(10, t), ay * 10, ay ~/ 10, gunluk * 3 * t, ay * 100],
           'Üreticiler 30 günde $gunluk · 30 = ${gunluk * 30} kcal enerji '
-          'bağlar. Üreticiden ${z[t]} basamağına $t aktarım olduğundan '
-          '${gunluk * 30} / 10${_ust(t)} = $ay kcal aktarılır.',
-          positive: true,
+              'bağlar. Üreticiden ${z[t]} basamağına $t aktarım olduğundan '
+              '${gunluk * 30} / 10${_ust(t)} = $ay kcal aktarılır.',
         );
       case 8:
-        return sayisal(
+        return say(
           '$giris Biyokütle de aynı oranda aktarıldığına göre zincirin '
-          'üreticisi olan ${z[0]} basamağındaki $e0 kg biyokütle, ${z[t]} '
-          'basamağında en çok kaç kg biyokütle oluşmasını sağlar?',
+              'üreticisi olan ${z[0]} basamağındaki $e0 kg biyokütle, ${z[t]} '
+              'basamağında en çok kaç kg biyokütle oluşmasını sağlar?',
           enerji(t),
-          [enerji(t - 1), enerji(t) ~/ 10, e0 * t ~/ 10, enerji(t) * 100, e0 ~/ (10 * t)],
+          [
+            enerji(t - 1),
+            enerji(t) ~/ 10,
+            e0 * t ~/ 10,
+            enerji(t) * 100,
+            e0 ~/ (10 * t),
+            enerji(t) ~/ 100,
+          ],
           'Biyokütle her basamakta 10 kat azalır. Üreticiden ${z[t]} '
-          'basamağına $t aktarım olduğundan $e0 / 10${_ust(t)} = ${enerji(t)} '
-          'kg biyokütle oluşur.',
-          positive: true,
+              'basamağına $t aktarım olduğundan $e0 / 10${_ust(t)} = ${enerji(t)} '
+              'kg biyokütle oluşur.',
         );
       default:
         return secenekli(
           '$giris $uretici $e0 kcal enerji bulunmaktadır. Bu zincirde '
-          '${enerji(t)} kcal enerji hangi canlının popülasyonuna aktarılır?',
+              '${enerji(t)} kcal enerji hangi canlının popülasyonuna aktarılır?',
           z[t],
           [for (var j = 1; j < 5; j++) z[j]],
           'Üreticideki enerji $e0 kcal, aranan enerji ${enerji(t)} kcal '
-          'olduğundan oran 10${_ust(t)} olur; bu da $t aktarım demektir. '
-          'Üreticiden sonraki $t. basamakta ${z[t]} bulunur.',
+              'olduğundan oran 10${_ust(t)} olur; bu da $t aktarım demektir. '
+              'Üreticiden sonraki $t. basamakta ${z[t]} bulunur.',
         );
     }
   },
@@ -2764,13 +3099,32 @@ final _f16 = lmAile(
     final yuzde = 2 * (a + 3); // başlangıcın %1 kadarı
     final n0 = 100 * yuzde;
     final dy = 12 + 2 * (b % 5); // doğum yüzdesi
-    final (oy, gy, ay) = const [(5, 3, 2), (8, 2, 4), (6, 4, 1), (9, 1, 3)][b ~/ 5];
+    final (oy, gy, ay) = const [
+      (5, 3, 2),
+      (8, 2, 4),
+      (6, 4, 1),
+      (9, 1, 3),
+    ][b ~/ 5];
     final dogum = yuzde * dy, olum = yuzde * oy;
     final gelen = yuzde * gy, giden = yuzde * ay;
     final net = dogum + gelen - olum - giden, netY = dy + gy - oy - ay;
     final son = n0 + net;
     final alan = (a + 3) * (1 + a % 2); // km²
     final ortam = sec(_populasyonlar, a + b);
+    final no = _no(a, b, c);
+    AdvancedItem say(
+      String kok,
+      int anahtar,
+      List<int> hatalar,
+      String aciklama,
+    ) => _sayiDengeli(
+      kok,
+      anahtar,
+      hatalar,
+      aciklama,
+      no,
+      agirlik: const [1, 1, 1, 2],
+    );
     final olaylar =
         'Yıl içinde $dogum birey doğmuş, $olum birey ölmüş, $gelen birey '
         'dışarıdan göç ederek popülasyona katılmış ve $giden birey göç ederek '
@@ -2781,105 +3135,195 @@ final _f16 = lmAile(
         '$olum − $giden = $net birey olur.';
     switch (c) {
       case 0:
-        return sayisal(
+        return say(
           '$tam Yıl sonunda popülasyonda kaç birey bulunur?',
           son,
-          [n0 + dogum - olum, n0 + dogum + gelen, n0 - net, n0 + dogum + gelen + olum + giden],
+          // Göçleri ya da ölüm ve dışa göçü unutma, işaret hatası, bütün
+          // değerleri toplama, değişimi ya da yıl başını verme, yalnız
+          // doğumu ekleme.
+          [
+            n0 + dogum - olum,
+            n0 + dogum + gelen,
+            n0 - net,
+            n0 + dogum + gelen + olum + giden,
+            net,
+            n0 + dogum,
+          ],
           '$denklem Yıl sonundaki büyüklük $n0 + $net = $son olur.',
-          positive: true,
         );
       case 1:
-        return sayisal(
+        return say(
           '$tam Popülasyondaki birey sayısı yıl içinde kaç artmıştır?',
           net,
-          [dogum - olum, dogum + gelen, dogum + gelen + olum + giden, dogum - olum - gelen + giden],
+          // Göçleri unutma, kayıpları unutma, bütün değerleri toplama, göç
+          // yönlerini karıştırma, yalnız göçleri ya da bir göçü alma.
+          [
+            dogum - olum,
+            dogum + gelen,
+            dogum + gelen + olum + giden,
+            dogum - olum - gelen + giden,
+            gelen - giden,
+            dogum - olum - giden,
+            dogum + gelen - olum,
+          ],
           denklem,
-          positive: true,
         );
       case 2:
-        return sayisal(
+        return say(
           '$tam Popülasyonun yıllık büyüme hızı, yıl başındaki büyüklüğün '
-          'yüzde kaçıdır?',
+              'yüzde kaçıdır?',
           netY,
-          [dy - oy, dy + gy, dy, netY * 10, dy + gy + oy + ay],
+          // Göçleri ya da kayıpları unutma, yalnız doğumu alma, yüzdeyi
+          // 10 ile çarpma, bütün oranları toplama, bir göçü unutma.
+          [
+            dy - oy,
+            dy + gy,
+            dy,
+            netY * 10,
+            dy + gy + oy + ay,
+            dy - oy - ay,
+            dy + gy - oy,
+            dy - oy - gy - ay,
+          ],
           '$denklem Büyüme hızı $net / $n0 · 100 = $netY olarak bulunur.',
-          positive: true,
         );
       case 3:
-        return sayisal(
+        return say(
           '$tam Popülasyon $alan km² büyüklüğünde bir alanda yaşadığına göre '
-          'yıl sonundaki popülasyon yoğunluğu km² başına kaç birey olur?',
+              'yıl sonundaki popülasyon yoğunluğu km² başına kaç birey olur?',
           son ~/ alan,
-          [n0 ~/ alan, net ~/ alan, (n0 + dogum - olum) ~/ alan, son ~/ alan * 2],
+          // Yıl başını ya da değişimi kullanma, göçleri unutma, iki katını
+          // alma, alana bölmeyi unutma, kayıpları unutma.
+          [
+            n0 ~/ alan,
+            net ~/ alan,
+            (n0 + dogum - olum) ~/ alan,
+            son ~/ alan * 2,
+            son,
+            (n0 + dogum + gelen) ~/ alan,
+          ],
           '$denklem Yıl sonunda $n0 + $net = $son birey vardır. Yoğunluk '
-          '$son / $alan = ${son ~/ alan} birey/km² olur.',
-          positive: true,
+              '$son / $alan = ${son ~/ alan} birey/km² olur.',
         );
       case 4:
-        return sayisal(
+        return say(
           '$ortam yılın başında $n0 birey vardır. Yıl içinde $dogum birey '
-          'doğmuş, $gelen birey dışarıdan göç ederek popülasyona katılmış ve '
-          '$giden birey göç ederek popülasyondan ayrılmıştır. Yıl sonunda '
-          '$son birey sayıldığına göre yıl içinde kaç birey ölmüştür?',
+              'doğmuş, $gelen birey dışarıdan göç ederek popülasyona katılmış ve '
+              '$giden birey göç ederek popülasyondan ayrılmıştır. Yıl sonunda '
+              '$son birey sayıldığına göre yıl içinde kaç birey ölmüştür?',
           olum,
-          [olum + giden, n0 + dogum - son, son - n0, olum + gelen, dogum - olum],
+          // Dışa göçü ya da içe göçü yanlış yönde katma, değişimi verme,
+          // doğumdan çıkarma.
+          [
+            olum + giden,
+            n0 + dogum - son,
+            son - n0,
+            olum + gelen,
+            dogum - olum,
+            olum - gelen,
+            olum - giden,
+          ],
           'Ölüm = yıl başı + doğum + içe göç − dışa göç − yıl sonu = $n0 + '
-          '$dogum + $gelen − $giden − $son = $olum birey olur.',
-          positive: true,
+              '$dogum + $gelen − $giden − $son = $olum birey olur.',
         );
       case 5:
-        return sayisal(
+        return say(
           '$ortam yılın başında $n0 birey vardır. Yıl içinde $dogum birey '
-          'doğmuş, $olum birey ölmüş ve $giden birey göç ederek popülasyondan '
-          'ayrılmıştır. Yıl sonunda $son birey sayıldığına göre yıl içinde '
-          'dışarıdan göç ederek popülasyona kaç birey katılmıştır?',
+              'doğmuş, $olum birey ölmüş ve $giden birey göç ederek popülasyondan '
+              'ayrılmıştır. Yıl sonunda $son birey sayıldığına göre yıl içinde '
+              'dışarıdan göç ederek popülasyona kaç birey katılmıştır?',
           gelen,
-          [son - n0, gelen + giden, son - n0 - dogum + olum, dogum - olum, gelen + olum],
+          // Değişimi verme, dışa göçü yanlış yönde katma, bir değeri
+          // unutma, doğum ve ölümü karıştırma.
+          [
+            son - n0,
+            gelen + giden,
+            son - n0 - dogum + olum,
+            dogum - olum,
+            gelen + olum,
+            son - n0 - dogum + giden,
+            son - n0 + olum + giden,
+          ],
           'İçe göç = yıl sonu − yıl başı − doğum + ölüm + dışa göç = $son − '
-          '$n0 − $dogum + $olum + $giden = $gelen birey olur.',
-          positive: true,
+              '$n0 − $dogum + $olum + $giden = $gelen birey olur.',
         );
       case 6:
-        return sayisal(
+        return say(
           '$ortam bir yıl boyunca sayım yapılmıştır. $olaylar Yıl sonunda '
-          '$son birey sayıldığına göre yılın başında popülasyonda kaç birey '
-          'vardı?',
+              '$son birey sayıldığına göre yılın başında popülasyonda kaç birey '
+              'vardı?',
           n0,
-          [son + net, son - dogum + olum, son - dogum - gelen, n0 + giden],
+          // Değişimi ekleme, göçleri unutma, kayıpları unutma, yalnız doğumu
+          // ya da içe göçü çıkarma.
+          [
+            son + net,
+            son - dogum + olum,
+            son - dogum - gelen,
+            n0 + giden,
+            son - dogum,
+            son - gelen,
+          ],
           '$denklem Yıl başındaki büyüklük $son − $net = $n0 olur.',
-          positive: true,
         );
       case 7:
-        return sayisal(
+        return say(
           '$tam Popülasyon $alan km² büyüklüğünde bir alanda yaşadığına göre '
-          'popülasyon yoğunluğu yıl içinde km² başına kaç birey artmıştır?',
+              'popülasyon yoğunluğu yıl içinde km² başına kaç birey artmıştır?',
           net ~/ alan,
-          [son ~/ alan, n0 ~/ alan, (dogum - olum) ~/ alan, (dogum + gelen) ~/ alan],
+          // Yıl sonu ya da yıl başı yoğunluğunu verme, göçleri ya da içe
+          // göçü unutma, kayıpları unutma.
+          [
+            son ~/ alan,
+            n0 ~/ alan,
+            (dogum - olum) ~/ alan,
+            (dogum + gelen) ~/ alan,
+            (dogum - olum - giden) ~/ alan,
+            (dogum - olum - gelen + giden) ~/ alan,
+          ],
           '$denklem Yoğunluktaki artış $net / $alan = ${net ~/ alan} '
-          'birey/km² olur.',
-          positive: true,
+              'birey/km² olur.',
         );
       case 8:
-        return sayisal(
+        return say(
           '$tam Göçler olmasaydı popülasyonun yıllık büyüme hızı, yıl '
-          'başındaki büyüklüğün yüzde kaçı olurdu?',
+              'başındaki büyüklüğün yüzde kaçı olurdu?',
           dy - oy,
-          [netY, dy, dy + oy, dy - oy + gy, (dy - oy) * 10],
+          // Göçleri katma, yalnız doğumu alma, ölümü ekleme, yüzdeyi 10 ile
+          // çarpma, dışa göçü de çıkarma, ölüm oranını verme.
+          [
+            netY,
+            dy,
+            dy + oy,
+            dy - oy + gy,
+            (dy - oy) * 10,
+            dy - oy - ay,
+            oy,
+            dy - oy - gy - ay,
+          ],
           'Göçler olmadığında değişim doğum − ölüm = $dogum − $olum = '
-          '${dogum - olum} birey olur. Büyüme hızı ${dogum - olum} / $n0 · '
-          '100 = ${dy - oy} bulunur.',
-          positive: true,
+              '${dogum - olum} birey olur. Büyüme hızı ${dogum - olum} / $n0 · '
+              '100 = ${dy - oy} bulunur.',
         );
       default:
-        return sayisal(
+        return say(
           '$tam Yıl sonunda popülasyon yoğunluğu km² başına ${son ~/ alan} '
-          'birey olarak hesaplandığına göre popülasyon kaç km² büyüklüğünde '
-          'bir alanda yaşamaktadır?',
+              'birey olarak hesaplandığına göre popülasyon kaç km² büyüklüğünde '
+              'bir alanda yaşamaktadır?',
           alan,
-          [n0 ~/ (son ~/ alan), alan * 2, alan + 1, alan + 3, alan * 10],
+          // Yıl başı sayısını kullanma, iki katını ya da yarısını alma,
+          // işlem kayması, 10 ile çarpma.
+          [
+            n0 ~/ (son ~/ alan),
+            alan * 2,
+            alan + 1,
+            alan + 3,
+            alan * 10,
+            alan - 1,
+            alan - 3,
+            if (alan.isEven) alan ~/ 2,
+          ],
           '$denklem Yıl sonunda $n0 + $net = $son birey vardır. Alan '
-          '$son / ${son ~/ alan} = $alan km² olur.',
-          positive: true,
+              '$son / ${son ~/ alan} = $alan km² olur.',
         );
     }
   },
@@ -2958,8 +3402,29 @@ final _f17 = lmAile(
     final soluk = 12 + a, hacim = havaTabani + 10 * b; // soluk/dk, mL
     final hava = soluk * hacim / 1000; // L/dk
     final buBas = _buyukBasla(bu), bununBas = _buyukBasla(bunun);
-    Iterable<double> uygun(List<double> adaylar) =>
-        adaylar.where((v) => v > 0 && _ikiBasamakli(v));
+    final no = _no(a, b, c);
+    // Litre cinsinden yanıtlarda komşu değerlerin uzaklığı.
+    double adim(double x) => x < 10 ? 0.5 : (x < 100 ? 5 : 50);
+    AdvancedItem litre(
+      String kok,
+      double anahtar,
+      List<double> hatalar,
+      String aciklama,
+    ) => _ondalikDengeli(
+      kok,
+      anahtar,
+      hatalar,
+      aciklama,
+      no,
+      adim: adim(anahtar),
+      birim: 'L',
+    );
+    AdvancedItem say(
+      String kok,
+      int anahtar,
+      List<int> hatalar,
+      String aciklama,
+    ) => _sayiDengeli(kok, anahtar, hatalar, aciklama, no);
     const debiTanim =
         'Kalp debisi, kalbin bir dakikada pompaladığı kan miktarıdır: nabız · '
         'atım hacmi.';
@@ -2967,72 +3432,100 @@ final _f17 = lmAile(
         'Dakikadaki solunum hacmi = soluk sayısı · bir solukta alınan hava.';
     switch (c) {
       case 0:
-        return ondalikli(
+        return litre(
           '$kisinin nabzı dakikada $nabiz atım, kalbinin bir kasılmada '
-          'pompaladığı kan miktarı (atım hacmi) $atim mL olarak ölçülüyor. '
-          '$bununBas kalp debisi dakikada kaç litredir?',
+              'pompaladığı kan miktarı (atım hacmi) $atim mL olarak ölçülüyor. '
+              '$bununBas kalp debisi dakikada kaç litredir?',
           debi,
-          uygun([debi * 10, debi / 10, debi * 2, debi / 2, debi * 100]),
+          // mL → L çevirmesinde 10, 100 ya da 10000'e bölme; iki katını ya
+          // da yarısını alma.
+          [debi * 10, debi / 10, debi * 2, debi / 2, debi * 100, debi / 100],
           '$debiTanim $nabiz · $atim = ${nabiz * atim} mL, yani ${tr(debi)} L '
-          'olur.',
-          unit: 'L',
-          positive: true,
+              'olur.',
         );
       case 1:
-        return sayisal(
+        return say(
           '$kisinin kalp debisi dakikada ${tr(debi)} litre, nabzı dakikada '
-          '$nabiz atım olarak ölçülüyor. $bununBas kalbinin bir kasılmada '
-          'pompaladığı kan miktarı (atım hacmi) kaç mL olur?',
+              '$nabiz atım olarak ölçülüyor. $bununBas kalbinin bir kasılmada '
+              'pompaladığı kan miktarı (atım hacmi) kaç mL olur?',
           atim,
-          [atim * 10, atim + 10, atim - 10, atim * 2, atim + 20],
+          // L → mL çevirmesinde kayma, iki katını ya da yarısını alma,
+          // işlem kayması.
+          [
+            atim * 10,
+            atim + 10,
+            atim - 10,
+            atim * 2,
+            atim + 20,
+            atim - 20,
+            atim ~/ 2,
+          ],
           '$debiTanim Atım hacmi ${nabiz * atim} mL / $nabiz = $atim mL '
-          'bulunur (${tr(debi)} L = ${nabiz * atim} mL).',
-          positive: true,
+              'bulunur (${tr(debi)} L = ${nabiz * atim} mL).',
         );
       case 2:
-        return sayisal(
+        return say(
           '$kisinin kalp debisi dakikada ${tr(debi)} litre, kalbinin bir '
-          'kasılmada pompaladığı kan miktarı (atım hacmi) $atim mL olarak '
-          'ölçülüyor. $bununBas nabzı dakikada kaç atımdır?',
+              'kasılmada pompaladığı kan miktarı (atım hacmi) $atim mL olarak '
+              'ölçülüyor. $bununBas nabzı dakikada kaç atımdır?',
           nabiz,
-          [nabiz + 10, nabiz - 10, nabiz + 20, nabiz * 2, nabiz - 20],
+          // İşlem kayması, iki katını ya da yarısını alma.
+          [
+            nabiz + 10,
+            nabiz - 10,
+            nabiz + 20,
+            nabiz * 2,
+            nabiz - 20,
+            nabiz ~/ 2,
+          ],
           '$debiTanim Nabız ${nabiz * atim} mL / $atim mL = $nabiz atım '
-          'bulunur (${tr(debi)} L = ${nabiz * atim} mL).',
-          positive: true,
+              'bulunur (${tr(debi)} L = ${nabiz * atim} mL).',
         );
       case 3:
-        return ondalikli(
+        return litre(
           '$kisi dakikada $soluk kez soluk alıp veriyor ve her solukta '
-          'akciğerlerine $hacim mL hava alıyor. $bununBas akciğerlerine bir '
-          'dakikada giren hava kaç litredir?',
+              'akciğerlerine $hacim mL hava alıyor. $bununBas akciğerlerine bir '
+              'dakikada giren hava kaç litredir?',
           hava,
-          uygun([hava * 10, hava / 10, hava * 2, hava / 2, hava * 100]),
+          [hava * 10, hava / 10, hava * 2, hava / 2, hava * 100, hava / 100],
           '$havaTanim $soluk · $hacim = ${soluk * hacim} mL, yani ${tr(hava)} '
-          'L olur.',
-          unit: 'L',
-          positive: true,
+              'L olur.',
         );
       case 4:
-        return sayisal(
+        return say(
           '$kisinin akciğerlerine bir dakikada ${tr(hava)} litre hava giriyor. '
-          '$buBas dakikada $soluk kez soluk alıp verdiğine göre her solukta '
-          'akciğerlerine kaç mL hava alır?',
+              '$buBas dakikada $soluk kez soluk alıp verdiğine göre her solukta '
+              'akciğerlerine kaç mL hava alır?',
           hacim,
-          [hacim * 10, hacim ~/ 10, hacim + 50, hacim - 50, hacim * 2],
+          [
+            hacim * 10,
+            hacim ~/ 10,
+            hacim + 50,
+            hacim - 50,
+            hacim * 2,
+            hacim ~/ 2,
+            hacim - 100,
+          ],
           '$havaTanim Bir solukta alınan hava ${soluk * hacim} mL / $soluk = '
-          '$hacim mL bulunur (${tr(hava)} L = ${soluk * hacim} mL).',
-          positive: true,
+              '$hacim mL bulunur (${tr(hava)} L = ${soluk * hacim} mL).',
         );
       case 5:
-        return sayisal(
+        return say(
           '$kisinin akciğerlerine bir dakikada ${tr(hava)} litre hava giriyor. '
-          '$buBas her solukta $hacim mL hava aldığına göre dakikada kaç kez '
-          'soluk alıp verir?',
+              '$buBas her solukta $hacim mL hava aldığına göre dakikada kaç kez '
+              'soluk alıp verir?',
           soluk,
-          [soluk + 2, soluk - 2, soluk * 2, soluk + 4, soluk + 6],
+          [
+            soluk + 2,
+            soluk - 2,
+            soluk * 2,
+            soluk + 4,
+            soluk + 6,
+            soluk - 4,
+            if (soluk.isEven) soluk ~/ 2,
+          ],
           '$havaTanim Soluk sayısı ${soluk * hacim} mL / $hacim mL = $soluk '
-          'bulunur (${tr(hava)} L = ${soluk * hacim} mL).',
-          positive: true,
+              'bulunur (${tr(hava)} L = ${soluk * hacim} mL).',
         );
       case 6:
         // Dinlenme: nabız 60–80, debi 4–7,2 L. Koşu: nabız 120–180, atım
@@ -3040,51 +3533,51 @@ final _f17 = lmAile(
         final n1 = 60 + 5 * (a % 5), s1 = _dinlenmeAtimi[a % 5] + 2 * b;
         final n2 = n1 + 60 + 10 * (a ~/ 5), s2 = s1 + 30;
         final d1 = n1 * s1, d2 = n2 * s2; // mL/dk
-        return ondalikli(
+        return litre(
           'Bir kişinin dinlenirken nabzı dakikada $n1 atım, atım hacmi $s1 '
-          'mL; koşarken nabzı dakikada $n2 atım, atım hacmi $s2 mL olarak '
-          'ölçülüyor. Bu kişinin kalp debisi koşarken dinlenme durumuna göre '
-          'dakikada kaç litre artmıştır?',
+              'mL; koşarken nabzı dakikada $n2 atım, atım hacmi $s2 mL olarak '
+              'ölçülüyor. Bu kişinin kalp debisi koşarken dinlenme durumuna göre '
+              'dakikada kaç litre artmıştır?',
           (d2 - d1) / 1000,
-          uygun([
+          // Koşu ya da dinlenme debisini verme, farkların çarpımını alma,
+          // birim çevirmede kayma, toplama, yalnız nabız ya da yalnız atım
+          // hacmi değişimini hesaba katma.
+          [
             d2 / 1000,
             d1 / 1000,
             (n2 - n1) * (s2 - s1) / 1000,
             (d2 - d1) / 100,
             (d2 + d1) / 1000,
-          ]),
+            (d2 - d1) / 10000,
+            (n2 - n1) * s1 / 1000,
+            n2 * (s2 - s1) / 1000,
+          ],
           '$debiTanim Dinlenirken $n1 · $s1 = $d1 mL, koşarken $n2 · $s2 = '
-          '$d2 mL olur. Artış ${d2 - d1} mL, yani ${tr((d2 - d1) / 1000)} L '
-          'bulunur.',
-          unit: 'L',
-          positive: true,
+              '$d2 mL olur. Artış ${d2 - d1} mL, yani ${tr((d2 - d1) / 1000)} L '
+              'bulunur.',
         );
       case 7:
-        return ondalikli(
+        return litre(
           '$kisinin nabzı dakikada $nabiz atım, kalbinin bir kasılmada '
-          'pompaladığı kan miktarı (atım hacmi) $atim mL olarak ölçülüyor. '
-          'Nabız ve atım hacmi değişmediğine göre $bunun kalbi 30 dakikada '
-          'kaç litre kan pompalar?',
+              'pompaladığı kan miktarı (atım hacmi) $atim mL olarak ölçülüyor. '
+              'Nabız ve atım hacmi değişmediğine göre $bunun kalbi 30 dakikada '
+              'kaç litre kan pompalar?',
           debi * 30,
-          uygun([debi, debi * 60, debi * 3, debi * 300, debi * 15]),
+          [debi, debi * 60, debi * 3, debi * 300, debi * 15],
           '$debiTanim $nabiz · $atim = ${nabiz * atim} mL, yani ${tr(debi)} L '
-          'olur. 30 dakikada ${tr(debi)} · 30 = ${tr(debi * 30)} L kan '
-          'pompalanır.',
-          unit: 'L',
-          positive: true,
+              'olur. 30 dakikada ${tr(debi)} · 30 = ${tr(debi * 30)} L kan '
+              'pompalanır.',
         );
       case 8:
-        return ondalikli(
+        return litre(
           '$kisi dakikada $soluk kez soluk alıp veriyor ve her solukta '
-          'akciğerlerine $hacim mL hava alıyor. $bununBas akciğerlerine 5 '
-          'dakikada giren hava kaç litredir?',
+              'akciğerlerine $hacim mL hava alıyor. $bununBas akciğerlerine 5 '
+              'dakikada giren hava kaç litredir?',
           hava * 5,
-          uygun([hava, hava * 50, hava * 10, hava * 2.5, hava / 2]),
+          [hava, hava * 50, hava * 10, hava * 2.5, hava / 2],
           '$havaTanim Bir dakikada $soluk · $hacim = ${soluk * hacim} mL, yani '
-          '${tr(hava)} L hava girer. Beş dakikada ${tr(hava)} · 5 = '
-          '${tr(hava * 5)} L olur.',
-          unit: 'L',
-          positive: true,
+              '${tr(hava)} L hava girer. Beş dakikada ${tr(hava)} · 5 = '
+              '${tr(hava * 5)} L olur.',
         );
       default:
         // Hafif tempo: 16–20 soluk, 700–890 mL. Tempo artınca soluk sayısı
@@ -3092,25 +3585,26 @@ final _f17 = lmAile(
         final k1 = 16 + a % 5, h1 = 700 + 10 * b;
         final k2 = k1 + 6 + 2 * (a ~/ 5), h2 = h1 + 500;
         final v1 = k1 * h1, v2 = k2 * h2; // mL/dk
-        return ondalikli(
+        return litre(
           'Bir sporcu hafif tempoda koşarken dakikada $k1 kez soluk alıp '
-          'veriyor ve her solukta $h1 mL hava alıyor. Tempo artınca dakikada '
-          '$k2 kez soluk alıp veriyor ve her solukta $h2 mL hava alıyor. '
-          'Sporcunun akciğerlerine bir dakikada giren hava kaç litre '
-          'artmıştır?',
+              'veriyor ve her solukta $h1 mL hava alıyor. Tempo artınca dakikada '
+              '$k2 kez soluk alıp veriyor ve her solukta $h2 mL hava alıyor. '
+              'Sporcunun akciğerlerine bir dakikada giren hava kaç litre '
+              'artmıştır?',
           (v2 - v1) / 1000,
-          uygun([
+          [
             v2 / 1000,
             v1 / 1000,
             (k2 - k1) * (h2 - h1) / 1000,
             (v2 - v1) / 100,
             (v2 + v1) / 1000,
-          ]),
+            (v2 - v1) / 10000,
+            (k2 - k1) * h1 / 1000,
+            k2 * (h2 - h1) / 1000,
+          ],
           '$havaTanim İlk durumda $k1 · $h1 = $v1 mL, ikinci durumda $k2 · '
-          '$h2 = $v2 mL olur. Artış ${v2 - v1} mL, yani '
-          '${tr((v2 - v1) / 1000)} L bulunur.',
-          unit: 'L',
-          positive: true,
+              '$h2 = $v2 mL olur. Artış ${v2 - v1} mL, yani '
+              '${tr((v2 - v1) / 1000)} L bulunur.',
         );
     }
   },
@@ -3144,20 +3638,20 @@ final _f18 = lmAile(
       case 0:
         return sayisal(
           '$denklem Bir bitki hücresi belirli bir sürede fotosentezle $n '
-          'molekül glikoz üretiyor ve oksijenli solunumda $m molekül glikoz '
-          'harcıyor. Bu sürede hücrenin ortama verdiği net O₂ molekülü sayısı '
-          'kaçtır?',
+              'molekül glikoz üretiyor ve oksijenli solunumda $m molekül glikoz '
+              'harcıyor. Bu sürede hücrenin ortama verdiği net O₂ molekülü sayısı '
+              'kaçtır?',
           6 * k,
           [6 * n, 6 * m, k, 6 * (n + m), 12 * k],
           'Fotosentezde 6 · $n = ${6 * n} O₂ üretilir, solunumda 6 · $m = '
-          '${6 * m} O₂ tüketilir. Net çıkış ${6 * n} − ${6 * m} = ${6 * k} '
-          'olur.',
+              '${6 * m} O₂ tüketilir. Net çıkış ${6 * n} − ${6 * m} = ${6 * k} '
+              'olur.',
           positive: true,
         );
       case 1:
         return sayisal(
           '$maya Bu olaylar sonunda açığa çıkan toplam CO₂ molekülü sayısı '
-          'kaçtır?',
+              'kaçtır?',
           6 * m + 2 * k,
           [6 * n, 2 * n, 6 * m, 2 * m + 6 * k, 6 * m + k],
           '$mayaBilgi Toplam CO₂: 6 · $m + 2 · $k = ${6 * m + 2 * k}.',
@@ -3169,95 +3663,102 @@ final _f18 = lmAile(
           2 * k,
           [k, 2 * n, 2 * m, 6 * k, 3 * k],
           'Fermantasyona giren glikoz sayısı $n − $m = $k olur. Her glikozdan '
-          '2 etil alkol oluştuğundan 2 · $k = ${2 * k} molekül etil alkol '
-          'oluşur.',
+              '2 etil alkol oluştuğundan 2 · $k = ${2 * k} molekül etil alkol '
+              'oluşur.',
           positive: true,
         );
       case 3:
         return sayisal(
           'Yoğun çalışan bir kas dokusunda $n molekül glikozun $m tanesi '
-          'oksijenli solunumla, kalanı laktik asit fermantasyonuyla '
-          'parçalanıyor. Bu olaylar sonunda açığa çıkan toplam CO₂ molekülü '
-          'sayısı kaçtır?',
+              'oksijenli solunumla, kalanı laktik asit fermantasyonuyla '
+              'parçalanıyor. Bu olaylar sonunda açığa çıkan toplam CO₂ molekülü '
+              'sayısı kaçtır?',
           6 * m,
           [6 * m + 2 * k, 6 * n, 2 * k, 6 * k, 6 * m + k],
           'Oksijenli solunumda 1 glikozdan 6 CO₂ oluşur; laktik asit '
-          'fermantasyonunda CO₂ oluşmaz (1 glikozdan 2 laktik asit oluşur). '
-          'Toplam CO₂: 6 · $m = ${6 * m}.',
+              'fermantasyonunda CO₂ oluşmaz (1 glikozdan 2 laktik asit oluşur). '
+              'Toplam CO₂: 6 · $m = ${6 * m}.',
           positive: true,
         );
       case 4:
         return sayisal(
           '$denklem Bir bitki hücresi belirli bir sürede fotosentezde '
-          '${6 * n} molekül CO₂ kullanıyor ve oksijenli solunumda ${6 * m} '
-          'molekül O₂ tüketiyor. Bu sürede hücrede biriken net glikoz molekülü '
-          'sayısı kaçtır?',
+              '${6 * n} molekül CO₂ kullanıyor ve oksijenli solunumda ${6 * m} '
+              'molekül O₂ tüketiyor. Bu sürede hücrede biriken net glikoz molekülü '
+              'sayısı kaçtır?',
           k,
           [n, 6 * k, n + m, m, 2 * k],
           'Fotosentezde ${6 * n} / 6 = $n glikoz üretilir, solunumda '
-          '${6 * m} / 6 = $m glikoz harcanır. Net birikim $n − $m = $k olur.',
+              '${6 * m} / 6 = $m glikoz harcanır. Net birikim $n − $m = $k olur.',
           positive: true,
         );
       case 5:
         return sayisal(
           'Bir maya kültüründe $n molekül glikozun bir bölümü oksijenli '
-          'solunumla, kalanı etil alkol fermantasyonuyla parçalanıyor ve '
-          'toplam ${6 * m + 2 * k} molekül CO₂ açığa çıkıyor. Oksijenli '
-          'solunumla parçalanan glikoz molekülü sayısı kaçtır?',
+              'solunumla, kalanı etil alkol fermantasyonuyla parçalanıyor ve '
+              'toplam ${6 * m + 2 * k} molekül CO₂ açığa çıkıyor. Oksijenli '
+              'solunumla parçalanan glikoz molekülü sayısı kaçtır?',
           m,
-          [k, (6 * m + 2 * k) ~/ 6, n - (6 * m + 2 * k) ~/ 6, 2 * m, m + 1, m + 2],
+          [
+            k,
+            (6 * m + 2 * k) ~/ 6,
+            n - (6 * m + 2 * k) ~/ 6,
+            2 * m,
+            m + 1,
+            m + 2,
+          ],
           '$mayaBilgi Oksijenli solunuma giren glikoz x ise 6x + 2 · ($n − x) '
-          '= ${6 * m + 2 * k} olur; 4x = ${4 * m} ve x = $m bulunur.',
+              '= ${6 * m + 2 * k} olur; 4x = ${4 * m} ve x = $m bulunur.',
           positive: true,
         );
       case 6:
         return sayisal(
           'Bir maya kültüründe $n molekül glikozun bir bölümü etil alkol '
-          'fermantasyonuyla parçalanıyor ve ${2 * k} molekül etil alkol '
-          'oluşuyor. Kalan glikozun tamamı oksijenli solunumla parçalandığına '
-          'göre tüketilen O₂ molekülü sayısı kaçtır?',
+              'fermantasyonuyla parçalanıyor ve ${2 * k} molekül etil alkol '
+              'oluşuyor. Kalan glikozun tamamı oksijenli solunumla parçalandığına '
+              'göre tüketilen O₂ molekülü sayısı kaçtır?',
           6 * m,
           [6 * n, 6 * k, 6 * m + 2 * k, m, 12 * m],
           'Fermantasyona giren glikoz ${2 * k} / 2 = $k, oksijenli solunuma '
-          'giren glikoz $n − $k = $m olur. Tüketilen O₂: 6 · $m = ${6 * m}.',
+              'giren glikoz $n − $k = $m olur. Tüketilen O₂: 6 · $m = ${6 * m}.',
           positive: true,
         );
       case 7:
         return sayisal(
           '$maya Bu olaylar sonunda oluşan CO₂ ve H₂O moleküllerinin toplam '
-          'sayısı kaçtır?',
+              'sayısı kaçtır?',
           12 * m + 2 * k,
           [6 * m + 2 * k, 12 * n, 12 * m + 4 * k, 12 * m, 6 * n],
           '$mayaBilgi CO₂: 6 · $m + 2 · $k = ${6 * m + 2 * k}; H₂O: 6 · $m = '
-          '${6 * m}. Toplam ${12 * m + 2 * k} olur.',
+              '${6 * m}. Toplam ${12 * m + 2 * k} olur.',
           positive: true,
         );
       case 8:
         return sayisal(
           'Bir hamur örneğinde $n molekül glikozun $m tanesi mayalar '
-          'tarafından etil alkol fermantasyonuyla, kalanı bakteriler '
-          'tarafından laktik asit fermantasyonuyla parçalanıyor. Bu olaylar '
-          'sonunda oluşan etil alkol, laktik asit ve CO₂ moleküllerinin toplam '
-          'sayısı kaçtır?',
+              'tarafından etil alkol fermantasyonuyla, kalanı bakteriler '
+              'tarafından laktik asit fermantasyonuyla parçalanıyor. Bu olaylar '
+              'sonunda oluşan etil alkol, laktik asit ve CO₂ moleküllerinin toplam '
+              'sayısı kaçtır?',
           2 * n + 2 * m,
           [2 * n, 4 * n, 2 * n + 2 * k, 2 * m + k, 3 * n],
           'Etil alkol fermantasyonunda 1 glikozdan 2 etil alkol ve 2 CO₂, '
-          'laktik asit fermantasyonunda 1 glikozdan 2 laktik asit oluşur. '
-          'Toplam: 4 · $m + 2 · $k = ${2 * n + 2 * m}.',
+              'laktik asit fermantasyonunda 1 glikozdan 2 laktik asit oluşur. '
+              'Toplam: 4 · $m + 2 · $k = ${2 * n + 2 * m}.',
           positive: true,
         );
       default:
         return kesirli(
           '$denklem Bir bitki hücresi belirli bir sürede fotosentezle $n '
-          'molekül glikoz üretiyor ve oksijenli solunumda $m molekül glikoz '
-          'harcıyor. Fotosentezde üretilen O₂ molekülü sayısı, solunumda '
-          'tüketilen O₂ molekülü sayısının kaç katıdır?',
+              'molekül glikoz üretiyor ve oksijenli solunumda $m molekül glikoz '
+              'harcıyor. Fotosentezde üretilen O₂ molekülü sayısı, solunumda '
+              'tüketilen O₂ molekülü sayısının kaç katıdır?',
           n,
           m,
           [(m, n), (6 * n, 1), (k, m), (n, 6 * m), (6 * n, m), (n + m, m)],
           'Fotosentezde 6 · $n = ${6 * n} O₂ üretilir, solunumda 6 · $m = '
-          '${6 * m} O₂ tüketilir. Oran ${6 * n} / ${6 * m} = ${kesir(n, m)} '
-          'olur.',
+              '${6 * m} O₂ tüketilir. Oran ${6 * n} / ${6 * m} = ${kesir(n, m)} '
+              'olur.',
         );
     }
   },
@@ -3303,36 +3804,52 @@ final _f19 = lmAile(
       case 0:
         return say(
           '$deney Bu iki olayda hücrelerin toplam net ATP kazancı kaç '
-          'moleküldür?',
+              'moleküldür?',
           2 * (x + y),
           // Üretilen ATP'yi verme, glikoz başına 1 sayma, bir hücre grubunu
           // unutma, oksijenli solunumun 38 ATP'sini kullanma.
-          [4 * (x + y), x + y, 2 * x, 2 * x + 4 * y, 6 * (x + y), 2 * y, 38 * (x + y)],
+          [
+            4 * (x + y),
+            x + y,
+            2 * x,
+            2 * x + 4 * y,
+            6 * (x + y),
+            2 * y,
+            38 * (x + y),
+          ],
           '$atp Toplam net kazanç 2 · ($x + $y) = ${2 * (x + y)} ATP bulunur.',
         );
       case 1:
         return say(
           '$deney Bu iki olayda substrat düzeyinde fosforilasyonla üretilen '
-          'toplam ATP kaç moleküldür?',
+              'toplam ATP kaç moleküldür?',
           4 * (x + y),
           // Net kazancı verme, glikoz başına 1 ya da 6 sayma, bir hücre
           // grubunu unutma, iki kez sayma, oksijenli solunumla karıştırma.
-          [2 * (x + y), x + y, 4 * x + 2 * y, 6 * (x + y), 4 * x, 8 * (x + y), 38 * (x + y)],
+          [
+            2 * (x + y),
+            x + y,
+            4 * x + 2 * y,
+            6 * (x + y),
+            4 * x,
+            8 * (x + y),
+            38 * (x + y),
+          ],
           '$atp Üretilen toplam ATP 4 · ($x + $y) = ${4 * (x + y)} olur.',
         );
       case 2:
         return say(
           '$deney Bu iki olayda glikolizin başlangıcında glikozu etkinleştirmek '
-          'için harcanan toplam ATP kaç moleküldür?',
+              'için harcanan toplam ATP kaç moleküldür?',
           2 * (x + y),
           [4 * (x + y), x + y, 2 * x, 2 * y, 6 * (x + y)],
           '$atp Glikozu etkinleştirmek için her glikozda 2 ATP harcandığından '
-          'toplam 2 · ($x + $y) = ${2 * (x + y)} ATP harcanır.',
+              'toplam 2 · ($x + $y) = ${2 * (x + y)} ATP harcanır.',
         );
       case 3:
         return say(
           '$deney Bu iki olayda açığa çıkan toplam CO₂ molekülü sayısı '
-          'kaçtır?',
+              'kaçtır?',
           2 * x,
           [2 * (x + y), 2 * y, x, 6 * x, x + y],
           '$urun Yalnız maya hücreleri CO₂ oluşturur: 2 · $x = ${2 * x}.',
@@ -3340,78 +3857,87 @@ final _f19 = lmAile(
       case 4:
         return say(
           '$deney Maya hücrelerinin oluşturduğu etil alkol ve CO₂ molekülleri '
-          'ile kas hücrelerinin oluşturduğu laktik asit moleküllerinin toplam '
-          'sayısı kaçtır?',
+              'ile kas hücrelerinin oluşturduğu laktik asit moleküllerinin toplam '
+              'sayısı kaçtır?',
           4 * x + 2 * y,
           [2 * (x + y), 4 * (x + y), 2 * x + 4 * y, 2 * x + y, 3 * (x + y)],
           '$urun Mayalarda 2 · $x + 2 · $x = ${4 * x}, kas hücrelerinde '
-          '2 · $y = ${2 * y} molekül oluşur. Toplam ${4 * x + 2 * y} bulunur.',
+              '2 · $y = ${2 * y} molekül oluşur. Toplam ${4 * x + 2 * y} bulunur.',
         );
       case 5:
         return say(
           'Bir deneyde maya hücreleri etil alkol fermantasyonu, oksijensiz '
-          'kalan kas hücreleri laktik asit fermantasyonu yapıyor. İki hücre '
-          'grubunun toplam net ATP kazancı ${2 * (x + y)} molekül, maya '
-          'hücrelerinin açığa çıkardığı CO₂ ${2 * x} molekül olarak '
-          'ölçülüyor. Kas hücrelerinin parçaladığı glikoz molekülü sayısı '
-          'kaçtır?',
+              'kalan kas hücreleri laktik asit fermantasyonu yapıyor. İki hücre '
+              'grubunun toplam net ATP kazancı ${2 * (x + y)} molekül, maya '
+              'hücrelerinin açığa çıkardığı CO₂ ${2 * x} molekül olarak '
+              'ölçülüyor. Kas hücrelerinin parçaladığı glikoz molekülü sayısı '
+              'kaçtır?',
           y,
           // Toplam glikozu verme, ikiye bölmeyi unutma ya da iki kez bölme,
           // hücre gruplarını karıştırma.
-          [x + y, 2 * y, x, y + 1, y + 2, y + x + 1, y - 1, if (y.isEven) y ~/ 2],
+          [
+            x + y,
+            2 * y,
+            x,
+            y + 1,
+            y + 2,
+            y + x + 1,
+            y - 1,
+            if (y.isEven) y ~/ 2,
+          ],
           '$atp Toplam glikoz ${2 * (x + y)} / 2 = ${x + y} olur. Mayalar '
-          '${2 * x} / 2 = $x glikoz parçalamıştır; kas hücrelerine '
-          '${x + y} − $x = $y glikoz kalır.',
+              '${2 * x} / 2 = $x glikoz parçalamıştır; kas hücrelerine '
+              '${x + y} − $x = $y glikoz kalır.',
         );
       case 6:
         return say(
           'Bir deneyde maya hücrelerinin etil alkol fermantasyonuyla ${2 * x} '
-          'molekül etil alkol, oksijensiz kalan kas hücrelerinin laktik asit '
-          'fermantasyonuyla ${2 * y} molekül laktik asit oluşturduğu '
-          'belirleniyor. Bu iki olayda substrat düzeyinde fosforilasyonla '
-          'üretilen toplam ATP kaç moleküldür?',
+              'molekül etil alkol, oksijensiz kalan kas hücrelerinin laktik asit '
+              'fermantasyonuyla ${2 * y} molekül laktik asit oluşturduğu '
+              'belirleniyor. Bu iki olayda substrat düzeyinde fosforilasyonla '
+              'üretilen toplam ATP kaç moleküldür?',
           4 * (x + y),
           [2 * (x + y), x + y, 8 * (x + y), 4 * x + 2 * y, 6 * (x + y)],
           'Parçalanan glikoz sayısı ${2 * x} / 2 + ${2 * y} / 2 = ${x + y} '
-          'olur. $atp Üretilen toplam ATP 4 · ${x + y} = ${4 * (x + y)} '
-          'bulunur.',
+              'olur. $atp Üretilen toplam ATP 4 · ${x + y} = ${4 * (x + y)} '
+              'bulunur.',
         );
       case 7:
         return say(
           'Bir deneyde maya hücreleri etil alkol fermantasyonuyla $x molekül '
-          'glikoz parçalıyor; oksijensiz kalan kas hücreleri de laktik asit '
-          'fermantasyonu yapıyor. İki olayda substrat düzeyinde '
-          'fosforilasyonla toplam ${4 * (x + y)} molekül ATP üretildiğine '
-          'göre kas hücrelerinde oluşan laktik asit molekülü sayısı kaçtır?',
+              'glikoz parçalıyor; oksijensiz kalan kas hücreleri de laktik asit '
+              'fermantasyonu yapıyor. İki olayda substrat düzeyinde '
+              'fosforilasyonla toplam ${4 * (x + y)} molekül ATP üretildiğine '
+              'göre kas hücrelerinde oluşan laktik asit molekülü sayısı kaçtır?',
           2 * y,
           [y, 2 * (x + y), 4 * y, x + y, 2 * x],
           '$atp Toplam glikoz ${4 * (x + y)} / 4 = ${x + y}, kas hücrelerinin '
-          'parçaladığı glikoz ${x + y} − $x = $y olur. Her glikozdan 2 laktik '
-          'asit oluştuğundan 2 · $y = ${2 * y} bulunur.',
+              'parçaladığı glikoz ${x + y} − $x = $y olur. Her glikozdan 2 laktik '
+              'asit oluştuğundan 2 · $y = ${2 * y} bulunur.',
         );
       case 8:
         return say(
           '$deney Bu iki olayın glikoliz evresinde oluşan toplam pirüvat '
-          '(pirüvik asit) molekülü sayısı kaçtır?',
+              '(pirüvik asit) molekülü sayısı kaçtır?',
           2 * (x + y),
           [x + y, 4 * (x + y), 2 * x, 3 * (x + y), 2 * y],
           'Glikolizde 6 karbonlu 1 glikozdan 3 karbonlu 2 pirüvat oluşur. '
-          'Toplam pirüvat 2 · ($x + $y) = ${2 * (x + y)} olur.',
+              'Toplam pirüvat 2 · ($x + $y) = ${2 * (x + y)} olur.',
         );
       default:
         return say(
           'Bir deneyde oksijensiz kalan kas hücreleri laktik asit '
-          'fermantasyonuyla ${2 * y} molekül laktik asit oluşturuyor; maya '
-          'hücreleri de etil alkol fermantasyonu yapıyor. İki olayda substrat '
-          'düzeyinde fosforilasyonla toplam ${4 * (x + y)} molekül ATP '
-          'üretildiğine göre maya hücrelerinde oluşan etil alkol molekülü '
-          'sayısı kaçtır?',
+              'fermantasyonuyla ${2 * y} molekül laktik asit oluşturuyor; maya '
+              'hücreleri de etil alkol fermantasyonu yapıyor. İki olayda substrat '
+              'düzeyinde fosforilasyonla toplam ${4 * (x + y)} molekül ATP '
+              'üretildiğine göre maya hücrelerinde oluşan etil alkol molekülü '
+              'sayısı kaçtır?',
           2 * x,
           [x, 2 * (x + y), 4 * x, x + y, 2 * y, 4 * x + 2],
           '$atp Toplam glikoz ${4 * (x + y)} / 4 = ${x + y} olur. Kas '
-          'hücreleri ${2 * y} / 2 = $y glikoz parçalamıştır; mayalara '
-          '${x + y} − $y = $x glikoz kalır. Her glikozdan 2 etil alkol '
-          'oluştuğundan 2 · $x = ${2 * x} bulunur.',
+              'hücreleri ${2 * y} / 2 = $y glikoz parçalamıştır; mayalara '
+              '${x + y} − $y = $x glikoz kalır. Her glikozdan 2 etil alkol '
+              'oluştuğundan 2 · $x = ${2 * x} bulunur.',
         );
     }
   },
@@ -3465,29 +3991,42 @@ final _f20 = lmAile(
           // Bütün besinlere 4 ya da 9 kcal verme, değerleri karıştırma, bir
           // besini unutma, gram toplamını verme.
           [
-            4 * (kh + pro + yag), 9 * kh + 4 * pro + 4 * yag,
-            4 * kh + 9 * pro + 9 * yag, 4 * kh + 9 * yag,
-            9 * (kh + pro + yag), kh + pro + yag, 4 * kh + 4 * pro,
+            4 * (kh + pro + yag),
+            9 * kh + 4 * pro + 4 * yag,
+            4 * kh + 9 * pro + 9 * yag,
+            4 * kh + 9 * yag,
+            9 * (kh + pro + yag),
+            kh + pro + yag,
+            4 * kh + 4 * pro,
           ],
           hesap,
         );
       case 1:
         return say(
           '$deger Bir öğrencinin bir öğünde tükettiği besinlerde $kh g '
-          'karbonhidrat ve $pro g protein vardır. Öğünün toplam enerjisi '
-          '$toplam kcal olduğuna göre öğündeki yağ miktarı kaç gramdır?',
+              'karbonhidrat ve $pro g protein vardır. Öğünün toplam enerjisi '
+              '$toplam kcal olduğuna göre öğündeki yağ miktarı kaç gramdır?',
           yag,
           // 9 yerine 4'e bölme, bölmeyi unutma, işlem kayması.
-          [9 * yag ~/ 4, 9 * yag, yag + 4, yag + 9, yag + 5, yag + 2, yag - 2, yag - 4],
+          [
+            9 * yag ~/ 4,
+            9 * yag,
+            yag + 4,
+            yag + 9,
+            yag + 5,
+            yag + 2,
+            yag - 2,
+            yag - 4,
+          ],
           'Karbonhidrat ve proteinden gelen enerji 4 · ($kh + $pro) = '
-          '${4 * (kh + pro)} kcal olur. Yağdan gelen enerji $toplam − '
-          '${4 * (kh + pro)} = ${9 * yag} kcal, yağ miktarı ${9 * yag} / 9 = '
-          '$yag g bulunur.',
+              '${4 * (kh + pro)} kcal olur. Yağdan gelen enerji $toplam − '
+              '${4 * (kh + pro)} = ${9 * yag} kcal, yağ miktarı ${9 * yag} / 9 = '
+              '$yag g bulunur.',
         );
       case 2:
         return _ondalikDengeli(
           '$ogun Günlük enerji gereksinimi $gunluk kcal olan bu öğrencinin '
-          'öğünden aldığı enerji, günlük gereksiniminin yüzde kaçıdır?',
+              'öğünden aldığı enerji, günlük gereksiniminin yüzde kaçıdır?',
           toplam * 100 / gunluk,
           // Bütün besinlere 4 ya da 9 kcal verme, kalan payı verme, yağı
           // unutma ya da yalnız yağı alma, değerleri karıştırma.
@@ -3500,7 +4039,7 @@ final _f20 = lmAile(
             (9 * kh + 4 * pro + 4 * yag) * 100 / gunluk,
           ],
           '$hesap Günlük gereksinime oranı $toplam / $gunluk · 100 = '
-          '${tr(toplam * 100 / gunluk)} bulunur.',
+              '${tr(toplam * 100 / gunluk)} bulunur.',
           no,
           adim: 2,
         );
@@ -3510,79 +4049,95 @@ final _f20 = lmAile(
         final yuz = 4 * k + 4 * p + 9 * y;
         return _ondalikDengeli(
           '$deger Bir besinin 100 gramında $k g karbonhidrat, $p g protein ve '
-          '$y g yağ vardır. Bu besinden $gram g yiyen bir kişi kaç kcal enerji '
-          'alır?',
+              '$y g yağ vardır. Bu besinden $gram g yiyen bir kişi kaç kcal enerji '
+              'alır?',
           yuz * gram / 100,
           // 100 g için değeri verme, bütün besinlere 4 ya da 9 kcal verme,
           // 10 ya da 1000'e bölme, oranı ters kurma, yağı unutma.
           [
-            yuz.toDouble(), 4.0 * (k + p + y) * gram / 100,
-            yuz * gram / 1000, yuz * 100 / gram, 9.0 * (k + p + y) * gram / 100,
-            yuz * gram / 10, 4.0 * (k + p) * gram / 100,
+            yuz.toDouble(),
+            4.0 * (k + p + y) * gram / 100,
+            yuz * gram / 1000,
+            yuz * 100 / gram,
+            9.0 * (k + p + y) * gram / 100,
+            yuz * gram / 10,
+            4.0 * (k + p) * gram / 100,
           ],
           'Besinin 100 gramı 4 · $k + 4 · $p + 9 · $y = $yuz kcal enerji '
-          'verir. $gram g için $yuz · $gram / 100 = ${tr(yuz * gram / 100)} '
-          'kcal bulunur.',
+              'verir. $gram g için $yuz · $gram / 100 = ${tr(yuz * gram / 100)} '
+              'kcal bulunur.',
           no,
           adim: 20,
         );
       case 4:
         return say(
           '$ogun Bu öğünde karbonhidrat ve proteinden gelen toplam enerji, '
-          'yağdan gelen enerjiden kaç kcal fazladır?',
+              'yağdan gelen enerjiden kaç kcal fazladır?',
           4 * (kh + pro) - 9 * yag,
           // Toplamı verme, proteini unutma, değerleri karıştırma, farkı gram
           // üzerinden alma, çıkarmayı unutma, yağ enerjisini verme.
           [
-            toplam, 4 * kh - 9 * yag, 4 * (kh + pro) - 4 * yag,
-            9 * (kh + pro) - 4 * yag, kh + pro - yag, 4 * (kh + pro), 9 * yag,
+            toplam,
+            4 * kh - 9 * yag,
+            4 * (kh + pro) - 4 * yag,
+            9 * (kh + pro) - 4 * yag,
+            kh + pro - yag,
+            4 * (kh + pro),
+            9 * yag,
           ],
           'Karbonhidrat ve proteinden 4 · ($kh + $pro) = ${4 * (kh + pro)} '
-          'kcal, yağdan 9 · $yag = ${9 * yag} kcal gelir. Fark '
-          '${4 * (kh + pro) - 9 * yag} kcal olur.',
+              'kcal, yağdan 9 · $yag = ${9 * yag} kcal gelir. Fark '
+              '${4 * (kh + pro) - 9 * yag} kcal olur.',
         );
       case 5:
         return say(
           '$deger Bir öğrencinin bir öğünde tükettiği besinlerde $pro g '
-          'protein ve $yag g yağ vardır. Öğünün toplam enerjisi $toplam kcal '
-          'olduğuna göre öğündeki karbonhidrat miktarı kaç gramdır?',
+              'protein ve $yag g yağ vardır. Öğünün toplam enerjisi $toplam kcal '
+              'olduğuna göre öğündeki karbonhidrat miktarı kaç gramdır?',
           kh,
           // 4 yerine 9'a bölme, bölmeyi unutma, işlem kayması.
           [kh + 10, kh - 10, 4 * kh ~/ 9, kh + 20, 4 * kh, kh - 20],
           'Protein ve yağdan gelen enerji 4 · $pro + 9 · $yag = '
-          '${4 * pro + 9 * yag} kcal olur. Karbonhidrattan gelen enerji '
-          '$toplam − ${4 * pro + 9 * yag} = ${4 * kh} kcal, miktarı '
-          '${4 * kh} / 4 = $kh g bulunur.',
+              '${4 * pro + 9 * yag} kcal olur. Karbonhidrattan gelen enerji '
+              '$toplam − ${4 * pro + 9 * yag} = ${4 * kh} kcal, miktarı '
+              '${4 * kh} / 4 = $kh g bulunur.',
         );
       case 6:
         return say(
           '$ogun Günlük enerji gereksinimi $gunluk kcal olan bu öğrenci, '
-          'gereksinimini tam karşılamak için günün kalanında kaç kcal daha '
-          'enerji almalıdır?',
+              'gereksinimini tam karşılamak için günün kalanında kaç kcal daha '
+              'enerji almalıdır?',
           gunluk - toplam,
           // Bütün besinlere 4 ya da 9 kcal verme, öğünün enerjisini verme,
           // proteini unutma, değerleri karıştırma, işlem kayması.
           [
-            gunluk - 4 * (kh + pro + yag), toplam, gunluk - 4 * kh - 9 * yag,
-            gunluk - toplam + 100, gunluk - toplam - 100,
+            gunluk - 4 * (kh + pro + yag),
+            toplam,
+            gunluk - 4 * kh - 9 * yag,
+            gunluk - toplam + 100,
+            gunluk - toplam - 100,
             gunluk - 9 * kh - 4 * pro - 4 * yag,
           ],
           '$hesap Kalan gereksinim $gunluk − $toplam = ${gunluk - toplam} kcal '
-          'bulunur.',
+              'bulunur.',
         );
       case 7:
         return _ondalikDengeli(
           '$ogun Öğrenci aynı enerjiyi yalnız proteinden alsaydı kaç gram '
-          'protein tüketmesi gerekirdi?',
+              'protein tüketmesi gerekirdi?',
           toplam / 4,
           // 4 yerine 9'a ya da 2'ye bölme, bölmeyi unutma, gram toplamını
           // verme, öğündeki proteini çıkarma ya da ekleme.
           [
-            (toplam / 9 * 100).round() / 100, (kh + pro + yag).toDouble(),
-            toplam / 2, toplam.toDouble(), toplam / 4 - pro, toplam / 4 + pro,
+            (toplam / 9 * 100).round() / 100,
+            (kh + pro + yag).toDouble(),
+            toplam / 2,
+            toplam.toDouble(),
+            toplam / 4 - pro,
+            toplam / 4 + pro,
           ],
           '$hesap Protein gram başına 4 kcal verdiğinden $toplam / 4 = '
-          '${tr(toplam / 4)} g protein gerekir.',
+              '${tr(toplam / 4)} g protein gerekir.',
           no,
           adim: 20,
           birim: 'g',
@@ -3590,29 +4145,39 @@ final _f20 = lmAile(
       case 8:
         return say(
           '$deger Bir sporcu antrenmandan önce $kh g karbonhidrat içeren bir '
-          'öğün, antrenmandan sonra $yag g yağ içeren bir atıştırmalık '
-          'tüketiyor. Karbonhidrattan alınan enerji, yağdan alınan enerjiden '
-          'kaç kcal fazladır?',
+              'öğün, antrenmandan sonra $yag g yağ içeren bir atıştırmalık '
+              'tüketiyor. Karbonhidrattan alınan enerji, yağdan alınan enerjiden '
+              'kaç kcal fazladır?',
           4 * kh - 9 * yag,
           // Toplama, değerleri karıştırma, ikisine 4 kcal verme, farkı gram
           // üzerinden alma, yağ enerjisini verme.
-          [4 * kh + 9 * yag, 9 * kh - 4 * yag, 4 * (kh - yag), kh - yag, 9 * yag],
+          [
+            4 * kh + 9 * yag,
+            9 * kh - 4 * yag,
+            4 * (kh - yag),
+            kh - yag,
+            9 * yag,
+          ],
           'Karbonhidrattan 4 · $kh = ${4 * kh} kcal, yağdan 9 · $yag = '
-          '${9 * yag} kcal alınır. Fark ${4 * kh - 9 * yag} kcal olur.',
+              '${9 * yag} kcal alınır. Fark ${4 * kh - 9 * yag} kcal olur.',
         );
       default:
         return say(
           '$ogun Öğündeki yağın tamamı yerine aynı kütlede karbonhidrat '
-          'tüketilseydi öğünün enerjisi kaç kcal olurdu?',
+              'tüketilseydi öğünün enerjisi kaç kcal olurdu?',
           toplam - 5 * yag,
           // Değişmediğini sanma, farkı ekleme, yağın enerjisini ya da
           // karbonhidratın enerjisini çıkarma, yalnız 5 kcal çıkarma.
           [
-            toplam, toplam + 5 * yag, toplam - 9 * yag, toplam - 4 * yag,
-            toplam - 5, 4 * (kh + pro) - 5 * yag,
+            toplam,
+            toplam + 5 * yag,
+            toplam - 9 * yag,
+            toplam - 4 * yag,
+            toplam - 5,
+            4 * (kh + pro) - 5 * yag,
           ],
           '$hesap Yağ yerine karbonhidrat alındığında her gram için 9 − 4 = '
-          '5 kcal eksilir: $toplam − 5 · $yag = ${toplam - 5 * yag} kcal.',
+              '5 kcal eksilir: $toplam − 5 · $yag = ${toplam - 5 * yag} kcal.',
         );
     }
   },

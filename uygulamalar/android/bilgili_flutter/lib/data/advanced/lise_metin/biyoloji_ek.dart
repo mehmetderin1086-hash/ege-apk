@@ -2084,13 +2084,19 @@ AdvancedItem _olasilikSorusu(
       if (_K(p, q) != dogru) aday.add(_K(p, q));
     }
   }
+  final secilen = aday.take(20).toList();
+  // Hedef sıraya ulaşılamıyorsa (bir yanda yeterli tipik hata yoksa)
+  // ulaşılabilen sıralardan biri ikinci bir karma ile seçilir; böylece eksik
+  // uç sıraların payı hep aynı komşu sıraya yığılmaz.
+  final alt = secilen.where((x) => x.p * dogru.q < dogru.p * x.q).length;
+  final ust = secilen.length - alt;
+  final enAz = ust >= 3 ? 0 : 3 - ust, enCok = alt >= 3 ? 3 : alt;
+  var sira = hedefSira(i);
+  if (sira < enAz || sira > enCok) {
+    sira = enAz + _secim(i, 5) % (enCok - enAz + 1);
+  }
   return AdvancedItem(kok, dogru.s, [
-    for (final x in _olasilikUclusu(
-      dogru,
-      aday.take(20).toList(),
-      hedefSira(i),
-    ))
-      x.s,
+    for (final x in _olasilikUclusu(dogru, secilen, sira)) x.s,
   ], aciklama);
 }
 
@@ -2522,9 +2528,13 @@ AdvancedItem _ciftDizi(int c, List<_Tanim> dizi, bool sirasiz, int i) {
       dogru * _yarim, // fazladan 1/2 çarpanı
       hatali(3), // heterozigotu saymama
       if (dizi.length > 1) p.first, // yalnız ilk çocuğu hesaplama
-      _K(1) - dogru, // tümleyen olay
+      // Tümleyen olay yalnız tek çocukta: birden çok çocuğun ortak
+      // olasılığının tümleyeni (ör. 61/64) gerçekçi bir hata değildir.
+      if (dizi.length == 1) _K(1) - dogru,
       hatali(2), // cinsiyet belirtilmemişken de 1/2 ile çarpma
-      if (dizi.length > 1) p.reduce((x, y) => x + y), // çarpmak yerine toplama
+      // Çarpmak yerine toplama; toplam 1 ise ("kesin") çeldirici olmaz.
+      if (dizi.length > 1 && !p.reduce((x, y) => x + y).bir)
+        p.reduce((x, y) => x + y),
       hatali(4), // hasta ile sağlıklıyı karıştırma
       hatali(5), // heterozigot için tek Punnett hücresi
       hatali(6), // kız ve erkek çocukların olasılıklarını karıştırma

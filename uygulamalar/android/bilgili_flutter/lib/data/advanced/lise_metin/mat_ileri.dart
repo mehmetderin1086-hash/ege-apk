@@ -348,17 +348,20 @@ Iterable<List<(int, int)>> _gecisler(
   bool sozcuk(List<(int, int)> u) =>
       u.every((x) => x.$2 != 0) &&
       _sozcukDengeli([soz((n, d)), for (final x in u) soz(x)]);
-  // Anahtar tek başına en uzun seçenek olmasın: ondan uzun bir çeldirici
-  // ya da onunla aynı uzunlukta en az iki çeldirici bulunsun.
+  // Anahtar tek başına en uzun ya da en kısa seçenek olmasın: onunla aynı
+  // uzunlukta en az iki çeldirici ya da hem daha uzun hem daha kısa birer
+  // çeldirici bulunsun.
   final boy = _q(n, d).length;
   bool uzun(List<(int, int)> u) {
     final l = [for (final x in u) _q(x.$1, x.$2).length];
-    return l.any((x) => x > boy) || l.where((x) => x == boy).length >= 2;
+    return l.where((x) => x == boy).length >= 2 ||
+        (l.any((x) => x > boy) && l.any((x) => x < boy));
   }
 
   for (final kosul in <bool Function(List<(int, int)>)>[
     (u) => _dengeli(n, d, u, tumBicim: true) && sozcuk(u) && uzun(u),
     (u) => _dengeli(n, d, u) && sozcuk(u) && uzun(u),
+    (u) => sozcuk(u) && uzun(u),
     (u) => _dengeli(n, d, u) && sozcuk(u),
     (u) => _dengeli(n, d, u),
     sozcuk,
@@ -2298,7 +2301,7 @@ final lmMatIleri = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.uygulama,
     (a, b, c) {
-      final tur = c % 5, ikinci = c >= 5;
+      final tur = c % 5, ikinci = c >= 5, hs = _hs(a, b, c);
       if (tur == 1 || tur == 3) {
         // İki terimi verilen pozitif terimli dizi; b ≥ 10 iken azalan.
         final (r, e) = (tur == 1 ? _geoOran1 : _geoOran3)[b % 10];
@@ -2312,16 +2315,46 @@ final lmMatIleri = <AdvancedFamily>[
           final re = _us(r, e);
           final am = azalan ? u * re : u, an = azalan ? u : u * re;
           final (yp, yq) = azalan ? (1, r) : (r, 1);
-          return _kes(
+          // Kök almayı unutma (r^e), kök yerine e'ye bölme, ters çevirme ×
+          // bunlar (bileşik üçlüler); aritmetik dizi gibi farkı e'ye bölme.
+          final ters = (yq, yp), kok = (an, am), bol = (an, am * e);
+          final fark = (an - am, e);
+          return _kesS(
             'Tüm terimleri pozitif olan bir geometrik dizide a${_alt(m)} = '
                 '$am ve a${_alt(n)} = $an olduğuna göre bu dizinin ortak çarpanı '
                 'kaçtır?',
             yp,
             yq,
-            [(an, am), (yq, yp), (an - am, e), (yp, yq * e)],
+            [
+              ..._uclu(
+                yp,
+                yq,
+                _gecisler(
+                  yp,
+                  yq,
+                  [
+                    [ters, kok, (am, an)],
+                    [ters, bol, (am * e, an)],
+                    [kok, bol, fark],
+                  ],
+                  // Son çare: bir fazlası ya da eksiği.
+                  [
+                    kok, ters, fark, bol, (am, an), (am * e, an), //
+                    (yp, yq * e), (yp - yq, yq), (yp + yq, yq),
+                  ],
+                ),
+                hs,
+                pozitif: true,
+              ),
+              kok,
+              ters,
+              fark,
+              (yp, yq * e),
+            ],
             'a${_alt(n)} = a${_alt(m)}·r${_ust(e)} olduğundan r${_ust(e)} = '
                 '${_oranYaz(an, am)} olur. Terimler pozitif olduğundan '
                 'r = ${_q(yp, yq)} bulunur.',
+            hs,
             pozitif: true,
           );
         }
@@ -2333,26 +2366,40 @@ final lmMatIleri = <AdvancedFamily>[
         final k = ikinci ? m + 1 : n + 1;
         final ak = terim(k);
         final oran = azalan ? '1/$r' : '$r';
-        return _kes(
+        // Aritmetik dizi gibi ara değer ya da öteleme, bir adım fazla, r ile
+        // bölme–çarpmayı karıştırma, ortak çarpanı ekleme, kök almayı unutma
+        // (a_m'den bir adımda a_n bulunacağından yalnız a_n'den giderken),
+        // kök yerine e'ye bölme.
+        final taban = ikinci ? am : an;
+        final yanlis = [
+          ...(ikinci
+              ? [(am * (e - 1) + an, e), (am + an, 2)]
+              : [(an * an, am), (an * (e + 1) - am, e)]),
+          azalan ? (ak, r) : (ak * r, 1),
+          azalan ? (taban * r, 1) : (taban, r),
+          azalan ? (taban * r + 1, r) : (taban + r, 1),
+          (taban * an, am * e),
+        ];
+        return _kesS(
           'Tüm terimleri pozitif olan bir geometrik dizide a${_alt(m)} = $am '
               've a${_alt(n)} = $an olduğuna göre a${_alt(k)} kaçtır?',
           ak,
           1,
-          ikinci
-              ? [
-                  (am * (e - 1) + an, e),
-                  (am + an, 2),
-                  azalan ? (ak, r) : (ak * r, 1),
-                ]
-              : [
-                  (an * an, am),
-                  (an * (e + 1) - am, e),
-                  azalan ? (ak, r) : (ak * r, 1),
-                ],
+          [
+            ..._uclu(
+              ak,
+              1,
+              _gecisler(ak, 1, const [], [...yanlis, (ak - 1, 1), (ak + 1, 1)]),
+              hs,
+              pozitif: true,
+            ),
+            ...yanlis,
+          ],
           'a${_alt(n)} = a${_alt(m)}·r${_ust(e)} olduğundan r${_ust(e)} = '
               '${_oranYaz(an, am)} ve terimler pozitif olduğundan r = $oran '
               'olur. a${_alt(k)} = a${_alt(ikinci ? m : n)}·r = '
               '${ikinci ? am : an}·${_sar(oran)} = $ak.',
+          hs,
           pozitif: true,
         );
       }
@@ -2362,38 +2409,89 @@ final lmMatIleri = <AdvancedFamily>[
       final kuvvet = _us(r, n - 1);
       final an = a1 * kuvvet;
       if (tur == 0) {
-        return _tam(
+        // Bir fazla ya da eksik kuvvet (r^n, r^(n − 2)), kuvvet yerine
+        // çarpma, işaret, aritmetik dizi formülü; işaret × kuvvet hatası
+        // bileşik üçlüler kurar.
+        final fazla = an * r, eksik = a1 * _us(r, n - 2);
+        final yanlis = [
+          (fazla, 1), (a1 * r * (n - 1), 1), (-an, 1), //
+          (a1 + (n - 1) * r, 1), (eksik, 1), (-fazla, 1), (-eksik, 1),
+        ];
+        return _kesS(
           'İlk terimi ${_n(a1)} ve ortak çarpanı ${_n(r)} olan bir geometrik '
               'dizinin $n. terimi kaçtır?',
           an,
-          [an * r, a1 * r * (n - 1), -an, a1 + (n - 1) * r],
+          1,
+          [
+            ..._uclu(
+              an,
+              1,
+              _gecisler(an, 1, [
+                [(-an, 1), (fazla, 1), (-fazla, 1)],
+                [(-an, 1), (eksik, 1), (-eksik, 1)],
+              ], yanlis),
+              hs,
+            ),
+            ...yanlis,
+          ],
           'a${_alt(n)} = a₁·r${_ust(n - 1)} = ${_n(a1)}·${_p(r)}${_ust(n - 1)} '
               '= ${_n(a1)}·${_p(kuvvet)} = ${_n(an)}.',
+          hs,
         );
       }
       if (tur == 4) {
-        return _kes(
+        // r^n'ye ya da r·(n − 1)'e bölme, işaret, r^(n − 2)'ye bölme,
+        // aritmetik dizi formülü (a₁ = aₙ − (n − 1)·r); işaret × kuvvet
+        // hatası bileşik üçlüler kurar.
+        final yanlis = [
+          (an, kuvvet * r), (an, r * (n - 1)), (-a1, 1), (a1 * r, 1), //
+          (-a1 * r, 1), (-an, kuvvet * r), (an - (n - 1) * r, 1),
+        ];
+        return _kesS(
           'Ortak çarpanı ${_n(r)} ve $n. terimi ${_n(an)} olan bir geometrik '
               'dizinin ilk terimi kaçtır?',
           a1,
           1,
-          [(an, kuvvet * r), (an, r * (n - 1)), (-a1, 1), (a1 * r, 1)],
+          [
+            ..._uclu(
+              a1,
+              1,
+              _gecisler(a1, 1, [
+                [(-a1, 1), (a1 * r, 1), (-a1 * r, 1)],
+                [(-a1, 1), (an, kuvvet * r), (-an, kuvvet * r)],
+              ], yanlis),
+              hs,
+            ),
+            ...yanlis,
+          ],
           'a${_alt(n)} = a₁·r${_ust(n - 1)} olduğundan ${_n(an)} = '
               'a₁·${_p(r)}${_ust(n - 1)} = a₁·${_p(kuvvet)} olur. Buradan '
               'a₁ = ${_n(an)}/${_p(kuvvet)} = ${_n(a1)} bulunur.',
+          hs,
         );
       }
       final rn = kuvvet * r;
       final toplam = a1 * (rn - 1) ~/ (r - 1);
-      return _tam(
+      // (r − 1)'e bölmeyi unutma, son terim, bir terim eksik ya da fazla,
+      // işaret, aritmetik dizi toplam formülü.
+      final aritmetik = (a1 + an) * n;
+      return _tamS(
         'İlk terimi ${_n(a1)} ve ortak çarpanı ${_n(r)} olan bir geometrik '
             'dizinin ilk $n teriminin toplamı kaçtır?',
         toplam,
-        [a1 * (rn - 1), an, a1 * (kuvvet - 1) ~/ (r - 1), -toplam],
+        [
+          a1 * (rn - 1),
+          an,
+          a1 * (kuvvet - 1) ~/ (r - 1),
+          -toplam,
+          a1 * (rn * r - 1) ~/ (r - 1),
+          if (aritmetik.isEven) aritmetik ~/ 2,
+        ],
         'İlk $n terimin toplamı a₁·(r${_ust(n)} − 1)/(r − 1) = '
             '${_n(a1)}·(${_p(r)}${_ust(n)} − 1)/(${_p(r)} − 1) = '
             '${_n(a1)}·${_p(rn - 1)}${r == 2 ? '' : '/${_p(r - 1)}'} = '
             '${_n(toplam)} bulunur.',
+        hs,
       );
     },
   ),
@@ -2741,11 +2839,13 @@ final lmMatIleri = <AdvancedFamily>[
                     for (final e in [m - p * k, 2 * p * k])
                       [(e, n), (y, 1), (e, 1)],
                   ],
-                  // Sabitlerin oranı (x = 0 koyma) ve baş katsayıların oranı
-                  // da tipik yanlışlardır.
+                  // Sabitlerin oranı (x = 0 koyma), baş katsayıların oranı,
+                  // çarpanlara ayırırken m'nin işaretini karıştırma da
+                  // tipik yanlışlardır.
                   [
                     (y, 1), (m - p * k, n), (2 * p * k, n), (m - p * k, 1), //
-                    (2 * p * k, 1), (m, n), (p, n), (0, 1), (1, 1),
+                    (2 * p * k, 1), (m, n), (p, n), (p * k - m, n),
+                    (p * k - m, 1), (0, 1), (1, 1),
                   ],
                 ),
                 hs,
@@ -2897,10 +2997,13 @@ final lmMatIleri = <AdvancedFamily>[
           // Pay ya da paydada −k yazma (biri ya da ikisi), x = 0 koyma, baş
           // katsayıların oranı, paydayı unutma, ters çevirme, 0/0 = 0 ya da
           // 1 sanma.
+          // Çarpanlara ayırırken payda ya da paydada sabitin işaretini
+          // karıştırma (biri ya da ikisi) da bileşik üçlü kurar.
           final y = p * k + m, z = k + n, yT = m - p * k, zT = n - k;
+          final yS = p * k - m, zS = k - n;
           final yanlis = [
             (m, n), (p, 1), (yT, zT), (y, 1), (yT, z), (y, zT), (z, y), //
-            (0, 1), (1, 1),
+            (yS, z), (y, zS), (yS, zS), (0, 1), (1, 1),
           ];
           return _kesS(
             'lim (x → ${_n(k)}) (${_pol(pay)})/(${_pol(payda)}) $son',
@@ -2912,6 +3015,7 @@ final lmMatIleri = <AdvancedFamily>[
                 z,
                 _gecisler(y, z, [
                   [(yT, z), (y, zT), (yT, zT)],
+                  [(yS, z), (y, zS), (yS, zS)],
                 ], yanlis),
                 hs,
               ),
