@@ -289,7 +289,9 @@ AdvancedItem _saySirali(
   final esik = 0.5 / _on(basamak);
   bool gecerli(num x) => x.isFinite && (!arti || x >= esik);
   final anahtar = yaz(dogru, kesin: true);
-  // Yazılan değerler (değer, ondalık basamak): yakınlık denetimi için.
+  // Yazılan değerler (değer, ondalık basamak). Yazılan değeri anahtara ya da
+  // önceki bir adaya eşit ya da pratikte eş olan aday atlanır; [_yakin]
+  // eşitliği de kapsar.
   final anahtarYazim = _yazim(dogru, basamak);
   final yazimlar = <(num, int)>[];
   bool yakin((num, int) z) =>
@@ -297,13 +299,9 @@ AdvancedItem _saySirali(
       yazimlar.any((w) => _yakin(w, z, orijin));
   final tipik = <(num, String)>[];
   for (final x in adaylar.where(gecerli)) {
-    final y = yaz(x), z = _yazim(x, basamak);
-    if (ayniSecenek(y, anahtar) ||
-        tipik.any((t) => ayniSecenek(t.$2, y)) ||
-        yakin(z)) {
-      continue;
-    }
-    tipik.add((x, y));
+    final z = _yazim(x, basamak);
+    if (yakin(z)) continue;
+    tipik.add((x, yaz(x)));
     yazimlar.add(z);
   }
   final alt = tipik.where((t) => t.$1 < d).length, ust = tipik.length - alt;

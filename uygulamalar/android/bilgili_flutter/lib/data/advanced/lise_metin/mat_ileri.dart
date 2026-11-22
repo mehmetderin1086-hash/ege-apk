@@ -196,9 +196,35 @@ List<String> _diziKirarak(
   return secim;
 }
 
+/// Hedef sıra [sira] için tipik hata adaylarının ([dogal]) yetmediği yanlar
+/// komşu değerlerle doldurulur. Bu iki ya da üç komşu gerektiriyorsa, en az
+/// komşuyla kurulabilen en yakın sıra seçilir: çeldiricilerin çoğu tipik
+/// hata kalır, sıra dengesi yalnız bu vakalarda kayar.
+int _azKomsuSira(num anahtar, Iterable<num> dogal, int sira) {
+  final alt = <num>[], ust = <num>[];
+  bool var_(List<num> l, num v) => l.any((x) => (x - v).abs() < 1e-9);
+  for (final v in dogal) {
+    if ((v - anahtar).abs() < 1e-9 || var_(alt, v) || var_(ust, v)) continue;
+    (v < anahtar ? alt : ust).add(v);
+  }
+  int gerek(int s) =>
+      (s - alt.length).clamp(0, 3) + (3 - s - ust.length).clamp(0, 3);
+  if (gerek(sira) <= 1) return sira;
+  var en = sira;
+  for (var f = 1; f <= 3; f++) {
+    for (final s in [sira - f, sira + f]) {
+      if (s >= 0 && s <= 3 && gerek(s) < gerek(en)) en = s;
+    }
+  }
+  return en;
+}
+
 /// [_tam] gibi; ama anahtardan küçük çeldirici sayısı [sira] olur. Adaylar
 /// öncelik sırasıyla verilir (iki yandan da tipik hatalar); bir yan eksik
-/// kalırsa anahtara yakın komşu değerler kullanılır.
+/// kalırsa anahtara yakın komşu değerler kullanılır (en çok bir komşu
+/// yetecek biçimde sıra gerekirse kaydırılır: [_azKomsuSira]). [uygun]
+/// verilirse bağlamın dışındaki değerler (ör. üçgende 180°'den büyük açı)
+/// hiç kullanılmaz.
 AdvancedItem _tamS(
   String kok,
   int yanit,
@@ -207,19 +233,22 @@ AdvancedItem _tamS(
   int sira, {
   String birim = '',
   bool pozitif = false,
+  bool Function(int)? uygun,
 }) {
+  bool gecer(int x) => (!pozitif || x > 0) && (uygun == null || uygun(x));
   final adim = yanit.abs() >= 200 ? 10 : (yanit.abs() >= 40 ? 5 : 1);
+  final dogal = [...adaylar.where(gecer)];
   final havuz = [
-    ...adaylar,
+    ...dogal,
     for (var k = 1; k <= 6; k++) ...[yanit + k * adim, yanit - k * adim],
-  ].where((x) => !pozitif || x > 0);
+  ].where(gecer);
   final yazim = birimli(_n(yanit), birim);
   return AdvancedItem(
     kok,
     yazim,
     _diziKirarak(yanit, yazim, [
       for (final x in havuz) (x, birimli(_n(x), birim)),
-    ], sira),
+    ], _azKomsuSira(yanit, dogal, sira)),
     aciklama,
   );
 }
@@ -238,8 +267,11 @@ AdvancedItem _kesS(
   int sira, {
   bool pozitif = false,
   bool komsuPozitif = false,
+  bool Function(double)? uygun,
 }) {
   bool arti((int, int) x) => x.$1 * x.$2 > 0;
+  bool icinde((int, int) x) =>
+      x.$2 != 0 && (uygun == null || uygun(x.$1 / x.$2));
   final tam = n % d == 0;
   // Tam sayı yanıtta adım [_tamS] ile aynıdır: 1, 5 ya da 10.
   final buyukluk = (n ~/ d).abs();

@@ -462,6 +462,17 @@ bool _tekBasina(List<num> x, int j, {bool enKucuk = false}) {
   return true;
 }
 
+/// İlk değerin (anahtarın) en büyük değeri kaç seçenekle paylaştığı (kendisi
+/// dahil); anahtar en büyük değilse 0.
+int _tepe(List<num> x) {
+  var enb = x[0];
+  for (final v in x) {
+    if (v > enb) enb = v;
+  }
+  if (x[0] < enb - 1e-9) return 0;
+  return x.where((v) => (v - enb).abs() <= 1e-9).length;
+}
+
 /// Ceza listelerinin sözlük sırasıyla karşılaştırılması.
 bool _dahaIyi(List<int> a, List<int> b) {
   for (var k = 0; k < a.length; k++) {
@@ -473,8 +484,9 @@ bool _dahaIyi(List<int> a, List<int> b) {
 /// Üç çeldiriciyi [adaylar] (öncelik sırasıyla değer ve yazım) içinden seçer.
 /// Üçlüler sırasıyla şu ölçütlerle karşılaştırılır: anahtardan küçük
 /// çeldirici sayısının [sira] hedefine uzaklığı; anahtarın sözcük
-/// benzerliğinde tek başına en yüksek ya da en düşük, uzunlukta tek başına en
-/// uzun olması; adayların öncelik sırası. Yazımı anahtarla ya da önceki bir
+/// benzerliğinde en yüksek değeri tek başına ya da bir seçenekle paylaşması
+/// ya da tek başına en düşük kalması, uzunlukta tek başına en uzun olması;
+/// adayların öncelik sırası. Yazımı anahtarla ya da önceki bir
 /// adayla aynı olan adaylar atlanır; ilk [enFazla] farklı aday denenir.
 List<String> _dengeli(
   num anahtar,
@@ -518,9 +530,11 @@ List<String> _dengeli(
           for (final u in s) s.fold<double>(0, (t, v) => t + jac[u][v]),
         ];
         final uz = [for (final u in s) boy[u]];
+        final tepe = _tepe(puan);
         final ceza = [
           (alt - sira).abs(),
-          (_tekBasina(puan, 0) || _tekBasina(puan, 0, enKucuk: true) ? 1 : 0) +
+          (tepe == 1 ? 2 : (tepe == 2 ? 1 : 0)) +
+              (_tekBasina(puan, 0, enKucuk: true) ? 1 : 0) +
               (_tekBasina(uz, 0) ? 1 : 0),
           p + q + r,
         ];
