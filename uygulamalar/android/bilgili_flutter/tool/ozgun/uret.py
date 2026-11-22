@@ -34,18 +34,32 @@ def notsuz(r):
     else: return r, 0
     if len({x.lower() for x in [d2,*w2]})<4 or not all(x.strip() for x in [d2,*w2]): return r, 0
     return {**r,'dogru':d2,'yanlis':w2}, 1
+# Anlamsal tekrar taraması kararları: <kok>/tekrar/<topic>/sil.json, secenek.json
+SIL=set(); SEC={}
+import glob as _g
+for f in _g.glob(f'{kok_dir}/tekrar/*/sil.json'):
+    for e in json.load(open(f,encoding='utf-8')): SIL.add(e['id'])
+for f in _g.glob(f'{kok_dir}/tekrar/*/secenek.json'):
+    for e in json.load(open(f,encoding='utf-8')): SEC.setdefault(e['id'],[]).append((e['eski'],e['yeni']))
+def secenek_duzelt(sid,r):
+    for eski,yeni in SEC.get(sid,[]):
+        w=[yeni if x==eski else x for x in r['yanlis']]
+        if w!=r['yanlis'] and len({x.lower() for x in [r['dogru'],*w]})==4: r={**r,'yanlis':w}
+    return r
 ZOR={'kolay':'easy','orta':'medium','zor':'hard'}
 BLOOM={'hatirlama':'hatirlama','anlama':'anlama','uygulama':'uygulama','analiz':'analiz','degerlendirme':'degerlendirme'}
 def dq(s): return "'"+s.replace('\\','\\\\').replace("'","\\'").replace('$','\\$').replace('\n','\\n')+"'"
 cikti='lib/data/advanced/ozgun'; os.makedirs(cikti,exist_ok=True)
-aileler=[]; toplam=0; elenen=0; duzeltilen=0; rapor=[]
+aileler=[]; toplam=0; elenen=0; duzeltilen=0; tekrar_sil=0; rapor=[]
 for a in ALAN:
     p=f'{kok_dir}/{a["id"]}/son.jsonl'
     if not os.path.exists(p): rapor.append(f'{a["id"]}: son.jsonl yok'); continue
     gruplar=collections.defaultdict(list)
-    for l in open(p,encoding='utf-8'):
+    for n,l in enumerate(open(p,encoding='utf-8'),1):
         if not l.strip(): continue
-        r,dz=notsuz(json.loads(l)); duzeltilen+=dz; k=kume(r['soru']); d=duz(r['soru'])
+        sid=f'{a["id"]}_{n}'
+        if sid in SIL: tekrar_sil+=1; continue
+        r,dz=notsuz(secenek_duzelt(sid,json.loads(l))); duzeltilen+=dz; k=kume(r['soru']); d=duz(r['soru'])
         if d in gorulen or benzer(k): elenen+=1; continue
         gorulen.add(d); ekle(k)
         gruplar[r.get('zorluk','orta')].append(r)
@@ -53,7 +67,7 @@ for a in ALAN:
         if zor not in ZOR: zor='orta'
         key=f'oz_{a["id"]}_{zor}'; ad=f'oz{a["id"].title().replace("_","")}{zor.title()}'
         bloom=collections.Counter(BLOOM.get(r.get('bloom'),'anlama') for r in rows).most_common(1)[0][0]
-        with open(f'{cikti}/{key}.dart','w',encoding='utf-8') as f:
+        with open(f'{cikti}/{key.lower()}.dart','w',encoding='utf-8') as f:
             f.write(f'// Üretilen dosya: tool/ozgun/uret.py. {a["kategori"]} · {a["alan"]} ({zor}).\n')
             f.write(f'const {ad} = <(String, String, List<String>, String)>[\n')
             for r in rows:
@@ -63,12 +77,13 @@ for a in ALAN:
 with open(f'{cikti}/ozgun.dart','w',encoding='utf-8') as f:
     f.write('// Üretilen dosya: tool/ozgun/uret.py. Elle yazılmış, birbirinden ayrışan özgün\n// çoktan seçmeli sorular; her aile bir alt alanın bir zorluk düzeyidir.\n')
     f.write("import '../common.dart';\n")
-    for key,ad,*_ in aileler: f.write(f"import '{key}.dart';\n")
+    for key,ad,*_ in aileler: f.write(f"import '{key.lower()}.dart';\n")
     f.write('\nAdvancedFamily _aile(String key, String title, Topic topic, Difficulty d, BloomLevel b, List<(String, String, List<String>, String)> v) =>\n    AdvancedFamily(key: key, title: title, topic: topic, level: StudyLevel.lise, count: v.length, difficulty: d, bloom: b,\n        lesson: title, sourceLabel: \'Bilgili · Özgün Soru Bankası\', build: (i) => AdvancedItem(v[i].$1, v[i].$2, v[i].$3, v[i].$4));\n\n')
     f.write('final ozgunAileler = <AdvancedFamily>[\n')
     for key,ad,a,zor,bloom,n in aileler:
         f.write(f"  _aile('{key}', {dq(a['alan'].split(' (')[0])}, Topic.{a['topic']}, Difficulty.{ZOR[zor]}, BloomLevel.{bloom}, {ad}),\n")
     f.write('];\n')
+print(f'tekrar taramasında silinen {tekrar_sil}, seçenek düzeltme kaydı {sum(map(len,SEC.values()))}')
 print(f'parantez ipucu temizlenen {duzeltilen}')
 print(f'aile {len(aileler)}, soru {toplam}, benzer/yinelenen diye elenen {elenen}')
 for r in rapor: print(' -',r)

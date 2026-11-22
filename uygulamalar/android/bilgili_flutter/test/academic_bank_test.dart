@@ -24,7 +24,7 @@ void main() {
       expect(blooms.length, greaterThanOrEqualTo(5));
       expect(
         blooms.fold<int>(0, (size, p) => size + p.questions.length),
-        8391,
+        AdvancedCatalog.all.length,
       );
       for (final pack in blooms) {
         final bloom = BloomLevel.values.singleWhere((b) => pack.id.endsWith('_${b.name}'));
@@ -32,9 +32,9 @@ void main() {
       }
       expect(
         levels.fold<int>(0, (count, p) => count + p.questions.length),
-        8391,
+        AdvancedCatalog.all.length,
       );
-      expect(ctrl.totalPoolCount, ctrl.personalQuestions.length + 8391);
+      expect(ctrl.totalPoolCount, ctrl.personalQuestions.length + AdvancedCatalog.all.length);
       expect(
         ctrl.allQuestions[ctrl.personalQuestions.length].id,
         AdvancedCatalog.all.first.id,
@@ -42,6 +42,10 @@ void main() {
       for (final f in AdvancedCatalog.families) {
         expect(AdvancedCatalog.hasId(f.questionAt(0).id), isTrue);
         expect(AdvancedCatalog.hasId(f.questionAt(f.count - 1).id), isTrue);
+        if (f.ozgunSira == null) {
+          expect(AdvancedCatalog.hasId('ak38_${f.key}_${f.count}'), isFalse);
+          continue;
+        }
         final secki = f.ozgunSira!.toSet();
         var disarida = 0;
         while (secki.contains(disarida)) {

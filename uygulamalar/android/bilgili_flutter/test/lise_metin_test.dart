@@ -12,7 +12,7 @@ void main() {
     expect(liseMetinFamilies, hasLength(400));
     final kaynak = {for (final f in AdvancedCatalog.kaynakAileler) f.key: f};
     var toplam = 0;
-    for (final f in AdvancedCatalog.families) {
+    for (final f in AdvancedCatalog.families.where((f) => seckiler.containsKey(f.key))) {
       expect(f.level, StudyLevel.lise, reason: f.key);
       expect(f.activityKind, isNull, reason: f.key);
       expect(f.creation, isNull, reason: f.key);
@@ -29,8 +29,8 @@ void main() {
         expect(AdvancedCatalog.questionById(q.id)?.text, q.text);
       }
     }
-    expect(toplam, AdvancedCatalog.all.length);
-    expect(AdvancedCatalog.all.length, 8391);
+    expect(toplam, 8391);
+    expect(AdvancedCatalog.all.length, 8391 + AdvancedCatalog.ozgun.length);
     final metin = AdvancedCatalog.families.where((f) => f.sourceLabel == lmKaynak);
     expect(metin.length, greaterThan(350));
   });

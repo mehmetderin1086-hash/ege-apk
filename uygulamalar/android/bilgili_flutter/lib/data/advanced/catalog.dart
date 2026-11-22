@@ -4,6 +4,7 @@ import 'applied.dart';
 import 'common.dart';
 import 'lise_metin.dart';
 import 'math.dart';
+import 'ozgun/ozgun.dart';
 import 'physics.dart';
 import 'plates.dart';
 import 'renewed.dart';
@@ -44,6 +45,7 @@ class AdvancedCatalog {
     for (final f in kaynakAileler)
       if (cokSecmeliLise(f) && seckiler[f.key] != null)
         f.secili(seckiler[f.key]!),
+    ...ozgunAileler,
   ]);
 
   /// Ailenin seçkiye girebilmesi için lise düzeyinde olması ve etkinlik,
@@ -55,6 +57,9 @@ class AdvancedCatalog {
       f.multiSelect == null;
   static final _byKey = {for (final f in families) f.key: f};
   static final all = FamilyQuestions(families);
+
+  /// Elle yazılmış özgün soru bankası (3.12.0).
+  static final ozgun = FamilyQuestions(ozgunAileler);
   static final visuals = select(format: QuestionFormat.visual);
   static final activityCount = [
     QuestionFormat.listening,
