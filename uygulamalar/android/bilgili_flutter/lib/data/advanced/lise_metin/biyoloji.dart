@@ -243,15 +243,28 @@ List<String> _dengeli(
   return enIyi!;
 }
 
+/// Anahtarın yaklaşık sekizde biri, tek anlamlı basamağa yuvarlanmış (en az
+/// 1): 18 → 2, 150 → 10, 4000 → 500.
+int _komsuAdimi(int x) {
+  var s = x.abs() ~/ 8, p = 1;
+  if (s < 1) return 1;
+  while (s >= 10) {
+    s ~/= 10;
+    p *= 10;
+  }
+  return s * p;
+}
+
 /// Tam sayı yanıtlı soru; çeldiriciler [_dengeli] ile seçilir. Adaylar ve
-/// anahtarın [adim] uzaklığındaki komşuları [enAz] … [enCok] aralığında kalır.
+/// anahtarın [adim] (verilmezse [_komsuAdimi]) uzaklığındaki komşuları
+/// [enAz] … [enCok] aralığında kalır.
 AdvancedItem _sayiDengeli(
   String kok,
   int anahtar,
   Iterable<int> hatalar,
   String aciklama,
   int no, {
-  int adim = 1,
+  int? adim,
   int komsu = 1,
   int enAz = 1,
   int? enCok,
@@ -262,6 +275,7 @@ AdvancedItem _sayiDengeli(
   bool uygun(int x) => x >= enAz && (enCok == null || x <= enCok);
   (num, String) yaz(int x) => (x, birimli('$x', birim));
   final yazim = birimli('$anahtar', birim);
+  final d = adim ?? _komsuAdimi(anahtar);
   return AdvancedItem(
     kok,
     yazim,
@@ -270,10 +284,7 @@ AdvancedItem _sayiDengeli(
       yazim,
       hatalar.where(uygun).map(yaz),
       [
-        for (var k = 1; k <= komsu; k++) ...[
-          anahtar + k * adim,
-          anahtar - k * adim,
-        ],
+        for (var k = 1; k <= komsu; k++) ...[anahtar + k * d, anahtar - k * d],
       ].where(uygun).map(yaz),
       no,
       genislik: genislik,
@@ -347,6 +358,31 @@ final _f01 = lmAile(
     final het = _gt(harf, 1), dom = _gt(harf, 0), rec = _gt(harf, 2);
     final m = 6 + b + 2 * a; // yavruların dörtte biri
     final n = 4 * m;
+    // Çeldiriciler m sayısının p/q katlarıdır (tam sayı olanlar): yanlış
+    // oranı kullanma (1/4, 1/2, 3/4, tamamı, 2/3, 1/3, 9/16 …) hataları.
+    AdvancedItem say(
+      String kok,
+      int anahtar,
+      List<(int, int)> oranlar,
+      String aciklama, {
+      int? enCok,
+      List<int> agirlik = const [1, 1, 1, 1],
+    }) => _sayiDengeli(
+      kok,
+      anahtar,
+      [
+        for (final (p, q) in oranlar)
+          if (p * m % q == 0) p * m ~/ q,
+      ],
+      aciklama,
+      _no(a, b, c),
+      adim: m ~/ 2,
+      enCok: enCok,
+      genislik: 2,
+      agirlik: agirlik,
+    );
+    // Anahtarın üst ya da alt ucunda kalan sorularda öteki uç öne alınır.
+    const ustUc = [1, 1, 1, 3], altUc = [2, 1, 1, 1];
     final giris =
         '$org $domOz aleli ($harf), $recOz aleline (${harf.toLowerCase()}) '
         'baskındır.';
@@ -356,91 +392,107 @@ final _f01 = lmAile(
         '$het, 1/4 kadarı $rec genotipli olur.';
     switch (c) {
       case 0:
-        return sayisal(
+        return say(
           '$hetIki toplam $n yavru elde ediliyor. Bu yavrulardan kaç tanesinin '
           '$domF olması beklenir?',
           3 * m,
-          [m, 2 * m, n],
+          // n'nin 1/4, 1/2, tamamı, 2/3, 9/16, 15/16 ve 3/16 kadarı.
+          [(1, 1), (2, 1), (4, 1), (8, 3), (9, 4), (15, 4), (3, 4)],
           '$oran $dom ve $het genotipliler $domF olduğundan beklenen sayı '
           '$n · 3/4 = ${3 * m} olur.',
-          positive: true,
+          enCok: n,
+          agirlik: ustUc,
         );
       case 1:
-        return sayisal(
+        return say(
           '$hetIki toplam $n yavru elde ediliyor. Bu yavrulardan kaç tanesinin '
           'heterozigot genotipli olması beklenir?',
           2 * m,
-          [m, 3 * m, n],
+          // n'nin 1/4, 3/4, tamamı, 2/3, 1/3, 9/16 ve 3/16 kadarı.
+          [(1, 1), (3, 1), (4, 1), (8, 3), (4, 3), (9, 4), (3, 4)],
           '$oran Heterozigot yavru sayısı $n · 1/2 = ${2 * m} olur.',
-          positive: true,
+          enCok: n,
+          agirlik: altUc,
         );
       case 2:
-        return sayisal(
+        return say(
           '$giris $het genotipli bir birey ile $rec genotipli bir bireyin '
           'çaprazlanmasıyla toplam $n yavru elde ediliyor. Bu yavrulardan kaç '
           'tanesinin $recF olması beklenir?',
           2 * m,
-          [m, 3 * m, n],
+          // n'nin 1/4, 3/4, tamamı, 1/3 ve 2/3 kadarı.
+          [(1, 1), (3, 1), (4, 1), (4, 3), (8, 3)],
           '$het × $rec çaprazlamasında yavruların yarısı $het, yarısı $rec '
           'genotipli olur. Beklenen $recF yavru sayısı $n · 1/2 = ${2 * m} '
           'olur.',
-          positive: true,
+          enCok: n,
+          agirlik: altUc,
         );
       case 3:
-        return sayisal(
+        return say(
           '$hetIki elde edilen yavrulardan $m tanesi $recF çıkıyor. Buna göre '
           '$domF yavru sayısının kaç olması beklenir?',
           3 * m,
-          [n, 2 * m, m],
+          // Toplamı verme; 1 : 1, 2 : 1 ya da 9 : 1 oranı kullanma; 3'e
+          // bölme.
+          [(4, 1), (2, 1), (1, 1), (9, 1), (1, 3), (15, 1)],
           '$oran Fenotip oranı 3 $domF : 1 $recF olduğundan $domF yavru '
           'sayısı $m · 3 = ${3 * m} olur.',
-          positive: true,
+          agirlik: ustUc,
         );
       case 4:
-        return sayisal(
+        return say(
           '$hetIki elde edilen yavrulardan ${3 * m} tanesi $domF çıkıyor. Bu '
           '$domF yavrulardan kaç tanesinin heterozigot genotipli olması '
           'beklenir?',
           2 * m,
-          [m, 3 * m ~/ 2, 3 * m, 9 * m ~/ 4],
+          // Baskın fenotiplilerin 1/3, 1/2, tamamı, 3/4 ve 1/4 kadarı.
+          [(1, 1), (3, 2), (3, 1), (9, 4), (3, 4)],
           'Fenotipi $domF olan yavruların genotip oranı 1 $dom : 2 $het '
           'biçimindedir; 2/3 kadarı heterozigottur: ${3 * m} · 2/3 = '
           '${2 * m}.',
-          positive: true,
+          enCok: 3 * m,
+          agirlik: ustUc,
         );
       case 5:
-        return sayisal(
+        return say(
           '$giris $dom genotipli bir birey ile $het genotipli bir bireyin '
           'çaprazlanmasıyla toplam $n yavru elde ediliyor. Bu yavrulardan kaç '
           'tanesinin heterozigot genotipli olması beklenir?',
           2 * m,
-          [m, 3 * m, n],
+          // n'nin 1/4, 3/4, tamamı, 2/3 ve 1/3 kadarı.
+          [(1, 1), (3, 1), (4, 1), (8, 3), (4, 3)],
           '$dom × $het çaprazlamasında yavruların yarısı $dom, yarısı $het '
           'genotipli olur; hepsi $domF olsa da heterozigot sayısı '
           '$n · 1/2 = ${2 * m} olur.',
-          positive: true,
+          enCok: n,
+          agirlik: altUc,
         );
       case 6:
-        return sayisal(
+        return say(
           '$hetIki toplam $n yavru elde ediliyor. Bu yavrularda $domF '
           'olanların sayısının, $recF olanların sayısından kaç fazla olması '
           'beklenir?',
           2 * m,
-          [3 * m, m, n],
+          // Baskın ya da çekinik sayıyı verme, toplamı verme, 1/3 oranı.
+          [(3, 1), (1, 1), (4, 1), (4, 3)],
           'Beklenen $domF yavru sayısı $n · 3/4 = ${3 * m}, $recF yavru '
           'sayısı $n · 1/4 = $m olur. Fark ${3 * m} − $m = ${2 * m} bulunur.',
-          positive: true,
+          enCok: n,
+          agirlik: altUc,
         );
       case 7:
-        return sayisal(
+        return say(
           '$hetIki elde edilen yavrulardan ${2 * m} tanesinin heterozigot '
           'genotipli olduğu belirleniyor. Buna göre toplam yavru sayısının kaç '
           'olması beklenir?',
           n,
-          [8 * m, 3 * m, 6 * m],
+          // Heterozigotları toplamın 1/4, 1/3, 2/3 ya da 3/4 kadarı sanma;
+          // verilen sayıyı yanıt sanma.
+          [(8, 1), (6, 1), (3, 1), (8, 3), (2, 1)],
           '$oran Heterozigotlar toplamın yarısı olduğundan toplam yavru '
           'sayısı ${2 * m} · 2 = $n olur.',
-          positive: true,
+          agirlik: ustUc,
         );
       case 8:
         // Sayım verisinden ebeveyn genotipi çıkarılır; yanıt bir olasılıktır.
@@ -449,28 +501,38 @@ final _f01 = lmAile(
           ('heterozigot genotipli', 2),
           ('homozigot baskın genotipli', 1),
         ][(a + b) % 3];
-        return _olasilik(
+        return _olasilikDengeli(
           '$giris Fenotipi $domF olan iki bireyin çaprazlanmasıyla elde edilen '
           '$n yavrudan $m tanesi $recF çıkıyor. Aynı ebeveynlerden oluşacak '
           'yeni bir yavrunun $olay olma olasılığı kaçtır?',
           pay,
           4,
-          [(1, 4), (1, 2), (3, 4), (2, 3), (1, 3)],
+          // Başka bir genotip ya da fenotip sınıfının oranı, 2/3 ve 1/3
+          // (baskın fenotiplilerin içindeki oranlar), dihibrit oranları.
+          // Tümü baskın sanma (1) ve dihibritteki 15/16 da eklenir.
+          [
+            (1, 4), (1, 2), (3, 4), (2, 3), (1, 3), (9, 16), (3, 16),
+            (1, 16), (3, 8), (1, 8), (1, 1), (15, 16),
+          ],
           'Çaprazlamada $recF yavru oluştuğuna göre ebeveynlerin ikisi de $het '
           'genotiplidir ($m / $n = 1/4). $oran İstenen olasılık '
           '${kesir(pay, 4)} bulunur.',
+          _no(a, b, c),
+          birDahil: true,
         );
       default:
-        return sayisal(
+        return say(
           '$giris Fenotipi $domF olan iki bireyin çaprazlanmasıyla elde edilen '
           '$n yavrudan $m tanesi $recF çıkıyor. Buna göre yavrulardan kaç '
           'tanesinin heterozigot genotipli olması beklenir?',
           2 * m,
-          [3 * m, m, 3 * m ~/ 2],
+          // n'nin 3/4, 1/4, tamamı, 2/3, 1/3 ve 3/8 kadarı.
+          [(3, 1), (1, 1), (4, 1), (8, 3), (4, 3), (3, 2)],
           'Çaprazlamada $recF yavru oluştuğuna göre ebeveynlerin ikisi de $het '
           'genotiplidir ($m / $n = 1/4). $het × $het çaprazlamasında '
           'heterozigot yavru sayısı $n · 1/2 = ${2 * m} olur.',
-          positive: true,
+          enCok: n,
+          agirlik: altUc,
         );
     }
   },
@@ -1436,6 +1498,13 @@ final _f08 = lmAile(
     final j = b ~/ 5;
     final kat = 1 << n;
     final son = k * kat;
+    final no = _no(a, b, c);
+    AdvancedItem say(
+      String kok,
+      int anahtar,
+      List<int> hatalar,
+      String aciklama,
+    ) => _sayiDengeli(kok, anahtar, hatalar, aciklama, no);
     final dk = const [20, 30, 40, 60][j], sa = const [12, 18, 24, 36][j];
     final bakteri =
         'Uygun koşullarda $dk dakikada bir ikiye bölünerek çoğalan bir bakteri '
@@ -1451,96 +1520,111 @@ final _f08 = lmAile(
         'sayı iki katına çıkar.';
     switch (c) {
       case 0:
-        return sayisal(
+        return say(
           '$bakteri Başlangıçta $k bakteri bulunduğuna göre ${n * dk} dakika '
           'sonra besiyerinde kaç bakteri bulunur?',
           son,
-          [k * 2 * n, k * n, son ~/ 2, son * 2, k + kat],
+          // 2ⁿ yerine 2n ya da n ile çarpma, bir bölünme eksik ya da fazla
+          // sayma, çarpmak yerine toplama, iki bölünme fazla sayma.
+          [k * 2 * n, k * n, son ~/ 2, son * 2, k + kat, son * 4],
           '$bolunmeDk Bakteri sayısı $k · 2${_ust(n)} = $son olur.',
-          positive: true,
         );
       case 1:
-        return sayisal(
+        return say(
           '$kultur Başlangıçta $k hücre bulunduğuna göre ${n * sa} saat sonra '
           'kültürde kaç hücre bulunur?',
           son,
-          [k * 2 * n, k * n, son ~/ 2, son * 2, k + kat],
+          [k * 2 * n, k * n, son ~/ 2, son * 2, k + kat, son * 4],
           '$bolunmeSa Hücre sayısı $k · 2${_ust(n)} = $son olur.',
-          positive: true,
         );
       case 2:
-        return sayisal(
+        return say(
           '$bakteri Başlangıçta $k bakteri bulunduğuna göre bakteri sayısının '
           '$son olması için kaç dakika geçmesi gerekir?',
           n * dk,
-          [kat * dk, (n - 1) * dk, (n + 1) * dk, 2 * n * dk],
+          // Kat sayısını bölünme sayısı sanma, bir ya da iki bölünme eksik
+          // ya da fazla sayma, tek bölünmenin süresini verme.
+          [kat * dk, (n - 1) * dk, (n + 1) * dk, 2 * n * dk, (n - 2) * dk, dk],
           'Bakteri sayısı $son / $k = $kat katına, yani 2${_ust(n)} katına '
           'çıkmıştır; bunun için $n bölünme gerekir. Süre $n · $dk = '
           '${n * dk} dakika olur.',
-          positive: true,
         );
       case 3:
-        return sayisal(
+        return say(
           'Bir doku kültüründeki hücreler eşit aralıklarla mitozla bölünüyor '
           've hiçbir hücre ölmüyor. Başlangıçta $k hücre bulunan kültürde '
           '${n * sa} saat sonra $son hücre sayıldığına göre bir hücrenin art '
           'arda iki bölünmesi arasında kaç saat geçmektedir?',
           sa,
-          [sa * 2, sa ~/ 2, n * sa ~/ (n + 1), n * sa ~/ (n - 1), sa + 6],
+          // Bölünme sayısını bir fazla ya da eksik alma, süreyi kat sayısına
+          // bölme, iki katını ya da yarısını alma.
+          [
+            sa * 2, sa ~/ 2, n * sa ~/ (n + 1), n * sa ~/ (n - 1), sa + 6,
+            sa - 6, if (n * sa % kat == 0) n * sa ~/ kat,
+          ],
           'Hücre sayısı $son / $k = $kat = 2${_ust(n)} katına çıkmıştır; '
           '${n * sa} saatte $n bölünme olmuştur. Bölünme aralığı '
           '${n * sa} / $n = $sa saat bulunur.',
-          positive: true,
         );
       case 4:
-        return sayisal(
+        return say(
           '$bakteri ${n * dk} dakika sonra besiyerinde $son bakteri '
           'sayıldığına göre başlangıçta kaç bakteri ekilmiştir?',
           k,
-          [2 * k, 4 * k, son ~/ (2 * n), k ~/ 2, k + n],
+          // 2ⁿ yerine 2n ya da n'ye bölme, bir bölünme eksik ya da fazla
+          // sayma, bölmek yerine çıkarma, kat sayısını fazladan bölme.
+          [
+            2 * k, 4 * k, son ~/ (2 * n), k ~/ 2, k + n, son ~/ n,
+            if (k % n == 0) k ~/ n, son - kat,
+          ],
           '$bolunmeDk Başlangıçtaki sayı '
           '$son / 2${_ust(n)} = $son / $kat = $k olur.',
-          positive: true,
         );
       case 5:
         final mayoz = son * _kesirPay[j] ~/ 4;
-        return sayisal(
+        return say(
           'Bir memelinin testisinde $k eşey ana hücresi art arda $n kez mitoz '
           'geçiriyor. Oluşan hücrelerin ${_kesirSoz[j]} mayoz geçirdiğine göre '
           'en çok kaç sperm hücresi oluşur?',
           4 * mayoz,
-          [mayoz, 2 * mayoz, 8 * mayoz, 4 * k * n, 4 * k],
+          // Mayoz başına 1, 2 ya da 8 sperm sayma, 2ⁿ yerine n ile çarpma,
+          // mitozları unutma, bütün hücrelerin mayoz geçirdiğini sanma.
+          [mayoz, 2 * mayoz, 8 * mayoz, 4 * k * n, 4 * k, 4 * son, son],
           'Mitozlar sonunda $k · 2${_ust(n)} = $son hücre oluşur. Bunlardan '
           '$mayoz tanesi mayoz geçirir ve her biri 4 sperm verir: '
           '$mayoz · 4 = ${4 * mayoz}.',
-          positive: true,
         );
       case 6:
         final mayoz = son * _kesirPay[j] ~/ 4;
-        return sayisal(
+        return say(
           'Bir memelinin yumurtalığında $k eşey ana hücresi art arda $n kez '
           'mitoz geçiriyor. Oluşan hücrelerin ${_kesirSoz[j]} mayoz '
           'geçirdiğine göre en çok kaç yumurta hücresi oluşur?',
           mayoz,
-          [4 * mayoz, 3 * mayoz, 2 * mayoz, son, k * n],
+          // Mayoz başına 4, 3 ya da 2 yumurta sayma, bütün hücreleri sayma,
+          // mitozları unutma, mayoz geçiren hücreyi 4'e bölme.
+          [
+            4 * mayoz, 3 * mayoz, 2 * mayoz, son, k * n, k,
+            if (mayoz % 4 == 0) mayoz ~/ 4, if (mayoz.isEven) mayoz ~/ 2,
+          ],
           'Mitozlar sonunda $k · 2${_ust(n)} = $son hücre oluşur. Bunlardan '
           '$mayoz tanesi mayoz geçirir; her mayozdan 1 yumurta ve 3 kutup '
           'hücresi oluştuğundan yumurta sayısı $mayoz olur.',
-          positive: true,
         );
       case 7:
-        return sayisal(
+        return say(
           '$kultur Başlangıçta $k hücre bulunan kültürde ${n * sa} saat '
           'içinde toplam kaç mitoz bölünme gerçekleşir?',
           son - k,
-          [son, k * n, son - 1, son ~/ 2, n],
+          // Hücre sayısını, bölünme sayısını ya da son bölünmeyi verme,
+          // 2ⁿ yerine n ile çarpma, her bölünmeyi iki kez sayma.
+          [son, k * n, son - 1, son ~/ 2, n, 2 * (son - k)],
           '$bolunmeSa Hücre sayısı $k · 2${_ust(n)} = $son olur. Her mitoz '
           'hücre sayısını 1 artırdığından bölünme sayısı '
           '$son − $k = ${son - k} bulunur.',
-          positive: true,
         );
       case 8:
-        return sayisal(
+        return say(
           '$bakteri Başlangıçta $k bakteri bulunan besiyerinde ${n * dk} '
           'dakikalık sürenin son $dk dakikasında bakteri sayısı kaç artar?',
           son ~/ 2,
@@ -1548,21 +1632,21 @@ final _f08 = lmAile(
           '$bolunmeDk Son bölünmeden önce '
           '$k · 2${_ust(n - 1)} = ${son ~/ 2}, sonra $son bakteri vardır; artış '
           '$son − ${son ~/ 2} = ${son ~/ 2} olur.',
-          positive: true,
         );
       default:
         final mayoz = son * _kesirPay[j] ~/ 4;
-        return sayisal(
+        return say(
           'Bir memelinin yumurtalığında $k eşey ana hücresi art arda $n kez '
           'mitoz geçiriyor. Oluşan hücrelerin ${_kesirSoz[j]} mayoz '
           'geçirdiğine göre mayozlar sonunda en çok kaç kutup hücresi oluşur?',
           3 * mayoz,
-          [mayoz, 4 * mayoz, 2 * mayoz, 3 * son, 3 * k * n],
+          // Mayoz başına 1, 2 ya da 4 kutup hücresi sayma, bütün hücreleri
+          // sayma, 2ⁿ yerine n ile çarpma, mitozları unutma.
+          [mayoz, 4 * mayoz, 2 * mayoz, 3 * son, 3 * k * n, 3 * k],
           'Mitozlar sonunda $k · 2${_ust(n)} = $son hücre oluşur. Bunlardan '
           '$mayoz tanesi mayoz geçirir; ilk kutup hücresi de bölündüğünde her '
           'mayozdan 1 yumurta ve en çok 3 kutup hücresi oluşur. Kutup hücresi '
           'sayısı en çok $mayoz · 3 = ${3 * mayoz} olur.',
-          positive: true,
         );
     }
   },
@@ -1586,52 +1670,75 @@ final _f09 = lmAile(
     const kural =
         'Adenin timinle 2, guanin sitozinle 3 hidrojen bağı kurar; A = T ve '
         'G = C olur.';
+    final no = _no(a, b, c);
+    AdvancedItem sor(
+      String kok,
+      int anahtar,
+      List<int> hatalar,
+      String aciklama, {
+      int adim = 10,
+    }) => _sayiDengeli(
+      kok,
+      anahtar,
+      hatalar,
+      aciklama,
+      no,
+      adim: adim,
+      agirlik: const [2, 1, 2, 3],
+    );
     switch (c) {
       case 0:
-        return sayisal(
+        return sor(
           'Çift zincirli bir DNA molekülünde toplam $top nükleotit '
           'bulunmaktadır ve bunların $ad tanesi adenin içerir. Bu DNA '
           'molekülünde guanin içeren nükleotit sayısı kaçtır?',
           gu,
-          [top - ad, 2 * gu, ad ~/ 2 + gu, top ~/ 2],
+          // A = T ya da G = C eşitliğini unutma, toplamın yarısı, adenin
+          // sayısını yanıt sanma.
+          [top - ad, 2 * gu, ad ~/ 2 + gu, top ~/ 2, ad],
           'A = T olduğundan A + T = ${2 * ad} olur. G + C = $top − ${2 * ad} = '
           '${2 * gu} ve G = C olduğundan G = $gu bulunur.',
-          positive: true,
         );
       case 1:
-        return sayisal(
+        return sor(
           'Çift zincirli bir DNA molekülünde $ad adenin ve $gu guanin '
           'nükleotidi vardır. Bu molekülün iki zinciri arasında toplam kaç '
           'hidrojen bağı bulunur?',
           hb,
-          [3 * ad + 2 * gu, 2 * (ad + gu), 3 * (ad + gu), ad + gu],
+          // Bağ sayılarını karıştırma, her çifte aynı sayıda bağ verme,
+          // her çifti iki kez sayma.
+          [3 * ad + 2 * gu, 2 * (ad + gu), 3 * (ad + gu), ad + gu, 2 * hb],
           '$kural Hidrojen bağı sayısı 2 · $ad + 3 · $gu = $hb olur.',
-          positive: true,
         );
       case 2:
-        return sayisal(
+        return sor(
           'Toplam $top nükleotit içeren çift zincirli bir DNA molekülünün iki '
           'zinciri arasında $hb hidrojen bağı vardır. Bu moleküldeki adenin '
           'sayısı kaçtır?',
           ad,
-          [gu, top ~/ 2, hb - top ~/ 2, 2 * ad],
+          // Guanin sayısını verme, çift sayısını verme, denklemleri yanlış
+          // çözme, bağ sayısını 5'e (2 + 3) bölme.
+          [gu, top ~/ 2, hb - top ~/ 2, 2 * ad, (hb - top ~/ 2) ~/ 2, hb ~/ 5],
           'A + G = $top / 2 = ${top ~/ 2} ve 2A + 3G = $hb olur. İkinci '
           'eşitlikten birincinin iki katı çıkarılırsa G = $hb − $top = $gu, '
           'A = ${top ~/ 2} − $gu = $ad bulunur.',
-          positive: true,
         );
       case 3:
         final si = 2 * (b + 2) * (50 - p);
-        return sayisal(
+        return sor(
           'Toplam $top2 nükleotit içeren çift zincirli bir DNA molekülünde '
           'nükleotitlerin %$p kadarı adenin içerir. Bu moleküldeki sitozin '
           'sayısı kaçtır?',
           si,
-          [2 * (b + 2) * p, 2 * si, 2 * (b + 2) * (100 - p), si ~/ 2],
+          // Adenin sayısını verme, G + C toplamını verme, %(100 − p) ya da
+          // yarısını alma, yarıya bölmeyi iki kez yapma.
+          [
+            2 * (b + 2) * p, 2 * si, 2 * (b + 2) * (100 - p), si ~/ 2,
+            (b + 2) * (100 - p), (b + 2) * p,
+          ],
           'A = T olduğundan A + T = %${2 * p}, G + C = %${100 - 2 * p} ve '
           'C = %${50 - p} olur. Sitozin sayısı $top2 · ${50 - p} / 100 = $si '
           'bulunur.',
-          positive: true,
         );
       case 4 || 5:
         final a1 = 20 + a, t1 = 15 + b;
@@ -1641,83 +1748,94 @@ final _f09 = lmAile(
             '$g1 guanin ve $c1 sitozin nükleotidi vardır.';
         if (c == 4) {
           final h = 2 * (a1 + t1) + 3 * (g1 + c1);
-          return sayisal(
+          return sor(
             '$zincir Bu DNA molekülünün iki zinciri arasında toplam kaç '
             'hidrojen bağı bulunur?',
             h,
             [
+              // Bağ sayılarını karıştırma, yalnız A ile G'yi sayma, her
+              // çifte aynı sayıda bağ verme, iki kez sayma.
               3 * (a1 + t1) + 2 * (g1 + c1),
               2 * a1 + 3 * g1,
               2 * (a1 + t1 + g1 + c1),
               2 * h,
+              3 * (a1 + t1 + g1 + c1),
+              a1 + t1 + g1 + c1,
             ],
             'Bir zincirdeki her A ve T karşı zincirle 2, her G ve C ise 3 '
             'hidrojen bağı kurar: 2 · ($a1 + $t1) + 3 · ($g1 + $c1) = $h.',
-            positive: true,
           );
         }
-        return sayisal(
+        return sor(
           '$zincir Bu DNA molekülünün iki zincirinde toplam kaç adenin '
           'nükleotidi bulunur?',
           a1 + t1,
-          [2 * a1, a1, a1 + c1, 2 * (a1 + t1)],
+          // Yalnız verilen zincirdeki adenini ya da timini sayma, eşleşmeyi
+          // karıştırma, iki kez sayma.
+          [2 * a1, a1, a1 + c1, 2 * (a1 + t1), t1, a1 + g1, 2 * t1],
           'Verilen zincirdeki her timinin karşısında diğer zincirde bir adenin '
           'bulunur. Toplam adenin sayısı $a1 + $t1 = ${a1 + t1} olur.',
-          positive: true,
         );
       case 6:
         final h = 2 * (b + 2) * (150 - p);
-        return sayisal(
+        return sor(
           'Toplam $top2 nükleotit içeren çift zincirli bir DNA molekülünde '
           'nükleotitlerin %$p kadarı timin içerir. Bu molekülün iki zinciri '
           'arasında toplam kaç hidrojen bağı bulunur?',
           h,
-          [2 * (b + 2) * (100 + p), 2 * (b + 2) * 125, 2 * h, top2],
+          // Bağ sayılarını karıştırma, ortalama 2,5 bağ alma, iki kez sayma,
+          // her çifte 2 ya da 3 bağ verme, çift yerine nükleotit sayma.
+          [
+            2 * (b + 2) * (100 + p), 2 * (b + 2) * 125, 2 * h, top2,
+            300 * (b + 2), h ~/ 2,
+          ],
           'A = T = $top2 · $p / 100 = ${2 * (b + 2) * p}, G = C = $top2 · '
           '${50 - p} / 100 = ${2 * (b + 2) * (50 - p)} olur. Hidrojen bağı '
           'sayısı 2 · ${2 * (b + 2) * p} + 3 · ${2 * (b + 2) * (50 - p)} = $h '
           'bulunur.',
-          positive: true,
         );
       case 7:
-        return sayisal(
+        return sor(
           'Çift zincirli bir DNA molekülünde $gu guanin nükleotidi vardır ve '
           'iki zincir arasında toplam $hb hidrojen bağı bulunur. Bu '
           'moleküldeki toplam nükleotit sayısı kaçtır?',
           top,
-          [ad + gu, hb - gu, 2 * ad + gu, top + 2 * gu],
+          // Çift sayısını verme, eşleşmeyi unutma, bağ sayısını ya da adenin
+          // sayısını yanıt sanma, iki kez sayma.
+          [ad + gu, hb - gu, 2 * ad + gu, top + 2 * gu, hb, ad, 2 * top],
           'G–C çiftlerindeki bağ sayısı 3 · $gu = ${3 * gu} olur. A–T çifti '
           'sayısı ($hb − ${3 * gu}) / 2 = $ad bulunur. Toplam nükleotit '
           '2 · ($ad + $gu) = $top olur.',
-          positive: true,
         );
       case 8:
         final q = 100 - 2 * p;
         final say = 2 * (b + 2) * p;
-        return sayisal(
+        return sor(
           'Toplam $top2 nükleotit içeren çift zincirli bir DNA molekülünde '
           'guanin ve sitozin nükleotitlerinin toplamı bütün nükleotitlerin '
           '%$q kadarıdır. Bu moleküldeki adenin sayısı kaçtır?',
           say,
-          [2 * say, 2 * (b + 2) * q, (b + 2) * q, top2 ~/ 2 - say],
+          // A + T toplamını, G + C ya da guanin sayısını verme, bir zincir
+          // için hesaplama.
+          [2 * say, 2 * (b + 2) * q, (b + 2) * q, top2 ~/ 2 - say, (b + 2) * p],
           'A + T = %${100 - q} olur ve A = T olduğundan A = %$p bulunur. '
           'Adenin sayısı $top2 · $p / 100 = $say olur.',
-          positive: true,
         );
       default:
         // Timin yüzdesi adenin yüzdesiyle aynı tekliktedir ve ona eşit olmaz.
         var q = a % 2 + 12 + 2 * b;
         if (q >= p) q += 2;
-        return sayisal(
+        return sor(
           'Bir DNA molekülünün zincirlerinden birindeki nükleotitlerin %$p '
           'kadarı adenin, %$q kadarı timin içerir. Bu DNA molekülünün '
           'tamamında adenin içeren nükleotitlerin oranı yüzde kaçtır?',
           (p + q) ~/ 2,
-          [p + q, p, q, 50 - (p + q) ~/ 2],
+          // İki oranı toplama, yalnız bir zinciri alma, G + C oranını verme.
+          [p + q, p, q, 50 - (p + q) ~/ 2, 100 - (p + q)],
           'Karşı zincirde adenin oranı %$q, timin oranı %$p olur. İki zincir '
           'eşit uzunlukta olduğundan molekülün tamamında adenin oranı '
           '($p + $q) / 2 = ${(p + q) ~/ 2} bulunur.',
-          positive: true,
+          adim: 2,
         );
     }
   },
@@ -2044,47 +2162,57 @@ final _f12 = lmAile(
   BloomLevel.uygulama,
   (a, b, c) {
     final x = a + 2, y = b + 3;
+    final no = _no(a, b, c);
+    AdvancedItem say(
+      String kok,
+      int anahtar,
+      List<int> hatalar,
+      String aciklama,
+    ) => _sayiDengeli(kok, anahtar, hatalar, aciklama, no);
     switch (c) {
       case 0:
         final p = 20 + 5 * a;
-        return sayisal(
+        return say(
           'Bir hücrede her biri $p amino asitten oluşan $y polipeptit zinciri '
           'sentezleniyor. Bu sentezler sırasında toplam kaç molekül su açığa '
           'çıkar?',
           y * (p - 1),
-          [y * p, y * (p + 1), p - 1, y * (p - 1) - y],
+          // Bağ yerine amino asit sayma, bir fazla ya da eksik sayma, tek
+          // zincir için hesaplama, zincirleri tek zincir sanma.
+          [y * p, y * (p + 1), p - 1, y * (p - 1) - y, y * p - 1, (y - 1) * (p - 1)],
           'Bir zincirde $p − 1 = ${p - 1} peptit bağı kurulur ve her bağda 1 '
           'molekül su açığa çıkar: $y · ${p - 1} = ${y * (p - 1)}.',
-          positive: true,
         );
       case 1:
         final p = 200 + 40 * a;
-        return sayisal(
+        return say(
           'Sindirim sırasında her biri $p glikoz biriminden oluşan $y nişasta '
           'molekülü tamamen glikoza hidroliz ediliyor. Bu olayda toplam kaç '
           'molekül su harcanır?',
           y * (p - 1),
-          [y * p, y * (p + 1), p - 1, y * p ~/ 2],
+          // Bağ yerine glikoz sayma, bir fazla ya da eksik sayma, tek molekül
+          // için hesaplama, molekülleri tek zincir sanma, yarıya bölme.
+          [y * p, y * (p + 1), p - 1, y * p ~/ 2, y * p - 1, y * (p - 2)],
           'Bir moleküldeki $p − 1 = ${p - 1} glikozit bağının her biri 1 '
           'molekül su harcanarak koparılır: $y · ${p - 1} = ${y * (p - 1)}.',
-          positive: true,
         );
       case 2:
         final p = 20 + 3 * b;
-        return sayisal(
+        return say(
           'Bir hücrede $x molekül trigliserit (nötr yağ) ile $p amino asitten '
           'oluşan bir polipeptit zinciri sentezleniyor. Bu sentezler sırasında '
           'toplam kaç molekül su açığa çıkar?',
           3 * x + p - 1,
-          [x + p - 1, 3 * x + p, 4 * x + p - 1, 3 * (x + p - 1)],
+          // Trigliserit başına 1, 2 ya da 4 su sayma, birini unutma, bir
+          // fazla sayma.
+          [x + p - 1, 3 * x + p, 4 * x + p - 1, 3 * (x + p - 1), 2 * x + p - 1, 3 * x, p - 1],
           'Bir trigliserit, 1 gliserol ile 3 yağ asidi arasında 3 ester bağı '
           'kurulurken 3 su verir: 3 · $x = ${3 * x}. Polipeptitte $p − 1 = '
           '${p - 1} su açığa çıkar. Toplam ${3 * x + p - 1} olur.',
-          positive: true,
         );
       case 3:
         final p = 200 + 40 * b;
-        return sayisal(
+        return say(
           'Sindirim sırasında $x molekül trigliserit (nötr yağ) ile $p glikoz '
           'biriminden oluşan bir glikojen molekülü yapı taşlarına kadar '
           'hidroliz ediliyor. Bu olayda toplam kaç yapı taşı molekülü oluşur?',
@@ -2093,80 +2221,92 @@ final _f12 = lmAile(
           'Her trigliseritten 1 gliserol ve 3 yağ asidi, yani 4 molekül '
           'oluşur: 4 · $x = ${4 * x}. Glikojenden $p glikoz oluşur. Toplam '
           '${4 * x} + $p = ${4 * x + p} bulunur.',
-          positive: true,
         );
       case 4:
         final p = 20 + 5 * a;
-        return sayisal(
+        return say(
           'Bir hücrede eşit sayıda amino asit içeren $y polipeptit zincirinin '
           'sentezi sırasında toplam ${y * (p - 1)} molekül su açığa çıkıyor. '
           'Bu zincirlerin her birinde kaç amino asit bulunur?',
           p,
-          [p - 1, p + 1, p - 2, y * (p - 1) ~/ (y + 1)],
+          // Bağ sayısını verme, bir fazla ya da eksik sayma, toplam suyu
+          // verme, zincir sayısının bir fazlasına ya da eksiğine bölme.
+          [
+            p - 1, p + 1, p - 2, y * (p - 1) ~/ (y + 1),
+            if (y * (p - 1) % (y - 1) == 0) y * (p - 1) ~/ (y - 1),
+            y * (p - 1),
+          ],
           'Bir zincir için açığa çıkan su ${y * (p - 1)} / $y = ${p - 1} '
           'olur. Amino asit sayısı peptit bağı sayısından 1 fazladır: '
           '${p - 1} + 1 = $p.',
-          positive: true,
         );
       case 5:
         final parca = a + 4, boy = 10 * (b + 3);
-        return sayisal(
+        return say(
           'Sindirim sırasında ${parca * boy} glikoz biriminden oluşan bir '
           'nişasta molekülü, her biri $boy glikoz içeren parçalara ayrılacak '
           'biçimde kısmen hidroliz ediliyor. Bu olayda kaç molekül su '
           'harcanır?',
           parca - 1,
-          [parca, parca * boy - 1, parca * (boy - 1), parca + 1],
+          // Parça sayısını verme, tam hidroliz sanma, parçalardaki bağları
+          // sayma, bir fazla ya da eksik sayma.
+          [parca, parca * boy - 1, parca * (boy - 1), parca + 1, parca - 2],
           'Molekül ${parca * boy} / $boy = $parca parçaya ayrılır. Bunun için '
           '$parca − 1 = ${parca - 1} glikozit bağı koparılır ve her bağ için 1 '
           'molekül su harcanır.',
-          positive: true,
         );
       case 6:
         final p = 200 + 12 * a;
-        return sayisal(
+        return say(
           'Bir hücrede toplam $p amino asit kullanılarak $y ayrı polipeptit '
           'zinciri sentezleniyor. Bu sentezler sırasında toplam kaç peptit '
           'bağı kurulur?',
           p - y,
-          [p - 1, p, p + y, p - y - 1],
+          // Tek zincir sanma, amino asit sayısını verme, zincir sayısını
+          // ekleme ya da iki kez çıkarma.
+          [p - 1, p, p + y, p - y - 1, p - 2 * y],
           'Her zincirde peptit bağı sayısı amino asit sayısından 1 eksiktir; '
           '$y zincir için toplam $p − $y = ${p - y} peptit bağı kurulur.',
-          positive: true,
         );
       case 7:
-        return sayisal(
+        return say(
           'Bir hücrede $x molekül trigliserit (nötr yağ) ile $y molekül '
           'disakkarit sentezleniyor. Bu sentezler sırasında toplam kaç molekül '
           'su açığa çıkar?',
           3 * x + y,
-          [x + y, 3 * x + 2 * y, 4 * x + 2 * y, 3 * (x + y)],
+          // Trigliserit başına 1, 2 ya da 4, disakkarit başına 2 su sayma;
+          // disakkaritleri unutma.
+          [x + y, 3 * x + 2 * y, 4 * x + 2 * y, 3 * (x + y), 2 * x + y, 3 * x],
           'Her trigliserit için 3, her disakkarit için 1 molekül su açığa '
           'çıkar: 3 · $x + $y = ${3 * x + y}.',
-          positive: true,
         );
       case 8:
         final p1 = 300 + 40 * a, p2 = 205 + 50 * b; // biri çift, diğeri tek
-        return sayisal(
+        return say(
           'Karaciğerde biri $p1, diğeri $p2 glikoz biriminden oluşan iki '
           'glikojen molekülü tamamen glikoza hidroliz ediliyor. Bu olayda '
           'toplam kaç molekül su harcanır?',
           p1 + p2 - 2,
-          [p1 + p2, p1 + p2 - 1, p1 + p2 + 2, 2 * (p1 + p2)],
+          // Bağ yerine glikoz sayma, tek molekül sanma, iki kez sayma, yalnız
+          // bir molekülü hesaplama, ortalama alma.
+          [
+            p1 + p2, p1 + p2 - 1, p1 + p2 + 2, 2 * (p1 + p2), p1 - 1, p2 - 1,
+            (p1 + p2) ~/ 2 - 1,
+          ],
           'Her molekülde glikozit bağı sayısı glikoz sayısından 1 eksiktir: '
           '($p1 − 1) + ($p2 − 1) = ${p1 + p2 - 2}.',
-          positive: true,
         );
       default:
-        return sayisal(
+        return say(
           'Bir deney tüpünde ${x + 1} molekül dipeptit ile $y molekül tripeptit '
           'tamamen amino asitlerine hidroliz ediliyor. Bu olayda toplam kaç '
           'molekül su harcanır?',
           x + 1 + 2 * y,
-          [x + 1 + y, 2 * (x + 1) + 3 * y, 2 * (x + 1) + 2 * y, x + 3 * y],
+          // Bağ yerine amino asit sayma, tripeptitte 1 ya da 3 bağ sayma,
+          // dipeptitleri ya da tripeptitleri unutma.
+          [x + 1 + y, 2 * (x + 1) + 3 * y, 2 * (x + 1) + 2 * y, x + 3 * y, 2 * y, x + 1],
           'Bir dipeptitte 1, bir tripeptitte 2 peptit bağı vardır; her bağ '
           'için 1 molekül su harcanır: ${x + 1} + 2 · $y = ${x + 1 + 2 * y}.',
-          positive: true,
         );
     }
   },

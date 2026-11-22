@@ -90,11 +90,10 @@ int _carp32(int a, int b) =>
 /// yanlış etiket öteki iki seçenekte görünür: konum çoğunluğu, ortak öge ya
 /// da benzerlik anahtarı göstermez. [tekrarsiz] doğruysa aynı etiketi iki
 /// konumda taşıyan seçenek kurulmaz (her konumun yanıtı ayrı bir eserse böyle
-/// bir seçenek kendi kendini eler). [ornek] verilirse (ailenin tablosundaki
-/// doğru etiketler, sıklıklarıyla) yanlış etiket bütün aday listesinden, bu
-/// örneklemdeki sıklığıyla orantılı seçilir: bir etiket çeldiricide de doğru
-/// yanıttaki sıklığına yakın sıklıkla görünür, sık doğru çıkan etiket
-/// vakalar boyunca “genellikle doğru” olmaz. [boyDengeli] doğruysa yanlış etiketler,
+/// bir seçenek kendi kendini eler). [agirlik] verilirse (bkz. [_dengeAgirlik])
+/// yanlış etiket bütün aday listesinden ağırlığıyla orantılı seçilir; böylece
+/// bir etiket çeldiricide doğru yanıttaki sıklığıyla görünür ve vakalar
+/// boyunca “genellikle doğru” olmaz. [boyDengeli] doğruysa yanlış etiketler,
 /// anahtardan uzun çeldirici sayısı vakadan vakaya 0 … 3 arasında eşit
 /// dağılacak biçimde seçilir (uzun yanlış biçimleri az olan ailelerde anahtar
 /// en uzun seçenek olmasın diye).
@@ -107,7 +106,7 @@ AdvancedItem _sirali(
   bool tekrarsiz = false,
   int genislik = 3,
   bool boyDengeli = false,
-  List<String>? ornek,
+  Map<String, double>? agirlik,
 }) {
   String yaz(List<String> v) => v.join(' – ');
   List<String> secenekler(List<String> w) => [
@@ -158,9 +157,20 @@ AdvancedItem _sirali(
     ];
     if (aday.isEmpty) throw StateError('Yanlış aday yok: $kok');
     String? secilen;
-    for (var r = 0; ornek != null && secilen == null && r < 64; r++) {
-      final s = ornek[_karma(i, 11 + p + 8 * r) % ornek.length];
-      if (aday.contains(s)) secilen = s;
+    if (agirlik != null) {
+      double a(String s) => agirlik[s] ?? 0.05;
+      var r =
+          _karma(i, 11 + p) /
+          4294967296 *
+          aday.fold<double>(0, (t, s) => t + a(s));
+      for (final s in aday) {
+        r -= a(s);
+        if (r < 0) {
+          secilen = s;
+          break;
+        }
+      }
+      secilen ??= aday.last;
     }
     w.add(
       secilen ??
@@ -170,6 +180,46 @@ AdvancedItem _sirali(
   }
   return secenekli(kok, yaz(dogru), secenekler(w), aciklama);
 }
+
+/// Yanlış etiket ağırlıkları. [kayitlar] ailenin tablosundaki her kayıt için
+/// (doğru etiket, o kayıtta çeldiriciye yazılabilecek etiketler) taşır.
+/// Çeldirici etiket adaylar arasından ağırlığıyla orantılı seçildiğinde her
+/// etiketin çeldiricide beklenen görünme sayısı doğru yanıttaki sayısına eşit
+/// olacak biçimde ağırlıklar yinelemeli orantılı uydurmayla bulunur.
+Map<String, double> _dengeAgirlik(List<(String, List<String>)> kayitlar) {
+  final dogru = <String, double>{};
+  for (final (d, _) in kayitlar) {
+    dogru[d] = (dogru[d] ?? 0) + 1;
+  }
+  final v = {
+    for (final (_, y) in kayitlar)
+      for (final s in y) s: 1.0,
+  };
+  for (var tur = 0; tur < 300; tur++) {
+    final say = <String, double>{};
+    for (final (_, y) in kayitlar) {
+      final t = y.fold<double>(0, (a, s) => a + v[s]!);
+      for (final s in y) {
+        say[s] = (say[s] ?? 0) + v[s]! / t;
+      }
+    }
+    for (final s in v.keys.toList()) {
+      final x = v[s]! * (1 + (dogru[s] ?? 0) / say[s]!) / 2;
+      v[s] = x < 0.05 ? 0.05 : (x > 20 ? 20 : x);
+    }
+  }
+  return v;
+}
+
+/// [havuz] içinden [dogru] ve [disi] dışında kalan etiketler.
+List<String> _haric(
+  List<String> havuz,
+  String dogru, [
+  List<String> disi = const [],
+]) => [
+  for (final s in havuz)
+    if (s != dogru && !disi.contains(s)) s,
+];
 
 const _kumeAdi = {
   1: 'Yalnız I',
@@ -353,7 +403,9 @@ const _sesOlaylari = [
 ];
 
 final _sesSerpik = _serpistir(_sesOlaylari, 5);
-final _sesOrnek = [for (final e in _sesOlaylari) e.$2];
+final _sesAgirlik = _dengeAgirlik([
+  for (final e in _sesOlaylari) (e.$2, _haric(_sesHavuzu, e.$2)),
+]);
 
 // “Hangileri” sorularında anahtarın üçte ikisi tek öncüllüdür; desen
 // ağırlıkları seçeneklerin boy dağılımını buna göre kurar (bkz. _hangileri).
@@ -401,7 +453,7 @@ final _sesOlayi = lmSirali(
       ],
       aciklama,
       i,
-      ornek: _sesOrnek,
+      agirlik: _sesAgirlik,
     );
   },
   exam: ExamKind.tyt,
@@ -573,7 +625,9 @@ const _sozcukTurleri = [
 ];
 
 final _turSerpik = _serpistir(_sozcukTurleri, 7);
-final _turOrnek = [for (final e in _sozcukTurleri) e.$2];
+final _turAgirlik = _dengeAgirlik([
+  for (final e in _sozcukTurleri) (e.$2, _haric(_turHavuzu, e.$2)),
+]);
 
 const _turKarisan = {
   'isim': ['zamir', 'sıfat'],
@@ -604,7 +658,7 @@ final _sozcukTuru = lmSirali(
       ],
       '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${x[p].$2}: ${x[p].$3}'].join('; ')}.',
       i,
-      ornek: _turOrnek,
+      agirlik: _turAgirlik,
     );
   },
   exam: ExamKind.tyt,
@@ -661,8 +715,9 @@ final _cekimler = _serpistir([
     for (var j = 0; j < t.$3.length; j++)
       (t.$3[j], _kipHavuzu[t.$1], _kisiHavuzu[t.$2[j]]),
 ], 9);
-final _kipOrnek = [for (final e in _cekimler) e.$2];
-final _kisiOrnek = [for (final e in _cekimler) e.$3];
+final _kisiAgirlik = _dengeAgirlik([
+  for (final e in _cekimler) (e.$3, _haric(_kisiHavuzu, e.$3)),
+]);
 
 const _kipKarisan = {
   'görülen geçmiş zaman': ['duyulan geçmiş zaman'],
@@ -682,6 +737,11 @@ const _kipDisi = {
   'istek kipi': ['emir kipi'],
   'emir kipi': ['istek kipi'],
 };
+
+final _kipAgirlik = _dengeAgirlik([
+  for (final e in _cekimler)
+    (e.$2, _haric(_kipHavuzu, e.$2, _kipDisi[e.$2] ?? const [])),
+]);
 
 final _fiilCekimi = lmSirali(
   'tde_fiil_cekimi',
@@ -709,7 +769,7 @@ final _fiilCekimi = lmSirali(
         ],
         aciklama,
         i,
-        ornek: _kisiOrnek,
+        agirlik: _kisiAgirlik,
       );
     }
     final kip = [for (final e in x) e.$2];
@@ -731,7 +791,7 @@ final _fiilCekimi = lmSirali(
       ],
       aciklama,
       i,
-      ornek: _kipOrnek,
+      agirlik: _kipAgirlik,
     );
   },
   exam: ExamKind.tyt,
@@ -811,7 +871,9 @@ const _yapilar = [
 ];
 
 final _yapiSerpik = _serpistir(_yapilar, 3);
-final _yapiOrnek = [for (final e in _yapilar) e.$2];
+final _yapiAgirlik = _dengeAgirlik([
+  for (final e in _yapilar) (e.$2, _haric(_yapiHavuzu, e.$2)),
+]);
 
 // “Hangileri” sorularındaki anahtar boylarına göre desen ağırlıkları.
 const _desenYapi = [15, 3, 40, 25, 12, 22, 2];
@@ -847,7 +909,7 @@ final _yapi = lmSirali(
       [for (var p = 0; p < 3; p++) _digerleri(_yapiHavuzu, etiket[p], i + p)],
       aciklama,
       i,
-      ornek: _yapiOrnek,
+      agirlik: _yapiAgirlik,
     );
   },
   exam: ExamKind.tyt,
@@ -1160,7 +1222,10 @@ const _sanatlar = [
 ];
 
 final _sanatSerpik = _serpistir(_sanatlar, 7);
-final _sanatOrnek = [for (final e in _sanatlar) e.$2];
+final _sanatAgirlik = _dengeAgirlik([
+  for (final e in _sanatlar)
+    (e.$2, _haric(_sanatHavuzu, e.$2, _sanatDisi[e.$2] ?? const [])),
+]);
 
 final _sozSanati = lmSirali(
   'tde_soz_sanati',
@@ -1190,7 +1255,7 @@ final _sozSanati = lmSirali(
       ],
       '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${etiket[p]}: ${_sanatGerekce[etiket[p]]}'].join('; ')}.',
       i,
-      ornek: _sanatOrnek,
+      agirlik: _sanatAgirlik,
     );
   },
   exam: ExamKind.ayt,
@@ -1272,6 +1337,10 @@ final _yazarAdlari = [for (final e in _eserler) e.$2];
 final _yakinYazarlar = [
   for (var t = 0; t < _eserler.length; t++) _komsular(_yazarAdlari, t),
 ];
+final _yazarAgirlik = _dengeAgirlik([
+  for (var t = 0; t < _eserler.length; t++)
+    (_eserler[t].$2, _yakinYazarlar[t].sublist(0, 6)),
+]);
 
 final _yazarEser = lmSirali(
   'tde_yazar_eser',
@@ -1309,7 +1378,7 @@ final _yazarEser = lmSirali(
       [for (final t in sira) _yakinYazarlar[t].sublist(0, 6)],
       aciklama,
       i,
-      ornek: _yazarAdlari,
+      agirlik: _yazarAgirlik,
     );
   },
   exam: ExamKind.ayt,
@@ -1459,9 +1528,22 @@ final _ilkEserleri = [for (final e in _ilkler) e.$2];
 final _yakinIlkler = [
   for (var t = 0; t < _ilkler.length; t++) _komsular(_ilkEserleri, t),
 ];
+final _ilkAgirlik = _dengeAgirlik([
+  for (var t = 0; t < _ilkler.length; t++)
+    (
+      _ilkler[t].$2,
+      _haric(
+        _yakinIlkler[t],
+        _ilkler[t].$2,
+        _ilkDisi[_ilkler[t].$1] ?? const [],
+      ).sublist(0, 6),
+    ),
+]);
 
 final _temsilciSerpik = _serpistir(_temsilciler, 9);
-final _toplulukOrnek = [for (final e in _temsilciler) e.$2];
+final _toplulukAgirlik = _dengeAgirlik([
+  for (final e in _temsilciler) (e.$2, _haric(_toplulukHavuzu, e.$2, e.$3)),
+]);
 
 final _donem = lmSirali(
   'tde_donem',
@@ -1493,7 +1575,7 @@ final _donem = lmSirali(
         '${[for (final e in x) '${e.$1}: ${e.$2} (${e.$3})'].join('; ')}.',
         i,
         tekrarsiz: true,
-        ornek: _ilkEserleri,
+        agirlik: _ilkAgirlik,
       );
     }
     final x = _yayili(_temsilciSerpik, j, 2500);
@@ -1520,7 +1602,7 @@ final _donem = lmSirali(
       ],
       '${[for (final e in x) '${e.$1}: ${e.$2}'].join('; ')}.',
       i,
-      ornek: _toplulukOrnek,
+      agirlik: _toplulukAgirlik,
     );
   },
   exam: ExamKind.ayt,
@@ -2193,6 +2275,9 @@ const _gelecekler = [
 ];
 
 final _gelecekSerpik = _serpistir(_gelecekler, 4);
+final _gelecekAgirlik = _dengeAgirlik([
+  for (final e in _gelecekler) (e.$2, _gelecekYanlis[e.$2]!),
+]);
 
 final _futureConditional = lmSirali(
   'ing_future_conditional',
@@ -2212,6 +2297,7 @@ final _futureConditional = lmSirali(
         [for (final e in etiket) _gelecekYanlis[e]!],
         '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${_gelecekGerekce[etiket[p]]}'].join('; ')}.',
         i,
+        agirlik: _gelecekAgirlik,
       );
     }
     // Koşul cümleleri: 24 çiftten üçlü seçki (2.024) × iki boşluk düzeni.
@@ -2271,6 +2357,9 @@ final _futureConditional = lmSirali(
       yanlis,
       '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${gerekce[p]}'].join('; ')}.',
       i,
+      // Doğru if biçimi (rains) çoğu yanlış biçimden kısadır; uzunluk
+      // dengesi anahtarın en kısa seçenek olmasını önler.
+      boyDengeli: true,
     );
   },
   lesson: 'İngilizce',
@@ -2338,6 +2427,7 @@ const _modallar = [
 ];
 
 final _modalSerpik = _serpistir(_modallar, 10);
+final _modalAgirlik = _dengeAgirlik([for (final e in _modallar) (e.$2, e.$3)]);
 
 final _modals = lmSirali(
   'ing_modals',
@@ -2355,6 +2445,7 @@ final _modals = lmSirali(
       [for (final e in x) e.$3],
       '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede “${x[p].$2}” ${_modalGerekce[x[p].$2]}'].join('; ')}.',
       i,
+      agirlik: _modalAgirlik,
     );
   },
   lesson: 'İngilizce',
@@ -2695,6 +2786,9 @@ const _miktarlar = [
 ];
 
 final _miktarSerpik = _serpistir(_miktarlar, 4);
+final _miktarAgirlik = _dengeAgirlik([
+  for (final e in _miktarlar) (e.$2, e.$3),
+]);
 
 final _quantifier = lmSirali(
   'ing_quantifier',
@@ -2712,6 +2806,7 @@ final _quantifier = lmSirali(
       [for (final e in x) e.$3],
       '${[for (var p = 0; p < 3; p++) '${_rakam[p]}. cümlede ${x[p].$4} (${x[p].$2})'].join('; ')}.',
       i,
+      agirlik: _miktarAgirlik,
     );
   },
   lesson: 'İngilizce',

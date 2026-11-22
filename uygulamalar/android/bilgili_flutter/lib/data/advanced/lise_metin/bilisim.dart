@@ -66,23 +66,74 @@ int _topla(Iterable<int> x) => x.fold(0, (p, q) => p + q);
 /// (a, b, c) koordinatlı vakanın 0 … 4999 arasındaki sıra numarası.
 int _no(int a, int b, int c) => a + 25 * b + 500 * c;
 
-/// Seçenekleri hazır sayısal soru: üç çeldirici, anahtardan küçük olanların
-/// sayısı vakanın hedef sırasına ([hedefSira]) eşit olacak biçimde [adaylar]
-/// arasından seçilir. Adaylar öncelik sırasıyla (değer, yazım) ikilileridir.
+/// Seçenekleri sınırlı bir havuzdan gelen sayısal soru: üç çeldirici,
+/// anahtardan küçük olanların sayısı vakanın hedef sırasına ([hedefSira])
+/// eşit olacak biçimde [adaylar] arasından seçilir. Havuz bir yanda kısa
+/// kalıyorsa hedef, olası sıralar arasında döndürülerek alınır (ör. yalnız
+/// 1, 2 ya da 3 olabiliyorsa 0 yerine 3). Adaylar öncelik sırasıyla (değer,
+/// yazım) ikilileridir.
 AdvancedItem _sirali(
   String prompt,
   num anahtar,
   String yazim,
   Iterable<(num, String)> adaylar,
   String explanation,
-  int i, [
-  int tuz = 0,
-]) => AdvancedItem(
-  prompt,
-  yazim,
-  siraliCeldiriciler(anahtar, yazim, adaylar, hedefSira(i, tuz)),
-  explanation,
-);
+  int i,
+) {
+  final tekil = <(num, String)>[];
+  for (final x in adaylar) {
+    if (ayniSecenek(x.$2, yazim) || tekil.any((w) => ayniSecenek(w.$2, x.$2))) {
+      continue;
+    }
+    tekil.add(x);
+  }
+  final alt = tekil.where((x) => x.$1 < anahtar).length;
+  final lo = 3 - (tekil.length - alt) < 0 ? 0 : 3 - (tekil.length - alt);
+  final hi = alt > 3 ? 3 : alt, h = hedefSira(i);
+  final sira = lo <= hi ? lo + (h - lo) % (hi - lo + 1) : h;
+  return AdvancedItem(
+    prompt,
+    yazim,
+    siraliCeldiriciler(anahtar, yazim, tekil, sira),
+    explanation,
+  );
+}
+
+/// Sayısal iki hatalı tasarım: A hatası [yanlislar] içinden bir değer (ör.
+/// yanlış dal), B hatası anahtara eklenen [kaymalar] içinden bir hesap hatası;
+/// çeldiriciler A, B ve A + B (w, n + e, w + e) olur ve hiçbiri ötekilere
+/// anahtardan daha yakın değildir. [yanlislar] içindeki ilk üç değer de tek
+/// başına bir tasarımdır. Anahtardan küçük çeldirici sayısı [sira] olan ilk
+/// geçerli tasarım, yoksa sıraya en yakını seçilir.
+List<int> _ikiHataliSayisal(
+  int n,
+  List<int> yanlislar,
+  List<int> kaymalar,
+  int sira, {
+  bool Function(int)? uygun,
+}) {
+  final tasarimlar = [
+    if (yanlislar.length >= 3) yanlislar.sublist(0, 3),
+    for (final w in yanlislar)
+      for (final e in kaymalar) [w, n + e, w + e],
+  ];
+  List<int>? enIyi;
+  var fark = 9;
+  for (final t in tasarimlar) {
+    if (t.toSet().length != 3 ||
+        t.contains(n) ||
+        (uygun != null && !t.every(uygun))) {
+      continue;
+    }
+    final d = (t.where((v) => v < n).length - sira).abs();
+    if (d < fark) {
+      enIyi = t;
+      fark = d;
+      if (d == 0) break;
+    }
+  }
+  return enIyi!;
+}
 
 /// [n] sayısının ikilik gösteriminde 1 (ya da [bit] 0 ise 0) olan, en soldaki
 /// basamak dışındaki ve [enAz] numaralı basamaktan başlayan konumlar
@@ -2476,85 +2527,6 @@ Set<int> _kosulSabitleri(_Kosul k) => {
     int.parse(m[0]!),
 };
 
-/// İşaretli tam sayı yanıtlı soru: negatif seçenekler − ile yazılır.
-AdvancedItem _isaretli(
-  String prompt,
-  int answer,
-  Iterable<int> alternatives,
-  String explanation,
-) {
-  String yaz(int x) => x < 0 ? '−${-x}' : '$x';
-  final step = answer.abs() >= 200 ? 10 : (answer.abs() >= 40 ? 5 : 1);
-  return secenekli(prompt, yaz(answer), [
-    for (final x in [
-      ...alternatives,
-      answer + step,
-      answer - step,
-      answer + 2 * step,
-      answer + 3 * step,
-    ])
-      yaz(x),
-  ], explanation);
-}
-
-/// Kalıp ve dal başına doğru formülün tipik hesap hataları: değişkenleri
-/// karıştırma, div ile mod'u karıştırma, bölümü yukarı yuvarlama, işlem
-/// önceliğini atlama, işareti ters alma. Başka bir dalın formülüyle aynı
-/// olan hatalar (ör. x − y yerine y − x) zaten yanlış dal çeldiricisidir.
-final _kosulKaymalari = <List<List<int Function(int, int)>>>[
-  [
-    [],
-    [],
-    [(x, y) => y % 3, (x, y) => x ~/ 3, (x, y) => (y + 2) ~/ 3],
-    [],
-  ],
-  [
-    [(x, y) => y - x, (x, y) => x + y],
-    [(x, y) => 2 * x, (x, y) => y + 2],
-    [(x, y) => x % 5, (x, y) => y ~/ 5, (x, y) => (x + 4) ~/ 5],
-    [(x, y) => (x + 2) * y, (x, y) => 2 * x + y, (x, y) => x + y],
-  ],
-  [
-    [(x, y) => x - y],
-    [(x, y) => 2 * y, (x, y) => x + 2],
-    [(x, y) => x % 2, (x, y) => y ~/ 2, (x, y) => (x + 1) ~/ 2],
-    [(x, y) => x - y],
-  ],
-  [
-    [(x, y) => (x - 2) * y, (x, y) => 2 * y - x, (x, y) => x + 2 * y],
-    [],
-    [(x, y) => y - x],
-    [(x, y) => y % 2, (x, y) => x ~/ 2, (x, y) => (y + 1) ~/ 2],
-  ],
-  [
-    [(x, y) => x + y + 50, (x, y) => 50 - x - y],
-    [],
-    [],
-    [],
-  ],
-];
-
-/// İşaretli tam sayı yanıtlı soru; çeldiriciler [adaylar] arasından,
-/// anahtardan küçük olanların sayısı [sira] olacak biçimde seçilir. Negatif
-/// seçenekler − ile yazılır.
-AdvancedItem _isaretliSirali(
-  String prompt,
-  int answer,
-  Iterable<int> adaylar,
-  String explanation,
-  int sira,
-) {
-  String yaz(int x) => x < 0 ? '−${-x}' : '$x';
-  return AdvancedItem(
-    prompt,
-    yaz(answer),
-    siraliCeldiriciler(answer, yaz(answer), [
-      for (final x in adaylar) (x, yaz(x)),
-    ], sira),
-    explanation,
-  );
-}
-
 /// Formüldeki x ve y yerine değerleri yazar.
 String _yerine(String formul, int x, int y) =>
     formul.replaceAll('x', '$x').replaceAll('y', '$y');
@@ -2642,27 +2614,29 @@ AdvancedItem _kosul(int a, int b, int c) {
           '${k.dallar[3].$1})',
       'yaz z',
     ];
-    // Önce yanlış dala sapma, sonra doğru formülde hesap hatası, en sonda
-    // elde ya da ödünç (±10) ve birler basamağı (±1, ±2) hataları. Girişlerle
-    // ve sıfırla aynı değerler kullanılmaz.
-    return _isaretliSirali(
-      _kod(_notlu(_kosulGiris, satirlar), satirlar, _yazSorusu),
+    // Çeldiriciler: üç yanlış dal ya da iki hatalı tasarım (bir yanlış dal w,
+    // doğru dalda elde, ödünç ya da birler basamağı hatası n + e ve ikisi
+    // birlikte w + e). Girişlerle ve sıfırla aynı değerler kullanılmaz.
+    String yaz(int v) => v < 0 ? '−${-v}' : '$v';
+    final secilen = _ikiHataliSayisal(
       d[dal],
       [
         for (var t = 0; t < 4; t++)
           if (t != dal) d[t],
-        for (final v in [
-          for (final f in _kosulKaymalari[c][dal]) f(x, y),
-          for (final e in const [10, -10, 1, -1, 2, -2, 3, -3]) d[dal] + e,
-        ])
-          if (v != 0 && v != x && v != y) v,
       ],
+      const [10, -10, 1, -1, 2, -2, 3, -3, 20, -20],
+      hedefSira(_no(a, b, c)),
+      uygun: (v) => v != 0 && v != x && v != y,
+    );
+    return AdvancedItem(
+      _kod(_notlu(_kosulGiris, satirlar), satirlar, _yazSorusu),
+      yaz(d[dal]),
+      [for (final v in secilen) yaz(v)],
       'x = $x ve y = $y için ${k.dis.$1} koşulu '
       '${k.dis.$2(x, y) ? 'doğrudur ve ilk' : 'yanlıştır ve ikinci'} '
       'parantezdeki yapı çalışır. ${dal < 2 ? k.ic1.$1 : k.ic2.$1} koşulu '
       '${dal.isEven ? 'doğru' : 'yanlış'} olduğundan z = '
       '${_yerine(k.dallar[dal].$1, x, y)} = ${d[dal]} yazdırılır.',
-      hedefSira(_no(a, b, c)),
     );
   }
   switch (c) {
@@ -2704,17 +2678,29 @@ AdvancedItem _kosul(int a, int b, int c) {
         'değilse n ← 1',
         'yaz n',
       ];
-      return sayisal(
+      // Notlar 1 … 5 arasındadır. Tipik hatalar: ≥ yerine > alma, koşulları
+      // bağımsız sanıp son doğru koşulun notunu (2) yazma; sonra komşu notlar.
+      return _sirali(
         _kod(_notlu(_atamaGiris, satirlar), satirlar, _yazSorusu),
         n,
+        '$n',
         [
-          for (final x in [_karne(p, kesin: true), n + 1, n - 1, n + 2, n - 2])
-            if (x >= 1 && x <= 5) x,
+          for (final x in [
+            _karne(p, kesin: true),
+            2,
+            n + 1,
+            n - 1,
+            n + 2,
+            n - 2,
+            n + 3,
+            n - 3,
+          ])
+            if (x >= 1 && x <= 5) (x, '$x'),
         ],
         'p = $toplam div 3 = $p olur. Koşullar yukarıdan aşağı sırayla denenir: '
-        '${ustler.isEmpty ? 'ilk koşul p ≥ $p, $p ≥ $p olduğundan doğrudur' : '${yanlislar}p ≥ $p koşulu ise $p ≥ $p olduğundan doğrudur'} '
-        '(≥ koşulu eşitlikte de sağlanır). Yazdırılan değer $n olur.',
-        positive: true,
+            '${ustler.isEmpty ? 'ilk koşul p ≥ $p, $p ≥ $p olduğundan doğrudur' : '${yanlislar}p ≥ $p koşulu ise $p ≥ $p olduğundan doğrudur'} '
+            '(≥ koşulu eşitlikte de sağlanır). Yazdırılan değer $n olur.',
+        _no(a, b, c),
       );
     case 6:
       // 10 kg üstündeki kilogram ücreti daha düşüktür (r2 < r1): üç dalın
@@ -2757,21 +2743,36 @@ AdvancedItem _kosul(int a, int b, int c) {
           'k ≤ 2 ve k ≤ 10 yanlıştır; u = ${t0 + 8 * r1} + ${kg - 10} · $r2 = '
               '$temel',
       };
-      return sayisal(
+      // Ek hatalar: kilogram ücretini 2 kg'dan değil baştan hesaplama, sabit
+      // ücreti eklememe, 10 kg üstünde sınırı (− 10) ya da orta dilimi
+      // (8 · r1) unutma, tüm kilogramlara düşük ücreti uygulama.
+      final ek = h == 1 ? e : 0;
+      return sayisalSirali(
         _kod(_atamaGiris, satirlar, _yazSorusu),
         u,
         [
           for (var t = 0; t < 3; t++)
             if (t != dal) _kargo(t0, r1, r2, e, kg, h, dal: t),
           _kargo(t0, r1, r2, e, kg, 1 - h),
+          ...switch (dal) {
+            0 => [t0 + kg * r1 + ek],
+            1 => [t0 + kg * r1 + ek, (kg - 2) * r1 + ek],
+            _ => [
+              t0 + 8 * r1 + kg * r2 + ek,
+              t0 + (kg - 10) * r2 + ek,
+              t0 + (kg - 2) * r2 + ek,
+            ],
+          },
         ],
         'k = $kg için $hesap olur. '
         '${h == 1 ? 'h = 1 olduğundan $e eklenir ve $u yazdırılır.' : 'h = 0 olduğundan ekleme yapılmaz ve $u yazdırılır.'}',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 7:
       final yillar = _yilSecimi(j);
       final dogru = yillar.where(_artik).length;
+      int say(bool Function(int) f) => yillar.where(f).length;
       final satirlar = [
         'eğer y mod 400 = 0 ise s ← 1',
         'değilse eğer y mod 100 = 0 ise s ← 0',
@@ -2779,7 +2780,10 @@ AdvancedItem _kosul(int a, int b, int c) {
         'değilse s ← 0',
         'yaz s',
       ];
-      return sayisal(
+      // Sayılar 0 … 5 arasındadır. Tipik hatalar: yalnız 4 kuralı, 400
+      // kuralını unutma, 0 yazdırılanları sayma, yalnız 400 kuralı; sonra
+      // komşu sayılar.
+      return _sirali(
         _kod(
           _notlu(_atamaGiris, satirlar),
           satirlar,
@@ -2787,14 +2791,25 @@ AdvancedItem _kosul(int a, int b, int c) {
           'çalıştırılıyor. Bu değerlerden kaç tanesi için 1 yazdırılır?',
         ),
         dogru,
+        '$dogru',
         [
-          yillar.where((y) => y % 4 == 0).length,
-          yillar.where((y) => y % 4 == 0 && y % 100 != 0).length,
-          yillar.length - dogru,
+          for (final x in [
+            say((y) => y % 4 == 0),
+            say((y) => y % 4 == 0 && y % 100 != 0),
+            yillar.length - dogru,
+            say((y) => y % 400 == 0),
+            dogru + 1,
+            dogru - 1,
+            dogru + 2,
+            dogru - 2,
+            dogru + 3,
+            dogru - 3,
+          ])
+            if (x >= 0 && x <= yillar.length) (x, '$x'),
         ],
         '${yillar.map((y) => '$y için ${_artik(y) ? 1 : 0}').join(', ')} '
-        'yazdırılır; 1 yazdırılan değer sayısı $dogru olur.',
-        positive: true,
+            'yazdırılır; 1 yazdırılan değer sayısı $dogru olur.',
+        _no(a, b, c),
       );
     case 8:
       final t = 120 + 20 * a + b;
@@ -2822,16 +2837,30 @@ AdvancedItem _kosul(int a, int b, int c) {
         'yaz f',
       ];
       const formul = ['t − t div 5', 't − t div 10', 't − 10', 't + 15'];
-      return sayisal(
+      // Yanlış dallardan sonra: indirimi çıkarmak yerine ekleme, yalnız
+      // indirim tutarını yazma, 10 ya da 15 eklemede işareti ters alma; en
+      // sonda öbür dalların indirimini artış sanma.
+      return sayisalSirali(
         _kod(_notlu(_kosulGiris, satirlar), satirlar, _yazSorusu),
         hesap(dal),
         [
           for (var d = 0; d < 4; d++)
             if (d != dal) hesap(d),
+          ...switch (dal) {
+            0 => [t + t ~/ 5, t ~/ 5],
+            1 => [t + t ~/ 10, t ~/ 10],
+            2 => [t + 10],
+            _ => [t - 15],
+          },
+          t + 10,
+          t - 15,
+          t + t ~/ 10,
+          t + t ~/ 5,
         ],
         't ≥ 500 koşulu ${t >= 500 ? 'doğru' : 'yanlış'}, u = 1 koşulu '
         '${u == 1 ? 'doğru' : 'yanlış'} olduğundan f = '
         '${formul[dal].replaceAll('t', '$t')} = ${hesap(dal)} yazdırılır.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     default:
@@ -2952,7 +2981,9 @@ AdvancedItem _dizi(int a, int b, int c) {
     }
     final x = al(k), y = al(x);
     final x0 = al(k + 1);
-    return sayisal(
+    // Ek hatalar: erişimlerden yalnız birini 0 ile başlayan indisle okuma
+    // (bir sağdaki ya da soldaki eleman).
+    return sayisalSirali(
       _kod(
         'A = ${_diziYaz(d)} dizisi veriliyor. $_diziNotu Aşağıdaki sözde '
         'kodda ← atama işlemidir.',
@@ -2960,9 +2991,19 @@ AdvancedItem _dizi(int a, int b, int c) {
         _yazSorusu,
       ),
       10 * x + y,
-      [if (x0 < n) 10 * x0 + al(x0 + 1), 11 * x, 10 * k + x, 10 * y + x],
+      [
+        if (x0 < n) 10 * x0 + al(x0 + 1),
+        11 * x,
+        10 * k + x,
+        10 * y + x,
+        if (x < n) 10 * x + al(x + 1),
+        10 * x0 + al(x0),
+        if (x > 1) 10 * x + al(x - 1),
+        if (k > 1) 10 * al(k - 1) + al(al(k - 1)),
+      ],
       'A[$k] = $x olduğundan x = $x olur. y = A[$x] = $y bulunur. Yazdırılan '
       'değer 10 · $x + $y = ${10 * x + y} olur.',
+      hedefSira(_no(a, b, c)),
       positive: true,
     );
   }
@@ -2987,7 +3028,9 @@ AdvancedItem _dizi(int a, int b, int c) {
       final dogru = esit ? son : ilk;
       if (dogru < 3 || dogru >= n) continue;
       final enk = d.indexOf(d.reduce((u, v) => u < v ? u : v)) + 1;
-      return sayisal(
+      // Ek hatalar: m değerinin döngü sonundaki i olduğunu sanma, indisi bir
+      // fazla sayma, m değerinin hiç değişmediğini sanma.
+      return sayisalSirali(
         _kod(_kodDiziGiris, [
           'A ← ${_diziYaz(d)}',
           'm ← 1',
@@ -2997,10 +3040,19 @@ AdvancedItem _dizi(int a, int b, int c) {
           'yaz m',
         ], _yazSorusu),
         dogru,
-        [if (ilk != son) esit ? ilk : son, dogru - 1, enk, enb],
+        [
+          if (ilk != son) esit ? ilk : son,
+          dogru - 1,
+          enk,
+          enb,
+          n,
+          dogru + 1,
+          1,
+        ],
         'm, o ana kadar görülen en büyük elemanın indisini tutar. En büyük '
         'değer $enb olup ${ilk == son ? '$ilk numaralı konumdadır' : '$ilk ve $son numaralı konumlarda bulunur; koşul ${esit ? '≥' : '>'} olduğundan ${esit ? 'eşit değerde de m güncellenir ve son konum' : 'eşit değerde m değişmez ve ilk konum'} kalır'}. '
         'Yazdırılan değer $dogru olur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     }
@@ -3045,7 +3097,9 @@ AdvancedItem _dizi(int a, int b, int c) {
         (sinirli != null && topla(sinirli) == dogru)) {
       continue;
     }
-    return sayisal(
+    // Ek hatalar: döngüyü son elemandan önce bitirme, A[i] yerine i
+    // toplama, toplamak yerine sayma.
+    return sayisalSirali(
       _kod('$_kodDiziGiris$_modNotu', [
         'A ← ${_diziYaz(d)}',
         't ← 0',
@@ -3055,10 +3109,19 @@ AdvancedItem _dizi(int a, int b, int c) {
         'yaz t',
       ], _yazSorusu),
       dogru,
-      [if (sinirli != null) topla(sinirli), tum - dogru, tum, dogru + d[0]],
+      [
+        if (sinirli != null) topla(sinirli),
+        tum - dogru,
+        tum,
+        dogru + d[0],
+        dogru - d[n - 1],
+        _topla(uyanlar),
+        uyanlar.length,
+      ],
       'Koşulu sağlayan elemanlar '
       '${uyanlar.map((i) => 'A[$i] = ${d[i - 1]}').join(', ')} olduğundan '
       't = ${uyanlar.map((i) => d[i - 1]).join(' + ')} = $dogru olur.',
+      hedefSira(_no(a, b, c)),
       positive: true,
     );
   }
@@ -3183,15 +3246,28 @@ AdvancedItem _siralama(int a, int b, int c) {
           if (d[i] != sirali[i]) 1,
       ]);
       if (s == n - 1 || s == ters || s == yersiz || s < 2) continue;
-      return sayisal(
+      // Ek hatalar: son değiştirmeyi saymama, değiştirme yapılmayan adımları
+      // sayma, her değiştirmenin iki elemanı yerleştirdiğini sanma, başta
+      // yerinde olan elemanları sayma.
+      return sayisalSirali(
         'Seçerek sıralama, her adımda dizinin henüz sıralanmamış bölümündeki en '
             'küçük elemanı bulur; bu eleman o bölümün ilk konumunda değilse '
             'ikisinin yerini değiştirir, ilk konumdaysa değiştirme yapmaz. '
             '${_diziYaz(d)} dizisi bu yöntemle küçükten büyüğe sıralanırsa '
             'toplam kaç yer değiştirme yapılır?',
         s,
-        [n - 1, ters, yersiz, s + 1],
+        [
+          n - 1,
+          ters,
+          yersiz,
+          s + 1,
+          s - 1,
+          n - 1 - s,
+          (yersiz + 1) ~/ 2,
+          n - yersiz,
+        ],
         'Adım adım: ${_secmeIzi(d)}. Toplam $s yer değiştirme yapılır.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     }
@@ -3203,17 +3279,25 @@ AdvancedItem _siralama(int a, int b, int c) {
     final d = g.farkli(n, 10, 89);
     final s = _gecisDegisimi(d), ters = _tersCiftler(d);
     if (s < 3 || s >= n - 1 || s == ters) continue;
-    return sayisal(
+    final gecis = _kabarcikGecis(d);
+    final yeri = [
+      for (var i = 0; i < n; i++)
+        if (gecis[i] != d[i]) 1,
+    ].length;
+    // Ek hatalar: yer değiştirme olmayan karşılaştırmaları sayma, yeri
+    // değişen eleman sayısını yazma.
+    return sayisalSirali(
       'Kabarcık sıralamasının bir geçişi aşağıdaki sözde kodla yapılmaktadır. '
           '$_diziNotu\n${_kabarcikKodu.join('\n')}\nn = $n ve A = '
           '${_diziYaz(d)} iken bu geçiş bir kez uygulanırsa toplam kaç yer '
           'değiştirme yapılır?',
       s,
-      [n - 1, ters, s + 1, s - 1],
+      [n - 1, ters, s + 1, s - 1, n - 1 - s, yeri],
       'Geçişte yan yana çiftler soldan sağa karşılaştırılır; soldaki büyük '
           'olduğunda yer değiştirilir. Geçiş sonunda dizi '
           '${_diziYaz(_kabarcikGecis(d))} olur ve $s yer değiştirme yapılmış '
           'olur.',
+      hedefSira(_no(a, b, c)),
       positive: true,
     );
   }
@@ -3311,16 +3395,27 @@ AdvancedItem _ikiliArama(int a, int b, int c) {
         if (say < 3 || say == dogrusal || say == n || say == _enKotu(n)) {
           continue;
         }
-        return sayisal(
+        // Ek hatalar: orta değeri yukarı yuvarlama, A[orta] değerini bir
+        // sağdan okuma, yalnız aralığı daraltan adımları sayma.
+        return sayisalSirali(
           '$giris\nn = $n, A = ${_diziYaz(d)} ve x = $x için:\n'
               '${_ikiliAramaKodu.join('\n')}\nHer döngü adımında A[orta] '
               'elemanına bakılması bir karşılaştırma sayılırsa algoritma kaç '
               'karşılaştırma yapar?',
           say,
-          [dogrusal, _enKotu(n), say + 1, say - 1],
+          [
+            dogrusal,
+            _enKotu(n),
+            say + 1,
+            say - 1,
+            _ikiliIz(d, x, yukari: true).length,
+            _ikiliIz(d, x, kayik: true).length,
+            say - 2,
+          ],
           'Bakılan elemanlar sırasıyla ${iz.join(', ')} olur. '
               '${yok ? 'Son adımda alt değeri ust değerini geçer ve x bulunamaz' : 'Son bakılan eleman x değerine eşittir'}; '
               'toplam $say karşılaştırma yapılır.',
+          hedefSira(_no(a, b, c)),
           positive: true,
         );
       }
@@ -3347,22 +3442,27 @@ AdvancedItem _ikiliArama(int a, int b, int c) {
   if (m.isEven) {
     final n = 100 + 37 * (m ~/ 2) + (m ~/ 2) * (m ~/ 2) * 3;
     final k = _enKotu(n);
-    return sayisal(
+    // Ek hatalar: doğrusal aramanın en kötü durumu (n), yarıya indirme
+    // sayısını bir eksik ya da iki eksik alma.
+    return sayisalSirali(
       'Küçükten büyüğe sıralı bir listede $n kayıt bulunmaktadır. İkili arama '
           'her adımda aranan değeri aralığın ortasındaki kayıtla karşılaştırıp '
           'aralığı yarıya indirir. Bir değer en kötü durumda en çok kaç '
           'karşılaştırmada bulunur ya da listede olmadığı anlaşılır?',
       k,
-      [k - 1, k + 1, n ~/ 2],
+      [k - 1, k + 1, n ~/ 2, n, k - 2, k + 2],
       '${_us(2, k - 1)} = ${1 << (k - 1)} ≤ $n < ${_us(2, k)} = ${1 << k} '
           'olduğundan en kötü durumda ${k - 1} kez yarıya indirmeden sonra tek '
           'kayıt kalır; toplam $k karşılaştırma yapılır.',
+      hedefSira(_no(a, b, c)),
       positive: true,
     );
   }
   final n = 40 + 11 * (m ~/ 2) + (m ~/ 2) * (m ~/ 2);
   final k = _enKotu(n);
-  return sayisal(
+  // Ek hatalar: farkı almayı unutma, iki sayıyı toplama, ikili arama için
+  // k + 1 alma, doğrusal arama için n / 2 alıp ayrıca bir eksik sayma.
+  return sayisalSirali(
     'Küçükten büyüğe sıralı bir listede $n kayıt vardır. Doğrusal arama '
         'kayıtları baştan sona tek tek, ikili arama ise her adımda aralığın '
         'ortasındaki kayda bakarak aralığı yarıya indirerek arar. Listede '
@@ -3370,11 +3470,21 @@ AdvancedItem _ikiliArama(int a, int b, int c) {
         'karşılaştırma sayısı, ikili aramanın en kötü durumdaki karşılaştırma '
         'sayısından kaç fazladır?',
     n - k,
-    [n - k + 1, n - k - 1, n ~/ 2 - k, n - (k - 1)],
+    [
+      n - k + 1,
+      n - k - 1,
+      n ~/ 2 - k,
+      n - (k - 1),
+      n,
+      n + k,
+      n - k - 2,
+      n ~/ 2 - k + 1,
+    ],
     'Doğrusal arama $n kaydın hepsine bakar. İkili arama için '
         '${_us(2, k - 1)} = ${1 << (k - 1)} ≤ $n < ${_us(2, k)} = ${1 << k} '
         'olduğundan en çok $k karşılaştırma gerekir. Fark $n − $k = ${n - k} '
         'olur.',
+    hedefSira(_no(a, b, c)),
     positive: true,
   );
 }
@@ -3408,6 +3518,16 @@ List<int> _oklid(int x, int y) {
   return r;
 }
 
+/// mod yerine div ile ilerleyen (hatalı) Öklid zincirinin döndürdüğü değer.
+int _divZinciri(int x, int y) {
+  while (y != 0) {
+    final t = x ~/ y;
+    x = y;
+    y = t;
+  }
+  return x;
+}
+
 /// EBOB vakaları: en az dört çağrı, EBOB en az 2; x − y farkı EBOB değerine
 /// eşit değildir (çıkarma hatası anahtarı vermez).
 final _ebobHavuzu = [
@@ -3432,7 +3552,7 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
     case 0:
       final p = 1 + a, k = 2 + b % 4, m = 4 + b ~/ 4;
       int f(int n) => p + k * n * (n + 1) ~/ 2;
-      return sayisal(
+      return sayisalSirali(
         _kod(_ozGiris, [
           _fonksiyon('f(n)', [
             'eğer n = 0 ise $p döndür',
@@ -3440,9 +3560,11 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
           ]),
         ], 'f($m) çağrısının döndürdüğü değer kaçtır?'),
         f(m),
-        [f(m - 1), f(m + 1), f(m) - p, p + k * m],
+        // Ek hata: 1 + 2 + … + m toplamında 2 ile bölmeyi unutma.
+        [f(m - 1), f(m + 1), f(m) - p, p + k * m, p + k * m * (m + 1)],
         'f($m) = f(${m - 1}) + $k · $m = … = f(0) + $k · (1 + 2 + … + $m) = '
         '$p + $k · ${m * (m + 1) ~/ 2} = ${f(m)} olur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 1:
@@ -3452,7 +3574,7 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
         iz.add(q * iz.last + r);
       }
       final dogru = iz[m - 1], once = iz[m - 2];
-      return sayisal(
+      return sayisalSirali(
         _kod(_ozGiris, [
           _fonksiyon('f(n)', [
             'eğer n = 1 ise $p döndür',
@@ -3460,9 +3582,18 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
           ]),
         ], 'f($m) çağrısının döndürdüğü değer kaçtır?'),
         dogru,
-        [once, iz[m], q * once, q * (once + r)],
+        // Ek hatalar: r eklemeyi hiç yapmama, temel durumda da r ekleme.
+        [
+          once,
+          iz[m],
+          q * once,
+          q * (once + r),
+          p * _kuvvet(q, m - 1),
+          dogru + r * _kuvvet(q, m - 1),
+        ],
         'f(1) = $p olup her adımda önceki değer $q ile çarpılıp $r eklenir: '
         '${[for (var n = 1; n <= m; n++) 'f($n) = ${iz[n - 1]}'].join(', ')}.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 2:
@@ -3490,7 +3621,7 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
         return r;
       }
       final d = iz(p, q);
-      return sayisal(
+      return sayisalSirali(
         _kod(_ozGiris, [
           _fonksiyon('f(n)', [
             'eğer n = 1 ise $p döndür',
@@ -3499,16 +3630,26 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
           ]),
         ], 'f($m) çağrısının döndürdüğü değer kaçtır?'),
         d[m - 1],
-        [d[m - 2], d[m], if (p != q) iz(q, p)[m - 1], d[m - 1] + d[m - 3]],
+        // Ek hatalar: iki adım eksik, iki temel değeri de aynı alma.
+        [
+          d[m - 2],
+          d[m],
+          if (p != q) iz(q, p)[m - 1],
+          d[m - 1] + d[m - 3],
+          d[m - 3],
+          iz(p, p)[m - 1],
+          iz(q, q)[m - 1],
+        ],
         'Değerler sırasıyla '
         '${[for (var n = 1; n <= m; n++) 'f($n) = ${d[n - 1]}'].join(', ')} '
         'olur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 3:
       final (n, k) = _dolas(_bolmeHavuzu, j, 307);
       final dogru = n ~/ k + n % k;
-      return sayisal(
+      return sayisalSirali(
         _kod(_ozGiris, [
           _fonksiyon('f(n)', [
             'eğer n < $k ise n döndür',
@@ -3516,18 +3657,19 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
           ]),
         ], 'f($n) çağrısının döndürdüğü değer kaçtır?'),
         dogru,
-        [n ~/ k, n % k, dogru + 1, n ~/ k + 1],
+        [n ~/ k, n % k, dogru + 1, n ~/ k + 1, dogru - 1],
         'Her çağrıda n değeri $k azalır ve sonuca 1 eklenir. $n sayısından '
         '${n ~/ k} kez $k çıkarılınca ${n % k} kalır; bu değer $k sayısından '
         'küçük olduğundan kendisi döndürülür. Sonuç ${n ~/ k} + ${n % k} = '
         '$dogru olur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 4:
       final m = 8 + a, d = 2 + b % 3, k = 1 + b ~/ 3;
       final terimler = [for (var n = m; n > 0; n -= d) n];
       final dogru = k * _topla(terimler);
-      return sayisal(
+      return sayisalSirali(
         _kod(_ozGiris, [
           _fonksiyon('f(n)', [
             'eğer n ≤ 0 ise 0 döndür',
@@ -3540,16 +3682,22 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
           k * m * (m + 1) ~/ 2,
           if (k > 1) _topla(terimler),
           dogru + k * (terimler.last - d),
+          // Ek hatalar: ilk terimi iki kez ekleme, son çağrıdan önce durma,
+          // yalnız ilk terimi alma.
+          dogru + k * m,
+          dogru - k * terimler.last,
+          k * m,
         ],
         'f($m) = ${terimler.map((n) => k == 1 ? '$n' : '$k · $n').join(' + ')} '
         '+ 0 = $dogru olur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 5:
       final (x, y) = _dolas(_ebobHavuzu, j, 401);
       final z = _oklid(x, y);
       final dogru = z[z.length - 2];
-      return sayisal(
+      return sayisalSirali(
         _kod('$_ozGiris$_modNotu', [
           _fonksiyon('g(x, y)', [
             'eğer y = 0 ise x döndür',
@@ -3557,9 +3705,12 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
           ]),
         ], 'g($x, $y) çağrısının döndürdüğü değer kaçtır?'),
         dogru,
-        [z[2], z[z.length - 3], y, x - y],
+        // Ek hatalar: çağrı sayısını yazma, mod yerine div ile ilerleme,
+        // sayıları aralarında asal sanma.
+        [z[2], z[z.length - 3], y, x - y, z.length - 1, _divZinciri(x, y), 1],
         'Çağrılar ${[for (var t = 0; t + 1 < z.length; t++) 'g(${z[t]}, ${z[t + 1]})'].join(' → ')} '
         'biçiminde ilerler; y = 0 olduğunda x = $dogru döndürülür.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 6:
@@ -3579,7 +3730,7 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
           'Çağrılar ${cagri.map((n) => 'f($n)').join(' → ')} biçiminde ilerler; '
           'son çağrıda n ≤ $t olduğundan yeni çağrı yapılmaz.';
       if (![m, t, d, 0].contains(say)) {
-        return sayisal(
+        return sayisalSirali(
           _kod(
             _ozGiris,
             [fonk],
@@ -3587,15 +3738,16 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
             'toplam kaç kez çalışır?',
           ),
           say,
-          [say - 1, say + 1, m - t, say + 2],
+          [say - 1, say + 1, m - t, say + 2, (m - t) ~/ d, m ~/ d],
           '$zincir Toplam $say çağrı vardır.',
+          hedefSira(_no(a, b, c)),
           positive: true,
         );
       }
       // Çağrı sayısı kökte yazılı bir sayıya eşitse döndürülen değer sorulur.
       final terimler = cagri.sublist(0, say - 1);
       final deger = _topla(terimler);
-      return sayisal(
+      return sayisalSirali(
         _kod(_ozGiris, [fonk], 'f($m) çağrısının döndürdüğü değer kaçtır?'),
         deger,
         [
@@ -3603,8 +3755,10 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
           deger - m,
           _topla([for (var n = t + 1; n <= m; n++) n]),
           deger + d,
+          deger - terimler.last,
         ],
         '$zincir Döndürülen değer ${terimler.join(' + ')} + 0 = $deger olur.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 7:
@@ -3621,7 +3775,7 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
       // Çağrı sayısı kökteki bir sayıya eşitse döndürülen değer sorulur.
       final cagriSor =
           ![n, k, 0, 1].contains(say) || [n, k, 0, 1].contains(deger);
-      return sayisal(
+      return sayisalSirali(
         _kod(
           '$_ozGiris$_divNotu',
           [fonk],
@@ -3637,13 +3791,14 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
         'Çağrılar ${iz.map((v) => 'f($v)').join(' → ')} biçimindedir; son '
         'çağrı 0 döndürür ve her önceki çağrı 1 ekler. '
         '${cagriSor ? 'Toplam $say çağrı yapılır.' : 'Döndürülen değer $deger olur.'}',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     case 8:
       final (x, y) = _dolas(_ebobCagriHavuzu, j, 211);
       final z = _oklid(x, y);
       final say = z.length - 1;
-      return sayisal(
+      return sayisalSirali(
         _kod(
           '$_ozGiris$_modNotu',
           [
@@ -3659,6 +3814,7 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
         [say - 1, say + 1, z[z.length - 2]],
         'Çağrılar ${[for (var t = 0; t + 1 < z.length; t++) 'g(${z[t]}, ${z[t + 1]})'].join(' → ')} '
         'biçimindedir; toplam $say çağrı yapılır.',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
     default:
@@ -3685,7 +3841,7 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
       final say = adim + 1;
       final basili = [x, y, d, e, 0, 1];
       final cagriSor = !basili.contains(say) || basili.contains(adim);
-      return sayisal(
+      return sayisalSirali(
         _kod(
           _ozGiris,
           [
@@ -3700,12 +3856,29 @@ AdvancedItem _ozyineleme(int a, int b, int c) {
               : 'h($x, $y) çağrısının döndürdüğü değer kaçtır?',
         ),
         cagriSor ? say : adim,
+        // Ek hatalar: farkın yalnız x ya da yalnız y adımıyla kapandığını
+        // sanma.
         cagriSor
-            ? [adim, say + 1, (y - x) ~/ (d + e), say + 2]
-            : [say, adim + 1, (y - x) ~/ (d + e), adim - 1],
+            ? [
+                adim,
+                say + 1,
+                (y - x) ~/ (d + e),
+                say + 2,
+                (y - x) ~/ d,
+                (y - x) ~/ e,
+              ]
+            : [
+                say,
+                adim + 1,
+                (y - x) ~/ (d + e),
+                adim - 1,
+                (y - x) ~/ d,
+                (y - x) ~/ e,
+              ],
         'Her çağrıda x değeri $d artar, y değeri $e azalır; aradaki fark '
         '${d + e} küçülür. Fark ${y - x} iken $adim adımda x ≥ y olur. '
         '${cagriSor ? 'Bu $adim çağrıya koşulun sağlandığı son çağrı da eklenince $say bulunur.' : 'Her adım sonuca 1 ekler ve son çağrı 0 döndürdüğünden değer $adim olur.'}',
+        hedefSira(_no(a, b, c)),
         positive: true,
       );
   }

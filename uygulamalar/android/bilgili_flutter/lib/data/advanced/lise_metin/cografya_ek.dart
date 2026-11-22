@@ -722,38 +722,228 @@ const _ucuslar = [
 String _kentAd((String, int) k) =>
     '${_utc(k.$2)} saat dilimini kullanan ${k.$1}';
 
+// Tarih–saat seçeneklerinde çeldirici seçimi. Bir seçenek tarih ve saat
+// ögelerinden oluşur. Çeldiriciler anahtarın tek öge değişiklikleri olursa
+// ögelerde çoğunluğa en yakın seçenek hep anahtar olur; bu yüzden seçilen dört
+// seçenekte her seçenek öteki üçüyle aynı sayıda tarih ve saat paylaşır ve
+// anahtarın zaman sırası (kaç çeldiricinin ondan önce olduğu) vakadan vakaya
+// değişir.
+
+/// "gün ay, ss:dd" seçeneğinin sözcük kümesi; ay bütün seçeneklerde ortaktır.
+Set<String> _anSozcuk(int x) {
+  final m = x % 1440;
+  return {
+    '${x ~/ 1440}',
+    '#',
+    (m ~/ 60).toString().padLeft(2, '0'),
+    (m % 60).toString().padLeft(2, '0'),
+  };
+}
+
+/// [puan] içinde en küçük değeri alanlar arasında 0. ögenin payı.
+double _enKucukPayi(List<double> puan) {
+  var enk = puan[0];
+  for (final p in puan) {
+    if (p < enk) enk = p;
+  }
+  var kac = 0;
+  for (final p in puan) {
+    if ((p - enk).abs() < 1e-9) kac++;
+  }
+  return (puan[0] - enk).abs() < 1e-9 ? 1 / kac : 0;
+}
+
+/// Dört seçenekte (0. öge anahtar) her seçeneğin öteki üçüyle paylaştığı
+/// tarih ve saat sayısı eşit mi?
+bool _esitPaylasim(List<int> s) {
+  int ortak(int a) {
+    var t = 0;
+    for (var b = 0; b < 4; b++) {
+      if (b == a) continue;
+      if (s[a] ~/ 1440 == s[b] ~/ 1440) t++;
+      if (s[a] % 1440 == s[b] % 1440) t++;
+    }
+    return t;
+  }
+
+  final o = ortak(0);
+  return ortak(1) == o && ortak(2) == o && ortak(3) == o;
+}
+
+/// Anahtarı sözcük benzerliğiyle (ilk değer), en yakın komşulukla ya da
+/// ötekilere toplam uzaklıkla (ikinci değer) öne çıkaran dörtlülerin ek
+/// maliyeti.
+(double, double) _anIpucuCezasi(List<int> s) {
+  final soz = [for (final x in s) _anSozcuk(x)];
+  final z = <double>[];
+  for (var a = 0; a < 4; a++) {
+    var t = 0.0;
+    for (var b = 0; b < 4; b++) {
+      if (b == a) continue;
+      t +=
+          soz[a].intersection(soz[b]).length / soz[a].union(soz[b]).length;
+    }
+    z.add(t);
+  }
+  var zEnb = z[0], zEnk = z[0], digerEnb = z[1];
+  for (var a = 0; a < 4; a++) {
+    if (z[a] > zEnb) zEnb = z[a];
+    if (z[a] < zEnk) zEnk = z[a];
+    if (a > 0 && z[a] > digerEnb) digerEnb = z[a];
+  }
+  final double sozCeza = zEnb - zEnk < 1e-9
+      ? 0
+      : (z[0] > digerEnb + 1e-9 ? 6 : ((z[0] - zEnb).abs() < 1e-9 ? 2 : 1));
+  final yakin = <double>[], toplam = <double>[];
+  for (var a = 0; a < 4; a++) {
+    var enk = -1, t = 0;
+    for (var b = 0; b < 4; b++) {
+      if (b == a) continue;
+      final u = (s[a] - s[b]).abs();
+      if (enk < 0 || u < enk) enk = u;
+      t += u;
+    }
+    yakin.add(enk.toDouble());
+    toplam.add(t.toDouble());
+  }
+  final y = _enKucukPayi(yakin) - 0.25, o = _enKucukPayi(toplam) - 0.25;
+  return (sozCeza, 8 * ((y > 0 ? y : 0.0) + (o > 0 ? o : 0.0)));
+}
+
+/// Anahtar anı [k] (gün × 1440 + dakika) olan soruya üç çeldirici an seçer.
+/// [adaylar] öncelik sırasıyla (an, maliyet) ikilileridir: tipik hatalar
+/// ucuz, birleşik hatalar ve komşu değerler pahalıdır. Dört seçenekte her
+/// seçenek öteki üçüyle aynı sayıda tarih ve saat paylaşmalıdır; anahtardan
+/// önceki çeldirici sayısı [hedef] değerinden her uzaklaştığında maliyete
+/// [sapma] eklenir. En düşük maliyetli üçlü seçilir.
+List<int> _anCeldiricileri(
+  int k,
+  List<(int, double)> adaylar,
+  int hedef,
+  double sapma,
+) {
+  final havuz = <(int, double)>[];
+  for (final (m, c) in [
+    ...adaylar,
+    for (var j = 2; j <= 6; j++) ...[(k + 60 * j, 50.0), (k - 60 * j, 50.0)],
+  ]) {
+    if (m < 1440 || m >= 30 * 1440 || m == k) continue;
+    if (havuz.any((h) => h.$1 == m)) continue;
+    if (havuz.length >= 3 && c >= 50) break;
+    havuz.add((m, c));
+  }
+  List<int>? enIyi;
+  var enIyiMaliyet = double.infinity;
+  for (final esit in [true, false]) {
+    for (var p = 0; p < havuz.length; p++) {
+      for (var q = p + 1; q < havuz.length; q++) {
+        for (var r = q + 1; r < havuz.length; r++) {
+          final s = [k, havuz[p].$1, havuz[q].$1, havuz[r].$1];
+          if (s.contains(k + 60) && s.contains(k - 60)) continue;
+          if (esit && !_esitPaylasim(s)) continue;
+          final once = s.where((x) => x < k).length;
+          final (soz, yakinlik) = _anIpucuCezasi(s);
+          final maliyet =
+              havuz[p].$2 +
+              havuz[q].$2 +
+              havuz[r].$2 +
+              soz +
+              yakinlik +
+              sapma * (once - hedef).abs() +
+              (esit ? 0 : 100);
+          if (maliyet < enIyiMaliyet) {
+            enIyiMaliyet = maliyet;
+            enIyi = s.sublist(1);
+          }
+        }
+      }
+    }
+    if (enIyi != null) return enIyi;
+  }
+  throw StateError('Eksik çeldirici: $k → $havuz');
+}
+
+/// (an, hata maliyeti) listesindeki her saate verilen tarihleri (tarih,
+/// maliyet) de uygular: "saat doğru, tarih yanlış" ya da "saat yanlış, tarih
+/// doğru" gibi iki boyutlu hata seçenekleri. İlk öge anahtardır.
+List<(int, double)> _tarihleIslenmis(
+  List<(int, double)> dogal,
+  List<(int, double)> tarihler, [
+  int? kok,
+  List<int>? kayma,
+]) {
+  final c = <(int, double)>[];
+  final gorulen = <int>{};
+  for (var j = 0; j < dogal.length; j++) {
+    final (m, cc) = dogal[j];
+    final d = m ~/ 1440, cl = m % 1440;
+    if (j > 0 && gorulen.add(m)) c.add((m, cc));
+    for (final (dd, dc) in tarihler) {
+      final x = dd * 1440 + cl;
+      if (dd == d || gorulen.contains(x)) continue;
+      gorulen.add(x);
+      // Hesaplanan kaymanın tersine giden tarih değişikliği daha zayıf bir
+      // çeldiricidir.
+      final ters = kok != null && kayma != null && (dd - kok) * kayma[j] < 0;
+      c.add((x, cc + dc + (ters ? 2 : 0)));
+    }
+  }
+  return c;
+}
+
+/// UTC farkında işaret hatası: aynı yöndeki farklar toplanır, ters yöndekiler
+/// çıkarılır (doğrusu, işaretli farkların farkıdır).
+int _hataFark((String, int) ka, (String, int) kb) =>
+    (ka.$2 >= 0) == (kb.$2 >= 0)
+    ? ka.$2.abs() + kb.$2.abs()
+    : (ka.$2.abs() - kb.$2.abs()).abs();
+
 AdvancedItem _saatDilimi(int a, int b, int c) {
   final bicim = c % 3, q = c ~/ 3;
+  final i = a + 25 * b + 500 * c;
   String an(int ay, int x) => _an(ay, x);
-  bool gecerli(int x) => x >= 1440 && x < 30 * 1440;
   if (bicim == 0) {
     final (ka, kb) = _donusum[a];
     final ay = const [2, 5, 8, 10][q];
     final t0 = (3 + a) * 1440 + 15 + 71 * b;
     final fark = kb.$2 - ka.$2;
     final dogru = t0 + 60 * fark;
-    final ayniYon = (ka.$2 >= 0) == (kb.$2 >= 0);
-    final hataFark = ayniYon
-        ? ka.$2.abs() + kb.$2.abs()
-        : (ka.$2.abs() - kb.$2.abs()).abs();
-    final gunDegisti = dogru ~/ 1440 != t0 ~/ 1440;
-    final adaylar = [
-      t0 - 60 * fark,
-      gunDegisti
-          ? (t0 ~/ 1440) * 1440 + dogru % 1440
-          : dogru + (fark > 0 ? 1440 : -1440),
-      if (hataFark != fark.abs() && hataFark != 0)
-        t0 + (fark > 0 ? 60 : -60) * hataFark,
-      dogru + 60,
-      dogru - 60,
-      dogru + 120,
-    ].where(gecerli);
+    final hataFark = _hataFark(ka, kb);
+    final y = fark > 0 ? 1 : -1, kok = t0 ~/ 1440, dk = dogru ~/ 1440;
+    final isaret = hataFark != fark.abs() && hataFark != 0;
+    // Saat hataları: ters yön, UTC işaret hatası, saat dilimlerini bir eksik
+    // ya da bir fazla sayma, işaret hatası ile ters yön; her biri hesaplandığı
+    // kaymayla.
+    final dogal = <(int, double, int)>[
+      (dogru, 0, 60 * fark),
+      (t0 - 60 * fark, 1, -60 * fark),
+      if (isaret) (t0 + y * 60 * hataFark, 2, y * 60 * hataFark),
+      (dogru + y * 60, 3, 60 * fark + y * 60),
+      (dogru - y * 60, 3, 60 * fark - y * 60),
+      if (isaret) (t0 - y * 60 * hataFark, 4, -y * 60 * hataFark),
+    ];
+    // Tarih: doğru tarih, değişmemiş tarih ya da gereksiz bir gün kaydırma.
+    final tarihler = <(int, double)>[
+      (dk, 0),
+      dk != kok ? (kok, 1) : (kok + y, 2),
+    ];
+    final secilen = _anCeldiricileri(
+      dogru,
+      _tarihleIslenmis(
+        [for (final (m, mc, _) in dogal) (m, mc)],
+        tarihler,
+        kok,
+        [for (final (_, _, d) in dogal) d],
+      ),
+      hedefSira(i),
+      3,
+    );
     final ileri = fark > 0;
     return secenekli(
       '${_kentAd(ka)} kentinde ${_anKok(ay, t0)} iken ${_kentAd(kb)} kentinde yerel '
           'tarih ve saat nedir?',
       an(ay, dogru),
-      adaylar.map((x) => an(ay, x)),
+      secilen.map((x) => an(ay, x)),
       'Saat farkı ${_p(ileri ? kb.$2 : ka.$2)} − ${_p(ileri ? ka.$2 : kb.$2)} = ${fark.abs()} '
           'saattir. ${kb.$1} kentinin UTC farkı daha ${ileri ? 'büyük' : 'küçük'} olduğundan saati '
           '${ileri ? 'ileridir' : 'geridir'}: ${an(ay, t0)} ${ileri ? '+' : '−'} ${fark.abs()} saat = '
@@ -770,19 +960,45 @@ AdvancedItem _saatDilimi(int a, int b, int c) {
     final farkYaz =
         '${kb.$1} kentinin saati ${ka.$1} kentinden ${fark.abs()} saat '
         '${fark > 0 ? 'ileridir' : 'geridir'}';
+    final hataFark = _hataFark(ka, kb);
+    final y = fark > 0 ? 1 : -1;
+    final isaret = hataFark != fark.abs() && hataFark != 0;
+    // Anahtar anı [k], kökte verilen anın günü [kok]; [hatalar] saat farkını
+    // unutma, farkı ters yönde uygulama, uçuş süresini unutma (ara sonuç) ve
+    // UTC işaret hatasıdır. Saat dilimlerini bir eksik ya da fazla saymak
+    // (±1 saat) ve tarih karışıklıkları da adaydır.
+    List<String> celdiriciler(int k, int kok, List<(int, double)> hatalar) {
+      final dk = k ~/ 1440;
+      final adaylar = _tarihleIslenmis(
+        [(k, 0.0), ...hatalar, (k + 60, 3.0), (k - 60, 3.0)],
+        [(dk, 1.0), if (kok != dk) (kok, 1.0)],
+      );
+      // Saati doğru, tarihi hatalı bir hesabın tarihi olan seçenekler.
+      final gorulen = {k, for (final (m, _) in adaylar) m};
+      for (final (m, _) in hatalar) {
+        final x = m ~/ 1440 * 1440 + k % 1440;
+        if (m ~/ 1440 != dk && m ~/ 1440 != kok && gorulen.add(x)) {
+          adaylar.add((x, 2.0));
+        }
+      }
+      return [
+        for (final x in _anCeldiricileri(k, adaylar, hedefSira(i), 3))
+          an(ay, x),
+      ];
+    }
+
     if (q == 0) {
       return secenekli(
         '${_kentAd(ka)} kentinden ${_anKok(ay, kalkis)} iken kalkan bir uçak, ${_sure(sure)} '
             'süren yolculuğun ardından ${_kentAd(kb)} kentine iniyor. Uçak yerel saatle hangi '
             'tarih ve saatte iner?',
         an(ay, varis),
-        [
-          kalkis + sure,
-          kalkis + sure - 60 * fark,
-          kalkis + 60 * fark,
-          varis + 60,
-          varis - 60,
-        ].where(gecerli).map((x) => an(ay, x)),
+        celdiriciler(varis, kalkis ~/ 1440, [
+          (kalkis + sure, 1),
+          (kalkis + sure - 60 * fark, 1),
+          (kalkis + 60 * fark, 2),
+          if (isaret) (kalkis + sure + y * 60 * hataFark, 2),
+        ]),
         '$farkYaz. Kalkış anında ${kb.$1} kentinde saat ${an(ay, kalkis + 60 * fark)} '
             'olur; buna ${_sure(sure)} eklenince varış ${an(ay, varis)} bulunur.',
       );
@@ -793,29 +1009,40 @@ AdvancedItem _saatDilimi(int a, int b, int c) {
             'kentinden başlayan yolculuğu ${_sure(sure)} sürmüştür. Bu uçak yerel saatle hangi '
             'tarih ve saatte kalkmıştır?',
         an(ay, kalkis),
-        [
-          varis - sure,
-          varis - sure + 60 * fark,
-          varis - 60 * fark,
-          kalkis + 60,
-          kalkis - 60,
-        ].where(gecerli).map((x) => an(ay, x)),
+        celdiriciler(kalkis, varis ~/ 1440, [
+          (varis - sure, 1),
+          (varis - sure + 60 * fark, 1),
+          (varis - 60 * fark, 2),
+          if (isaret) (varis - sure - y * 60 * hataFark, 2),
+        ]),
         '$farkYaz. Varış anında ${ka.$1} kentinde saat ${an(ay, varis - 60 * fark)} olur; '
             'bundan ${_sure(sure)} çıkarılınca kalkış ${an(ay, kalkis)} bulunur.',
       );
     }
+    // Süre: saat farkını unutma ya da ters yönde uygulama, UTC işaret hatası,
+    // eksi çıkan farka 24 saat ekleme; gerekirse saat dilimlerini bir ya da iki
+    // eksik/fazla sayma. Anahtarın değer sırası vakadan vakaya değişir.
     final ham = varis - kalkis;
+    final sureler = [
+      ham,
+      ham + 60 * fark,
+      if (isaret) ...[
+        sure + y * 60 * (fark.abs() - hataFark),
+        sure + y * 60 * (fark.abs() + hataFark),
+      ],
+      if (ham < 60) ham + 1440,
+      sure + 60,
+      sure - 60,
+      sure + 120,
+      sure - 120,
+    ].where((x) => x >= 60 && x <= 1800 && x != sure);
     return secenekli(
       '${_kentAd(ka)} kentinden ${_anKok(ay, kalkis)} iken kalkan bir uçak, ${_kentAd(kb)} '
           'kentine ${_anKok(ay, varis)} iken iniyor. Bu uçuş ne kadar sürmüştür?',
       _sure(sure),
-      [
-        ham,
-        ham + 60 * fark,
-        sure + 60,
-        sure - 60,
-        sure + 120,
-      ].where((x) => x > 0).map(_sure),
+      siraliCeldiriciler(sure, _sure(sure), [
+        for (final x in sureler) (x, _sure(x)),
+      ], hedefSira(i)),
       '$farkYaz. Kalkış anında ${kb.$1} kentinde saat ${an(ay, kalkis + 60 * fark)} olur; '
           'buradan varışa kadar geçen süre ${_sure(sure)} bulunur.',
     );

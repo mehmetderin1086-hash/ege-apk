@@ -276,7 +276,6 @@ AdvancedItem _saySirali(
   }
 
   final d = dogru.toDouble();
-  final adim = _komsuAdim((komsuOlcek ?? d).toDouble(), basamak);
   final esik = 0.5 / _on(basamak);
   bool gecerli(num x) => x.isFinite && (!arti || x >= esik);
   final anahtar = yaz(dogru, kesin: true);
@@ -306,28 +305,36 @@ AdvancedItem _saySirali(
     anahtar,
     siraliCeldiriciler(d, anahtar, [
       ...tipik,
-      for (var k = 1; k <= 6; k++)
-        for (final x in [d + k * adim, d - k * adim])
-          if (gecerli(x) && x > komsuAlt && x < komsuUst) (x, yaz(x)),
+      for (final x in _komsular(d, (komsuOlcek ?? d).toDouble(), basamak))
+        if (gecerli(x) && x > komsuAlt && x < komsuUst) (x, yaz(x)),
     ], hedef),
     aciklama,
   );
 }
 
-/// Komşu değer adımı: |d| değerinin dörtte birini aşmayan en büyük
-/// 1·10ᵏ, 2·10ᵏ ya da 5·10ᵏ değeri; en az bir yazım basamağı (10⁻ᵇᵃˢᵃᵐᵃᵏ).
-/// Böylece komşu değer anahtara yapışık bir eş (0,2 ile 0,19 gibi) olmaz.
-double _komsuAdim(double d, int basamak) {
-  final enKucuk = 1 / _on(basamak), hedef = d.abs() / 4;
-  if (hedef <= enKucuk) return enKucuk.toDouble();
-  var e = enKucuk.toDouble();
-  while (e * 10 <= hedef + 1e-12) {
-    e *= 10;
+/// Anahtarın komşu değerleri: d ± %20, %40, %60, %80 ([olcek] büyüklüğüne
+/// göre), anahtarın kendi ondalık basamak sayısına yuvarlanır; yuvarlanınca
+/// anahtara eşit kalırsa bir basamak daha (en çok [basamak]) kullanılır.
+/// Göreli adım, komşunun anahtara yapışık bir eş (0,2 ile 0,19 gibi) olmasını
+/// ve anahtarla aynı ondalık kısmı taşımasını (89,1 ile 109,1 gibi) önler.
+List<num> _komsular(double d, double olcek, int basamak) {
+  final yazim = _yz(d, basamak), virgul = yazim.indexOf(',');
+  final od = virgul < 0 ? 0 : yazim.length - virgul - 1;
+  num yuvarla(double x, int k) => (x * _on(k)).round() / _on(k);
+  final sonuc = <num>[];
+  for (final f in const [0.2, 0.4, 0.6, 0.8]) {
+    for (final yon in const [1, -1]) {
+      final ham = d + yon * f * olcek.abs();
+      var k = od;
+      var x = yuvarla(ham, k);
+      while ((x - d).abs() < 1e-9 && k < basamak) {
+        k++;
+        x = yuvarla(ham, k);
+      }
+      sonuc.add((x - d).abs() < 1e-9 ? d + yon / _on(basamak) : x);
+    }
   }
-  for (final k in const [5, 2]) {
-    if (k * e <= hedef + 1e-12) return k * e;
-  }
-  return e;
+  return sonuc;
 }
 
 /// Kesir yanıtlı soru; anahtarın değer sırası [sira] ile belirlenir. Adaylar
@@ -2894,6 +2901,21 @@ const _tuzIyonlari = [
   ('(NH₄)₂SO₄', 'NH₄⁺', 2),
 ];
 
+// Bir formül biriminin verdiği toplam iyon sayısı (çeldirici: sorulan iyon
+// yerine bütün iyonları saymak).
+const _toplamIyon = {
+  'CaCl₂': 3,
+  'Al₂(SO₄)₃': 5,
+  'Na₃PO₄': 4,
+  'Mg(NO₃)₂': 3,
+  'K₂SO₄': 3,
+  'AlCl₃': 4,
+  'Fe₂(SO₄)₃': 5,
+  'Na₂CO₃': 3,
+  'Al(NO₃)₃': 4,
+  '(NH₄)₂SO₄': 3,
+};
+
 // (1. tuz, iyon sayısı, 2. tuz, iyon sayısı, ortak iyon)
 const _ortakIyonlular = [
   ('NaCl', 1, 'CaCl₂', 2, 'Cl⁻'),
@@ -2922,58 +2944,85 @@ final _f15 = lmAile(
     // Derişim 4 mol/L değerine çıkabildiğinden yalnız suda çok çözünen
     // maddeler kullanılır.
     final x = const ['NaCl', 'NaNO₃', 'HCl', 'NaOH', 'KOH'][(a + b) % 5];
+    final sira = _sira(a, b, c);
     switch (c % 5) {
       case 0:
       case 1:
         final c0 = (w == 0 ? 10 : 3) * s / 100;
         final d1 = r2 * c0, d2 = r1 * c0;
         if (c % 5 == 0) {
-          return _say(
+          return _saySirali(
             '${_t(d1)} mol/L derişimli $v1 mL $x çözeltisine $v2 mL saf su '
                 'ekleniyor. Yeni çözeltinin derişimi kaç mol/L olur?',
             d2,
-            [d1 * v1 / v2, d1 * v2 / vt, d1 / 2, d1 * vt / v1, d2 / 2],
+            [
+              d1 * v1 / v2,
+              d1 * v2 / vt,
+              d1 * vt / v1,
+              d1,
+              d1 / 2,
+              d2 / 2,
+              d2 * 2,
+            ],
             'Son hacim $v1 + $v2 = $vt mL olur. M₁V₁ = M₂V₂ eşitliğinden M₂ = '
                 '${_t(d1)}·$v1 / $vt = ${_t(d2)} mol/L bulunur.',
+            sira,
             birim: 'mol/L',
           );
         }
-        return sayisal(
+        return _saySirali(
           '${_t(d1)} mol/L derişimli $v1 mL $x çözeltisinin derişimini '
               '${_t(d2)} mol/L değerine düşürmek için kaç mL saf su eklenmelidir?',
           v2,
-          [vt, v1, vt + v1, v2 * 2, v2 ~/ 2],
+          [vt, v1, vt + v1, v1 * d2 / d1, v1 * v2 / vt, v2 * 2, v2 / 2],
           'M₁V₁ = M₂V₂ eşitliğinden son hacim ${_t(d1)}·$v1 / ${_t(d2)} = $vt '
               'mL olmalıdır. Eklenecek su $vt − $v1 = $v2 mL bulunur.',
-          unit: 'mL',
-          positive: true,
+          sira,
+          birim: 'mL',
         );
       case 2:
         final p = (w == 0 ? 10 : 3) * s / 100, q = (w == 0 ? 10 : 3) * s2 / 100;
         final d1 = r2 * p, d2 = r2 * q, son = r1 * p + (r2 - r1) * q;
-        return _say(
+        return _saySirali(
           '${_t(d1)} mol/L derişimli $v1 mL $x çözeltisi ile ${_t(d2)} mol/L '
               'derişimli $v2 mL $x çözeltisi karıştırılıyor. Karışımın derişimi '
               'kaç mol/L olur?',
           son,
-          [(d1 + d2) / 2, d1 + d2, (d1 * v2 + d2 * v1) / vt, (d1 - d2).abs()],
+          [
+            (d1 + d2) / 2,
+            d1 + d2,
+            (d1 * v2 + d2 * v1) / vt,
+            (d1 - d2).abs(),
+            son / 2,
+            son * 2,
+          ],
           'Son derişim (${_t(d1)}·$v1 + ${_t(d2)}·$v2) / $vt = ${_t(son)} '
               'mol/L bulunur.',
+          sira,
           birim: 'mol/L',
         );
       case 3:
         final (tuz, iyon, k) = _tuzIyonlari[a % 5 + 5 * w];
         final c0 = s / 100;
         final d1 = r2 * c0, d2 = r1 * c0;
-        return _say(
+        return _saySirali(
           '${_t(d1)} mol/L derişimli $v1 mL $tuz çözeltisi saf su ile $vt mL '
               'hacme tamamlanıyor. Son çözeltideki $iyon iyonu derişimi kaç mol/L '
               'olur? (Tuzun suda tamamen iyonlaştığı kabul edilecektir.)',
           k * d2,
-          [d2, k * d1, d2 / k, d1, k * d2 * 2],
+          [
+            d2,
+            k * d1,
+            d2 / k,
+            d1,
+            _toplamIyon[tuz]! * d2,
+            k * d2 * 2,
+            k * d2 / 2,
+          ],
           'Seyreltilen çözeltinin derişimi ${_t(d1)}·$v1 / $vt = ${_t(d2)} '
               'mol/L olur. Bir formül birimi $k tane $iyon iyonu verdiğinden iyon '
               'derişimi $k·${_t(d2)} = ${_t(k * d2)} mol/L bulunur.',
+          sira,
           birim: 'mol/L',
         );
       default:
@@ -2981,7 +3030,7 @@ final _f15 = lmAile(
         final p = s / 100, q = s2 / 100;
         final d1 = r2 * p, d2 = r2 * q;
         final son = k1 * r1 * p + k2 * (r2 - r1) * q;
-        return _say(
+        return _saySirali(
           '${_t(d1)} mol/L derişimli $v1 mL $t1 çözeltisi ile ${_t(d2)} mol/L '
               'derişimli $v2 mL $t2 çözeltisi karıştırılıyor. Karışımdaki $iyon '
               'iyonu derişimi kaç mol/L olur? (Tuzların suda tamamen iyonlaştığı '
@@ -2993,9 +3042,11 @@ final _f15 = lmAile(
             (k1 * d1 + k2 * d2) / 2,
             k2 * r1 * p + k1 * (r2 - r1) * q,
             son / 2,
+            son * 2,
           ],
           '$iyon derişimi ($k1·${_t(d1)}·$v1 + $k2·${_t(d2)}·$v2) / $vt = '
               '${_t(son)} mol/L bulunur.',
+          sira,
           birim: 'mol/L',
         );
     }
@@ -3334,6 +3385,7 @@ final _f17 = lmAile(
   BloomLevel.analiz,
   (a, b, c) {
     final w = c ~/ 5;
+    final sira = _sira(a, b, c);
     if (c % 5 == 1) {
       final (bilinen, hedef, urun, dh, yanlis, yol) = _hessTakimlari[a % 5];
       final n = (1 + b + 20 * (a ~/ 5)) / 10;
@@ -3346,21 +3398,30 @@ final _f17 = lmAile(
           'Aşağıdaki tepkimelerin entalpileri bilinmektedir:\n$liste\n'
           'Buna göre $hedef tepkimesi';
       if (w == 0) {
-        return _say(
+        return _saySirali(
           '$giris ile ${_t(n)} mol $urun oluşurken açığa çıkan ısı kaç kJ olur?',
           q,
-          [yanlis[0] * n, yanlis[1] * n, q / 2, q * 2, -dh],
+          [
+            yanlis[0] * n,
+            yanlis[1] * n,
+            -dh,
+            _olcekte(-dh / n, q),
+            q / 2,
+            q * 2,
+          ],
           '$yol ${_t(n)} mol $urun için ${_t(n)}·${-dh} = ${_t(q)} kJ ısı '
               'açığa çıkar.',
+          sira,
           birim: 'kJ',
         );
       }
-      return _say(
+      return _saySirali(
         '$giris gerçekleşirken ${_t(q)} kJ ısı açığa çıktığına göre kaç mol '
             '$urun oluşmuştur?',
         n,
-        [q / yanlis[0], q / yanlis[1], n * 2, n / 2, n + 1],
+        [q / yanlis[0], q / yanlis[1], _olcekte(-dh / q, n), n * 2, n / 2],
         '$yol Oluşan $urun miktarı ${_t(q)} / ${-dh} = ${_t(n)} mol olur.',
+        sira,
         birim: 'mol',
       );
     }
@@ -3370,7 +3431,7 @@ final _f17 = lmAile(
       final q = m * 4.2 * dt / 1000;
       const sabit = 'Su için c = 4,2 J/(g·°C)';
       if (w == 0) {
-        return _say(
+        return _saySirali(
           'Kalorimetre kabındaki $m gram suyun sıcaklığı $t1 °C değerinden '
               '$t2 °C değerine çıkıyor. Suyun aldığı ısı kaç kJ olur? ($sabit)',
           q,
@@ -3378,24 +3439,28 @@ final _f17 = lmAile(
             m * 4.2 * t2 / 1000,
             m * 4.2 * t1 / 1000,
             m * dt / 1000,
+            m * 4.2 * (t1 + t2) / 1000,
+            _olcekte(m * 4.2 / dt / 1000, q, 10),
             q * 2,
             q / 2,
           ],
           'ΔT = $t2 − $t1 = $dt °C olur. Q = m·c·ΔT = $m·4,2·$dt = '
               '${_t(q * 1000)} J = ${_t(q)} kJ bulunur.',
+          sira,
           birim: 'kJ',
         );
       }
-      return sayisal(
+      return _saySirali(
         'Kalorimetre kabındaki $t1 °C sıcaklıktaki $m gram suya ${_t(q)} kJ '
             'ısı veriliyor. Isı kaybı olmadığına göre suyun son sıcaklığı kaç °C '
             'olur? ($sabit)',
         t2,
-        [dt, t2 + t1, t1 + 2 * dt, t2 - 5, t2 + 5],
+        [dt, t2 + t1, t1 + 2 * dt, t1 - dt, t2 - 5, t2 + 5],
         'ΔT = Q / (m·c) = ${_t(q * 1000)} / ($m·4,2) = $dt °C olur. Son '
             'sıcaklık $t1 + $dt = $t2 °C bulunur.',
-        unit: '°C',
-        positive: true,
+        sira,
+        birim: '°C',
+        basamak: 0,
       );
     }
     final (girenYazi, urunYazi, x) = _termoTepkimeler[a];
@@ -3422,6 +3487,13 @@ final _f17 = lmAile(
       }
     }
     final denk = '$girenYazi → $urunYazi';
+    // Ürünlerin ve girenlerin oluşum entalpisi toplamları (çeldiriciler için:
+    // girenleri unutmak ya da çıkarmak yerine toplamak).
+    final urunT = urun.fold<num>(0, (t, x) => t + x.$1 * (_olusum[x.$2] ?? 0));
+    final girenT = giren.fold<num>(
+      0,
+      (t, x) => t + x.$1 * (_olusum[x.$2] ?? 0),
+    );
     final n = (b + 1) / 10, q = -dh * n / kx;
     final mk = _mk(x), m = n * mk;
     final hx = _olusum[x]!;
@@ -3441,30 +3513,58 @@ final _f17 = lmAile(
         .replaceFirst('-', '−');
     switch (c % 5) {
       case 0:
-        return _say(
+        return _saySirali(
           '$denk tepkimesindeki bileşiklerin standart oluşum entalpileri '
               '(kJ/mol): ${liste(true)}. Buna göre $miktar $fiil açığa çıkan ısı '
               'kaç kJ olur?$kut',
           q,
-          [-dh * n, yalin.abs() * n / kx, yalin.abs() * n, q / 2, q * 2, -dh],
+          [
+            -dh * n,
+            yalin.abs() * n / kx,
+            (urunT + girenT).abs() * n / kx,
+            urunT.abs() * n / kx,
+            yalin.abs() * n,
+            _olcekte(-dh, q, 10),
+            q / 2,
+            q * 2,
+          ],
           '$dhYazi $molYazi${kx == 1 ? '' : 'Bu değer $kx mol $x içindir. '}'
               'Açığa çıkan ısı ${-dh}·${_t(n)}${kx == 1 ? '' : ' / $kx'} = '
               '${_t(q)} kJ bulunur.',
+          sira,
           birim: 'kJ',
         );
       case 3:
-        return _say(
+        return _saySirali(
           '$denk tepkimesindeki bileşiklerin standart oluşum entalpileri '
               '(kJ/mol): ${liste(true)}. Tepkimede ${_t(q)} kJ ısı açığa çıktığına '
               'göre kaç ${gramli ? 'gram' : 'mol'} $x '
               '${xUrun ? 'oluşmuştur' : 'harcanmıştır'}?$kut',
           gramli ? m : n,
           gramli
-              ? [m / kx, m * 2, m / 2, n, q / yalin.abs() * mk, m * kx]
-              : [n / kx, n * 2, n / 2, q / yalin.abs(), n * kx, n + 1],
+              ? [
+                  q / yalin.abs() * mk,
+                  n,
+                  m / kx,
+                  m * kx,
+                  _olcekte(q / hx.abs() * mk, m),
+                  _olcekte(-dh / q * mk, m),
+                  m * 2,
+                  m / 2,
+                ]
+              : [
+                  q / yalin.abs(),
+                  n / kx,
+                  n * kx,
+                  _olcekte(q / hx.abs(), n),
+                  _olcekte(-dh / q, n),
+                  n * 2,
+                  n / 2,
+                ],
           '$dhYazi ${-dh} kJ ısı $kx mol $x için açığa çıkar; ${_t(q)} kJ için '
               '${_t(q)}·$kx / ${-dh} = ${_t(n)} mol $x gerekir.'
               '${gramli ? ' Kütlesi ${_t(n)}·${_t(mk)} = ${_t(m)} gramdır.' : ''}',
+          sira,
           birim: gramli ? 'g' : 'mol',
         );
       default:

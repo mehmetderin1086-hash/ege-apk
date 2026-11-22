@@ -2167,9 +2167,9 @@ final lmGeometriEk = <AdvancedFamily>[
       final sira = ic ? 'D, F, E, C' : 'D, E, F, C';
       return sayisal(
         'ABCD paralelkenarında A ve B açılarının açıortayları [DC] kenarını '
-            'sırasıyla E ve F noktalarında kesiyor; bu noktalar [DC] üzerinde '
-            '$sira sırasıyla dizilidir. |AD| = $p cm ve |EF| = $q cm olduğuna '
-            'göre ABCD paralelkenarının çevresi kaç cm olur?',
+            'sırasıyla E ve F noktalarında kesiyor; $sira noktaları [DC] '
+            'üzerinde bu sırayla yer alır. |AD| = $p cm ve |EF| = $q cm '
+            'olduğuna göre ABCD paralelkenarının çevresi kaç cm olur?',
         cevre,
         [2 * (p + (ic ? 2 * p + q : 2 * p - q)), 2 * (p + p + q), 6 * p],
         'Açıortaylar ADE ve BCF ikizkenar üçgenlerini oluşturur: |DE| = |AD| '
@@ -2510,7 +2510,7 @@ final lmGeometriEk = <AdvancedFamily>[
           if (x + z == 2 * y) y += 20;
           final v = 11 + 5 * (b ~/ 10);
           return sayisal(
-            'ABC üçgeninin [BC] kenarı üzerinde B, D, E, C sırasıyla dizilen D '
+            'ABC üçgeninin [BC] kenarı üzerinde B\'den C\'ye doğru sırasıyla D '
                 've E noktaları alınıyor. |BD| = $x cm, |DE| = $y cm, |EC| = $z cm '
                 've ADE üçgeninin alanı ${y * v} cm² olduğuna göre ABC üçgeninin '
                 'alanı kaç cm² olur?',
@@ -3806,11 +3806,14 @@ final lmGeometriEk = <AdvancedFamily>[
           }
           return sayisal(
             '$kap içinde $su cm³ su vardır ve suyun yüksekliği kabın '
-                'yüksekliğinin $m/$n katıdır. Kap ağzına kadar doldurulursa kaç cm³ '
-                'su alır?',
+                'yüksekliğinin $m/$n katıdır. Kap ağzına kadar doldurulduğunda '
+                'içinde toplam kaç cm³ su bulunur?',
             hacim,
+            // Oranı küp yerine doğrusal ya da kare alma; eklenecek suyu
+            // (hacim − su) toplam su sanma.
             [?_bol(su * n, m), ?_bol(su * n * n, m * m), hacim - su],
-            '$cozum Kabın hacmi $su·($n/$m)³ = $su·$n3 / $m3 = $hacim cm³.',
+            '$cozum Ağzına kadar dolu kaptaki su, kabın hacmi kadardır: '
+                '$su·($n/$m)³ = $su·$n3 / $m3 = $hacim cm³.',
             unit: 'cm³',
             positive: true,
           );

@@ -353,8 +353,21 @@ const _egimYer = [
   ('bir çiftlik', 'bir orman gözetleme kulesi'),
 ];
 
+/// Eğim çeldiricileri: hepsi kökün sorduğu işaretle (% ya da ‰) yazılır ve
+/// anahtarın değer sırası [sira] ile belirlenir. [adaylar] (değer, ondalık basamak)
+/// ikilileridir.
+List<String> _egimCeldirici(
+  String isaret,
+  int anahtar,
+  List<(num, int)> adaylar,
+  int sira,
+) => siraliCeldiriciler(anahtar, '$isaret$anahtar', [
+  for (final (x, d) in adaylar) (x, '$isaret${tr(x, d)}'),
+], sira);
+
 AdvancedItem _egim(int a, int b, int c) {
   final k = c ~/ 2;
+  final sira = hedefSira(_vaka(a, b, c));
   if (c.isEven) {
     final p = 2 + a; // %2 … %26
     final yatay = (2 + b) * 200; // 400 … 4200 m
@@ -362,13 +375,23 @@ AdvancedItem _egim(int a, int b, int c) {
     final h1 = const [320, 550, 680, 860, 1040][k], h2 = h1 + fark;
     final yer = sec(_egimYer, a + b);
     final uzaklik = k.isOdd ? '${tr(yatay / 1000)} km' : '$yatay m';
-    return secenekli(
+    return AdvancedItem(
       'Yükseltisi $h1 m olan ${yer.$1} ile yükseltisi $h2 m olan ${yer.$2} arasındaki yatay '
       'uzaklık $uzaklik olarak ölçülmüştür. Bu iki yer arasındaki ortalama eğim yüzde (%) kaçtır?',
       '%$p',
-      // Değerce birbirinden farklı üç hata: birimi binde sanma (‰p = %p/10),
-      // 1000 ile çarpma (%10p) ve 100 ile çarpmayı unutma (%p/100).
-      ['‰$p', '%${p * 10}', '%${tr(p / 100)}'],
+      // Tipik hatalar: 100 yerine 1000 ile çarpma, 100 ile çarpmayı unutma, oranı ters
+      // kurma (yatay uzaklık / yükselti farkı), yükselti farkı yerine yerlerden birinin
+      // yükseltisini ya da iki yükseltinin toplamını kullanma, 100 yerine 10 ile çarpma.
+      // Yuvarlanan değerler öğrencinin bulacağı sonuca en yakın tam sayıdır.
+      _egimCeldirici('%', p, [
+        (10 * p, 0),
+        (p / 100, 2),
+        ((100 / p).round(), 0),
+        ((h2 * 100 / yatay).round(), 0),
+        ((h1 * 100 / yatay).round(), 0),
+        (((h1 + h2) * 100 / yatay).round(), 0),
+        (p / 10, 1),
+      ], sira),
       'Yükselti farkı $h2 − $h1 = $fark m, yatay uzaklık '
       '${k.isOdd ? '$uzaklik = $yatay m' : '$yatay m'} olduğundan '
       'eğim = $fark / $yatay × 100 = %$p olur.',
@@ -387,12 +410,23 @@ AdvancedItem _egim(int a, int b, int c) {
     _ => 'Bir su iletim hattı $h2 m yükseltideki bir kaynaktan $h1 m yükseltideki bir depoya '
         'inmektedir. Kaynak ile depo arasındaki yatay uzaklık $km km olduğuna göre hattın',
   };
-  return secenekli(
+  return AdvancedItem(
     '$giris ortalama eğimi binde (‰) kaçtır?',
     '‰$q',
-    // Değerce birbirinden farklı üç hata: birimi yüzde sanma (%q = ‰10q),
-    // 100 ile çarpma (‰q/10) ve 1000 ile çarpmayı unutma (‰q/1000).
-    ['%$q', '‰${tr(q / 10)}', '‰${tr(q / 1000, 3)}'],
+    // Tipik hatalar: 1000 yerine 100 ile çarpma (yüzde formülü), kilometreyi metreye
+    // çevirirken 100 ile çarpma, oranı ters kurma, yükselti farkı yerine yerlerden
+    // birinin yükseltisini ya da iki yükseltinin toplamını kullanma, 1000 ile
+    // çarpmayı unutma, 1000 yerine 10 ile çarpma.
+    _egimCeldirici('‰', q, [
+      (q / 10, 1),
+      (10 * q, 0),
+      ((1000 / q).round(), 0),
+      ((h2 / km).round(), 0),
+      ((h1 / km).round(), 0),
+      (((h1 + h2) / km).round(), 0),
+      (q / 1000, 3),
+      (q / 100, 2),
+    ], sira),
     'Yükselti farkı $h2 − $h1 = $fark m, yatay uzaklık $km km = ${km * 1000} m olduğundan '
     'eğim = $fark / ${km * 1000} × 1000 = ‰$q olur.',
   );
@@ -417,13 +451,30 @@ AdvancedItem _sicaklik(int a, int b, int c) {
   String yaz(int onda) => _derece(onda / 10);
   // Yükselti farkının (m) yol açtığı sıcaklık farkı, onda bir °C.
   int fark(int metre) => metre ~/ 20;
-  AdvancedItem soru(String kok, int dogru, List<int> yanlis, String aciklama) =>
-      secenekli(
+  final i = _vaka(a, b, c);
+  // Çeldiriciler anahtarın iki yanındaki tipik hatalardan, anahtarın değer sırası
+  // [sira] olacak biçimde seçilir; tipik hata yetmezse 1–2 °C komşu değer gelir.
+  AdvancedItem soru(String kok, int dogru, List<int> yanlis, String aciklama, int sira) =>
+      AdvancedItem(
         kok,
         yaz(dogru),
-        [...yanlis, dogru + 10, dogru - 10, dogru + 20, dogru - 20].map(yaz),
+        siraliCeldiriciler(dogru, yaz(dogru), [
+          for (final x in [...yanlis, dogru + 10, dogru - 10, dogru + 20, dogru - 20])
+            (x, yaz(x)),
+        ], sira),
         aciklama,
       );
+  // Tipik hatalar: ters yönde işlem, 100 m'de 1 °C sanma, 400 m'de 1 °C sanma
+  // (400 m kuralı yalnız sonuç onda bire tam bölündüğünde) ve bunların ters
+  // yönlü biçimleri. Çağıran yer bunlara sıcaklık değişimini sıcaklık sanmayı
+  // (d, yükselen yerde −d) ekler.
+  List<int> hatalar(int t0, int d, int yon, bool tam400) => [
+    t0 - yon * d,
+    t0 + 2 * yon * d,
+    if (tam400) t0 + yon * (d ~/ 2),
+    t0 - 2 * yon * d,
+    if (tam400) t0 - yon * (d ~/ 2),
+  ];
   if (bicim == 0) {
     final deniz = 120 + 10 * a + const [0, 5, 2, 7][q]; // 12 … 36,7 °C
     final h = 100 * (6 + b); // 600 … 2500 m
@@ -432,23 +483,27 @@ AdvancedItem _sicaklik(int a, int b, int c) {
       'Deniz seviyesinde sıcaklığın ${yaz(deniz)} ölçüldüğü bir anda, aynı bölgede $h m '
       'yükseltideki ${sec(_yuksekYer, a + b)} sıcaklığın kaç °C olması beklenir? $kural',
       t,
-      // Ters yönde işlem, 100 m'de 1 °C sanma, 400 m'de 1 °C sanma (ya da ikisi birden).
-      [deniz + d, deniz - 2 * d, h % 200 == 0 ? deniz - d ~/ 2 : deniz + 2 * d],
+      [...hatalar(deniz, d, -1, h % 200 == 0), d, -d],
       'Yükselti farkı $h m olduğundan sıcaklık $h / 200 = ${say(d)} °C azalır: '
       '${say(deniz)} − ${say(d)} = ${yaz(t)}.',
+      hedefSira(i),
     );
   }
   if (bicim == 1) {
     final deniz = 120 + 10 * a + const [0, 5, 2][q];
     final h = 100 * (4 + b); // 400 … 2300 m
     final d = fark(h), t = deniz - d; // t: istasyonda ölçülen, en az 0,5 °C
+    // Bu biçimde anahtarın üstünde tek tipik hata vardır (100 m'de 1 °C sanma);
+    // anahtar en küçük seçenek yapılmaz, ailenin öteki biçimleri bunu dengeler.
+    final s0 = hedefSira(i);
     return soru(
       'Yükseltisi $h m olan bir meteoroloji istasyonunda sıcaklık ${yaz(t)} olarak '
       'ölçülmüştür. $kural Buna göre istasyonun deniz seviyesine indirgenmiş sıcaklığı kaç °C olur?',
       deniz,
-      [t - d, t + 2 * d, h % 200 == 0 ? t + d ~/ 2 : t - 2 * d],
+      [...hatalar(t, d, 1, h % 200 == 0), d],
       'İndirgemede yükseltinin etkisi kaldırılır: $h / 200 = ${say(d)} °C eklenir. '
       '${say(t)} + ${say(d)} = ${yaz(deniz)}.',
+      s0 == 0 ? 2 + hedefSira(i, 5) % 2 : s0,
     );
   }
   // İki nokta arasında: köy 300, 500 ya da 700 m; yayla 900 … 2800 m.
@@ -462,10 +517,12 @@ AdvancedItem _sicaklik(int a, int b, int c) {
       'Bir dağın yamacında $ust m yükseltideki yaylada sıcaklık ${yaz(tUst)} iken aynı anda '
       '$alt m yükseltideki köyde sıcaklığın kaç °C olması beklenir? $kural',
       tAlt,
-      [tUst - d, tUst + 2 * d, m % 200 == 0 ? tUst + d ~/ 2 : tUst - 2 * d],
+      // Yükselti farkı yerine yaylanın yükseltisini kullanma da tipik bir hatadır.
+      [...hatalar(tUst, d, 1, m % 200 == 0), tUst + fark(ust), d],
       'Yükselti farkı $ust − $alt = $m m olduğundan sıcaklık farkı '
       '$m / 200 = ${say(d)} °C olur. Alçaktaki köy daha sıcaktır: '
       '${say(tUst)} + ${say(d)} = ${yaz(tAlt)}.',
+      hedefSira(i),
     );
   }
   final tAlt = 80 + 10 * a + (q == 2 ? 5 : 0); // 8 … 32,5 °C
@@ -474,10 +531,11 @@ AdvancedItem _sicaklik(int a, int b, int c) {
     'Bir dağın yamacında $alt m yükseltideki köyde sıcaklık ${yaz(tAlt)} iken aynı anda '
     '$ust m yükseltideki yaylada sıcaklığın kaç °C olması beklenir? $kural',
     tUst,
-    [tAlt + d, tAlt - 2 * d, m % 200 == 0 ? tAlt - d ~/ 2 : tAlt + 2 * d],
+    [...hatalar(tAlt, d, -1, m % 200 == 0), tAlt - fark(ust), d, -d],
     'Yükselti farkı $ust − $alt = $m m olduğundan sıcaklık farkı '
     '$m / 200 = ${say(d)} °C olur. Yüksekteki yayla daha soğuktur: '
     '${say(tAlt)} − ${say(d)} = ${yaz(tUst)}.',
+    hedefSira(i),
   );
 }
 
@@ -616,17 +674,32 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
   final bicim = c % 3, q = c ~/ 3;
   final bin = 20 + 4 * a; // nüfus (bin kişi)
   final nufus = bin * 1000;
+  final sira = hedefSira(_vaka(a, b, c));
   if (bicim == 0) {
     final dogum = 16 + b, olum = 5 + 2 * q;
-    final hiz = dogum - olum;
-    return sayisal(
+    final hiz = dogum - olum, artis = bin * hiz;
+    return sayisalSirali(
       'Yıl ortası nüfusu $nufus olan bir ilçede bir yıl içinde doğum oranı ‰$dogum, ölüm oranı '
       '‰$olum olarak gerçekleşmiştir. Göçler dikkate alınmadığında bu ilçenin nüfusu bir yılda '
       'doğal yolla kaç kişi artmıştır?',
-      bin * hiz,
-      [bin * dogum, bin * (dogum + olum), bin * hiz * 10],
+      artis,
+      // Tipik hatalar anahtarın iki yanında: ölümleri düşmeme, yalnız ölümleri
+      // hesaplama, oranları toplama, artış hızını (‰) kişi sayısı sanma, binde yerine
+      // yüzde alma, on binde sanma (tam sayı çıktığında) ve oran farkında bir birimlik
+      // işlem hatası.
+      [
+        bin * dogum,
+        bin * olum,
+        bin * (dogum + olum),
+        hiz,
+        artis * 10,
+        if (artis % 10 == 0) artis ~/ 10,
+        bin * (hiz - 1),
+        bin * (hiz + 1),
+      ],
       'Doğal nüfus artış hızı ‰$dogum − ‰$olum = ‰$hiz olur. '
       '$nufus × $hiz / 1000 = ${bin * hiz} kişi.',
+      sira,
       unit: 'kişi',
       positive: true,
     );
@@ -634,16 +707,25 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
   if (bicim == 1) {
     final hiz = 3 + b, olumOrani = 6 + q;
     final olum = bin * olumOrani, dogum = olum + bin * hiz;
-    return secenekli(
+    String binde(num x, [int d = 2]) => '‰${tr(x, d)}';
+    return AdvancedItem(
       'Yıl ortası nüfusu $nufus olan bir ilçede bir yıl boyunca $dogum doğum ve $olum ölüm '
       'kaydedilmiştir. Bu ilçenin doğal nüfus artış hızı binde (‰) kaçtır?',
       '‰$hiz',
-      [
-        '‰${hiz + olumOrani}',
-        '%$hiz',
-        '‰$olumOrani',
-        '‰${hiz + 2 * olumOrani}',
-      ],
+      // Bütün seçenekler kökün sorduğu binde (‰) ile yazılır. Tipik hatalar: ölümleri
+      // düşmeme (doğum hızı), 1000 yerine 100 ile çarpma, ölüm hızını verme, doğum ile
+      // ölümü toplama, 1000 ile çarpmayı unutma, 1000 yerine 10000 ile çarpma.
+      siraliCeldiriciler(hiz, '‰$hiz', [
+        for (final (x, d) in [
+          (hiz + olumOrani, 0),
+          (hiz / 10, 1),
+          (olumOrani, 0),
+          (hiz + 2 * olumOrani, 0),
+          (hiz / 1000, 3),
+          (hiz * 10, 0),
+        ])
+          (x, binde(x, d)),
+      ], sira),
       'Doğal artış $dogum − $olum = ${dogum - olum} kişidir. '
       '${dogum - olum} / $nufus × 1000 = ‰$hiz bulunur.',
     );
@@ -655,14 +737,19 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
   final dogal = dogum - olum, net = gelen - giden;
   if (q == 2) {
     final son = nufus + dogal + net;
-    return sayisal(
+    final toplam = son - nufus;
+    return sayisalSirali(
       'Yıl başında nüfusu $nufus olan bir ilçede yıl içinde $dogum doğum ve $olum ölüm '
       'gerçekleşmiş, yıl sonunda nüfus $son olarak belirlenmiştir. Bu ilçenin yıl içindeki net '
       'göçü (aldığı göç ile verdiği göç arasındaki fark) kaç kişidir?',
       net,
-      [son - nufus, son - nufus + dogal, dogal],
+      // Tipik hatalar: toplam artışı net göç sanma, doğal artışı çıkarmak yerine
+      // ekleme, doğal artışı verme, doğal artış yerine yalnız doğumları ya da doğum
+      // ile ölümün toplamını çıkarma.
+      [toplam, toplam + dogal, dogal, toplam - dogum, toplam - dogum - olum],
       'Toplam artış $son − $nufus = ${son - nufus} kişi, doğal artış $dogum − $olum = $dogal '
       'kişidir. Net göç ${son - nufus} − $dogal = $net kişi olur.',
+      sira,
       unit: 'kişi',
       positive: true,
     );
@@ -673,22 +760,45 @@ AdvancedItem _nufusArtisi(int a, int b, int c) {
       'ilçe dışarıdan $gelen kişi göç almış, dışarıya $giden kişi göç vermiştir.';
   if (q == 0) {
     final son = nufus + dogal + net;
-    return sayisal(
+    return sayisalSirali(
       '$veri Bu ilçenin yıl sonundaki nüfusu kaç kişidir?',
       son,
-      [nufus + dogal, nufus + dogal + gelen + giden, nufus + dogum + olum + net],
+      // Tipik hatalar: göçü unutma, göçleri toplama, ölümleri ekleme, doğal artışı
+      // unutma, ölümleri düşmeme, net göçü çıkarma, verilen göçü düşmeme.
+      [
+        nufus + dogal,
+        nufus + dogal + gelen + giden,
+        nufus + dogum + olum + net,
+        nufus + net,
+        nufus + dogum + net,
+        nufus + dogal - net,
+        nufus + dogal + gelen,
+      ],
       'Doğal artış $dogum − $olum = $dogal, net göç $gelen − $giden = $net kişidir. '
       '$nufus + $dogal + $net = $son kişi.',
+      sira,
       unit: 'kişi',
       positive: true,
     );
   }
-  return sayisal(
+  return sayisalSirali(
     '$veri Bu ilçenin nüfusu bir yılda toplam kaç kişi artmıştır?',
     dogal + net,
-    [dogal, dogal + gelen + giden, dogum + olum + net, net],
+    // Tipik hatalar: göçü unutma, göçleri toplama, ölümleri ekleme, doğal artışı
+    // unutma, ölümleri düşmeme, verilen göçü düşmeme, iki artışı toplamak yerine
+    // birbirinden çıkarma.
+    [
+      dogal,
+      dogal + gelen + giden,
+      dogum + olum + net,
+      net,
+      dogum + net,
+      dogal + gelen,
+      (dogal - net).abs(),
+    ],
     'Doğal artış $dogum − $olum = $dogal, net göç $gelen − $giden = $net kişidir. '
     'Toplam artış $dogal + $net = ${dogal + net} kişi.',
+    sira,
     unit: 'kişi',
     positive: true,
   );
@@ -748,36 +858,60 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
   final oran = 40 + 2 * a; // %40 … %88
   final calisan = (20 + 5 * b) * 1000; // 15–64 yaş
   final bagimli = (200 + 50 * b) * oran; // 0–14 ile 65+
+  final sira = hedefSira(_vaka(a, b, c));
   if (c.isEven) {
     final pay = const [60, 65, 70, 75, 80][k];
     final genc = bagimli * pay ~/ 100, yasli = bagimli - genc;
     final toplamdaPay = (bagimli * 100 / (calisan + bagimli)).round();
-    return secenekli(
+    final calisanPay = (calisan * 100 / (calisan + bagimli)).round();
+    return AdvancedItem(
       'Bir ilçede 0–14 yaş grubunda $genc, 15–64 yaş grubunda $calisan, 65 ve üzeri yaş grubunda '
       '$yasli kişi yaşamaktadır. Bağımlı nüfus oranı, 0–14 ile 65 ve üzeri yaş gruplarındaki '
       'toplam nüfusun 15–64 yaş grubundaki nüfusa oranının 100 ile çarpılmasıyla bulunduğuna '
       'göre bu ilçenin bağımlı nüfus oranı yüzde kaçtır?',
       '%$oran',
-      [
-        '%${tr(oran * pay / 100)}',
-        '%$toplamdaPay',
-        '%${tr(oran * (100 - pay) / 100)}',
-        '%${oran + 10}',
-      ],
+      // Tipik hatalar anahtarın iki yanında: bağımlı nüfusu toplam nüfusa oranlama,
+      // oranı ters kurma (15–64 / bağımlı), yalnız 0–14 yaşı ya da yalnız 65 ve üzeri
+      // yaşı hesaba katma, toplam nüfusu 15–64 yaş nüfusuna oranlama, 15–64 yaşın
+      // toplamdaki payını verme; en sonda 10 puanlık komşu değer.
+      siraliCeldiriciler(oran, '%$oran', [
+        for (final x in <num>[
+          toplamdaPay,
+          (10000 / oran).round(),
+          oran * pay / 100,
+          100 + oran,
+          oran * (100 - pay) / 100,
+          calisanPay,
+          oran + 10,
+        ])
+          (x, '%${tr(x)}'),
+      ], sira),
       'Bağımlı nüfus $genc + $yasli = $bagimli kişidir. '
       '$bagimli / $calisan × 100 = %$oran bulunur.',
     );
   }
   final pay = const [55, 62, 68, 72, 78][k];
   final yasli = bagimli * (100 - pay) ~/ 100, genc = bagimli - yasli;
-  return sayisal(
+  return sayisalSirali(
     'Bir ilçede 15–64 yaş grubundaki nüfus $calisan, 65 ve üzeri yaş grubundaki nüfus $yasli '
     'kişidir. Bağımlı nüfus oranı (0–14 ile 65 ve üzeri yaş nüfusunun 15–64 yaş nüfusuna '
     'oranının 100 katı) %$oran olduğuna göre bu ilçede 0–14 yaş grubunda kaç kişi yaşamaktadır?',
     genc,
-    [bagimli, bagimli + yasli, calisan - bagimli],
+    // Tipik hatalar: 65 ve üzeri nüfusu çıkarmama ya da ekleme, bağımlı nüfusu 15–64
+    // yaş nüfusundan çıkarma (65 ve üzeri ile birlikte ya da değil), 65 ve üzeri
+    // nüfusu verme; tipik hata yetmezse en sonda ±%10 komşu değerler.
+    [
+      bagimli,
+      calisan - bagimli,
+      bagimli + yasli,
+      calisan - bagimli - yasli,
+      yasli,
+      genc * 9 ~/ 10,
+      genc * 11 ~/ 10,
+    ],
     'Bağımlı nüfus = $calisan × $oran / 100 = $bagimli kişidir. '
     '0–14 yaş nüfusu = $bagimli − $yasli = $genc kişi.',
+    sira,
     unit: 'kişi',
     positive: true,
   );
@@ -916,14 +1050,27 @@ AdvancedItem _yuzyil(int i) {
   if (bicim == 3) {
     final mo = 110 + 37 * (k % 50), ms = 105 + 73 * (k ~/ 50);
     final olay = sec(_sureOlay, k);
-    return sayisal(
+    final fark = (mo - ms).abs();
+    return sayisalSirali(
       '${olay.$1} M.Ö. $mo yılında ${olay.$2}, M.S. $ms yılında ${olay.$3}. Milattan önceki bir '
       'tarih ile milattan sonraki bir tarih arasındaki süre iki tarihin toplanmasıyla '
       'bulunduğuna göre bu iki olay arasında kaç yıl vardır?',
       mo + ms,
-      [(mo - ms).abs(), mo + ms + 100, mo + ms - 100],
+      // Tipik hatalar anahtarın iki yanında: toplamak yerine çıkarma, toplamada yüzler
+      // basamağında elde hatası (çıkarma hatasıyla birlikte de), sıfır yılını sayma,
+      // onlar basamağında elde hatası.
+      [
+        fark,
+        mo + ms + 100,
+        fark + 100,
+        mo + ms - 100,
+        mo + ms + 1,
+        mo + ms + 10,
+        mo + ms - 10,
+      ],
       'Tarihlerden biri milattan önce, diğeri milattan sonra olduğundan yıllar toplanır: '
       '$mo + $ms = ${mo + ms} yıl.',
+      hedefSira(i),
       unit: 'yıl',
       positive: true,
     );
@@ -942,8 +1089,11 @@ AdvancedItem _yuzyil(int i) {
   String ad(int yy, int j) =>
       '${mo ? 'M.Ö. ' : ''}$yy. yüzyılın ${ceyrek ? '${_ceyrekAdi[j]} çeyreği' : '${j == 0 ? 'ilk' : 'ikinci'} yarısı'}';
   final komsu = yuz >= 1 ? n - 1 : n + 1;
+  // Çeldiriciler 2 × 2 düzenindedir: yüzyıl hatası (yılın ilk basamaklarını yüzyıl
+  // sanma) ile parça hatası (yarıyı ya da çeyreği ters uçtan sayma) ayrı ayrı ve
+  // birlikte verilir. Her yüzyıl ve her parça adı ikişer seçenekte görünür.
   final yanlis = ceyrek
-      ? [ad(n, 3 - konum), ad(komsu, konum), ad(n, (konum + 1) % 4), ad(n, (konum + 3) % 4)]
+      ? [ad(n, 3 - konum), ad(komsu, konum), ad(komsu, 3 - konum)]
       : [ad(n, 1 - konum), ad(komsu, konum), ad(komsu, 1 - konum), ad(n + 1, konum)];
   final (bas, son) = mo
       ? (yuz * 100 + 100 - boy * konum, yuz * 100 + 101 - boy * (konum + 1))

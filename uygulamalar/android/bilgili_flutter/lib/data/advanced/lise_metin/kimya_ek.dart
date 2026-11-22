@@ -4799,6 +4799,270 @@ final _iupacYanlisAdlari = [
     for (final y in _iupacYanlislari(_alkanlar[c])) (c, y),
 ];
 
+// Çeldirici düzenleri. Bir ad (ana zincir uzunluğu, dallar) olarak tutulur;
+// tipik hatalar bu yapı üzerinde uygulanır: ters uçtan numaralama, dalları bir
+// konum kaydırma, ana zinciri bir fazla ya da bir eksik sayma, dalları
+// alfabetik sıraya koymama. İki bağımsız hatanın 2 × 2 düzeninde (anahtar,
+// X, Y, X + Y) her hata iki seçenekte geçer; sözcük benzerliği ve seçenek
+// uzunluğu anahtarı ötekilerden ayırmaz.
+typedef _AlkanAdi = (int, List<(int, int)>);
+
+String _adYazi(_AlkanAdi a, {bool alfabetik = true}) =>
+    _alkanAdiYaz(a.$1, a.$2, alfabetik: alfabetik);
+
+/// Dallar ana zincirin uç karbonlarında değil ve bir karbonda en çok iki dal
+/// var: ad yanlış olsa da kurulabilir bir iskeleti anlatır.
+bool _adKurulur(_AlkanAdi a) {
+  final (n, d) = a;
+  if (n < 3 || n > 10) return false;
+  final say = <int, int>{};
+  for (final (k, _) in d) {
+    if (k < 2 || k > n - 1) return false;
+    say[k] = (say[k] ?? 0) + 1;
+    if (say[k]! > 2) return false;
+  }
+  return true;
+}
+
+_AlkanAdi _tersNumara(_AlkanAdi a) => (a.$1, [
+  for (final (k, s) in a.$2) (a.$1 + 1 - k, s),
+]);
+
+_AlkanAdi _kaydir(_AlkanAdi a, int y) => (a.$1, [
+  for (final (k, s) in a.$2) (k + y, s),
+]);
+
+/// Ana zinciri bir fazla ya da bir eksik saymanın kurulabilir sonuçları;
+/// ad uzunluğunu koruyanlar önce.
+List<int> _yanlisZincirBoylari(_AlkanAdi a) {
+  final n = a.$1;
+  final out = [
+    for (final m in [n + 1, n - 1])
+      if (_adKurulur((m, a.$2))) m,
+  ];
+  int uzunluk(int m) => _anaZincir[m].length == _anaZincir[n].length ? 0 : 1;
+  out.sort((x, y) => uzunluk(x).compareTo(uzunluk(y)));
+  return out;
+}
+
+/// 2 × 2 düzen: X (ters numaralama ya da kaydırma) ile ana zinciri yanlış
+/// sayma; çeldiriciler X, zincir hatası ve ikisi birden.
+List<String>? _ikiliDuzen(_AlkanAdi a, Set<String> yasak) {
+  final ad = _adYazi(a);
+  for (final x in [_tersNumara(a), _kaydir(a, 1), _kaydir(a, -1)]) {
+    if (!_adKurulur(x) || _adYazi(x) == ad) continue;
+    for (final m in _yanlisZincirBoylari(a)) {
+      if (!_adKurulur((m, x.$2))) continue;
+      final ys = [_adYazi(x), _adYazi((m, a.$2)), _adYazi((m, x.$2))];
+      if ({ad, ...ys}.length == 4 && !ys.any(yasak.contains)) return ys;
+    }
+  }
+  return null;
+}
+
+/// 2 × 2 düzen: ilk dalın konumunu kaydırma ile son dalın konumunu kaydırma
+/// (ters numaralama ve zincir boyu hatası kurulamadığında, ör. 2,9-dimetildekan).
+List<String>? _uclarDuzeni(_AlkanAdi a, Set<String> yasak) {
+  final (n, d) = a;
+  if (d.length < 2) return null;
+  final ad = _adYazi(a);
+  _AlkanAdi kay(_AlkanAdi x, int t, int y) => (n, [
+    for (var u = 0; u < d.length; u++)
+      u == t ? (x.$2[u].$1 + y, x.$2[u].$2) : x.$2[u],
+  ]);
+  for (final (y1, y2) in const [(1, -1), (1, 1), (-1, -1), (-1, 1)]) {
+    final x = kay(a, 0, y1), y = kay(a, d.length - 1, y2);
+    final xy = kay(x, d.length - 1, y2);
+    if (![x, y, xy].every(_adKurulur)) continue;
+    final ys = [_adYazi(x), _adYazi(y), _adYazi(xy)];
+    if ({ad, ...ys}.length == 4 && !ys.any(yasak.contains)) return ys;
+  }
+  return null;
+}
+
+/// Zincirin iki yönden numaralanmasıyla adlar: önce en küçük konumlu (tuzak
+/// zincirde öğrencinin bulacağı ad), sonra ters numaralanmışı.
+(_AlkanAdi, _AlkanAdi) _zincirYonleri(List<List<int>> adj, List<int> yol) {
+  final ileri = (yol, _zincirDallari(adj, yol));
+  final ters = yol.reversed.toList();
+  final geri = (ters, _zincirDallari(adj, ters));
+  final once = _zincirKarsilastir(ileri, geri) <= 0 ? ileri : geri;
+  final sonra = identical(once, ileri) ? geri : ileri;
+  return ((yol.length, once.$2), (yol.length, sonra.$2));
+}
+
+/// Kökte verilen yanlış adın hangi tuzak zincirden geldiği (yoksa null).
+(_AlkanAdi, _AlkanAdi)? _yanlisZincir(
+  List<List<int>> adj,
+  List<int> yol,
+  String yanlis,
+) {
+  final yapraklar = [
+    for (var v = 0; v < adj.length; v++)
+      if (adj[v].length <= 1) v,
+  ];
+  for (final x in yapraklar) {
+    for (final y in yapraklar) {
+      if (x >= y) continue;
+      final p = _agacYolu(adj, x, y);
+      if (p.length >= yol.length ||
+          !_zincirDallari(adj, p).every((d) => d.$2 <= 2)) {
+        continue;
+      }
+      final z = _zincirYonleri(adj, p);
+      if (_adYazi(z.$1) == yanlis) return z;
+    }
+  }
+  return null;
+}
+
+/// Kökteki yanlış ad W = E(anahtar) iken çeldiriciler E + X, E + Y ve X + Y
+/// hatalarıdır: her çift seçenek iki hatada ayrışır, W'ye anahtar kadar
+/// yakın iki çeldirici bulunur.
+List<String>? _yanlisAdDuzeni(
+  List<List<int>> adj,
+  List<int> yol,
+  _AlkanAdi a,
+  String w,
+) {
+  final ad = _adYazi(a);
+  bool uygun(List<String> ys) =>
+      {ad, w, ...ys}.length == 5 && ys.every((y) => y != ad && y != w);
+  final zincirler = _yanlisZincirBoylari(a);
+  if (w == _adYazi(_tersNumara(a))) {
+    for (final yon in const [1, -1]) {
+      final k = _kaydir(a, yon), tk = _tersNumara(k);
+      if (!_adKurulur(k) || !_adKurulur(tk)) continue;
+      for (final m in zincirler) {
+        if (!_adKurulur((m, k.$2)) || !_adKurulur((m, _tersNumara(a).$2))) {
+          continue;
+        }
+        final ys = [
+          _adYazi((m, _tersNumara(a).$2)),
+          _adYazi(tk),
+          _adYazi((m, k.$2)),
+        ];
+        if (uygun(ys)) return ys;
+      }
+    }
+    return null;
+  }
+  if (w == _adYazi(a, alfabetik: false)) {
+    for (final x in [_tersNumara(a), _kaydir(a, 1), _kaydir(a, -1)]) {
+      if (!_adKurulur(x) || _adYazi(x) == ad) continue;
+      for (final m in zincirler) {
+        if (!_adKurulur((m, x.$2))) continue;
+        final ys = [
+          _adYazi(x, alfabetik: false),
+          _adYazi((m, a.$2), alfabetik: false),
+          _adYazi((m, x.$2)),
+        ];
+        if (uygun(ys)) return ys;
+      }
+    }
+    return null;
+  }
+  final z = _yanlisZincir(adj, yol, w);
+  if (z == null) return null;
+  for (final mz in _yanlisZincirBoylari(z.$1)) {
+    for (final m in zincirler) {
+      if (!_adKurulur((m, _tersNumara(a).$2))) continue;
+      final ys = [
+        _adYazi(z.$2),
+        _adYazi((mz, z.$1.$2)),
+        _adYazi((m, _tersNumara(a).$2)),
+      ];
+      if (uygun(ys)) return ys;
+    }
+  }
+  return null;
+}
+
+/// Düzen kurulamayan adlar için tipik hatalardan sıralı yedek adaylar: tek
+/// hatalar (numaralama, kaydırma, zincir boyu, alfabe, çarpan ön eki, etil
+/// yerine metil), zincir boyu hatalı ikili hatalar ve tuzak zincir adları.
+List<String> _yedekAdlar(
+  _AlkanAdi a,
+  Iterable<String> zincirAdlari,
+  Set<String> yasak,
+) {
+  final (n, d) = a;
+  final ad = _adYazi(a);
+  final tekli = <_AlkanAdi>[
+    _tersNumara(a),
+    _kaydir(a, 1),
+    _kaydir(a, -1),
+    for (final ilk in [true, false])
+      for (final y in const [1, -1])
+        (n, [
+          for (var t = 0; t < d.length; t++)
+            t == (ilk ? 0 : d.length - 1) ? (d[t].$1 + y, d[t].$2) : d[t],
+        ]),
+  ];
+  final boylar = _yanlisZincirBoylari(a);
+  final out = <String>[];
+  void ekle(String x) {
+    if (x != ad && !yasak.contains(x) && !out.contains(x)) out.add(x);
+  }
+
+  for (final t in tekli) {
+    if (_adKurulur(t)) ekle(_adYazi(t));
+  }
+  for (final m in boylar) {
+    ekle(_adYazi((m, d)));
+  }
+  if (d.any((e) => e.$2 == 1) && d.any((e) => e.$2 == 2)) {
+    ekle(_adYazi(a, alfabetik: false));
+  }
+  if (d.length > {for (final e in d) e.$2}.length) {
+    ekle(_alkanAdiYaz(n, d, carpan: false));
+  }
+  if (d.any((e) => e.$2 == 2)) {
+    ekle(_adYazi((n, [for (final (k, _) in d) (k, 1)])));
+  }
+  for (final t in tekli) {
+    for (final m in boylar) {
+      if (_adKurulur(t) && _adKurulur((m, t.$2))) ekle(_adYazi((m, t.$2)));
+    }
+  }
+  zincirAdlari.forEach(ekle);
+  return out;
+}
+
+/// Adaylardan, anahtarın sözcük benzerliğinde ya da uzunlukta tek başına en
+/// yüksek ya da en düşük olmadığı ilk üçlü (öncelik sırasıyla). Bulunamazsa
+/// ölçüt gevşetilir: önce yalnız en yüksek değerler, sonra yalnız sözcük
+/// benzerliğinin en yükseği aranır; o da yoksa null.
+List<String>? _dengeliUclu(String anahtar, List<String> adaylar) {
+  final k = adaylar.length < 8 ? adaylar.length : 8;
+  bool tekUst(List<num> p) {
+    for (var j = 1; j < p.length; j++) {
+      if (p[j] >= p[0] - 1e-9) return false;
+    }
+    return true;
+  }
+
+  bool tekAlt(List<num> p) => tekUst([for (final x in p) -x]);
+  for (var duzey = 0; duzey < 3; duzey++) {
+    for (var x = 0; x < k; x++) {
+      for (var y = x + 1; y < k; y++) {
+        for (var z = y + 1; z < k; z++) {
+          final se = [anahtar, adaylar[x], adaylar[y], adaylar[z]];
+          final p = _sozcukBenzerligi(se);
+          final u = [for (final e in se) e.length];
+          final aykiri = switch (duzey) {
+            0 => tekUst(p) || tekAlt(p) || tekUst(u) || tekAlt(u),
+            1 => tekUst(p) || tekUst(u),
+            _ => tekUst(p),
+          };
+          if (!aykiri) return se.sublist(1);
+        }
+      }
+    }
+  }
+  return null;
+}
+
 String _alkanFormulu(int c) => 'C${_alt(c)}H${_alt(2 * c + 2)}';
 
 final _f19 = lmSirali(
@@ -4816,15 +5080,38 @@ final _f19 = lmSirali(
       final b = _alkanlar[c];
       final (ad, adj, yol, dallar) = b;
       final cizimTuzak = p.length < yol.length;
+      final yapi = (yol.length, dallar);
+      // Yatay yazılan zincir en uzun zincir değilse çeldiriciler o zincirin
+      // iki yönden numaralanmış adları ile anahtarın tek hatalı bir biçimidir
+      // (zincir seçimi × numaralama düzeni); değilse 2 × 2 düzen.
+      List<String>? duzen;
+      if (cizimTuzak) {
+        final (z, tz) = _zincirYonleri(adj, p);
+        for (final u in [
+          if (hedefSira(i).isEven) _tersNumara(yapi),
+          for (final m in _yanlisZincirBoylari(yapi)) (m, yapi.$2),
+          _tersNumara(yapi),
+        ]) {
+          final aday = [_adYazi(z), _adYazi(tz), _adYazi(u)];
+          if (_adKurulur(u) && {ad, ...aday}.length == 4) {
+            duzen = aday;
+            break;
+          }
+        }
+      }
+      final yedek = _yedekAdlar(yapi, [
+        if (cizimTuzak) _zincirAdi(adj, p),
+        ..._iupacYanlislari(b),
+      ], const {});
+      duzen ??=
+          _ikiliDuzen(yapi, const {}) ??
+          _uclarDuzeni(yapi, const {}) ??
+          _dengeliUclu(ad, yedek);
       return secenekli(
         'Yoğun yapı formülü ${_yogunFormul(adj, p)} olan alkanın IUPAC adı '
             'nedir?',
         ad,
-        [
-          if (cizimTuzak) _zincirAdi(adj, p),
-          ..._iupacYanlislari(b),
-          ..._iupacEkYanlislar(b),
-        ],
+        [...?duzen, ...yedek, ..._iupacEkYanlislar(b)],
         'En uzun karbon zinciri ${yol.length} karbonludur'
             '${cizimTuzak ? ' (yatay yazılan zincir en uzun zincir değildir)' : ''}; '
             'dallara en küçük numaralar verilir ve dallar alfabetik sırayla '
@@ -4835,14 +5122,21 @@ final _f19 = lmSirali(
       final (c, yanlis) =
           _iupacYanlisAdlari[j * _iupacYanlisAdlari.length ~/ 1000];
       final b = _alkanlar[c];
-      final (ad, _, yol, _) = b;
+      final (ad, adj, yol, dallar) = b;
+      final yapi = (yol.length, dallar);
+      final yedek = _yedekAdlar(yapi, _iupacYanlislari(b), {yanlis});
+      final duzen =
+          _yanlisAdDuzeni(adj, yol, yapi, yanlis) ??
+          _ikiliDuzen(yapi, {yanlis}) ??
+          _uclarDuzeni(yapi, {yanlis}) ??
+          _dengeliUclu(ad, yedek);
       // Kökte yanlış olduğu söylenen ad seçeneklere konmaz.
       return secenekli(
         'Bir öğrenci bir alkanı “$yanlis” olarak adlandırmıştır. Bu ad IUPAC '
             'kurallarına uymadığına göre bileşiğin doğru IUPAC adı nedir?',
         ad,
         [
-          for (final s in [..._iupacYanlislari(b), ..._iupacEkYanlislar(b)])
+          for (final s in [...?duzen, ...yedek, ..._iupacEkYanlislar(b)])
             if (s != yanlis) s,
         ],
         '“$yanlis” adıyla tanımlanan yapıda en uzun zincir ${yol.length} '

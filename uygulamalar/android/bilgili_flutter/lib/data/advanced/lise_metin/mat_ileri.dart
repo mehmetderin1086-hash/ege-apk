@@ -303,12 +303,34 @@ bool _isaretDengeli(int yanit, List<int> u) {
 /// biçimce (tam sayı / kesir) dengeli mi? Her özellikte anahtarla aynı olan
 /// çeldirici sayısı 1 ya da 3 olmalı: ne anahtar ne de bir çeldirici tek
 /// kalır.
-bool _dengeli(int n, int d, List<(int, int)> u) {
+/// [tumBicim] doğruysa üç çeldirici de anahtarla aynı biçimde olmalıdır.
+bool _dengeli(int n, int d, List<(int, int)> u, {bool tumBicim = false}) {
+  if (u.any((x) => x.$2 == 0)) return false;
   bool neg((int, int) x) => x.$1 != 0 && (x.$1 < 0) != (x.$2 < 0);
   bool tam((int, int) x) => x.$1 % x.$2 == 0;
   final isaret = u.where((x) => neg(x) == neg((n, d))).length;
   final bicim = u.where((x) => tam(x) == tam((n, d))).length;
-  return (isaret == 1 || isaret == 3) && (bicim == 1 || bicim == 3);
+  return (isaret == 1 || isaret == 3) &&
+      (bicim == 3 || (!tumBicim && bicim == 1));
+}
+
+/// Üçlü adaylarını öncelik geçişleriyle verir: önce biçimce tümüyle aynı ve
+/// işaretçe dengeli, sonra [_dengeli], en sonda koşulsuz. Her geçişte önce
+/// [tasarim] üçlüleri (bileşik tasarımlar), sonra [adaylar] seçkileri gelir.
+Iterable<List<(int, int)>> _gecisler(
+  int n,
+  int d,
+  List<List<(int, int)>> tasarim,
+  List<(int, int)> adaylar,
+) sync* {
+  for (final kosul in <bool Function(List<(int, int)>)>[
+    (u) => _dengeli(n, d, u, tumBicim: true),
+    (u) => _dengeli(n, d, u),
+    (u) => true,
+  ]) {
+    yield* tasarim.where(kosul);
+    yield* _seckiler(adaylar, kosul);
+  }
 }
 
 /// Üçlüde değeri tam sayı olan bir kesir var mı?
@@ -1361,7 +1383,7 @@ final lmMatIleri = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.analiz,
     (a, b, c) {
-      final v = c ~/ 3;
+      final v = c ~/ 3, hs = _hs(a, b, c);
       // Δ > 0 sorusunda b = ±1 iken 4·a·c yerine a·c alan yol da aynı tam
       // sayıyı verir; bu katsayılar atlanır.
       final kb = c % 3 == 2 && v == 0
@@ -1372,13 +1394,26 @@ final lmMatIleri = <AdvancedFamily>[
         final bas = const [1, 2, 3, -1][v];
         final kc = _sifirsiz(b, 9);
         final delta = b2 - 4 * bas * kc;
-        return _tam(
+        return _tamS(
           '${_pol([bas, kb, kc])} = 0 denkleminin diskriminantı kaçtır?',
           delta,
-          [b2 + 4 * bas * kc, b2 - bas * kc, kb - 4 * bas * kc, b2 - 4 * kc],
+          // İşaret, 4'ü unutma, b'nin karesini almama, a'yı unutma; negatif
+          // b'nin karesini negatif alma, 4 yerine 2 ya da 8, 4ac − b² yazma
+          // (anahtarın ters işaretlisi olduğundan en sonda).
+          [
+            b2 + 4 * bas * kc,
+            b2 - bas * kc,
+            kb - 4 * bas * kc,
+            b2 - 4 * kc,
+            if (kb < 0) -b2 - 4 * bas * kc,
+            b2 - 2 * bas * kc,
+            b2 - 8 * bas * kc,
+            4 * bas * kc - b2,
+          ],
           'Δ = b² − 4ac formülünde a = ${_n(bas)}, b = ${_n(kb)}, '
               'c = ${_n(kc)} alınır: Δ = ${_p(kb)}² − 4·${_p(bas)}·${_p(kc)} = '
               '${_n(delta)}.',
+          hs,
         );
       }
       if (c % 3 == 1) {
@@ -1392,28 +1427,44 @@ final lmMatIleri = <AdvancedFamily>[
             'Buradan ${_pol([1, -p], 'm')} = ${2 * t} veya '
             '${_pol([1, -p], 'm')} = −${2 * t}; m = ${_n(p + 2 * t)} veya '
             'm = ${_n(p - 2 * t)} bulunur.';
+        // Kök alırken 4'ün kökünü almama (±t) ya da 4t alma, p'yi unutma,
+        // p'nin işaretini çevirme, öteki kökü verme.
         return switch (v) {
-          0 => _tam(
+          0 => _tamS(
             '$denklem denkleminin çakışık iki kökü olduğuna göre m sayısının '
                 'alabileceği en büyük değer kaçtır?',
             p + 2 * t,
-            [p + t, p - 2 * t, 2 * t, p + 4 * t],
+            [p + t, p - 2 * t, 2 * t, p + 4 * t, -p + 2 * t, p - t, p - 4 * t],
             '$giris En büyük değer ${_n(p + 2 * t)} olur.',
+            hs,
           ),
-          1 => _tam(
+          1 => _tamS(
             '$denklem denkleminin çakışık iki kökü olduğuna göre m sayısının '
                 'alabileceği en küçük değer kaçtır?',
             p - 2 * t,
-            [p - t, p + 2 * t, -2 * t, p - 4 * t],
+            [p - t, p + 2 * t, -2 * t, p - 4 * t, -p - 2 * t, p + t, p + 4 * t],
             '$giris En küçük değer ${_n(p - 2 * t)} olur.',
+            hs,
           ),
-          _ => _tam(
+          // Kökler yerine 4'ün kökünü almadan ya da 4t ile çarpma, toplamı
+          // verme, p² ya da 4t² terimini unutma, işaret.
+          _ => _tamS(
             '$denklem denkleminin çakışık iki kökü olduğuna göre m sayısının '
                 'alabileceği değerlerin çarpımı kaçtır?',
             p * p - 4 * t * t,
-            [p * p - t * t, p * p + 4 * t * t, 4 * t * t - p * p, 2 * p],
+            [
+              p * p - t * t,
+              p * p + 4 * t * t,
+              2 * p,
+              p * p - 16 * t * t,
+              -4 * t * t,
+              p * p,
+              4 * t * t - p * p,
+              -2 * p,
+            ],
             '$giris Çarpımları ${_p(p + 2 * t)}·${_p(p - 2 * t)} = '
                 '${_n(p * p - 4 * t * t)} olur.',
+            hs,
           ),
         };
       }
@@ -1424,35 +1475,70 @@ final lmMatIleri = <AdvancedFamily>[
       final delta =
           'Δ = ${_p(kb)}² − 4·(${_pol([1, -q], 'm')}) = ${_n(b2 + 4 * q)} − 4m '
           'olur.';
+      // 4'ü yalnız m ile çarpma: Δ = b² + q − 4m sanılır.
+      final dagit = b2 + q;
+      int alt4(int x) => (x / 4).floor();
       switch (v) {
         case 0:
           final yanit = kb.isEven ? taban - 1 : taban;
-          return _tam(
+          return _tamS(
             '$denklem denkleminin birbirinden farklı iki gerçek kökü olduğuna '
                 'göre m sayısının alabileceği en büyük tam sayı değeri kaçtır?',
             yanit,
-            [yanit + 1, yanit - 2 * q, b2 + q - 1],
+            // Sınırı dâhil etme, q'nun işareti, 4'ü unutma, eşitsizliği ters
+            // çevirme, bir eksik, 4'e bölmeyi unutma, 4'ü dağıtmama.
+            [
+              yanit + 1,
+              yanit - 2 * q,
+              b2 + q - 1,
+              taban + 1,
+              yanit - 1,
+              b2 + 4 * q - 1,
+              alt4(dagit - 1),
+            ],
             '$delta İki farklı gerçek kök için Δ > 0, yani m < $sinir '
                 'olmalıdır. Bu koşulu sağlayan en büyük tam sayı ${_n(yanit)} olur.',
+            hs,
           );
         case 1:
           final yanit = taban + 1;
-          return _tam(
+          return _tamS(
             '$denklem denkleminin gerçek kökü olmadığına göre m sayısının '
                 'alabileceği en küçük tam sayı değeri kaçtır?',
             yanit,
-            [yanit - 1, yanit - 2 * q, b2 + q + 1],
+            // Sınırı dâhil etme, q'nun işareti, 4'ü unutma, eşitsizliği ters
+            // çevirme, bir fazla, 4'e bölmeyi unutma, 4'ü dağıtmama.
+            [
+              yanit - 1,
+              yanit - 2 * q,
+              b2 + q + 1,
+              kb.isEven ? taban - 1 : taban,
+              yanit + 1,
+              b2 + 4 * q + 1,
+              alt4(dagit) + 1,
+            ],
             '$delta Gerçek kök olmaması için Δ < 0, yani m > $sinir '
                 'olmalıdır. Bu koşulu sağlayan en küçük tam sayı ${_n(yanit)} olur.',
+            hs,
           );
         default:
-          return _tam(
+          return _tamS(
             '$denklem denkleminin en az bir gerçek kökü olduğuna göre m '
                 'sayısının alabileceği en büyük tam sayı değeri kaçtır?',
             taban,
-            [taban + 1, taban - 1, taban - 2 * q, b2 + q],
+            // Bir fazla ya da eksik, q'nun işareti, 4'ü unutma, 4'e bölmeyi
+            // unutma, 4'ü dağıtmama.
+            [
+              taban + 1,
+              taban - 1,
+              taban - 2 * q,
+              b2 + q,
+              b2 + 4 * q,
+              alt4(dagit),
+            ],
             '$delta En az bir gerçek kök için Δ ≥ 0, yani m ≤ $sinir '
                 'olmalıdır. Bu koşulu sağlayan en büyük tam sayı ${_n(taban)} olur.',
+            hs,
           );
       }
     },
@@ -1848,19 +1934,22 @@ final lmMatIleri = <AdvancedFamily>[
         n0,
         payda,
         [
-          ..._uclu(n0, payda, [
-            for (final u in [
-              for (final y in ilkY)
-                for (final e in ikinciY)
-                  [top(ilkD, e), top(y, dogruK), top(y, e)],
-            ])
-              if (_dengeli(n0, payda, u)) u,
-            ..._seckiler(izgara, (u) => _dengeli(n0, payda, u)),
-            for (final y in ilkY)
-              for (final e in ikinciY)
-                [top(ilkD, e), top(y, dogruK), top(y, e)],
-            ..._seckiler(izgara),
-          ], hs),
+          // Son çare: değerin bir fazlası ya da eksiği (üssü bir kaydırma).
+          ..._uclu(
+            n0,
+            payda,
+            _gecisler(
+              n0,
+              payda,
+              [
+                for (final y in ilkY)
+                  for (final e in ikinciY)
+                    [top(ilkD, e), top(y, dogruK), top(y, e)],
+              ],
+              [...izgara, (n0 - payda, payda), (n0 + payda, payda)],
+            ),
+            hs,
+          ),
           ...izgara,
         ],
         '$adim; 1/${_us(tb, tn)} = $tb^(−$tn) olduğundan $ikinci = −$tn '
@@ -2560,7 +2649,7 @@ final lmMatIleri = <AdvancedFamily>[
     Difficulty.medium,
     BloomLevel.uygulama,
     (a, b, c) {
-      final v = c ~/ 5;
+      final v = c ~/ 5, hs = _hs(a, b, c);
       const son = 'limitinin değeri kaçtır?';
       switch (c % 5) {
         case 0:
@@ -2597,16 +2686,43 @@ final lmMatIleri = <AdvancedFamily>[
           );
           final pay = [p, m - p * k, -m * k], payda = [n, -n * k];
           final kok = _pol([1, -k]);
-          return _kes(
+          // Pay hatası (−k yazma: m − pk; türevde yalnız 2px: 2pk) × payda
+          // hatası (n'ye bölmeyi unutma) bileşik üçlüleri; 0/0 = 0 ya da 1
+          // sanma.
+          final y = p * k + m;
+          return _kesS(
             'lim (x → ${_n(k)}) (${_pol(pay)})/(${_pol(payda)}) $son',
-            p * k + m,
+            y,
             n,
-            [(p * k + m, 1), (m - p * k, n), (0, 1), (p * k + m, n * k)],
+            [
+              ..._uclu(
+                y,
+                n,
+                _gecisler(
+                  y,
+                  n,
+                  [
+                    for (final e in [m - p * k, 2 * p * k])
+                      [(e, n), (y, 1), (e, 1)],
+                  ],
+                  [
+                    (y, 1), (m - p * k, n), (2 * p * k, n), (m - p * k, 1), //
+                    (2 * p * k, 1), (0, 1), (1, 1),
+                  ],
+                ),
+                hs,
+              ),
+              (y, 1),
+              (m - p * k, n),
+              (0, 1),
+              (y, n * k),
+            ],
             'x = ${_n(k)} için pay ve payda sıfır olur. Pay ($kok)·'
                 '(${_pol([p, m])}), payda ${n == 1 ? kok : '$n·($kok)'} biçiminde '
                 'yazılıp sadeleştirilir: (${_pol([p, m])})'
                 '${n == 1 ? '' : '/$n'} ifadesinin x = ${_n(k)} için değeri '
                 '${_q(p * k + m, n)} olur.',
+            hs,
           );
         case 2:
           // p ≠ q olduğundan oranı ters çeviren (q/p) aynı değeri bulamaz.
@@ -2627,14 +2743,37 @@ final lmMatIleri = <AdvancedFamily>[
           final ifade = v == 0
               ? '(${_pol([p, u, w])})/(${_pol([q, s, t])})'
               : '(${_polArtan([w, u, p])})/(${_polArtan([t, s, q])})';
-          return _kes(
+          // Oranı ters çevirme × yanlış terimlerin (x'li ya da sabit)
+          // oranını alma bileşik üçlüleri: anahtar ile tersi, yanlış oran ile
+          // tersi iki ikiz çift kurar. ∞/∞ = 1 ya da 0 sanma.
+          return _kesS(
             'lim (x → ∞) $ifade $son',
             p,
             q,
-            [(q, p), (u, s), (w, t), (0, 1)],
+            [
+              ..._uclu(
+                p,
+                q,
+                _gecisler(
+                  p,
+                  q,
+                  [
+                    [(q, p), (u, s), (s, u)],
+                    [(q, p), (w, t), (t, w)],
+                  ],
+                  [(q, p), (u, s), (w, t), (s, u), (t, w), (0, 1), (1, 1)],
+                ),
+                hs,
+              ),
+              (q, p),
+              (u, s),
+              (w, t),
+              (0, 1),
+            ],
             'Pay ve paydanın dereceleri eşit (2) olduğundan limit, en büyük '
                 'dereceli terimlerin katsayıları oranıdır: $p/$q'
                 '${_q(p, q) == '$p/$q' ? '' : ' = ${_q(p, q)}'}.',
+            hs,
           );
         case 3:
           // q ≥ 3 olduğundan baş katsayıları çarpmak yerine toplayan (p + q)
@@ -2654,25 +2793,42 @@ final lmMatIleri = <AdvancedFamily>[
               'Çarpım açıldığında en büyük dereceli terim '
               '${_pol([p, 0])}·${_pol([q, 0])} = ${_pol([p * q, 0, 0])} olur; '
               'pay ve paydanın dereceleri eşittir.';
+          // Tek çarpanın katsayısını alma, katsayıları toplama, sabitlerin
+          // oranı, oranı ters çevirme, paydayı (ya da payı) unutma, 0 sanma.
+          final pq = p * q, ue = u * e;
           if (v == 0) {
-            return _kes(
+            final yanlis = [
+              (p, r), (q, r), (p + q, r), (ue, w), (r, pq), (pq, 1), (0, 1), //
+            ];
+            return _kesS(
               'lim (x → ∞) [$carpim]/($kare) $son',
-              p * q,
+              pq,
               r,
-              [(p, r), (q, r), (p + q, r), (u * e, w)],
+              [
+                ..._uclu(pq, r, _gecisler(pq, r, const [], yanlis), hs),
+                ...yanlis,
+              ],
               '$acilim Limit, en büyük dereceli terimlerin katsayıları '
                   'oranıdır: ${p * q}/$r'
                   '${_q(p * q, r) == '${p * q}/$r' ? '' : ' = ${_q(p * q, r)}'}.',
+              hs,
             );
           }
-          return _kes(
+          final yanlis = [
+            (r, p), (r, q), (r, p + q), (w, ue), (pq, r), (r, 1), (0, 1), //
+          ];
+          return _kesS(
             'lim (x → ∞) ($kare)/[$carpim] $son',
             r,
-            p * q,
-            [(r, p), (r, q), (r, p + q), (w, u * e)],
+            pq,
+            [
+              ..._uclu(r, pq, _gecisler(r, pq, const [], yanlis), hs),
+              ...yanlis,
+            ],
             '$acilim Limit, en büyük dereceli terimlerin katsayıları '
                 'oranıdır: $r/${p * q}'
                 '${_q(r, p * q) == '$r/${p * q}' ? '' : ' = ${_q(r, p * q)}'}.',
+            hs,
           );
         default:
           final i = v == 0 ? 1 : -1;
@@ -2691,16 +2847,35 @@ final lmMatIleri = <AdvancedFamily>[
           final kok = _pol([1, -k]);
           final ham = '${_n(p * k + m)}/${_p(k + n)}';
           final sade = _q(p * k + m, k + n);
-          return _kes(
+          // Pay ya da paydada −k yazma (biri ya da ikisi), x = 0 koyma, baş
+          // katsayıların oranı, paydayı unutma, ters çevirme, 0/0 = 0 ya da
+          // 1 sanma.
+          final y = p * k + m, z = k + n, yT = m - p * k, zT = n - k;
+          final yanlis = [
+            (m, n), (p, 1), (yT, zT), (y, 1), (yT, z), (y, zT), (z, y), //
+            (0, 1), (1, 1),
+          ];
+          return _kesS(
             'lim (x → ${_n(k)}) (${_pol(pay)})/(${_pol(payda)}) $son',
-            p * k + m,
-            k + n,
-            [(m, n), (p, 1), if (n != k) (m - p * k, n - k), (p * k + m, 1)],
+            y,
+            z,
+            [
+              ..._uclu(
+                y,
+                z,
+                _gecisler(y, z, [
+                  [(yT, z), (y, zT), (yT, zT)],
+                ], yanlis),
+                hs,
+              ),
+              ...yanlis,
+            ],
             'x = ${_n(k)} için pay ve payda sıfır olur. Pay ($kok)·'
                 '(${_pol([p, m])}), payda ($kok)·(${_pol([1, n])}) biçiminde '
                 'yazılıp sadeleştirilir: (${_pol([p, m])})/(${_pol([1, n])}) '
                 'ifadesinin x = ${_n(k)} için değeri '
                 '$ham${ham == sade ? '' : ' = $sade'} olur.',
+            hs,
           );
       }
     },

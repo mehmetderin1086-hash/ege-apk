@@ -7,6 +7,8 @@ import 'denge.dart';
 import 'ortak.dart';
 
 const _mat = Topic.mathematics;
+const _tm = 'Temel Matematik';
+const _aytMat = 'Matematik';
 
 /// (a, b, c) vakasının çeldirici seçim kodu: `% 4` hedef sıradır
 /// (anahtardan küçük çeldirici sayısı, bkz. hedefSira), `~/ 4` ise hedef
@@ -30,26 +32,18 @@ List<String> _celdirici(
   Iterable<(num, String)> komsular,
   int sira,
 ) {
-  final alinan = <String>[];
-  List<(num, String)> ayikla(Iterable<(num, String)> xs) {
-    final secilen = <(num, String)>[];
-    for (final x in xs) {
-      if (x.$2.trim().isEmpty ||
-          ayniSecenek(x.$2, yazim) ||
-          alinan.any((w) => ayniSecenek(w, x.$2))) {
-        continue;
-      }
-      alinan.add(x.$2);
-      secilen.add(x);
-    }
-    return secilen;
-  }
-
+  // Bir çağrıdaki bütün adaylar aynı birim ve biçimdedir ve yazımları
+  // değerlerinden türetilir; bu yüzden değeri aynı olan aday aynı seçenektir.
+  final alinan = <num>{anahtar};
+  List<(num, String)> ayikla(Iterable<(num, String)> xs) => [
+    for (final x in xs)
+      if (x.$2.trim().isNotEmpty && alinan.add(x.$1)) x,
+  ];
   final h = ayikla(hatalar), k = ayikla(komsular);
   final hA = [for (final x in h) if (x.$1 < anahtar) x.$2];
   final hU = [for (final x in h) if (x.$1 > anahtar) x.$2];
-  final kA = [for (final x in k) if (x.$1 < anahtar) x.$2];
-  final kU = [for (final x in k) if (x.$1 > anahtar) x.$2];
+  final kA = [for (final x in k) if (x.$1 < anahtar) "${x.$2} ~K"];
+  final kU = [for (final x in k) if (x.$1 > anahtar) "${x.$2} ~K"];
   int eksik(int r) => max(0, r - hA.length) + max(0, 3 - r - hU.length);
   bool olur(int r) =>
       r - hA.length <= kA.length && 3 - r - hU.length <= kU.length;
@@ -66,6 +60,19 @@ List<String> _celdirici(
     ...[...hU, ...kU].take(3 - r),
   ];
 }
+
+/// Komşu değerlerin anahtara uzaklığı (adım sayısı). Üstte ve altta farklı
+/// sırayla gelir: iki yana birer komşu düşerse anahtar ikisinin ortası
+/// olmaz, aynı yana iki komşu düşerse anahtarla eşit aralıklı dizi kurmaz.
+const _ustKat = [1, 3, 4, 2, 6, 5], _altKat = [2, 3, 1, 5, 4, 6];
+
+/// [anahtar] çevresindeki komşu değerler (adımı [adim]).
+List<num> _komsu(num anahtar, num adim) => [
+  for (var j = 0; j < 6; j++) ...[
+    anahtar + _ustKat[j] * adim,
+    anahtar - _altKat[j] * adim,
+  ],
+];
 
 /// Tam sayı yanıtlı soru; çeldiriciler [_celdirici] ile seçilir. Komşu
 /// değerler anahtarın büyüklüğüne göre 1, 5 ya da 10 adımlıdır.
@@ -90,17 +97,14 @@ AdvancedItem _sayi(
       yazim,
       [for (final x in yanlis) if (gecer(x)) (x, birimli('$x', unit))],
       [
-        for (var j = 1; j <= 6; j++)
-          for (final x in [dogru + j * adim, dogru - j * adim])
-            if (gecer(x)) (x, birimli('$x', unit)),
+        for (final x in _komsu(dogru, adim))
+          if (gecer(x as int)) (x, birimli('$x', unit)),
       ],
       sira,
     ),
     aciklama,
   );
 }
-const _tm = 'Temel Matematik';
-const _aytMat = 'Matematik';
 
 /// İşaretli tam sayı (Unicode eksi ile).
 String _m(int x) => x < 0 ? '−${-x}' : '$x';
@@ -152,7 +156,7 @@ AdvancedItem _koklu(
 }
 
 /// Derece yanıtlı soru; çeldiriciler [_celdirici] ile seçilir: [yanlis]
-/// iki yandaki tipik hata değerleridir, son çare olarak ±10°, ±20°, ±5° …
+/// iki yandaki tipik hata değerleridir, son çare olarak 5°'nin katı olan
 /// komşular kullanılır. Bütün seçenekler 0° ile [ust] arasında kalır.
 AdvancedItem _aci(
   String prompt,
@@ -171,9 +175,8 @@ AdvancedItem _aci(
       '$dogru°',
       [for (final x in yanlis) if (gecer(x)) (x, '$x°')],
       [
-        for (final d in const [10, 20, 5, 15, 30, 25])
-          for (final x in [dogru + d, dogru - d])
-            if (gecer(x)) (x, '$x°'),
+        for (final x in _komsu(dogru, 5))
+          if (gecer(x as int)) (x, '$x°'),
       ],
       sira,
     ),
@@ -936,13 +939,15 @@ final lmGeometri = <AdvancedFamily>[
             'göre |DC| kaç cm olur?',
             dc,
             // D'yi orta nokta sanma, oranı ters kurma, oran yerine farkı
-            // ekleme, oranın karesini alma, |AC|'den |BD|'yi çıkarma.
+            // ekleme, oranın karesini alma, |AC|'den |BD|'yi çıkarma, oranın
+            // bir birimini yanıt sanma.
             [
               bd,
               bol(bd * ab, ac),
               bd + (n - m) * s,
               bol(n * n * w, m),
               ac - bd,
+              w,
             ],
             'Açıortay teoremine göre |BD| / |DC| = |AB| / |AC| = $ab/$ac = '
             '$m/$n olur. $bd / |DC| = $m/$n eşitliğinden |DC| = $dc cm.',
@@ -955,12 +960,14 @@ final lmGeometri = <AdvancedFamily>[
           '|BD| kaç cm olur?',
           bd,
           // Oranı ters kurma, D'yi orta nokta sanma, |BC|'yi m/n ile
-          // çarpma, |AB|'yi |BC|'den çıkarma, |AB|'nin yarısı.
+          // çarpma, |AB|'yi |BC|'den çıkarma, oranın bir birimini yanıt
+          // sanma, |AB|'nin yarısı.
           [
             dc,
             if (bc.isEven) bc ~/ 2,
             bol(bc * m, n),
             bc - ab,
+            w,
             if (ab.isEven) ab ~/ 2,
           ],
           'Açıortay teoremine göre |BD| / |DC| = |AB| / |AC| = $ab/$ac = '
@@ -2022,7 +2029,8 @@ final lmGeometri = <AdvancedFamily>[
             v,
             // Yalnız koniyi ya da yalnız yarım küreyi alma, tam küre alma,
             // 3'e bölmeyi unutma (tümünde ya da konide), yarım küreyi 2πr³
-            // alma.
+            // alma, r'nin karesini almama, yarım küreyi unutup koniyi silindir
+            // gibi hesaplama, çapla çalışma.
             [
               bol(r * r * yuk, 3),
               bol(r * r * (yuk + 4 * r), 3),
@@ -2030,6 +2038,9 @@ final lmGeometri = <AdvancedFamily>[
               bol(2 * r * r * r, 3),
               bol(3 * r * r * yuk + 2 * r * r * r, 3),
               bol(r * r * yuk + 6 * r * r * r, 3),
+              r * (r + n),
+              r * r * yuk,
+              4 * v,
             ],
             'Koninin hacmi π·${r * r}·$yuk / 3, yarım kürenin hacmi '
             '(2/3)·π·$r³ olur. Toplam π·${r * r}·($yuk + ${2 * r}) / 3 = '
@@ -2262,22 +2273,27 @@ final lmGeometri = <AdvancedFamily>[
       final sira = _hs(a, b, c);
       // Çeldiriciler paydası aynı (√(A² + B²)) kalan pay hatalarıdır; pay ya
       // da paydası anahtarla ortak olan "kökü unutma", "paydayı unutma" gibi
-      // seçenekler anahtarı ötekilerin ortası yapardı. Anahtar tam sayıysa
-      // paydayı unutma hatası da eklenir; böylece anahtar tek tam sayı kalmaz.
+      // seçenekler anahtarı ötekilerin ortası yapardı. Bu ikisi yalnız pay
+      // hataları çakıştığında (nokta orijindeyse, sabit sıfırsa) eklenir.
+      // Anahtar tam sayıysa paydayı unutma hatası en başa alınır; böylece
+      // anahtar tek tam sayı seçenek kalmaz.
       List<String> celdir(int pay, Iterable<int> paylar) {
         final yazim = kesir(pay, h);
+        final farkli = {for (final e in paylar) if (e > 0 && e != pay) e};
         return _celdirici(
           pay / h,
           yazim,
           [
             if (pay % h == 0) (pay, '$pay'),
-            for (final e in paylar)
-              if (e > 0) (e / h, kesir(e, h)),
+            for (final e in farkli) (e / h, kesir(e, h)),
+            if (farkli.length < 2) ...[
+              (pay, '$pay'),
+              (pay / (h * h), kesir(pay, h * h)),
+            ],
           ],
           [
-            for (var j = 1; j <= 6; j++)
-              for (final e in [pay + j, pay - j])
-                if (e > 0) (e / h, kesir(e, h)),
+            for (final e in _komsu(pay, 1))
+              if (e > 0) (e / h, kesir(e as int, h)),
           ],
           sira,
         );
@@ -2356,22 +2372,59 @@ final lmGeometri = <AdvancedFamily>[
           'Denklem tam kareye tamamlanırsa $std biçimine gelir';
       switch (c % 5) {
         case 0:
-          return _tam(
+          final top = h + k + r;
+          return AdvancedItem(
             'Analitik düzlemde denklemi $std olan çemberin merkezi M(a, b) ve '
             'yarıçapı r birim olduğuna göre a + b + r toplamı kaçtır?',
-            h + k + r,
-            [-h - k + r, h + k + r * r, -h - k + r * r, h + k - r],
+            _m(top),
+            // Merkezin ya da bir koordinatın işaretini çevirme, r yerine r²
+            // alma (işaret hatasıyla birlikte de), karekök yerine ikiye bölme,
+            // r'yi eklemeyi unutma.
+            _celdirici(
+              top,
+              _m(top),
+              [
+                for (final x in [
+                  -h - k + r,
+                  h + k + r * r,
+                  -h - k + r * r,
+                  -h + k + r,
+                  h - k + r,
+                  if (r.isEven) h + k + r * r ~/ 2,
+                  h + k,
+                ])
+                  (x, _m(x)),
+              ],
+              [for (final x in _komsu(top, 1)) (x, _m(x as int))],
+              _hs(a, b, c),
+            ),
             'Merkez M${_n(h, k)} ve r² = ${r * r} olduğundan r = $r bulunur. '
             'a + b + r = ${_m(h)} + ${_pz(k)} + $r = ${_m(h + k + r)}.',
           );
         case 1:
-          return sayisal(
+          // Tam kare ise karekökü, değilse elenen 0.
+          int kok(int x) {
+            for (var y = 1; y * y <= x; y++) {
+              if (y * y == x) return y;
+            }
+            return 0;
+          }
+          final sabit = h * h + k * k - r * r;
+          return _sayi(
             'Analitik düzlemde denklemi $genel olan çemberin yarıçapı kaç '
             'birimdir?',
             r,
-            [r * r, 2 * r, r + 2],
+            // Karekök almayı unutma, çapı verme, ikiye fazladan bölme, sabit
+            // terimin karekökünü alma, r² = a² + b² + F diye işaret hatası.
+            [
+              r * r,
+              2 * r,
+              if (r.isEven) r ~/ 2,
+              kok(sabit.abs()),
+              kok(h * h + k * k + sabit),
+            ],
             '$tamKare; r² = ${r * r} olduğundan yarıçap $r birimdir.',
-            positive: true,
+            _hs(a, b, c),
           );
         case 2:
           return _noktali(

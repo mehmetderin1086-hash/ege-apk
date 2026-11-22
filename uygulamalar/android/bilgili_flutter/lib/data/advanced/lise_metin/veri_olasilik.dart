@@ -173,7 +173,7 @@ AdvancedItem _olasilikSirali(
   final ust = aday.where((x) => x.$1 > anahtar).length;
   final alt = aday.length - ust;
   final lo = ust >= 3 ? 0 : 3 - ust, hi = alt >= 3 ? 3 : alt;
-  final sira = lo + (hedefSira(i) * 4 + hedefSira(i, 7)) % (hi - lo + 1);
+  final sira = _araliktaSira(i, lo, hi);
   List<String>? ilk;
   for (var x = 0; x < aday.length; x++) {
     for (var y = x + 1; y < aday.length; y++) {
@@ -243,7 +243,7 @@ AdvancedItem _isaretliSirali(
   if (!ust.any(ayni) && alt.any(ayni) && lo < 1) lo = 1;
   if (!alt.any(ayni) && ust.any(ayni) && hi > 2) hi = 2;
   if (lo > hi) (lo, hi) = (lo0, hi0);
-  final sira = lo + (hedefSira(i) * 4 + hedefSira(i, 7)) % (hi - lo + 1);
+  final sira = _araliktaSira(i, lo, hi);
   List<String> sec(List<int> xs) => siraliCeldiriciler(yanit, _eksi(yanit), [
     for (final x in xs) (x, _eksi(x)),
   ], sira);
@@ -306,6 +306,125 @@ AdvancedItem _tamSirali(
     ], sira),
     aciklama,
   );
+}
+
+/// Olası sıralar [alt, ust] arasından [i] için düzgün dağılmış bir sıra
+/// (iki bağımsız karmadan 16 değer).
+int _araliktaSira(int i, int alt, int ust) =>
+    alt + (hedefSira(i) * 4 + hedefSira(i, 7)) % (ust - alt + 1);
+
+/// Pozitif tam sayı yanıtlı soru. [adaylar] tipik hatalardır; anahtarın
+/// değer sırası, bu adaylarla ulaşılabilen sıralar arasında düzgün (ya da
+/// [agirlik] verilirse ağırlıklı) dağıtılır. Komşu değerler yalnız farklı
+/// tipik aday üçten azsa eklenir.
+AdvancedItem _tamAralikli(
+  String prompt,
+  int yanit,
+  Iterable<int> adaylar,
+  String aciklama,
+  int i, {
+  String unit = '',
+  List<int>? agirlik,
+}) {
+  final tipik = <int>[];
+  for (final x in adaylar) {
+    if (x > 0 && x != yanit && !tipik.contains(x)) tipik.add(x);
+  }
+  if (tipik.length < 3) {
+    final adim = yanit >= 200 ? 10 : (yanit >= 40 ? 5 : 1);
+    for (var k = 1; k <= 6; k++) {
+      for (final x in [yanit + k * adim, yanit - k * adim]) {
+        if (x > 0 && !tipik.contains(x)) tipik.add(x);
+      }
+    }
+  }
+  final ust = tipik.where((x) => x > yanit).length;
+  final alt = tipik.length - ust;
+  final lo = ust >= 3 ? 0 : 3 - ust, hi = alt >= 3 ? 3 : alt;
+  final sira = agirlik == null
+      ? _araliktaSira(i, lo, hi)
+      : _agirlikliSira(i, lo, hi, agirlik);
+  final yazim = birimli('$yanit', unit);
+  return AdvancedItem(
+    prompt,
+    yazim,
+    siraliCeldiriciler(yanit, yazim, [
+      for (final x in tipik) (x, birimli('$x', unit)),
+    ], sira),
+    aciklama,
+  );
+}
+
+/// [i] için [alt, ust] arasından ağırlıklı bir sıra seçer; [agirlik] dört
+/// sıranın göreli ağırlıklarıdır (iki bağımsız karmadan 16 değer).
+int _agirlikliSira(int i, int alt, int ust, List<int> agirlik) {
+  final h = hedefSira(i) * 4 + hedefSira(i, 7);
+  var toplam = 0;
+  for (var r = alt; r <= ust; r++) {
+    toplam += agirlik[r];
+  }
+  var birikim = 0;
+  for (var r = alt; r <= ust; r++) {
+    birikim += agirlik[r];
+    if (16 * birikim > h * toplam) return r;
+  }
+  return ust;
+}
+
+/// Tam sayı yanıtlı, ondalıklı çeldiricilere izin veren soru. [adaylar]
+/// (pay, payda) biçiminde tipik hata değerleridir; en çok iki ondalık
+/// basamakla tam yazılabilenler kullanılır. Anahtarın değer sırası olası
+/// sıralar arasından [agirlik] ile seçilir; anahtar tek tam sayılı seçenek
+/// kalmasın diye en az bir çeldiricisi tam sayı olan ilk üçlü yeğlenir.
+AdvancedItem _ondalikAralikli(
+  String prompt,
+  int yanit,
+  Iterable<(int, int)> adaylar,
+  String aciklama,
+  int i,
+  List<int> agirlik,
+) {
+  final aday = <(double, String)>[];
+  void ekle(int p, int q) {
+    if (q <= 0 || p <= 0 || (p * 100) % q != 0) return;
+    final v = p / q;
+    if ((v - yanit).abs() < 1e-9 ||
+        aday.any((y) => (y.$1 - v).abs() < 1e-9)) {
+      return;
+    }
+    aday.add((v, tr(v)));
+  }
+
+  for (final (p, q) in adaylar) {
+    ekle(p, q);
+  }
+  for (var k = 1; aday.length < 3; k++) {
+    ekle(yanit + k, 1);
+    ekle(yanit - k, 1);
+  }
+  final ust = aday.where((x) => x.$1 > yanit).length;
+  final alt = aday.length - ust;
+  final sira = _agirlikliSira(
+    i,
+    ust >= 3 ? 0 : 3 - ust,
+    alt >= 3 ? 3 : alt,
+    agirlik,
+  );
+  List<String>? ilk;
+  for (var x = 0; x < aday.length; x++) {
+    for (var y = x + 1; y < aday.length; y++) {
+      for (var z = y + 1; z < aday.length; z++) {
+        final uc = [aday[x], aday[y], aday[z]];
+        if (uc.where((e) => e.$1 < yanit).length != sira) continue;
+        final yazimlar = [for (final e in uc) e.$2];
+        ilk ??= yazimlar;
+        if (yazimlar.any((s) => !s.contains(','))) {
+          return AdvancedItem(prompt, '$yanit', yazimlar, aciklama);
+        }
+      }
+    }
+  }
+  return AdvancedItem(prompt, '$yanit', ilk!, aciklama);
 }
 
 /// Bölünebiliyorsa a / b, bölünemiyorsa 0 (0 aday olarak elenir).
@@ -2038,6 +2157,7 @@ AdvancedItem _kosullu(int a, int b, int c) =>
 // ---------------------------------------------------------------------------
 
 AdvancedItem _ortalama(int a, int b, int c) {
+  final i = _no(a, b, c);
   final n = 5 + a; // 5 … 29 gün
   final m = 240 + 20 * (b ~/ 4); // ilk ortalama
   final d = 1 + c % 5; // ortalamadaki değişim
@@ -2045,56 +2165,90 @@ AdvancedItem _ortalama(int a, int b, int c) {
   switch (b % 4) {
     case 0:
       final x = m + s * d * (n + 1), yeni = m + s * d;
-      return sayisal(
+      return _tamAralikli(
         'Bir kırtasiyede $n gün boyunca günde ortalama $m kalem satılmıştır. '
         'Sonraki gün $x kalem satıldığına göre ${n + 1} günlük satış '
         'ortalaması kaç kalem olur?',
         yeni,
-        [(m + x) ~/ 2, m + s * d * (n + 1) ~/ n, m - s * d, m + s * (d + 1)],
+        [
+          (m + x) ~/ 2, // eski ortalama ile yeni değerin ortalaması
+          n * m ~/ (n + 1), // yeni değer toplama eklenmez
+          m + s * d * (n + 1) ~/ n, // fark n'ye bölünür
+          m - s * d, // değişimin yönü ters alınır
+          (n * m + x) ~/ n, // yeni toplam n'ye bölünür
+          m + s * (d + 1),
+          m - s * d * (n + 1) ~/ n,
+          (n * m + x) ~/ (n + 2),
+          m, // ortalama değişmez sanılır
+        ],
         'İlk $n günün toplamı $n·$m = ${n * m} kalemdir. Yeni toplam '
         '${n * m} + $x = ${n * m + x} olur; ortalama ${n * m + x} : ${n + 1} '
         '= $yeni bulunur.',
-        positive: true,
+        i,
       );
     case 1:
       final x = m + s * d * (n - 1), yeni = m - s * d;
-      return sayisal(
+      return _tamAralikli(
         'Bir kütüphaneye $n gün boyunca günde ortalama $m kişi gelmiştir. '
         '$x kişinin geldiği gün hesaba katılmazsa kalan ${n - 1} günün '
         'ortalaması kaç kişi olur?',
         yeni,
-        [m + s * d, (n * m - x) ~/ n, (m + x) ~/ 2, m - s * (d + 1)],
+        [
+          m + s * d, // değişimin yönü ters alınır
+          (n * m - x) ~/ n, // kalan toplam n'ye bölünür
+          (m + x) ~/ 2,
+          m - s * (d + 1),
+          m - s * d * (n - 1), // fark bölünmeden çıkarılır
+          m, // ortalama değişmez sanılır
+        ],
         'Toplam $n·$m = ${n * m} kişidir. Bir gün çıkarılınca toplam '
         '${n * m} − $x = ${n * m - x} olur; ortalama ${n * m - x} : ${n - 1} '
         '= $yeni bulunur.',
-        positive: true,
+        i,
       );
     case 2:
       final yeni = m + s * d, x = m + s * d * (n + 1);
-      return sayisal(
+      return _tamAralikli(
         'Bir fırında $n gün boyunca günde ortalama $m ekmek satılmıştır. '
         'Sonraki günün satışı da hesaba katıldığında ${n + 1} günlük ortalama '
         '$yeni ekmek olmuştur. Buna göre sonraki gün kaç ekmek satılmıştır?',
         x,
-        [m + s * d * n, m + s * d * (n + 2), yeni, 2 * yeni - m],
+        [
+          m + s * d * n, // fark n ile çarpılır
+          m + s * d * (n + 2),
+          yeni, // yeni ortalama yanıt sanılır
+          2 * yeni - m,
+          m - s * d * (n + 1), // değişimin yönü ters alınır
+          m + s * d * (n - 1),
+          (n + 1) * yeni - (n - 1) * m, // gün sayıları karıştırılır
+          (n + 2) * yeni - n * m,
+        ],
         'İlk $n günün toplamı $n·$m = ${n * m}, ${n + 1} günün toplamı '
         '${n + 1}·$yeni = ${(n + 1) * yeni} ekmektir. Fark: '
         '${(n + 1) * yeni} − ${n * m} = $x.',
-        positive: true,
+        i,
       );
     default:
       final yeni = m - s * d, x = m + s * d * (n - 1);
-      return sayisal(
+      return _tamAralikli(
         'Bir otoparka $n gün boyunca günde ortalama $m araç girmiştir. Bu '
         'günlerden biri hesaba katılmadığında kalan ${n - 1} günün ortalaması '
         '$yeni araç olmuştur. Buna göre hesaba katılmayan gün otoparka kaç '
         'araç girmiştir?',
         x,
-        [m + s * d * n, m + s * d * (n - 2), yeni, 2 * m - yeni],
+        [
+          m + s * d * n, // fark n ile çarpılır
+          m + s * d * (n - 2),
+          yeni, // yeni ortalama yanıt sanılır
+          2 * m - yeni,
+          m - s * d * (n - 1), // değişimin yönü ters alınır
+          m + s * d * (n + 1),
+          n * m - (n - 2) * yeni, // gün sayıları karıştırılır
+        ],
         '$n günün toplamı $n·$m = ${n * m}, kalan ${n - 1} günün toplamı '
         '${n - 1}·$yeni = ${(n - 1) * yeni} araçtır. Fark: '
         '${n * m} − ${(n - 1) * yeni} = $x.',
-        positive: true,
+        i,
       );
   }
 }
@@ -2161,6 +2315,14 @@ AdvancedItem _medyanMod(int a, int b, int c) {
   if (iki.isOdd) throw StateError('Medyan tam sayı değil: $sirali');
   final medyan = iki ~/ 2;
   final ortadaki = veri[n ~/ 2]; // sıralamadan ortadakini alma hatası
+  // Tipik hatalar için: ortanın komşu değerleri, ortanın sıra numarası,
+  // tam sayıysa aritmetik ortalama ve en küçükle en büyüğün ortalaması
+  // (tam sayı değilse 0; 0 aday olarak elenir).
+  final altKomsu = sirali[(n - 1) ~/ 2 - 1], ustKomsu = sirali[n ~/ 2 + 1];
+  final ortaSira = (n + 1) ~/ 2;
+  final toplam = sirali.fold<int>(0, (x, y) => x + y);
+  final ortalama = toplam % n == 0 ? toplam ~/ n : 0;
+  final uclarOrtasi = (l0 + l4).isEven ? (l0 + l4) ~/ 2 : 0;
   final (yer, ne) = _veriBaglamlari[(a + 2 * c) % 5];
   final giris = '$yer $n $ne şöyledir: ${_liste(veri)}.';
   final medyanYazi = n.isOdd
@@ -2173,27 +2335,63 @@ AdvancedItem _medyanMod(int a, int b, int c) {
     0 => (
       'medyanı (ortancası)',
       medyan,
-      [ortadaki, mod, aciklik, sirali[n ~/ 2 - 1], sirali[n ~/ 2] + 1],
+      [
+        ortadaki, // veriler sıralanmaz
+        mod,
+        l2, // farklı değerlerin ortancası
+        ortaSira, // değer yerine sıra numarası
+        ortalama,
+        altKomsu,
+        ustKomsu,
+        uclarOrtasi,
+        aciklik,
+        sirali[n ~/ 2] + 1,
+      ],
       '$siraliYazi Medyan, $medyanYazi olur.',
     ),
     1 => (
       'modu (tepe değeri)',
       mod,
-      [medyan, l2, aciklik, enCok, l0],
+      [
+        medyan,
+        enCok, // değer yerine tekrar sayısı
+        l2,
+        aciklik,
+        ortalama,
+        l4,
+        l0,
+      ],
       '$siraliYazi En çok yinelenen değer $enCok kez geçen $mod olduğundan '
           'mod $mod olur.',
     ),
     2 => (
       'açıklığı',
       aciklik,
-      [l4, veri.last - veri.first, l4 - l1, l3 - l0, medyan],
+      [
+        l4, // en büyük değer
+        veri.last - veri.first, // veriler sıralanmaz
+        l4 - l1,
+        aciklik + 1,
+        l3 - l0,
+        medyan,
+        uclarOrtasi,
+        mod,
+      ],
       'En büyük değer $l4, en küçük değer $l0 olduğundan açıklık '
           '$l4 − $l0 = $aciklik olur.',
     ),
     3 => (
       'medyanı ile modunun toplamı',
       medyan + mod,
-      [ortadaki + mod, 2 * mod, medyan + aciklik, 2 * medyan],
+      [
+        ortadaki + mod,
+        2 * mod,
+        medyan + enCok, // mod yerine tekrar sayısı
+        medyan + aciklik,
+        2 * medyan,
+        l2 + mod,
+        if (ortalama > 0) ortalama + mod,
+      ],
       '$siraliYazi Medyan, $medyanYazi; mod ise $enCok kez geçen $mod olur. '
           'Toplam: $medyan + $mod = ${medyan + mod}.',
     ),
@@ -2203,8 +2401,13 @@ AdvancedItem _medyanMod(int a, int b, int c) {
       [
         aciklik + ortadaki,
         l4 + medyan,
+        l4 - l1 + medyan,
         aciklik + mod,
+        aciklik + ortaSira, // medyan yerine sıra numarası
+        aciklik + 1 + medyan,
         aciklik + sirali[n ~/ 2],
+        aciklik + l2,
+        aciklik + altKomsu,
       ],
       '$siraliYazi Açıklık $l4 − $l0 = $aciklik; medyan, $medyanYazi olur. '
           'Toplam: $aciklik + $medyan = ${aciklik + medyan}.',
@@ -2212,14 +2415,31 @@ AdvancedItem _medyanMod(int a, int b, int c) {
     5 => (
       'modu ile açıklığının toplamı',
       mod + aciklik,
-      [medyan + aciklik, mod + l4, enCok + aciklik, mod + l4 - l1],
+      [
+        medyan + aciklik,
+        mod + l4,
+        enCok + aciklik, // mod yerine tekrar sayısı
+        mod + aciklik + 1,
+        mod + l4 - l1,
+        l2 + aciklik,
+        mod + l3 - l0,
+      ],
       'Mod, $enCok kez geçen $mod; açıklık $l4 − $l0 = $aciklik olur. '
           'Toplam: $mod + $aciklik = ${mod + aciklik}.',
     ),
     6 => (
       'modu ile medyanı arasındaki fark',
       mod - medyan,
-      [(mod - ortadaki).abs(), mod - l2, aciklik, l3 - l2],
+      [
+        (mod - ortadaki).abs(),
+        mod - l2,
+        aciklik,
+        mod + medyan, // fark yerine toplam
+        l3 - l2,
+        (mod - altKomsu).abs(),
+        (mod - ustKomsu).abs(),
+        if (ortalama > 0) (mod - ortalama).abs(),
+      ],
       '$siraliYazi Mod, $enCok kez geçen $mod; medyan, $medyanYazi olur. '
           'Fark: $mod − $medyan = ${mod - medyan}.',
     ),
@@ -2229,20 +2449,24 @@ AdvancedItem _medyanMod(int a, int b, int c) {
       [
         ortadaki + mod + aciklik,
         medyan + mod + l4,
-        medyan + mod,
+        medyan + mod, // açıklık eklenmez
+        medyan + enCok + aciklik,
         2 * medyan + aciklik,
+        ortaSira + mod + aciklik,
+        medyan + mod + aciklik + 1,
+        l2 + mod + aciklik,
       ],
       '$siraliYazi Medyan $medyan, mod $mod, açıklık $l4 − $l0 = $aciklik '
           'olur. Toplam: $medyan + $mod + $aciklik = '
           '${medyan + mod + aciklik}.',
     ),
   };
-  return sayisal(
+  return _tamAralikli(
     '$giris Bu veri grubunun $soru kaçtır?',
     yanit,
     yanlis,
     cozum,
-    positive: true,
+    _no(a, b, c),
   );
 }
 
@@ -2304,6 +2528,12 @@ AdvancedItem _standartSapma(int a, int b, int c) {
   final enKucuk = veri.reduce((x, y) => x < y ? x : y);
   final aciklik = enBuyuk - enKucuk;
   final mutlak = sapma.fold<int>(0, (x, y) => x + y.abs());
+  // Kareler toplamının karekökü (tam kare değilse 0; 0 aday olarak elenir).
+  var kok = 0;
+  while (kok * kok < kareler) {
+    kok++;
+  }
+  if (kok * kok != kareler) kok = 0;
   final kareYazi = [
     for (var i = 0; i < n; i++) '${_par(veri[i] - ort)}²',
   ].join(' + ');
@@ -2315,33 +2545,40 @@ AdvancedItem _standartSapma(int a, int b, int c) {
       'Ortalama $toplam : $n = $ort olur. Farkların kareleri toplamı '
       '$kareYazi = $kareler, varyans $kareler : ${n - 1} = $varyans';
   if (c.isEven) {
-    return sayisal(
+    return _ondalikAralikli(
       '$giris Buna göre bu veri grubunun standart sapması kaçtır?',
       ss,
       [
-        varyans,
-        if (kareler % n == 0) kareler ~/ n,
-        aciklik,
-        if (mutlak % n == 0) mutlak ~/ n,
-        kareler,
-        2 * ss,
+        (varyans, 1), // karekök alınmaz
+        (mutlak, n), // mutlak sapmaların ortalaması
+        (kareler, n), // n'ye bölünür, karekök alınmaz
+        (kok, n - 1), // önce karekök alınır
+        (mutlak, n - 1),
+        (aciklik, 1),
+        (2 * ss, 1),
+        (kareler, 1),
       ],
       '$ortak bulunur. Standart sapma varyansın kareköküdür: √$varyans = $ss.',
-      positive: true,
+      _no(a, b, c),
+      const [1, 1, 2, 4],
     );
   }
-  return sayisal(
+  return _ondalikAralikli(
     '$giris Buna göre bu veri grubunun varyansı kaçtır?',
     varyans,
     [
-      ss,
-      kareler,
-      if (kareler % n == 0) kareler ~/ n,
-      aciklik,
-      varyans * 2,
+      (ss, 1), // karekök alınır
+      (kareler, 1), // bölme unutulur
+      (kareler, n), // n'ye bölünür
+      (kareler, n - 2),
+      (aciklik, 1),
+      (mutlak, n - 1), // kareler yerine mutlak değerler
+      (2 * varyans, 1),
+      (aciklik * aciklik, 1),
     ],
     '$ortak bulunur.',
-    positive: true,
+    _no(a, b, c),
+    const [1, 1, 2, 4],
   );
 }
 
@@ -2375,16 +2612,24 @@ AdvancedItem _agirlikli(int a, int b, int c) {
     final p1 = fiyat - d * m2, p2 = fiyat + d * m1;
     final urun = _karisimUrunleri[(a + b) % 4];
     final tutar = p1 * m1 + p2 * m2;
-    return sayisal(
+    // Karışımın fiyatı iki fiyat arasında kalır; çeldiriciler de öyle.
+    return _tamAralikli(
       'Bir aktar, kilogramı $p1 TL olan $m1 kg $urun ile kilogramı $p2 TL '
       'olan $m2 kg $urun karıştırıyor. Bu karışımın kilogramı kaç TL olur?',
       fiyat,
-      [(p1 + p2) ~/ 2, fiyat + d * (m1 - m2), (p1 + p2) ~/ 2 + d, tutar ~/ 10],
+      [
+        (p1 + p2) ~/ 2, // fiyatların düz ortalaması
+        fiyat + d * (m1 - m2), // kütleler yer değiştirir
+        (p1 * m1 + p2) ~/ (m1 + 1), // ikinci kütle çarpılmaz
+        (p1 + p2 * m2) ~/ (1 + m2), // birinci kütle çarpılmaz
+        (p1 + p2) ~/ 2 + d,
+      ].where((x) => x > p1 && x < p2),
       'Karışımın toplam değeri $p1·$m1 + $p2·$m2 = $tutar TL, toplam kütlesi '
       '$m1 + $m2 = ${m1 + m2} kg olur. Kilogram fiyatı '
       '$tutar : ${m1 + m2} = $fiyat TL bulunur.',
+      _no(a, b, c),
       unit: 'TL',
-      positive: true,
+      agirlik: const [2, 1, 2, 3],
     );
   }
   // Kredili not ortalaması: sapmalar krediyle ağırlıklı olarak sıfırlanır.
@@ -2399,17 +2644,31 @@ AdvancedItem _agirlikli(int a, int b, int c) {
   final toplam = k1 * g1 + k2 * g2 + k3 * g3, kredi = k1 + k2 + k3;
   if (toplam != ort * kredi) throw StateError('Ağırlıklı ortalama tutmuyor');
   final duz = (g1 + g2 + g3) ~/ 3;
-  return sayisal(
+  // Ağırlıklı ortalama en düşük ve en yüksek not arasında kalır.
+  final enDusuk = [g1, g2, g3].reduce((x, y) => x < y ? x : y);
+  final enYuksek = [g1, g2, g3].reduce((x, y) => x > y ? x : y);
+  return _tamAralikli(
     'Bir üniversite öğrencisi $k1 kredilik ${dersler[0]} dersinden $g1, '
     '$k2 kredilik ${dersler[1]} dersinden $g2 ve $k3 kredilik ${dersler[2]} '
     'dersinden $g3 almıştır. Bu üç notun krediye göre ağırlıklı ortalaması '
     'kaçtır?',
     ort,
-    [duz, duz + 1, (g2 + g3) ~/ 2, toplam ~/ 10, ort + d],
+    [
+      duz, // düz ortalama
+      (k3 * g1 + k2 * g2 + k1 * g3) ~/ kredi, // krediler ters eşlenir
+      (g2 + g3) ~/ 2,
+      (g1 + k2 * g2 + k3 * g3) ~/ (1 + k2 + k3), // bir kredi unutulur
+      (k1 * g1 + g2 + k3 * g3) ~/ (k1 + 1 + k3),
+      (k1 * g1 + k2 * g2 + g3) ~/ (k1 + k2 + 1),
+      duz + 1,
+      ort + d,
+      ort - d,
+    ].where((x) => x > enDusuk && x < enYuksek),
     'Notlar kredileriyle çarpılıp toplanır: $k1·$g1 + $k2·$g2 + $k3·$g3 = '
     '$toplam. Toplam kredi $kredi olduğundan ortalama $toplam : $kredi = '
     '$ort olur.',
-    positive: true,
+    _no(a, b, c),
+    agirlik: const [2, 1, 2, 3],
   );
 }
 

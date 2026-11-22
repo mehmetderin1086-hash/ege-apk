@@ -449,38 +449,14 @@ AdvancedItem _bolme(int a, int b, int c) {
 // ---------------------------------------------------------------------------
 String _n(int x) => x < 0 ? '−${-x}' : '$x';
 
-/// Tam sayı yanıtlı soru; negatif değerler “−” işaretiyle yazılır.
-AdvancedItem _tam(
-  String kok,
-  int yanit,
-  Iterable<int> adaylar,
-  String aciklama,
-) {
-  final adim = yanit.abs() >= 200 ? 10 : (yanit.abs() >= 40 ? 5 : 1);
-  return secenekli(
-    kok,
-    _n(yanit),
-    [
-      ...adaylar,
-      yanit + adim,
-      yanit - adim,
-      yanit + 2 * adim,
-      yanit - 2 * adim,
-      yanit + 3 * adim,
-      yanit + 4 * adim,
-    ].map(_n),
-    aciklama,
-  );
-}
-
 /// (a, b, c) vakasının sıra numarası için hedef değer sırası (0 … 3): anahtardan
 /// küçük çeldirici sayısı vakadan vakaya dengeli değişir.
 int _sira(int a, int b, int c, [int tuz = 0]) =>
     hedefSira(a + 25 * b + 500 * c, tuz);
 
-/// [_tam] gibi; anahtardan küçük çeldirici sayısı [sira] olur. [adaylar] önce
-/// tipik hata değerleridir; yetmezse anahtarın iki yanındaki komşu değerlerle
-/// tamamlanır. [enAz] ve [enCok] verilirse bu aralığın dışındaki adaylar
+/// Tam sayı yanıtlı soru; negatif değerler “−” işaretiyle yazılır. Anahtardan
+/// küçük çeldirici sayısı [sira] olur. [adaylar] önce tipik hata değerleridir;
+/// yetmezse anahtarın iki yanındaki komşu değerlerle tamamlanır. [enAz] ve [enCok] verilirse bu aralığın dışındaki adaylar
 /// elenir.
 AdvancedItem _tamSirali(
   String kok,
@@ -1279,15 +1255,15 @@ AdvancedItem _sistem(int a, int b, int c) {
   final x = a - 8, y = b - 6;
   final e1 = p * x + q * y, e2 = r * x + s * y;
   final toplamVar = (p == 1 && q == 1) || (r == 1 && s == 1);
-  final (soru, yanit, yanlis) = switch ((a + b) % 4) {
-    0 => ('x', x, [y, x + y, -x]),
-    1 => ('y', y, [x, x + y, -y]),
-    2 when !toplamVar => ('x + y toplamı', x + y, [x - y, x, y]),
-    _ => ('x · y çarpımı', x * y, [x + y, -(x * y), x * x]),
-  };
   final ms = s.abs(), mq = q.abs(), topla = q * s < 0;
   final kat = topla ? p * ms + r * mq : p * ms - r * mq;
   final sagTaraf = topla ? e1 * ms + e2 * mq : e1 * ms - e2 * mq;
+  final (soru, yanit, yanlis) = switch ((a + b) % 4) {
+    0 => ('x', x, [y, x + y, x - y, sagTaraf]), // sagTaraf: ara sonuç
+    1 => ('y', y, [x, x + y, x - y]),
+    2 when !toplamVar => ('x + y toplamı', x + y, [x - y, x, y, x * y]),
+    _ => ('x · y çarpımı', x * y, [x + y, x * x, x - y, y * y]),
+  };
   final carpim = ms == 1 && mq == 1
       ? 'Denklemler'
       : ms == 1
@@ -1295,7 +1271,7 @@ AdvancedItem _sistem(int a, int b, int c) {
       : mq == 1
       ? 'Birinci denklem $ms ile çarpılıp denklemler'
       : 'Birinci denklem $ms ile, ikinci denklem $mq ile çarpılıp';
-  return _tam(
+  return _isaretli(
     '${_ikili(p, q, e1)} ve ${_ikili(r, s, e2)} denklemlerini birlikte '
         'sağlayan x ve y gerçek sayıları için $soru kaçtır?',
     yanit,
@@ -1304,8 +1280,32 @@ AdvancedItem _sistem(int a, int b, int c) {
         '${topla ? 'toplanırsa' : 'çıkarılırsa'} ${_sonuc(kat, sagTaraf, x)} '
         'bulunur. Yerine yazılınca y = ${_n(y)} olur; istenen değer ${_n(yanit)} '
         'bulunur.',
+    _sira(a, b, c),
   );
 }
+
+/// [_yuzdeSoru] gibi; anahtardan küçük çeldirici sayısı [sira] olur. Yüzdeler
+/// 1 ile 99 arasında kalır.
+AdvancedItem _yuzdeSirali(
+  String kok,
+  int yanit,
+  Iterable<int> adaylar,
+  String aciklama,
+  int sira,
+) => AdvancedItem(
+  kok,
+  '%$yanit',
+  siraliCeldiriciler(yanit, '%$yanit', [
+    for (final x in [
+      ...adaylar,
+      for (var k = 1; k <= 4; k++) ...[yanit + 5 * k, yanit - 5 * k],
+      yanit + 2,
+      yanit - 2,
+    ])
+      if (x > 0 && x < 100) (x, '%$x'),
+  ], sira),
+  aciklama,
+);
 
 /// Yüzde yanıtlı soru: seçenekler “%25” biçimindedir.
 AdvancedItem _yuzdeSoru(
@@ -1679,56 +1679,99 @@ AdvancedItem _karZarar(int a, int b, int c) {
       '${100 - q}x/100 olur.';
   switch (kk) {
     case 0:
-      return sayisal(
+      return sayisalSirali(
         'Bir ürün $karli TL fiyatla satıldığında %$p kâr elde ediliyor. Aynı '
             'ürün %$q zararla satılsaydı satış fiyatı kaç TL olurdu?',
         zararli,
-        [m, karli * (100 - q) ~/ 100, karli * (100 - p - q) ~/ 100, d],
+        [
+          m, // maliyet yanıt sanılmış
+          karli * (100 - q) ~/ 100, // zarar satış fiyatına uygulanmış
+          karli * (100 - p - q) ~/ 100,
+          d,
+          m * q ~/ 100, // zarar tutarı
+          karli,
+          m * (100 + q) ~/ 100, // zarar eklenmiş
+        ],
         '$maliyet ${100 + p}x/100 = $karli eşitliğinden x = $m bulunur. '
             'Zararlı satış fiyatı $m · ${100 - q}/100 = $zararli TL olur.',
+        sira,
         unit: 'TL',
         positive: true,
       );
     case 1:
-      return sayisal(
+      return sayisalSirali(
         'Bir ürün $zararli TL fiyatla satıldığında %$q zarar ediliyor. Aynı '
             'ürün %$p kârla satılsaydı satış fiyatı kaç TL olurdu?',
         karli,
-        [m, zararli * (100 + p) ~/ 100, zararli * (100 + p + q) ~/ 100, d],
+        [
+          m,
+          zararli * (100 + p) ~/ 100, // kâr zararlı fiyata uygulanmış
+          zararli * (100 + p + q) ~/ 100,
+          d,
+          if (zararli * 100 % (100 - p - q) == 0)
+            zararli * 100 ~/ (100 - p - q), // fark kârlı fiyata göre alınmış
+          m * (100 + p + q) ~/ 100, // zarar oranı da eklenmiş
+          zararli,
+        ],
         '$maliyet ${100 - q}x/100 = $zararli eşitliğinden x = $m bulunur. '
             'Kârlı satış fiyatı $m · ${100 + p}/100 = $karli TL olur.',
+        sira,
         unit: 'TL',
         positive: true,
       );
     case 2:
-      return sayisal(
+      return sayisalSirali(
         'Bir ürünün %$p kârla satış fiyatı, %$q zararla satış fiyatından $d TL '
             'fazladır. Buna göre ürünün maliyeti kaç TL olur?',
         m,
-        [d * 100 ~/ p, d, if (p != q) d * 100 ~/ (p - q).abs(), karli],
+        [
+          d * 100 ~/ p, // yalnız kâr oranına bölünmüş
+          d, // fark yanıt sanılmış
+          if (p != q) d * 100 ~/ (p - q).abs(), // oranlar çıkarılmış
+          karli,
+          d * 100 ~/ q, // yalnız zarar oranına bölünmüş
+        ],
         '$maliyet Fark ${p + q}x/100 = $d olduğundan x = $m bulunur.',
+        sira,
         unit: 'TL',
         positive: true,
       );
     case 3:
-      return _yuzdeSoru(
+      return _yuzdeSirali(
         'Bir ürün $karli TL fiyatla satıldığında %$p kâr elde ediliyor. Aynı '
             'ürün $zararli TL fiyatla satılırsa yüzde kaç zarar edilir?',
         q,
-        [d * 100 ~/ karli, p + q, 100 - q],
+        [
+          d * 100 ~/ karli,
+          p + q,
+          100 - q,
+          q * 100 ~/ (100 + p), // zarar kârlı fiyata göre oranlanmış
+          q * 100 ~/ (100 - q), // zarar satış fiyatına göre oranlanmış
+          p,
+        ],
         '$maliyet ${100 + p}x/100 = $karli eşitliğinden x = $m bulunur. Zarar '
             '$m − $zararli = ${m - zararli} TL olup maliyetin %$q kadarıdır.',
+        sira,
       );
     default:
-      return sayisal(
+      return sayisalSirali(
         'Bir ürün $zararli TL fiyatla satıldığında %$q zarar ediliyor. Bu '
             'üründen %$p kâr elde edilmesi için satış fiyatı kaç TL '
             'artırılmalıdır?',
         d,
-        [m * p ~/ 100, zararli * (p + q) ~/ 100, karli, m - zararli],
+        [
+          m * p ~/ 100, // yalnız kâr tutarı
+          zararli * (p + q) ~/ 100, // oranlar satış fiyatına uygulanmış
+          karli, // hedef fiyat yanıt sanılmış
+          m - zararli, // yalnız zarar tutarı
+          m,
+          zararli * p ~/ 100,
+          zararli,
+        ],
         '$maliyet ${100 - q}x/100 = $zararli eşitliğinden x = $m bulunur. '
             'Kârlı satış fiyatı $karli TL olacağından fiyat $karli − $zararli = '
             '$d TL artırılmalıdır.',
+        sira,
         unit: 'TL',
         positive: true,
       );
@@ -2293,7 +2336,7 @@ const _kesirCift = [
 ];
 
 AdvancedItem _sayiProblemi(int a, int b, int c) {
-  final kk = c ~/ 3;
+  final kk = c ~/ 3, sira = _sira(a, b, c);
   if (c % 3 == 0) {
     final x0 = 3 + a + 25 * b;
     final (adet, tur) = const [(3, 0), (5, 0), (4, 2), (3, 1)][kk];
@@ -2304,20 +2347,28 @@ AdvancedItem _sayiProblemi(int a, int b, int c) {
     final ad = const ['ardışık', 'ardışık tek', 'ardışık çift'][tur];
     final buyuk = (a + b).isEven;
     final sabit = adim * adet * (adet - 1) ~/ 2;
-    return sayisal(
+    final orta = toplam ~/ adet, yay = adim * (adet - 1);
+    return _tamSirali(
       'Toplamları $toplam olan $adet $ad doğal sayıdan en '
           '${buyuk ? 'büyüğü' : 'küçüğü'} kaçtır?',
       buyuk ? son : ilk,
       [
-        buyuk ? ilk : son,
-        toplam ~/ adet,
+        buyuk ? ilk : son, // öteki uç
+        orta, // ortalama
         (buyuk ? son : ilk) + adim,
         ilk + adim,
+        buyuk ? son - adim : ilk - adim, // bir adım kaydırılmış
+        if (adet.isOdd) buyuk ? orta + yay : orta - yay, // ortaya tüm aralık
+        buyuk ? son + 2 * adim : ilk - 2 * adim,
+        buyuk ? ilk - adim : son + adim,
+        buyuk ? son + 3 * adim : ilk - 3 * adim,
+        buyuk ? ilk - 2 * adim : son + 2 * adim,
       ],
       'En küçük sayı x ise sayılar x, x + $adim, … biçimindedir ve toplamları '
           '${adet}x + $sabit = $toplam olur. Buradan x = $ilk bulunur; en büyük '
           'sayı $son olur.',
-      positive: true,
+      sira,
+      enAz: 1,
     );
   }
   if (c % 3 == 1) {
@@ -2328,21 +2379,24 @@ AdvancedItem _sayiProblemi(int a, int b, int c) {
       final ilkKalan = para * (q1 - p1) ~/ q1;
       final kalan = ilkKalan * (q2 - p2) ~/ q2;
       final naif = q1 * q2 - p1 * q2 - p2 * q1; // kesirleri doğrudan toplama
-      return sayisal(
+      return sayisalSirali(
         'Bir öğrenci parasının $f1 kadarını kitaba, kalan parasının $f2 '
             'kadarını kırtasiyeye harcıyor. Geriye $kalan TL kaldığına göre '
             'öğrencinin başlangıçta kaç TL parası vardı?',
         para,
         [
-          if (naif > 0) kalan * q1 * q2 ~/ naif,
-          ilkKalan,
+          if (naif > 0) kalan * q1 * q2 ~/ naif, // kesirler doğrudan toplanmış
+          ilkKalan, // ara sonuç
           kalan * q2 ~/ (q2 - p2) + kalan,
           kalan * q1 ~/ (q1 - p1),
+          kalan * q1 * q2, // yalnız paydalarla çarpılmış
+          para - kalan, // harcanan toplam
         ],
         'Para x TL olsun. Kitaptan sonra x · ${_K(q1 - p1, q1)} kalır; '
             'kırtasiyeden sonra bunun ${_K(q2 - p2, q2)} kadarı, yani x · '
             '${_K(q1 - p1, q1) * _K(q2 - p2, q2)} kalır. Bu değer $kalan olduğundan '
             'x = $para bulunur.',
+        sira,
         unit: 'TL',
         positive: true,
       );
@@ -2350,43 +2404,70 @@ AdvancedItem _sayiProblemi(int a, int b, int c) {
     final x = q1 * q2 ~/ q1.gcd(q2) * (b + 1);
     final oran = kk == 0 ? f1 + f2 : f1 - f2;
     final t = x * oran.n ~/ oran.d;
-    return sayisal(
+    return _tamSirali(
       kk == 0
           ? 'Bir sayının $f1 kadarı ile $f2 kadarının toplamı $t olduğuna göre '
                 'bu sayı kaçtır?'
           : 'Bir sayının $f1 kadarı, aynı sayının $f2 kadarından $t fazla '
                 'olduğuna göre bu sayı kaçtır?',
       x,
-      [t, t * q1 ~/ p1, t * q2 ~/ p2, t * (q1 + q2) ~/ (p1 + p2), t * oran.n],
+      [
+        t,
+        t * q1 ~/ p1, // yalnız ilk kesre bölünmüş
+        t * q2 ~/ p2,
+        t * (q1 + q2) ~/ (p1 + p2), // paylar ve paydalar toplanmış
+        t * oran.n,
+        x * p1 ~/ q1, // ara sonuç: sayının ilk kesir kadarı
+        x * p2 ~/ q2,
+        t * oran.d, // yalnız paydayla çarpılmış
+        t * q1 * q2,
+      ],
       'Sayı x olsun. x · $f1 ${kk == 0 ? '+' : '−'} x · $f2 = x · $oran = $t '
       'eşitliğinden x = $x bulunur.',
-      positive: true,
+      sira,
+      enAz: 1,
     );
   }
   if (kk == 2) {
     final k = 2 + b % 4, r = 1 + b ~/ 4, kucuk = 6 + a;
     final buyuk = k * kucuk + r, s = buyuk + kucuk;
-    return sayisal(
+    return _tamSirali(
       'Toplamları $s olan iki sayıdan büyüğü, küçüğünün $k katından $r '
           'fazladır. Buna göre büyük sayı kaçtır?',
       buyuk,
-      [kucuk, k * kucuk, s - r, s ~/ (k + 1) * k],
+      [
+        kucuk, // küçük sayı yanıt sanılmış
+        k * kucuk, // fazlalık eklenmemiş
+        s - r,
+        s ~/ (k + 1) * k,
+        k * (kucuk + r), // fazlalık da katla çarpılmış
+        s, // toplam
+      ],
       'Küçük sayı x ise büyük sayı ${k}x + $r olur. ${k + 1}x + $r = $s '
           'eşitliğinden x = $kucuk ve büyük sayı $k · $kucuk + $r = $buyuk '
           'bulunur.',
-      positive: true,
+      sira,
+      enAz: 1,
     );
   }
   final kucuk = 11 + 3 * a, fark = 4 + 5 * b;
   final buyuk = kucuk + fark, s = buyuk + kucuk;
-  return sayisal(
+  return _tamSirali(
     'Toplamları $s, farkları $fark olan iki sayıdan '
         '${kk == 0 ? 'büyük' : 'küçük'} olanı kaçtır?',
     kk == 0 ? buyuk : kucuk,
-    [kk == 0 ? kucuk : buyuk, s - fark, s ~/ 2, s + fark],
+    [
+      kk == 0 ? kucuk : buyuk, // öteki sayı
+      s - fark, // ikiye bölünmemiş
+      s ~/ 2,
+      s + fark,
+      fark,
+      if (s.isEven) kk == 0 ? s ~/ 2 + fark : s ~/ 2 - fark, // farkın tamamı
+    ],
     'Büyük sayı ($s + $fark) / 2 = $buyuk, küçük sayı ($s − $fark) / 2 = '
         '$kucuk olur.',
-    positive: true,
+    sira,
+    enAz: 1,
   );
 }
 

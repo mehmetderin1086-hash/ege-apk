@@ -69,10 +69,10 @@ List<String> _sirali(
 /// Ondalıklı yanıtlı soru; anahtarın seçenekler içindeki değer sırası vakadan
 /// vakaya [hedefSira] ile değişir ([sira] verilirse o kullanılır). [hatalar]
 /// anahtarın iki yanındaki tipik hata değerleridir (öncelik sırasıyla);
-/// yetmezse en sonda anahtarın yakın komşuları kullanılır. Komşu katsayıları
-/// (1,2 · 0,75 · 1,5 · 0,6) bilerek bakışımsızdır: anahtar komşuların ortası
-/// olmaz. Sıfıra yuvarlanan ya da yazımı değerinden %10'dan çok sapan adaylar
-/// atılır.
+/// yetmezse en sonda anahtarın yakın komşuları (1,2 · 0,75 · 1,5 · 0,6 katı,
+/// son çare olarak ± adım) kullanılır. Anahtarı iki çeldiricinin ortasına
+/// alan seçimleri [_sirali] önler. Sıfıra yuvarlanan ya da yazımı değerinden
+/// %10'dan çok sapan adaylar atılır.
 AdvancedItem _ondalikSira(
   String prompt,
   double answer,
@@ -85,11 +85,23 @@ AdvancedItem _ondalikSira(
 }) {
   double yuvarla(double x) =>
       double.parse(tr(x, digits).replaceFirst(',', '.'));
+  // Komşular anahtarın basamak sayısıyla yazılır (tam sayı anahtara tam sayı
+  // komşu); yuvarlama anahtarı verirse bir basamak daha kullanılır.
+  final yazilan = tr(answer, digits), virgul = yazilan.indexOf(',');
+  final basamak = virgul < 0 ? 0 : yazilan.length - virgul - 1;
+  double komsu(double m) {
+    for (var d = basamak; d <= digits; d++) {
+      final x = double.parse((answer * m).toStringAsFixed(d));
+      if ((x - answer).abs() > 1e-9) return x;
+    }
+    return answer * m;
+  }
+
   final adim = answer.abs() >= 20 ? 1.0 : (answer.abs() >= 2 ? 0.5 : 0.1);
   final aday = [
     for (final x in [
       ...hatalar,
-      for (final m in const [1.2, 0.75, 1.5, 0.6]) answer * m,
+      for (final m in const [1.2, 0.75, 1.5, 0.6]) komsu(m),
       for (var k = 1; k <= 6; k++) ...[answer + k * adim, answer - k * adim],
     ])
       if (x.isFinite &&
@@ -1368,7 +1380,7 @@ final lmFizikElektrik = <AdvancedFamily>[
           if (dc.isEven) dc ~/ 2, // cisim 2F'de sanılmış
           if (dg.isEven) dg ~/ 2, // görüntü 2F'de sanılmış
           if (dc * dg % fark == 0) dc * dg ~/ fark, // ters değerlerde işaret
-          if (f.isEven) f ~/ 2, // bulunan değer bir de ikiye bölünmüş
+          if (f.isEven) f ~/ 2, // bulunan f eğrilik yarıçapı sanılıp yarılanmış
           dc, // cisim uzaklığı odak sanılmış
         ],
         'Büyütme ${tr(h2)} / ${tr(h1)} = $oran olduğundan görüntü uzaklığı '
