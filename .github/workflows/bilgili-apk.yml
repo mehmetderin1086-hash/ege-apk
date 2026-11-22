@@ -67,7 +67,10 @@ jobs:
             -dname "CN=Android Debug,O=Android,C=US"
 
       - name: APK derle
-        run: flutter build apk --release --split-per-abi --no-pub
+        run: |
+          test -f ~/.android/debug.keystore
+          BILGILI_IMZA_DOSYASI="$HOME/.android/debug.keystore" \
+            flutter build apk --release --split-per-abi --no-pub
 
       - name: Dosyaları adlandır
         id: paket
@@ -82,6 +85,7 @@ jobs:
           (cd "$CIKTI" && sha256sum *.apk | tee SHA256SUMS.txt && ls -l)
           keytool -list -v -keystore ~/.android/debug.keystore -storepass android 2>/dev/null \
             | grep -E 'SHA256:' | head -1 || true
+          "$(ls -d "$ANDROID_HOME"/build-tools/* | tail -1)/apksigner" verify --print-certs "$CIKTI/Bilgili-${SURUM}-arm64.apk" | grep -i sha-256 || true
           echo "surum=$SURUM" >> "$GITHUB_OUTPUT"
           echo "kod=$KOD" >> "$GITHUB_OUTPUT"
           echo "cikti=$CIKTI" >> "$GITHUB_OUTPUT"
@@ -98,7 +102,6 @@ jobs:
           SURUM: ${{ steps.paket.outputs.surum }}
           KOD: ${{ steps.paket.outputs.kod }}
           CIKTI: ${{ steps.paket.outputs.cikti }}
-          IMZA_ONBELLEKTEN: ${{ steps.imza.outputs.cache-hit }}
         run: |
           set -euo pipefail
           ETIKET="bilgili-v${SURUM}"
@@ -107,11 +110,7 @@ jobs:
             echo
             echo "Çoğu telefon için \`Bilgili-${SURUM}-arm64.apk\` dosyasını indirin. \`armv7\` dosyası eski 32 bit telefonlar içindir."
             echo
-            if [ "${IMZA_ONBELLEKTEN}" = "true" ]; then
-              echo "Bu derleme 3.9.0 ile aynı anahtarla imzalandı; 3.9.0 kuruluysa doğrudan üzerine kurulur ve veriler korunur. 3.8.0 veya daha eski bir sürüm kuruluysa önce Ayarlar bölümünden tam yedek alın, eski uygulamayı kaldırın, bu APK'yı kurup yedeği geri yükleyin."
-            else
-              echo "Bu derleme, önceki Bilgili APK'larından farklı bir anahtarla imzalandı. Telefonda eski sürüm kuruluysa önce Ayarlar bölümünden tam yedek alın, eski uygulamayı kaldırın, bu APK'yı kurup yedeği geri yükleyin."
-            fi
+            echo "Bu derleme, önbellekte saklanan sabit bir anahtarla imzalandı; bundan sonraki Bilgili sürümleri bunun üzerine doğrudan kurulur. 3.9.0 ve önceki APK'lar farklı anahtarlar taşıdığı için bir kez önce Ayarlar bölümünden tam yedek alın, eski uygulamayı kaldırın, bu APK'yı kurup yedeği geri yükleyin."
             echo
             echo '```'
             cat "$CIKTI/SHA256SUMS.txt"
