@@ -1,12 +1,21 @@
-# Bilgili 3.10.0
+# Bilgili 3.11.0
 
-Lise ve üniversite düzeyleri için hazırlanmış çevrimdışı Android soru uygulaması. 3.9.0 sürümünde 3.8.0 bankasına lise düzeyinde, yalnız metinden oluşan 1.000.000 soru eklenmişti; bu sürümde 1.000.000 soru daha eklendi. Toplam 3.270.439 sorunun (2.592.093 lise, 678.346 üniversite) kalıcı birer kimliği var. Uygulama soru ailelerinden seçilen kaydı cihazda oluşturur. Böylece her oyun açılışında tüm bankayı belleğe alması gerekmez.
+Lise öğrencileri için hazırlanmış çevrimdışı Android soru uygulaması. Bu sürümde banka baştan ayıklandı: üniversite soruları ve çoktan seçmeli olmayan soru türleri (doğru/yanlış, boşluk doldurma, sıralama, eşleştirme, dinleme, telaffuz, açık uçlu görev, çoklu seçim) kaldırıldı. Kalan 8.391 sorunun hepsi lise düzeyinde, dört seçenekli ve birbirinden belirgin biçimde ayrışıyor.
 
-## Uygulamada
+## Seçki
 
-Akademi bölümünde konu, düzey, Bloom basamağı veya soru türü seçilebilir. Bankada çoktan seçmeli, çoklu seçim, doğru/yanlış, boşluk doldurma, sıralama, eşleştirme, dinleme, telaffuz ve açık uçlu üretim soruları vardır. Üretim görevlerinde öğrenci kendi yanıtını ölçütlere göre yazar. Yanıt çalışma defterine kaydedilir. Oyun bu etkinlikteki ayrı kontrol sorusunu puanlar. Sesli etkinlikler Android cihazın konuşma hizmetlerini kullanır.
+Her soru ailesi tek bir kalıptan binlerce vaka üretebilir; bunların çoğu yalnız sayıları ya da birkaç sözcüğü değişen kopyalardır. `tool/secki/` araçları her aileden yalnız birbirinden ayrışan vakaları seçer ve `lib/data/advanced/secki.g.dart` dosyasına yazar:
 
-Lise metin soruları paketler bölümünde “Lise · Metin Soru Bankası” paketinde toplanır. Konu, sınav (TYT, AYT), ders ve “Metin” biçim filtreleriyle de seçilebilirler.
+- Kökler sözcük kümelerine çevrilir (sayılar atılır). En uzak nokta yöntemiyle her aileden, seçilenlere en az %20 uzak en çok 50 vaka alınır. Yalnız sayısı değişen kopyalar elenir.
+- Başka bir ailedeki seçilmiş soruya benzeyen ya da aynı olan kökler de elenir.
+- Seçkideki 8.443 sorunun tamamı, anahtarı görmeyen çözücülere tek tek çözdürüldü. Uyuşmazlık ya da kusur notu taşıyan 362 soruyu hakem editörler anahtar ve çözümle birlikte yeniden çözdü. Kusurlu bulunan 52 soru (`tool/secki/elenen.txt`) bankadan çıkarıldı.
+- Soru kimlikleri özgün vaka numarasını korur; kayıtlı istatistikler aynı sorulara bağlı kalır.
+
+Seçkiyi yeniden üretmek için:
+
+```sh
+flutter test --no-pub tool/secki/secki_uret_test.dart
+```
 
 ## Lise metin bankası
 
@@ -59,4 +68,4 @@ flutter build apk --release
 
 Tam tarama, oyunun sunduğu her soru kimliğini açarak soru kökü, kanıt, cevap anahtarı, seçenekler, yazılı yanıt eşdeğerliği, etkinlik çözümü, görsel varlıklar ve açık uçlu görev ölçütlerini kontrol eder. Aynı kök ve kanıt çiftini yakalamak için şık sırasını ve kimliği tekrar denetiminin dışında tutar. Her aile için sıkıştırılmış JSON Lines kayıtları, dağılımları içeren `ozet.json` ve aile örneklerini içeren `aile-ornekleri.json` üretilir. İçerik incelemesi ve yöntem sınırları `tool/academic_review/PEDAGOJI.md` dosyasındadır; bu belge 3.8.0 bankasını anlatır. Seçenek biçiminden ipucu taraması `flutter test tool/lise_metin/ipucu_test.dart` ile çalışır.
 
-Sürüm kodu 32, paket adı `com.mehmetderin.bilgiarena` olarak ayarlandı. Kaynak arşivi özel imzalama anahtarını içermez. İş akışı, sürüm APK'sını önbellekte saklanan sabit bir anahtarla imzalar (`BILGILI_IMZA_DOSYASI`); 3.10.0'dan sonraki sürümler bunun üzerine kurulur. 3.9.0 ve önceki APK'lar farklı anahtarlar taşıdığından onların üzerine kurulamaz.
+Sürüm kodu 33, paket adı `com.mehmetderin.bilgiarena` olarak ayarlandı. Kaynak arşivi özel imzalama anahtarını içermez. İş akışı, sürüm APK'sını önbellekte saklanan sabit bir anahtarla imzalar (`BILGILI_IMZA_DOSYASI`); 3.10.0 ve sonraki sürümler birbirinin üzerine kurulur. 3.9.0 ve önceki APK'lar farklı anahtarlar taşıdığından onların üzerine kurulamaz.

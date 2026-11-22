@@ -30,7 +30,7 @@ void main() {
       }
     }
     expect(toplam, AdvancedCatalog.all.length);
-    expect(AdvancedCatalog.all.length, 8443);
+    expect(AdvancedCatalog.all.length, 8391);
     final metin = AdvancedCatalog.families.where((f) => f.sourceLabel == lmKaynak);
     expect(metin.length, greaterThan(350));
   });

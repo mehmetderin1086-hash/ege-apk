@@ -106,11 +106,11 @@ jobs:
           set -euo pipefail
           ETIKET="bilgili-v${SURUM}"
           {
-            echo "Bilgili ${SURUM} (sürüm kodu ${KOD}). Lise düzeyinde 1.000.000 metin sorusu daha eklendi; bankada toplam 3.270.439 soru var."
+            echo "Bilgili ${SURUM} (sürüm kodu ${KOD}). Banka ayıklandı: yalnız lise düzeyinde, birbirinden ayrışan 8.391 çoktan seçmeli soru kaldı."
             echo
             echo "Çoğu telefon için \`Bilgili-${SURUM}-arm64.apk\` dosyasını indirin. \`armv7\` dosyası eski 32 bit telefonlar içindir."
             echo
-            echo "Bu derleme, önbellekte saklanan sabit bir anahtarla imzalandı; bundan sonraki Bilgili sürümleri bunun üzerine doğrudan kurulur. 3.9.0 ve önceki APK'lar farklı anahtarlar taşıdığı için bir kez önce Ayarlar bölümünden tam yedek alın, eski uygulamayı kaldırın, bu APK'yı kurup yedeği geri yükleyin."
+            echo "Bu derleme 3.10.0 ile aynı sabit anahtarla imzalandı; 3.10.0'ın üzerine doğrudan kurulur. 3.9.0 ve önceki sürümler kuruluysa önce Ayarlar bölümünden tam yedek alın, eski uygulamayı kaldırın, bu APK'yı kurup yedeği geri yükleyin."
             echo
             echo '```'
             cat "$CIKTI/SHA256SUMS.txt"

@@ -24,7 +24,7 @@ void main() {
       expect(blooms.length, greaterThanOrEqualTo(5));
       expect(
         blooms.fold<int>(0, (size, p) => size + p.questions.length),
-        8443,
+        8391,
       );
       for (final pack in blooms) {
         final bloom = BloomLevel.values.singleWhere((b) => pack.id.endsWith('_${b.name}'));
@@ -32,9 +32,9 @@ void main() {
       }
       expect(
         levels.fold<int>(0, (count, p) => count + p.questions.length),
-        8443,
+        8391,
       );
-      expect(ctrl.totalPoolCount, ctrl.personalQuestions.length + 8443);
+      expect(ctrl.totalPoolCount, ctrl.personalQuestions.length + 8391);
       expect(
         ctrl.allQuestions[ctrl.personalQuestions.length].id,
         AdvancedCatalog.all.first.id,
