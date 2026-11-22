@@ -224,13 +224,21 @@ AdvancedItem _sirali(
   if (secim != null) {
     w = secim;
   } else if (ikili) {
-    // Uzunluğu göze çarpan seçenek bırakmayanlar arasından, sıra numarasına
-    // göre değişen biri; böylece çeldirici dizilerinin türleri vakadan vakaya
-    // değişir.
-    final enIyi = _enAzGozeCarpan(
-      dogru,
-      _ikiliSecimler(dogru, [for (var p = 0; p < 3; p++) adaylar(p, 1 << 30)]),
-    );
+    // Doğru seçeneğin rolü ([_ikiliRol]) dört vakanın birinde en düşük,
+    // birinde ikinci düşük, ikisinde en yüksek etiket sıklığı puanlıdır; bu
+    // sıklık, gösterilen seçenek yerinden bağımsız olarak dörtlü sıra
+    // numarası öbeklerinden seçilir. Böylece küme yapısından doğru seçenek
+    // çıkarılamaz. O roldeki diziler arasından uzunluğu göze çarpan seçenek
+    // bırakmayanlardan, sıra numarasına göre değişen biri alınır.
+    final gecerli = _ikiliSecimler(dogru, [
+      for (var p = 0; p < 3; p++) adaylar(p, 1 << 30),
+    ]);
+    final rol = const [3, 2, 0, 0][(i ~/ 4 + i ~/ 64) % 4];
+    final rolde = [
+      for (final g in gecerli)
+        if (_ikiliRol(dogru, g) == rol) g,
+    ];
+    final enIyi = _enAzGozeCarpan(dogru, rolde.isEmpty ? gecerli : rolde);
     if (enIyi.isNotEmpty) w = enIyi[(7 * i + i ~/ 7) % enIyi.length];
   } else {
     w = enIyiUclu([for (var p = 0; p < 3; p++) adaylar(p, 3)]);
@@ -278,11 +286,49 @@ List<List<String>> _ikiliSecimler(List<String> dogru, List<List<String>> aday) {
   ];
 }
 
+/// Doğru üçlü ile w dizisinin verdiği dört seçeneğin etiketleri.
+List<List<String>> _etiketSecenekleri(List<String> dogru, List<String> w) => [
+  dogru,
+  [w[0], w[1], dogru[2]],
+  [w[0], dogru[1], w[2]],
+  [dogru[0], w[1], w[2]],
+];
+
+/// Seçeneklerin etiket sıklığı puanları: her etiketin dört seçenekte toplam
+/// kaç kez geçtiği sayılır; bir seçeneğin puanı, etiketlerinin bu sayılarının
+/// toplamıdır.
+List<int> _siklikPuanlari(List<List<String>> secenekler) {
+  final say = <String, int>{};
+  for (final s in secenekler) {
+    for (final x in s) {
+      say[x] = (say[x] ?? 0) + 1;
+    }
+  }
+  return [for (final s in secenekler) s.fold(0, (t, x) => t + say[x]!)];
+}
+
+/// Tam iki etiketi aynı doğru üçlüde doğru seçeneğin rolü: etiket sıklığı
+/// puanı kendisininkinden büyük seçenek sayısı. Bu kümelerde w dizisi dört
+/// biçimden birini alır (X – X – Y için A – A – A, A – A – X, Y – A – X ya da
+/// A – Y – X). Dördü de aynı küme yapısını verir; yalnız doğru seçenek o
+/// yapıda sırasıyla en düşük puanlı (3), ikinci düşük puanlı (2) ya da en
+/// yüksek puanlı iki seçenekten biri (0) olur.
+int _ikiliRol(List<String> dogru, List<String> w) {
+  final p = _siklikPuanlari(_etiketSecenekleri(dogru, w));
+  var n = 0;
+  for (var t = 1; t < 4; t++) {
+    if (p[t] > p[0]) n++;
+  }
+  return n;
+}
+
 /// [_sirali] dengeli kipinin bu doğru üçlü için çeldirici kurabilmesi:
-/// etiketleri ayrı üçlülerde ([ayri]) temiz w'ler, tam iki etiketi aynı
-/// üçlülerde ([ikili]) dengeli bir w dizisi bulunmalıdır. Üç etiketi aynı
-/// üçlü hiçbir zaman uygun değildir. [aday], o konumlarda kesin yanlış olan
-/// etiketlerdir (sırası önemsizdir).
+/// etiketleri ayrı üçlülerde ([ayri]) temiz w'ler bulunmalıdır. Tam iki
+/// etiketi aynı üçlülerde ([ikili]) doğru seçeneğin üç rolünün ([_ikiliRol])
+/// her biri için dengeli bir w dizisi bulunmalıdır; böylece rol vakadan
+/// vakaya eşit sıklıkla seçilebilir. Üç etiketi aynı üçlü hiçbir zaman uygun
+/// değildir. [aday], o konumlarda kesin yanlış olan etiketlerdir (sırası
+/// önemsizdir).
 bool _dengeliKurulur(
   List<String> dogru,
   List<List<String>> aday, {
@@ -291,8 +337,11 @@ bool _dengeliKurulur(
 }) {
   final k = {...dogru}.length;
   if (k == 3) return ayri && _temizKurulur(dogru, aday);
-  if (k == 2) return ikili && _ikiliSecimler(dogru, aday).isNotEmpty;
-  return false;
+  if (k != 2 || !ikili) return false;
+  final roller = {
+    for (final w in _ikiliSecimler(dogru, aday)) _ikiliRol(dogru, w),
+  };
+  return roller.containsAll(const [0, 2, 3]);
 }
 
 /// Doğru üçlü ile w dizisinin verdiği dört seçenek (önce doğru seçenek).

@@ -123,6 +123,7 @@ class _Ozneli {
     required this.hangileri,
     required this.onerme,
     this.donem = false,
+    this.kronolojik = false,
     this.fiil = 'aittir',
     this.sifat = 'ait olanlar',
     this.grup,
@@ -131,6 +132,7 @@ class _Ozneli {
     this.onermeYaz,
     this.ozetYaz,
     this.dokumYaz,
+    this.siraliYaz,
   });
 
   final List<(String, int, int)> tablo;
@@ -139,6 +141,14 @@ class _Ozneli {
   final String sirali, onerme;
   final String Function(String ikinciAd) hangileri;
   final bool donem;
+
+  /// Değerler zaman sırasıyla dizilmişse (dönemler, yıllar) sıralı biçimdeki
+  /// çeldiricilerden biri doğru yanıtın zaman sırasını korur; böylece yalnız
+  /// olayların birbirine göre sırasını bilen öğrenci yanıtı bulamaz.
+  final bool kronolojik;
+
+  /// İsteğe bağlı: sıralı biçimin soru cümlesini doğru değerlere göre kurar.
+  final String Function(List<int> degerler)? siraliYaz;
 
   /// Olağan kipte açıklamanın yüklemi (“aittir”, “ilgilidir”) ve sıfat biçimi.
   final String fiil, sifat;
@@ -202,6 +212,135 @@ class _Ozneli {
       : 'I. $oge ${ozne[x[0].$2].$2}, II. $oge ${ozne[x[1].$2].$2}, '
             'III. $oge ${ozne[x[2].$2].$2} $fiil.';
 
+  /// Sıralı biçimin dengeli çeldiricileri: her konumda iki aday değer ikişer
+  /// seçenekte geçer; böylece seçeneklerin birbirine benzerliği (konum
+  /// uyuşması, öge kümesi, örtüşme) doğru yanıtı ele vermez. Kurgular:
+  /// A) her çeldirici iki konumu vakada bulunmayan, kesin yanlış komşu
+  ///    değerlerle değiştirir (üç ayrı komşu değer gerekir);
+  /// B) iki ögenin yer değiştirmesi, üçüncü konumun komşu bir değerle
+  ///    değiştirilmesi ve ikisinin birlikte uygulanması;
+  /// C) yalnız dizilim: iki yer değiştirme ve bir döngü.
+  /// Uygun kurgu yoksa null döner.
+  List<List<int>>? _dengeliCeldirici(
+    List<(String, int, int)> x,
+    List<int> d,
+    int kay,
+  ) {
+    final yon = kay.isEven ? const [1, -1] : const [-1, 1];
+    // Konumun vakada bulunmayan, kesin yanlış değerleri; yakından uzağa.
+    final aday = [
+      for (var k = 0; k < 3; k++)
+        [
+          for (var a = 1; a < ozne.length; a++)
+            for (final s in yon)
+              if (d[k] + s * a >= 0 &&
+                  d[k] + s * a < ozne.length &&
+                  !d.contains(d[k] + s * a) &&
+                  (_yasak(x[k]) >> (d[k] + s * a)) & 1 == 0)
+                d[k] + s * a,
+        ],
+    ];
+    bool duzen(List<int> v) {
+      for (var p = 0; p < 3; p++) {
+        for (var q = p + 1; q < 3; q++) {
+          if ((v[p] < v[q]) != (d[p] < d[q])) return false;
+        }
+      }
+      return true;
+    }
+
+    List<int> koy(List<int> v, int k, int deger) => [
+      for (var q = 0; q < 3; q++) q == k ? deger : v[q],
+    ];
+
+    List<List<int>>? kurguA(bool sirayiKoru) {
+      final ilk = [for (final l in aday) l.take(6).toList()];
+      for (final x0 in ilk[0]) {
+        for (final x1 in ilk[1]) {
+          for (final x2 in ilk[2]) {
+            if (x0 == x1 || x0 == x2 || x1 == x2) continue;
+            final c = [
+              [d[0], x1, x2],
+              [x0, d[1], x2],
+              [x0, x1, d[2]],
+            ];
+            if (sirayiKoru && !c.any(duzen)) continue;
+            return c;
+          }
+        }
+      }
+      return null;
+    }
+
+    List<List<int>>? kurguB(bool sirayiKoru) {
+      final gr = grup;
+      for (final ayniObek in const [true, false]) {
+        for (var t = 0; t < 3; t++) {
+          final r = (kay + t) % 3, p = (r + 1) % 3, q = (r + 2) % 3;
+          // Yer değiştirmede en az bir konum kesin yanlış olmalıdır.
+          if ((x[p].$3 >> d[q]) & 1 == 1 && (x[q].$3 >> d[p]) & 1 == 1) {
+            continue;
+          }
+          if (ayniObek && gr != null && gr[d[p]] != gr[d[q]]) continue;
+          final takas = [
+            for (var k = 0; k < 3; k++) k == p ? d[q] : (k == q ? d[p] : d[k]),
+          ];
+          for (final v in aday[r]) {
+            final tek = koy(d, r, v);
+            if (sirayiKoru && !duzen(tek)) continue;
+            return [tek, takas, koy(takas, r, v)];
+          }
+        }
+      }
+      return null;
+    }
+
+    List<List<int>>? kurguC() {
+      final yer = [
+        for (final p in const [
+          [0, 2, 1],
+          [2, 1, 0],
+          [1, 0, 2],
+        ])
+          if (_kesinYanlis(x, p)) p,
+      ];
+      final don = [
+        for (final p in const [
+          [1, 2, 0],
+          [2, 0, 1],
+        ])
+          if (_kesinYanlis(x, p)) p,
+      ];
+      if (yer.length < 2 || don.isEmpty) return null;
+      final a = kay % yer.length;
+      return [
+        for (final p in [
+          yer[a],
+          yer[(a + 1) % yer.length],
+          don[kay % don.length],
+        ])
+          [for (final k in p) d[k]],
+      ];
+    }
+
+    final sira = kronolojik
+        ? [
+            () => kurguB(true),
+            () => kurguA(true),
+            () => kurguB(false),
+            () => kurguA(false),
+            kurguC,
+          ]
+        : kay.isEven
+        ? [() => kurguA(false), () => kurguB(false), kurguC]
+        : [() => kurguB(false), () => kurguA(false), kurguC];
+    for (final f in sira) {
+      final c = f();
+      if (c != null) return c;
+    }
+    return null;
+  }
+
   AdvancedItem call(int i) {
     final (b, j, m) = _bicim(i, dongu);
     final u = _dilim(b == 0 ? farkli : tum, j, m);
@@ -211,11 +350,12 @@ class _Ozneli {
       for (final e in x) ogeYaz?.call(e.$1) ?? (donem ? e.$1 : _buyuk(e.$1)),
     ]);
     if (b == 0) {
-      // Çeldiriciler: bir konumun değerini vakada bulunmayan komşu bir değerle
-      // değiştiren iki seçenek ve bir dizilim. Taşınan her konumu tartışmalı
-      // kalan dizilim çeldirici olamaz.
       String yaz(List<int> v) => [for (final k in v) ozne[k].$1].join(' – ');
       final kay = j ~/ 6;
+      final secilen = _dengeliCeldirici(x, d, kay);
+      // Yedek: bir konumun değerini vakada bulunmayan komşu bir değerle
+      // değiştiren iki seçenek ve bir dizilim. Taşınan her konumu tartışmalı
+      // kalan dizilim çeldirici olamaz.
       final diz = [
         for (final p in ucluDizilimler.skip(1))
           if (_kesinYanlis(x, p)) [for (final k in p) d[k]],
@@ -234,7 +374,9 @@ class _Ozneli {
           break;
         }
       }
-      return secenekli('$liste$sirali', yaz(d), [
+      return secenekli('$liste${siraliYaz?.call(d) ?? sirali}', yaz(d), [
+        if (secilen != null)
+          for (final v in secilen) yaz(v),
         if (diz.isNotEmpty) yaz(diz[kay % diz.length]),
         for (final v in degisik) yaz(v),
         for (var t = 1; t < diz.length; t++) yaz(diz[(kay + t) % diz.length]),

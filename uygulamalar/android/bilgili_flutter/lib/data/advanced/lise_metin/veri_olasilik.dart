@@ -242,30 +242,54 @@ AdvancedItem _permutasyon(int a, int b, int c) {
       '$n ${ctx.on} $rolYazi seçilecektir. Bir kişi en çok bir göreve '
       'getirilebilecektir.';
   const soru = 'Buna göre bu seçim kaç farklı şekilde yapılabilir?';
-  final pnr = _perm(n, r);
+  final pnr = _perm(n, r), q = _perm(n - 1, r - 1);
   final String kosul, aciklama;
   final int yanit;
+  // Tipik hatalar anahtarın iki yanından; sıra hedefSira ile seçilir.
   final List<int> yanlis;
   switch (k) {
     case 0:
       kosul = '';
       yanit = pnr;
-      yanlis = [_komb(n, r), _perm(n - 1, r), _perm(n, r - 1) * (n - r)];
+      yanlis = [
+        _komb(n, r), // sıra önemsenmez
+        _kuvvet(n, r), // aynı kişi birden çok göreve
+        _perm(n - 1, r),
+        _perm(n, r + 1), // bir çarpan fazla
+        _perm(n, r - 1) * (n - r),
+        _perm(n + 1, r),
+      ];
       aciklama =
           'Görevler farklı olduğu için sıra önemlidir: P($n, $r) = '
           '${_carpimYaz(n, r)} = $pnr.';
     case 1:
       kosul = ' $ad1 adlı $kisi mutlaka $ilk olacaktır.';
-      yanit = _perm(n - 1, r - 1);
-      yanlis = [pnr, _perm(n - 1, r), _perm(n, r - 1)];
+      yanit = q;
+      yanlis = [
+        _perm(n, r - 1), // kişi havuzdan çıkarılmaz
+        _komb(n - 1, r - 1), // sıra önemsenmez
+        r * q, // her göreve getirilebilir sanılır
+        _perm(n - 2, r - 1), // bir kişi fazla çıkarılır
+        _perm(n - 1, r), // görev havuzdan çıkarılmaz
+        _perm(n - 1, r - 2),
+        pnr,
+      ];
       aciklama =
           '$ad1 için tek seçenek vardır. Kalan ${r - 1} görev kalan ${n - 1} '
           'kişiye P(${n - 1}, ${r - 1}) = ${_carpimYaz(n - 1, r - 1)} = $yanit '
           'farklı şekilde dağıtılır.';
     case 2:
       kosul = ' $ad1 adlı $kisi bu görevlerden birine mutlaka getirilecektir.';
-      yanit = r * _perm(n - 1, r - 1);
-      yanlis = [_perm(n - 1, r - 1), pnr, _perm(n - 1, r)];
+      yanit = r * q;
+      yanlis = [
+        q, // görev sayısıyla çarpılmaz
+        pnr,
+        r + q, // çarpma yerine toplama
+        _perm(n - 1, r),
+        r * _perm(n - 2, r - 1), // bir kişi fazla çıkarılır
+        r * _perm(n, r - 1), // kişi havuzdan çıkarılmaz
+        r * _komb(n - 1, r - 1),
+      ];
       aciklama =
           '$ad1 için $r görev seçeneği vardır. Kalan ${r - 1} görev kalan '
           '${n - 1} kişiye P(${n - 1}, ${r - 1}) = ${_perm(n - 1, r - 1)} '
@@ -273,7 +297,14 @@ AdvancedItem _permutasyon(int a, int b, int c) {
     case 3:
       kosul = ' $ad1 adlı $kisi bu görevlerin hiçbirine getirilmeyecektir.';
       yanit = _perm(n - 1, r);
-      yanlis = [pnr, _perm(n - 1, r - 1), pnr - _perm(n - 1, r - 1)];
+      yanlis = [
+        pnr,
+        q,
+        pnr - q,
+        _komb(n - 1, r), // sıra önemsenmez
+        _kuvvet(n - 1, r), // aynı kişi birden çok göreve
+        _perm(n - 2, r), // bir kişi fazla çıkarılır
+      ];
       aciklama =
           '$ad1 dışarıda bırakılır; görevler kalan ${n - 1} kişiye '
           'P(${n - 1}, $r) = ${_carpimYaz(n - 1, r)} = $yanit farklı şekilde '
@@ -282,8 +313,15 @@ AdvancedItem _permutasyon(int a, int b, int c) {
       kosul =
           ' $ad1 adlı $kisi $ilk olmayacak, ancak öteki görevlere '
           'getirilebilecektir.';
-      yanit = pnr - _perm(n - 1, r - 1);
-      yanlis = [_perm(n - 1, r), pnr, _perm(n - 1, r - 1)];
+      yanit = pnr - q;
+      yanlis = [
+        _perm(n - 1, r), // kişi hiç görev almaz sanılır
+        pnr,
+        q,
+        (n - 1) * _perm(n, r - 1), // ilk görevlisi havuzdan çıkarılmaz
+        (n - 1) * _perm(n - 2, r - 1), // bir kişi fazla çıkarılır
+        (n - 1) * _kuvvet(n, r - 1), // aynı kişi birden çok göreve
+      ];
       aciklama =
           'Tüm seçimler P($n, $r) = $pnr tanedir. $ad1 adlı kişinin $ilk '
           'olduğu seçimler P(${n - 1}, ${r - 1}) = ${_perm(n - 1, r - 1)} '
@@ -295,9 +333,11 @@ AdvancedItem _permutasyon(int a, int b, int c) {
       yanit = _perm(r, 2) * _perm(n - 2, r - 2);
       yanlis = [
         _perm(n - 2, r - 2),
-        2 * _perm(n - 2, r - 2),
+        r * r * _perm(n - 2, r - 2), // ikisi aynı göreve de yazılır
         _komb(r, 2) * _perm(n - 2, r - 2),
         pnr,
+        2 * _perm(n - 2, r - 2),
+        _perm(r, 2) * _perm(n, r - 2), // iki kişi havuzdan çıkarılmaz
       ];
       aciklama =
           'İki kişi $r görevden ikisine P($r, 2) = ${_perm(r, 2)} şekilde '
@@ -306,8 +346,15 @@ AdvancedItem _permutasyon(int a, int b, int c) {
           '${_perm(r, 2)}·${_perm(n - 2, r - 2)} = $yanit.';
     case 6:
       kosul = ' $ad1 adlı $kisi ya $ilk ya da $son olacaktır.';
-      yanit = 2 * _perm(n - 1, r - 1);
-      yanlis = [_perm(n - 1, r - 1), r * _perm(n - 1, r - 1), pnr];
+      yanit = 2 * q;
+      yanlis = [
+        q, // iki görev seçeneği unutulur
+        r * q, // her göreve getirilebilir sanılır
+        2 + q, // çarpma yerine toplama
+        pnr,
+        2 * _perm(n - 2, r - 1), // bir kişi fazla çıkarılır
+        2 * _perm(n, r - 1), // kişi havuzdan çıkarılmaz
+      ];
       aciklama =
           '$ad1 için 2 görev seçeneği vardır. Kalan ${r - 1} görev kalan '
           '${n - 1} kişiye P(${n - 1}, ${r - 1}) = ${_perm(n - 1, r - 1)} '
@@ -317,13 +364,27 @@ AdvancedItem _permutasyon(int a, int b, int c) {
           ' $ad1 adlı $kisi mutlaka $ilk olacak, $ad2 adlı $kisi ise hiçbir '
           'göreve getirilmeyecektir.';
       yanit = _perm(n - 2, r - 1);
-      yanlis = [_perm(n - 1, r - 1), _perm(n - 2, r - 2), _perm(n - 2, r)];
+      yanlis = [
+        q, // ikinci kişi dışarıda bırakılmaz
+        _perm(n - 2, r - 2),
+        _perm(n - 2, r), // görev havuzdan çıkarılmaz
+        _komb(n - 2, r - 1), // sıra önemsenmez
+        _perm(n - 3, r - 1), // bir kişi fazla çıkarılır
+        _perm(n, r - 1),
+      ];
       aciklama =
           '$ad1 için tek seçenek vardır, $ad2 dışarıda kalır. Kalan ${r - 1} '
           'görev kalan ${n - 2} kişiye P(${n - 2}, ${r - 1}) = '
           '${_carpimYaz(n - 2, r - 1)} = $yanit farklı şekilde dağıtılır.';
   }
-  return sayisal('$giris$kosul $soru', yanit, yanlis, aciklama, positive: true);
+  return sayisalSirali(
+    '$giris$kosul $soru',
+    yanit,
+    yanlis,
+    aciklama,
+    hedefSira(_no(a, b, c)),
+    positive: true,
+  );
 }
 
 // ---------------------------------------------------------------------------
