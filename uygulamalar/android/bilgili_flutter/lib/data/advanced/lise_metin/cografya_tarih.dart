@@ -86,6 +86,8 @@ AdvancedItem _sayisalTipik(
 /// [komsu] doğruysa anahtarın bir adım altı ve üstü son çare olarak kullanılır.
 /// [digits] basamakla tam yazılamayan (yuvarlanması gereken) tipik hata değerleri
 /// kullanılmaz: tam anahtarın yanında "1,667 km" gibi yuvarlanmış bir değer göze batar.
+/// Kendinden önceki bir tipik değere %2'den yakın olan değer de atlanır; iki
+/// çeldirici neredeyse aynı değeri göstermez.
 AdvancedItem _ondalikliTipik(
   String prompt,
   double answer,
@@ -110,16 +112,22 @@ AdvancedItem _ondalikliTipik(
     if (yuvarla(answer - k * step) > 0) aday(answer - k * step),
   ];
   final yazim = birimli(tr(answer, digits), unit);
+  final tipik = <(double, String)>[];
+  for (final x in alternatives) {
+    if (!x.isFinite || yuvarla(x) <= 0 || !tam(x)) continue;
+    final y = yuvarla(x);
+    if (tipik.any((t) => (t.$1 - y).abs() <= 0.02 * (t.$1 > y ? t.$1 : y))) {
+      continue;
+    }
+    tipik.add(aday(x));
+  }
   return AdvancedItem(
     prompt,
     yazim,
     _tipikSirali(
       yuvarla(answer),
       yazim,
-      [
-        for (final x in alternatives)
-          if (x.isFinite && yuvarla(x) > 0 && tam(x)) aday(x),
-      ],
+      tipik,
       komsu ? komsular(1) : const [],
       [for (var k = 1; k <= 6; k++) ...komsular(k)],
       sira,
@@ -1028,6 +1036,16 @@ AdvancedItem _bagilNem(int a, int b, int c) {
   }
 }
 
+/// [x] değerlerinden, listede kendinden önce gelen bir değere [fark] ya da daha
+/// yakın olanları atar; iki çeldiricinin neredeyse aynı değeri göstermesini önler.
+List<T> _ayrik<T extends num>(List<T> x, num fark) {
+  final kalan = <T>[];
+  for (final v in x) {
+    if (kalan.every((w) => (v - w).abs() > fark)) kalan.add(v);
+  }
+  return kalan;
+}
+
 AdvancedItem _bagimliNufus(int a, int b, int c) {
   final k = c ~/ 2;
   final oran = 40 + 2 * a; // %40 … %88
@@ -1049,11 +1067,12 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
       // oranı ters kurma (15–64 / bağımlı), yalnız 0–14 yaşı ya da yalnız 65 ve üzeri
       // yaşı hesaba katma, toplam nüfusu 15–64 yaş nüfusuna oranlama, 15–64 yaşın
       // toplamdaki payını verme, bağımlı nüfusu 0–14 yaş nüfusuna oranlama; en sonda
-      // komşu değerler. Gerçekçi olmayan %170 üstü oranlar kullanılmaz. Komşu değerler
+      // komşu değerler. Birbirine 3 puandan yakın iki değer aynı soruda kullanılmaz.
+      // Gerçekçi olmayan %170 üstü oranlar kullanılmaz. Komşu değerler
       // yalnız anahtarın üstüne düşer; çok kullanılırlarsa anahtar yakın değerlerin
       // en küçüğü olarak göze batar.
       siraliCeldiriciler(oran, '%$oran', [
-        for (final x in <num>[
+        for (final x in _ayrik(<num>[
           toplamdaPay,
           if (10000 / oran <= 170) (10000 / oran).round(),
           oran * pay / 100,
@@ -1063,7 +1082,7 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
           if (10000 / pay <= 170) (10000 / pay).round(),
           oran + 10,
           oran + 6,
-        ])
+        ], 3))
           (x, '%${tr(x)}'),
       ], sira),
       'Bağımlı nüfus $genc + $yasli = $bagimli kişidir. '
@@ -1082,8 +1101,9 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
     // yaş grubuna eşit bölme, 65 ve üzeri nüfusu iki kez çıkarma; tipik hata yetmezse
     // en sonda %10 ve %25 komşu değerler. Anahtarın altındaki tipik hatalar olmadan
     // komşular çoğunlukla altta kalır ve anahtar yakın değerlerin en büyüğü olarak
-    // göze batar. Kökte verilen 65 ve üzeri nüfus çeldirici yapılmaz.
-    [
+    // göze batar. Kökte verilen 65 ve üzeri nüfus çeldirici yapılmaz. Birbirine %3'ten
+    // yakın iki değer aynı soruda kullanılmaz.
+    _ayrik([
       bagimli,
       calisan - bagimli,
       bagimli + yasli,
@@ -1093,7 +1113,7 @@ AdvancedItem _bagimliNufus(int a, int b, int c) {
       genc * 9 ~/ 10,
       genc * 11 ~/ 10,
       genc * 3 ~/ 4,
-    ],
+    ], genc * 0.03),
     'Bağımlı nüfus = $calisan × $oran / 100 = $bagimli kişidir. '
         '0–14 yaş nüfusu = $bagimli − $yasli = $genc kişi.',
     sira,

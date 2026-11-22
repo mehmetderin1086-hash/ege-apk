@@ -1,6 +1,7 @@
 // TYT temel matematik, ikinci tur: 9.–10. sınıf sayılar ve cebir konularından
 // (asal çarpanlar, faktöriyel, aralık, fonksiyon, polinom, ikinci derece ve
 // sözel problemler) 20 metin ailesi; her aile 5.000 ayrı soru üretir.
+import 'denge.dart';
 import 'ortak.dart';
 
 // ---------------------------------------------------------------------------
@@ -420,6 +421,155 @@ AdvancedItem _kes(
   );
 }
 
+/// Değer sırası dengeli çeldirici seçimi: anahtardan küçük çeldirici sayısı
+/// [hedef] (0 … 3) olur. [hatalar] tipik hata değerleri, [komsular] anahtarın
+/// iki yanındaki komşu değerlerdir (yakından uzağa); ikililer (değer, yazım)
+/// biçimindedir. Öncelik: o yandaki hatalar, sonra o yandaki komşular. Anahtarı
+/// iki çeldiricinin tam ortasında bırakan (yanıtı ele veren simetrik çift) aday
+/// ancak o yanda başka aday kalmazsa alınır. Bir yanda aday yetmezse öbür yanın
+/// adaylarıyla tamamlanır. Yazımı anahtarla ya da birbiriyle aynı olan
+/// (`ayniSecenek`) adaylar atlanır.
+List<String> _dengeliSec(
+  double yanit,
+  String yanitYazim,
+  List<(double, String)> hatalar,
+  List<(double, String)> komsular,
+  int hedef,
+) {
+  final kota = [hedef, 3 - hedef];
+  final secilen = <(double, String)>[];
+  bool yeni((double, String) e) =>
+      !ayniSecenek(e.$2, yanitYazim) &&
+      !secilen.any((s) => ayniSecenek(s.$2, e.$2));
+  bool simetrik(double x) => secilen.any(
+    (s) => (x + s.$1 - 2 * yanit).abs() <= 1e-9 * (1 + yanit.abs()),
+  );
+  void tur(List<(double, String)> liste, bool simetriSerbest, bool serbest) {
+    for (final e in liste) {
+      if (secilen.length == 3) return;
+      if (!yeni(e) || (!simetriSerbest && simetrik(e.$1))) continue;
+      final yan = e.$1 < yanit ? 0 : 1;
+      if (!serbest) {
+        if (kota[yan] == 0) continue;
+        kota[yan]--;
+      }
+      secilen.add(e);
+    }
+  }
+
+  for (final serbest in const [false, true]) {
+    for (final simetriSerbest in const [false, true]) {
+      tur(hatalar, simetriSerbest, serbest);
+      tur(komsular, simetriSerbest, serbest);
+    }
+  }
+  if (secilen.length != 3) {
+    throw StateError('Eksik çeldirici: $yanitYazim → $secilen');
+  }
+  return [for (final e in secilen) e.$2];
+}
+
+/// Kökün karmasından hedef değer sırası (0 … 3): vakadan vakaya dengeli değişir.
+int _hedef(String kok, [int tuz = 0]) => hedefSira(_ozet(kok), 7 + tuz);
+
+/// [_tam] gibi; ancak anahtardan küçük çeldirici sayısı kökten seçilen hedef
+/// sıraya eşit olur ([_dengeliSec]). Önce [adaylar] (tipik hatalar) denenir;
+/// bir yanda yetmezse o yandaki komşu değerler ([komsuAdim] aralıkla) alınır.
+AdvancedItem _tamD(
+  String kok,
+  int yanit,
+  Iterable<int> adaylar,
+  String aciklama, {
+  String birim = '',
+  bool pozitif = false,
+  int? enAz,
+  int? enCok,
+  int? komsuAdim,
+}) {
+  final adim =
+      komsuAdim ?? (yanit.abs() >= 200 ? 10 : (yanit.abs() >= 40 ? 5 : 1));
+  bool uygun(int x) =>
+      x != yanit &&
+      (!pozitif || x > 0) &&
+      (enAz == null || x >= enAz) &&
+      (enCok == null || x <= enCok);
+  (double, String) yaz(int x) => (x.toDouble(), birimli(_n(x), birim));
+  final yazim = birimli(_n(yanit), birim);
+  return AdvancedItem(
+    kok,
+    yazim,
+    _dengeliSec(
+      yanit.toDouble(),
+      yazim,
+      [
+        for (final x in adaylar)
+          if (uygun(x)) yaz(x),
+      ],
+      [
+        for (var j = 1; j <= 8; j++)
+          for (final x in [yanit - j * adim, yanit + j * adim])
+            if (uygun(x)) yaz(x),
+      ],
+      _hedef(kok),
+    ),
+    aciklama,
+  );
+}
+
+/// [_kes] gibi; değer sırası [_tamD] gibi dengelenir. Komşu değerler
+/// yanıtın paydasıyla yazılan yakın kesirlerdir.
+AdvancedItem _kesD(
+  String kok,
+  int n,
+  int d,
+  Iterable<(int, int)> adaylar,
+  String aciklama, {
+  bool pozitif = false,
+  String birim = '',
+  bool ters = true,
+  bool birdenKucuk = false,
+}) {
+  final tam = n % d == 0;
+  bool uygun((int, int) x) =>
+      x.$2 != 0 &&
+      (!pozitif || x.$1 * x.$2 > 0) &&
+      (!birdenKucuk || (x.$1 * x.$2 > 0 && x.$1.abs() < x.$2.abs())) &&
+      x.$1 * d != n * x.$2;
+  (double, String) yaz((int, int) x) =>
+      (x.$1 / x.$2, birimli(_q(x.$1, x.$2), birim));
+  final yazim = birimli(_q(n, d), birim);
+  return AdvancedItem(
+    kok,
+    yazim,
+    _dengeliSec(
+      n / d,
+      yazim,
+      [
+        for (final x in [...adaylar, if (ters && n != 0 && !tam) (d, n)])
+          if (uygun(x)) yaz(x),
+      ],
+      [
+        for (final x in [
+          for (var j = 1; j <= 6; j++) ...[(n - j * d, d), (n + j * d, d)],
+          (n - 1, d),
+          (n + 1, d),
+          if (birdenKucuk) ...[
+            (n - 2, d),
+            (n + 2, d),
+            (n - 3, d),
+            (n + 3, d),
+            (n, d + 1),
+            (n + 1, d + 1),
+          ],
+        ])
+          if (uygun(x)) yaz(x),
+      ],
+      _hedef(kok),
+    ),
+    aciklama,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // 1. Asal çarpanlara ayırma
 // ---------------------------------------------------------------------------
@@ -627,21 +777,35 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
     final usCarpim = _carp([for (final x in f) x.$2]);
     final usTop = _topla([for (final x in f) x.$2 + 1]);
     final asallar = [for (final x in f) x.$1];
+    final altKume = _kuvvet(2, _topla([for (final x in f) x.$2]));
     switch (c) {
       case 0:
-        return _tam(
+        return _tamD(
           '$n sayısının pozitif bölenlerinin sayısı kaçtır?',
           bolen,
-          [usCarpim, usTop, 2 * bolen, bolen - f.length],
+          [
+            usCarpim,
+            usTop,
+            2 * bolen,
+            bolen - f.length,
+            // Her asal çarpanı ayrı bir çarpan sayıp alt küme sayısını almak.
+            if (altKume <= 3 * bolen) altKume,
+          ],
           '$yaz olduğundan pozitif bölen sayısı ${_bolenYaz(f)} = $bolen '
               'olur.',
           pozitif: true,
         );
       case 1:
-        return _tam(
+        return _tamD(
           '$n sayısının tam sayı bölenlerinin sayısı kaçtır?',
           2 * bolen,
-          [bolen, 2 * usCarpim, 2 * usTop, bolen + 1],
+          [
+            bolen,
+            2 * usCarpim,
+            2 * usTop,
+            bolen + 1,
+            if (altKume <= 3 * bolen) 2 * altKume,
+          ],
           '$yaz olduğundan pozitif bölen sayısı ${_bolenYaz(f)} = $bolen '
               'olur. Her pozitif bölenin negatifi de bir bölen olduğundan tam '
               'sayı bölen sayısı 2 · $bolen = ${2 * bolen} bulunur.',
@@ -650,7 +814,7 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
         );
       case 2:
         final top = _topla(asallar);
-        return _tam(
+        return _tamD(
           '$n sayısının asal bölenlerinin toplamı kaçtır?',
           top,
           [
@@ -658,6 +822,9 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
             top + 1,
             _carp(asallar),
             f.length,
+            // Asal bölenlerden birini (en büyüğünü ya da en küçüğünü) unutmak.
+            top - asallar.last,
+            top - asallar.first,
           ],
           '$yaz olduğundan asal bölenler ${_liste([for (final p in asallar) '$p'])} '
               'sayılarıdır. Bu asal sayıların toplamı $top olur.',
@@ -665,7 +832,11 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
         );
       case 3:
         final k = _kareTamlayan(f);
-        return _tam(
+        final tekUslu = [
+          for (final x in f)
+            if (x.$2.isOdd) x.$1,
+        ];
+        return _tamD(
           'k bir pozitif tam sayı olmak üzere $n · k çarpımı bir tam kare '
               'sayıdır. Buna göre k sayısının alabileceği en küçük değer kaçtır?',
           k,
@@ -677,6 +848,10 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
             ]),
             _tamKok(n * k, 2),
             _kupTamlayan(f),
+            // Üssü tek olan çarpanlardan yalnız birini tamamlamak.
+            if (tekUslu.length > 1) ...[k ~/ tekUslu.last, k ~/ tekUslu.first],
+            // En küçük asal çarpanla çarpmanın yeteceğini sanmak.
+            asallar.first,
           ].where((x) => x > 1),
           '$yaz olur. ${_kareAciklama(f, k)} Gerçekten $n · $k = ${n * k} = '
               '${_tamKok(n * k, 2)}² olur.',
@@ -684,7 +859,7 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
         );
       default:
         final k = _kupTamlayan(f);
-        return _tam(
+        return _tamD(
           'k bir pozitif tam sayı olmak üzere $n · k çarpımı bir tam küp '
               'sayıdır. Buna göre k sayısının alabileceği en küçük değer kaçtır?',
           k,
@@ -696,6 +871,8 @@ AdvancedItem _asalCarpanSoru(int a, int b, int c) {
             _carp([for (final x in f) _kuvvet(x.$1, x.$2 % 3)]),
             _tamKok(n * k, 3),
             _kareTamlayan(f),
+            // Üssü zaten üçün katı olan çarpanı da bir sonraki kata tamamlamak.
+            _carp([for (final x in f) _kuvvet(x.$1, 3 - x.$2 % 3)]),
           ].where((x) => x > 1),
           '$yaz olur. ${_kupAciklama(f, k)} Gerçekten $n · $k = ${n * k} = '
               '${_tamKok(n * k, 3)}³ olur.',

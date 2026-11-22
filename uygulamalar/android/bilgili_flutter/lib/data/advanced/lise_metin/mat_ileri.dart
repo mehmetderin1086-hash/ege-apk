@@ -287,17 +287,16 @@ AdvancedItem _kesS(
       (n - 1, d - 1), (n, d + 1), (n, d - 1), (n + 3, d), (n - 3, d),
     ],
   ].where((x) => !komsuPozitif || arti(x));
-  final havuz = [
-    ...adaylar,
-    ...komsu,
-  ].where((x) => x.$2 != 0 && (!pozitif || arti(x)));
+  bool gecer((int, int) x) => icinde(x) && (!pozitif || arti(x));
+  final dogal = [...adaylar.where(gecer)];
+  final havuz = [...dogal, ...komsu.where(gecer)];
   final yazim = _q(n, d);
   return AdvancedItem(
     kok,
     yazim,
     _diziKirarak(n / d, yazim, [
       for (final x in havuz) (x.$1 / x.$2, _q(x.$1, x.$2)),
-    ], sira),
+    ], _azKomsuSira(n / d, [for (final x in dogal) x.$1 / x.$2], sira)),
     aciklama,
   );
 }
@@ -1978,7 +1977,7 @@ final lmMatIleri = <AdvancedFamily>[
           ];
           final tekler = [
             2 * p, -p, s2 + i * p, 4 * p, if (p.isEven) p ~/ 2, //
-            -2 * p, p + 1, p - 1,
+            -2 * p,
           ];
           return _tamS(
             '$bas a² + b² = ${_n(kare)} olduğuna göre a·b çarpımı kaçtır?',
@@ -2002,7 +2001,7 @@ final lmMatIleri = <AdvancedFamily>[
           // Seçenekler işaretçe dengeli tutulur; gerekirse anahtara bir
           // yakın değer eklenir.
           final ps = p * s;
-          final tekler = [3 * p, -p, 3 * ps, ps, -3 * p, -ps, p + 1, p - 1];
+          final tekler = [3 * p, -p, 3 * ps, ps, -3 * p, -ps];
           return _tamS(
             '$bas $kupler = ${_n(kup)} olduğuna göre a·b çarpımı kaçtır?',
             p,
@@ -2167,7 +2166,9 @@ final lmMatIleri = <AdvancedFamily>[
             (us + q, p),
             (-us - q, p),
             (us, p),
-            if (v == 0) (_us(t, m) - q, p),
+            // Büyüklüğü anahtarınkinin 10 katını aşmıyorsa.
+            if (v == 0 && (_us(t, m) - q).abs() <= 10 * p * x.abs())
+              (_us(t, m) - q, p),
           ];
           final isaret = (-x, 1);
           return _kesS(
@@ -2460,6 +2461,10 @@ final lmMatIleri = <AdvancedFamily>[
           // bunlar (bileşik üçlüler); aritmetik dizi gibi farkı e'ye bölme.
           final ters = (yq, yp), kok = (an, am), bol = (an, am * e);
           final fark = (an - am, e);
+          // İki terim farklı olduğundan r = 1 olamaz; 1 değerli yanlış ve
+          // r ± 1 gibi düz komşular tipik hata sayılmaz (son çarede [_kesS]
+          // komşuları en çok bir kez girer).
+          bool birDegil((int, int) x) => x.$2 != 0 && x.$1 != x.$2;
           return _kesS(
             'Tüm terimleri pozitif olan bir geometrik dizide a${_alt(m)} = '
                 '$am ve a${_alt(n)} = $an olduğuna göre bu dizinin ortak çarpanı '
@@ -2478,28 +2483,27 @@ final lmMatIleri = <AdvancedFamily>[
                     [ters, bol, (am * e, an)],
                     [kok, bol, fark],
                   ])
-                    if (u.every((x) => _olcekte(x, yp, yq))) u,
+                    if (u.every((x) => _olcekte(x, yp, yq) && birDegil(x))) u,
                 ],
                 [
                   for (final x in [
                     kok, ters, fark, bol, (am, an), (am * e, an), //
-                    (yp, yq * e), (yp - yq, yq), (yp + yq, yq),
+                    (yp, yq * e),
                   ])
-                    if (_olcekte(x, yp, yq)) x,
+                    if (_olcekte(x, yp, yq) && birDegil(x)) x,
                 ],
                 hs,
                 pozitif: true,
               ),
-              kok,
-              ters,
-              fark,
-              (yp, yq * e),
+              for (final x in [kok, ters, fark, (yp, yq * e)])
+                if (birDegil(x)) x,
             ],
             'a${_alt(n)} = a${_alt(m)}·r${_ust(e)} olduğundan r${_ust(e)} = '
                 '${_oranYaz(an, am)} olur. Terimler pozitif olduğundan '
                 'r = ${_q(yp, yq)} bulunur.',
             hs,
             pozitif: true,
+            uygun: (x) => (x - 1).abs() > 1e-9,
           );
         }
         final u = const [1, 2, 3, 5, 7][a % 5];
@@ -2534,7 +2538,9 @@ final lmMatIleri = <AdvancedFamily>[
               ak,
               1,
               const [],
-              [...yanlis, (ak - 1, 1), (ak + 1, 1)],
+              // Düz komşular (a_k ± 1) üçlü aramasına girmez; gerekirse
+              // [_kesS] son çarede en çok bir komşu ekler.
+              yanlis,
               hs,
               pozitif: true,
             ),
@@ -2731,14 +2737,16 @@ final lmMatIleri = <AdvancedFamily>[
               '${_pili(p, q)} radyan = ${p == 1 ? '' : '$p·'}180°/$q = $r° '
               'olur. Üçüncü açı 180° − $aci° − $r° = $ucuncu° bulunur.';
           // İki açıyı toplayıp bırakma, bir açıyı unutma, π'yi 360° ya da
-          // 90° alma, iç açılar toplamını 360° sanma.
+          // 90° alma, radyandaki payı unutma (pπ/q yerine π/q). Bir iç açı
+          // 0° ile 180° arasında olduğundan bu aralığın dışındaki değerler
+          // (ör. iç açılar toplamını 360° sanma) kullanılmaz.
           final hatalar = [
             aci + r,
             180 - r,
             180 - aci - 2 * r,
-            360 - aci - r,
             180 - aci,
             if (r.isEven) 180 - aci - r ~/ 2,
+            if (p > 1) 180 - aci - 180 ~/ q,
           ];
           if (v == 0) {
             return _tamS(
@@ -2748,8 +2756,10 @@ final lmMatIleri = <AdvancedFamily>[
               cevir,
               hs,
               pozitif: true,
+              uygun: (x) => x < 180,
             );
           }
+          bool aralikta((int, int) x) => x.$1 > 0 && x.$1 < x.$2;
           // Pay hatası × payda hatası (π'yi 360° ya da 90° alma): anahtar
           // her yazım ögesini iki seçenekle paylaşır.
           return _kesS(
@@ -2758,13 +2768,16 @@ final lmMatIleri = <AdvancedFamily>[
             ucuncu,
             180,
             [
+              // Üçgenin iç açısı π'den küçük olduğundan k, 0 ile 1 arasında
+              // kalmalıdır; bu aralığın dışına düşen üçlüler atlanır.
               ..._uclu(
                 ucuncu,
                 180,
                 [
                   for (final e in hatalar)
                     for (final p in const [360, 90])
-                      [(e, 180), (ucuncu, p), (e, p)],
+                      if ([(e, 180), (ucuncu, p), (e, p)].every(aralikta))
+                        [(e, 180), (ucuncu, p), (e, p)],
                 ],
                 hs,
                 pozitif: true,
@@ -2773,11 +2786,13 @@ final lmMatIleri = <AdvancedFamily>[
               (ucuncu, 360),
               (ucuncu, 90),
               (180 - r, 180),
+              for (final e in hatalar) (e, 180),
             ],
             '$cevir Radyan cinsinden $ucuncu·π/180 = '
                 '${_pili(ucuncu, 180)} olduğundan k = ${_q(ucuncu, 180)} olur.',
             hs,
             pozitif: true,
+            uygun: (x) => x < 1,
           );
         case 1 || 4:
           final r = 4 * (a + 1);
@@ -2835,8 +2850,10 @@ final lmMatIleri = <AdvancedFamily>[
         case 2:
           final esas = 2 * (5 * a + b % 5) + 11;
           final tur = b ~/ 5 + 2;
-          // Tümleyen (360° − x), ters yön (x + 180°), bütünler, onlar
-          // basamağında işlem hatası (yanıt tek sayı; ±10 teklik bozmaz).
+          // Tümleyen (360° − x), ters yön (x + 180°), bütünler, onlar ya da
+          // yüzler basamağında çıkarma hatası (yanıt tek sayı; ±10, ±20,
+          // ±100 teklik bozmaz). Esas ölçü [0°, 360°) aralığında olduğundan
+          // bir tur eksik ya da fazla çıkarma (aralık dışı) kullanılmaz.
           final ortak = [
             360 - esas,
             (esas + 180) % 360,
@@ -2844,28 +2861,33 @@ final lmMatIleri = <AdvancedFamily>[
             esas - 10,
             esas + 10,
             if (esas > 20) esas - 20,
+            esas + 20,
+            esas + 100,
+            if (esas > 100) esas - 100,
           ];
+          bool esasta(int x) => x >= 0 && x < 360;
           if (v == 0) {
             final aci = 360 * tur + esas;
             return _tamS(
               'Ölçüsü $aci° olan açının esas ölçüsü kaç derecedir?',
               esas,
-              // Tur sayısını yanıt sanma, bir tur eksik çıkarma.
-              [ortak[0], ortak[1], tur, esas + 360, ...ortak.skip(2)],
+              // Tur sayısını yanıt sanma.
+              [ortak[0], ortak[1], tur, ...ortak.skip(2)],
               '$aci° = $tur·360° + $esas° olduğundan esas ölçü $esas° olur.',
               hs,
               pozitif: true,
+              uygun: esasta,
             );
           }
           final aci = esas - 360 * (tur - 1);
           return _tamS(
             'Ölçüsü ${_n(aci)}° olan açının esas ölçüsü kaç derecedir?',
             esas,
-            // Bir tur eksik ya da fazla ekleme.
-            [ortak[0], ortak[1], esas - 360, esas + 360, ...ortak.skip(2)],
+            ortak,
             'Esas ölçü 0° ile 360° arasındadır (0° dâhil). ${_n(aci)}° + '
                 '${tur - 1}·360° = $esas° olduğundan esas ölçü $esas° olur.',
             hs,
+            uygun: esasta,
           );
         default:
           final (q, m) = _radyanEsas[a];
@@ -2880,27 +2902,28 @@ final lmMatIleri = <AdvancedFamily>[
             return _tamS(
               'Ölçüsü $aci radyan olan açının esas ölçüsü kaç derecedir?',
               derece,
-              // Tümleyen, ters yön, π'yi 90° ya da 360° alma, bütünler, bir
-              // tur eksik çıkarma.
+              // Tümleyen, ters yön, π'yi 90° ya da 360° alma, bütünler. Esas
+              // ölçü [0°, 360°) aralığında olduğundan bir tur eksik çıkarma
+              // (aralık dışı) kullanılmaz.
               [
                 360 - derece,
                 (derece + 180) % 360,
                 if (derece.isEven) derece ~/ 2,
                 if (2 * derece < 360) 2 * derece,
                 if (derece < 180) 180 - derece,
-                derece + 360,
               ],
               '$indir olduğundan esas ölçü ${_pili(m, q)} radyandır. Bu da '
                   '${m == 1 ? '' : '$m·'}180°/$q = $derece° eder.',
               hs,
               pozitif: true,
+              uygun: (x) => x < 360,
             );
           }
-          // Ters yön (2π − x), π kadar kayma, bir tur eksik ya da fazla
-          // çıkarma (negatif kalma); payda hatası (2q, π ile 2π'yi
-          // karıştırma) ile bileşik üçlüler önce denenir.
+          // Ters yön (2π − x), π kadar kayma ve payda hatası (2q, π ile 2π'yi
+          // karıştırma) bileşik üçlüleri önce denenir. Esas ölçü [0, 2π)
+          // aralığında olduğundan k, 0 ile 2 arasında kalır; bir tur eksik ya
+          // da fazla çıkarma (k ≥ 2 ya da k < 0) kullanılmaz.
           final ters = 2 * q - m, kay = (m + q) % (2 * q);
-          final eksik = m + 2 * q, fazla = m - 2 * q;
           return _kesS(
             'Ölçüsü $aci radyan olan açının esas ölçüsü k·π radyan olduğuna '
                 'göre k kaçtır?',
@@ -2908,23 +2931,22 @@ final lmMatIleri = <AdvancedFamily>[
             q,
             [
               ..._uclu(m, q, [
-                for (final e in [ters, kay, eksik, fazla])
-                  [(e, q), (m, 2 * q), (e, 2 * q)],
-                [(ters, q), (kay, q), (eksik, q)],
-                [(fazla, q), (m, 2 * q), (ters, q)],
-                [(fazla, q), (m, 2 * q), (eksik, q)],
-                [(fazla, q), (ters, q), (eksik, q)],
+                for (final e in [ters, kay]) [(e, q), (m, 2 * q), (e, 2 * q)],
+                [(ters, q), (kay, q), (m, 2 * q)],
+                [(ters, q), (kay, q), (ters, 2 * q)],
+                [(ters, q), (kay, q), (kay, 2 * q)],
               ], hs),
               (ters, q),
               (kay, q),
               (m, 2 * q),
-              (eksik, q),
-              (fazla, q),
+              (ters, 2 * q),
+              (kay, 2 * q),
             ],
             '$indir olduğundan esas ölçü ${_pili(m, q)} radyandır; '
                 'k = ${_q(m, q)} olur.',
             hs,
             komsuPozitif: true,
+            uygun: (x) => x >= 0 && x < 2,
           );
       }
     },

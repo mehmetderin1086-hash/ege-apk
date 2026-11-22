@@ -484,9 +484,8 @@ bool _dahaIyi(List<int> a, List<int> b) {
 /// Üç çeldiriciyi [adaylar] (öncelik sırasıyla değer ve yazım) içinden seçer.
 /// Üçlüler sırasıyla şu ölçütlerle karşılaştırılır: anahtardan küçük
 /// çeldirici sayısının [sira] hedefine uzaklığı; anahtarın sözcük
-/// benzerliğinde en yüksek değeri tek başına ya da bir seçenekle paylaşması
-/// ya da tek başına en düşük kalması, uzunlukta tek başına en uzun olması;
-/// adayların öncelik sırası. Yazımı anahtarla ya da önceki bir
+/// benzerliğinde öne çıkması ya da tek başına geride kalması, uzunlukta tek
+/// başına en uzun olması; adayların öncelik sırası. Yazımı anahtarla ya da önceki bir
 /// adayla aynı olan adaylar atlanır; ilk [enFazla] farklı aday denenir.
 List<String> _dengeli(
   num anahtar,
@@ -530,10 +529,14 @@ List<String> _dengeli(
           for (final u in s) s.fold<double>(0, (t, v) => t + jac[u][v]),
         ];
         final uz = [for (final u in s) boy[u]];
+        // Anahtarın en benzer seçenekler arasındaki payı 1/4'e yakın olmalı:
+        // tek başına en benzer (pay 1) ya da yalnız bir seçenekle en benzer
+        // (pay 1/2) olması da, en benzerler arasında hiç bulunmaması da
+        // cezalandırılır.
         final tepe = _tepe(puan);
         final ceza = [
           (alt - sira).abs(),
-          (tepe == 1 ? 2 : (tepe == 2 ? 1 : 0)) +
+          (tepe == 1 ? 3 : (tepe == 2 || tepe == 0 ? 1 : 0)) +
               (_tekBasina(puan, 0, enKucuk: true) ? 1 : 0) +
               (_tekBasina(uz, 0) ? 1 : 0),
           p + q + r,
@@ -4703,6 +4706,7 @@ AdvancedItem _grafikDonusum(int a, int b, int c, int deneme) {
 String _sagSol(int k, bool sag) => 'lim (x → ${_n(k)}${sag ? '⁺' : '⁻'}) f(x)';
 
 AdvancedItem _sureklilik(int a, int b, int c, int deneme) {
+  final sira = hedefSira(_vaka(a, b, c));
   if (c <= 2) {
     final (al, be) = _parcaDog[a];
     final (mu, nu, ro) = _parcaKare[b];
@@ -4713,6 +4717,8 @@ AdvancedItem _sureklilik(int a, int b, int c, int deneme) {
     ][c][deneme % 4];
     final f = _Parcali([al, be], [mu, nu, ro], k, (a + b) % 2);
     final sol = _deg(f.p1, k), sag = _deg(f.p2, k), fk = f.deger(k);
+    // x yerine −k koyma (işaret hatası) ile bulunan tek yanlı limitler.
+    final solE = _deg(f.p1, -k), sagE = _deg(f.p2, -k);
     // Sürekli noktada sağ ve sol limitler eşittir; soru önemsizleşir.
     if (sol == sag) _kirli = true;
     final limitler =
@@ -4722,16 +4728,28 @@ AdvancedItem _sureklilik(int a, int b, int c, int deneme) {
         '${_yerine(f.p2, k)} = ${_n(sag)}.';
     switch (c) {
       case 0:
-        return _tam(
+        final eski = _tam(
           '${f.tanim} Buna göre ${_sagSol(k, false)} + ${_sagSol(k, true)} '
               'toplamı kaçtır?',
           sol + sag,
           [2 * sol, 2 * sag, sol - sag, sag - sol],
           '$limitler Toplam ${_n(sol + sag)} olur.',
         );
+        // İki limiti tek kuraldan alma, toplamak yerine çıkarma, işaret
+        // hatası.
+        return _dengele(
+          eski,
+          sol + sag,
+          _tamAday([
+            ...[2 * sol, 2 * sag, sol - sag, sag - sol, solE + sagE],
+            ...[sol + sagE, solE + sag, -(sol + sag)],
+            ..._komsuTam(sol + sag),
+          ]),
+          sira,
+        );
       case 1:
         final hangi = f.birinci(k) ? 'birinci' : 'ikinci';
-        return _tam(
+        final eski = _tam(
           '${f.tanim} Buna göre ${_sagSol(k, false)} + f(${_n(k)}) toplamı '
               'kaçtır?',
           sol + fk,
@@ -4745,13 +4763,36 @@ AdvancedItem _sureklilik(int a, int b, int c, int deneme) {
               'f(${_n(k)}) = ${_n(fk)}. Toplam ${_n(sol)} + ${_p(fk)} = '
               '${_n(sol + fk)} olur.',
         );
+        // f(k) için yanlış kuralı seçme, limit yerine öteki kuralı kullanma,
+        // toplamak yerine çıkarma, işaret hatası.
+        return _dengele(
+          eski,
+          sol + fk,
+          _tamAday([
+            ...[f.birinci(k) ? sol + sag : 2 * sol, 2 * sag, sol - fk],
+            ...[sag + fk, solE + (f.birinci(k) ? solE : sagE), fk - sol],
+            ...[-(sol + fk), ..._komsuTam(sol + fk)],
+          ]),
+          sira,
+        );
       default:
-        return _tam(
+        final eski = _tam(
           '${f.tanim} Buna göre ${_sagSol(k, true)} − ${_sagSol(k, false)} '
               'farkı kaçtır?',
           sag - sol,
           [sol - sag, sol + sag, sag, -sol],
           '$limitler Fark ${_n(sag)} − ${_p(sol)} = ${_n(sag - sol)} olur.',
+        );
+        // Farkı ters alma, toplama, limitlerden birini unutma, işaret hatası.
+        return _dengele(
+          eski,
+          sag - sol,
+          _tamAday([
+            ...[sol - sag, sol + sag, sag, -sol, sagE - solE],
+            ...[-(sol + sag), -sag, sol, solE - sagE],
+            ..._komsuTam(sag - sol),
+          ]),
+          sira,
         );
     }
   }
@@ -4786,7 +4827,7 @@ AdvancedItem _sureklilik(int a, int b, int c, int deneme) {
     final tur = (a + b) % 2;
     final s1 = tur == 0 ? '<' : '≤', s2 = tur == 0 ? '≥' : '>';
     final sol = be == 0 ? 'mx' : 'mx ${be < 0 ? '−' : '+'} ${be.abs()}';
-    return _ras(
+    final eski = _ras(
       'Gerçek sayılarda tanımlı f fonksiyonu x $s1 ${_n(k)} için f(x) = $sol, '
           'x $s2 ${_n(k)} için f(x) = ${_pol(sag)} biçiminde tanımlanıyor. f '
           'fonksiyonu x = ${_n(k)} noktasında sürekli olduğuna göre m kaçtır?',
@@ -4802,6 +4843,19 @@ AdvancedItem _sureklilik(int a, int b, int c, int deneme) {
           '${_yerine(sag, k)} = ${_n(hedef)}. Buradan '
           '${_pol([k, 0], 'm')} = ${_n(hedef - be)} ve m = ${_n(m)} bulunur.',
     );
+    // k ile bölmeyi unutma, işaret hatası, yalnız sabit terimi alma, x
+    // yerine −k koyma, sabit terimi yanlış yana geçirme ya da unutma, bölmeyi
+    // ters yapma; en sonda komşu değerler.
+    return _dengele(
+      eski,
+      m,
+      _rAday([
+        ...[_R(hedef - be), _R(be - hedef, k), _R(delta - be, k)],
+        ...[_R(_deg(sag, -k) - be, k), _R(hedef + be, k), _R(hedef, k)],
+        ...[_R(k, hedef - be), _R(m + 1), _R(m - 1), _R(m + 2), _R(m - 2)],
+      ]),
+      sira,
+    );
   }
   if (c == 6) {
     // Kaldırılabilir süreksizlik: (x − r)(x − s)/(x − r).
@@ -4809,7 +4863,7 @@ AdvancedItem _sureklilik(int a, int b, int c, int deneme) {
     AdvancedItem kur(int s) {
       final pay = [1, -(r + s), r * s];
       final yanit = r - s;
-      return _tam(
+      final eski = _tam(
         'Gerçek sayılarda tanımlı f fonksiyonu x ≠ ${_n(r)} için f(x) = '
             '(${_pol(pay)})/(${_pol([1, -r])}), x = ${_n(r)} için f(x) = m '
             'biçiminde tanımlanıyor. f fonksiyonu x = ${_n(r)} noktasında sürekli '
@@ -4819,6 +4873,17 @@ AdvancedItem _sureklilik(int a, int b, int c, int deneme) {
         'Pay (${_pol([1, -r])})·(${_pol([1, -s])}) biçiminde çarpanlarına '
             'ayrılır; x ≠ ${_n(r)} için f(x) = ${_pol([1, -s])} olur. Süreklilik '
             'için m = ${_n(r)} − ${_p(s)} = ${_n(yanit)} olmalıdır.',
+      );
+      // Çarpanın işaretini yanlış alma, farkı ters alma, sabit terimi ya da
+      // 0'ı yanıt sanma, sadeleşen çarpanı unutma.
+      return _dengele(
+        eski,
+        yanit,
+        _tamAday([
+          ...[r + s, s - r, r * s, 0, -(r + s), -s, r, 2 * r - s],
+          ..._komsuTam(yanit),
+        ]),
+        sira,
       );
     }
 
@@ -4842,7 +4907,7 @@ AdvancedItem _sureklilik(int a, int b, int c, int deneme) {
       final kup = r * r * r;
       final pay = [al, 0, 0, -al * kup];
       final yanit = 3 * al * r * r + d;
-      return _tam(
+      final eski = _tam(
         'Gerçek sayılarda tanımlı f fonksiyonu x ≠ ${_n(r)} için f(x) = '
             '(${_pol(pay)})/(${_pol([1, -r])})${_sabitEk(d)}, x = ${_n(r)} için '
             'f(x) = m biçiminde tanımlanıyor. f fonksiyonu x = ${_n(r)} noktasında '
@@ -4854,6 +4919,18 @@ AdvancedItem _sureklilik(int a, int b, int c, int deneme) {
             '(${_pol([1, r, r * r])})${_sabitEk(d)} olur. Süreklilik için m, bu '
             'ifadenin x = ${_n(r)} için değeridir: ${al == 1 ? '' : '$al·'}'
             '${3 * r * r}${_sabitEk(d)} = ${_n(yanit)}.',
+      );
+      // Bölümde 3 katsayısını, sabiti ya da baş katsayıyı unutma, sabitin
+      // işaretini çevirme, r² yerine r alma.
+      return _dengele(
+        eski,
+        yanit,
+        _tamAday([
+          ...[al * r * r + d, 3 * al * r * r, 2 * al * r * r + d, d],
+          ...[3 * al * r * r - d, if (al != 1) 3 * r * r + d, 3 * al * r + d],
+          ..._komsuTam(yanit),
+        ]),
+        sira,
       );
     }
 
@@ -4871,7 +4948,7 @@ AdvancedItem _sureklilik(int a, int b, int c, int deneme) {
   // Hatalı çözüm: süreklilik eşitliğinde işaret hatası (a·k1 = c1 − …).
   final aHata = _R(c1 - _deg(orta, k1), k1),
       bHata = _R(c3 - _deg(orta, k2), k2);
-  return _ras(
+  final eski = _ras(
     'Gerçek sayılarda tanımlı f fonksiyonu x < ${_n(k1)} için f(x) = '
         'ax${_sabitEk(c1)}, ${_n(k1)} ≤ x < ${_n(k2)} '
         'için f(x) = ${_pol(orta)}, x ≥ ${_n(k2)} için f(x) = '
@@ -4886,6 +4963,24 @@ AdvancedItem _sureklilik(int a, int b, int c, int deneme) {
         '${_n(_deg(orta, k1))}, buradan a = ${_n(aa)}. x = ${_n(k2)} noktasında: '
         '${_n(_deg(orta, k2))} = b·${_p(k2)}${_sabitEk(c3)}, buradan b = '
         '${_n(bb)}. ${c == 8 ? 'a + b' : 'a·b'} = ${_n(yanit)}.',
+  );
+  // Süreklilik eşitliklerinde işaret hatası (birinde ya da ikisinde), işlemi
+  // karıştırma, parametrelerden yalnız birini yanıt sanma.
+  return _dengele(
+    eski,
+    yanit,
+    _rAday(
+      c == 8
+          ? [
+              ...[aHata + _R(bb), _R(aa) + bHata, _R(aa - bb), _R(aa * bb)],
+              ...[aHata + bHata, _R(bb - aa), -_R(aa + bb), _R(aa), _R(bb)],
+            ]
+          : [
+              ...[aHata * _R(bb), _R(aa) * bHata, _R(aa + bb), -_R(aa * bb)],
+              ...[aHata * bHata, _R(aa - bb), _R(aa), _R(bb)],
+            ],
+    ),
+    sira,
   );
 }
 

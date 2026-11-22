@@ -194,7 +194,7 @@ AdvancedItem _saySirali(
   var s = sira;
   var katlar = [for (var k = 1; k <= komsu; k++) k];
   if (yon != null) {
-    if (2 * a <= 0.25 * m) katlar = [for (var k = 2; k <= komsu + 1; k++) k, 1];
+    if (2 * a <= 0.25 * m) katlar = [for (var k = 2; k <= komsu + 1; k++) k];
     final kd = deger(d);
     final gorulen = <String>[];
     var alt = 0, ust = 0;

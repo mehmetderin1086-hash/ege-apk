@@ -26,6 +26,10 @@ int _hs(int a, int b, int c) {
 /// kurulamıyorsa kurulabilen sıralardan biri [sira] ~/ 4 ile seçilir.
 /// Böylece seçenekler anahtarın çevresine dizilmiş komşulardan oluşmaz.
 /// [enCokAlt] verilirse anahtardan küçük çeldirici sayısı onu aşmaz.
+/// [zorunlu] adaylar arasındaysa her seçimde bulunur (anahtar tek tam sayı
+/// seçenek kalmasın diye); [isaret] doğruysa en az bir çeldirici anahtarla
+/// aynı işarette olur (anahtar tek negatif ya da tek negatif olmayan
+/// seçenek kalmasın diye).
 List<String> _celdirici(
   num anahtar,
   String yazim,
@@ -33,6 +37,8 @@ List<String> _celdirici(
   Iterable<(num, String)> komsular,
   int sira, {
   int enCokAlt = 3,
+  num? zorunlu,
+  bool isaret = false,
 }) {
   // Bir çağrıdaki bütün adaylar aynı birim ve biçimdedir ve yazımları
   // değerlerinden türetilir; bu yüzden değeri aynı olan aday aynı seçenektir.
@@ -114,6 +120,7 @@ List<String> _celdirici(
     return true;
   }
 
+  final zorunluVar = [...alt0, ...ust0].any((x) => x.$1 == zorunlu);
   List<(num, String)>? secim;
   var secimDuzey = -1, secimMaliyet = 0;
   for (final ia in _birlesim(alt0.length, r)) {
@@ -125,17 +132,23 @@ List<String> _celdirici(
       final a = [for (final i in ia) alt0[i]];
       final u = [for (final i in iu) ust0[i]];
       final ortaVar = a.any((p) => u.any((q) => orta(p.$1, q.$1)));
-      final duzey = ortaVar
-          ? 0
-          : merkez([
-              for (final x in [...a, ...u]) x.$1,
-            ])
-          ? 1
-          : 2;
+      final secilen = [...a, ...u];
+      final tur =
+          (zorunlu == null ||
+              !zorunluVar ||
+              secilen.any((x) => x.$1 == zorunlu)) &&
+          (!isaret || secilen.any((x) => (x.$1 < 0) == (anahtar < 0)));
+      final duzey =
+          (tur ? 3 : 0) +
+          (ortaVar
+              ? 0
+              : merkez([for (final x in secilen) x.$1])
+              ? 1
+              : 2);
       final maliyet = [...ia, ...iu].fold<int>(0, (t, i) => t + i) + 10 * komsu;
       if (duzey > secimDuzey ||
           (duzey == secimDuzey && maliyet < secimMaliyet)) {
-        secim = [...a, ...u];
+        secim = secilen;
         secimDuzey = duzey;
         secimMaliyet = maliyet;
       }
@@ -2452,8 +2465,9 @@ final lmGeometri = <AdvancedFamily>[
           sira,
           // Tam sayı anahtarda tek tam sayı çeldirici (paydayı unutma)
           // anahtardan büyüktür; üç çeldiricinin de küçük olduğu sıra
-          // seçilmez.
+          // seçilmez ve bu çeldirici her vakada bulunur.
           enCokAlt: pay % h == 0 ? 2 : 3,
+          zorunlu: pay % h == 0 ? pay : null,
         );
       }
 
@@ -2551,6 +2565,7 @@ final lmGeometri = <AdvancedFamily>[
               ],
               [for (final x in _komsu(top, 1)) (x, _m(x as int))],
               _hs(a, b, c),
+              isaret: true,
             ),
             'Merkez M${_n(h, k)} ve r² = ${r * r} olduğundan r = $r bulunur. '
             'a + b + r = ${_m(h)} + ${_pz(k)} + $r = ${_m(h + k + r)}.',
