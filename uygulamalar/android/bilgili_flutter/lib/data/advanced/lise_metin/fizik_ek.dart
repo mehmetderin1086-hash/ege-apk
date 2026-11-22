@@ -5748,15 +5748,23 @@ List<List<double>> _renkOlcu(List<List<int>> se) {
 /// benzeyen; eşitlikte yarım) vakanın hedef sırasına en yakın olan üçlü
 /// alınır; böylece anahtar vakadan vakaya en benzeyen, en az benzeyen ya da
 /// aradaki seçenek olur. Uzunluk sırası ayrı bir hedefle dengelenir.
+/// [yedekler] (tümleyen renkler, hepsi siyah) yalnız gerektiğinde kullanılır:
+/// sık görülselerdi "hiç doğru çıkmayan seçenek" olarak elenirlerdi.
 List<List<int>> _renkCeldiriciler(
   List<int> anahtar,
   Iterable<List<int>> adaylar,
+  Iterable<List<int>> yedekler,
   int i,
 ) {
   final havuz = <List<int>>[];
-  for (final x in adaylar) {
-    if (_ayniDizi(x, anahtar) || havuz.any((y) => _ayniDizi(x, y))) continue;
+  final yedek = <bool>[];
+  for (final (x, y) in [
+    for (final x in adaylar) (x, false),
+    for (final x in yedekler) (x, true),
+  ]) {
+    if (_ayniDizi(x, anahtar) || havuz.any((z) => _ayniDizi(x, z))) continue;
     havuz.add(x);
+    yedek.add(y);
   }
   if (havuz.length < 3) throw StateError('Eksik çeldirici: ${_dizi(anahtar)}');
   final hedef = hedefSira(i).toDouble(), boyHedef = hedefSira(i, 1).toDouble();
@@ -5767,7 +5775,12 @@ List<List<int>> _renkCeldiriciler(
       for (var z = y + 1; z < havuz.length; z++) {
         final uclu = [havuz[x], havuz[y], havuz[z]];
         final olcu = _renkOlcu([anahtar, ...uclu]);
-        var maliyet = 0.0;
+        // Tek renkli diziler (anahtar hiçbir zaman tek renkli değildir) birden
+        // çoksa anahtarı ele vermesinler diye cezalandırılır.
+        final tekRenk = uclu.where((d) => d.toSet().length == 1).length;
+        var maliyet =
+            [x, y, z].where((j) => yedek[j]).length +
+            1.5 * math.max(0, tekRenk - 1);
         for (var m = 0; m < olcu.length; m++) {
           final s = olcu[m];
           var r = 0.0;
@@ -5814,8 +5827,7 @@ AdvancedItem _renkCisim(List<int> cisim, List<(int, int)> demet, int i) {
         'sırasıyla hangi renklerde görünür? $_renkNot',
     _dizi(anahtar),
     [
-      for (final x in _renkCeldiriciler(anahtar, [
-        ..._cisimYanlis(cisim, demet),
+      for (final x in _renkCeldiriciler(anahtar, _cisimYanlis(cisim, demet), [
         [for (final o in cisim) 7 - o],
         [for (final _ in cisim) 0],
       ], i))
@@ -5856,8 +5868,7 @@ AdvancedItem _renkFiltre(int f1, int f2, List<int> cisim, int i) {
         'sırasıyla hangi renklerde görünür? $_renkNot',
     _dizi(anahtar),
     [
-      for (final x in _renkCeldiriciler(anahtar, [
-        ..._filtreYanlis(f1, f2, cisim),
+      for (final x in _renkCeldiriciler(anahtar, _filtreYanlis(f1, f2, cisim), [
         [for (final o in cisim) 7 - o],
         [for (final _ in cisim) 0],
       ], i))

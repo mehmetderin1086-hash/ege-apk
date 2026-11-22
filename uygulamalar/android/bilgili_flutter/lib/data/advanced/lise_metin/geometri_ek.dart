@@ -545,8 +545,9 @@ List<(num, String)> _komsuAday(int c, int m, String birim) {
 }
 
 /// Tam sayı Heron alanı için adaylar: dik üçgen sanma, iki katını ya da
-/// yarısını alma, karekök almayı unutma; [olcekli] ise (kenarlar küçük
-/// üçgenin t katı) alanı t ya da t³ katına çıkarma ve hiç büyütmeme.
+/// yarısını alma, karekök almayı unutma; [a0] verilirse (kenarlar alanı a0
+/// olan küçük üçgenin t katı) alanı t² yerine t katına çıkarma ya da hiç
+/// büyütmeme.
 List<(num, String)> _heronTamAday(
   int x,
   int y,
@@ -563,9 +564,8 @@ List<(num, String)> _heronTamAday(
     if (olcekli) w(t * a0),
     w(2 * alan),
     if (alan.isEven) w(alan ~/ 2),
-    if (olcekli) w(a0),
-    if (olcekli) w(t * alan),
     if ((x * z).isEven) w(x * z ~/ 2),
+    if (olcekli) w(a0),
     if (alan <= 3000) w(alan * alan),
     ..._komsuAday(alan, 1, birim),
   ];
@@ -1275,12 +1275,13 @@ final lmGeometriEk = <AdvancedFamily>[
           '${q - p} < |BC| < ${p + q} olur.';
       if (!cevre) {
         return switch (j) {
-          // Uçları katma, son − ilk sayımı (hi − lo), en büyük ya da en küçük
-          // değeri sayı sanma.
+          // Uçları katma, son − ilk sayımı (hi − lo), en büyük değeri sayı
+          // sanma, en küçük ve en büyük değeri de dışarıda bırakma; en küçük
+          // değeri ya da alt sınırı sayı sanma.
           0 => sayisalSirali(
             '$veri bu uzunluk kaç farklı değer alabilir?',
             adet,
-            [adet + 2, adet - 1, adet + 1, hi, lo, q - p],
+            [adet + 2, adet - 1, adet + 1, hi, adet - 2, lo, q - p],
             '$kural Uygun tam sayılar en küçüğü $lo, en büyüğü $hi olmak '
                 'üzere $adet tanedir.',
             sira,

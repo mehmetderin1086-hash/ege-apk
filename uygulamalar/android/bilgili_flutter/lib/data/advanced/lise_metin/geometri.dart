@@ -44,19 +44,19 @@ List<String> _celdirici(
   final h = ayikla(hatalar), k = ayikla(komsular);
   final hA = [
     for (final x in h)
-      if (x.$1 < anahtar) x.$2,
+      if (x.$1 < anahtar) x,
   ];
   final hU = [
     for (final x in h)
-      if (x.$1 > anahtar) x.$2,
+      if (x.$1 > anahtar) x,
   ];
   final kA = [
     for (final x in k)
-      if (x.$1 < anahtar) x.$2,
+      if (x.$1 < anahtar) x,
   ];
   final kU = [
     for (final x in k)
-      if (x.$1 > anahtar) x.$2,
+      if (x.$1 > anahtar) x,
   ];
   int eksik(int r) => max(0, r - hA.length) + max(0, 3 - r - hU.length);
   bool olur(int r) =>
@@ -77,10 +77,39 @@ List<String> _celdirici(
   ];
   final hedef = sira % 4;
   final r = izin.contains(hedef) ? hedef : izin[sira ~/ 4 % izin.length];
-  return [
-    ...[...hA, ...kA].take(r),
-    ...[...hU, ...kU].take(3 - r),
-  ];
+  final alt = [...hA, ...kA].take(r).toList();
+  final ust = [...hU, ...kU].take(3 - r).toList();
+  // Anahtar iki çeldiricinin geometrik ortası olmasın (x/2 ile 2x gibi;
+  // "yarısı ve iki katı seçeneklerde olan" ipucu). Böyle bir çiftin bir
+  // öğesi aynı yandaki sıradaki adayla değiştirilir: önce tipik hatalar
+  // (önce üstte, sonra altta), sonra komşular. Hedef sıra değişmez.
+  final kare = anahtar * anahtar;
+  bool orta(num p, num q) => (p * q - kare).abs() <= 1e-9 * kare;
+  bool ciftVar() => alt.any((p) => ust.any((q) => orta(p.$1, q.$1)));
+  bool degistir(
+    List<(num, String)> secilen,
+    List<(num, String)> karsi,
+    List<(num, String)> adaylar,
+  ) {
+    final i = secilen.indexWhere((p) => karsi.any((q) => orta(p.$1, q.$1)));
+    if (i < 0) return false;
+    for (final x in adaylar) {
+      if (secilen.contains(x) || karsi.any((q) => orta(x.$1, q.$1))) continue;
+      secilen[i] = x;
+      return true;
+    }
+    return false;
+  }
+
+  for (var tur = 0; tur < 3 && ciftVar(); tur++) {
+    if (!(degistir(ust, alt, hU) ||
+        degistir(alt, ust, hA) ||
+        degistir(ust, alt, kU) ||
+        degistir(alt, ust, kA))) {
+      break;
+    }
+  }
+  return [for (final x in [...alt, ...ust]) x.$2];
 }
 
 /// Komşu değerlerin anahtara uzaklığı (adım sayısı). Üstte ve altta farklı
@@ -97,7 +126,10 @@ List<num> _komsu(num anahtar, num adim) => [
 ];
 
 /// Tam sayı yanıtlı soru; çeldiriciler [_celdirici] ile seçilir. Komşu
-/// değerler anahtarın büyüklüğüne göre 1, 5 ya da 10 adımlıdır.
+/// değerler anahtarın büyüklüğüne göre 1, 5 ya da 10 adımlıdır. [alt] ve
+/// [ust] verilirse çeldiriciler bu iki değerin (ikisi de hariç) arasında
+/// kalır: kökün kendi verisiyle çelişen (küçük üçgenin alanının büyüğünkünü
+/// aşması, parçanın bütünden uzun olması gibi) seçenek kurulmaz.
 AdvancedItem _sayi(
   String prompt,
   int dogru,
@@ -105,9 +137,11 @@ AdvancedItem _sayi(
   String aciklama,
   int sira, {
   String unit = '',
+  int alt = 0,
+  int? ust,
 }) {
   // Uzunluk, alan, hacim ve sayım yanıtlarında yalnız pozitif değerler.
-  bool gecer(int x) => x > 0;
+  bool gecer(int x) => x > alt && (ust == null || x < ust);
   final adim = dogru.abs() >= 200 ? 10 : (dogru.abs() >= 40 ? 5 : 1);
   final yazim = birimli('$dogru', unit);
   return AdvancedItem(
@@ -364,7 +398,9 @@ final lmGeometri = <AdvancedFamily>[
           be,
           // C iç açısını bulma, dış açıyı iç açı sanma, B'nin dış açısını
           // verme, çıkarmak yerine toplama, A'nın dış açısını verme, A'nın
-          // iç açısı yerine dış açısını çıkarma, üçgeni ikizkenar sanma.
+          // iç açısı yerine dış açısını çıkarma, üçgeni A = B ikizkenarı
+          // sanma. (B = C sanmak (180° − A) / 2 verir; A hep tek olduğundan
+          // bu değer tam sayı olmaz ve eklenmez.)
           [
             180 - d,
             180 - al - d,
@@ -373,7 +409,6 @@ final lmGeometri = <AdvancedFamily>[
             180 - al,
             d - (180 - al),
             if (d.isEven) d ~/ 2,
-            if (al.isOdd) (180 - al) ~/ 2,
           ],
           'Bir dış açının ölçüsü, kendisine komşu olmayan iki iç açının '
               'ölçüleri toplamına eşittir: $al° + B = $d°, B = $d° − $al° = $be°.',
@@ -818,6 +853,8 @@ final lmGeometri = <AdvancedFamily>[
               '|BC| = $de·${n * s} / $ad = $bc cm.',
           sira,
           unit: 'cm',
+          // [DE] ∥ [BC] ve D, [AB] üzerinde olduğundan |BC| > |DE|.
+          alt: de,
         );
       }
       final k = 1 + b, s1 = m * m * k, s2 = n * n * k;
@@ -840,6 +877,7 @@ final lmGeometri = <AdvancedFamily>[
                 '${m * m}/${n * n}. Büyük alan $s1·${n * n} / ${m * m} = $s2 cm².',
             sira,
             unit: 'cm²',
+            alt: s1,
           );
         case 1:
           return _sayi(
@@ -860,6 +898,7 @@ final lmGeometri = <AdvancedFamily>[
                 '${m * m}/${n * n}. Küçük alan $s2·${m * m} / ${n * n} = $s1 cm².',
             sira,
             unit: 'cm²',
+            ust: s2,
           );
         case 2:
           final p1 = m * (k + 2), p2 = n * (k + 2);
@@ -881,6 +920,7 @@ final lmGeometri = <AdvancedFamily>[
                 'Ç = $p1·$n / $m = $p2 cm.',
             sira,
             unit: 'cm',
+            alt: p1,
           );
         case 3:
           final e1 = m * (k + 1), e2 = n * (k + 1);
@@ -903,6 +943,7 @@ final lmGeometri = <AdvancedFamily>[
                 'oranı $m/$n olur. Karşılık gelen kenar $e1·$n / $m = $e2 cm.',
             sira,
             unit: 'cm',
+            alt: e1,
           );
         default:
           final e1 = m * (k + 1), e2 = n * (k + 1);
@@ -926,6 +967,7 @@ final lmGeometri = <AdvancedFamily>[
                 '$s2 cm².',
             sira,
             unit: 'cm²',
+            alt: s1,
           );
       }
     },
@@ -992,6 +1034,8 @@ final lmGeometri = <AdvancedFamily>[
               '$m/$n olur. |BD| = $bc·$m / ${m + n} = $bd cm.',
           sira,
           unit: 'cm',
+          // D, [BC] üzerinde olduğundan |BD| < |BC|.
+          ust: bc,
         );
       }
       if (c % 3 == 1) {
@@ -1066,6 +1110,8 @@ final lmGeometri = <AdvancedFamily>[
               'olduğundan |BC| = ${x + 2 * r} − $x = ${2 * r} cm.',
           sira,
           unit: 'cm',
+          // Hipotenüs dik kenardan uzundur: |BC| > |AB|.
+          alt: x,
         ),
         _ => _sayi(
           '$giris |AB| = $x cm ve |AD| = $r cm olduğuna göre ABD üçgeninin '

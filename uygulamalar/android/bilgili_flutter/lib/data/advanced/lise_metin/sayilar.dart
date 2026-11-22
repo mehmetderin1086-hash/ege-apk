@@ -5648,12 +5648,21 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
           (c == 9 ? 0 : 4 * w);
       final toplam = goreli * t;
       final uz2 = toplam - uz1;
+      // Boylar eşitse “Uzunlukları 120 m ve 120 m” yerine tek değer yazılır;
+      // trenler o zaman boylarıyla ayırt edilemediğinden “birinci, ikinci” ya
+      // da “sırasıyla” denmez.
+      final esitBoy = uz1 == uz2;
+      final trenler = esitBoy
+          ? 'Her birinin uzunluğu $uz1 m olan iki tren'
+          : 'Uzunlukları $uz1 m ve $uz2 m olan iki tren';
       if (c == 9) {
+        final bir = esitBoy ? 'Trenlerden birinin' : 'Birinci trenin';
+        final obur = esitBoy ? 'diğer trenin' : 'ikinci trenin';
         return _tam(
-          'Uzunlukları $uz1 m ve $uz2 m olan iki tren paralel raylarda birbirine doğru '
-              'ilerliyor. Birinci trenin hızı ${_hizYaz(v1)} olup trenlerin ön uçlarının '
-              'karşılaştığı andan arka uçlarının ayrıldığı ana kadar $t saniye geçiyor. '
-              'İkinci trenin hızı kaç km/sa olur?',
+          '$trenler paralel raylarda birbirine doğru ilerliyor. $bir hızı '
+              '${_hizYaz(v1)} olup trenlerin ön uçlarının karşılaştığı andan arka '
+              'uçlarının ayrıldığı ana kadar $t saniye geçiyor. '
+              '${esitBoy ? 'Diğer' : 'İkinci'} trenin hızı kaç km/sa olur?',
           v2 * 18 ~/ 5,
           [
             (goreli + v1) * 18 ~/ 5,
@@ -5661,18 +5670,24 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
             ?_bol(toplam * 18, 5 * t * 2),
           ],
           'İki tren birbirini geçerken toplam ${uz1 + uz2} m yol alınır; göreli hız '
-              '${uz1 + uz2} / $t = $goreli m/s olur. Birinci trenin hızı $v1 m/s '
-              'olduğundan ikinci trenin hızı $goreli − $v1 = $v2 m/s = '
+              '${uz1 + uz2} / $t = $goreli m/s olur. $bir hızı $v1 m/s '
+              'olduğundan $obur hızı $goreli − $v1 = $v2 m/s = '
               '${v2 * 18 ~/ 5} km/sa bulunur.',
           birim: 'km/sa',
           pozitif: true,
         );
       }
       final zit = c == 4;
+      // Hızlar yalnız zıt yönde eşit olabilir: “sırasıyla 54 km/sa ve 54 km/sa”
+      // yerine “ikisi de 54 km/sa” yazılır.
+      final esitHiz = v1 == v2;
+      final hizlar = esitHiz
+          ? ', ikisi de ${_hizYaz(v1)} sabit hızla'
+          : ' ${esitBoy ? '' : 'sırasıyla '}${_hizYaz(v1)} ve ${_hizYaz(v2)} '
+                'sabit hızlarla';
       return _tam(
-        'Uzunlukları $uz1 m ve $uz2 m olan iki tren paralel raylarda '
-            '${zit ? 'birbirine doğru' : 'aynı yönde'} sırasıyla ${_hizYaz(v1)} ve '
-            '${_hizYaz(v2)} sabit hızlarla ilerliyor. ${zit ? 'Trenlerin ön uçlarının karşılaştığı andan arka uçlarının ayrıldığı ana kadar' : 'Hızlı trenin ön ucunun yavaş trenin arka ucuna yetiştiği andan hızlı trenin yavaş treni tamamen geçtiği ana kadar'} '
+        '$trenler paralel raylarda ${zit ? 'birbirine doğru' : 'aynı yönde'}'
+            '$hizlar ilerliyor. ${zit ? 'Trenlerin ön uçlarının karşılaştığı andan arka uçlarının ayrıldığı ana kadar' : 'Hızlı trenin ön ucunun yavaş trenin arka ucuna yetiştiği andan hızlı trenin yavaş treni tamamen geçtiği ana kadar'} '
             'kaç saniye geçer?',
         t,
         [
@@ -5681,7 +5696,7 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
           ?_bol(uz2, goreli),
           ?_bol(toplam, v1),
         ],
-        '${_hizYaz(v1)} = $v1 m/s ve ${_hizYaz(v2)} = $v2 m/s olur. '
+        '${_hizYaz(v1)} = $v1 m/s${esitHiz ? '' : ' ve ${_hizYaz(v2)} = $v2 m/s'} olur. '
             '${zit ? 'Zıt yönde' : 'Aynı yönde'} hareket eden trenlerin göreli hızı '
             '${zit ? '$v1 + $v2' : '$v1 − $v2'} = $goreli m/s, alınması gereken yol '
             '$uz1 + $uz2 = $toplam m olduğundan süre $toplam / $goreli = $t s bulunur.',
@@ -5823,9 +5838,10 @@ AdvancedItem _birimUret(int a, int b, int c, int w) {
     case 2:
       final en = 40 + 10 * a, boy = 25 * (2 + b);
       final alan = en * boy;
+      // Kenarlar eşitse (50 m ve 50 m gibi) tarla kare olarak anlatılır.
       return ondalik(
-        'Kenarları $en m ve $boy m olan dikdörtgen biçimli bir tarlanın alanı kaç '
-            'dekardır? (1 dekar = 1000 m²)',
+        '${en == boy ? 'Bir kenarı $en m olan kare' : 'Kenarları $en m ve $boy m olan dikdörtgen'} '
+            'biçimli bir tarlanın alanı kaç dekardır? (1 dekar = 1000 m²)',
         alan / 1000,
         [alan / 100, alan / 10000, 2 * (en + boy) / 1000],
         'Tarlanın alanı $en · $boy = $alan m² olur. 1 dekar = 1000 m² olduğundan '
@@ -5837,9 +5853,11 @@ AdvancedItem _birimUret(int a, int b, int c, int w) {
           y = 20 + 5 * (b % 10) + 50 * (w ~/ 2),
           z = 30 + 10 * (b ~/ 10) + (a % 2) * 5 + 20 * (w % 2);
       final hacim = x * y * z;
+      // Üç boyut eşitse akvaryum küp olarak anlatılır.
       return ondalik(
-        'Boyutları $x cm, $y cm ve $z cm olan dikdörtgenler prizması biçimindeki bir '
-            'akvaryum tamamen dolduğunda kaç litre su alır? (1 L = 1 dm³)',
+        '${x == y && y == z ? 'Bir ayrıtının uzunluğu $x cm olan küp' : 'Boyutları $x cm, $y cm ve $z cm olan dikdörtgenler prizması'} '
+            'biçimindeki bir akvaryum tamamen dolduğunda kaç litre su alır? '
+            '(1 L = 1 dm³)',
         hacim / 1000,
         [hacim / 100, hacim / 10000, (x * y + y * z + x * z) * 2 / 1000],
         'Hacim $x · $y · $z = $hacim cm³ olur. 1 dm³ = 1000 cm³ ve 1 L = 1 dm³ '
@@ -5859,13 +5877,19 @@ AdvancedItem _birimUret(int a, int b, int c, int w) {
       final ml = const [200, 250, 400, 500, 750][a % 5];
       final adet = 12 + 2 * b + 40 * (a ~/ 5) + 200 * w;
       final litre = ml * adet / 1000;
-      return ondalik(
+      // Şişe sayısı tam sayıdır; 1,2 ya da 0,012 gibi tam olmayan çeldiriciler
+      // hemen elenir. Çeldiriciler tam sayı olan hatalardan gelir: 1 L = 10000 mL
+      // ya da 1 L = 100 mL sanmak, bölmek yerine çarpmak (litre · şişe hacmi);
+      // yetmezse yakın tam sayılar.
+      return _tam(
         '${d(litre)} L zeytinyağı, her biri $ml mL alan şişelere dolduruluyor. Bu iş '
             'için kaç şişe gerekir?',
-        adet.toDouble(),
-        [litre * 100 / ml, litre / ml * 10, adet + 2.0],
+        adet,
+        [10 * adet, ?_bol(adet, 10), ?_bol(adet * ml * ml, 1000000)],
         '${d(litre)} L = ${d(litre * 1000)} mL olur (1 L = 1000 mL). Şişe sayısı '
             '${d(litre * 1000)} / $ml = $adet bulunur.',
+        pozitif: true,
+        komsuAdim: 2,
       );
     case 6:
       final hektarMi = b >= 10;
@@ -5884,9 +5908,10 @@ AdvancedItem _birimUret(int a, int b, int c, int w) {
     case 7:
       final en = 120 + 20 * a, boy = 150 + 25 * b;
       final alan = en * boy;
+      // Kenarlar eşitse (200 cm ve 200 cm gibi) halı kare olarak anlatılır.
       return ondalik(
-        'Kenar uzunlukları $en cm ve $boy cm olan dikdörtgen biçimli bir halının alanı '
-            'kaç metrekaredir?',
+        '${en == boy ? 'Bir kenarının uzunluğu $en cm olan kare' : 'Kenar uzunlukları $en cm ve $boy cm olan dikdörtgen'} '
+            'biçimli bir halının alanı kaç metrekaredir?',
         alan / 10000,
         [alan / 1000, alan / 100, 2 * (en + boy) / 100],
         'Halının alanı $en · $boy = $alan cm² olur. 1 m² = 10000 cm² olduğundan '
