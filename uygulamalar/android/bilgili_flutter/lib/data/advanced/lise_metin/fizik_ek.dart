@@ -5415,8 +5415,17 @@ AdvancedItem _acikHava(int a, int b, int k) {
             'yerine yoğunluğu $ds g/cm³ olan bir sıvıyla yapılıyor. Tüpte '
             'yükselen sıvı sütununun yüksekliği kaç cm olur? $_civaNot',
         h,
-        // Ek: cıvanın yoğunluğunu unutmak, sıvının yoğunluğuyla çarpmak.
-        [p0 * d / 1360, p0 * 13.6, p0, p0 * 100 / d, p0 * 13.6 * d / 100],
+        // Ek: cıvanın yoğunluğunu unutmak, sıvının yoğunluğuyla çarpmak,
+        // yoğunluk oranını iki kez uygulamak, basıncı 76 cmHg almak.
+        [
+          p0 * d / 1360,
+          p0 * 13.6,
+          p0,
+          p0 * 100 / d,
+          p0 * 13.6 * d / 100,
+          if (p0 != 76) 76 * 1360 / d,
+          h * 100 / d,
+        ],
         '$esit $p0·13,6 = h·$ds. Buradan h = $hs cm bulunur.',
         unit: 'cm',
         sira: s,

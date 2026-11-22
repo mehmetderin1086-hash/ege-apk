@@ -2140,8 +2140,9 @@ const _disKonu = [
   ('Osmanlı borçları', 'Osmanlı borçları ile'),
 ];
 
-// (bilgi, konu, yasak maske, yanlış önermede bilginin önüne konabilecek
-// konular). Yükleme özne olarak konunun adı gelir; bilgi konunun adını anmaz.
+// (bilgi, konu, yasak maske, yanlış önermede ve eşleştirme çeldiricisinde
+// bilgiye yakıştırılabilecek konular). Yükleme özne olarak konunun adı gelir;
+// bilgi konunun adını anmaz.
 // Balkan Antantı ile Sadabat Paktı'nın ortak arka planı (İtalya'nın
 // yayılmacılığı) karşılıklı maskelidir. Yalnız borçlara, mübadeleye ya da bir
 // bölgeye uyan bilgiler (ödenmek, paylaştırılmak, kapsam dışı bırakmak,
@@ -2312,8 +2313,8 @@ const _siyasiAd = [
   ('1950 seçimleri', '1950 seçimlerine'),
 ];
 
-// (bilgi, parti ya da gelişme, yasak maske, yanlış önermede bilginin önüne
-// konabilecek değerler; −1 öbeğin tümü). Partiler (0–4) ve olaylar (5–12) ayrı
+// (bilgi, parti ya da gelişme, yasak maske, yanlış önermede ve eşleştirme
+// çeldiricisinde bilgiye yakıştırılabilecek değerler; −1 öbeğin tümü). Partiler (0–4) ve olaylar (5–12) ayrı
 // öbeklerdir. Maskeler, bilginin başka bir parti ya da gelişmeyi anan ya da
 // onunla doğrudan bağlantılı olduğu durumları (ör. Dörtlü Takrir'i verenlerin
 // kurduğu Demokrat Parti) işaretler. Olaylarda yanlış önerme yalnız bilgiye
