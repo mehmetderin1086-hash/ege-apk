@@ -1,8 +1,6 @@
 import 'package:bilgili_flutter/models/quiz_models.dart';
 import 'package:bilgili_flutter/services/native_bridge.dart';
 import 'package:bilgili_flutter/services/voice_answer_resolver.dart';
-import 'package:bilgili_flutter/state/arena_controller.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Question _activity(QuestionActivity activity) => Question(
@@ -84,47 +82,4 @@ void main() {
     expect(VoiceAnswerResolver.resolve('1 1 3', order), isNull);
     expect(QuizNarration.questionSegments(q, 4).single.text, contains('5. E.'));
   });
-
-  test(
-    'live host narrates manual response types without requesting microphone',
-    () async {
-      const channel = MethodChannel('com.mehmetderin.bilgiarena/native');
-      final messenger =
-          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-      final ctrl = ArenaController.inMemoryForTest();
-      final calls = <String>[];
-      NativeBridge.testMode = false;
-      messenger.setMockMethodCallHandler(channel, (call) async {
-        calls.add(call.method);
-        return true;
-      });
-      addTearDown(() {
-        ctrl.exitRound();
-        ctrl.dispose();
-        NativeBridge.testMode = true;
-        messenger.setMockMethodCallHandler(channel, null);
-      });
-      for (final format in [QuestionFormat.fill, QuestionFormat.multiSelect]) {
-        calls.clear();
-        expect(
-          ctrl.startConfiguredRound(
-            overrideSetup: RoundSetup(
-              questionCount: 1,
-              format: format,
-              liveVoiceHost: true,
-            ),
-            seed: 38,
-          ),
-          isTrue,
-        );
-        await Future<void>.delayed(const Duration(milliseconds: 15));
-        expect(ctrl.activeRound!.current.matchesFormat(format), isTrue);
-        expect(calls, contains('speak'));
-        expect(calls, isNot(contains('requestMicPermission')));
-        expect(calls, isNot(contains('startListening')));
-        expect(ctrl.livePhase, LiveVoicePhase.idle);
-        ctrl.exitRound();
-      }
-    },
-  );
 }

@@ -127,6 +127,9 @@ enum QuestionFormat {
   final String label;
   final IconData icon;
   const QuestionFormat(this.label, this.icon);
+
+  /// Arayüzde sunulan biçimler: banka yalnız çoktan seçmeli sorulardan oluşur.
+  static const sunulan = [mixed, visual, text];
 }
 
 enum ExamKind {

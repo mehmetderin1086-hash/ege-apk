@@ -1,42 +1,38 @@
 import 'package:bilgili_flutter/data/advanced/catalog.dart';
 import 'package:bilgili_flutter/data/advanced/lise_metin.dart';
 import 'package:bilgili_flutter/data/advanced/lise_metin/ortak.dart';
+import 'package:bilgili_flutter/data/advanced/secki.g.dart';
 import 'package:bilgili_flutter/state/arena_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('lise metin bankası 400 aileden 2.000.000 soru sunar', () {
+  test('seçki yalnız lise çoktan seçmeli ailelerden ayrışan vakaları sunar', () {
     expect(liseMetinFamilies, hasLength(400));
-    expect(liseMetinFamilies.map((f) => f.key).toSet(), hasLength(400));
+    final kaynak = {for (final f in AdvancedCatalog.kaynakAileler) f.key: f};
     var toplam = 0;
-    for (final f in liseMetinFamilies) {
-      expect(f.key, startsWith('lm_'));
+    for (final f in AdvancedCatalog.families) {
       expect(f.level, StudyLevel.lise, reason: f.key);
-      expect(f.visualKind, isNull, reason: f.key);
       expect(f.activityKind, isNull, reason: f.key);
       expect(f.creation, isNull, reason: f.key);
       expect(f.multiSelect, isNull, reason: f.key);
-      expect(f.count, lmAileBoyu, reason: f.key);
+      final secki = seckiler[f.key]!;
+      expect(f.count, secki.length);
+      expect(secki.length, inInclusiveRange(1, 50), reason: f.key);
+      expect(secki.toSet(), hasLength(secki.length), reason: f.key);
       toplam += f.count;
-      for (final i in [0, f.count ~/ 2, f.count - 1]) {
-        final q = f.questionAt(i);
-        expect(q.studyLevel, 'Lise');
-        expect(q.visual, isNull);
-        expect(q.activity, isNull);
-        expect(q.sourceModel, lmKaynak);
-        expect(q.matchesFormat(QuestionFormat.text), isTrue, reason: q.id);
+      for (var j = 0; j < f.count; j++) {
+        final q = f.questionAt(j);
+        expect(q.id, 'ak38_${f.key}_${secki[j]}');
+        expect(q.text, kaynak[f.key]!.build(secki[j]).prompt);
         expect(AdvancedCatalog.questionById(q.id)?.text, q.text);
       }
     }
-    expect(toplam, 2000000);
-    final eski = AdvancedCatalog.families
-        .where((f) => !f.key.startsWith('lm_'))
-        .fold<int>(0, (n, f) => n + f.count);
-    expect(eski, 1270439);
-    expect(AdvancedCatalog.all.length, 3270439);
-    expect(AdvancedCatalog.select(level: StudyLevel.lise).length, 2592093);
+    expect(toplam, AdvancedCatalog.all.length);
+    expect(AdvancedCatalog.all.length, 8443);
+    final metin = AdvancedCatalog.families.where((f) => f.sourceLabel == lmKaynak);
+    expect(metin.length, greaterThan(350));
   });
 
   test('lise metin paketi oynanabilir ve yalnız lise metin sorusu içerir', () {
@@ -45,7 +41,7 @@ void main() {
     final paket = ctrl.offlinePacks.singleWhere(
       (p) => p.id == 'builtin_sb_ak38_lise_metin',
     );
-    expect(paket.questions.length, greaterThanOrEqualTo(2000000));
+    expect(paket.questions.length, greaterThan(5000));
     ctrl.startPackRound(paket, maxQuestions: 12);
     final sorular = ctrl.activeRound!.questions;
     expect(sorular.map((q) => q.id).toSet(), hasLength(12));
@@ -53,6 +49,7 @@ void main() {
       expect(q.studyLevel, 'Lise', reason: q.id);
       expect(q.visual, isNull, reason: q.id);
       expect(q.activity, isNull, reason: q.id);
+      expect(q.options, hasLength(4), reason: q.id);
     }
     ctrl.exitRound();
   });

@@ -17,24 +17,24 @@ void main() {
             p.id == 'builtin_sb_ak38_lise' ||
             p.id == 'builtin_sb_ak38_universite',
       );
-      expect(levels.length, 2);
+      expect(levels.length, 1);
       final blooms = ctrl.offlinePacks.where(
         (p) => p.id.startsWith('builtin_sb_ak38_bloom_'),
       );
-      expect(blooms.length, 6);
+      expect(blooms.length, greaterThanOrEqualTo(5));
       expect(
         blooms.fold<int>(0, (size, p) => size + p.questions.length),
-        3270439,
+        8443,
       );
-      for (final bloom in BloomLevel.values) {
-        final pack = blooms.singleWhere((p) => p.id.endsWith('_${bloom.name}'));
+      for (final pack in blooms) {
+        final bloom = BloomLevel.values.singleWhere((b) => pack.id.endsWith('_${b.name}'));
         expect(pack.questions.first.bloom, bloom);
       }
       expect(
         levels.fold<int>(0, (count, p) => count + p.questions.length),
-        3270439,
+        8443,
       );
-      expect(ctrl.totalPoolCount, ctrl.personalQuestions.length + 3270439);
+      expect(ctrl.totalPoolCount, ctrl.personalQuestions.length + 8443);
       expect(
         ctrl.allQuestions[ctrl.personalQuestions.length].id,
         AdvancedCatalog.all.first.id,
@@ -42,7 +42,12 @@ void main() {
       for (final f in AdvancedCatalog.families) {
         expect(AdvancedCatalog.hasId(f.questionAt(0).id), isTrue);
         expect(AdvancedCatalog.hasId(f.questionAt(f.count - 1).id), isTrue);
-        expect(AdvancedCatalog.hasId('ak38_${f.key}_${f.count}'), isFalse);
+        final secki = f.ozgunSira!.toSet();
+        var disarida = 0;
+        while (secki.contains(disarida)) {
+          disarida++;
+        }
+        expect(AdvancedCatalog.hasId('ak38_${f.key}_$disarida'), isFalse);
       }
       for (final pack in levels) {
         ctrl.startPackRound(pack, maxQuestions: 6);
@@ -54,28 +59,20 @@ void main() {
     },
   );
 
-  test('academic response-format views partition the curriculum and preserve exact offsets', () {
-    const formats = [QuestionFormat.multipleChoice, QuestionFormat.multiSelect, QuestionFormat.trueFalse, QuestionFormat.fill,
-      QuestionFormat.creation, QuestionFormat.ordering, QuestionFormat.matching,
-      QuestionFormat.listening, QuestionFormat.pronunciation];
-    var count = 0;
-    for (final format in formats) {
-      final view = AdvancedCatalog.select(format: format);
-      expect(view.length, greaterThan(0), reason: format.label);
-      count += view.length;
-      for (final index in {0, view.length ~/ 2, view.length - 1}) {
-        final q = view[index];
-        expect(q.matchesFormat(format), isTrue, reason: q.id);
-        expect(AdvancedCatalog.questionById(q.id)?.text, q.text);
-      }
+  test('every academic question is a four-option multiple-choice question', () {
+    final all = AdvancedCatalog.all;
+    expect(AdvancedCatalog.select(format: QuestionFormat.multipleChoice).length, all.length);
+    for (final format in [QuestionFormat.multiSelect, QuestionFormat.trueFalse, QuestionFormat.fill,
+        QuestionFormat.creation, QuestionFormat.ordering, QuestionFormat.matching,
+        QuestionFormat.listening, QuestionFormat.pronunciation]) {
+      expect(AdvancedCatalog.select(format: format), isEmpty, reason: format.label);
     }
-    expect(count, AdvancedCatalog.all.length);
-    final ctrl = ArenaController.inMemoryForTest();
-    addTearDown(ctrl.dispose);
-    for (final mode in [GameMode.sprint, GameMode.classic]) {
-      final cfg = RoundSetup(mode: mode, liveVoiceHost: mode == GameMode.classic,
-          format: QuestionFormat.creation, questionCount: 8);
-      expect(ctrl.sampleQuestions(cfg, seed: 18).every((q) => q.responseType == ResponseType.choice), isTrue);
+    for (var i = 0; i < all.length; i += 7) {
+      final q = all[i];
+      expect(q.responseType, ResponseType.choice, reason: q.id);
+      expect(q.options, hasLength(4), reason: q.id);
+      expect(q.studyLevel, 'Lise', reason: q.id);
+      expect(AdvancedCatalog.questionById(q.id)?.text, q.text);
     }
   });
 
@@ -144,23 +141,6 @@ void main() {
       ctrl.exitRound();
     },
   );
-
-  test('a multi-select answer requires the exact set and records sorted indices', () {
-    final ctrl = ArenaController.inMemoryForTest();
-    addTearDown(ctrl.dispose);
-    final q = AdvancedCatalog.select(format: QuestionFormat.multiSelect).first;
-    ctrl.startQuestionPractice(q);
-    final r = ctrl.activeRound!;
-    expect(ctrl.useFiftyFiftyJoker(), isFalse);
-    ctrl.submitChoice(0);
-    expect(r.revealed, isFalse);
-    final correct = r.current.multiSelect!.correct.toSet();
-    ctrl.submitMultiple({...correct, -1});
-    expect(r.revealed, isFalse);
-    ctrl.submitMultiple(correct);
-    expect(r.answers.single.correct, isTrue);
-    expect(r.answers.single.submittedSequence, correct.toList()..sort());
-  });
 
   test('round sampling respects visuals, topic, hidden questions and seed', () {
     final ctrl = ArenaController.inMemoryForTest();
@@ -250,15 +230,10 @@ void main() {
       highSchool.items.first.id,
       AdvancedCatalog.select(level: StudyLevel.lise).first.id,
     );
-    final filtered = await task(
+    final university = await task(
       PoolCollection.university,
       firstBrowserPage,
-      query: 'a',
     ).run();
-    expect(filtered.items, hasLength(4));
-    expect(
-      filtered.items.first.id,
-      AdvancedCatalog.select(level: StudyLevel.universite).first.id,
-    );
+    expect(university.items, isEmpty);
   });
 }

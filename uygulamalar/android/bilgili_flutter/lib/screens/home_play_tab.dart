@@ -797,7 +797,7 @@ class _HomePlayTabState extends State<HomePlayTab> {
               ),
               const SizedBox(height: 8),
               ArenaScrollPills<QuestionFormat>(
-                items: QuestionFormat.values,
+                items: QuestionFormat.sunulan,
                 selected: setup.format,
                 labelBuilder: (f) => f.label,
                 iconBuilder: (f) => f.icon,

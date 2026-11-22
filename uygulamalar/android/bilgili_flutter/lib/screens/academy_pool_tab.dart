@@ -308,7 +308,7 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
               ),
               const SizedBox(height: 10),
               ArenaScrollPills<PoolCollection>(
-                items: PoolCollection.values,
+                items: const [PoolCollection.all, PoolCollection.personal, PoolCollection.highSchool],
                 selected: _collection,
                 labelBuilder: (c) => c.label,
                 onSelected: (c) => setState(() {
@@ -341,7 +341,7 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
               ),
               const SizedBox(height: 8),
               ArenaScrollPills<QuestionFormat>(
-                items: QuestionFormat.values,
+                items: QuestionFormat.sunulan,
                 selected: _filterFormat,
                 labelBuilder: (f) => f.label,
                 onSelected: (f) => setState(() {
