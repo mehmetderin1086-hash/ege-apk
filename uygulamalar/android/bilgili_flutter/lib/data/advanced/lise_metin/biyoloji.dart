@@ -1854,7 +1854,7 @@ final _f08 = lmAile(
       case 5:
         final mayoz = son * _kesirPay[j] ~/ 4;
         return say(
-          'Bir memelinin testisinde $k eşey ana hücresi art arda $n kez mitoz '
+          'Bir memelinin testisinde $k eşey ana hücresi ${_kez(n)} mitoz '
               'geçiriyor. Oluşan hücrelerin ${_kesirSoz[j]} mayoz geçirdiğine göre '
               'en çok kaç sperm hücresi oluşur?',
           4 * mayoz,
@@ -1868,7 +1868,7 @@ final _f08 = lmAile(
       case 6:
         final mayoz = son * _kesirPay[j] ~/ 4;
         return say(
-          'Bir memelinin yumurtalığında $k eşey ana hücresi art arda $n kez '
+          'Bir memelinin yumurtalığında $k eşey ana hücresi ${_kez(n)} '
               'mitoz geçiriyor. Oluşan hücrelerin ${_kesirSoz[j]} mayoz '
               'geçirdiğine göre en çok kaç yumurta hücresi oluşur?',
           mayoz,
@@ -1913,7 +1913,7 @@ final _f08 = lmAile(
       default:
         final mayoz = son * _kesirPay[j] ~/ 4;
         return say(
-          'Bir memelinin yumurtalığında $k eşey ana hücresi art arda $n kez '
+          'Bir memelinin yumurtalığında $k eşey ana hücresi ${_kez(n)} '
               'mitoz geçiriyor. Oluşan hücrelerin ${_kesirSoz[j]} mayoz '
               'geçirdiğine göre mayozlar sonunda en çok kaç kutup hücresi oluşur?',
           3 * mayoz,
@@ -2167,8 +2167,8 @@ final _f10 = lmAile(
         'çoğalıyor. $tek';
     final ikiAsama =
         "DNA'larındaki azotun tamamı ¹⁵N (ağır azot) olan $k bakteri önce "
-        'yalnız ¹⁴N içeren besiyerinde art arda $n1 kez, ardından yalnız ¹⁵N '
-        'içeren besiyerinde art arda $m kez bölünüyor. $tek';
+        'yalnız ¹⁴N içeren besiyerinde ${_kez(n1)}, ardından yalnız ¹⁵N '
+        'içeren besiyerinde ${_kez(m)} bölünüyor. $tek';
     final ozet =
         '${n * sure} / $sure = $n eşlenme sonunda $k · 2${_ust(n)} = $top DNA '
         'molekülü oluşur. Başlangıçtaki ${2 * k} ağır zincir korunur ve ayrı '
@@ -2943,7 +2943,7 @@ final _f14 = lmAile(
 const _besinZincirleri = [
   ['ot', 'çekirge', 'kurbağa', 'yılan', 'şahin'],
   ['fitoplankton', 'zooplankton', 'hamsi', 'palamut', 'yunus'],
-  ['yaprak', 'tırtıl', 'serçe', 'yılan', 'kartal'],
+  ['meşe ağacı', 'tırtıl', 'serçe', 'yılan', 'kartal'],
   ['su yosunu', 'su piresi', 'küçük balık', 'turna balığı', 'balıkçıl'],
   ['bitki', 'yaprak biti', 'uğur böceği', 'örümcek', 'kertenkele'],
 ];
@@ -4289,3 +4289,6 @@ final _f20 = lmAile(
   exam: ExamKind.tyt,
   lesson: 'Biyoloji',
 );
+
+/// Bölünme sayısını yazar: 1 için "bir kez", diğerleri için "art arda n kez".
+String _kez(int n) => n == 1 ? 'bir kez' : 'art arda $n kez';

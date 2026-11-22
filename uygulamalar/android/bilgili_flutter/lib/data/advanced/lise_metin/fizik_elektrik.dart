@@ -1194,7 +1194,7 @@ final lmFizikElektrik = <AdvancedFamily>[
       final n = (b + 1) * t ~/ 4;
       final v = 3 * (a + 1) * (b + 1) / 20;
       return _ondalikSira(
-        'Yarıçapı ${tr(r)} m olan bir çark sabit hızla dönerken $t saniyede '
+        'Yarıçapı ${tr(r)} m olan bir çark sabit süratle dönerken $t saniyede '
         '$n tam devir yapıyor. Çarkın kenarındaki bir noktanın çizgisel '
         'hızının büyüklüğü kaç m/s olur? (π = 3 alınız.)',
         v,

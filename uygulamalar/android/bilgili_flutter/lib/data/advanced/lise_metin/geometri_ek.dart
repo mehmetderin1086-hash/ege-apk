@@ -2657,8 +2657,9 @@ final lmGeometriEk = <AdvancedFamily>[
         // Köşegen: (|AB| + |DC|) / 2, yükseklik ve köşegen bir Pisagor üçlüsü.
         final k = 1 + 20 ~/ l1, dd = k * l1, h = k * l2, kg = k * w;
         final q = 1 + b, p = 2 * dd - q;
-        // Pisagor yerine toplama, ara sonucu ya da yüksekliği yanıt sanma.
-        return sayisalSirali(
+        // Pisagor yerine toplama, ara sonucu ya da yüksekliği yanıt sanma;
+        // komşu değerler AHC üçgeninin dik kenarlarından uzun tutulur.
+        return _uzunlukSirali(
           'ABCD ikizkenar yamuğunda [AB] ∥ [DC], |AB| = $p cm, |DC| = $q cm '
               've yamuğun yüksekliği $h cm olarak veriliyor. Buna göre [AC] '
               'köşegeninin uzunluğu kaç cm olur?',
@@ -2668,8 +2669,7 @@ final lmGeometriEk = <AdvancedFamily>[
               '($p + $q) / 2 = $dd cm olur. AHC dik üçgeninde |AC| = √($dd² + '
               '$h²) = $kg cm.',
           sira,
-          unit: 'cm',
-          positive: true,
+          alt: math.max(dd, h),
         );
       }
       var q = 2 + b;
@@ -2701,17 +2701,17 @@ final lmGeometriEk = <AdvancedFamily>[
             unit: 'cm',
             positive: true,
           ),
-          // Pisagor yerine toplama (d ya da 2d ile), ikiye bölmeyi unutma,
-          // yüksekliği yan kenar sanma ve çıkarma.
-          4 => sayisalSirali(
+          // Pisagor yerine toplama (d ya da 2d ile), ikiye bölmeyi unutma ve
+          // yüksekliği yan kenar sanma. Eğik yan kenar dik kenarlardan (h, d)
+          // kısa olamayacağından |h − d| ve onlardan kısa komşular kullanılmaz.
+          4 => _uzunlukSirali(
             '$giris olup |AB| = $p cm, |DC| = $q cm ve yamuğun yüksekliği $h '
                 'cm olarak veriliyor. Buna göre |AD| kaç cm olur?',
             w,
-            [h + d, h + 2 * d, 2 * d, h, (h - d).abs()],
+            [h + d, h + 2 * d, 2 * d, h],
             '$ayir |AD| = √($h² + $d²) = $w cm.',
             sira,
-            unit: 'cm',
-            positive: true,
+            alt: math.max(h, d),
           ),
           // |AB| için d ya da hiç parça eklememe, 4d ekleme; parçayı w − h
           // sanma ve dikmeleri çevreye katma.
@@ -2744,17 +2744,17 @@ final lmGeometriEk = <AdvancedFamily>[
           'C köşesinden [AB] tabanına inen dikmenin ayağı H olsun; AHCD bir '
           'dikdörtgen olduğundan |HB| = $p − $q = $l1 cm olur.';
       return switch (c) {
-        // Pisagor yerine toplama ya da çıkarma, |AD| değerini, farkı ya da
-        // büyük tabanı yanıt sanma.
-        6 => sayisalSirali(
+        // Pisagor yerine toplama, |AD| değerini, farkı ya da büyük tabanı
+        // yanıt sanma; komşu değerler CHB üçgeninin dik kenarlarından uzun
+        // tutulur (|l2 − l1| gibi dikmeden kısa bir yan kenar kullanılmaz).
+        6 => _uzunlukSirali(
           '$giris |AB| = $p cm, |DC| = $q cm ve |AD| = $l2 cm olduğuna göre '
               '|BC| kaç cm olur?',
           w,
-          [l1 + l2, l2, p, (l2 - l1).abs(), l1],
+          [l1 + l2, l2, p, l1],
           '$dikme CHB dik üçgeninde |BC| = √($l2² + $l1²) = $w cm.',
           sira,
-          unit: 'cm',
-          positive: true,
+          alt: math.max(l1, l2),
         ),
         // Pisagor yerine çıkarma ya da toplama, farkı ya da |BC| değerini
         // yanıt sanma.
@@ -3248,19 +3248,26 @@ final lmGeometriEk = <AdvancedFamily>[
           final r = 2 + (a + b) % 25;
           final R = r + 1 + b == 2 * r ? r + 21 + b : r + 1 + b;
           final fark = R * R - r * r;
-          // Karekök almayı unutma, işaret hatası, yarıçap farkı ve karekök
-          // yerine ikiye bölme.
-          return sayisalSirali(
+          // Küçük çemberin yarıçapı R'den kısadır: çeldiriciler de R'nin
+          // altında tutulur (işaret hatası √(R² + fark) her zaman R'yi aşar,
+          // kullanılmaz). Karekök almayı unutma, halkanın alanını küçük
+          // dairenin alanı sanma (√fark), yarıçap farkı ve karekök yerine
+          // ikiye bölme. (0, R) aralığında üç değer bulunmayan iki küçük
+          // vakada (R ≤ 4) r² ve R'nin üstündeki komşular eklenir.
+          return _uzunlukSirali(
             '$esMerkez farklı olan iki çemberden büyüğünün yarıçapı $R cm, iki '
                 'çember arasında kalan daire halkasının alanı ${_pi(fark)} cm² olduğuna '
                 'göre küçük çemberin yarıçapı kaç cm olur?',
             r,
-            [r * r, ?_tamKok(R * R + fark), R - r, ?_bol(r * r, 2)],
+            [
+              for (final x in [r * r, ?_tamKok(fark), R - r, ?_bol(r * r, 2)])
+                if (x < R) x,
+              if (R <= 4) ...[r * r, R + 1, R + 2],
+            ],
             'π·$R² − π·r² = ${_pi(fark)} eşitliğinden r² = ${R * R} − $fark = '
                 '${r * r}, r = $r cm bulunur.',
             sira,
-            unit: 'cm',
-            positive: true,
+            ust: R,
           );
         case 2:
           final aci = _halkaAci[b % 10], adim = _halkaAdim(aci);
@@ -4937,17 +4944,20 @@ final lmGeometriEk = <AdvancedFamily>[
       if (c == 8) {
         final xc = x1 + a % 3;
         // 2 ile çarpma yerine 4 ile çarpma, uzaklığı yanıt sanma, işaret
-        // hatası ve 2 ile çarpmayı unutma.
+        // hatası ve 2 ile çarpmayı unutma. Kökteki k > yy koşulunu bozan tek
+        // çeldirici koşulun dışarıda bıraktığı yy − h köküdür: uzaklık ve
+        // komşular yy'nin üstünde tutulur.
         return _tamSirali(
           'Analitik düzlemde A${_n(x1, yy)}, B${_n(x1 + w, yy)} ve '
               'C(${_m(xc)}, k) noktaları veriliyor. k > ${_m(yy)} olmak üzere ABC '
               'üçgeninin alanı ${tr(alan)} birimkare olduğuna göre k kaçtır?',
           yy + h,
-          [yy + 2 * h, h, yy - h, if (h.isEven) yy + h ~/ 2],
+          [yy + 2 * h, if (h > yy) h, yy - h, if (h.isEven) yy + h ~/ 2],
           '[AB] kenarı yatay olup uzunluğu $w birimdir. C noktasının AB '
               'doğrusuna uzaklığı k − ${_pz(yy)} olur: $w·(k − ${_pz(yy)}) / 2 = '
               '${tr(alan)}, k − ${_pz(yy)} = $h ve k = ${_m(yy + h)}.',
           sira,
+          alt: yy,
         );
       }
       final xx = yy, yc = x1 + a % 3;
@@ -4956,11 +4966,13 @@ final lmGeometriEk = <AdvancedFamily>[
             'C(k, ${_m(yc)}) noktaları veriliyor. k > ${_m(xx)} olmak üzere ABC '
             'üçgeninin alanı ${tr(alan)} birimkare olduğuna göre k kaçtır?',
         xx + h,
-        [xx + 2 * h, h, xx - h, if (h.isEven) xx + h ~/ 2],
+        // Yatay durumdaki gibi: k > xx koşulunu yalnız xx − h bozar.
+        [xx + 2 * h, if (h > xx) h, xx - h, if (h.isEven) xx + h ~/ 2],
         '[AB] kenarı düşey olup uzunluğu $w birimdir. C noktasının AB '
             'doğrusuna uzaklığı k − ${_pz(xx)} olur: $w·(k − ${_pz(xx)}) / 2 = '
             '${tr(alan)}, k − ${_pz(xx)} = $h ve k = ${_m(xx + h)}.',
         sira,
+        alt: xx,
       );
     },
     exam: ExamKind.ayt,
