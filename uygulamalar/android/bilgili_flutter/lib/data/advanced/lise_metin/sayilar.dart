@@ -424,11 +424,13 @@ AdvancedItem _kes(
 /// Değer sırası dengeli çeldirici seçimi: anahtardan küçük çeldirici sayısı
 /// [hedef] (0 … 3) olur. [hatalar] tipik hata değerleri, [komsular] anahtarın
 /// iki yanındaki komşu değerlerdir (yakından uzağa); ikililer (değer, yazım)
-/// biçimindedir. Öncelik: o yandaki hatalar, sonra o yandaki komşular. Anahtarı
-/// iki çeldiricinin tam ortasında bırakan (yanıtı ele veren simetrik çift) aday
-/// ancak o yanda başka aday kalmazsa alınır. Bir yanda aday yetmezse öbür yanın
-/// adaylarıyla tamamlanır. Yazımı anahtarla ya da birbiriyle aynı olan
-/// (`ayniSecenek`) adaylar atlanır.
+/// biçimindedir. Öncelik: o yandaki hatalar, sonra o yandaki komşular. Dört
+/// seçenekten üçünü eşit aralıklı yapan aday, aynı türden başka aday kaldıkça
+/// alınmaz (komşular anahtarla birlikte eşit aralıklı dizi kurup anahtarı dizinin
+/// ucunda ele vermesin). Anahtarı iki çeldiricinin tam ortasında bırakan
+/// (yanıtı ele veren simetrik çift) aday ancak o yanda başka aday kalmazsa
+/// alınır. Bir yanda aday yetmezse öbür yanın adaylarıyla tamamlanır. Yazımı
+/// anahtarla ya da birbiriyle aynı olan (`ayniSecenek`) adaylar atlanır.
 List<String> _dengeliSec(
   double yanit,
   String yanitYazim,
@@ -441,13 +443,28 @@ List<String> _dengeliSec(
   bool yeni((double, String) e) =>
       !ayniSecenek(e.$2, yanitYazim) &&
       !secilen.any((s) => ayniSecenek(s.$2, e.$2));
-  bool simetrik(double x) => secilen.any(
-    (s) => (x + s.$1 - 2 * yanit).abs() <= 1e-9 * (1 + yanit.abs()),
-  );
-  void tur(List<(double, String)> liste, bool simetriSerbest, bool serbest) {
+  bool esit(double p, double q) =>
+      (p - q).abs() <= 1e-9 * (1 + p.abs() + q.abs());
+  // 2: anahtar, x ile bir çeldiricinin tam ortasında; 1: x, seçeneklerden
+  // ikisiyle eşit aralıklı bir üçlü kurar; 0: hiçbiri.
+  int duzey(double x) {
+    if (secilen.any((s) => esit(x + s.$1, 2 * yanit))) return 2;
+    final d = [yanit, for (final s in secilen) s.$1];
+    for (var i = 0; i < d.length; i++) {
+      for (var j = i + 1; j < d.length; j++) {
+        final p = d[i], q = d[j];
+        if (esit(p + q, 2 * x) || esit(p + x, 2 * q) || esit(q + x, 2 * p)) {
+          return 1;
+        }
+      }
+    }
+    return 0;
+  }
+
+  void tur(List<(double, String)> liste, int enCok, bool serbest) {
     for (final e in liste) {
       if (secilen.length == 3) return;
-      if (!yeni(e) || (!simetriSerbest && simetrik(e.$1))) continue;
+      if (!yeni(e) || duzey(e.$1) > enCok) continue;
       final yan = e.$1 < yanit ? 0 : 1;
       if (!serbest) {
         if (kota[yan] == 0) continue;
@@ -458,10 +475,12 @@ List<String> _dengeliSec(
   }
 
   for (final serbest in const [false, true]) {
-    for (final simetriSerbest in const [false, true]) {
-      tur(hatalar, simetriSerbest, serbest);
-      tur(komsular, simetriSerbest, serbest);
-    }
+    tur(hatalar, 0, serbest);
+    tur(hatalar, 1, serbest);
+    tur(komsular, 0, serbest);
+    tur(komsular, 1, serbest);
+    tur(hatalar, 2, serbest);
+    tur(komsular, 2, serbest);
   }
   if (secilen.length != 3) {
     throw StateError('Eksik çeldirici: $yanitYazim → $secilen');
@@ -514,6 +533,14 @@ AdvancedItem _tamD(
     ),
     aciklama,
   );
+}
+
+/// Komşu değer aralığı: [birim] sayısının, [yanit] değerinin yaklaşık %5'i
+/// kadar olan katı (en az [birim]). Problemdeki miktarlar [birim] katı
+/// olduğundan komşu değerler de aynı “parça” yapısını korur.
+int _katAdim(int yanit, int birim) {
+  final k = (yanit / (20 * birim)).round();
+  return birim * (k < 1 ? 1 : k);
 }
 
 /// [_kes] gibi; değer sırası [_tamD] gibi dengelenir. Komşu değerler
@@ -4381,7 +4408,7 @@ AdvancedItem _polinomEsitlikUret(int a, int b, int c, int w) {
       );
       final C = const [5, -8, 9, -6][(a + 2 * b + w ~/ 3) % 4];
       final m = A + p, n = B - q, k = C + r;
-      return _tam(
+      return _tamD(
         '(m − $p)x² + (n + $q)x + k ${r < 0 ? '+' : '−'} ${r.abs()} = '
             '${_polinom([A, B, C])} eşitliği her x gerçek sayısı için sağlandığına '
             'göre m + n + k toplamı kaçtır?',
@@ -4400,7 +4427,7 @@ AdvancedItem _polinomEsitlikUret(int a, int b, int c, int w) {
       final carpim = _polCarp([p, q], [1, r, sv]);
       final d = (a + b).isEven != w.isOdd ? 2 : 1;
       final yanit = _katsayiAl(carpim, d);
-      return _tam(
+      return _tamD(
         '(${_polinom([p, q])}) · (${_polinom([1, r, sv])}) çarpımının ${_terimAdi(d)} '
         'kaçtır?',
         yanit,
@@ -4422,7 +4449,7 @@ AdvancedItem _polinomEsitlikUret(int a, int b, int c, int w) {
           n = const [-5, 3, -4, 7, 8][a ~/ 5] + (b ~/ 10) * 9 + 40 * (w ~/ 2);
       final toplam = (a + b).isEven != w.isOdd;
       final kat = _polCarp([1, p], [m, n]);
-      return _tam(
+      return _tamD(
         '(${_polinom([1, p])}) · (mx + n) = ${_polinom(kat)} eşitliği her x için '
             'doğru olduğuna göre m ${toplam ? '+' : '·'} n değeri kaçtır?',
         toplam ? m + n : m * n,
@@ -4488,7 +4515,7 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c, int w) {
       final carpim = _polCarp(_polCarp([1, -r1], [1, -r2]), [1, -r3]);
       final yanit = _katsayiAl(carpim, d);
       final ikiliToplam = r1 * r2 + r1 * r3 + r2 * r3;
-      return _tam(
+      return _tamD(
         '${_carpanX(r1)} · ${_carpanX(r2)} · ${_carpanX(r3)} çarpımının '
             '${_terimAdi(d)} kaçtır?',
         yanit,
@@ -4507,7 +4534,7 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c, int w) {
           (b ~/ 10) * 20 +
           40 * w;
       final K = m * q + p;
-      return _tam(
+      return _tamD(
         '(x² + mx ${p < 0 ? '−' : '+'} ${p.abs()}) · (${_polinom([1, q])}) çarpımında '
             'x teriminin katsayısı ${_n(K)} olduğuna göre m kaçtır?',
         m,
@@ -4525,7 +4552,7 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c, int w) {
         case 0 || 1 || 4:
           final eksi = v == 1;
           final sonuc = v == 4 ? C * n : C + n;
-          return _tam(
+          return _tamD(
             '${A == 1 ? '' : '$A'}x² ${eksi ? '−' : '+'} ${B}x + m = ($kx ${eksi ? '−' : '+'} n)² '
                 'eşitliği her x için doğru olduğuna göre m ${v == 4 ? '·' : '+'} n '
                 'değeri kaçtır?',
@@ -4537,7 +4564,7 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c, int w) {
             pozitif: true,
           );
         case 2:
-          return _tam(
+          return _tamD(
             'n > 0 olmak üzere ${A == 1 ? '' : '$A'}x² + mx + $C = ($kx + n)² eşitliği her '
                 'x için doğru olduğuna göre m + n değeri kaçtır?',
             B + n,
@@ -4547,7 +4574,7 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c, int w) {
             pozitif: true,
           );
         default:
-          return _tam(
+          return _tamD(
             'k > 0 olmak üzere mx² + ${B}x + $C = (kx + $n)² eşitliği her x için '
                 'doğru olduğuna göre m + k değeri kaçtır?',
             A + k,
@@ -4563,7 +4590,7 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c, int w) {
       final u = 2 + a % 5, v = const [3, -8, 4, 5, -7][a ~/ 5];
       final p = 1 + b % 5, q = 2 + b ~/ 5 + 4 * w;
       final A = u + v, B = -u * p + v * q;
-      return _tam(
+      return _tamD(
         'm(x − $p) + n(x + $q) = ${_polinom([A, B])} eşitliği her x için doğru '
             'olduğuna göre m · n çarpımı kaçtır?',
         u * v,
@@ -4580,7 +4607,7 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c, int w) {
       final carpim = _polCarp([1, p, q], [1, r, sv]);
       final d = (a + b).isEven != w.isOdd ? 2 : 1;
       final yanit = _katsayiAl(carpim, d);
-      return _tam(
+      return _tamD(
         '(${_polinom([1, p, q])}) · (${_polinom([1, r, sv])}) çarpımının '
         '${_terimAdi(d)} kaçtır?',
         yanit,
@@ -4618,7 +4645,7 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c, int w) {
         -10,
       ][b];
       final A = m + nn, B = m - nn;
-      return _tam(
+      return _tamD(
         '(m + n)x + m − n = ${_polinom([A, B])} eşitliği her x için doğru olduğuna '
             'göre m · n çarpımı kaçtır?',
         m * nn,
@@ -4637,7 +4664,7 @@ AdvancedItem _polinomEsitlikSoru2(int a, int b, int c, int w) {
       // ya da kendisi olurdu.
       final d = (a + b + w) % 3;
       final yanit = _katsayiAl(carpim, d);
-      return _tam(
+      return _tamD(
         '(${_polinom([p, q, r])}) · (${_polinom([1, sv])}) çarpımının ${_terimAdi(d)} '
             'kaçtır?',
         yanit,
@@ -5317,7 +5344,7 @@ AdvancedItem _isaretUret(int a, int b, int c, int w) {
         'İşaret tablosunda en sağdaki aralık pozitiftir ve her kökte işaret değişir; '
         'çözüm kümesi $parca olur (paydanın kökleri dâhil edilmez). Bu kümedeki tam '
         'sayılar ${_tamListe(cozum)}${say ? '' : '; toplamları ${_n(_topla(cozum))} bulunur'}.';
-    return _tam(
+    return _tamD(
       '$ifade $isaret 0 eşitsizliğini sağlayan ${say ? 'kaç tane x tam sayısı vardır' : 'x tam sayılarının toplamı kaçtır'}?',
       deger(cozum),
       [deger(paydaDahil), deger(payHata), deger(tumAralik), deger(orta)],
@@ -5372,7 +5399,7 @@ AdvancedItem _isaretUret(int a, int b, int c, int w) {
       'çözümü $aralik aralığıdır. x = ${_n(p)} için ifade 0 olduğundan bu değer '
       '${esit2 ? 'çözüme katılır' : 'çözüme katılmaz'}. Çözümdeki tam sayılar '
       '${_tamListe(cozum)}${say ? '' : '; toplamları ${_n(_topla(cozum))} bulunur'}.';
-  return _tam(
+  return _tamD(
     '$ifade $isaret 0 eşitsizliğini sağlayan ${say ? 'kaç tane x tam sayısı vardır' : 'x tam sayılarının toplamı kaçtır'}?',
     deger(cozum),
     [deger(kareYok), deger(rDahil), deger(hepsi), deger(cozum) + (say ? 1 : p)],
@@ -5614,7 +5641,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
           'Aylık geliri $m TL olan bir memur, gelirinin ${_kesYaz(f1)} kadarını kiraya, '
           'kalan paranın ${_kesYaz(f2)} kadarını mutfak giderlerine ayırıyor.';
       if (c == 0) {
-        return _tam(
+        return _tamD(
           '$kok Bu harcamalardan sonra memurun elinde kaç TL kalır?',
           kalan,
           [
@@ -5628,9 +5655,10 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
               '$kalan TL kalır.',
           birim: 'TL',
           pozitif: true,
+          komsuAdim: _katAdim(kalan, m ~/ birim),
         );
       }
-      return _tam(
+      return _tamD(
         '$kok Buna göre memur mutfak giderlerine kaç TL ayırır?',
         ikinci,
         [m * p2 ~/ q2, kalan, ilk, kalan1 - ilk],
@@ -5639,6 +5667,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
             '${_kesYaz(f2)} = $ikinci TL olur.',
         birim: 'TL',
         pozitif: true,
+        komsuAdim: _katAdim(ikinci, m ~/ birim),
       );
     case 1 || 8:
       // Kalandan başlangıç miktarı: buğday (kg) ya da depodaki su (L).
@@ -5655,7 +5684,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
                 '$kalan kg buğday kaldığına göre çiftçi kaç kilogram buğday üretmiştir?';
       final ters =
           q1 * q2 - p1 * q2 - p2 * q1; // kesirleri doğrudan çıkaran yol
-      return _tam(
+      return _tamD(
         kok,
         bas,
         [
@@ -5669,6 +5698,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
         'x · ${_q(k1 * k2, q1 * q2)} = $kalan eşitliğinden x = $bas bulunur.',
         birim: su ? 'L' : 'kg',
         pozitif: true,
+        komsuAdim: _katAdim(bas, birim),
       );
     case 2:
       // Üç aşamalı harcama; başlangıç parası istenir.
@@ -5678,7 +5708,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
       // Harçlık 2000 … 6000 TL.
       final bas = miktar(birim * q3, 2000, (a + b) % 3);
       final kalan = bas * k1 * k2 * k3 ~/ (q1 * q2 * q3);
-      return _tam(
+      return _tamD(
         'Bir öğrenci harçlığının ${_kesYaz(f1)} kadarını kitaba, kalan paranın '
             '${_kesYaz(f2)} kadarını yemeğe, en son kalan paranın ${_kesYaz(f3)} '
             'kadarını ulaşıma harcıyor. Öğrencinin $kalan TL parası kaldığına göre '
@@ -5700,13 +5730,14 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
             'x = $bas bulunur.',
         birim: 'TL',
         pozitif: true,
+        komsuAdim: _katAdim(bas, birim * q3),
       );
     case 3 || 9:
       // Kalan ya da kullanılan kesir.
       final kn = k1 * k2, kd = q1 * q2;
       final kullanilan = c == 9;
       final n = kullanilan ? kd - kn : kn;
-      return _kes(
+      return _kesD(
         kullanilan
             ? 'Bir su deposundaki suyun önce ${_kesYaz(f1)} kadarı, sonra kalan suyun '
                   '${_kesYaz(f2)} kadarı kullanılıyor. Kullanılan su, deponun başlangıçtaki '
@@ -5724,6 +5755,18 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
           if (kullanilan) (p1 * p2, q1 * q2) else (k1 * p2, q1 * q2),
           (kd - n, kd),
           if (kullanilan) (p1 + p2, q1 + q2) else (k1 + k2, q1 + q2),
+          // Kalanı 1 − (harcanan kesirlerin çarpımı) ya da harcanan
+          // kesirlerin çarpımı sanmak; ikinci adımı unutup ilk adımdaki
+          // kalanı yanıt sanmak. Kullanılanı yalnız ikinci adımda kullanılan
+          // kısım ya da 1 − (harcanan kesirlerin çarpımı) sanmak.
+          if (kullanilan) ...[
+            (k1 * p2, q1 * q2),
+            (kd - p1 * p2, kd),
+          ] else ...[
+            (kd - p1 * p2, kd),
+            (p1 * p2, q1 * q2),
+            (k1, q1),
+          ],
         ].where((t) => t.$1 > 0 && t.$1 < t.$2 && t.$1 * kd != n * t.$2),
         'İlk adımdan sonra $k1/$q1, ikinci adımdan sonra $k1/$q1 · $k2/$q2 = '
         '${_q(kn, kd)} kalır. ${kullanilan ? 'Kullanılan kısım 1 − ${_q(kn, kd)} = ${_q(n, kd)} olur.' : 'Kalan para harçlığın ${_q(kn, kd)} kadarıdır.'}',
@@ -5748,7 +5791,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
       final bas = miktar(q1 * s2, 1500, 2 * ((a + b) % 4));
       final fark = (bas * farkPay ~/ (q1 * s2)).abs();
       final fazla = farkPay > 0;
-      return _tam(
+      return _tamD(
         'Bir öğrenci harçlığının ${_kesYaz(f1)} kadarını kitaba, kalan paranın '
             '${_kesYaz(g2)} kadarını yemeğe harcıyor. Kitaba harcadığı para, yemeğe '
             'harcadığından $fark TL ${fazla ? 'fazla' : 'az'} olduğuna göre başlangıçta '
@@ -5767,6 +5810,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
             '$fark olduğundan x = $bas bulunur.',
         birim: 'TL',
         pozitif: true,
+        komsuAdim: _katAdim(bas, q1 * s2),
       );
     case 6:
       // Kesir + sabit tutar: x · (1 − f1) − T = x · (1 − f1) · h.
@@ -5777,7 +5821,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
       final T = bas * k1 * (hq - hp) ~/ (q1 * hq);
       final g = _q(gn, gd);
       final (gp, gq) = (gn ~/ gn.gcd(gd), gd ~/ gn.gcd(gd));
-      return _tam(
+      return _tamD(
         'Bir kişi parasının ${_kesYaz(f1)} kadarını market alışverişine harcadıktan '
             'sonra $T TL de fatura ödüyor. Geriye başlangıçtaki parasının $g kadarı '
             'kaldığına göre kişinin başlangıçta kaç TL parası vardı?',
@@ -5795,12 +5839,13 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
             '${_q(k1 * gq - gp * q1, q1 * gq)} = $T ve x = $bas bulunur.',
         birim: 'TL',
         pozitif: true,
+        komsuAdim: _katAdim(bas, q1 * hq),
       );
     default:
       // Roman 160 … 660 sayfa.
       final sayfa = miktar(birim, 160, (a + b) % 4);
       final kalan = sayfa * k1 * k2 ~/ (q1 * q2);
-      return _tam(
+      return _tamD(
         'Bir öğrenci okuduğu romanın önce ${_kesYaz(f1)} kadarını, sonra kalan '
             'sayfaların ${_kesYaz(f2)} kadarını okuyor. Okumadığı $kalan sayfa '
             'kaldığına göre roman kaç sayfadır?',
@@ -5817,6 +5862,7 @@ AdvancedItem _kalanKesirSoru(int a, int b, int c) {
             '${_q(k1 * k2, q1 * q2)} olur. x · ${_q(k1 * k2, q1 * q2)} = $kalan '
             'eşitliğinden x = $sayfa bulunur.',
         pozitif: true,
+        komsuAdim: _katAdim(sayfa, birim),
       );
   }
 }
@@ -5846,7 +5892,7 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
       final T = v * t - L; // tünel boyu
       final tren = 'Uzunluğu $L m olan bir tren ${_hizYaz(v)} sabit hızla';
       if (c == 0) {
-        return _tam(
+        return _tamD(
           '$tren ilerliyor. Bu tren $T m uzunluğundaki bir tünele girmeye başladığı '
               'andan tünelden tamamen çıktığı ana kadar kaç saniye geçer?',
           t,
@@ -5863,7 +5909,7 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
         );
       }
       if (c == 7) {
-        return _tam(
+        return _tamD(
           '$tren bir tünele girmeye başladığı andan tünelden tamamen çıktığı ana kadar '
               '$t saniye geçiyor. Tünelin uzunluğu kaç metredir?',
           T,
@@ -5874,7 +5920,7 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
           pozitif: true,
         );
       }
-      return _tam(
+      return _tamD(
         'Bir tren ${_hizYaz(v)} sabit hızla ilerliyor ve $T m uzunluğundaki bir tüneli, '
             'tünele girmeye başladığı andan tamamen çıktığı ana kadar $t saniyede '
             'geçiyor. Trenin uzunluğu kaç metredir?',
@@ -5884,12 +5930,13 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
             'boyu ile tren boyunun toplamıdır: ${v * t} − $T = $L m.',
         birim: 'm',
         pozitif: true,
+        komsuAdim: 10, // tren boyları 10 metrenin katıdır
       );
     case 1:
       final L = 120 + 20 * (b % 10);
       final tIc = 15 + ek + (a % 5); // tamamen içinde kalma süresi
       final T = v * tIc + L;
-      return _tam(
+      return _tamD(
         'Uzunluğu $L m olan bir tren ${_hizYaz(v)} sabit hızla, uzunluğu $T m olan '
             'bir tünelden geçiyor. Tren kaç saniye boyunca tamamen tünelin içinde '
             'kalır?',
@@ -5905,7 +5952,7 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
       final t1 = (120 + v - 1) ~/ v + b % 10;
       final dt = 20 + 4 * (a ~/ 5) + 13 * (b ~/ 10) + 30 * w;
       final L = v * t1, B = v * dt, t2 = t1 + dt;
-      return _tam(
+      return _tamD(
         'Sabit hızla giden bir tren, yol kenarındaki bir direğin önünden $t1 saniyede '
             'geçiyor. Aynı tren $B m uzunluğundaki bir köprüyü, köprüye girmeye '
             'başladığı andan tamamen çıktığı ana kadar $t2 saniyede geçiyor. Trenin '
@@ -5942,7 +5989,7 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
       if (c == 9) {
         final bir = esitBoy ? 'Trenlerden birinin' : 'Birinci trenin';
         final obur = esitBoy ? 'diğer trenin' : 'ikinci trenin';
-        return _tam(
+        return _tamD(
           '$trenler paralel raylarda birbirine doğru ilerliyor. $bir hızı '
               '${_hizYaz(v1)} olup trenlerin ön uçlarının karşılaştığı andan arka '
               'uçlarının ayrıldığı ana kadar $t saniye geçiyor. '
@@ -5959,6 +6006,7 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
               '${v2 * 18 ~/ 5} km/sa bulunur.',
           birim: 'km/sa',
           pozitif: true,
+          komsuAdim: 18, // 5 m/s adımı
         );
       }
       final zit = c == 4;
@@ -5969,7 +6017,7 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
           ? ', ikisi de ${_hizYaz(v1)} sabit hızla'
           : ' ${esitBoy ? '' : 'sırasıyla '}${_hizYaz(v1)} ve ${_hizYaz(v2)} '
                 'sabit hızlarla';
-      return _tam(
+      return _tamD(
         '$trenler paralel raylarda ${zit ? 'birbirine doğru' : 'aynı yönde'}'
             '$hizlar ilerliyor. ${zit ? 'Trenlerin ön uçlarının karşılaştığı andan arka uçlarının ayrıldığı ana kadar' : 'Hızlı trenin ön ucunun yavaş trenin arka ucuna yetiştiği andan hızlı trenin yavaş treni tamamen geçtiği ana kadar'} '
             'kaç saniye geçer?',
@@ -5991,7 +6039,7 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
       final L = 150 + 25 * (b % 10);
       final t = (L + 200 + v - 1) ~/ v + ek + 20 * w;
       final B = v * t - L;
-      return _tam(
+      return _tamD(
         'Uzunluğu $L m olan bir tren, $B m uzunluğundaki bir köprüyü, köprüye girmeye '
             'başladığı andan tamamen çıktığı ana kadar $t saniyede geçiyor. Trenin hızı '
             'kaç km/sa olur?',
@@ -6002,6 +6050,7 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
             '${v * 18 ~/ 5} km/sa bulunur.',
         birim: 'km/sa',
         pozitif: true,
+        komsuAdim: 18, // 5 m/s adımı
       );
     default:
       // Tünelde tamamen içinde kalma süresi t1, tamamen geçme süresi t2.
@@ -6010,7 +6059,7 @@ AdvancedItem _trenUret(int a, int b, int c, int w) {
       final fark = 2 * yari; // t2 − t1
       final t2 = t1 + fark;
       final L = v * fark ~/ 2, T = v * (t1 + t2) ~/ 2;
-      return _tam(
+      return _tamD(
         'Sabit ${_hizYaz(v)} hızla giden bir tren bir tünelden geçiyor. Tren $t1 saniye '
             'boyunca tamamen tünelin içinde kalıyor ve tüneli, girmeye başladığı andan '
             'tamamen çıktığı ana kadar $t2 saniyede geçiyor. Trenin uzunluğu kaç '

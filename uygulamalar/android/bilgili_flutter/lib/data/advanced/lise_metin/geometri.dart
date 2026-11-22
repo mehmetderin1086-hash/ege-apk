@@ -87,14 +87,15 @@ List<String> _celdirici(
   final hedef = sira % 4;
   final r = izin.contains(hedef) ? hedef : izin[sira ~/ 4 % izin.length];
   // Seçim, hedef sırayı koruyan aday birleşimleri arasından yapılır
-  // (her yanda öncelik sırasıyla ilk altı aday). Anahtar iki çeldiricinin
-  // geometrik ya da aritmetik ortası olmasın (x/2 ile 2x, x − d ile x + d:
-  // "yarısı ve iki katı seçeneklerde" ipucu) ve öteki seçeneklerin çoğunun
-  // basit katı (2, 3, 4 kat ya da 1/2, 1/3, 1/4) olduğu tek "merkez"
-  // seçenek olmasın. Uyan birleşimlerden önce en az komşulu, sonra öncelik
-  // sıraları toplamı en küçük olan alınır; komşu sayısı gerekenden (en az
-  // bir) fazla olmaz.
-  // Uyan yoksa yalnız orta koşulu, o da yoksa ilk adaylar kullanılır.
+  // (her yanda öncelik sırasıyla ilk altı aday). Koşullar önem sırasıyla:
+  // [ayniTur]; anahtar iki çeldiricinin geometrik ya da aritmetik ortası
+  // olmasın (x/2 ile 2x, x − d ile x + d: "yarısı ve iki katı seçeneklerde"
+  // ipucu); öteki seçeneklerin çoğu anahtarın basit katı (2, 3, 4 kat ya da
+  // 1/2, 1/3, 1/4) olup anahtar tek "merkez" kalmasın. Koşulları en iyi
+  // sağlayan birleşimlerden önce en az komşulu, sonra öncelik sıraları
+  // toplamı en küçük olan alınır; anahtarın tek "iki katı" çiftinde kaldığı
+  // birleşime küçük bir ceza eklenir. Komşu sayısı gerekenden (en az bir)
+  // fazla olmaz.
   List<(num, String)> ilk(List<(num, String)> xs) => [
     ...xs.take(6),
     if (!xs.take(6).any((x) => tur(x.$1)))
@@ -2461,8 +2462,9 @@ final lmGeometri = <AdvancedFamily>[
       // da paydası anahtarla ortak olan "kökü unutma", "paydayı unutma" gibi
       // seçenekler anahtarı ötekilerin ortası yapardı. Bu ikisi yalnız pay
       // hataları çakıştığında (nokta orijindeyse, sabit sıfırsa) eklenir.
-      // Anahtar tam sayıysa paydayı unutma hatası en başa alınır ve her
-      // vakada kullanılır; böylece anahtar tek tam sayı seçenek kalmaz.
+      // Anahtar tam sayıysa paydayı unutma hatası en başa alınır ve
+      // _celdirici seçeneklerde anahtardan başka en az bir tam sayı bırakır;
+      // anahtar kesirse en az bir kesir bırakır.
       List<String> celdir(int pay, Iterable<int> paylar) {
         final yazim = kesir(pay, h);
         final farkli = {

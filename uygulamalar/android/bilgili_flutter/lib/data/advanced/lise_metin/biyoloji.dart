@@ -427,7 +427,7 @@ final _f01 = lmAile(
       agirlik: agirlik,
     );
     // Anahtarın üst ya da alt ucunda kalan sorularda öteki uç öne alınır.
-    const ustUc = [1, 1, 1, 2], altUc = [2, 1, 1, 1];
+    const ustUc = [1, 1, 1, 4], altUc = [2, 1, 1, 1];
     final giris =
         '$org $domOz aleli ($harf), $recOz aleline (${harf.toLowerCase()}) '
         'baskındır.';
@@ -2655,14 +2655,7 @@ final _f12 = lmAile(
           // Bağ yerine glikoz sayma, tek molekül sanma, iki kez sayma, yalnız
           // bir molekülü hesaplama. (Ortalama alma kullanılmaz: p1 + p2 tek
           // olduğundan ortalama tam sayı çıkmaz.)
-          [
-            p1 + p2,
-            p1 + p2 - 1,
-            p1 + p2 + 2,
-            2 * (p1 + p2),
-            p1 - 1,
-            p2 - 1,
-          ],
+          [p1 + p2, p1 + p2 - 1, p1 + p2 + 2, 2 * (p1 + p2), p1 - 1, p2 - 1],
           'Her molekülde glikozit bağı sayısı glikoz sayısından 1 eksiktir: '
               '($p1 − 1) + ($p2 − 1) = ${p1 + p2 - 2}.',
         );

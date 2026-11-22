@@ -165,6 +165,7 @@ AdvancedItem _saySirali(
   int komsu = 2,
   Iterable<num> son = const [],
   bool? tipikOncelik,
+  bool yakinKomsu = false,
 }) {
   String yaz(num x) => birimli(_yz(x, basamak), birim);
   double deger(num x) => double.parse(tr(x, basamak).replaceFirst(',', '.'));
@@ -193,12 +194,19 @@ AdvancedItem _saySirali(
   ];
   var s = sira;
   var katlar = [for (var k = 1; k <= komsu; k++) k];
+  final tipik = ciftler(adaylar);
   if (tipikOncelik != null) {
-    if (2 * a <= 0.25 * m) katlar = [for (var k = 2; k <= komsu + 1; k++) k];
+    // Komşular yanıtın %25'ini aşmayan en az iki adımlık uzaklıklardan; böyle
+    // bir uzaklık yoksa yalnız bir adım.
+    final uzak = [
+      for (var k = 2; k <= komsu + 1; k++)
+        if (k * a <= 0.25 * m) k,
+    ];
+    katlar = uzak.isEmpty ? [1] : [...uzak, if (uzak.length < komsu) 1];
     final kd = deger(d);
     final gorulen = <String>[];
     var alt = 0, ust = 0;
-    for (final (v, y) in ciftler(adaylar)) {
+    for (final (v, y) in tipik) {
       if (ayniSecenek(y, yazim) || gorulen.any((z) => ayniSecenek(z, y))) {
         continue;
       }
@@ -210,10 +218,34 @@ AdvancedItem _saySirali(
     final enAz = 3 - ust < 0 ? 0 : 3 - ust, enCok = alt > 3 ? 3 : alt;
     if (tipikOncelik && enAz <= enCok) s = s.clamp(enAz, enCok);
   }
-  final havuz = ciftler([
-    ...adaylar,
-    for (final k in katlar) ...[d - k * a, d + k * a],
-  ]);
+  // Bir tipik hata değerine %3'ten yakın komşu değer alınmaz (494 ile 492 gibi
+  // neredeyse aynı iki seçenek olmasın); yerine bir sonraki adım denenir.
+  bool yakin(num v) => tipik.any(
+    (t) =>
+        (t.$1 - v).abs() < 0.03 * (t.$1.abs() > v.abs() ? t.$1.abs() : v.abs()),
+  );
+  final sinirli = yakinKomsu || tipikOncelik != null;
+  List<(num, String)> komsular(int yon) {
+    final out = <(num, String)>[];
+    for (final k in [...katlar, katlar.last + 1, katlar.last + 2]) {
+      if (out.length == katlar.length) break;
+      // [yakinKomsu] ya da [tipikOncelik] verilmişse bir adımdan uzak komşu
+      // yanıttan en çok %25 uzak olabilir.
+      if (sinirli && k > 1 && k * a > 0.25 * m) continue;
+      final c = ciftler([d + yon * k * a]);
+      if (c.isNotEmpty && !yakin(c.first.$1)) out.add(c.first);
+    }
+    return out;
+  }
+
+  final altK = komsular(-1), ustK = komsular(1);
+  final havuz = [
+    ...tipik,
+    for (var j = 0; j < katlar.length; j++) ...[
+      if (j < altK.length) altK[j],
+      if (j < ustK.length) ustK[j],
+    ],
+  ];
   // [son] adayları yalnız üç çeldirici başka türlü bulunamıyorsa eklenir.
   final farkli = <String>[];
   for (final (_, y) in havuz) {
@@ -4116,6 +4148,7 @@ final _f17 = lmAile(
           cozum,
           sira,
           birim: 'mol',
+          yakinKomsu: true,
           adim: _molAdimi(deger),
         );
       }
@@ -4134,6 +4167,7 @@ final _f17 = lmAile(
         '$cozum Bu ${_t(deger)} mol $nicelik ${_t(g)} gram eder.',
         sira,
         birim: 'g',
+        yakinKomsu: true,
         // Komşu değerler mol ızgarasında: komşu mol miktarının kütlesi.
         adim: _molAdimi(deger) * molKutle,
       );
@@ -4255,6 +4289,7 @@ final _f17 = lmAile(
             yol,
             sira,
             birim: 'mol',
+            yakinKomsu: true,
             adim: _molAdimi(co2),
           );
         }
@@ -4265,6 +4300,7 @@ final _f17 = lmAile(
           '$yol Bu ${_t(co2)} mol CO₂ ${_t(co2 * 44)} gram eder.',
           sira,
           birim: 'g',
+          yakinKomsu: true,
           adim: _molAdimi(co2) * 44,
         );
       case 5:
@@ -4284,6 +4320,7 @@ final _f17 = lmAile(
               '${_t(h2o)} mol, yani ${_t(h2o)}·18 = ${_t(g)} gram H₂O oluşur.',
           sira,
           birim: 'g',
+          yakinKomsu: true,
           adim: _molAdimi(h2o) * 18,
         );
       case 6:
@@ -4332,6 +4369,7 @@ final _f17 = lmAile(
               '12·$n + $h = $mk g/mol olur.',
           sira,
           birim: 'g/mol',
+          yakinKomsu: true,
           adim: 2,
         );
       case 8:
@@ -4369,6 +4407,7 @@ final _f17 = lmAile(
               '${tur == 'toplam' ? 'atom' : '$tur atomu'} vardır.',
           sira,
           birim: 'mol',
+          yakinKomsu: true,
           adim: _molAdimi(deger),
         );
       default:

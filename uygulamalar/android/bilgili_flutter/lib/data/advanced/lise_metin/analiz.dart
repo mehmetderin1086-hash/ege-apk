@@ -572,6 +572,15 @@ AdvancedItem _dengele(
   }
 }
 
+/// [hedef] verilmemişse (rastlantı denetiminin ön denemeleri) [eski] soru
+/// olduğu gibi döner; verilmişse çeldiriciler [adaylar] ile dengelenir.
+AdvancedItem _belkiDengele(
+  AdvancedItem eski,
+  num anahtar,
+  List<(num, String)> Function() adaylar,
+  int? hedef,
+) => hedef == null ? eski : _dengele(eski, anahtar, adaylar(), hedef);
+
 /// Tam sayı adayları; [pozitif] doğruysa sıfır ve negatifler atılır.
 List<(num, String)> _tamAday(
   Iterable<int?> xs, {
@@ -1012,7 +1021,7 @@ String _kokluOran(int pay, int nn) {
   return _kok(pay, s * f, f);
 }
 
-AdvancedItem _ikiKat(_IkiKat veri) {
+AdvancedItem _ikiKat(_IkiKat veri, [int? hedef]) {
   final (ar, bicim, s, t) = veri;
   const adlar = ['sin 2x', 'cos 2x', 'tan 2x', 'cot 2x'];
   final bir = _R(1);
@@ -1025,7 +1034,7 @@ AdvancedItem _ikiKat(_IkiKat veri) {
     final kok = '$ad x = $deger olduğuna göre cos 2x değeri kaçtır?';
     if (bicim == 9) {
       final yanit = (bir - kare) / (bir + kare);
-      return _ras(
+      final eski = _ras(
         kok,
         yanit,
         [
@@ -1039,11 +1048,27 @@ AdvancedItem _ikiKat(_IkiKat veri) {
         // cos 2x yerine cos² x ya da sin² x bulma.
         yedek: [bir / (bir + kare), kare / (bir + kare)],
       );
+      // İşaret hatası, ters kesir, paydayı unutma, cos² x ya da sin² x bulma
+      // ve bunların işaretlisi.
+      return _belkiDengele(
+        eski,
+        yanit.p / yanit.q,
+        () => _rAday([
+          ...[-yanit, bir - kare, kare - bir, bir / (bir + kare)],
+          ...[
+            kare / (bir + kare),
+            -(bir / (bir + kare)),
+            -(kare / (bir + kare)),
+          ],
+          if (kare != bir) (bir + kare) / (bir - kare),
+        ], aralik: _birlik),
+        hedef,
+      );
     }
     final kareYaz = kesirli ? '' : '$ad² x = $kare olduğundan ';
     if (ad == 'sin') {
       final yanit = bir - _R(2) * kare;
-      return _ras(
+      final eski = _ras(
         kok,
         yanit,
         [
@@ -1055,9 +1080,21 @@ AdvancedItem _ikiKat(_IkiKat veri) {
         aralik: _birlik,
         yedek: [kare, bir - _R(4) * kare],
       );
+      // İşaret hatası, 2 katsayısını unutma, kare almayı unutma, formülü
+      // karıştırma ve bunların işaretlisi.
+      return _belkiDengele(
+        eski,
+        yanit.p / yanit.q,
+        () => _rAday([
+          ...[-yanit, bir - kare, kare - bir],
+          if (kesirli) ...[bir - _R(2 * s, t), _R(2 * s, t) - bir],
+          ...[kare, -kare, bir - _R(4) * kare, _R(4) * kare - bir],
+        ], aralik: _birlik),
+        hedef,
+      );
     }
     final yanit = _R(2) * kare - bir;
-    return _ras(
+    final eski = _ras(
       kok,
       yanit,
       [
@@ -1068,6 +1105,18 @@ AdvancedItem _ikiKat(_IkiKat veri) {
       '${kareYaz}cos 2x = 2·cos² x − 1 = 2·${_rs(kare)} − 1 = $yanit.',
       aralik: _birlik,
       yedek: [kare, bir - kare],
+    );
+    // İşaret hatası, 2 katsayısını unutma, kare almayı unutma, sin² x bulma
+    // ve bunların işaretlisi.
+    return _belkiDengele(
+      eski,
+      yanit.p / yanit.q,
+      () => _rAday([
+        ...[-yanit, kare - bir, bir - kare],
+        if (kesirli) ...[_R(2 * s, t) - bir, bir - _R(2 * s, t)],
+        ...[kare, -kare, _R(4) * kare - bir, bir - _R(4) * kare],
+      ], aralik: _birlik),
+      hedef,
     );
   }
   final u = s, v = t, nn = u * u + v * v;
@@ -1117,7 +1166,7 @@ AdvancedItem _ikiKat(_IkiKat veri) {
                 '${_esit('${_rs(t2)}/${_rs(tp)}', '$sin2')}.'
           : 'sin 2$x = 2·sin $x·cos $x = 2·${_sar(_kokluOran(v, nn))}·'
                 '${_sar(_kokluOran(u, nn))} = $sin2.';
-      return _ras(
+      final eski = _ras(
         kok,
         sin2,
         [-sin2, _R(u * v, nn), cos2, tan2],
@@ -1125,13 +1174,24 @@ AdvancedItem _ikiKat(_IkiKat veri) {
         aralik: _birlik,
         yedek: [-cos2, _R(-u * v, nn)],
       );
+      // Bölge işareti, 2 katsayısını unutma, cos 2x ya da tan 2x bulma,
+      // sin² x ya da cos² x bulma ve bunların işaretlisi.
+      return _belkiDengele(
+        eski,
+        sin2.p / sin2.q,
+        () => _rAday([
+          ...[-sin2, _R(u * v, nn), cos2, tan2, -cos2, _R(-u * v, nn)],
+          ...[_R(v * v, nn), _R(u * u, nn), -tan2],
+        ], aralik: _birlik),
+        hedef,
+      );
     case 1:
       final hesap = bicim <= 1
           ? 'cos 2x = (1 − tan² x)/(1 + tan² x) = '
                 '${_esit('${_rs(t1)}/${_rs(tp)}', '$cos2')}.'
           : 'cos 2α = cos² α − sin² α = ${_R(u * u, nn)} − ${_R(v * v, nn)} '
                 '= $cos2.';
-      return _ras(
+      final eski = _ras(
         kok,
         cos2,
         [-cos2, sin2, _R(u * u - v * v, u * u), _R(nn, u * u - v * v)],
@@ -1140,13 +1200,36 @@ AdvancedItem _ikiKat(_IkiKat veri) {
         // cos 2x yerine cos² x ya da sin² x bulma.
         yedek: [_R(u * u, nn), _R(v * v, nn)],
       );
+      // İşaret hatası, sin 2x bulma, paydayı yanlış alma, cos² x ya da sin² x
+      // bulma ve bunların işaretlisi.
+      return _belkiDengele(
+        eski,
+        cos2.p / cos2.q,
+        () => _rAday([
+          ...[-cos2, sin2, _R(u * u - v * v, u * u), _R(u * u, nn)],
+          ...[_R(v * v, nn), -sin2, _R(v * v - u * u, u * u)],
+          ...[_R(-u * u, nn), _R(-v * v, nn)],
+        ], aralik: _birlik),
+        hedef,
+      );
     case 2:
-      return _ras(
+      final eski = _ras(
         kok,
         tan2,
         [-tan2, sin2, _R(2 * v, u), cot2],
         '$giris${tanSatir}tan 2$x = 2·tan $x/(1 − tan² $x) = '
         '${_esit('${_rs(t2)}/${_rs(t1)}', '$tan2')}.',
+      );
+      // İşaret hatası, tan ile cot'u karıştırma (ikisi birlikte de), sin 2x
+      // bulma, 2·tan x bulma.
+      return _belkiDengele(
+        eski,
+        tan2.p / tan2.q,
+        () => _rAday([
+          ...[-tan2, cot2, -cot2, sin2, _R(2 * v, u), -sin2],
+          ...[_R(-2 * v, u), cos2],
+        ]),
+        hedef,
       );
     default:
       final k2 = cotx * cotx - bir, k1 = _R(2) * cotx;
@@ -1154,13 +1237,24 @@ AdvancedItem _ikiKat(_IkiKat veri) {
           ? ''
           : 'cot $x = cos $x/sin $x = $cotx olur. ';
       final cotGiris = bicim == 1 ? '' : giris;
-      return _ras(
+      final eski = _ras(
         kok,
         cot2,
         [-cot2, tan2, _R(u * u - v * v, u * v), cos2],
         '$cotGiris${bicim == 0 ? 'tan x = $tanx olduğundan cot x = $cotx olur. ' : cotSatir}'
         'cot 2$x = (cot² $x − 1)/(2·cot $x) = '
         '${_esit('${_rs(k2)}/${_rs(k1)}', '$cot2')}.',
+      );
+      // İşaret hatası, tan ile cot'u karıştırma (ikisi birlikte de), 2
+      // katsayısını unutma, cos 2x bulma.
+      return _belkiDengele(
+        eski,
+        cot2.p / cot2.q,
+        () => _rAday([
+          ...[-cot2, tan2, -tan2, _R(u * u - v * v, u * v), cos2],
+          ...[_R(v * v - u * u, u * v), -cos2],
+        ]),
+        hedef,
       );
   }
 }
@@ -1632,6 +1726,7 @@ AdvancedItem _trigDenklemKare(int a, int b, int c) {
           (gecerli(p1, q1) ? 1 : 0) + (gecerli(p2, q2) ? 1 : 0),
           2 * ((gecerli(p1, q1) ? 1 : 0) + (gecerli(p2, q2) ? 1 : 0)),
           ...[n1, n2, yanit + 1, yanit - 1, yanit + 2, yanit - 2, 0],
+          yanit + 3,
         ].where((x) => x >= 0),
       ),
       sira,
@@ -2572,7 +2667,7 @@ AdvancedItem _periyotSoru(int a, int b, int c) {
       (t) => _periyotTers(c, (t + 500 * c) % n),
       j,
     );
-    return _periyotTers(c, (t + 500 * c) % n);
+    return _periyotTers(c, (t + 500 * c) % n, hedefSira(_vaka(a, b, c)));
   }
   if (c <= 6) {
     final t = _temizSec(
@@ -2581,7 +2676,7 @@ AdvancedItem _periyotSoru(int a, int b, int c) {
       (t) => _periyotAcik(c, t),
       j,
     );
-    return _periyotAcik(c, t);
+    return _periyotAcik(c, t, hedefSira(_vaka(a, b, c)));
   }
   final t = _temizSec(
     'periyot$c-$b',
@@ -2589,11 +2684,11 @@ AdvancedItem _periyotSoru(int a, int b, int c) {
     (t) => _genlikSoru(b, t, c),
     a,
   );
-  return _genlikSoru(b, t, c);
+  return _genlikSoru(b, t, c, hedefSira(_vaka(a, b, c)));
 }
 
 /// Uç değerleri ve periyodu verilen a·sin(bx) + c biçimleri (c ≤ 4).
-AdvancedItem _periyotTers(int c, int sira) {
+AdvancedItem _periyotTers(int c, int sira, [int? hedef]) {
   final (g, k, fi) = _tersPeriyot[sira];
   final (fp, fq) = _frekans[fi];
   final frek = _R(fp, fq), ters = _R(fq, fp);
@@ -2603,10 +2698,13 @@ AdvancedItem _periyotTers(int c, int sira) {
   final pozitif = 'a, b pozitif gerçek sayılardır.';
   final perAc = 'Esas periyot 2π/b = $t olduğundan b = $frek olur.';
   final kYaz = '${k < 0 ? '−' : '+'} ${k.abs()}';
+  // Ek çeldiriciler: periyodu π/b ya da 4π/b sanma (b'nin yarısı ya da iki
+  // katı), kaymayı en küçük değer sanma, genliği en büyük değer sanma.
+  final yari = frek / _R(2), cift = frek * _R(2);
   switch (c) {
     case 0:
       final yanit = _R(g) + frek + _R(k);
-      return _ras(
+      final eski = _ras(
         'f(x) = a·sin(bx) + c fonksiyonunun $buyuk ve esas periyodu $t '
             'olduğuna göre a + b + c toplamı kaçtır? ($pozitif)',
         yanit,
@@ -2621,9 +2719,20 @@ AdvancedItem _periyotTers(int c, int sira) {
             '(${_n(maks)} + ${_p(min)})/2 = ${_n(k)}. $perAc a + b + c = $g + '
             '${_rs(frek)} + ${_p(k)} = $yanit.',
       );
+      return _belkiDengele(
+        eski,
+        yanit.p / yanit.q,
+        () => _rAday([
+          ...[_R(maks - min) + frek + _R(k), _R(g) + ters + _R(k)],
+          ...[_R(g) + frek - _R(k), _R(g) + frek + _R(maks)],
+          ...[_R(g) + frek + _R(min), _R(g) + yari + _R(k)],
+          ...[_R(g) + cift + _R(k), _R(maks) + frek + _R(k)],
+        ]),
+        hedef,
+      );
     case 1:
       final yanit = _R(k) + _R(g) + frek;
-      return _ras(
+      final eski = _ras(
         'f(x) = a + b·cos(cx) fonksiyonunun görüntü kümesi [${_n(min)}, '
             '${_n(maks)}] ve esas periyodu $t olduğuna göre a + b + c toplamı '
             'kaçtır? (b ve c pozitif gerçek sayılardır.)',
@@ -2639,9 +2748,20 @@ AdvancedItem _periyotTers(int c, int sira) {
             'Esas periyot 2π/c = $t olduğundan c = $frek bulunur. a + b + c = '
             '${_n(k)} + $g + ${_rs(frek)} = $yanit.',
       );
+      return _belkiDengele(
+        eski,
+        yanit.p / yanit.q,
+        () => _rAday([
+          ...[_R(k) + _R(maks - min) + frek, _R(k) + _R(g) + ters],
+          ...[_R(-k) + _R(g) + frek, _R(maks) + _R(g) + frek],
+          ...[_R(min) + _R(g) + frek, _R(k) + _R(g) + yari],
+          ...[_R(k) + _R(g) + cift, _R(k) + _R(maks) + frek],
+        ]),
+        hedef,
+      );
     case 2:
       final yanit = _R(g) * frek;
-      return _ras(
+      final eski = _ras(
         'f(x) = a·sin(bx) $kYaz fonksiyonunun en büyük değeri ${_n(maks)} ve esas '
             'periyodu $t olduğuna göre a·b çarpımı kaçtır? ($pozitif)',
         yanit,
@@ -2655,9 +2775,18 @@ AdvancedItem _periyotTers(int c, int sira) {
             'a·b = $g·${_rs(frek)} = $yanit.',
         pozitif: true,
       );
+      return _belkiDengele(
+        eski,
+        yanit.p / yanit.q,
+        () => _rAday([
+          ...[_R(maks) * frek, _R(g) * ters, _R((g + 2 * k).abs()) * frek],
+          ...[_R(g) + frek, _R(g) * yari, _R(g) * cift, _R(k.abs()) * frek],
+        ], pozitif: true),
+        hedef,
+      );
     case 3:
       final yanit = _R(g) * frek;
-      return _ras(
+      final eski = _ras(
         'f(x) = a·cos(bx) $kYaz fonksiyonunun en küçük değeri ${_n(min)} ve '
             'esas periyodu $t olduğuna göre a·b çarpımı kaçtır? ($pozitif)',
         yanit,
@@ -2671,9 +2800,18 @@ AdvancedItem _periyotTers(int c, int sira) {
             '$perAc a·b = $g·${_rs(frek)} = $yanit.',
         pozitif: true,
       );
+      return _belkiDengele(
+        eski,
+        yanit.p / yanit.q,
+        () => _rAday([
+          ...[_R(min.abs()) * frek, _R(g) * ters, _R(maks.abs()) * frek],
+          ...[_R(g) + frek, _R(g) * yari, _R(g) * cift, _R(k.abs()) * frek],
+        ], pozitif: true),
+        hedef,
+      );
     default:
       final yanit = _R(g) * frek * _R(k);
-      return _ras(
+      final eski = _ras(
         'f(x) = a·sin(bx) + c fonksiyonunun $buyuk ve esas periyodu $t '
             'olduğuna göre a·b·c çarpımı kaçtır? ($pozitif)',
         yanit,
@@ -2686,12 +2824,22 @@ AdvancedItem _periyotTers(int c, int sira) {
         'a = (${_n(maks)} − ${_p(min)})/2 = $g ve c = (${_n(maks)} + ${_p(min)})/2 = '
             '${_n(k)} olur. $perAc a·b·c = $g·${_rs(frek)}·${_p(k)} = $yanit.',
       );
+      return _belkiDengele(
+        eski,
+        yanit.p / yanit.q,
+        () => _rAday([
+          ...[_R(maks - min) * frek * _R(k), _R(g) * ters * _R(k)],
+          ...[_R(g) * frek * _R(maks), _R(g) * frek * _R(min)],
+          ...[_R(g) * yari * _R(k), _R(g) * cift * _R(k), -yanit],
+        ]),
+        hedef,
+      );
   }
 }
 
 /// Açık biçim: en büyük (c = 5) ya da en küçük (c = 6) değer ile esas
 /// periyodun çarpımı.
-AdvancedItem _periyotAcik(int c, int j) {
+AdvancedItem _periyotAcik(int c, int j, [int? hedef]) {
   // Açık biçim: en büyük (c = 5) ya da en küçük (c = 6) değer ile esas
   // periyodun çarpımı. Genlik g, kayma k ve frekans hesaba girer; katsayının
   // işareti, fonksiyonun adı ve faz kayması yalnız süstür.
@@ -2710,7 +2858,7 @@ AdvancedItem _periyotAcik(int c, int j) {
             '${k.abs()}';
   final yanit = _pi(uc * 2 * fq, fp);
   final ad = maks ? 'büyük' : 'küçük';
-  return _secenek(
+  final eski = _secenek(
     'f(x) = $ifade fonksiyonunun en $ad değeri a ve esas periyodu T '
         'olduğuna göre a·T çarpımı kaçtır?',
     yanit,
@@ -2728,11 +2876,24 @@ AdvancedItem _periyotAcik(int c, int j) {
         'T = ${_esit('2π/${_rs(_R(fp, fq))}', _periyot(fp, fq))} bulunur. a·T = '
         '${_p(uc)}·${_sar(_periyot(fp, fq))} = $yanit.',
   );
+  // Periyodu π/b ya da 4π/b sanma, kaymayı unutma, öteki uç değeri alma,
+  // işaret hatası; en sonda komşu değerler. Değerler π'nin katsayısıdır.
+  (num, String) piAday(int n) => (n / fp, _pi(n, fp));
+  return _belkiDengele(
+    eski,
+    uc * 2 * fq / fp,
+    () => [
+      ...[uc * fq, (maks ? g : -g) * 2 * fq, (maks ? k - g : k + g) * 2 * fq],
+      ...[uc * 4 * fq, -uc * 2 * fq, (uc + 1) * 2 * fq, (uc - 1) * 2 * fq],
+      ...[(uc + 2) * 2 * fq, (uc - 2) * 2 * fq],
+    ].map(piAday).toList(),
+    hedef,
+  );
 }
 
 /// a·sin x + b·cos x + d: genlik √(a² + b²). t sabit terimi ve işaretleri
 /// seçer.
-AdvancedItem _genlikSoru(int b, int t, int c) {
+AdvancedItem _genlikSoru(int b, int t, int c, [int? hedef]) {
   final (u0, v0) = _genlikCifti[b];
   final (p0, q0) = (t ~/ 4).isEven ? (u0, v0) : (v0, u0);
   final d = _genlikKayma[t];
@@ -2748,7 +2909,7 @@ AdvancedItem _genlikSoru(int b, int t, int c) {
       '√(${p0 * p0} + ${q0 * q0}) = $r olur.';
   switch (c) {
     case 7:
-      return _tam(
+      final eski = _tam(
         'f(x) = $ifade fonksiyonunun en büyük değeri kaçtır?',
         r + d,
         [pa + qb + d, p0 + q0 + d, p0 * p0 + q0 * q0 + d, r - d],
@@ -2756,8 +2917,19 @@ AdvancedItem _genlikSoru(int b, int t, int c) {
             '${d == 0 ? '$r' : '$r ${d < 0 ? '−' : '+'} ${d.abs()} = ${_n(r + d)}'}'
             ' olur.',
       );
+      // Katsayıları toplama ya da kareleri toplayıp kök almayı unutma, sabiti
+      // unutma ya da çıkarma, en küçük değeri verme, katsayıları çıkarma.
+      return _belkiDengele(
+        eski,
+        r + d,
+        () => _tamAday([
+          ...[pa + qb + d, p0 + q0 + d, p0 * p0 + q0 * q0 + d, r - d],
+          ...[d - r, if (d != 0) r, (p0 - q0).abs() + d, ..._komsuTam(r + d)],
+        ]),
+        hedef,
+      );
     case 8:
-      return _tam(
+      final eski = _tam(
         'f(x) = $ifade fonksiyonunun en küçük değeri kaçtır?',
         d - r,
         [d - p0 - q0, d - (pa + qb).abs(), -r - d.abs(), d - p0 * p0 - q0 * q0],
@@ -2765,9 +2937,21 @@ AdvancedItem _genlikSoru(int b, int t, int c) {
             '${d == 0 ? '−$r' : '−$r ${d < 0 ? '−' : '+'} ${d.abs()} = ${_n(d - r)}'}'
             ' olur.',
       );
+      // Katsayıları toplama ya da kareleri toplayıp kök almayı unutma, sabiti
+      // unutma, en büyük değeri verme, katsayıları çıkarma.
+      return _belkiDengele(
+        eski,
+        d - r,
+        () => _tamAday([
+          ...[d - p0 - q0, d - (pa + qb).abs(), -r - d.abs()],
+          ...[d - p0 * p0 - q0 * q0, r + d, if (d != 0) -r],
+          ...[d - (p0 - q0).abs(), ..._komsuTam(d - r)],
+        ]),
+        hedef,
+      );
     default:
       final yanit = (r + d) * (d - r);
-      return _tam(
+      final eski = _tam(
         'f(x) = $ifade fonksiyonunun en büyük değeri M, en küçük değeri m '
             'olduğuna göre M·m çarpımı kaçtır?',
         yanit,
@@ -2779,6 +2963,18 @@ AdvancedItem _genlikSoru(int b, int t, int c) {
         ],
         '$giris M = ${_n(r + d)} ve m = ${_n(d - r)} olduğundan M·m = '
             '${_p(r + d)}·${_p(d - r)} = ${_n(yanit)}.',
+      );
+      // Genlik yerine katsayı toplamını alma, çarpım yerine toplam ya da fark,
+      // işaret hatası, uç değerlerden birinin karesi.
+      return _belkiDengele(
+        eski,
+        yanit,
+        () => _tamAday([
+          ...[(p0 + q0 + d) * (d - p0 - q0), -yanit, 2 * d, d * d + r * r],
+          ...[2 * r, (r + d) * (r + d), (d - r) * (d - r)],
+          ..._komsuTam(yanit),
+        ]),
+        hedef,
       );
   }
 }
@@ -5259,6 +5455,7 @@ final List<(int, int, int)> _konumUclu = [
 ].take(25).toList();
 
 AdvancedItem _konumHiz(int a, int b, int c, int deneme) {
+  final sira = hedefSira(_vaka(a, b, c));
   if (c <= 1) {
     final a3 = 1 + a % 2;
     final a2 = const [-6, -4, -3, -1, 2, 3][a ~/ 2 % 6];
@@ -5269,7 +5466,7 @@ AdvancedItem _konumHiz(int a, int b, int c, int deneme) {
     final v = _turevK(x), ivme = _turevK(v);
     if (c == 0) {
       final yanit = _deg(v, t0);
-      return _tam(
+      final eski = _tam(
         '$_konumGiris x(t) = ${_pol(x, 't')} bağıntısıyla veriliyor. Cismin '
             't = $t0 s anındaki hızı kaç m/s olur?',
         yanit,
@@ -5283,9 +5480,32 @@ AdvancedItem _konumHiz(int a, int b, int c, int deneme) {
             '${_yerine(v, t0)} = ${_n(yanit)} m/s.',
         birim: 'm/s',
       );
+      // Konumu, ivmeyi ya da türevi hatalı (2 katsayısını ya da sabiti
+      // unutarak) alma, bir saniye kaydırma; komşu değerler.
+      return _dengele(
+        eski,
+        yanit,
+        _tamAday([
+          ...[
+            _deg(x, t0),
+            _deg(ivme, t0),
+            _deg([a3, a2, a1], t0),
+          ],
+          ...[
+            _deg(v, t0 + 1),
+            _deg(v, t0 - 1),
+            _deg([3 * a3, a2, a1], t0),
+          ],
+          ...[
+            _deg([3 * a3, 2 * a2, 0], t0),
+            ..._komsuTam(yanit),
+          ],
+        ], birim: 'm/s'),
+        sira,
+      );
     }
     final yanit = _deg(ivme, t0);
-    return _tam(
+    final eski = _tam(
       '$_konumGiris x(t) = ${_pol(x, 't')} bağıntısıyla veriliyor. Cismin '
           't = $t0 s anındaki ivmesi kaç m/s² olur?',
       yanit,
@@ -5293,6 +5513,18 @@ AdvancedItem _konumHiz(int a, int b, int c, int deneme) {
       'v(t) = ${_pol(v, 't')} ve ivme a(t) = v′(t) = ${_pol(ivme, 't')} olur. '
           'a($t0) = ${_yerine(ivme, t0)} = ${_n(yanit)} m/s².',
       birim: 'm/s²',
+    );
+    // Hızı verme, türevde 2 katsayısını ya da sabit terimi unutma, bir saniye
+    // kaydırma; komşu değerler.
+    return _dengele(
+      eski,
+      yanit,
+      _tamAday([
+        ...[_deg(v, t0), 6 * a3 * t0, 3 * a3 * t0 + 2 * a2, yanit + a1],
+        ...[6 * a3 * t0 + a2, _deg(ivme, t0 + 1), _deg(ivme, t0 - 1)],
+        ..._komsuTam(yanit),
+      ], birim: 'm/s²'),
+      sira,
     );
   }
   if (c == 8) {
@@ -5303,7 +5535,7 @@ AdvancedItem _konumHiz(int a, int b, int c, int deneme) {
     final q = 2 * p * ts;
     final x = [-p, q, r];
     final yanit = _deg(x, ts);
-    return _tam(
+    final eski = _tam(
       '$_konumGiris x(t) = ${_pol(x, 't')} bağıntısıyla veriliyor. Cismin '
           'hızının sıfır olduğu anda konumu kaç metredir?',
       yanit,
@@ -5312,6 +5544,22 @@ AdvancedItem _konumHiz(int a, int b, int c, int deneme) {
           'x($ts) = ${_yerine(x, ts)} = $yanit m.',
       birim: 'm',
       pozitif: true,
+    );
+    // Anı konum sanma, bir saniye kaydırma, kare terimi unutma ya da işaretini
+    // çevirme, başlangıç konumunu verme, hızı sıfır yapan anı t = ts/2 bulma.
+    return _dengele(
+      eski,
+      yanit,
+      _tamAday(
+        [
+          ...[ts, _deg(x, ts + 1), q * ts + r, r, 3 * p * ts * ts + r],
+          if (_bol(3 * p * ts * ts, 4) != null) 3 * p * ts * ts ~/ 4 + r,
+          ..._komsuTam(yanit),
+        ],
+        birim: 'm',
+        pozitif: true,
+      ),
+      sira,
     );
   }
   // Hızı t₁ ve t₂ anlarında sıfır olan hareket:
@@ -5329,7 +5577,7 @@ AdvancedItem _konumHiz(int a, int b, int c, int deneme) {
     case 2 || 3:
       final ilk = c == 2;
       final yanit = ilk ? t1 : t2;
-      return _tam(
+      final eski = _tam(
         '$_konumGiris x(t) = $pol bağıntısıyla veriliyor. Cismin hızı '
             'kaçıncı saniyede ${ilk ? 'ilk' : 'ikinci'} kez sıfır olur?',
         yanit,
@@ -5338,10 +5586,21 @@ AdvancedItem _konumHiz(int a, int b, int c, int deneme) {
             'hız ${ilk ? 'ilk' : 'ikinci'} kez $yanit. saniyede sıfır olur.',
         pozitif: true,
       );
+      // Öteki kökü, köklerin toplamını, ortalamasını, çarpımını ya da farkını
+      // verme; komşu değerler.
+      return _dengele(
+        eski,
+        yanit,
+        _tamAday([
+          ...[ilk ? t2 : t1, t1 + t2, (t1 + t2) ~/ 2, t1 * t2, t2 - t1],
+          ..._komsuTam(yanit),
+        ], pozitif: true),
+        sira,
+      );
     case 4 || 5:
       final ti = c == 4 ? t1 : t2;
       final yanit = _deg(x, ti);
-      return _tam(
+      final eski = _tam(
         '$_konumGiris x(t) = $pol bağıntısıyla veriliyor. Cismin hızının '
             '${c == 4 ? 'ilk' : 'ikinci'} kez sıfır olduğu anda konumu kaç '
             'metredir?',
@@ -5351,10 +5610,21 @@ AdvancedItem _konumHiz(int a, int b, int c, int deneme) {
             'x($ti) = ${_yerine(x, ti)} = ${_n(yanit)} m.',
         birim: 'm',
       );
+      // Öteki anı, başlangıç konumunu ya da yer değiştirmeyi verme, bir saniye
+      // kaydırma; komşu değerler.
+      return _dengele(
+        eski,
+        yanit,
+        _tamAday([
+          ...[_deg(x, c == 4 ? t2 : t1), x0, _deg(x, ti + 1)],
+          ...[_deg(x, ti - 1), yanit - x0, ..._komsuTam(yanit)],
+        ], birim: 'm'),
+        sira,
+      );
     case 6:
       final ts = (t1 + t2) ~/ 2;
       final yanit = _deg(v, ts);
-      return _tam(
+      final eski = _tam(
         '$_konumGiris x(t) = $pol bağıntısıyla veriliyor. Cismin ivmesinin '
             'sıfır olduğu andaki hızı kaç m/s olur?',
         yanit,
@@ -5364,12 +5634,23 @@ AdvancedItem _konumHiz(int a, int b, int c, int deneme) {
             '${_n(yanit)} m/s.',
         birim: 'm/s',
       );
+      // İşaret hatası, konumu verme, bir saniye kaydırma, anı hız sanma,
+      // başlangıç hızı, ivmenin sıfır olduğu anı hızın sıfır olduğu an sanma.
+      return _dengele(
+        eski,
+        yanit,
+        _tamAday([
+          ...[-yanit, _deg(x, ts), _deg(v, ts + 1), ts, _deg(v, ts - 1)],
+          ...[_deg(v, 0), 0, ..._komsuTam(yanit)],
+        ], birim: 'm/s'),
+        sira,
+      );
     case 7:
       // t = 0 ile t = T arasında alınan yol; yön t₁ anında değişir.
       final tSon = t1 + fark ~/ 2;
       final x0d = _deg(x, 0), x1 = _deg(x, t1), xs = _deg(x, tSon);
       final yol = (x1 - x0d).abs() + (xs - x1).abs();
-      return _tam(
+      final eski = _tam(
         '$_konumGiris x(t) = $pol bağıntısıyla veriliyor. Cismin t = 0 ile '
             't = $tSon s arasında aldığı toplam yol kaç metredir?',
         yol,
@@ -5380,9 +5661,25 @@ AdvancedItem _konumHiz(int a, int b, int c, int deneme) {
         birim: 'm',
         pozitif: true,
       );
+      // Yer değiştirmeyi ya da tek parçayı yol sanma, konumları toplama, iki
+      // parçayı da başlangıçtan ölçme; komşu değerler.
+      return _dengele(
+        eski,
+        yol,
+        _tamAday(
+          [
+            ...[(xs - x0d).abs(), (x1 - x0d).abs(), (xs - x1).abs(), x1 + xs],
+            ...[(x1 - x0d).abs() + (xs - x0d).abs(), 2 * (x1 - x0d).abs()],
+            ..._komsuTam(yol),
+          ],
+          birim: 'm',
+          pozitif: true,
+        ),
+        sira,
+      );
     default:
       final yanit = _deg(ivme, t1);
-      return _tam(
+      final eski = _tam(
         '$_konumGiris x(t) = $pol bağıntısıyla veriliyor. Cismin hızının '
             'ilk kez sıfır olduğu andaki ivmesi kaç m/s² olur?',
         yanit,
@@ -5391,6 +5688,17 @@ AdvancedItem _konumHiz(int a, int b, int c, int deneme) {
             '${_pol(ivme, 't')} olduğundan a($t1) = ${_yerine(ivme, t1)} = '
             '${_n(yanit)} m/s².',
         birim: 'm/s²',
+      );
+      // İşaret hatası, başlangıçtaki ivme, ivme yerine hız (0), bir saniye
+      // kaydırma, türevde sabit terimi unutma; komşu değerler.
+      return _dengele(
+        eski,
+        yanit,
+        _tamAday([
+          ...[-yanit, _deg(ivme, 0), 0, _deg(ivme, t1 + 1)],
+          ...[_deg(ivme, t1 - 1), 6 * a3 * t1, ..._komsuTam(yanit)],
+        ], birim: 'm/s²'),
+        sira,
       );
   }
 }
@@ -7036,8 +7344,10 @@ final lmAnaliz = <AdvancedFamily>[
     'İki kat açı formülleriyle sin 2x, cos 2x, tan 2x, cot 2x',
     Difficulty.medium,
     BloomLevel.uygulama,
-    (a, b, c) =>
-        _ikiKat(_ikiKatHavuz[(a + 25 * b + 500 * c) * 1013 % lmAileBoyu]),
+    (a, b, c) => _ikiKat(
+      _ikiKatHavuz[(a + 25 * b + 500 * c) * 1013 % lmAileBoyu],
+      hedefSira(_vaka(a, b, c)),
+    ),
   ),
 
   // 3 · Trigonometrik denklem: c < 6 → özel değerli sin, cos, tan denklemi

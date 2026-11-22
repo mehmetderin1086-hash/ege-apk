@@ -514,6 +514,29 @@ List<(int, int)> _ucluSec(
   return const [];
 }
 
+/// [_ucluSec] gibi; ama seçilen üçlüde anahtarla aynı biçimde (tam sayı ya
+/// da kesir) en az bir çeldirici yoksa, bunu sağlayan en yakın sıra denenir
+/// (anahtar biçimiyle tek kalmasın). Üçlüyle birlikte kullanılan sırayı da
+/// verir; uygun sıra yoksa [sira] ile bulunan üçlü döner.
+(List<(int, int)>, int) _ucluSecBicim(
+  int n,
+  int d,
+  List<List<(int, int)>> tasarim,
+  List<(int, int)> adaylar,
+  int sira, {
+  bool pozitif = false,
+}) {
+  final tam = n % d == 0;
+  for (var f = 0; f <= 3; f++) {
+    for (final s in f == 0 ? [sira] : [sira - f, sira + f]) {
+      if (s < 0 || s > 3) continue;
+      final u = _ucluSec(n, d, tasarim, adaylar, s, pozitif: pozitif);
+      if (u.any((x) => (x.$1 % x.$2 == 0) == tam)) return (u, s);
+    }
+  }
+  return (_ucluSec(n, d, tasarim, adaylar, sira, pozitif: pozitif), sira);
+}
+
 /// Aday, anahtarın (n/d) büyüklüğünün en çok 20 katı mı (1'den küçük
 /// anahtarlarda 20)? Saçma büyüklükte yanlışları elemek için.
 bool _olcekte((int, int) x, int n, int d) =>
@@ -2480,6 +2503,31 @@ final lmMatIleri = <AdvancedFamily>[
           // r ± 1 gibi düz komşular tipik hata sayılmaz (son çarede [_kesS]
           // komşuları en çok bir kez girer).
           bool birDegil((int, int) x) => x.$2 != 0 && x.$1 != x.$2;
+          // Büyüklüğü anahtarın 20 katını aşan yanlışlar elenir. Anahtar,
+          // biçimiyle (tam sayı ya da kesir) tek kalmasın diye gerekirse en
+          // yakın başka bir sıra seçilir (ör. r = 2 iken 2'den küçük tam sayı
+          // yanlış yoktur).
+          final (uclu, us) = _ucluSecBicim(
+            yp,
+            yq,
+            [
+              for (final u in [
+                [ters, kok, (am, an)],
+                [ters, bol, (am * e, an)],
+                [kok, bol, fark],
+              ])
+                if (u.every((x) => _olcekte(x, yp, yq) && birDegil(x))) u,
+            ],
+            [
+              for (final x in [
+                kok, ters, fark, bol, (am, an), (am * e, an), //
+                (yp, yq * e),
+              ])
+                if (_olcekte(x, yp, yq) && birDegil(x)) x,
+            ],
+            hs,
+            pozitif: true,
+          );
           return _kesS(
             'Tüm terimleri pozitif olan bir geometrik dizide a${_alt(m)} = '
                 '$am ve a${_alt(n)} = $an olduğuna göre bu dizinin ortak çarpanı '
@@ -2487,36 +2535,18 @@ final lmMatIleri = <AdvancedFamily>[
             yp,
             yq,
             [
-              // Büyüklüğü anahtarın 20 katını aşan yanlışlar elenir; son
-              // çare bir fazlası ya da eksiği.
-              ..._ucluSec(
-                yp,
-                yq,
-                [
-                  for (final u in [
-                    [ters, kok, (am, an)],
-                    [ters, bol, (am * e, an)],
-                    [kok, bol, fark],
-                  ])
-                    if (u.every((x) => _olcekte(x, yp, yq) && birDegil(x))) u,
-                ],
-                [
-                  for (final x in [
-                    kok, ters, fark, bol, (am, an), (am * e, an), //
-                    (yp, yq * e),
-                  ])
-                    if (_olcekte(x, yp, yq) && birDegil(x)) x,
-                ],
-                hs,
-                pozitif: true,
-              ),
-              for (final x in [kok, ters, fark, (yp, yq * e)])
+              ...uclu,
+              // Üçlü bulunamazsa önce öteki tipik yanlışlar (kök almayı
+              // unutmanın tersi dahil), en sonda komşular gelir.
+              for (final x in [kok, ters, fark, (yp, yq * e), (am, an)])
                 if (birDegil(x)) x,
+              for (final x in [bol, (am * e, an)])
+                if (_olcekte(x, yp, yq) && birDegil(x)) x,
             ],
             'a${_alt(n)} = a${_alt(m)}·r${_ust(e)} olduğundan r${_ust(e)} = '
                 '${_oranYaz(an, am)} olur. Terimler pozitif olduğundan '
                 'r = ${_q(yp, yq)} bulunur.',
-            hs,
+            us,
             pozitif: true,
             uygun: (x) => (x - 1).abs() > 1e-9,
           );

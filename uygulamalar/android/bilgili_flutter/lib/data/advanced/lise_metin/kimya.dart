@@ -261,7 +261,8 @@ int _sira(int a, int b, int c) {
 /// [komsuOlcek] (verilmezse anahtarın kendisi) büyüklüğüne göre seçilir.
 /// Anahtara ya da öncelikli bir adaya pratikte eş görünen adaylar (60,72 ile
 /// 60,7; 340 ile 336) atlanır; yakınlık [orijin] noktasından ölçülür (ör.
-/// kaynama noktalarında 100 °C).
+/// kaynama noktalarında 100 °C). [ikiKatYarim] verilirse anahtarın hem iki
+/// katı hem yarısı adaylarda bulunduğunda vakaya göre yalnız biri tutulur.
 AdvancedItem _saySirali(
   String kok,
   num dogru,
@@ -278,6 +279,7 @@ AdvancedItem _saySirali(
   num komsuUst = double.infinity,
   num? komsuOlcek,
   num orijin = 0,
+  bool ikiKatYarim = false,
 }) {
   String yaz(num x, {bool kesin = false}) {
     var s = kesin ? _t(x, basamak) : _yz(x, basamak);
@@ -302,7 +304,9 @@ AdvancedItem _saySirali(
   // bağımsız seçim) yalnız biri tutulur.
   final liste = adaylar.where(gecerli).toList();
   bool esit(num x, num y) => (x - y).abs() <= 1e-9 * (1 + x.abs() + y.abs());
-  if (liste.any((x) => esit(x, 2 * d)) && liste.any((x) => esit(x, d / 2))) {
+  if (ikiKatYarim &&
+      liste.any((x) => esit(x, 2 * d)) &&
+      liste.any((x) => esit(x, d / 2))) {
     final atilan = (sira ~/ 16).isEven ? d / 2 : 2 * d;
     liste.removeWhere((x) => esit(x, atilan));
   }
@@ -1987,6 +1991,7 @@ final _f09 = lmAile(
           [yanlisUrun, ns, ne, na + nb, ns * ks / kc, x, nc / 2, nc * 2, artan],
           '$karar Oluşan $fc miktarı ${_t(ns)}·$kc / $ks = ${_t(nc)} mol olur.',
           sira,
+          ikiKatYarim: true,
           birim: 'mol',
         );
       case 1:
@@ -2015,6 +2020,7 @@ final _f09 = lmAile(
           '$karar Artan $fe miktarı ${_t(ne)} − ${_t(ke * x)} = ${_t(artan)} '
               'mol olur.',
           sira,
+          ikiKatYarim: true,
           birim: 'mol',
           komsuUst: enCok,
         );
@@ -2036,6 +2042,7 @@ final _f09 = lmAile(
           '$cevir $karar Oluşan $fc miktarı ${_t(nc)} mol, kütlesi '
               '${_t(nc)}·${_t(mc)} = ${_t(nc * mc)} gram olur.',
           sira,
+          ikiKatYarim: true,
           birim: 'g',
         );
       case 3:
@@ -2063,6 +2070,7 @@ final _f09 = lmAile(
               '${_t(artan)} mol, kütlesi ${_t(artan)}·${_t(me)} = '
               '${_t(artan * me)} gram olur.',
           sira,
+          ikiKatYarim: true,
           birim: 'g',
           komsuUst: enCokKutle,
         );
@@ -2084,6 +2092,7 @@ final _f09 = lmAile(
           '$karar Oluşan $fc miktarı ${_t(nc)} mol, kütlesi ${_t(nc)}·${_t(mc)} '
               '= ${_t(nc * mc)} gram olur.',
           sira,
+          ikiKatYarim: true,
           birim: 'g',
         );
     }
@@ -2646,7 +2655,6 @@ final _f13 = lmAile(
               top * u - n[j] * u,
               n[2] * u,
               u,
-              top * u ~/ n[j],
               2 * n[j] * u,
               n[j] * u ~/ 2,
             ],
@@ -3550,6 +3558,7 @@ final _f17 = lmAile(
           '$yol ${_t(n)} mol $urun için ${_t(n)}·${-dh} = ${_t(q)} kJ ısı '
               'açığa çıkar.',
           sira,
+          ikiKatYarim: true,
           birim: 'kJ',
         );
       }
@@ -3560,6 +3569,7 @@ final _f17 = lmAile(
         [q / yanlis[0], q / yanlis[1], _olcekte(-dh / q, n), n * 2, n / 2],
         '$yol Oluşan $urun miktarı ${_t(q)} / ${-dh} = ${_t(n)} mol olur.',
         sira,
+        ikiKatYarim: true,
         birim: 'mol',
       );
     }
@@ -3585,6 +3595,7 @@ final _f17 = lmAile(
           'ΔT = $t2 − $t1 = $dt °C olur. Q = m·c·ΔT = $m·4,2·$dt = '
               '${_t(q * 1000)} J = ${_t(q)} kJ bulunur.',
           sira,
+          ikiKatYarim: true,
           birim: 'kJ',
         );
       }
@@ -3597,6 +3608,7 @@ final _f17 = lmAile(
         'ΔT = Q / (m·c) = ${_t(q * 1000)} / ($m·4,2) = $dt °C olur. Son '
             'sıcaklık $t1 + $dt = $t2 °C bulunur.',
         sira,
+        ikiKatYarim: true,
         birim: '°C',
         basamak: 0,
       );
@@ -3670,6 +3682,7 @@ final _f17 = lmAile(
               'Açığa çıkan ısı ${-dh}·${_t(n)}${kx == 1 ? '' : ' / $kx'} = '
               '${_t(q)} kJ bulunur.',
           sira,
+          ikiKatYarim: true,
           birim: 'kJ',
         );
       case 3:
@@ -3703,6 +3716,7 @@ final _f17 = lmAile(
               '${_t(q)}·$kx / ${-dh} = ${_t(n)} mol $x gerekir.'
               '${gramli ? ' Kütlesi ${_t(n)}·${_t(mk)} = ${_t(m)} gramdır.' : ''}',
           sira,
+          ikiKatYarim: true,
           birim: gramli ? 'g' : 'mol',
         );
       default:
