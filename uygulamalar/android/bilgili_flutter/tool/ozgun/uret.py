@@ -10,17 +10,35 @@ def kume(s): return frozenset(w for w in kel.findall(s.lower()) if len(w)>=2)
 def duz(s): return re.sub(r'\s+',' ',s.lower()).strip()
 ESIK=0.25
 gorulen=set(); kumeler=[]; ters=collections.defaultdict(list)
+# Önek süzgeci: Jaccard benzerliği 1-ESIK'ten büyük iki küme, sözcükleri genel bir
+# sıraya dizildiğinde ilk birkaç sözcüğünden en az birini paylaşır; yalnız bunlar dizinlenir.
+SIRA={}
+def _onek(k):
+    s=sorted(k,key=lambda w:(SIRA.get(w,0),w))
+    n=len(s)-int(-(-(1-ESIK)*len(s)//1))+1
+    return s[:max(n,0)]
 def benzer(k):
-    sayac=collections.Counter()
-    for w in k:
-        for j in ters[w]: sayac[j]+=1
-    for j,ort in sayac.items():
-        b=kumeler[j]
+    if not k: return False
+    aday=set()
+    for w in _onek(k): aday.update(ters[w])
+    for j in aday:
+        b=kumeler[j]; ort=len(k&b)
         if 1-ort/(len(k)+len(b)-ort) < ESIK: return True
     return False
 def ekle(k):
     j=len(kumeler); kumeler.append(k)
-    for w in k: ters[w].append(j)
+    for w in _onek(k): ters[w].append(j)
+def sira_kur(metinler):
+    df=collections.Counter()
+    for m in metinler: df.update(kume(m))
+    SIRA.update({w:c for w,c in df.items()})
+_tum=[]
+if mevcut:
+    _tum+= [json.loads(l)['soru'] for l in open(mevcut,encoding='utf-8')]
+for _a in ALAN:
+    _p=f'{kok_dir}/{_a["id"]}/son.jsonl'
+    if os.path.exists(_p): _tum+=[json.loads(l)['soru'] for l in open(_p,encoding='utf-8') if l.strip()]
+sira_kur(_tum); del _tum
 if mevcut:
     for l in open(mevcut,encoding='utf-8'):
         r=json.loads(l); gorulen.add(duz(r['soru'])); ekle(kume(r['soru']))

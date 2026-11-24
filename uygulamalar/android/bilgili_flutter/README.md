@@ -1,4 +1,12 @@
-# Bilgili 3.15.1
+# Bilgili 3.16.0
+
+3.16.0 sürümünde 23 kategoriye 112.792 yeni, elle yazılmış özgün çoktan seçmeli soru eklendi. Her kategoride 9 yeni alt alan açıldı (toplam 207). Banka artık 172.149 soru içeriyor (163.758 özgün soru ve 8.391 seçki sorusu).
+
+- Her soru, cevap anahtarını görmeyen ayrı bir çözücü tarafından çözüldü. Uyuşmazlıklar ve kusur notları hakem incelemesinden geçti.
+- Yeni sorular hem birbirleriyle hem bankadaki sorularla karşılaştırıldı. Aynı bilgiyi soranlar, zamanla eskiyebilecek olanlar ve aynı anlama gelen seçenekler ayıklandı.
+- `tool/ozgun/uret.py` içindeki benzerlik denetimi önek süzgeciyle hızlandırıldı. Sonuç aynı kaldı, süre saatlerden saniyelere indi.
+
+## 3.15.1
 
 3.15.1: Sürüm derlemesindeki kaynak küçültme, koddan adıyla çağrılan `res/raw` ses dosyalarını siliyordu; `res/raw/keep.xml` ile korundu. Menü ve oyun müzikleri de bu sürümden itibaren APK'da yer alır.
 

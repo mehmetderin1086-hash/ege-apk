@@ -106,7 +106,7 @@ jobs:
           set -euo pipefail
           ETIKET="bilgili-v${SURUM}"
           {
-            echo "Bilgili ${SURUM} (sürüm kodu ${KOD}). Zirve Merdiveni için özgün müzik ve ses efektleri; menü ve oyun müzikleri artık APK içinde (kaynak küçültme düzeltmesi). Banka 59.357 soru."
+            echo "Bilgili ${SURUM} (sürüm kodu ${KOD}). 23 kategoriye 112.792 yeni özgün çoktan seçmeli soru; banka 172.149 soru."
             echo
             echo "Çoğu telefon için \`Bilgili-${SURUM}-arm64.apk\` dosyasını indirin. \`armv7\` dosyası eski 32 bit telefonlar içindir."
             echo
