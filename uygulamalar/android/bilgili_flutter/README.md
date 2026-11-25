@@ -1,4 +1,12 @@
-# Bilgili 3.16.0
+# Bilgili 3.17.0
+
+3.17.0 sürümünde 23 kategoriye 51.995 yeni, elle yazılmış özgün çoktan seçmeli soru eklendi. Her kategoride 5 yeni alt alan açıldı (toplam 115 yeni alt alan, 345 yeni aile). Banka artık 224.144 soru içeriyor (215.753 özgün soru ve 8.391 seçki sorusu).
+
+- Mevcut 966 özgün ailenin tamamı ve tüm soru kimlikleri korundu; 3.16.0 üzerindeki kayıtlı ilerleme ve istatistikler bozulmadan taşınır.
+- Yeni 51.995 sorunun tamamı hem mevcut 172.149 soruluk bankaya hem kendi aralarına karşı tam metin, sayıdan arındırılmış iskelet ve %25 Jaccard sözcük uzaklığı süzgecinden geçirildi; ayrıca soru içi biçim, çapraz atıf ve aşırı uzun şık ipucu denetimleri uygulandı.
+- 23 kategorinin her biri 2.049 ile 2.449 arasında yeni özgün soruyla dengeli biçimde genişletildi.
+
+## 3.16.0
 
 3.16.0 sürümünde 23 kategoriye 112.792 yeni, elle yazılmış özgün çoktan seçmeli soru eklendi. Her kategoride 9 yeni alt alan açıldı (toplam 207). Banka artık 172.149 soru içeriyor (163.758 özgün soru ve 8.391 seçki sorusu).
 
