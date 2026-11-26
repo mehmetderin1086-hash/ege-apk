@@ -227,6 +227,8 @@ void main() {
     ctrl.submitActivitySequence(ctrl.activeRound!.current.activity!.solution);
     await tester.pump(const Duration(milliseconds: 200));
     expect(ctrl.activeRound!.answers.last.correct, isTrue);
+    ctrl.exitRound();
+    await tester.pump();
     expect(tester.takeException(), isNull);
   });
 
@@ -269,6 +271,8 @@ void main() {
     expect(ctrl.activeRound, isNotNull);
     expect(ctrl.activeRound!.questions, hasLength(10));
     expect(ctrl.activeRound!.questions.every((q) => q.activity?.kind == ActivityKind.listening), isTrue);
+    ctrl.exitRound();
+    await tester.pump();
     expect(tester.takeException(), isNull);
   });
 }
