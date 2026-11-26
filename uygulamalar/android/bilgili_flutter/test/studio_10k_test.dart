@@ -230,7 +230,6 @@ void main() {
     ctrl.exitRound();
     await tester.pump();
     expect(tester.takeException(), isNull);
-    ctrl.exitRound();
   });
 
   testWidgets('HomePlayTab opens Sesli İngilizce Stüdyosu modal and launches listening round', (tester) async {
@@ -275,7 +274,5 @@ void main() {
     ctrl.exitRound();
     await tester.pump();
     expect(tester.takeException(), isNull);
-    ctrl.exitRound();
-    await tester.pump();
   });
 }
