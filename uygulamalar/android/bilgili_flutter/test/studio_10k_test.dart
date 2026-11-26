@@ -61,6 +61,8 @@ void main() {
             expect(act.solution.toSet(), equals({for (var k = 0; k < act.left.length; k++) k}), reason: q.id);
             break;
           case ResponseType.creation:
+          case ResponseType.slider:
+          case ResponseType.anagram:
             break;
         }
 
@@ -257,15 +259,15 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 300));
-    final card = find.text('Sesli İngilizce Stüdyosu (3.000 Soru)');
+    final card = find.text('Sesli İngilizce Stüdyosu (28.000 Soru)');
     await tester.scrollUntilVisible(card, 200, scrollable: find.byType(Scrollable).first);
     await tester.ensureVisible(card);
     await tester.pump(const Duration(milliseconds: 200));
     await tester.tap(card);
     await tester.pumpAndSettle();
 
-    expect(find.text('İngilizce Dinleme & Anlama (1.800 Soru)'), findsOneWidget);
-    await tester.tap(find.text('İngilizce Dinleme & Anlama (1.800 Soru)'));
+    expect(find.text('İngilizce Dinleme & Anlama (17.800 Soru)'), findsOneWidget);
+    await tester.tap(find.text('İngilizce Dinleme & Anlama (17.800 Soru)'));
     await tester.pumpAndSettle();
 
     expect(ctrl.activeRound, isNotNull);

@@ -32,7 +32,10 @@ void main() {
     expect(toplam, 8391);
     expect(
       AdvancedCatalog.all.length,
-      8391 + AdvancedCatalog.ozgun.length + AdvancedCatalog.studio10k.length,
+      8391 +
+          AdvancedCatalog.ozgun.length +
+          AdvancedCatalog.studio10k.length +
+          AdvancedCatalog.studio100k.length,
     );
     final metin = AdvancedCatalog.families.where((f) => f.sourceLabel == lmKaynak);
     expect(metin.length, greaterThan(350));

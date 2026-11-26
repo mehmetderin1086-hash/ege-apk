@@ -129,6 +129,16 @@ void main() {
               require(visual.values.length >= 3, 'Atom katmanları');
             case VisualKind.matrix:
               require(visual.rows.length == 3, '3x3 matris verisi');
+            case VisualKind.circuit:
+              require(visual.labels.isNotEmpty, 'Devre verisi');
+            case VisualKind.venn:
+              require(visual.values.length >= 3, 'Venn verisi');
+            case VisualKind.compass:
+              require(visual.values.isNotEmpty, 'Pusula açısı');
+            case VisualKind.colorLab:
+              require(visual.labels.isNotEmpty, 'Renk verisi');
+            case VisualKind.piano:
+              require(visual.labels.isNotEmpty, 'Piyano tuşları');
           }
           add(visuals, visual.kind.name);
         }

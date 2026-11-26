@@ -1,4 +1,14 @@
-# Bilgili 3.20.0
+# Bilgili 3.21.0
+
+3.21.0 sürümünde **100.000 yeni metin dışı soru** eklendi (toplam soru bankası **334.144** soruya ulaştı) ve metin dışındaki tüm görsel, sesli ve etkileşimli motorlar baştan sona geliştirildi:
+
+- **5 Yeni Vektörel Görsel Motor (25.000 Soru):** **Sayısal Mantık Kapıları & Seri/Paralel Elektrik Devreleri** (`circuit`, 7.000), **Venn Şeması, Küme İşlemleri & Olasılık** (`venn`, 5.000), **Pusula, Rota, Azimut & İngilizce Navigasyon** (`compass`, 4.500), **Renk Karışımı, RGB Hex & Görünür Işık Spektrumu** (`colorLab`, 4.500) ve **2 Oktav Piyano Klavyesi, Aralık, Akor & Gamlar** (`piano`, 4.000).
+- **7 Mevcut Görsel Motorun Dev Genişlemesi (+25.000 Soru):** Derin Dünya Bayrakları Atlası (3.200), Analog Saat · Açı · Ayna Saati · 24 Saat & İngilizce Saat (4.000), Pasta Grafiği Veri Analitiği (3.600), Koordinat Düzlemi, Poligon Alanı & Vektörler (4.400), 36 Elementli Bohr Atom, İzotop & İyon Laboratuvarı (3.000), Sol/Fa Anahtarlı Müzik Portesi & Akorlar (2.800) ve 3×3 Mantık & Sihirli Kare Matrisleri (4.000).
+- **Sesli İngilizce Stüdyosu 2.0 (+25.000 Soru · Toplam 28.000+):** Oynatıcı içine canlı **US / UK / AU aksan değiştirici** ve **3 hız seviyesi (`0.72x Yavaş`, `1.0x Normal`, `1.18x Hızlı`)** eklendi; 14 senaryolu gerçek diyaloglar (7.000), A2–C1 kelime/deyim/phrasal verb (5.000), IELTS sayı/indirim/saat/tarih (4.000), 125 kelimelik dinle-yaz dikte (5.000) ve telaffuz/sessiz harf/eşsesli/vurgu (4.000) eklendi.
+- **2 Yeni 3D Etkileşimli Oyun Mekaniği (+25.000 Soru):** Tolerans bantlı **3D Tahmin Sürgüsü** (`slider`, 4.500 — tarih, bilim, açı, yüzde, sıcaklık, hız/mesafe), sesli İngilizce ve Türkçe **3D Harf Dizme / Anagram** (`anagram`, 6.000 — 3.500 sesli İngilizce + 2.500 Türkçe kültür/bilim), 10 alanlı Mega Eşleştirme (4.000), Kronoloji & İngilizce Cümle Kurma Sıralaması (3.500), Çoklu Seçim (2.500), 3D Doğru/Yanlış (2.500) ve Kısa Yanıt (2.000); ayrıca sıralama ve eşleştirme taşlarına yanıt sonrası yeşil ✓ / kırmızı ✕ doğrulama işaretleri eklendi.
+- **Yeni Stüdyo Keşif Menüleri:** Ana ekrandaki **Görsel & Etkinlik** kartı 12 görsel motor, 3D Tahmin Sürgüsü ve 3D Harf Dizme için tek dokunuşlu **Görsel & Etkileşimli Stüdyo** menüsünü açar; **Sesli İngilizce Stüdyosu** menüsü 28.000+ soruluk güncel modlarla yenilendi.
+
+## 3.20.0
 
 3.20.0 sürümünde **10.000 yeni nesil görsel, sesli İngilizce ve çok biçimli etkileşimli soru** eklendi (toplam soru bankası **234.144** soruya ulaştı) ve tüm yeni soru biçimleri 3D Stüdyo arayüzüyle desteklendi:
 

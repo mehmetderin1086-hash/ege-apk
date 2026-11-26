@@ -1630,7 +1630,7 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
               ],
               // Kart içi etkileşimli kendini sına şıkları!
               if (q.options.isNotEmpty &&
-                  !q.isInteractiveSequence &&
+                  !q.isCustomInteractive &&
                   q.responseType != ResponseType.fill &&
                   q.multiSelect == null) ...[
                 Text(

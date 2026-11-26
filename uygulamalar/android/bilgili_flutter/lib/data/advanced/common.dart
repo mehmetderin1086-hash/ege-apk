@@ -115,6 +115,8 @@ class AdvancedFamily {
         ActivityKind.listening => ResponseType.listening,
         ActivityKind.dictation => ResponseType.fill,
         ActivityKind.pronunciation => ResponseType.pronunciation,
+        ActivityKind.slider => ResponseType.slider,
+        ActivityKind.anagram => ResponseType.anagram,
       };
     }
     if (fixedResponseType != null) return fixedResponseType!;
@@ -139,6 +141,8 @@ class AdvancedFamily {
         QuestionFormat.ordering => activityKind == ActivityKind.ordering,
         QuestionFormat.matching => activityKind == ActivityKind.matching,
         QuestionFormat.pronunciation => activityKind == ActivityKind.pronunciation,
+        QuestionFormat.slider => activityKind == ActivityKind.slider,
+        QuestionFormat.anagram => activityKind == ActivityKind.anagram,
       };
 
   List<int> _offsets(QuestionFormat format) =>
@@ -192,7 +196,9 @@ class AdvancedFamily {
       qOptions = const ['Doğru', 'Yanlış'];
       qAnswer = statementCorrect ? 0 : 1;
       qExplanation = 'Doğru yanıt: ${item.correct}. ${item.explanation}';
-    } else if (mode == ResponseType.fill) {
+    } else if (mode == ResponseType.fill ||
+        mode == ResponseType.slider ||
+        mode == ResponseType.anagram) {
       qText = item.prompt;
       qOptions = [item.correct, ...item.wrong];
       qAnswer = 0;

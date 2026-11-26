@@ -257,7 +257,8 @@ class QuizNarration {
     if (act != null &&
         (act.kind == ActivityKind.listening ||
             act.kind == ActivityKind.dictation ||
-            act.kind == ActivityKind.pronunciation)) {
+            act.kind == ActivityKind.pronunciation ||
+            act.kind == ActivityKind.anagram)) {
       final transcript = act.transcript ?? '';
       if (transcript.isNotEmpty) {
         segments.add((text: intro.toString(), language: 'tr-TR'));
@@ -274,6 +275,16 @@ class QuizNarration {
         segments.add((text: intro.toString(), language: 'tr-TR'));
         return segments;
       }
+      if (act.kind == ActivityKind.anagram) {
+        intro.write('Harf taşlarına sırayla dokunarak kelimeyi oluştur.');
+        segments.add((text: intro.toString(), language: 'tr-TR'));
+        return segments;
+      }
+    }
+    if (act?.kind == ActivityKind.slider) {
+      intro.write(' Ekrandaki tahmin sürgüsünü kaydırarak değerini kilitle.');
+      segments.add((text: intro.toString(), language: 'tr-TR'));
+      return segments;
     }
     if (act?.kind == ActivityKind.ordering) {
       for (final (i, item) in act!.items.indexed) {

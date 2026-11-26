@@ -123,7 +123,9 @@ enum QuestionFormat {
   dictation('Sesli Dikte', Icons.hearing_rounded),
   ordering('Sıralama', Icons.swap_vert_rounded),
   matching('Eşleştirme', Icons.compare_arrows_rounded),
-  pronunciation('Telaffuz', Icons.record_voice_over_rounded);
+  pronunciation('Telaffuz', Icons.record_voice_over_rounded),
+  slider('Tahmin Sürgüsü', Icons.tune_rounded),
+  anagram('Harf Dizme', Icons.spellcheck_rounded);
 
   final String label;
   final IconData icon;
@@ -136,6 +138,8 @@ enum QuestionFormat {
     listening,
     dictation,
     pronunciation,
+    slider,
+    anagram,
     matching,
     ordering,
     multiSelect,
@@ -229,7 +233,12 @@ enum VisualKind {
   musicStaff,
   coordPlane,
   atom,
-  matrix;
+  matrix,
+  circuit,
+  venn,
+  compass,
+  colorLab,
+  piano;
 
   static VisualKind? fromString(String? raw) {
     if (raw == null) return null;
@@ -381,7 +390,9 @@ enum ActivityKind {
   dictation,
   ordering,
   matching,
-  pronunciation;
+  pronunciation,
+  slider,
+  anagram;
 
   static ActivityKind? fromString(String? raw) {
     if (raw == null) return null;
@@ -403,6 +414,10 @@ enum ActivityKind {
         return 'Eşleştirme';
       case ActivityKind.pronunciation:
         return 'Telaffuz';
+      case ActivityKind.slider:
+        return 'Tahmin Sürgüsü';
+      case ActivityKind.anagram:
+        return 'Harf Dizme';
     }
   }
 }
@@ -436,6 +451,33 @@ class QuestionActivity {
     return true;
   }
 
+  double get sliderMin => items.isNotEmpty ? (double.tryParse(items[0]) ?? 0) : 0;
+  double get sliderMax => items.length > 1 ? (double.tryParse(items[1]) ?? 100) : 100;
+  double get sliderStep => items.length > 2 ? (double.tryParse(items[2]) ?? 1) : 1;
+  double get sliderTolerance => items.length > 3 ? (double.tryParse(items[3]) ?? 0) : 0;
+  String get sliderUnit => items.length > 4 ? items[4] : '';
+  int get sliderTarget => solution.isNotEmpty ? solution.first : 0;
+
+  bool matchesSlider(int estimate) => (estimate - sliderTarget).abs() <= sliderTolerance;
+
+  String get anagramTarget => left.isNotEmpty ? left.first : '';
+
+  bool matchesAnagram(String built) {
+    String fold(String s) => s
+        .trim()
+        .replaceAll('İ', 'i')
+        .replaceAll('I', 'ı')
+        .toLowerCase()
+        .replaceAll(RegExp(r'\s+'), '');
+    final exp = anagramTarget;
+    if (exp.isEmpty) return false;
+    if (language != null && language!.startsWith('en')) {
+      return built.trim().toLowerCase().replaceAll(' ', '') ==
+          exp.trim().toLowerCase().replaceAll(' ', '');
+    }
+    return fold(built) == fold(exp);
+  }
+
   String describeSequence(List<int> seq) {
     if (kind == ActivityKind.ordering && items.isNotEmpty) {
       return seq
@@ -451,6 +493,12 @@ class QuestionActivity {
         parts.add('${left[i]} → $rText');
       }
       return parts.join(' · ');
+    }
+    if (kind == ActivityKind.slider && solution.isNotEmpty) {
+      return '${solution.first}${sliderUnit.isNotEmpty ? ' $sliderUnit' : ''}';
+    }
+    if (kind == ActivityKind.anagram && left.isNotEmpty) {
+      return left.first;
     }
     return seq.map((e) => '${e + 1}').join(' - ');
   }
@@ -493,7 +541,7 @@ enum ResponseType {
   choice('Çoktan seçmeli'), multiSelect('Çoklu seçim'), trueFalse('Doğru / yanlış'),
   fill('Boşluk doldurma'), creation('Açık uçlu tasarım'),
   ordering('Sıralama'), matching('Eşleştirme'), listening('Dinleme'),
-  pronunciation('Telaffuz');
+  pronunciation('Telaffuz'), slider('Tahmin sürgüsü'), anagram('Harf dizme');
   const ResponseType(this.label);
   final String label;
 }
@@ -579,6 +627,8 @@ class Question {
       ActivityKind.listening => ResponseType.listening,
       ActivityKind.dictation => ResponseType.fill,
       ActivityKind.pronunciation => ResponseType.pronunciation,
+      ActivityKind.slider => ResponseType.slider,
+      ActivityKind.anagram => ResponseType.anagram,
       null => _answerMode,
     };
   }
@@ -649,8 +699,11 @@ class Question {
       return multiSelect!.correct.map((i) => multiSelect!.options[i]).join(' · ');
     }
     if (activity != null) {
-      if (activity!.kind == ActivityKind.ordering || activity!.kind == ActivityKind.matching) {
-        if (activity!.solution.isNotEmpty) {
+      if (activity!.kind == ActivityKind.ordering ||
+          activity!.kind == ActivityKind.matching ||
+          activity!.kind == ActivityKind.slider ||
+          activity!.kind == ActivityKind.anagram) {
+        if (activity!.solution.isNotEmpty || activity!.left.isNotEmpty) {
           return activity!.describeSequence(activity!.solution);
         }
       }
@@ -666,6 +719,10 @@ class Question {
 
   bool get isInteractiveSequence =>
       activity?.kind == ActivityKind.ordering || activity?.kind == ActivityKind.matching;
+
+  bool get isSlider => activity?.kind == ActivityKind.slider;
+  bool get isAnagram => activity?.kind == ActivityKind.anagram;
+  bool get isCustomInteractive => isInteractiveSequence || isSlider || isAnagram;
 
   bool get isPronunciation => activity?.kind == ActivityKind.pronunciation;
 
@@ -699,6 +756,10 @@ class Question {
         return activity?.kind == ActivityKind.matching;
       case QuestionFormat.pronunciation:
         return activity?.kind == ActivityKind.pronunciation;
+      case QuestionFormat.slider:
+        return activity?.kind == ActivityKind.slider;
+      case QuestionFormat.anagram:
+        return activity?.kind == ActivityKind.anagram;
     }
   }
 
@@ -720,7 +781,7 @@ class Question {
   }
 
   Question shuffled(Random rng) {
-    if (isInteractiveSequence || isPronunciation || multiSelect != null || options.length != 4) {
+    if (isCustomInteractive || isPronunciation || multiSelect != null || options.length != 4) {
       return this;
     }
     final indices = [0, 1, 2, 3]..shuffle(rng);

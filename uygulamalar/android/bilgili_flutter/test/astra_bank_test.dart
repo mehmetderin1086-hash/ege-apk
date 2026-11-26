@@ -15,7 +15,10 @@ void main() {
     addTearDown(controller.dispose);
     await controller.initialize();
     expect(controller.personalQuestions, isEmpty);
-    final expected = 8391 + AdvancedCatalog.ozgun.length + AdvancedCatalog.studio10k.length;
+    final expected = 8391 +
+        AdvancedCatalog.ozgun.length +
+        AdvancedCatalog.studio10k.length +
+        AdvancedCatalog.studio100k.length;
     expect(controller.totalPoolCount, expected);
     expect(AdvancedCatalog.all.length, expected);
     expect(controller.allQuestions.last.sourceModel, isNotEmpty);
@@ -77,7 +80,10 @@ void main() {
       expect(controller.personalQuestions.single.id, mine['id']);
       expect(
         controller.totalPoolCount,
-        8392 + AdvancedCatalog.ozgun.length + AdvancedCatalog.studio10k.length,
+        8392 +
+            AdvancedCatalog.ozgun.length +
+            AdvancedCatalog.studio10k.length +
+            AdvancedCatalog.studio100k.length,
       );
     }
   });

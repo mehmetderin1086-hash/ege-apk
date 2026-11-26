@@ -487,7 +487,7 @@ class SettingsTab extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'Sürüm 3.20.0 · ${controller.totalPoolCount} çevrimdışı görsel, sesli & akademik soru · 23 kategori',
+                      'Sürüm 3.21.0 · ${controller.totalPoolCount} çevrimdışı görsel, sesli & etkileşimli soru · 23 kategori',
                       style: TextStyle(
                         fontSize: 11.5,
                         color: Colors.white.withValues(alpha: 0.74),

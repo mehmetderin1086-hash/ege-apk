@@ -922,7 +922,7 @@ class _HomePlayTabState extends State<HomePlayTab> {
         ),
         const SizedBox(height: 10),
 
-        // 8. Sesli İngilizce Stüdyosu (3.000 Yeni Soru)
+        // 8. Sesli İngilizce Stüdyosu (28.000 Soru)
         ArenaGlassCard(
           tint: const Color(0xFF58D5E3),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -948,7 +948,7 @@ class _HomePlayTabState extends State<HomePlayTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Sesli İngilizce Stüdyosu (3.000 Soru)',
+                      'Sesli İngilizce Stüdyosu (28.000 Soru)',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -959,7 +959,7 @@ class _HomePlayTabState extends State<HomePlayTab> {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'US/UK Dinleme · Sesli Dikte · Telaffuz · Word Order',
+                      'US/UK/AU Aksan · Dinleme · Dikte · Telaffuz · 3D Harf Dizme',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 11, color: Colors.white70),
@@ -974,14 +974,14 @@ class _HomePlayTabState extends State<HomePlayTab> {
         ),
         const SizedBox(height: 10),
 
-        // 8b. Görsel & Etkinlik + Aralıklı Tekrar
+        // 8b. Görsel & Etkinlik Stüdyosu + Aralıklı Tekrar
         Row(
           children: [
             Expanded(
               child: ArenaGlassCard(
                 tint: const Color(0xFF5CE09B),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-                onTap: ctrl.startVisualAndActivityDiscovery,
+                onTap: () => _openVisualInteractiveStudioSheet(context, ctrl),
                 child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1005,7 +1005,7 @@ class _HomePlayTabState extends State<HomePlayTab> {
                     ),
                     SizedBox(height: 3),
                     Text(
-                      'Bayrak · Saat · Atom · Matris',
+                      '12 Görsel Motor · Sürgü · Harf Dizme',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 10.5, color: Colors.white70),
@@ -1538,49 +1538,56 @@ class _HomePlayTabState extends State<HomePlayTab> {
   void _openAudioEnglishStudioSheet(BuildContext context, ArenaController ctrl) {
     final modes = <(String, String, IconData, Color, QuestionFormat?)>[
       (
-        'Karışık Sesli İngilizce (10 Soru)',
-        'US/UK/AU aksanlarla Dinleme + Dikte + Telaffuz karma tur',
+        'Karışık Sesli İngilizce (28.000 Soru)',
+        'Canlı US/UK/AU aksan seçici · 3 hız (0.72x / 1.0x / 1.18x) karma tur',
         Icons.auto_awesome_rounded,
         StudioPalette.goldBright,
         null,
       ),
       (
-        'İngilizce Dinleme & Anlama (1.800 Soru)',
-        'Günlük diyaloglar, havaalanı/otel anonsları, deyimler ve IELTS sayılar',
+        'İngilizce Dinleme & Anlama (17.800 Soru)',
+        '14 senaryolu gerçek diyaloglar, A2–C1 kelime/deyim ve IELTS sayılar',
         Icons.headphones_rounded,
         const Color(0xFF58D5E3),
         QuestionFormat.listening,
       ),
       (
-        'İngilizce Sesli Dikte (600 Soru)',
-        'Normal (1.0x) veya yavaş (0.7x) dinle, eksik İngilizce kelimeyi yaz',
+        'İngilizce Sesli Dikte (5.600 Soru)',
+        'Yavaş/normal/hızlı dinle, eksik İngilizce kelimeyi yazarak tamamla',
         Icons.hearing_rounded,
         const Color(0xFF5CE09B),
         QuestionFormat.dictation,
       ),
       (
-        'İngilizce Telaffuz & Konuşma (600 Soru)',
-        'Mikrofonla telaffuz denetimi, sessiz harfler, minimal çiftler ve hece vurgusu',
+        'İngilizce Telaffuz & Konuşma (4.600 Soru)',
+        'Mikrofonlu konuşma denetimi, sessiz harfler, eşsesliler ve vurgu',
         Icons.record_voice_over_rounded,
         const Color(0xFFFF7BAC),
         QuestionFormat.pronunciation,
       ),
       (
-        'İngilizce Cümle Kurma · Word Order (300 Soru)',
+        'Sesli İngilizce 3D Harf Dizme (3.500 Soru)',
+        'İngilizce kelimeyi dinle, karışık 3D harf taşlarıyla doğru yazımı kur',
+        Icons.spellcheck_rounded,
+        const Color(0xFFF6C453),
+        QuestionFormat.anagram,
+      ),
+      (
+        'İngilizce Cümle Kurma · Word Order (1.800 Soru)',
         'Karışık İngilizce öbekleri doğru dilbilgisi sırasına diz',
         Icons.swap_vert_rounded,
         const Color(0xFFC5A3FF),
         QuestionFormat.ordering,
       ),
       (
-        'İngilizce Deyim & Phrasal Verb Eşleştirme (350 Soru)',
+        'İngilizce Deyim & Phrasal Verb Eşleştirme',
         'İngilizce deyimleri ve öbek fiilleri Türkçe anlamlarıyla eşleştir',
         Icons.compare_arrows_rounded,
         const Color(0xFFFFB076),
         QuestionFormat.matching,
       ),
       (
-        'Görsel İngilizce Saat Stüdyosu (240 Soru)',
+        'Görsel İngilizce Saat Stüdyosu',
         'Analog saat kadranına bakarak doğru İngilizce saat ifadesini seç',
         Icons.schedule_rounded,
         const Color(0xFF5AB2FF),
@@ -1598,8 +1605,8 @@ class _HomePlayTabState extends State<HomePlayTab> {
       builder: (ctx) => SafeArea(
         child: DraggableScrollableSheet(
           expand: false,
-          initialChildSize: 0.72,
-          maxChildSize: 0.9,
+          initialChildSize: 0.76,
+          maxChildSize: 0.92,
           minChildSize: 0.45,
           builder: (_, sc) => ListView(
             controller: sc,
@@ -1622,7 +1629,7 @@ class _HomePlayTabState extends State<HomePlayTab> {
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Sesli İngilizce Stüdyosu',
+                      'Sesli İngilizce Stüdyosu 2.0',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -1634,7 +1641,7 @@ class _HomePlayTabState extends State<HomePlayTab> {
               ),
               const SizedBox(height: 4),
               const Text(
-                'Doğal Amerikan, İngiliz ve Avustralya aksanlarıyla dinle, yaz, konuş ve pekiştir.',
+                'Canlı US / UK / AU aksan değiştirici ve 3 hız seviyesiyle dinle, yaz, konuş ve harf diz.',
                 style: TextStyle(fontSize: 12, color: Colors.white70),
               ),
               const SizedBox(height: 14),
@@ -1685,6 +1692,193 @@ class _HomePlayTabState extends State<HomePlayTab> {
                         ),
                         const SizedBox(width: 6),
                         Icon(Icons.play_arrow_rounded, color: m.$4, size: 22),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openVisualInteractiveStudioSheet(BuildContext context, ArenaController ctrl) {
+    final entries = <(String, String, IconData, Color, VoidCallback)>[
+      (
+        '14 Türlü Karma Görsel & Etkileşimli Keşif',
+        '5 yeni görsel motor + 3D Sürgü + 3D Harf Dizme + Sesli İngilizce',
+        Icons.auto_awesome_rounded,
+        StudioPalette.goldBright,
+        ctrl.startVisualAndActivityDiscovery,
+      ),
+      (
+        'Mantık Kapıları & Elektrik Devresi (7.000)',
+        '2 kademeli AND/OR/XOR devreleri + seri/paralel Ohm Yasası',
+        Icons.memory_rounded,
+        const Color(0xFF4CE0D2),
+        () => ctrl.startVisualEngineRound(
+              kinds: const [VisualKind.circuit],
+              title: 'Mantık Kapıları & Elektrik Devresi',
+            ),
+      ),
+      (
+        'Venn Şeması & Pusula Navigasyonu (9.500)',
+        'Küme işlemleri, olasılık + pusula kerteriz, azimut ve yönler',
+        Icons.explore_rounded,
+        const Color(0xFF5CE09B),
+        () => ctrl.startVisualEngineRound(
+              kinds: const [VisualKind.venn, VisualKind.compass],
+              title: 'Venn Şeması & Pusula Stüdyosu',
+            ),
+      ),
+      (
+        'Renk/Spektrum & 2 Oktav Piyano (8.500)',
+        'RGB/Boya karışımı, dalga boyu + piyano akor, aralık ve gamlar',
+        Icons.piano_rounded,
+        const Color(0xFFFF7BAC),
+        () => ctrl.startVisualEngineRound(
+              kinds: const [VisualKind.colorLab, VisualKind.piano],
+              title: 'Renk Optiği & Piyano Stüdyosu',
+            ),
+      ),
+      (
+        '3D Tahmin Sürgüsü Stüdyosu (4.500)',
+        'Tarih yılı, hız-mesafe, yüzde, °C/°F ve üçgen açısını sürgüyle kilitle',
+        Icons.tune_rounded,
+        const Color(0xFFF6C453),
+        () => ctrl.startVisualEngineRound(
+              format: QuestionFormat.slider,
+              title: '3D Tahmin Sürgüsü Stüdyosu',
+            ),
+      ),
+      (
+        '3D Harf Dizme / Anagram Stüdyosu (6.000)',
+        'Sesli İngilizce (3.500) ve Türkçe kültür/bilim (2.500) taşlarıyla kelime kur',
+        Icons.spellcheck_rounded,
+        const Color(0xFFC5A3FF),
+        () => ctrl.startVisualEngineRound(
+              format: QuestionFormat.anagram,
+              title: '3D Harf Dizme Stüdyosu',
+            ),
+      ),
+      (
+        'Bayrak · Saat · Pasta · Koordinat · Atom · Matris (29.000)',
+        '7 klasik vektörel görsel motorun genişletilmiş 29.000 soruluk arşivi',
+        Icons.grid_view_rounded,
+        const Color(0xFF5AB2FF),
+        () => ctrl.startVisualEngineRound(
+              kinds: const [
+                VisualKind.flag,
+                VisualKind.clock,
+                VisualKind.pieChart,
+                VisualKind.coordPlane,
+                VisualKind.atom,
+                VisualKind.musicStaff,
+                VisualKind.matrix,
+              ],
+              title: 'Görsel Atlas & Bilim Stüdyosu',
+            ),
+      ),
+    ];
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0A1240),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.76,
+          maxChildSize: 0.92,
+          minChildSize: 0.45,
+          builder: (_, sc) => ListView(
+            controller: sc,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: StudioPalette.gold.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Row(
+                children: [
+                  Icon(Icons.insights_rounded, color: Color(0xFF5CE09B), size: 22),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Görsel & Etkileşimli Stüdyo',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: StudioPalette.goldBright,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                '12 vektörel görsel motor, 3D Tahmin Sürgüsü ve 3D Harf Dizme ile metin dışı 110.000 soru.',
+                style: TextStyle(fontSize: 12, color: Colors.white70),
+              ),
+              const SizedBox(height: 14),
+              for (final e in entries)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 9),
+                  child: ArenaGlassCard(
+                    tint: e.$4,
+                    padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                      e.$5();
+                    },
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: e.$4.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(11),
+                          ),
+                          child: Icon(e.$3, color: e.$4, size: 19),
+                        ),
+                        const SizedBox(width: 11),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                e.$1,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                e.$2,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 11, color: Colors.white70),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(Icons.play_arrow_rounded, color: e.$4, size: 22),
                       ],
                     ),
                   ),

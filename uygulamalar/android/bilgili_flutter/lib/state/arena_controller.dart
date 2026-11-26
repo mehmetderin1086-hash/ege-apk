@@ -412,6 +412,10 @@ class ArenaController extends ChangeNotifier {
           AdvancedCatalog.select(level: level));
     }
     add('ozgun', 'Özgün Soru Bankası', AdvancedCatalog.ozgun);
+    add('studio_100k', '100.000 Metin Dışı Stüdyo · Tümü', AdvancedCatalog.studio100k);
+    add('studio_visual_50k', 'Yeni Nesil Görsel Stüdyo · 50.000', AdvancedCatalog.studioVisual50k);
+    add('studio_audio_en_25k', 'Sesli İngilizce Stüdyosu · 25.000', AdvancedCatalog.studioAudioEnglish25k);
+    add('studio_interactive_25k', '3D Etkileşimli Stüdyo · 25.000', AdvancedCatalog.studioInteractive25k);
     add('studio_10k', 'Yeni Nesil 10.000 Seçki · Tümü', AdvancedCatalog.studio10k);
     add('studio_visual_4k', 'Yeni Nesil Görsel Stüdyo · 4.000', AdvancedCatalog.studioVisual4k);
     add('studio_audio_en_3k', 'Sesli İngilizce Stüdyosu · 3.000', AdvancedCatalog.studioAudioEnglish3k);
@@ -588,7 +592,9 @@ class ArenaController extends ChangeNotifier {
     final rng = seed != null ? Random(seed) : _rng;
     final manual = cfg.format == QuestionFormat.fill ||
         cfg.format == QuestionFormat.dictation ||
-        cfg.format == QuestionFormat.multiSelect;
+        cfg.format == QuestionFormat.multiSelect ||
+        cfg.format == QuestionFormat.slider ||
+        cfg.format == QuestionFormat.anagram;
     final quick = cfg.mode == GameMode.sprint || (cfg.liveVoiceHost && !manual);
     final format = quick &&
             {
@@ -597,6 +603,8 @@ class ArenaController extends ChangeNotifier {
               QuestionFormat.dictation,
               QuestionFormat.creation,
               QuestionFormat.multiSelect,
+              QuestionFormat.slider,
+              QuestionFormat.anagram,
               QuestionFormat.visual,
               QuestionFormat.text,
             }.contains(cfg.format)
@@ -732,42 +740,80 @@ class ArenaController extends ChangeNotifier {
   void startVisualAndActivityDiscovery() {
     final picked = <Question>[];
     final pickedIds = <String>{};
-    void addFrom(List<Question> questions, int count, {int cap = 12}) {
+    void addFrom(List<Question> questions, int count, {int cap = 14}) {
       for (final q in _pickRandomQuestions(questions, count, _rng)) {
         if (picked.length < cap && pickedIds.add(q.id)) picked.add(q);
       }
     }
     for (final kind in [
+      VisualKind.circuit,
+      VisualKind.venn,
+      VisualKind.compass,
+      VisualKind.colorLab,
+      VisualKind.piano,
       VisualKind.flag,
       VisualKind.clock,
-      VisualKind.pieChart,
-      VisualKind.coordPlane,
       VisualKind.atom,
-      VisualKind.musicStaff,
       VisualKind.matrix,
     ]) {
       addFrom(AdvancedCatalog.select(visualKind: kind), 1);
     }
     for (final format in [
+      QuestionFormat.slider,
+      QuestionFormat.anagram,
       QuestionFormat.listening,
       QuestionFormat.dictation,
-      QuestionFormat.pronunciation,
       QuestionFormat.matching,
-      QuestionFormat.ordering,
     ]) {
       addFrom(AdvancedCatalog.select(format: format), 1);
     }
-    if (picked.length < 12) {
-      addFrom(_allQuestions.where((q) => q.visual != null || q.activity != null).toList(), 12);
+    if (picked.length < 14) {
+      addFrom(_allQuestions.where((q) => q.visual != null || q.activity != null).toList(), 14);
     }
-    if (picked.length < 12) addFrom(AdvancedCatalog.visuals, 12);
+    if (picked.length < 14) addFrom(AdvancedCatalog.visuals, 14);
     if (picked.isEmpty) return;
     picked.shuffle(_rng);
     _beginRound(
-      title: 'Görsel & Etkinlik Keşif Turu',
+      title: 'Görsel & Etkileşimli Keşif (14 Tür)',
       cfg: RoundSetup(mode: GameMode.training, questionCount: picked.length),
       questions: picked,
     );
+  }
+
+  bool startVisualEngineRound({
+    List<VisualKind>? kinds,
+    QuestionFormat? format,
+    String? title,
+    int count = 10,
+  }) {
+    final List<Question> picked;
+    if (kinds != null && kinds.isNotEmpty) {
+      final bag = <Question>[];
+      final seen = <String>{};
+      final perKind = max(1, (count / kinds.length).ceil());
+      for (final k in kinds) {
+        for (final q in _pickRandomQuestions(AdvancedCatalog.select(visualKind: k), perKind, _rng)) {
+          if (seen.add(q.id)) bag.add(q);
+        }
+      }
+      bag.shuffle(_rng);
+      picked = bag.take(count).toList();
+    } else if (format != null) {
+      picked = _pickRandomQuestions(AdvancedCatalog.select(format: format), count, _rng);
+    } else {
+      picked = _pickRandomQuestions(AdvancedCatalog.studioVisual50k, count, _rng);
+    }
+    if (picked.isEmpty) return false;
+    _beginRound(
+      title: title ?? 'Görsel & Etkileşimli Stüdyo',
+      cfg: RoundSetup(
+        format: format ?? QuestionFormat.visual,
+        mode: GameMode.training,
+        questionCount: picked.length,
+      ),
+      questions: picked,
+    );
+    return true;
   }
 
   bool startAudioEnglishStudio({QuestionFormat? format, int count = 10}) {
@@ -786,6 +832,10 @@ class ArenaController extends ChangeNotifier {
         source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.pronunciation);
         title = 'Sesli İngilizce · Telaffuz & Konuşma';
         break;
+      case QuestionFormat.anagram:
+        source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.anagram);
+        title = 'Sesli İngilizce · 3D Harf Dizme';
+        break;
       case QuestionFormat.visual:
         source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.visual);
         title = 'İngilizce Görsel Saat Stüdyosu';
@@ -799,8 +849,8 @@ class ArenaController extends ChangeNotifier {
         title = 'İngilizce Deyim & Fiil Eşleştirme';
         break;
       default:
-        source = AdvancedCatalog.studioAudioEnglish3k;
-        title = 'Sesli İngilizce Stüdyosu (Karışık)';
+        source = AdvancedCatalog.studioAudioEnglishAll;
+        title = 'Sesli İngilizce Stüdyosu (28.000)';
     }
     final qs = _pickRandomQuestions(source, count, _rng);
     if (qs.isEmpty) return false;
@@ -1326,8 +1376,12 @@ class ArenaController extends ChangeNotifier {
     if (r == null || r.revealed || r.finished) return;
     final q = r.current;
     if (r.needsCreation || (choiceIndex != null &&
-        (q.responseType == ResponseType.fill || q.responseType == ResponseType.multiSelect ||
-         choiceIndex < 0 || choiceIndex >= q.options.length))) {
+        (q.responseType == ResponseType.fill ||
+         q.responseType == ResponseType.multiSelect ||
+         q.isSlider ||
+         q.isAnagram ||
+         choiceIndex < 0 ||
+         choiceIndex >= q.options.length))) {
       return;
     }
     final isCorrect = choiceIndex != null && choiceIndex == q.answer;
@@ -1353,6 +1407,39 @@ class ArenaController extends ChangeNotifier {
       selectedOption: isCorrect ? q.answer : -1,
       submittedSequence: sequence,
       spokenTranscript: spokenTranscript,
+    );
+  }
+
+  void submitSliderAnswer(int estimate) {
+    final r = activeRound;
+    if (r == null || r.revealed || r.finished || r.needsCreation) return;
+    final q = r.current;
+    final act = q.activity;
+    if (act == null || act.kind != ActivityKind.slider) return;
+    final isCorrect = act.matchesSlider(estimate);
+    final unitSuffix = act.sliderUnit.isNotEmpty ? ' ${act.sliderUnit}' : '';
+    _commitAnswer(
+      round: r,
+      question: q,
+      isCorrect: isCorrect,
+      selectedOption: isCorrect ? q.answer : -1,
+      writtenResponse: '$estimate$unitSuffix',
+    );
+  }
+
+  void submitAnagramAnswer(String word) {
+    final r = activeRound;
+    if (r == null || r.revealed || r.finished || r.needsCreation) return;
+    final q = r.current;
+    final act = q.activity;
+    if (act == null || act.kind != ActivityKind.anagram || word.trim().isEmpty) return;
+    final isCorrect = act.matchesAnagram(word);
+    _commitAnswer(
+      round: r,
+      question: q,
+      isCorrect: isCorrect,
+      selectedOption: isCorrect ? q.answer : -1,
+      writtenResponse: word.trim(),
     );
   }
 
@@ -1631,18 +1718,25 @@ class ArenaController extends ChangeNotifier {
         awaitCompletion: wait,
       );
 
-  Future<void> speakActivityAudio(Question q, {double? rate}) async {
+  Future<void> speakActivityAudio(
+    Question q, {
+    double? rate,
+    String? languageOverride,
+  }) async {
     final act = q.activity;
     if (act == null) return;
     final text = act.transcript ?? q.text;
-    final lang = act.language ?? 'tr-TR';
+    final lang = languageOverride ?? act.language ?? 'tr-TR';
     await _speakInLanguage(text, lang, wait: false, rateOverride: rate);
   }
 
   Future<String?> listenOnceAndResolveCurrentQuestion({bool isPronunciation = false}) async {
     final r = activeRound;
     if (r == null || r.revealed || r.needsCreation ||
-        r.current.responseType == ResponseType.fill || r.current.responseType == ResponseType.multiSelect) {
+        r.current.responseType == ResponseType.fill ||
+        r.current.responseType == ResponseType.multiSelect ||
+        r.current.isSlider ||
+        r.current.isAnagram) {
       return null;
     }
     final token = ++_liveToken;
@@ -1733,7 +1827,10 @@ class ArenaController extends ChangeNotifier {
       if (_liveToken != token || activeRound != r || r.revealed || r.paused || r.finished) return;
     }
 
-    if (r.current.responseType == ResponseType.fill || r.current.multiSelect != null) {
+    if (r.current.responseType == ResponseType.fill ||
+        r.current.multiSelect != null ||
+        r.current.isSlider ||
+        r.current.isAnagram) {
       livePhase = LiveVoicePhase.idle;
       notifyListeners();
       return;

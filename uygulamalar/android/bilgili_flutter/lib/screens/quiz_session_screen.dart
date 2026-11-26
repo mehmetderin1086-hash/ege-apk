@@ -331,12 +331,18 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                                     question: q,
                                     accent: StudioPalette.gold,
                                     revealed: round.revealed,
-                                    onPlayListeningAudio: (rate) =>
-                                        ctrl.speakActivityAudio(q, rate: rate),
+                                    onPlayListeningAudio: (rate, {languageOverride}) =>
+                                        ctrl.speakActivityAudio(
+                                          q,
+                                          rate: rate,
+                                          languageOverride: languageOverride,
+                                        ),
                                     onStartPronunciationMic: () =>
                                         _triggerSingleVoiceAnswer(context, pronunciation: true),
                                     onSubmitSequence: (seq) => ctrl.submitActivitySequence(seq),
                                     onSelectChoice: (idx) => ctrl.submitChoice(idx),
+                                    onSubmitSlider: ctrl.submitSliderAnswer,
+                                    onSubmitAnagram: ctrl.submitAnagramAnswer,
                                   ),
                               ],
                             ),
@@ -398,13 +404,13 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                         ),
                       if (!round.needsCreation &&
                           q.multiSelect == null &&
-                          !q.isInteractiveSequence &&
+                          !q.isCustomInteractive &&
                           q.responseType == ResponseType.trueFalse &&
                           q.options.length == 2)
                         _buildTrueFalseRow(ctrl, round, q),
                       if (!round.needsCreation &&
                           q.multiSelect == null &&
-                          !q.isInteractiveSequence &&
+                          !q.isCustomInteractive &&
                           q.responseType != ResponseType.fill &&
                           !(q.responseType == ResponseType.trueFalse && q.options.length == 2))
                         for (var i = 0; i < q.options.length; i++)
@@ -580,6 +586,12 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
           if (q.responseType == ResponseType.fill && rec?.writtenResponse != null)
             Text('Yazdığın yanıt: ${rec!.writtenResponse}',
                 style: const TextStyle(color: Colors.white70)),
+          if (q.responseType == ResponseType.slider && rec?.writtenResponse != null)
+            Text('Tahminin: ${rec!.writtenResponse}',
+                style: const TextStyle(color: Colors.white70)),
+          if (q.responseType == ResponseType.anagram && rec?.writtenResponse != null)
+            Text('Kurduğun kelime: ${rec!.writtenResponse}',
+                style: const TextStyle(color: Colors.white70)),
           if (rec?.spokenTranscript != null && rec!.spokenTranscript!.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
@@ -751,7 +763,11 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
       );
     }
 
-    if (round.needsCreation || q.multiSelect != null || q.responseType == ResponseType.fill) {
+    if (round.needsCreation ||
+        q.multiSelect != null ||
+        q.responseType == ResponseType.fill ||
+        q.isSlider ||
+        q.isAnagram) {
       return const SizedBox.shrink();
     }
     if (round.setup.liveVoiceHost) {

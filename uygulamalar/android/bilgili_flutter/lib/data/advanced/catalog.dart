@@ -11,6 +11,7 @@ import 'renewed.dart';
 import 'secki.g.dart';
 import 'social.dart';
 import 'studio10k/studio_10k.dart';
+import 'studio100k/studio_100k.dart';
 
 enum PoolCollection {
   all('Tümü'),
@@ -40,14 +41,15 @@ class AdvancedCatalog {
     ...liseMetinFamilies,
   ]);
 
-  /// Oyunun sunduğu aileler: lise düzeyindeki seçki, özgün banka ve
-  /// 10.000 soruluk yeni nesil görsel/sesli/etkileşimli stüdyo paketi.
+  /// Oyunun sunduğu aileler: lise düzeyindeki seçki, özgün banka,
+  /// 10.000 yeni nesil seçki ve 100.000 metin dışı stüdyo paketi.
   static final families = List<AdvancedFamily>.unmodifiable([
     for (final f in kaynakAileler)
       if (cokSecmeliLise(f) && seckiler[f.key] != null)
         f.secili(seckiler[f.key]!),
     ...ozgunAileler,
     ...studio10kFamilies,
+    ...studio100kFamilies,
   ]);
 
   /// Ailenin seçkiye girebilmesi için lise düzeyinde olması ve etkinlik,
@@ -69,6 +71,16 @@ class AdvancedCatalog {
   static final studioAudioEnglish3k = FamilyQuestions(audioEnglish3kFamilies);
   static final studioInteractive3k = FamilyQuestions(interactiveStudio3kFamilies);
 
+  /// Bilgili 3.21 — 100.000 soruluk metin dışı görsel, sesli İngilizce ve etkileşimli banka.
+  static final studio100k = FamilyQuestions(studio100kFamilies);
+  static final studioVisual50k = FamilyQuestions(studioVisual50kFamilies);
+  static final studioAudioEnglish25k = FamilyQuestions(audioEnglish25kFamilies);
+  static final studioInteractive25k = FamilyQuestions(interactiveStudio25kFamilies);
+  static final studioAudioEnglishAll = FamilyQuestions([
+    ...audioEnglish3kFamilies,
+    ...audioEnglish25kFamilies,
+  ]);
+
   static final visuals = select(format: QuestionFormat.visual);
   static final activityCount = [
     QuestionFormat.listening,
@@ -76,6 +88,8 @@ class AdvancedCatalog {
     QuestionFormat.pronunciation,
     QuestionFormat.ordering,
     QuestionFormat.matching,
+    QuestionFormat.slider,
+    QuestionFormat.anagram,
   ].fold<int>(0, (n, format) => n + select(format: format).length);
 
   static ({AdvancedFamily family, int index})? _locate(String id) {

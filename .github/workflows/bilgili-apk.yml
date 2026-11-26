@@ -106,11 +106,11 @@ jobs:
           set -euo pipefail
           ETIKET="bilgili-v${SURUM}"
           {
-            echo "Bilgili ${SURUM} (sürüm kodu ${KOD}). 10.000 yeni nesil soru eklendi (toplam 234.144 soru): 4.000 yeni nesil görsel soru (64 dünya bayrağı atlası, analog saat/açı/İngilizce saat, 3D pasta grafiği, koordinat düzlemi & vektörler, Bohr atom modeli, müzik portesi/akor, 3×3 görsel zekâ matrisi), 3.000 Sesli İngilizce Stüdyosu sorusu (US/UK/AU aksanlarla normal/yavaş dinleme, IELTS sayı/fiyat/tarih, sesli dikte & harf ipucu, mikrofonlu telaffuz/fonetik) ve 3.000 çok biçimli etkileşimli soru (eşleştirme, kronoloji & İngilizce cümle kurma sıralaması, çoklu doğru seçim, 3D Doğru/Yanlış kartları, akıllı boşluk doldurma)."
+            echo "Bilgili ${SURUM} (sürüm kodu ${KOD}). 100.000 yeni metin dışı soru eklendi (toplam 334.144 soru) ve tüm görsel, sesli ve etkileşimli motorlar geliştirildi: 5 yeni vektörel görsel motor (Mantık Kapıları & Seri/Paralel Elektrik Devresi, Venn Şeması & Olasılık, Pusula & Azimut Navigasyonu, Renk Karışımı/RGB/Spektrum, 2 Oktav Piyano Klavyesi · 25.000 soru), 7 mevcut görsel motorun genişletilmesi (Bayrak, Analog/Ayna/İngilizce Saat, Pasta Grafiği, Koordinat/Vektör, 36 Elementli Bohr Atom, Müzik Portesi, 3×3 Matris · +25.000 soru), canlı US/UK/AU aksan değiştiricili ve 3 hızlı (0.72x/1.0x/1.18x) Sesli İngilizce Stüdyosu 2.0 (+25.000 soru) ve 2 yeni 3D etkileşimli mekanik (3D Tahmin Sürgüsü + 3D Sesli İngilizce & Türkçe Harf Dizme, Mega Eşleştirme, Sıralama/Word Order, Çoklu Seçim, 3D Doğru/Yanlış · +25.000 soru)."
             echo
             echo "Çoğu telefon için \`Bilgili-${SURUM}-arm64.apk\` dosyasını indirin. \`armv7\` dosyası eski 32 bit telefonlar içindir."
             echo
-            echo "Bu derleme 3.10.0–3.19.0 ile aynı sabit anahtarla imzalandı; 3.19.0 ve önceki sürümlerin (3.10.0+) üzerine doğrudan kurulur. 3.9.0 ve önceki sürümler kuruluysa önce Ayarlar bölümünden tam yedek alın, eski uygulamayı kaldırın, bu APK'yı kurup yedeği geri yükleyin."
+            echo "Bu derleme 3.10.0–3.20.0 ile aynı sabit anahtarla imzalandı; 3.20.0 ve önceki sürümlerin (3.10.0+) üzerine doğrudan kurulur. 3.9.0 ve önceki sürümler kuruluysa önce Ayarlar bölümünden tam yedek alın, eski uygulamayı kaldırın, bu APK'yı kurup yedeği geri yükleyin."
             echo
             echo '```'
             cat "$CIKTI/SHA256SUMS.txt"

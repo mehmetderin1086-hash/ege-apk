@@ -173,6 +173,16 @@ class QuestionVisualViewer extends StatelessWidget {
         return Icons.science_rounded;
       case VisualKind.matrix:
         return Icons.apps_rounded;
+      case VisualKind.circuit:
+        return Icons.memory_rounded;
+      case VisualKind.venn:
+        return Icons.donut_large_rounded;
+      case VisualKind.compass:
+        return Icons.explore_rounded;
+      case VisualKind.colorLab:
+        return Icons.palette_rounded;
+      case VisualKind.piano:
+        return Icons.piano_rounded;
     }
   }
 
@@ -551,6 +561,115 @@ class QuestionVisualViewer extends StatelessWidget {
               painter: _PatternMatrixPainter(rows: visual.rows, accent: accent),
             ),
           ),
+        );
+
+      case VisualKind.circuit:
+        return SizedBox(
+          height: expanded ? 245 : 168,
+          child: CustomPaint(
+            size: Size.infinite,
+            painter: _CircuitVisualPainter(
+              mode: visual.unit ?? 'logic',
+              labels: visual.labels,
+              values: visual.values,
+              accent: accent,
+            ),
+          ),
+        );
+
+      case VisualKind.venn:
+        return SizedBox(
+          height: expanded ? 250 : 178,
+          child: CustomPaint(
+            size: Size.infinite,
+            painter: _VennVisualPainter(
+              labels: visual.labels,
+              values: visual.values,
+              highlight: visual.unit ?? 'none',
+              accent: accent,
+            ),
+          ),
+        );
+
+      case VisualKind.compass:
+        final deg = visual.values.isNotEmpty ? visual.values[0] : 0.0;
+        final turn = visual.values.length > 1 ? visual.values[1] : 0.0;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: expanded ? 250 : 176,
+              child: CustomPaint(
+                size: Size.infinite,
+                painter: _CompassVisualPainter(
+                  bearingDeg: deg,
+                  turnDeg: turn,
+                  accent: accent,
+                ),
+              ),
+            ),
+            if (visual.unit != null && visual.unit!.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(99),
+                  border: Border.all(color: accent.withValues(alpha: 0.45)),
+                ),
+                child: Text(
+                  visual.unit!,
+                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: accent),
+                ),
+              ),
+            ],
+          ],
+        );
+
+      case VisualKind.colorLab:
+        return SizedBox(
+          height: expanded ? 220 : 156,
+          child: CustomPaint(
+            size: Size.infinite,
+            painter: _ColorLabVisualPainter(
+              mode: visual.unit ?? 'mix',
+              labels: visual.labels,
+              values: visual.values,
+              accent: accent,
+            ),
+          ),
+        );
+
+      case VisualKind.piano:
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: expanded ? 170 : 120,
+              child: CustomPaint(
+                size: Size.infinite,
+                painter: _PianoVisualPainter(
+                  highlightedKeys: visual.labels,
+                  accent: accent,
+                ),
+              ),
+            ),
+            if (visual.unit != null && visual.unit!.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(99),
+                  border: Border.all(color: accent.withValues(alpha: 0.45)),
+                ),
+                child: Text(
+                  visual.unit!,
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: accent),
+                ),
+              ),
+            ],
+          ],
         );
     }
   }
@@ -2146,14 +2265,560 @@ class _DiagramPainter extends CustomPainter {
       elements != oldDelegate.elements || defaultAccent != oldDelegate.defaultAccent;
 }
 
+class _CircuitVisualPainter extends CustomPainter {
+  final String mode; // logic, series, parallel
+  final List<String> labels;
+  final List<double> values;
+  final Color accent;
+
+  _CircuitVisualPainter({
+    required this.mode,
+    required this.labels,
+    required this.values,
+    required this.accent,
+  });
+
+  void _paintText(Canvas c, String text, Offset center, Color col, {double size = 11.5}) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(fontSize: size, fontWeight: FontWeight.w900, color: col),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(c, Offset(center.dx - tp.width / 2, center.dy - tp.height / 2));
+  }
+
+  void _drawGateBox(Canvas c, Rect rect, String gateName, Color col) {
+    final rr = RRect.fromRectAndRadius(rect, const Radius.circular(10));
+    c.drawRRect(rr, Paint()..color = const Color(0xFF101D5C));
+    c.drawRRect(rr, Paint()..style = PaintingStyle.stroke..strokeWidth = 2.0..color = col);
+    _paintText(c, gateName, rect.center, col, size: 12);
+    if (gateName == 'NAND' || gateName == 'NOR' || gateName == 'NOT') {
+      c.drawCircle(
+        Offset(rect.right + 5, rect.center.dy),
+        4.5,
+        Paint()..color = const Color(0xFF0A1240),
+      );
+      c.drawCircle(
+        Offset(rect.right + 5, rect.center.dy),
+        4.5,
+        Paint()..style = PaintingStyle.stroke..strokeWidth = 1.8..color = col,
+      );
+    }
+  }
+
+  void _drawBitNode(Canvas c, Offset pos, String label, String bit) {
+    final isOne = bit == '1';
+    final col = isOne ? const Color(0xFF4BE085) : const Color(0xFFFF7B89);
+    c.drawCircle(pos, 15, Paint()..color = col.withValues(alpha: 0.20));
+    c.drawCircle(pos, 15, Paint()..style = PaintingStyle.stroke..strokeWidth = 1.8..color = col);
+    _paintText(c, '$label=$bit', pos, Colors.white, size: 10.2);
+  }
+
+  void _drawResistor(Canvas c, Offset a, Offset b, String label, Color col) {
+    final dx = b.dx - a.dx;
+    final dy = b.dy - a.dy;
+    final len = sqrt(dx * dx + dy * dy);
+    if (len < 10) return;
+    final ux = dx / len, uy = dy / len;
+    final px = -uy, py = ux;
+    final start = Offset(a.dx + ux * len * 0.22, a.dy + uy * len * 0.22);
+    final end = Offset(a.dx + ux * len * 0.78, a.dy + uy * len * 0.78);
+    final wire = Paint()..color = const Color(0xFF7CEEFF)..strokeWidth = 2.0;
+    c.drawLine(a, start, wire);
+    c.drawLine(end, b, wire);
+    final zig = Path()..moveTo(start.dx, start.dy);
+    const peaks = 6;
+    for (var i = 1; i <= peaks; i++) {
+      final t = i / (peaks + 1);
+      final bx = start.dx + (end.dx - start.dx) * t;
+      final by = start.dy + (end.dy - start.dy) * t;
+      final amp = i.isOdd ? 7.0 : -7.0;
+      zig.lineTo(bx + px * amp, by + py * amp);
+    }
+    zig.lineTo(end.dx, end.dy);
+    c.drawPath(zig, Paint()..style = PaintingStyle.stroke..strokeWidth = 2.2..color = col);
+    final mid = Offset((a.dx + b.dx) / 2, (a.dy + b.dy) / 2);
+    _paintText(c, label, mid + Offset(px * 16, py * 16 - 4), Colors.white, size: 10.5);
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final wire = Paint()..color = const Color(0xFF4CE0D2).withValues(alpha: 0.78)..strokeWidth = 2.2;
+    if (mode == 'logic') {
+      final isTwoStage = labels.length >= 5;
+      final g1 = labels.isNotEmpty ? labels[0] : 'AND';
+      final a = labels.length > 1 ? labels[1] : '1';
+      final b = labels.length > 2 ? labels[2] : '0';
+
+      if (!isTwoStage) {
+        final gateRect = Rect.fromCenter(center: Offset(size.width * 0.50, size.height * 0.50), width: 78, height: 54);
+        final outPos = Offset(size.width * 0.84, size.height * 0.50);
+        if (g1 == 'NOT') {
+          final inA = Offset(size.width * 0.16, size.height * 0.50);
+          canvas.drawLine(Offset(inA.dx + 15, inA.dy), Offset(gateRect.left, gateRect.center.dy), wire);
+          _drawBitNode(canvas, inA, 'A', a);
+        } else {
+          final inA = Offset(size.width * 0.16, size.height * 0.30);
+          final inB = Offset(size.width * 0.16, size.height * 0.70);
+          canvas.drawLine(Offset(inA.dx + 15, inA.dy), Offset(gateRect.left, gateRect.top + 14), wire);
+          canvas.drawLine(Offset(inB.dx + 15, inB.dy), Offset(gateRect.left, gateRect.bottom - 14), wire);
+          _drawBitNode(canvas, inA, 'A', a);
+          _drawBitNode(canvas, inB, 'B', b);
+        }
+        canvas.drawLine(Offset(gateRect.right + 8, gateRect.center.dy), Offset(outPos.dx - 17, outPos.dy), wire..color = accent);
+        _drawGateBox(canvas, gateRect, g1, accent);
+        canvas.drawCircle(outPos, 17, Paint()..color = accent.withValues(alpha: 0.24));
+        canvas.drawCircle(outPos, 17, Paint()..style = PaintingStyle.stroke..strokeWidth = 2.0..color = accent);
+        _paintText(canvas, '?', outPos, accent, size: 16);
+      } else {
+        final g2 = labels[3];
+        final cBit = labels[4];
+        final r1 = Rect.fromCenter(center: Offset(size.width * 0.37, size.height * 0.36), width: 64, height: 42);
+        final r2 = Rect.fromCenter(center: Offset(size.width * 0.67, size.height * 0.54), width: 64, height: 42);
+        final inA = Offset(size.width * 0.12, size.height * 0.22);
+        final inB = Offset(size.width * 0.12, size.height * 0.50);
+        final inC = Offset(size.width * 0.12, size.height * 0.78);
+        final outPos = Offset(size.width * 0.90, size.height * 0.54);
+
+        canvas.drawLine(Offset(inA.dx + 15, inA.dy), Offset(r1.left, r1.top + 11), wire);
+        canvas.drawLine(Offset(inB.dx + 15, inB.dy), Offset(r1.left, r1.bottom - 11), wire);
+        canvas.drawLine(Offset(r1.right + 6, r1.center.dy), Offset(r2.left, r2.top + 11), wire);
+        canvas.drawLine(Offset(inC.dx + 15, inC.dy), Offset(r2.left, r2.bottom - 11), wire);
+        canvas.drawLine(Offset(r2.right + 6, r2.center.dy), Offset(outPos.dx - 15, outPos.dy), wire..color = accent);
+
+        _drawBitNode(canvas, inA, 'A', a);
+        _drawBitNode(canvas, inB, 'B', b);
+        _drawBitNode(canvas, inC, 'C', cBit);
+        _drawGateBox(canvas, r1, g1, const Color(0xFF4CE0D2));
+        _drawGateBox(canvas, r2, g2, accent);
+        canvas.drawCircle(outPos, 15, Paint()..color = accent.withValues(alpha: 0.24));
+        canvas.drawCircle(outPos, 15, Paint()..style = PaintingStyle.stroke..strokeWidth = 2.0..color = accent);
+        _paintText(canvas, '?', outPos, accent, size: 15);
+      }
+      return;
+    }
+
+    // Electric circuit: series or parallel
+    final v = values.isNotEmpty ? values[0].round() : 12;
+    final r1 = values.length > 1 ? values[1].round() : 4;
+    final r2 = values.length > 2 ? values[2].round() : 6;
+    final hasR3 = values.length > 3 && values[3] > 0;
+    final r3 = hasR3 ? values[3].round() : 0;
+
+    final left = 24.0, right = size.width - 24.0;
+    final top = 34.0, bottom = size.height - 26.0;
+
+    // Battery on bottom edge
+    final midX = (left + right) / 2;
+    canvas.drawLine(Offset(left, bottom), Offset(midX - 18, bottom), wire);
+    canvas.drawLine(Offset(midX + 18, bottom), Offset(right, bottom), wire);
+    canvas.drawLine(Offset(midX - 10, bottom - 13), Offset(midX - 10, bottom + 13), Paint()..color = accent..strokeWidth = 3.0);
+    canvas.drawLine(Offset(midX + 10, bottom - 7), Offset(midX + 10, bottom + 7), Paint()..color = Colors.white..strokeWidth = 4.2);
+    _paintText(canvas, '$v V', Offset(midX, bottom - 18), accent, size: 11.5);
+
+    if (mode == 'series') {
+      canvas.drawLine(Offset(left, top), Offset(left, bottom), wire);
+      canvas.drawLine(Offset(right, top), Offset(right, bottom), wire);
+      if (hasR3) {
+        final x1 = left + (right - left) / 3;
+        final x2 = left + 2 * (right - left) / 3;
+        _drawResistor(canvas, Offset(left, top), Offset(x1, top), '$r1 Ω', accent);
+        _drawResistor(canvas, Offset(x1, top), Offset(x2, top), '$r2 Ω', const Color(0xFF4CE0D2));
+        _drawResistor(canvas, Offset(x2, top), Offset(right, top), '$r3 Ω', const Color(0xFFFF7BAC));
+      } else {
+        _drawResistor(canvas, Offset(left, top), Offset(midX, top), '$r1 Ω', accent);
+        _drawResistor(canvas, Offset(midX, top), Offset(right, top), '$r2 Ω', const Color(0xFF4CE0D2));
+      }
+      _paintText(canvas, 'Seri Bağlı Devre', Offset(midX, (top + bottom) / 2 - 4), Colors.white70, size: 11);
+    } else {
+      final midY = (top + bottom) / 2 - 4;
+      canvas.drawLine(Offset(left, top), Offset(left, bottom), wire);
+      canvas.drawLine(Offset(right, top), Offset(right, bottom), wire);
+      _drawResistor(canvas, Offset(left, top), Offset(right, top), 'R₁ = $r1 Ω', accent);
+      _drawResistor(canvas, Offset(left, midY), Offset(right, midY), 'R₂ = $r2 Ω', const Color(0xFF4CE0D2));
+      _paintText(canvas, 'Paralel Bağlı Devre', Offset(midX, bottom - 36), Colors.white70, size: 10.5);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CircuitVisualPainter old) =>
+      old.mode != mode || old.labels != labels || old.values != values;
+}
+
+class _VennVisualPainter extends CustomPainter {
+  final List<String> labels;
+  final List<double> values;
+  final String highlight;
+  final Color accent;
+
+  _VennVisualPainter({
+    required this.labels,
+    required this.values,
+    required this.highlight,
+    required this.accent,
+  });
+
+  void _text(Canvas c, String t, Offset center, Color col, {double size = 12}) {
+    final tp = TextPainter(
+      text: TextSpan(text: t, style: TextStyle(fontSize: size, fontWeight: FontWeight.w900, color: col)),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(c, Offset(center.dx - tp.width / 2, center.dy - tp.height / 2));
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final box = RRect.fromRectAndRadius(Rect.fromLTWH(8, 8, size.width - 16, size.height - 16), const Radius.circular(14));
+    canvas.drawRRect(box, Paint()..color = const Color(0xFF0A1342));
+    canvas.drawRRect(box, Paint()..style = PaintingStyle.stroke..strokeWidth = 1.4..color = Colors.white24);
+
+    final r = min(size.height * 0.34, size.width * 0.25);
+    final cy = size.height * 0.54;
+    final cA = Offset(size.width * 0.38, cy);
+    final cB = Offset(size.width * 0.62, cy);
+    const colA = Color(0xFFF6C453);
+    const colB = Color(0xFF4CE0D2);
+
+    canvas.drawCircle(cA, r, Paint()..color = colA.withValues(alpha: highlight == 'onlyA' || highlight == 'union' ? 0.34 : 0.18));
+    canvas.drawCircle(cB, r, Paint()..color = colB.withValues(alpha: highlight == 'onlyB' || highlight == 'union' ? 0.34 : 0.18));
+    canvas.drawCircle(cA, r, Paint()..style = PaintingStyle.stroke..strokeWidth = 2.2..color = colA);
+    canvas.drawCircle(cB, r, Paint()..style = PaintingStyle.stroke..strokeWidth = 2.2..color = colB);
+
+    final nameA = labels.isNotEmpty ? labels[0] : 'A';
+    final nameB = labels.length > 1 ? labels[1] : 'B';
+    _text(canvas, nameA, Offset(cA.dx - r * 0.35, cy - r - 11), colA, size: 11.5);
+    _text(canvas, nameB, Offset(cB.dx + r * 0.35, cy - r - 11), colB, size: 11.5);
+    _text(canvas, 'E', Offset(22, 22), Colors.white70, size: 11);
+
+    final onlyA = values.isNotEmpty ? values[0].round() : 0;
+    final both = values.length > 1 ? values[1].round() : 0;
+    final onlyB = values.length > 2 ? values[2].round() : 0;
+    final outside = values.length > 3 ? values[3].round() : 0;
+
+    _text(canvas, '$onlyA', Offset(cA.dx - r * 0.42, cy), Colors.white, size: 15);
+    _text(canvas, '$both', Offset(size.width * 0.50, cy), highlight == 'both' ? const Color(0xFFFFE082) : Colors.white, size: 16);
+    _text(canvas, '$onlyB', Offset(cB.dx + r * 0.42, cy), Colors.white, size: 15);
+    _text(canvas, 'Dış: $outside', Offset(size.width - 42, size.height - 22), Colors.white70, size: 10.5);
+  }
+
+  @override
+  bool shouldRepaint(covariant _VennVisualPainter old) =>
+      old.values != values || old.labels != labels || old.highlight != highlight;
+}
+
+class _CompassVisualPainter extends CustomPainter {
+  final double bearingDeg;
+  final double turnDeg;
+  final Color accent;
+
+  _CompassVisualPainter({
+    required this.bearingDeg,
+    required this.turnDeg,
+    required this.accent,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final r = min(size.width, size.height) * 0.44;
+
+    canvas.drawCircle(
+      center,
+      r + 3,
+      Paint()
+        ..shader = const LinearGradient(
+          colors: [Color(0xFFFFE082), Color(0xFFB77B14), Color(0xFFF6C453)],
+        ).createShader(Rect.fromCircle(center: center, radius: r + 3)),
+    );
+    canvas.drawCircle(
+      center,
+      r,
+      Paint()
+        ..shader = const RadialGradient(
+          colors: [Color(0xFF13266B), Color(0xFF060C2B)],
+        ).createShader(Rect.fromCircle(center: center, radius: r)),
+    );
+
+    // 8 compass directions
+    const dirs = [
+      (0, 'K'), (45, 'KD'), (90, 'D'), (135, 'GD'),
+      (180, 'G'), (225, 'GB'), (270, 'B'), (315, 'KB'),
+    ];
+    for (var d = 0; d < 360; d += 15) {
+      final rad = (d - 90) * pi / 180;
+      final major = d % 45 == 0;
+      canvas.drawLine(
+        Offset(center.dx + cos(rad) * (r - (major ? 10 : 5)), center.dy + sin(rad) * (r - (major ? 10 : 5))),
+        Offset(center.dx + cos(rad) * (r - 2), center.dy + sin(rad) * (r - 2)),
+        Paint()..color = major ? accent : Colors.white24..strokeWidth = major ? 2.0 : 1.0,
+      );
+    }
+    for (final d in dirs) {
+      final rad = (d.$1 - 90) * pi / 180;
+      final isCard = d.$1 % 90 == 0;
+      final pos = Offset(center.dx + cos(rad) * (r - 21), center.dy + sin(rad) * (r - 21));
+      final tp = TextPainter(
+        text: TextSpan(
+          text: d.$2,
+          style: TextStyle(
+            fontSize: isCard ? 12 : 9.5,
+            fontWeight: FontWeight.w900,
+            color: d.$1 == 0 ? const Color(0xFFFF7B89) : (isCard ? const Color(0xFFFFE082) : Colors.white70),
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tp.paint(canvas, Offset(pos.dx - tp.width / 2, pos.dy - tp.height / 2));
+    }
+
+    // Turn arc if non-zero
+    final startRad = (bearingDeg - 90) * pi / 180;
+    if (turnDeg.abs() > 0.1) {
+      final sweep = turnDeg * pi / 180;
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: r * 0.52),
+        startRad,
+        sweep,
+        false,
+        Paint()..style = PaintingStyle.stroke..strokeWidth = 3.0..color = const Color(0xFF4CE0D2),
+      );
+    }
+
+    // Main bearing needle
+    final tip = Offset(center.dx + cos(startRad) * r * 0.62, center.dy + sin(startRad) * r * 0.62);
+    final tail = Offset(center.dx - cos(startRad) * r * 0.25, center.dy - sin(startRad) * r * 0.25);
+    canvas.drawLine(tail, tip, Paint()..color = accent..strokeWidth = 3.4..strokeCap = StrokeCap.round);
+    canvas.drawCircle(tip, 4.5, Paint()..color = const Color(0xFF4CE0D2));
+    canvas.drawCircle(center, 5, Paint()..color = accent);
+    canvas.drawCircle(center, 2.2, Paint()..color = const Color(0xFF060C2B));
+  }
+
+  @override
+  bool shouldRepaint(covariant _CompassVisualPainter old) =>
+      old.bearingDeg != bearingDeg || old.turnDeg != turnDeg;
+}
+
+class _ColorLabVisualPainter extends CustomPainter {
+  final String mode; // mix, rgb, spectrum
+  final List<String> labels;
+  final List<double> values;
+  final Color accent;
+
+  _ColorLabVisualPainter({
+    required this.mode,
+    required this.labels,
+    required this.values,
+    required this.accent,
+  });
+
+  Color _parseHex(String hex) {
+    final clean = hex.replaceAll('#', '').trim();
+    final v = int.tryParse(clean, radix: 16);
+    if (v == null) return accent;
+    return Color(clean.length == 6 ? (0xFF000000 | v) : v);
+  }
+
+  void _text(Canvas c, String t, Offset center, Color col, {double size = 11.5}) {
+    final tp = TextPainter(
+      text: TextSpan(text: t, style: TextStyle(fontSize: size, fontWeight: FontWeight.w900, color: col)),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(c, Offset(center.dx - tp.width / 2, center.dy - tp.height / 2));
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (mode == 'spectrum') {
+      final nm = (values.isNotEmpty ? values.first : 550.0).clamp(380.0, 750.0);
+      final barRect = Rect.fromLTWH(16, size.height * 0.44, size.width - 32, 32);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(barRect, const Radius.circular(10)),
+        Paint()
+          ..shader = const LinearGradient(
+            colors: [
+              Color(0xFF6B2CF5),
+              Color(0xFF2E6BFF),
+              Color(0xFF00D4FF),
+              Color(0xFF2EE66B),
+              Color(0xFFFFE033),
+              Color(0xFFFF881A),
+              Color(0xFFE62229),
+            ],
+          ).createShader(barRect),
+      );
+      final frac = (nm - 380.0) / 370.0;
+      final mx = barRect.left + barRect.width * frac;
+      canvas.drawLine(Offset(mx, barRect.top - 18), Offset(mx, barRect.bottom + 14), Paint()..color = Colors.white..strokeWidth = 2.6);
+      canvas.drawCircle(Offset(mx, barRect.top - 22), 5, Paint()..color = accent);
+      _text(canvas, 'λ = ${nm.round()} nm', Offset(mx.clamp(56, size.width - 56), barRect.top - 34), accent, size: 12);
+      _text(canvas, '380 nm', Offset(barRect.left + 20, barRect.bottom + 20), Colors.white70, size: 10);
+      _text(canvas, '565 nm', Offset(barRect.center.dx, barRect.bottom + 20), Colors.white70, size: 10);
+      _text(canvas, '750 nm', Offset(barRect.right - 20, barRect.bottom + 20), Colors.white70, size: 10);
+      return;
+    }
+
+    if (mode == 'rgb') {
+      final hex = labels.isNotEmpty ? labels[0] : '#FF8800';
+      final col = _parseHex(hex);
+      final swatch = RRect.fromRectAndRadius(Rect.fromLTWH(18, 22, 92, size.height - 44), const Radius.circular(16));
+      canvas.drawRRect(swatch, Paint()..color = col);
+      canvas.drawRRect(swatch, Paint()..style = PaintingStyle.stroke..strokeWidth = 2.0..color = Colors.white70);
+
+      final r = (col.r * 255).round();
+      final g = (col.g * 255).round();
+      final b = (col.b * 255).round();
+      final bars = [('R', r, const Color(0xFFFF5A6E)), ('G', g, const Color(0xFF4BE085)), ('B', b, const Color(0xFF5AB2FF))];
+      final bx = 128.0;
+      final bw = max(60.0, size.width - bx - 18);
+      for (var i = 0; i < 3; i++) {
+        final y = 30.0 + i * 36.0;
+        _text(canvas, '${bars[i].$1}: ${bars[i].$2}', Offset(bx + 26, y), Colors.white, size: 11);
+        final track = RRect.fromRectAndRadius(Rect.fromLTWH(bx + 54, y - 6, max(20, bw - 54), 12), const Radius.circular(99));
+        canvas.drawRRect(track, Paint()..color = Colors.white12);
+        final fillW = max(6.0, (bw - 54) * (bars[i].$2 / 255.0));
+        canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(bx + 54, y - 6, fillW, 12), const Radius.circular(99)), Paint()..color = bars[i].$3);
+      }
+      return;
+    }
+
+    // Color mixing mode: Swatch A + Swatch B = ?
+    final colA = labels.isNotEmpty ? _parseHex(labels[0]) : const Color(0xFFFF0000);
+    final nameA = labels.length > 1 ? labels[1] : 'A';
+    final colB = labels.length > 2 ? _parseHex(labels[2]) : const Color(0xFF00FF00);
+    final nameB = labels.length > 3 ? labels[3] : 'B';
+
+    final cy = size.height * 0.45;
+    final r = min(size.height * 0.28, size.width * 0.13);
+    final pA = Offset(size.width * 0.19, cy);
+    final pB = Offset(size.width * 0.50, cy);
+    final pQ = Offset(size.width * 0.81, cy);
+
+    canvas.drawCircle(pA, r, Paint()..color = colA);
+    canvas.drawCircle(pA, r, Paint()..style = PaintingStyle.stroke..strokeWidth = 2.0..color = Colors.white70);
+    _text(canvas, nameA, Offset(pA.dx, cy + r + 15), Colors.white, size: 11);
+
+    _text(canvas, '+', Offset((pA.dx + pB.dx) / 2, cy), accent, size: 22);
+
+    canvas.drawCircle(pB, r, Paint()..color = colB);
+    canvas.drawCircle(pB, r, Paint()..style = PaintingStyle.stroke..strokeWidth = 2.0..color = Colors.white70);
+    _text(canvas, nameB, Offset(pB.dx, cy + r + 15), Colors.white, size: 11);
+
+    _text(canvas, '=', Offset((pB.dx + pQ.dx) / 2, cy), accent, size: 22);
+
+    canvas.drawCircle(pQ, r, Paint()..color = accent.withValues(alpha: 0.22));
+    canvas.drawCircle(pQ, r, Paint()..style = PaintingStyle.stroke..strokeWidth = 2.2..color = accent);
+    _text(canvas, '?', pQ, accent, size: 22);
+    _text(canvas, 'Sonuç', Offset(pQ.dx, cy + r + 15), accent, size: 11);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ColorLabVisualPainter old) =>
+      old.mode != mode || old.labels != labels || old.values != values;
+}
+
+class _PianoVisualPainter extends CustomPainter {
+  final List<String> highlightedKeys;
+  final Color accent;
+
+  _PianoVisualPainter({required this.highlightedKeys, required this.accent});
+
+  static const _whiteKeys = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5', 'E5', 'F5', 'G5', 'A5', 'B5'];
+  static const _blackOffsets = [
+    (0, 'C#4'), (1, 'D#4'), (3, 'F#4'), (4, 'G#4'), (5, 'A#4'),
+    (7, 'C#5'), (8, 'D#5'), (10, 'F#5'), (11, 'G#5'), (12, 'A#5'),
+  ];
+
+  String _norm(String raw) {
+    final u = raw.trim().toUpperCase();
+    return switch (u) {
+      'DB4' => 'C#4',
+      'EB4' => 'D#4',
+      'GB4' => 'F#4',
+      'AB4' => 'G#4',
+      'BB4' => 'A#4',
+      'DB5' => 'C#5',
+      'EB5' => 'D#5',
+      'GB5' => 'F#5',
+      'AB5' => 'G#5',
+      'BB5' => 'A#5',
+      _ => u,
+    };
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final active = highlightedKeys.map(_norm).toSet();
+    final root = highlightedKeys.isNotEmpty ? _norm(highlightedKeys.first) : '';
+    final kw = (size.width - 12) / _whiteKeys.length;
+    final kh = size.height - 10;
+
+    // White keys
+    for (var i = 0; i < _whiteKeys.length; i++) {
+      final k = _whiteKeys[i];
+      final rect = Rect.fromLTWH(6 + i * kw, 5, kw - 1.2, kh);
+      final isHit = active.contains(k);
+      final isRoot = k == root && active.length > 1;
+      final fill = isHit
+          ? (isRoot ? const Color(0xFF4CE0D2) : accent)
+          : const Color(0xFFF4F6FC);
+      canvas.drawRRect(
+        RRect.fromRectAndCorners(rect, bottomLeft: const Radius.circular(5), bottomRight: const Radius.circular(5)),
+        Paint()..color = fill,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndCorners(rect, bottomLeft: const Radius.circular(5), bottomRight: const Radius.circular(5)),
+        Paint()..style = PaintingStyle.stroke..strokeWidth = 1.0..color = const Color(0xFF141B40),
+      );
+      if (k == 'C4' || k == 'C5') {
+        final tp = TextPainter(
+          text: TextSpan(
+            text: k,
+            style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w900, color: isHit ? const Color(0xFF061028) : Colors.black54),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        tp.paint(canvas, Offset(rect.center.dx - tp.width / 2, rect.bottom - 14));
+      }
+    }
+
+    // Black keys
+    final bw = kw * 0.64;
+    final bh = kh * 0.60;
+    for (final b in _blackOffsets) {
+      final x = 6 + (b.$1 + 1) * kw - bw / 2 - 0.5;
+      final rect = Rect.fromLTWH(x, 5, bw, bh);
+      final isHit = active.contains(b.$2);
+      final isRoot = b.$2 == root && active.length > 1;
+      final fill = isHit
+          ? (isRoot ? const Color(0xFF4CE0D2) : accent)
+          : const Color(0xFF0A102B);
+      canvas.drawRRect(
+        RRect.fromRectAndCorners(rect, bottomLeft: const Radius.circular(4), bottomRight: const Radius.circular(4)),
+        Paint()..color = fill,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndCorners(rect, bottomLeft: const Radius.circular(4), bottomRight: const Radius.circular(4)),
+        Paint()..style = PaintingStyle.stroke..strokeWidth = 1.0..color = isHit ? Colors.white : Colors.white24,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PianoVisualPainter old) => old.highlightedKeys != highlightedKeys;
+}
+
 class QuestionActivityWidget extends StatefulWidget {
   final Question question;
   final Color accent;
   final bool revealed;
-  final void Function(double rate) onPlayListeningAudio;
+  final void Function(double rate, {String? languageOverride}) onPlayListeningAudio;
   final VoidCallback onStartPronunciationMic;
   final void Function(List<int> sequence) onSubmitSequence;
   final void Function(int optionIndex) onSelectChoice;
+  final void Function(int estimate)? onSubmitSlider;
+  final void Function(String word)? onSubmitAnagram;
 
   const QuestionActivityWidget({
     super.key,
@@ -2164,6 +2829,8 @@ class QuestionActivityWidget extends StatefulWidget {
     required this.onStartPronunciationMic,
     required this.onSubmitSequence,
     required this.onSelectChoice,
+    this.onSubmitSlider,
+    this.onSubmitAnagram,
   });
 
   @override
@@ -2176,21 +2843,61 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
   final Map<int, int> _leftToRight = {};
   bool _showTranscript = false;
   int _playCount = 0;
+  String? _selectedAccentOverride;
+
+  // Slider state
+  double _sliderValue = 0;
+  bool _sliderInitialized = false;
+
+  // Anagram state
+  final List<int> _anagramPickedIndices = [];
+  List<String> _anagramTileOrder = const [];
+  bool _anagramHintShown = false;
+
+  void _initInteractiveState() {
+    _orderedPick.clear();
+    _activeLeftIndex = null;
+    _leftToRight.clear();
+    _showTranscript = false;
+    _playCount = 0;
+    _selectedAccentOverride = null;
+    _anagramPickedIndices.clear();
+    _anagramHintShown = false;
+
+    final act = widget.question.activity;
+    if (act?.kind == ActivityKind.slider) {
+      final minV = act!.sliderMin;
+      final maxV = act.sliderMax;
+      final step = max(1.0, act.sliderStep);
+      final mid = ((minV + maxV) / 2 / step).round() * step;
+      _sliderValue = mid.clamp(minV, maxV);
+      _sliderInitialized = true;
+    } else {
+      _sliderInitialized = false;
+    }
+    if (act?.kind == ActivityKind.anagram) {
+      _anagramTileOrder = List<String>.from(act!.items);
+    } else {
+      _anagramTileOrder = const [];
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initInteractiveState();
+  }
 
   @override
   void didUpdateWidget(covariant QuestionActivityWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.question.id != widget.question.id) {
-      _orderedPick.clear();
-      _activeLeftIndex = null;
-      _leftToRight.clear();
-      _showTranscript = false;
-      _playCount = 0;
+      _initInteractiveState();
     }
   }
 
   String _accentLabel(String? lang) {
-    final l = (lang ?? 'en-US').toLowerCase();
+    final l = (_selectedAccentOverride ?? lang ?? 'en-US').toLowerCase();
     if (l.startsWith('en-gb')) return 'İngiliz İngilizcesi (UK)';
     if (l.startsWith('en-au')) return 'Avustralya İngilizcesi (AU)';
     if (l.startsWith('en')) return 'Amerikan İngilizcesi (US)';
@@ -2200,7 +2907,56 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
 
   void _triggerAudio(double rate) {
     setState(() => _playCount++);
-    widget.onPlayListeningAudio(rate);
+    widget.onPlayListeningAudio(rate, languageOverride: _selectedAccentOverride);
+  }
+
+  Widget _buildAccentSwitcher(String? defaultLang) {
+    final isEn = (defaultLang ?? '').toLowerCase().startsWith('en');
+    if (!isEn) return const SizedBox.shrink();
+    final active = (_selectedAccentOverride ?? defaultLang ?? 'en-US').toLowerCase();
+    Widget chip(String code, String tag) {
+      final selected = active.startsWith(tag.toLowerCase());
+      return InkWell(
+        onTap: () => setState(() => _selectedAccentOverride = tag),
+        borderRadius: BorderRadius.circular(99),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: selected ? widget.accent.withValues(alpha: 0.28) : Colors.white.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(99),
+            border: Border.all(
+              color: selected ? widget.accent : Colors.white24,
+            ),
+          ),
+          child: Text(
+            code,
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w900,
+              color: selected ? widget.accent : Colors.white70,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        children: [
+          Text(
+            'Aksan:',
+            style: TextStyle(fontSize: 10.5, color: Colors.white.withValues(alpha: 0.65), fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(width: 6),
+          chip('US', 'en-US'),
+          const SizedBox(width: 5),
+          chip('UK', 'en-GB'),
+          const SizedBox(width: 5),
+          chip('AU', 'en-AU'),
+        ],
+      ),
+    );
   }
 
   Widget _buildAudioStudioPanel(QuestionActivity act, {required bool isDictation}) {
@@ -2282,10 +3038,11 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
                 ),
             ],
           ),
-          const SizedBox(height: 11),
+          _buildAccentSwitcher(act.language),
+          const SizedBox(height: 10),
           // Stylized studio waveform bar
           Container(
-            height: 28,
+            height: 26,
             padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.25),
@@ -2319,35 +3076,36 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
                   style: FilledButton.styleFrom(
                     backgroundColor: widget.accent,
                     foregroundColor: const Color(0xFF061028),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
                   ),
-                  icon: const Icon(Icons.play_arrow_rounded, size: 19),
+                  icon: const Icon(Icons.play_arrow_rounded, size: 18),
                   label: const Text(
                     'Dinle (1.0x)',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5),
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 2,
-                child: OutlinedButton.icon(
-                  onPressed: () => _triggerAudio(0.72),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF7CEEFF),
-                    side: BorderSide(color: const Color(0xFF7CEEFF).withValues(alpha: 0.6)),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                  ),
-                  icon: const Icon(Icons.slow_motion_video_rounded, size: 16),
-                  label: const Text(
-                    'Yavaş',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
-                  ),
+              const SizedBox(width: 6),
+              OutlinedButton(
+                onPressed: () => _triggerAudio(0.72),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF7CEEFF),
+                  side: BorderSide(color: const Color(0xFF7CEEFF).withValues(alpha: 0.6)),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 ),
+                child: const Text('Yavaş', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11.5)),
+              ),
+              const SizedBox(width: 6),
+              OutlinedButton(
+                onPressed: () => _triggerAudio(1.18),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFFFB076),
+                  side: BorderSide(color: const Color(0xFFFFB076).withValues(alpha: 0.6)),
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 10),
+                ),
+                child: const Text('1.2x', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11.5)),
               ),
             ],
           ),
@@ -2404,6 +3162,382 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
     );
   }
 
+  Widget _buildSliderPanel(QuestionActivity act) {
+    final minV = act.sliderMin;
+    final maxV = max(minV + 1, act.sliderMax);
+    final step = max(1.0, act.sliderStep);
+    final divisions = max(1, ((maxV - minV) / step).round());
+    final current = (_sliderInitialized ? _sliderValue : ((minV + maxV) / 2)).clamp(minV, maxV);
+    final unitSuffix = act.sliderUnit.isNotEmpty ? ' ${act.sliderUnit}' : '';
+    final target = act.sliderTarget;
+    final diff = (current.round() - target).abs();
+    final tol = act.sliderTolerance.round();
+
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF15246B).withValues(alpha: 0.92),
+            const Color(0xFF091036).withValues(alpha: 0.96),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: widget.accent.withValues(alpha: 0.55), width: 1.3),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.tune_rounded, color: widget.accent, size: 18),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  act.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: widget.accent),
+                ),
+              ),
+              if (tol > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CE0D2).withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text(
+                    '±$tol$unitSuffix',
+                    style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFF7CEEFF)),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.32),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: widget.accent.withValues(alpha: 0.65), width: 1.4),
+              ),
+              child: Text(
+                '${current.round()}$unitSuffix',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: widget.accent,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: widget.accent,
+              inactiveTrackColor: Colors.white24,
+              thumbColor: const Color(0xFFFFE082),
+              overlayColor: widget.accent.withValues(alpha: 0.25),
+              trackHeight: 5,
+            ),
+            child: Slider(
+              min: minV,
+              max: maxV,
+              divisions: divisions,
+              value: current,
+              onChanged: widget.revealed
+                  ? null
+                  : (v) => setState(() {
+                        _sliderValue = v;
+                        _sliderInitialized = true;
+                      }),
+            ),
+          ),
+          Row(
+            children: [
+              Text(
+                '${minV.round()}$unitSuffix',
+                style: const TextStyle(fontSize: 11, color: Colors.white60, fontWeight: FontWeight.w700),
+              ),
+              const Spacer(),
+              Text(
+                '${maxV.round()}$unitSuffix',
+                style: const TextStyle(fontSize: 11, color: Colors.white60, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          if (widget.revealed) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: (diff <= tol ? const Color(0xFF4BE085) : const Color(0xFFFF7B89)).withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: diff <= tol ? const Color(0xFF4BE085) : const Color(0xFFFF7B89),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Tam Değer: $target$unitSuffix',
+                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900, color: Colors.white),
+                    ),
+                  ),
+                  Text(
+                    diff == 0 ? 'Tam İsabet!' : 'Fark: $diff$unitSuffix',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      color: diff <= tol ? const Color(0xFF4BE085) : const Color(0xFFFF7B89),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 10),
+            FilledButton.icon(
+              onPressed: () => widget.onSubmitSlider?.call(current.round()),
+              style: FilledButton.styleFrom(
+                backgroundColor: widget.accent,
+                foregroundColor: const Color(0xFF061028),
+                padding: const EdgeInsets.symmetric(vertical: 11),
+              ),
+              icon: const Icon(Icons.lock_rounded, size: 17),
+              label: const Text('Tahminimi Kilitle', style: TextStyle(fontWeight: FontWeight.w900)),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnagramPanel(QuestionActivity act) {
+    final tiles = _anagramTileOrder.isNotEmpty ? _anagramTileOrder : act.items;
+    final builtWord = [for (final idx in _anagramPickedIndices) if (idx < tiles.length) tiles[idx]].join();
+    final target = act.anagramTarget;
+    final hasAudio = act.transcript != null && act.transcript!.isNotEmpty;
+
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF15246B).withValues(alpha: 0.92),
+            const Color(0xFF091036).withValues(alpha: 0.96),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: widget.accent.withValues(alpha: 0.55), width: 1.3),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.spellcheck_rounded, color: widget.accent, size: 18),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  act.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: widget.accent),
+                ),
+              ),
+              if (!widget.revealed && _anagramPickedIndices.isNotEmpty)
+                InkWell(
+                  onTap: () => setState(_anagramPickedIndices.clear),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    child: Text('Temizle', style: TextStyle(fontSize: 11.5, color: Colors.white70)),
+                  ),
+                ),
+            ],
+          ),
+          if (hasAudio) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => _triggerAudio(0.92),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF4CE0D2),
+                      foregroundColor: const Color(0xFF061028),
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                    ),
+                    icon: const Icon(Icons.volume_up_rounded, size: 17),
+                    label: const Text('Kelimeyi Dinle', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: () => _triggerAudio(0.70),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF7CEEFF),
+                    side: BorderSide(color: const Color(0xFF7CEEFF).withValues(alpha: 0.55)),
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  ),
+                  child: const Text('Yavaş', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 12),
+          // Built answer slots
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (var s = 0; s < tiles.length; s++)
+                InkWell(
+                  onTap: widget.revealed || s >= _anagramPickedIndices.length
+                      ? null
+                      : () => setState(() => _anagramPickedIndices.removeAt(s)),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    width: 34,
+                    height: 38,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: s < _anagramPickedIndices.length
+                          ? widget.accent.withValues(alpha: 0.26)
+                          : Colors.black.withValues(alpha: 0.30),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: s < _anagramPickedIndices.length ? widget.accent : Colors.white24,
+                        width: 1.4,
+                      ),
+                    ),
+                    child: Text(
+                      s < _anagramPickedIndices.length
+                          ? tiles[_anagramPickedIndices[s]]
+                          : (_anagramHintShown && s == 0 && target.isNotEmpty ? target[0].toUpperCase() : ''),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: s < _anagramPickedIndices.length ? Colors.white : const Color(0xFF7CEEFF),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Scrambled interactive letter tiles
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              for (var i = 0; i < tiles.length; i++)
+                Builder(
+                  builder: (_) {
+                    final used = _anagramPickedIndices.contains(i);
+                    return InkWell(
+                      onTap: widget.revealed || used
+                          ? null
+                          : () => setState(() => _anagramPickedIndices.add(i)),
+                      borderRadius: BorderRadius.circular(11),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 140),
+                        width: 38,
+                        height: 40,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          gradient: used
+                              ? null
+                              : const LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [Color(0xFF233899), Color(0xFF0E1A54)],
+                                ),
+                          color: used ? Colors.white.withValues(alpha: 0.05) : null,
+                          borderRadius: BorderRadius.circular(11),
+                          border: Border.all(
+                            color: used ? Colors.white12 : widget.accent.withValues(alpha: 0.72),
+                            width: 1.4,
+                          ),
+                        ),
+                        child: Text(
+                          tiles[i],
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: used ? Colors.white24 : Colors.white,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
+          if (!widget.revealed) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                TextButton.icon(
+                  onPressed: () => setState(() => _anagramHintShown = true),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF7CEEFF),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  icon: const Icon(Icons.lightbulb_outline_rounded, size: 15),
+                  label: const Text('İlk Harf', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800)),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: _anagramPickedIndices.isEmpty
+                      ? null
+                      : () => setState(() => _anagramPickedIndices.removeLast()),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white70,
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  icon: const Icon(Icons.backspace_outlined, size: 15),
+                  label: const Text('Geri Al', style: TextStyle(fontSize: 11.5)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            FilledButton.icon(
+              onPressed: _anagramPickedIndices.length == tiles.length
+                  ? () => widget.onSubmitAnagram?.call(builtWord)
+                  : null,
+              style: FilledButton.styleFrom(
+                backgroundColor: widget.accent,
+                foregroundColor: const Color(0xFF061028),
+              ),
+              icon: const Icon(Icons.check_circle_rounded, size: 18),
+              label: Text(
+                _anagramPickedIndices.length == tiles.length
+                    ? 'Kelimeyi Onayla ($builtWord)'
+                    : '${_anagramPickedIndices.length}/${tiles.length} harf dizildi',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final act = widget.question.activity;
@@ -2415,6 +3549,12 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
 
       case ActivityKind.dictation:
         return _buildAudioStudioPanel(act, isDictation: true);
+
+      case ActivityKind.slider:
+        return _buildSliderPanel(act);
+
+      case ActivityKind.anagram:
+        return _buildAnagramPanel(act);
 
       case ActivityKind.ordering:
         return Container(
@@ -2462,7 +3602,7 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  for (var i = 0; i < act.items.length; i++) _buildOrderChip(i, act.items[i]),
+                  for (var i = 0; i < act.items.length; i++) _buildOrderChip(i, act.items[i], act.solution),
                 ],
               ),
               if (!widget.revealed) ...[
@@ -2536,7 +3676,7 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
                     child: Column(
                       children: [
                         for (var i = 0; i < act.left.length; i++)
-                          _buildMatchLeftTile(i, act.left[i]),
+                          _buildMatchLeftTile(i, act.left[i], act.solution),
                       ],
                     ),
                   ),
@@ -2616,6 +3756,7 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
                   ),
                 ],
               ),
+              _buildAccentSwitcher(act.language),
               const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -2701,9 +3842,23 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
     }
   }
 
-  Widget _buildOrderChip(int index, String label) {
+  Widget _buildOrderChip(int index, String label, List<int> solution) {
     final pos = _orderedPick.indexOf(index);
     final selected = pos >= 0;
+    final correctPos = solution.indexOf(index);
+    final isRightSpot = widget.revealed && selected && pos == correctPos;
+    final isWrongSpot = widget.revealed && selected && pos != correctPos;
+
+    Color borderCol = selected ? widget.accent : Colors.white.withValues(alpha: 0.16);
+    Color bgCol = selected ? widget.accent.withValues(alpha: 0.24) : Colors.white.withValues(alpha: 0.07);
+    if (isRightSpot) {
+      borderCol = const Color(0xFF4BE085);
+      bgCol = const Color(0xFF4BE085).withValues(alpha: 0.20);
+    } else if (isWrongSpot) {
+      borderCol = const Color(0xFFFF7B89);
+      bgCol = const Color(0xFFFF7B89).withValues(alpha: 0.20);
+    }
+
     return InkWell(
       onTap: widget.revealed
           ? null
@@ -2722,12 +3877,8 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          color: selected
-              ? widget.accent.withValues(alpha: 0.24)
-              : Colors.white.withValues(alpha: 0.07),
-          border: Border.all(
-            color: selected ? widget.accent : Colors.white.withValues(alpha: 0.16),
-          ),
+          color: bgCol,
+          border: Border.all(color: borderCol),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -2735,7 +3886,9 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
             if (selected) ...[
               CircleAvatar(
                 radius: 10,
-                backgroundColor: widget.accent,
+                backgroundColor: isRightSpot
+                    ? const Color(0xFF4BE085)
+                    : (isWrongSpot ? const Color(0xFFFF7B89) : widget.accent),
                 child: Text(
                   '${pos + 1}',
                   style: const TextStyle(
@@ -2749,7 +3902,7 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
             ],
             Flexible(
               child: Text(
-                label,
+                widget.revealed && correctPos >= 0 ? '$label (#${correctPos + 1})' : label,
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -2770,10 +3923,13 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
     Color(0xFFFF7BAC),
   ];
 
-  Widget _buildMatchLeftTile(int i, String text) {
+  Widget _buildMatchLeftTile(int i, String text, List<int> solution) {
     final isActive = _activeLeftIndex == i;
     final matchedRight = _leftToRight[i];
     final c = _pairColors[i % _pairColors.length];
+    final revealedOk = widget.revealed && i < solution.length && matchedRight == solution[i];
+    final revealedWrong = widget.revealed && matchedRight != null && !revealedOk;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 7),
       child: InkWell(
@@ -2786,23 +3942,39 @@ class _QuestionActivityWidgetState extends State<QuestionActivityWidget> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(11),
-            color: isActive || matchedRight != null
-                ? c.withValues(alpha: 0.22)
-                : Colors.white.withValues(alpha: 0.06),
+            color: revealedOk
+                ? const Color(0xFF4BE085).withValues(alpha: 0.22)
+                : revealedWrong
+                    ? const Color(0xFFFF7B89).withValues(alpha: 0.22)
+                    : (isActive || matchedRight != null
+                        ? c.withValues(alpha: 0.22)
+                        : Colors.white.withValues(alpha: 0.06)),
             border: Border.all(
-              color: isActive || matchedRight != null
-                  ? c
-                  : Colors.white.withValues(alpha: 0.15),
+              color: revealedOk
+                  ? const Color(0xFF4BE085)
+                  : revealedWrong
+                      ? const Color(0xFFFF7B89)
+                      : (isActive || matchedRight != null ? c : Colors.white.withValues(alpha: 0.15)),
               width: isActive ? 1.6 : 1.0,
             ),
           ),
-          child: Text(
-            '${i + 1}. $text',
-            style: const TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${i + 1}. $text',
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              if (revealedOk)
+                const Icon(Icons.check_circle_rounded, size: 15, color: Color(0xFF4BE085))
+              else if (revealedWrong)
+                const Icon(Icons.cancel_rounded, size: 15, color: Color(0xFFFF7B89)),
+            ],
           ),
         ),
       ),
