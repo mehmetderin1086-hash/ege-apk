@@ -8,6 +8,7 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
 import android.media.MediaPlayer
+import android.media.SoundPool
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -191,6 +192,12 @@ class MainActivity : FlutterActivity() {
                 setBackgroundMusic(track, volume)
                 result.success(true)
             }
+            "playClip" -> {
+                val name = call.argument<String>("name") ?: ""
+                val volume = (call.argument<Double>("volume") ?: 0.8).toFloat()
+                playClip(name, volume)
+                result.success(true)
+            }
             "playSfx" -> {
                 val kind = call.argument<String>("kind") ?: "tick"
                 val volume = (call.argument<Double>("volume") ?: 0.55).toFloat()
@@ -331,12 +338,13 @@ class MainActivity : FlutterActivity() {
             result?.success(false)
             return
         }
-        val locale = Locale.forLanguageTag(languageTag)
+        val bcp47 = normalizeBcp47(languageTag)
+        val locale = Locale.forLanguageTag(bcp47)
         val avail = engine.isLanguageAvailable(locale)
         if (avail >= TextToSpeech.LANG_AVAILABLE) {
             engine.language = locale
         } else {
-            val fallback = Locale.forLanguageTag(languageTag.substringBefore('-'))
+            val fallback = Locale.forLanguageTag(bcp47.substringBefore('-'))
             if (engine.isLanguageAvailable(fallback) >= TextToSpeech.LANG_AVAILABLE) {
                 engine.language = fallback
             }
@@ -452,10 +460,11 @@ class MainActivity : FlutterActivity() {
                     override fun onEvent(eventType: Int, params: Bundle?) {}
                 })
 
+                val bcp47 = normalizeBcp47(language)
                 val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                     putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, language)
-                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, language)
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, bcp47)
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, bcp47)
                     putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
                     putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
                 }
@@ -465,6 +474,15 @@ class MainActivity : FlutterActivity() {
                 result.error("LISTEN_ERROR", e.localizedMessage ?: "Ses dinleme başlatılamadı.", null)
             }
         }
+    }
+
+    private fun normalizeBcp47(raw: String?): String {
+        val parts = (raw ?: "tr-TR").trim().split('-').filter { it.isNotEmpty() }
+        if (parts.isEmpty()) return "tr-TR"
+        if (parts.size >= 2) {
+            return "${parts[0].lowercase(Locale.ROOT)}-${parts[1].uppercase(Locale.ROOT)}"
+        }
+        return parts[0].lowercase(Locale.ROOT)
     }
 
     private fun emitVoiceEvent(payload: Map<String, Any>) {
@@ -502,7 +520,7 @@ class MainActivity : FlutterActivity() {
         val resId = when (desired) {
             "menu" -> resources.getIdentifier("muzik_menu", "raw", packageName)
             "game" -> resources.getIdentifier("muzik_oyun", "raw", packageName)
-            else -> 0
+            else -> if (desired.matches(Regex("[a-z0-9_]+"))) resources.getIdentifier(desired, "raw", packageName) else 0
         }
         if (resId == 0) return
         try {
@@ -515,6 +533,47 @@ class MainActivity : FlutterActivity() {
                 currentMusicTrack = desired
             }
         } catch (_: Exception) {}
+    }
+
+    // Kısa ses efektleri (res/raw altındaki dosyalar) için düşük gecikmeli oynatıcı.
+    private var soundPool: SoundPool? = null
+    private val clipIds = HashMap<String, Int>()
+    private val loadedClips = HashSet<Int>()
+    private val pendingClips = HashMap<Int, Float>()
+
+    private fun ensureSoundPool(): SoundPool {
+        soundPool?.let { return it }
+        val attrs = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_GAME)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        val pool = SoundPool.Builder().setMaxStreams(4).setAudioAttributes(attrs).build()
+        pool.setOnLoadCompleteListener { sp, id, status ->
+            if (status == 0) {
+                loadedClips.add(id)
+                pendingClips.remove(id)?.let { v -> sp.play(id, v, v, 1, 0, 1f) }
+            }
+        }
+        soundPool = pool
+        return pool
+    }
+
+    private fun playClip(name: String, volume: Float) {
+        if (!name.matches(Regex("[a-z0-9_]+"))) return
+        val v = volume.coerceIn(0f, 1f)
+        mainHandler.post {
+            try {
+                val pool = ensureSoundPool()
+                val id = clipIds[name] ?: run {
+                    val resId = resources.getIdentifier(name, "raw", packageName)
+                    if (resId == 0) return@post
+                    val loaded = pool.load(applicationContext, resId, 1)
+                    clipIds[name] = loaded
+                    loaded
+                }
+                if (loadedClips.contains(id)) pool.play(id, v, v, 1, 0, 1f) else pendingClips[id] = v
+            } catch (_: Exception) {}
+        }
     }
 
     private fun stopMusicInternal() {
@@ -703,6 +762,10 @@ class MainActivity : FlutterActivity() {
         stopSpeakingInternal()
         destroySpeechRecognizer()
         stopMusicInternal()
+        try {
+            soundPool?.release()
+        } catch (_: Exception) {}
+        soundPool = null
         try {
             tts?.shutdown()
         } catch (_: Exception) {}

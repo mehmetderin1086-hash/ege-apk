@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Müzik ve efektler koddan getIdentifier ile adıyla çağrılır; kaynak
+     küçültme bunları kullanılmıyor sanıp silmesin. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/muzik_*,@raw/zirve_*" />

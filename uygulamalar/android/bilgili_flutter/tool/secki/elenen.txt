@@ -1,0 +1,53 @@
+# Kör çözüm ve hakem incelemesinde kusurlu bulunan sorular; seçkiye alınmaz.
+ak38_applied_mixing_0  # Kök iki ondalık istiyor ama seçenekler tek ondalıklı; tutarsızlık var.
+ak38_lm_biy_eseye_bagli_0  # "Bu özellik bakımından taşıyıcı" dilbilgisel olarak kan grubuna bağlanıyor; kök belirsiz.
+ak38_lm_biy_eseye_bagli_940  # "Bu özellik bakımından taşıyıcı" ifadesi kan grubu ile hemofili arasında belirsiz kalıyor.
+ak38_lm_biy_eseye_bagli_4431  # "Bu özellik bakımından taşıyıcı" ifadesi hangi özelliği kastettiği bakımından belirsiz.
+ak38_lm_biy_eseye_bagli_1022  # "Bu özellik bakımından taşıyıcı" ifadesi hangi özelliği kastettiği bakımından belirsiz.
+ak38_lm_biy_osmoz_3500  # %1,5'lik "şurup" gerçekçi değil; gerçek deneyde yumurta şurupta su kaybeder, bağlam yanıltıcı.
+ak38_lm_bl_bagisiklik_0  # Üç öncül aynı durumu anlatıyor; cevap ayırt edicilik olmadan sezilir.
+ak38_lm_bl_bagisiklik_3317  # Enfeksiyonda reaktif trombositoz görülebildiğinden III. öncül tartışmalı.
+ak38_lm_bl_bitki_doku_4661  # Bekçi hücreleri yaprakta bulunduğu için II de yaprak için savunulabilir; iki seçenek savunulabilir.
+ak38_lm_bl_soyagaci_3071  # Ailede hasta birey yok; veri bilgi taşımıyor, soru önemsiz ve ayırt edici değil.
+ak38_social_ages_7716  # Bir pay sorusunda %100'ü aşan imkânsız çeldirici bulunuyor.
+ak38_social_ages_7500  # Bir pay sorusunda %100'ü aşan imkânsız çeldirici bulunuyor.
+ak38_social_agriculture_5950  # Pay sorusunda %100'ü aşan imkânsız çeldirici var.
+ak38_social_agriculture_5000  # Pay sorusunda %100'ü aşan imkânsız çeldirici var.
+ak38_social_basin_2500  # İki çeldirici %100'ü aşıyor; soru fiilen iki seçeneğe iniyor.
+ak38_social_basin_2540  # İki çeldirici %100'ü aşıyor; soru fiilen iki seçeneğe iniyor.
+ak38_social_census_0  # Pay sorusunda %100'ü aşan imkânsız çeldirici var.
+ak38_social_census_7500  # Kırsal nüfus değişmemiş; cevap 0 ve çeldiriciler anlamsız, soru önemsiz.
+ak38_social_census_159  # Pay sorusunda %100'ü aşan imkânsız çeldirici var.
+ak38_social_land_5000  # 4000 nüfuslu ilçede yalnız 150 çiftçinin 55 km² ekmesi gerçekçi olmayan veri.
+ak38_lm_kim_dizilim_0  # 13. periyot seçeneği imkânsız; çeldirici kusurlu.
+ak38_lm_kim_dizilim_1008  # Değerlik elektronu 13 seçeneği imkânsız; çeldirici kusurlu.
+ak38_lm_kim_dizilim_2  # 13. periyot seçeneği imkânsız; çeldirici kusurlu.
+ak38_lm_kim_dizilim_1023  # Değerlik elektronu 15 seçeneği imkânsız; çeldirici kusurlu.
+ak38_lm_kim_dizilim_1024  # Değerlik elektronu 15 seçeneği imkânsız; çeldirici kusurlu.
+ak38_lm_kim_dizilim_1  # 13. periyot seçeneği imkânsız; çeldirici kusurlu.
+ak38_lm_kim_dizilim_8  # 13. periyot seçeneği imkânsız; çeldirici kusurlu.
+ak38_lm_kim_dizilim_1022  # Değerlik elektronu 15 seçeneği imkânsız; çeldirici kusurlu.
+ak38_lm_kim_dizilim_1002  # Değerlik elektronu 13 seçeneği imkânsız; çeldirici kusurlu.
+ak38_math_log_law_0  # log₂(x − 1 + 1) yazımı şablon hatası; öğretmenin kabul etmeyeceği garip ifade.
+ak38_math_paths_0  # Q'dan bitişe tek yatay adım olduğundan fotoğraf koşulu anlamsız; soru dejenere.
+ak38_math_piecewise_profit_0  # "20 − 1x" şablon yazım hatası içeriyor.
+ak38_lm_th_ilk_cag_3362  # Urartuların da yıllık (anal) tuttuğu bilindiğinden II. öncül tartışmalı; B de savunulabilir.
+ak38_lm_th_ilk_cag_3046  # Urartu yıllıkları (Argişti) bilindiğinden I. öncül tartışmalı; B de savunulabilir.
+ak38_lm_geo_aciortay_kenarortay_4000  # |AB| = 3, hipotenüs 28 cm gibi gerçekçi olmayan veri kullanılmış.
+ak38_lm_geo_prizma_2000  # Ayrıtları 4, 4, 4 olan cisme dikdörtgenler prizması denmesi şablon kaynaklı garip ifade.
+ak38_math_angle_bisector_0  # İkizkenar üçgende açıortay teoremi işlevsiz, çeldiriciler yapay ve açıklama hatalı.
+ak38_math_flower_beds_0  # Grafik değerlerinin "yalnız" mı toplam mı olduğu belirsiz ve "tam bir" ifadesi hatalı.
+ak38_math_roof_0  # Kesirli duvar yüksekliği gerçekçi değil, şekil %2 eğimle çelişiyor ve 11 çeldiricisi saçma.
+ak38_arts_ensemble_0  # Tempo gerçekçi değil ve çeldiriciler yapay kesirler; soru kalitesiz.
+ak38_arts_storyboard_0  # Maket boyu 166/3 cm gibi doğal olmayan kesir ve 2/3 çeldiricisi saçma.
+ak38_lm_ing_future_conditional_2710  # Üç cümlede de "I promise" geçtiği için kök cevabı açıkça veriyor.
+ak38_lm_ing_present_continuous_203  # "Look!" ardından soru cümlesi doğal olmayan İngilizce; öğretmen kabul etmez.
+ak38_lm_ing_present_continuous_137  # "Look!" ardından soru cümlesi doğal olmayan İngilizce; öğretmen kabul etmez.
+ak38_lm_ing_present_continuous_519  # "Look!" ardından soru cümlesi doğal olmayan İngilizce; öğretmen kabul etmez.
+ak38_lm_ing_present_continuous_438  # "Look!" ardından soru cümlesi doğal olmayan İngilizce; öğretmen kabul etmez.
+ak38_lm_ing_present_continuous_730  # "Look!" ardından soru cümlesi doğal olmayan İngilizce; öğretmen kabul etmez.
+ak38_lm_ing_present_continuous_336  # "Look!" ile olumsuz eylem bağlamı doğal olmayan İngilizce.
+ak38_lm_ing_present_continuous_272  # "Look!" ile olumsuz eylem bağlamı doğal olmayan İngilizce.
+ak38_lm_ing_present_continuous_277  # "Look!" ardından konuşanın kendi eylemini sorması mantıksız ve doğal değil.
+ak38_lm_ing_present_continuous_374  # "Look!" ardından soru cümlesi doğal olmayan İngilizce.
+ak38_lm_ing_present_continuous_671  # "Look!" ardından soru cümlesi doğal olmayan İngilizce.

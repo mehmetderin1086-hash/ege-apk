@@ -5,229 +5,15 @@ import 'dart:io';
 import 'dart:math';
 import 'package:archive/archive.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
-import '../data/seed_extras.dart';
+import '../data/advanced/catalog.dart';
+import '../data/advanced/common.dart' show StudyLevel;
 import '../models/quiz_models.dart';
 import '../services/ai_gateway_service.dart';
 import '../services/native_bridge.dart';
 import '../services/voice_answer_resolver.dart';
 import '../theme/arena_design.dart';
-
-List<Map<String, dynamic>> _extractRawQuestionMaps(String rawJson) {
-  final decoded = jsonDecode(rawJson);
-  final List items;
-  if (decoded is List) {
-    items = decoded;
-  } else if (decoded is Map && decoded['questions'] is List) {
-    items = decoded['questions'] as List;
-  } else {
-    items = const [];
-  }
-  return items
-      .whereType<Map>()
-      .map((m) => Map<String, dynamic>.from(m))
-      .toList(growable: false);
-}
-
-List<Question> _parseQuestionsInIsolate(String rawJson) {
-  final maps = _extractRawQuestionMaps(rawJson);
-  final parsed = <Question>[];
-  for (var i = 0; i < maps.length; i++) {
-    parsed.add(Question.fromJson(maps[i], fallbackIndex: 1000 + i));
-  }
-  return parsed;
-}
-
-List<Question> _parseMegaBankInIsolate(Uint8List gzBytes) {
-  final rawBytes = GZipDecoder().decodeBytes(gzBytes);
-  final text = utf8.decode(rawBytes, allowMalformed: true);
-  final lines = const LineSplitter().convert(text);
-  final parsed = <Question>[];
-  for (var i = 0; i < lines.length; i++) {
-    final line = lines[i];
-    if (line.isEmpty) continue;
-    final parts = line.split('\t');
-    if (parts.length < 10) continue;
-    final id = parts[0];
-    final qText = parts[1];
-    if (qText.isEmpty) continue;
-    final opts = <String>[parts[2], parts[3], parts[4], parts[5]];
-    final ans = (int.tryParse(parts[6]) ?? 0).clamp(0, 3);
-    final exp = parts[7];
-    final cat = Topic.fromLabel(parts[8]);
-    final diff = Difficulty.fromLabel(parts[9]);
-    final examStr = parts.length > 10 ? parts[10] : '';
-    final lessonStr = parts.length > 11 ? parts[11] : '';
-    parsed.add(
-      Question(
-        id: id,
-        contentID: id,
-        text: qText,
-        options: opts,
-        answer: ans,
-        explanation: exp,
-        category: cat,
-        difficulty: diff,
-        exam: examStr.isNotEmpty ? ExamKind.fromLabel(examStr) : null,
-        lesson: lessonStr.isNotEmpty ? lessonStr : null,
-        sourceModel: 'yerleşik-mega-100k',
-      ),
-    );
-  }
-  return parsed;
-}
-
-List<Question> _parseMegaVisualActivityBankInIsolate(Uint8List gzBytes) {
-  final rawBytes = GZipDecoder().decodeBytes(gzBytes);
-  final text = utf8.decode(rawBytes, allowMalformed: true);
-  final lines = const LineSplitter().convert(text);
-  final parsed = <Question>[];
-  for (var i = 0; i < lines.length; i++) {
-    final line = lines[i];
-    if (line.isEmpty) continue;
-    final parts = line.split('\t');
-    if (parts.length < 14) continue;
-    final id = parts[0];
-    final qText = parts[1];
-    if (qText.isEmpty) continue;
-    final opts = <String>[parts[2], parts[3], parts[4], parts[5]];
-    final ans = (int.tryParse(parts[6]) ?? 0).clamp(0, 3);
-    final exp = parts[7];
-    final cat = Topic.fromLabel(parts[8]);
-    final diff = Difficulty.fromLabel(parts[9]);
-    final examStr = parts[10];
-    final lessonStr = parts[11];
-    final kindTag = parts[12];
-    final payload = parts[13];
-
-    QuestionVisual? visual;
-    QuestionActivity? activity;
-    final p = payload.split('|');
-
-    if (kindTag == 'V:barChart' || kindTag == 'V:lineChart') {
-      if (p.length >= 5) {
-        final vKind = kindTag == 'V:barChart' ? VisualKind.barChart : VisualKind.lineChart;
-        final labels = p[3].split('~');
-        final values = p[4].split('~').map((v) => double.tryParse(v) ?? 0.0).toList();
-        visual = QuestionVisual(
-          kind: vKind,
-          title: p[0],
-          summary: p[1],
-          unit: p[2].isEmpty ? null : p[2],
-          labels: labels,
-          values: values,
-        );
-      }
-    } else if (kindTag == 'V:table') {
-      if (p.length >= 4) {
-        final cols = p[2].split('~');
-        final rows = p[3]
-            .split('^')
-            .where((r) => r.isNotEmpty)
-            .map((r) => r.split('~'))
-            .toList();
-        visual = QuestionVisual(
-          kind: VisualKind.table,
-          title: p[0],
-          summary: p[1],
-          columns: cols,
-          rows: rows,
-        );
-      }
-    } else if (kindTag == 'V:diagram') {
-      if (p.length >= 3) {
-        final elems = <DiagramElement>[];
-        for (final rawEl in p[2].split('^')) {
-          if (rawEl.isEmpty) continue;
-          final ep = rawEl.split(',');
-          if (ep.length >= 3) {
-            elems.add(
-              DiagramElement(
-                shape: ep[0],
-                x: double.tryParse(ep[1]) ?? 50,
-                y: double.tryParse(ep[2]) ?? 50,
-                width: ep.length > 3 && ep[3].isNotEmpty ? double.tryParse(ep[3]) : null,
-                height: ep.length > 4 && ep[4].isNotEmpty ? double.tryParse(ep[4]) : null,
-                endX: ep.length > 5 && ep[5].isNotEmpty ? double.tryParse(ep[5]) : null,
-                endY: ep.length > 6 && ep[6].isNotEmpty ? double.tryParse(ep[6]) : null,
-                label: ep.length > 7 && ep[7].isNotEmpty ? ep[7] : null,
-                color: ep.length > 8 && ep[8].isNotEmpty ? ep[8] : null,
-              ),
-            );
-          }
-        }
-        visual = QuestionVisual(
-          kind: VisualKind.diagram,
-          title: p[0],
-          summary: p[1],
-          elements: elems,
-        );
-      }
-    } else if (kindTag == 'V:image') {
-      if (p.length >= 3) {
-        visual = QuestionVisual(
-          kind: VisualKind.image,
-          title: p[0],
-          summary: p[1],
-          imageID: p[2],
-        );
-      }
-    } else if (kindTag == 'A:listening' || kindTag == 'A:pronunciation') {
-      if (p.length >= 3) {
-        activity = QuestionActivity(
-          kind: kindTag == 'A:listening' ? ActivityKind.listening : ActivityKind.pronunciation,
-          title: p[0],
-          language: p[1],
-          transcript: p[2],
-        );
-      }
-    } else if (kindTag == 'A:ordering') {
-      if (p.length >= 3) {
-        final items = p[1].split('~');
-        final sol = p[2].split('~').map((s) => int.tryParse(s) ?? 0).toList();
-        activity = QuestionActivity(
-          kind: ActivityKind.ordering,
-          title: p[0],
-          items: items,
-          solution: sol,
-        );
-      }
-    } else if (kindTag == 'A:matching') {
-      if (p.length >= 4) {
-        final left = p[1].split('~');
-        final right = p[2].split('~');
-        final sol = p[3].split('~').map((s) => int.tryParse(s) ?? 0).toList();
-        activity = QuestionActivity(
-          kind: ActivityKind.matching,
-          title: p[0],
-          left: left,
-          right: right,
-          solution: sol,
-        );
-      }
-    }
-
-    parsed.add(
-      Question(
-        id: id,
-        contentID: id,
-        text: qText,
-        options: opts,
-        answer: ans,
-        explanation: exp,
-        category: cat,
-        difficulty: diff,
-        exam: examStr.isNotEmpty ? ExamKind.fromLabel(examStr) : null,
-        lesson: lessonStr.isNotEmpty ? lessonStr : null,
-        visual: visual,
-        activity: activity,
-        sourceModel: 'yerleşik-gorsel-etkinlik-50k',
-      ),
-    );
-  }
-  return parsed;
-}
+import 'arena_rooms.dart';
 
 enum LiveVoicePhase {
   idle,
@@ -245,6 +31,8 @@ class ActiveRound {
   final RoundSetup setup;
   final List<Question> questions;
   int currentIndex = 0;
+  String creationResponse = '';
+  bool get needsCreation => current.creation != null && creationResponse.trim().isEmpty;
   bool revealed = false;
   bool paused = false;
   bool pausedByOverlay = false;
@@ -263,6 +51,10 @@ class ActiveRound {
   final List<AnswerRecord> answers = [];
   final List<int> duelScores;
   final List<int> duelCorrects;
+  final List<int> rivalScores;
+  final List<int> rivalCorrects;
+  final List<int> rivalStreaks;
+  final Random rivalRng;
 
   ActiveRound({
     required this.id,
@@ -270,7 +62,16 @@ class ActiveRound {
     required this.setup,
     required this.questions,
   })  : duelScores = List<int>.filled(setup.duelPlayerNames.length, 0),
-        duelCorrects = List<int>.filled(setup.duelPlayerNames.length, 0);
+        duelCorrects = List<int>.filled(setup.duelPlayerNames.length, 0),
+        rivalScores = List<int>.filled(setup.rivalNames.length, 0),
+        rivalCorrects = List<int>.filled(setup.rivalNames.length, 0),
+        rivalStreaks = List<int>.filled(setup.rivalNames.length, 0),
+        rivalRng = Random(id.hashCode);
+
+  bool get hasRivals => setup.rivalNames.isNotEmpty;
+
+  /// Rakip i'nin bilme olasılığı: 0,55 ile 0,80 arasında, adına göre sabit.
+  double rivalSkill(int i) => 0.55 + (setup.rivalNames[i].hashCode % 26).abs() / 100;
 
   Question get current => questions[currentIndex];
   bool get isDuel => setup.duelPlayerNames.length >= 2;
@@ -311,6 +112,9 @@ class ArenaBadgeInfo {
   final String description;
   final IconDataCompat iconKind;
   final bool unlocked;
+  final int current;
+  final int target;
+  final String group;
 
   const ArenaBadgeInfo({
     required this.id,
@@ -318,10 +122,33 @@ class ArenaBadgeInfo {
     required this.description,
     required this.iconKind,
     required this.unlocked,
+    this.current = 0,
+    this.target = 1,
+    this.group = 'Genel',
   });
+
+  double get progress =>
+      unlocked ? 1.0 : (target <= 0 ? 0.0 : (current / target).clamp(0.0, 1.0));
 }
 
-enum IconDataCompat { spark, curious, flawless, master, collector, aiExplorer, voiceStar, duelKing }
+enum IconDataCompat {
+  spark,
+  curious,
+  hunter,
+  encyclopedia,
+  flawless,
+  streak,
+  master,
+  sage,
+  explorer5,
+  explorer23,
+  zirveMid,
+  zirveTop,
+  collector,
+  dailyHabit,
+  voiceStar,
+  duelKing,
+}
 
 class ArenaController extends ChangeNotifier {
   final bool persistToDisk;
@@ -339,6 +166,13 @@ class ArenaController extends ChangeNotifier {
 
   // User Progress & Collections
   int xp = 0;
+  /// Etkinlik anahtarı → kullanılan deneme sayısı ve en yüksek puan.
+  final Map<String, int> etkinlikDenemeleri = {};
+  final Map<String, int> etkinlikEnIyi = {};
+  String? _aktifEtkinlik;
+  /// Zirve Merdiveni: en yüksek kazanç ve ulaşılan en üst basamak.
+  int zirveEnIyi = 0;
+  int zirveEnUstBasamak = 0;
   int dailyStreak = 1;
   String? lastPlayedDayKey;
   String? completedDailyChallengeDayKey;
@@ -347,6 +181,7 @@ class ArenaController extends ChangeNotifier {
   final Map<String, int> categoryAnswered = {};
   final Map<String, int> categoryCorrect = {};
   final List<Question> savedBookmarks = [];
+  final Map<String, String> creationPortfolio = {};
   final List<ReviewCard> reviewDeck = [];
   final List<QuestionPack> offlinePacks = [];
   final List<RoundSummary> history = [];
@@ -408,8 +243,9 @@ class ArenaController extends ChangeNotifier {
   String dailyPoolDayKey = _todayKey();
 
   // Visual, Audio & Accessibility Settings
-  String wallpaperId = 'observatory';
-  WallpaperClarity wallpaperClarity = WallpaperClarity.balanced;
+  static const int _currentUiThemeRev = 318;
+  String wallpaperId = 'istanbul_bogaz';
+  WallpaperClarity wallpaperClarity = WallpaperClarity.vivid;
   EffectIntensity effectIntensity = EffectIntensity.rich;
   bool menuMusicEnabled = false;
   bool gameMusicEnabled = true;
@@ -425,14 +261,14 @@ class ArenaController extends ChangeNotifier {
   bool reduceMotion = false;
 
   ArenaController({this.persistToDisk = true}) {
+    _addAcademicPacks();
     _voiceSub = NativeBridge.voiceEvents.listen(_onNativeVoiceEvent);
   }
 
   factory ArenaController.inMemoryForTest({List<Question>? seedQuestions}) {
     NativeBridge.testMode = true;
     final ctrl = ArenaController(persistToDisk: false);
-    final seeds = seedQuestions ?? SeedExtras.buildExtraSeeds();
-    ctrl._mergeQuestions(seeds);
+    if (seedQuestions != null) ctrl._mergeQuestions(seedQuestions);
     ctrl.isFullPoolLoaded = true;
     return ctrl;
   }
@@ -444,15 +280,71 @@ class ArenaController extends ChangeNotifier {
 
   int get level => (xp ~/ 250) + 1;
   int get xpInCurrentLevel => xp % 250;
-  List<Question> get allQuestions => UnmodifiableListView(_allQuestions);
-  int get totalPoolCount => _allQuestions.length;
-  int get visualQuestionCount => _visualCount;
-  int get activityQuestionCount => _activityCount;
+  List<Question> get personalQuestions => UnmodifiableListView(_allQuestions);
+  List<Question> get allQuestions => JoinedQuestions(_allQuestions, AdvancedCatalog.all);
+  int get totalPoolCount => _allQuestions.length + AdvancedCatalog.all.length;
+  int get visualQuestionCount => _visualCount + AdvancedCatalog.visuals.length;
+  int get activityQuestionCount => _activityCount + AdvancedCatalog.activityCount;
   ArenaWallpaper get currentWallpaper => ArenaWallpapers.byId(wallpaperId);
 
+  Question? questionById(String id) =>
+      AdvancedCatalog.questionById(id) ?? _allQuestions.where((q) => q.id == id).firstOrNull ??
+      savedBookmarks.where((q) => q.id == id).firstOrNull ??
+      reviewDeck.where((card) => card.question.id == id).firstOrNull?.question;
+
+  List<Topic> get availableTopics => Topic.poolCategories.where((t) => countForTopic(t) > 0).toList();
+
   int countForTopic(Topic t) {
-    if (t == Topic.mixed || t == Topic.custom) return _allQuestions.length;
-    return _categoryCounts[t] ?? 0;
+    if (t == Topic.mixed || t == Topic.custom) return totalPoolCount;
+    return (_categoryCounts[t] ?? 0) + AdvancedCatalog.topicCounts[t]!;
+  }
+
+  int countForTopics(Set<Topic> topics) {
+    final active = topics.where((t) => t != Topic.mixed && t != Topic.custom).toSet();
+    if (active.isEmpty) return totalPoolCount;
+    var sum = 0;
+    for (final t in active) {
+      sum += countForTopic(t);
+    }
+    return min(sum, totalPoolCount);
+  }
+
+  /// Akademi havuzundaki etkin filtre kombinasyonuna uyan yaklaşık soru sayısını O(1) döndürür.
+  int countFilteredPool({
+    Set<Topic>? topics,
+    Difficulty? difficulty,
+    BloomLevel? bloom,
+    QuestionFormat format = QuestionFormat.mixed,
+    PoolCollection collection = PoolCollection.all,
+  }) {
+    final activeTopics = topics
+            ?.where((t) => t != Topic.mixed && t != Topic.custom)
+            .toSet() ??
+        const <Topic>{};
+    var total = 0;
+    if (collection != PoolCollection.personal) {
+      total += AdvancedCatalog.select(
+        topic: activeTopics.length == 1 ? activeTopics.first : Topic.mixed,
+        topics: activeTopics.length > 1 ? activeTopics : null,
+        format: format,
+        level: collection.level,
+        bloom: bloom,
+        difficulty: difficulty,
+      ).length;
+    }
+    if (collection.level == null && bloom == null) {
+      for (final q in _allQuestions) {
+        if (activeTopics.isNotEmpty) {
+          final hit = activeTopics.contains(q.category) ||
+              (activeTopics.contains(Topic.exam) && q.exam != null);
+          if (!hit) continue;
+        }
+        if (difficulty != null && q.difficulty != difficulty) continue;
+        if (!q.matchesFormat(format)) continue;
+        total++;
+      }
+    }
+    return total;
   }
 
   List<ReviewCard> get dueReviewCards {
@@ -463,103 +355,36 @@ class ArenaController extends ChangeNotifier {
   bool get isDailyChallengeDoneToday => completedDailyChallengeDayKey == _todayKey();
 
   Future<void> initialize() async {
-    if (isLoadingPool) return;
+    if (isLoadingPool || isFullPoolLoaded) return;
     isLoadingPool = true;
     notifyListeners();
-
-    // 1. Extra curated seeds immediately
-    _mergeQuestions(SeedExtras.buildExtraSeeds());
-
-    // 2. Load persisted state if enabled
-    if (persistToDisk) {
-      await _loadPersistedState();
-    }
-
-    // 3. Load 420 rich seed questions (visuals + activities) immediately
-    try {
-      final rawSeeds = await rootBundle.loadString('assets/sorular/tohumlar.json');
-      final maps = _extractRawQuestionMaps(rawSeeds);
-      final parsed = <Question>[];
-      for (var i = 0; i < maps.length; i++) {
-        parsed.add(Question.fromJson(maps[i], fallbackIndex: i));
-      }
-      _mergeQuestions(parsed);
-      notifyListeners();
-    } catch (_) {}
-
-    // 4. Load 20,000 embedded + 100,000 mega bank + 50,000 visual/activity bank in background isolates
-    try {
-      final rawEmbeddedFuture = rootBundle.loadString('assets/sorular/gomulu-sorular.json');
-      final rawMegaFuture = rootBundle.load('assets/sorular/mega-banka-100k.tsv.gz');
-      final rawVisual50kFuture = rootBundle.load('assets/sorular/mega-gorsel-etkinlik-50k.tsv.gz');
-
-      final rawEmbedded = await rawEmbeddedFuture;
-      final parsed20k = await compute(_parseQuestionsInIsolate, rawEmbedded);
-      _mergePreverifiedEmbeddedQuestions(parsed20k);
-      notifyListeners();
-
-      final rawMegaData = await rawMegaFuture;
-      final gzBytes = rawMegaData.buffer.asUint8List(
-        rawMegaData.offsetInBytes,
-        rawMegaData.lengthInBytes,
-      );
-      final parsed100k = await compute(_parseMegaBankInIsolate, gzBytes);
-      _mergePreverifiedEmbeddedQuestions(parsed100k);
-      notifyListeners();
-
-      final rawVisual50kData = await rawVisual50kFuture;
-      final gzVisualBytes = rawVisual50kData.buffer.asUint8List(
-        rawVisual50kData.offsetInBytes,
-        rawVisual50kData.lengthInBytes,
-      );
-      final parsed50kVisual =
-          await compute(_parseMegaVisualActivityBankInIsolate, gzVisualBytes);
-      _mergePreverifiedEmbeddedQuestions(parsed50kVisual);
-      _rebuildBuiltinQuestionBankPacks();
-    } catch (_) {
-      _rebuildBuiltinQuestionBankPacks();
-    }
+    if (persistToDisk) await _loadPersistedState();
 
     isFullPoolLoaded = true;
     isLoadingPool = false;
     _syncBackgroundMusic();
     notifyListeners();
-
-    // Soft non-blocking discovery of CLIProxy models in background
-    unawaited(refreshLiveModels(silent: true));
   }
 
   void _mergeQuestions(Iterable<Question> incoming) {
     for (final q in incoming) {
       if (q.text.trim().isEmpty) continue;
-      if (!_loadedIds.add(q.id)) continue;
+      if (AdvancedCatalog.hasId(q.id) || !_loadedIds.add(q.id)) continue;
       final key = q.poolKey;
       if (_poolKeys.add(key)) {
         _allQuestions.add(q);
-        _categoryCounts[q.category] = (_categoryCounts[q.category] ?? 0) + 1;
-        if (q.visual != null) _visualCount++;
-        if (q.activity != null) _activityCount++;
+        _countPersonalQuestion(q);
       }
     }
   }
 
-  void _mergePreverifiedEmbeddedQuestions(List<Question> incoming) {
-    for (var i = 0; i < incoming.length; i++) {
-      final q = incoming[i];
-      if (_loadedIds.add(q.id)) {
-        _allQuestions.add(q);
-        _categoryCounts[q.category] = (_categoryCounts[q.category] ?? 0) + 1;
-        if (q.visual != null) _visualCount++;
-        if (q.activity != null) _activityCount++;
-      }
+  void _countPersonalQuestion(Question q) {
+    _categoryCounts[q.category] = (_categoryCounts[q.category] ?? 0) + 1;
+    if (q.exam != null && q.category != Topic.exam) {
+      _categoryCounts[Topic.exam] = (_categoryCounts[Topic.exam] ?? 0) + 1;
     }
-  }
-
-  void _ensurePoolKeysPopulated() {
-    if (_poolKeys.length >= _allQuestions.length) return;
-    for (var i = 0; i < _allQuestions.length; i++) {
-      _poolKeys.add(_allQuestions[i].poolKey);
-    }
+    if (q.visual != null) _visualCount++;
+    if (q.activity != null) _activityCount++;
   }
 
   void _recomputePoolStats() {
@@ -567,174 +392,44 @@ class ArenaController extends ChangeNotifier {
     _visualCount = 0;
     _activityCount = 0;
     for (final q in _allQuestions) {
-      _categoryCounts[q.category] = (_categoryCounts[q.category] ?? 0) + 1;
-      if (q.visual != null) _visualCount++;
-      if (q.activity != null) _activityCount++;
+      _countPersonalQuestion(q);
     }
   }
 
-  void _rebuildBuiltinQuestionBankPacks() {
-    offlinePacks.removeWhere((p) => p.id.startsWith('builtin_sb_'));
-    final tyt = <Question>[];
-    final ayt = <Question>[];
-    final kpssLgs = <Question>[];
-    final bilimTek = <Question>[];
-    final tarihCog = <Question>[];
-    final kulturEdeb = <Question>[];
-    final sanatMuzik = <Question>[];
-    final sinemaSpor = <Question>[];
-    final dogaDil = <Question>[];
-    final gorselBank = <Question>[];
-    final dinlemeTelaffuzBank = <Question>[];
-    final siralamaEslestirmeBank = <Question>[];
-
-    for (var i = 0; i < _allQuestions.length; i++) {
-      final q = _allQuestions[i];
-      if (q.visual != null) {
-        gorselBank.add(q);
-      }
-      if (q.activity != null) {
-        if (q.activity!.kind == ActivityKind.listening ||
-            q.activity!.kind == ActivityKind.pronunciation) {
-          dinlemeTelaffuzBank.add(q);
-        } else {
-          siralamaEslestirmeBank.add(q);
-        }
-      }
-      final cid = q.contentID ?? q.id;
-      if (!cid.startsWith('sb10k_') &&
-          !cid.startsWith('mb100k_') &&
-          !cid.startsWith('mv50k_')) {
-        continue;
-      }
-      switch (q.category) {
-        case Topic.exam:
-          if (q.exam == ExamKind.tyt) {
-            tyt.add(q);
-          } else if (q.exam == ExamKind.ayt) {
-            ayt.add(q);
-          } else if (q.exam == ExamKind.kpss || q.exam == ExamKind.lgs) {
-            kpssLgs.add(q);
-          }
-          break;
-        case Topic.science:
-        case Topic.technology:
-          bilimTek.add(q);
-          break;
-        case Topic.history:
-        case Topic.geography:
-          tarihCog.add(q);
-          break;
-        case Topic.culture:
-        case Topic.literature:
-          kulturEdeb.add(q);
-          break;
-        case Topic.art:
-        case Topic.music:
-          sanatMuzik.add(q);
-          break;
-        case Topic.cinema:
-        case Topic.sport:
-          sinemaSpor.add(q);
-          break;
-        case Topic.nature:
-        case Topic.language:
-          dogaDil.add(q);
-          break;
-        case Topic.mixed:
-        case Topic.custom:
-          break;
-      }
+  void _addAcademicPacks() {
+    void add(String id, String title, FamilyQuestions questions) {
+      if (questions.isEmpty) return;
+      offlinePacks.add(QuestionPack(
+        id: 'builtin_sb_ak38_$id',
+        title: title,
+        createdAt: DateTime(2026, 11, 21),
+        models: const ['GPT-6.2 Astra'],
+        questions: questions,
+      ));
     }
-
-    final now = DateTime(2026, 11, 14);
-    final packEntries = <({String id, String title, List<String> tags, List<Question> qs})>[
-      (
-        id: 'builtin_sb_gorsel_etk',
-        title: 'Görsel Grafik, Tablo & Şema Bankası',
-        tags: const ['Görselli', 'Grafik', 'Tablo', 'Şema'],
-        qs: gorselBank,
-      ),
-      (
-        id: 'builtin_sb_dinleme_telaffuz',
-        title: 'Dinleme & Çok Dilli Telaffuz Bankası',
-        tags: const ['Dinleme', 'Telaffuz'],
-        qs: dinlemeTelaffuzBank,
-      ),
-      (
-        id: 'builtin_sb_siralama_eslestirme',
-        title: 'Sıralama & Eşleştirme Etkinlik Bankası',
-        tags: const ['Sıralama', 'Eşleştirme'],
-        qs: siralamaEslestirmeBank,
-      ),
-      (
-        id: 'builtin_sb_tyt',
-        title: 'TYT Tam Soru Bankası',
-        tags: const ['TYT', 'Sınav Hazırlık'],
-        qs: tyt,
-      ),
-      (
-        id: 'builtin_sb_ayt',
-        title: 'AYT Alan Soru Bankası',
-        tags: const ['AYT', 'Sınav Hazırlık'],
-        qs: ayt,
-      ),
-      (
-        id: 'builtin_sb_kpss_lgs',
-        title: 'KPSS & LGS Kamp Soru Bankası',
-        tags: const ['KPSS', 'LGS', 'Sınav Hazırlık'],
-        qs: kpssLgs,
-      ),
-      (
-        id: 'builtin_sb_bilim_tek',
-        title: 'Bilim & Teknoloji Soru Bankası',
-        tags: const ['Bilim', 'Teknoloji'],
-        qs: bilimTek,
-      ),
-      (
-        id: 'builtin_sb_tarih_cog',
-        title: 'Tarih & Coğrafya Soru Bankası',
-        tags: const ['Tarih', 'Coğrafya'],
-        qs: tarihCog,
-      ),
-      (
-        id: 'builtin_sb_kultur_edeb',
-        title: 'Genel Kültür & Edebiyat Bankası',
-        tags: const ['Genel Kültür', 'Edebiyat'],
-        qs: kulturEdeb,
-      ),
-      (
-        id: 'builtin_sb_sanat_muzik',
-        title: 'Sanat & Müzik Soru Bankası',
-        tags: const ['Sanat', 'Müzik'],
-        qs: sanatMuzik,
-      ),
-      (
-        id: 'builtin_sb_sinema_spor',
-        title: 'Sinema, TV & Spor Soru Bankası',
-        tags: const ['Sinema ve TV', 'Spor'],
-        qs: sinemaSpor,
-      ),
-      (
-        id: 'builtin_sb_doga_dil',
-        title: 'Doğa & Yabancı Dil Soru Bankası',
-        tags: const ['Doğa', 'Yabancı Dil'],
-        qs: dogaDil,
-      ),
-    ];
-
-    for (final entry in packEntries) {
-      if (entry.qs.isNotEmpty) {
-        offlinePacks.add(
-          QuestionPack(
-            id: entry.id,
-            title: entry.title,
-            createdAt: now,
-            models: entry.tags,
-            questions: entry.qs,
-          ),
-        );
-      }
+    for (final level in StudyLevel.values) {
+      add(level.name, '${level.label} · Akademik Soru Bankası',
+          AdvancedCatalog.select(level: level));
+    }
+    add('ozgun', 'Özgün Soru Bankası', AdvancedCatalog.ozgun);
+    add('studio_100k', '100.000 Metin Dışı Stüdyo · Tümü', AdvancedCatalog.studio100k);
+    add('studio_visual_50k', 'Yeni Nesil Görsel Stüdyo · 50.000', AdvancedCatalog.studioVisual50k);
+    add('studio_audio_en_25k', 'Sesli İngilizce Stüdyosu · 25.000', AdvancedCatalog.studioAudioEnglish25k);
+    add('studio_interactive_25k', '3D Etkileşimli Stüdyo · 25.000', AdvancedCatalog.studioInteractive25k);
+    add('studio_10k', 'Yeni Nesil 10.000 Seçki · Tümü', AdvancedCatalog.studio10k);
+    add('studio_visual_4k', 'Yeni Nesil Görsel Stüdyo · 4.000', AdvancedCatalog.studioVisual4k);
+    add('studio_audio_en_3k', 'Sesli İngilizce Stüdyosu · 3.000', AdvancedCatalog.studioAudioEnglish3k);
+    add('studio_interactive_3k', 'Çok Biçimli Etkileşimli · 3.000', AdvancedCatalog.studioInteractive3k);
+    add('lise_metin', 'Lise · Metin Soru Bankası',
+        AdvancedCatalog.select(level: StudyLevel.lise, format: QuestionFormat.text));
+    for (final bloom in BloomLevel.values) {
+      add('bloom_${bloom.name}', 'Bloom · ${bloom.label}', AdvancedCatalog.select(bloom: bloom));
+    }
+    for (final topic in Topic.poolCategories) {
+      add('topic_${topic.name}', '${topic.label} · Konu Bankası', AdvancedCatalog.select(topic: topic));
+    }
+    for (final format in QuestionFormat.values.where((f) => f != QuestionFormat.mixed && f != QuestionFormat.text)) {
+      add('format_${format.name}', '${format.label} · Soru Türü', AdvancedCatalog.select(format: format));
     }
   }
 
@@ -792,7 +487,20 @@ class ArenaController extends ChangeNotifier {
     unawaited(_savePersistedState());
   }
 
+  /// Özel ekranların (Zirve Merdiveni) çaldığı müzik parçası; null ise
+  /// menü/oyun müziği kuralı geçerlidir.
+  String? ozelMuzik;
+
+  void ozelMuzikAyarla(String? parca) {
+    ozelMuzik = parca;
+    _syncBackgroundMusic();
+  }
+
   void _syncBackgroundMusic() {
+    if (ozelMuzik != null) {
+      NativeBridge.setMusic(gameMusicEnabled ? ozelMuzik : null, volume: musicVolume);
+      return;
+    }
     if (activeRound != null && !activeRound!.finished && !activeRound!.paused) {
       if (gameMusicEnabled) {
         NativeBridge.setMusic('game', volume: musicVolume);
@@ -810,6 +518,49 @@ class ArenaController extends ChangeNotifier {
 
   void updateSetup(RoundSetup nextSetup) {
     setup = nextSetup;
+    notifyListeners();
+  }
+
+  /// Birden fazla kategori seçmek veya seçimi kaldırmak için kullanılır.
+  void toggleTopicSelection(Topic t) {
+    if (t == Topic.mixed) {
+      setup = setup.copyWith(topic: Topic.mixed, selectedTopics: const {});
+      notifyListeners();
+      return;
+    }
+    if (t == Topic.custom) {
+      setup = setup.copyWith(topic: Topic.custom, selectedTopics: const {});
+      notifyListeners();
+      return;
+    }
+    final next = Set<Topic>.of(setup.effectiveTopics);
+    if (!next.remove(t)) {
+      next.add(t);
+    }
+    if (next.isEmpty) {
+      setup = setup.copyWith(topic: Topic.mixed, selectedTopics: const {});
+    } else if (next.length == 1) {
+      setup = setup.copyWith(topic: next.first, selectedTopics: next);
+    } else {
+      setup = setup.copyWith(topic: Topic.mixed, selectedTopics: next);
+    }
+    notifyListeners();
+  }
+
+  void selectTopicBundle(Set<Topic> topics) {
+    final clean = topics.where((t) => t != Topic.mixed && t != Topic.custom).toSet();
+    if (clean.isEmpty) {
+      setup = setup.copyWith(topic: Topic.mixed, selectedTopics: const {});
+    } else if (clean.length == 1) {
+      setup = setup.copyWith(topic: clean.first, selectedTopics: clean);
+    } else {
+      setup = setup.copyWith(topic: Topic.mixed, selectedTopics: clean);
+    }
+    notifyListeners();
+  }
+
+  void clearSelectedTopics() {
+    setup = setup.copyWith(topic: Topic.mixed, selectedTopics: const {});
     notifyListeners();
   }
 
@@ -839,11 +590,39 @@ class ArenaController extends ChangeNotifier {
   // --- Sampling & Round Launchers ---
   List<Question> sampleQuestions(RoundSetup cfg, {int? seed}) {
     final rng = seed != null ? Random(seed) : _rng;
+    final manual = cfg.format == QuestionFormat.fill ||
+        cfg.format == QuestionFormat.dictation ||
+        cfg.format == QuestionFormat.multiSelect ||
+        cfg.format == QuestionFormat.slider ||
+        cfg.format == QuestionFormat.anagram;
+    final quick = cfg.mode == GameMode.sprint || (cfg.liveVoiceHost && !manual);
+    final format = quick &&
+            {
+              QuestionFormat.mixed,
+              QuestionFormat.fill,
+              QuestionFormat.dictation,
+              QuestionFormat.creation,
+              QuestionFormat.multiSelect,
+              QuestionFormat.slider,
+              QuestionFormat.anagram,
+              QuestionFormat.visual,
+              QuestionFormat.text,
+            }.contains(cfg.format)
+        ? QuestionFormat.multipleChoice
+        : cfg.format;
+    final bool? requireVisual = quick && cfg.format == QuestionFormat.visual ? true
+        : quick && cfg.format == QuestionFormat.text ? false : null;
+    bool matches(Question q) => !reportedQuestionIds.contains(q.id) &&
+        q.matchesFormat(format) && (requireVisual == null || (q.visual != null) == requireVisual);
+
+    final activeTopics = cfg.effectiveTopics;
+    final singleExam = activeTopics.length == 1 && activeTopics.first == Topic.exam;
+
     final candidates = _allQuestions.where((q) {
-      if (reportedQuestionIds.contains(q.id)) return false;
-      if (cfg.topic != Topic.mixed && cfg.topic != Topic.custom) {
-        if (cfg.topic == Topic.exam) {
-          if (q.category != Topic.exam) return false;
+      if (!matches(q)) return false;
+      if (activeTopics.isNotEmpty) {
+        if (singleExam) {
+          if (q.category != Topic.exam && q.exam == null) return false;
           if (q.exam != null && q.exam != cfg.exam) return false;
           if (cfg.lesson != null &&
               cfg.lesson!.isNotEmpty &&
@@ -851,36 +630,26 @@ class ArenaController extends ChangeNotifier {
               q.lesson != cfg.lesson) {
             return false;
           }
-        } else if (q.category != cfg.topic) {
-          return false;
+        } else {
+          final hit = activeTopics.contains(q.category) ||
+              (activeTopics.contains(Topic.exam) && q.exam != null);
+          if (!hit) return false;
         }
       }
       if (cfg.difficulty != null && q.difficulty != cfg.difficulty) {
         return false;
       }
-      if (!q.matchesFormat(cfg.format)) return false;
       return true;
     }).toList();
 
-    var pool = candidates;
-    if (pool.length < cfg.questionCount) {
-      // Relax difficulty/lesson constraint if narrow filter had few matches
-      final relaxed = _allQuestions.where((q) {
-        if (reportedQuestionIds.contains(q.id)) return false;
-        if (!q.matchesFormat(cfg.format)) return false;
-        if (cfg.topic != Topic.mixed && cfg.topic != Topic.custom && cfg.topic != Topic.exam) {
-          return q.category == cfg.topic;
-        }
-        return true;
-      }).toList();
-      final existingIds = pool.map((e) => e.id).toSet();
-      for (final extra in relaxed) {
-        if (existingIds.add(extra.id)) pool.add(extra);
-      }
-    }
-    if (pool.isEmpty) {
-      pool = List<Question>.from(_allQuestions.take(20));
-    }
+    final academic = AdvancedCatalog.select(
+      topic: singleExam ? Topic.exam : cfg.topic,
+      topics: activeTopics.length > 1 ? activeTopics : null,
+      difficulty: cfg.difficulty, format: format, requireVisual: requireVisual,
+      exam: singleExam ? cfg.exam : null,
+      lesson: singleExam ? cfg.lesson : null,
+    );
+    final pool = JoinedQuestions(candidates, academic);
 
     // Prioritize unplayed questions with fast random sampling on large pools
     return _pickRandomQuestions(pool, cfg.questionCount, rng);
@@ -889,8 +658,8 @@ class ArenaController extends ChangeNotifier {
   List<Question> _pickRandomQuestions(List<Question> pool, int targetCount, Random rng) {
     if (pool.isEmpty) return const [];
     if (pool.length <= 600) {
-      final unplayed = pool.where((q) => !playedQuestionIds.contains(q.id)).toList()..shuffle(rng);
-      final played = pool.where((q) => playedQuestionIds.contains(q.id)).toList()..shuffle(rng);
+      final unplayed = pool.where((q) => !reportedQuestionIds.contains(q.id) && !playedQuestionIds.contains(q.id)).toList()..shuffle(rng);
+      final played = pool.where((q) => !reportedQuestionIds.contains(q.id) && playedQuestionIds.contains(q.id)).toList()..shuffle(rng);
       final combined = [...unplayed, ...played];
       return combined.take(targetCount).map((q) => q.shuffled(rng)).toList();
     }
@@ -901,21 +670,21 @@ class ArenaController extends ChangeNotifier {
     // Pass 1: random unplayed picks
     for (var i = 0; i < maxAttempts && picked.length < targetCount; i++) {
       final q = pool[rng.nextInt(pool.length)];
-      if (!playedQuestionIds.contains(q.id) && pickedIds.add(q.id)) {
+      if (!reportedQuestionIds.contains(q.id) && !playedQuestionIds.contains(q.id) && pickedIds.add(q.id)) {
         picked.add(q.shuffled(rng));
       }
     }
     // Pass 2: random fallback from pool if needed
     for (var i = 0; i < maxAttempts && picked.length < targetCount; i++) {
       final q = pool[rng.nextInt(pool.length)];
-      if (pickedIds.add(q.id)) {
+      if (!reportedQuestionIds.contains(q.id) && pickedIds.add(q.id)) {
         picked.add(q.shuffled(rng));
       }
     }
     if (picked.length < targetCount) {
       for (var i = 0; i < pool.length && picked.length < targetCount; i++) {
         final q = pool[i];
-        if (pickedIds.add(q.id)) {
+        if (!reportedQuestionIds.contains(q.id) && pickedIds.add(q.id)) {
           picked.add(q.shuffled(rng));
         }
       }
@@ -923,29 +692,30 @@ class ArenaController extends ChangeNotifier {
     return picked;
   }
 
-  void startConfiguredRound({String? customTitle, RoundSetup? overrideSetup, int? seed}) {
+  bool startConfiguredRound({String? customTitle, RoundSetup? overrideSetup, int? seed}) {
     final cfg = overrideSetup ?? setup;
     final qs = sampleQuestions(cfg, seed: seed);
-    if (qs.isEmpty) return;
+    if (qs.isEmpty) return false;
     _beginRound(
       title: customTitle ??
           (cfg.duelPlayerNames.length >= 2
               ? 'Düello Arenası (${cfg.duelPlayerNames.length} Oyuncu)'
               : cfg.liveVoiceHost
                   ? 'Canlı Sesli Yarışma'
-                  : '${cfg.topic.label} · ${cfg.mode.label}'),
+                  : '${cfg.topicsLabel} · ${cfg.mode.label}'),
       cfg: cfg,
       questions: qs,
     );
+    return true;
   }
 
-  void startLiveVoiceQuiz() {
+  bool startLiveVoiceQuiz() {
     final liveCfg = setup.copyWith(
       liveVoiceHost: true,
       mode: GameMode.classic,
       questionCount: 8,
     );
-    startConfiguredRound(
+    return startConfiguredRound(
       customTitle: 'Canlı Sesli Yarışma',
       overrideSetup: liveCfg,
     );
@@ -970,61 +740,281 @@ class ArenaController extends ChangeNotifier {
   void startVisualAndActivityDiscovery() {
     final picked = <Question>[];
     final pickedIds = <String>{};
-    final seenVisuals = <VisualKind>{};
-    final seenActivities = <ActivityKind>{};
-    final n = _allQuestions.length;
-
-    if (n > 0) {
-      // Fast random probes to gather a diverse mix of visual and activity kinds
-      for (var attempt = 0; attempt < 600 && picked.length < 10; attempt++) {
-        final q = _allQuestions[_rng.nextInt(n)];
-        if (reportedQuestionIds.contains(q.id)) continue;
-        if (q.visual == null && q.activity == null) continue;
-        final isNewVisual = q.visual != null && seenVisuals.add(q.visual!.kind);
-        final isNewAct = q.activity != null && seenActivities.add(q.activity!.kind);
-        if ((isNewVisual || isNewAct || attempt > 240) && pickedIds.add(q.id)) {
-          picked.add(q.shuffled(_rng));
-        }
-      }
-      if (picked.length < 10) {
-        for (var i = 0; i < n && picked.length < 10; i++) {
-          final q = _allQuestions[i];
-          if (!reportedQuestionIds.contains(q.id) &&
-              (q.visual != null || q.activity != null) &&
-              pickedIds.add(q.id)) {
-            picked.add(q.shuffled(_rng));
-          }
-        }
+    void addFrom(List<Question> questions, int count, {int cap = 14}) {
+      for (final q in _pickRandomQuestions(questions, count, _rng)) {
+        if (picked.length < cap && pickedIds.add(q.id)) picked.add(q);
       }
     }
+    for (final kind in [
+      VisualKind.circuit,
+      VisualKind.venn,
+      VisualKind.compass,
+      VisualKind.colorLab,
+      VisualKind.piano,
+      VisualKind.flag,
+      VisualKind.clock,
+      VisualKind.atom,
+      VisualKind.matrix,
+    ]) {
+      addFrom(AdvancedCatalog.select(visualKind: kind), 1);
+    }
+    for (final format in [
+      QuestionFormat.slider,
+      QuestionFormat.anagram,
+      QuestionFormat.listening,
+      QuestionFormat.dictation,
+      QuestionFormat.matching,
+    ]) {
+      addFrom(AdvancedCatalog.select(format: format), 1);
+    }
+    if (picked.length < 14) {
+      addFrom(_allQuestions.where((q) => q.visual != null || q.activity != null).toList(), 14);
+    }
+    if (picked.length < 14) addFrom(AdvancedCatalog.visuals, 14);
     if (picked.isEmpty) return;
+    picked.shuffle(_rng);
     _beginRound(
-      title: 'Görsel & Etkinlik Keşif Turu',
-      cfg: const RoundSetup(mode: GameMode.training, questionCount: 10),
+      title: 'Görsel & Etkileşimli Keşif (14 Tür)',
+      cfg: RoundSetup(mode: GameMode.training, questionCount: picked.length),
       questions: picked,
     );
   }
 
-  bool startSpacedRepetitionReview() {
-    final due = dueReviewCards.isNotEmpty ? dueReviewCards : reviewDeck;
-    if (due.isEmpty) return false;
-    final qs = due.take(12).map((c) => c.question.shuffled(_rng)).toList();
+  bool startVisualEngineRound({
+    List<VisualKind>? kinds,
+    QuestionFormat? format,
+    String? title,
+    int count = 10,
+  }) {
+    final List<Question> picked;
+    if (kinds != null && kinds.isNotEmpty) {
+      final bag = <Question>[];
+      final seen = <String>{};
+      final perKind = max(1, (count / kinds.length).ceil());
+      for (final k in kinds) {
+        for (final q in _pickRandomQuestions(AdvancedCatalog.select(visualKind: k), perKind, _rng)) {
+          if (seen.add(q.id)) bag.add(q);
+        }
+      }
+      bag.shuffle(_rng);
+      picked = bag.take(count).toList();
+    } else if (format != null) {
+      picked = _pickRandomQuestions(AdvancedCatalog.select(format: format), count, _rng);
+    } else {
+      picked = _pickRandomQuestions(AdvancedCatalog.studioVisual50k, count, _rng);
+    }
+    if (picked.isEmpty) return false;
     _beginRound(
-      title: 'Aralıklı Tekrar Turu',
-      cfg: RoundSetup(mode: GameMode.training, questionCount: qs.length),
+      title: title ?? 'Görsel & Etkileşimli Stüdyo',
+      cfg: RoundSetup(
+        format: format ?? QuestionFormat.visual,
+        mode: GameMode.training,
+        questionCount: picked.length,
+      ),
+      questions: picked,
+    );
+    return true;
+  }
+
+  bool startAudioEnglishStudio({QuestionFormat? format, int count = 10}) {
+    final List<Question> source;
+    final String title;
+    switch (format) {
+      case QuestionFormat.listening:
+        source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.listening);
+        title = 'Sesli İngilizce · Dinleme & Anlama';
+        break;
+      case QuestionFormat.dictation:
+        source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.dictation);
+        title = 'Sesli İngilizce · Dikte Stüdyosu';
+        break;
+      case QuestionFormat.pronunciation:
+        source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.pronunciation);
+        title = 'Sesli İngilizce · Telaffuz & Konuşma';
+        break;
+      case QuestionFormat.anagram:
+        source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.anagram);
+        title = 'Sesli İngilizce · 3D Harf Dizme';
+        break;
+      case QuestionFormat.visual:
+        source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.visual);
+        title = 'İngilizce Görsel Saat Stüdyosu';
+        break;
+      case QuestionFormat.ordering:
+        source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.ordering);
+        title = 'İngilizce Cümle Kurma (Word Order)';
+        break;
+      case QuestionFormat.matching:
+        source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.matching);
+        title = 'İngilizce Deyim & Fiil Eşleştirme';
+        break;
+      default:
+        source = AdvancedCatalog.studioAudioEnglishAll;
+        title = 'Sesli İngilizce Stüdyosu (28.000)';
+    }
+    final qs = _pickRandomQuestions(source, count, _rng);
+    if (qs.isEmpty) return false;
+    _beginRound(
+      title: title,
+      cfg: RoundSetup(
+        topic: Topic.language,
+        format: format ?? QuestionFormat.mixed,
+        mode: GameMode.training,
+        questionCount: qs.length,
+      ),
       questions: qs,
     );
     return true;
   }
 
-  void startDuelTournament(List<String> players, {Topic topic = Topic.mixed, int perPlayer = 3}) {
+  bool startSpacedRepetitionReview() => startReviewRound();
+
+  bool startReviewRound({int? boxFilter, Topic? topicFilter, bool onlyDue = false}) {
+    Iterable<ReviewCard> source = onlyDue
+        ? dueReviewCards
+        : (dueReviewCards.isNotEmpty && boxFilter == null && topicFilter == null
+            ? dueReviewCards
+            : reviewDeck);
+    if (boxFilter != null) {
+      source = reviewDeck.where((c) => c.box == boxFilter);
+    }
+    if (topicFilter != null && topicFilter != Topic.mixed) {
+      source = source.where((c) => c.question.category == topicFilter);
+    }
+    final list = source.toList();
+    if (list.isEmpty) return false;
+    final qs = list.take(15).map((c) => c.question.shuffled(_rng)).toList();
+    final label = boxFilter != null
+        ? 'Tekrar · Kutu ${boxFilter + 1}'
+        : topicFilter != null && topicFilter != Topic.mixed
+            ? 'Tekrar · ${topicFilter.label}'
+            : 'Aralıklı Tekrar Turu';
+    _beginRound(
+      title: label,
+      cfg: RoundSetup(
+        topic: topicFilter ?? Topic.mixed,
+        mode: GameMode.training,
+        questionCount: qs.length,
+      ),
+      questions: qs,
+    );
+    return true;
+  }
+
+  bool startBookmarksRound({Topic? topicFilter, int maxQuestions = 15}) {
+    final list = (topicFilter == null || topicFilter == Topic.mixed)
+        ? List<Question>.of(savedBookmarks)
+        : savedBookmarks.where((q) => q.category == topicFilter).toList();
+    if (list.isEmpty) return false;
+    list.shuffle(_rng);
+    final qs = list.take(maxQuestions).map((q) => q.shuffled(_rng)).toList();
+    _beginRound(
+      title: topicFilter != null && topicFilter != Topic.mixed
+          ? 'Defterim · ${topicFilter.label}'
+          : 'Bilgi Defterim Turu',
+      cfg: RoundSetup(
+        topic: topicFilter ?? Topic.mixed,
+        mode: GameMode.training,
+        questionCount: qs.length,
+      ),
+      questions: qs,
+    );
+    return true;
+  }
+
+  bool startFilteredAcademyRound({
+    Set<Topic>? topics,
+    Difficulty? difficulty,
+    BloomLevel? bloom,
+    QuestionFormat format = QuestionFormat.mixed,
+    PoolCollection collection = PoolCollection.all,
+    int count = 10,
+    GameMode mode = GameMode.classic,
+  }) {
+    final activeTopics = topics
+            ?.where((t) => t != Topic.mixed && t != Topic.custom)
+            .toSet() ??
+        const <Topic>{};
+    final personalCandidates = <Question>[];
+    if (collection.level == null && bloom == null) {
+      for (final q in _allQuestions) {
+        if (reportedQuestionIds.contains(q.id)) continue;
+        if (activeTopics.isNotEmpty) {
+          final hit = activeTopics.contains(q.category) ||
+              (activeTopics.contains(Topic.exam) && q.exam != null);
+          if (!hit) continue;
+        }
+        if (difficulty != null && q.difficulty != difficulty) continue;
+        if (!q.matchesFormat(format)) continue;
+        personalCandidates.add(q);
+      }
+    }
+    final academic = collection == PoolCollection.personal
+        ? FamilyQuestions(const [])
+        : AdvancedCatalog.select(
+            topic: activeTopics.length == 1 ? activeTopics.first : Topic.mixed,
+            topics: activeTopics.length > 1 ? activeTopics : null,
+            format: format,
+            level: collection.level,
+            bloom: bloom,
+            difficulty: difficulty,
+          );
+    final pool = JoinedQuestions(personalCandidates, academic);
+    final picked = _pickRandomQuestions(pool, count, _rng);
+    if (picked.isEmpty) return false;
+    final parts = <String>[
+      if (activeTopics.length == 1)
+        activeTopics.first.label
+      else if (activeTopics.length > 1)
+        '${activeTopics.length} Kategori'
+      else
+        'Akademi Havuzu',
+      if (difficulty != null) difficulty.label,
+      if (bloom != null) bloom.label,
+    ];
+    _beginRound(
+      title: parts.join(' · '),
+      cfg: RoundSetup(
+        topic: activeTopics.length == 1 ? activeTopics.first : Topic.mixed,
+        selectedTopics: activeTopics,
+        difficulty: difficulty,
+        format: format,
+        mode: mode,
+        questionCount: picked.length,
+      ),
+      questions: picked,
+    );
+    return true;
+  }
+
+  bool startTopicPractice(Topic topic, {int count = 10, Difficulty? difficulty, GameMode mode = GameMode.classic}) {
+    final cfg = RoundSetup(
+      topic: topic,
+      selectedTopics: topic == Topic.mixed ? const {} : {topic},
+      difficulty: difficulty,
+      mode: mode,
+      questionCount: count,
+    );
+    return startConfiguredRound(
+      customTitle: '${topic.label} · Odak Çalışması',
+      overrideSetup: cfg,
+    );
+  }
+
+  void startDuelTournament(
+    List<String> players, {
+    Topic topic = Topic.mixed,
+    Set<Topic>? topics,
+    int perPlayer = 3,
+  }) {
     final cleanNames = players.map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
     if (cleanNames.length < 2) return;
     final count = cleanNames.length * perPlayer;
     final cfg = RoundSetup(
       topic: topic,
+      selectedTopics: topics ?? const {},
       mode: GameMode.classic,
-      format: QuestionFormat.text,
+      format: QuestionFormat.multipleChoice,
       questionCount: count,
       duelPlayerNames: cleanNames,
     );
@@ -1034,11 +1024,121 @@ class ArenaController extends ChangeNotifier {
     );
   }
 
+  /// Özel oda: aynı oda numarası aynı soruları üretir. İki ya da daha çok
+  /// oyuncu varsa aynı cihazda sırayla oynanır.
+  bool startOdaRound(OdaAyari oda, List<String> oyuncular) {
+    final adlar = oyuncular.map((e) => e.trim()).where((e) => e.isNotEmpty).take(10).toList();
+    final cfg = RoundSetup(
+      topic: oda.kategori,
+      mode: GameMode.classic,
+      format: QuestionFormat.multipleChoice,
+      questionCount: oda.soruSayisi * max(1, adlar.length),
+      secondsPerQuestion: oda.sure,
+      duelPlayerNames: adlar.length >= 2 ? adlar : const [],
+    );
+    return startConfiguredRound(customTitle: 'Özel Oda ${oda.kod}', overrideSetup: cfg, seed: oda.tohum);
+  }
+
+  /// Bire Bir ya da Çoklu: bilgisayar rakiplerine karşı.
+  bool startRakipMaci({
+    required List<String> rakipler,
+    Topic topic = Topic.mixed,
+    Set<Topic>? topics,
+    int soru = 7,
+    int sure = 20,
+  }) {
+    final cfg = RoundSetup(
+      topic: topic,
+      selectedTopics: topics ?? const {},
+      mode: GameMode.classic,
+      format: QuestionFormat.multipleChoice,
+      questionCount: soru,
+      secondsPerQuestion: sure,
+      rivalNames: rakipler,
+    );
+    return startConfiguredRound(
+      customTitle: rakipler.length == 1 ? 'Bire Bir · ${rakipler.first}' : 'Çoklu Oda (${rakipler.length + 1} kişi)',
+      overrideSetup: cfg,
+    );
+  }
+
+  /// Zirve Merdiveni için 15 soru: 5 kolay, 5 orta, 5 zor; hepsi dört
+  /// seçenekli metin sorusu. Ek olarak her zorluktan birer yedek soru
+  /// (soru değiştirme jokeri için) döner.
+  ({List<Question> sorular, Map<Difficulty, Question> yedek})? zirveSorulari({
+    Topic topic = Topic.mixed,
+    Set<Topic>? topics,
+    int? seed,
+  }) {
+    final rng = Random(seed ?? DateTime.now().microsecondsSinceEpoch);
+    final sorular = <Question>[];
+    final yedek = <Difficulty, Question>{};
+    for (final d in Difficulty.values) {
+      final cfg = RoundSetup(
+        topic: topic,
+        selectedTopics: topics ?? const {},
+        difficulty: d,
+        mode: GameMode.classic,
+        format: QuestionFormat.text,
+        questionCount: 12,
+      );
+      final aday = sampleQuestions(cfg, seed: rng.nextInt(1 << 30))
+          .where((q) =>
+              q.options.length == 4 &&
+              q.visual == null &&
+              q.activity == null &&
+              q.responseType == ResponseType.choice)
+          .where((q) => sorular.every((x) => x.id != q.id))
+          .toList();
+      if (aday.length < 6) return null;
+      sorular.addAll(aday.take(5));
+      yedek[d] = aday[5];
+    }
+    return (sorular: sorular, yedek: yedek);
+  }
+
+  void zirveKaydet({required int kazanc, required int basamak}) {
+    zirveEnIyi = max(zirveEnIyi, kazanc);
+    zirveEnUstBasamak = max(zirveEnUstBasamak, basamak);
+    xp += basamak * 15;
+    notifyListeners();
+    unawaited(_savePersistedState());
+  }
+
+  int etkinlikDenemesi(Etkinlik e) => etkinlikDenemeleri[e.anahtar] ?? 0;
+
+  bool startEtkinlik(Etkinlik e) {
+    if (etkinlikDenemesi(e) >= e.hak) return false;
+    final cfg = RoundSetup(
+      topic: e.tema.konu,
+      mode: GameMode.classic,
+      format: QuestionFormat.multipleChoice,
+      questionCount: e.soruSayisi,
+      secondsPerQuestion: 20,
+    );
+    final ok = startConfiguredRound(customTitle: 'Etkinlik · ${e.tema.ad}', overrideSetup: cfg, seed: e.tohum + etkinlikDenemesi(e));
+    if (ok) {
+      etkinlikDenemeleri[e.anahtar] = etkinlikDenemesi(e) + 1;
+      _aktifEtkinlik = e.anahtar;
+      unawaited(_savePersistedState());
+    }
+    return ok;
+  }
+
+  void startQuestionPractice(Question question) {
+    _beginRound(
+      title: question.lesson ?? question.category.label,
+      cfg: RoundSetup(mode: GameMode.training, topic: question.category, questionCount: 1),
+      questions: [question.shuffled(_rng)],
+    );
+  }
+
   void startPackRound(QuestionPack pack, {int? maxQuestions}) {
     if (pack.questions.isEmpty) return;
     final int targetCount = maxQuestions ??
         (pack.questions.length > 25 ? setup.questionCount.clamp(10, 30) : pack.questions.length);
     final qs = _pickRandomQuestions(pack.questions, targetCount, _rng);
+    if (qs.isEmpty) return;
     _beginRound(
       title: pack.title,
       cfg: RoundSetup(mode: setup.mode, questionCount: qs.length),
@@ -1046,7 +1146,7 @@ class ArenaController extends ChangeNotifier {
     );
   }
 
-  void startStudyProfileRound(StudyProfile profile) {
+  bool startStudyProfileRound(StudyProfile profile) {
     final cfg = RoundSetup(
       topic: Topic.exam,
       exam: profile.exam,
@@ -1055,7 +1155,7 @@ class ArenaController extends ChangeNotifier {
       mode: GameMode.classic,
       questionCount: profile.questionCount,
     );
-    startConfiguredRound(customTitle: profile.title, overrideSetup: cfg);
+    return startConfiguredRound(customTitle: profile.title, overrideSetup: cfg);
   }
 
   void _beginRound({
@@ -1085,6 +1185,7 @@ class ArenaController extends ChangeNotifier {
 
   void _configureTimersForQuestion(ActiveRound round, {required bool isFirstQuestion}) {
     round.questionElapsedSeconds = 0;
+    round.creationResponse = '';
     round.hiddenOptions = {};
     switch (round.setup.mode) {
       case GameMode.training:
@@ -1092,7 +1193,15 @@ class ArenaController extends ChangeNotifier {
         round.remainingSeconds = 0;
         break;
       case GameMode.classic:
-        round.totalTimerSeconds = round.setup.liveVoiceHost ? 35 : 15;
+        final q = round.questions.isNotEmpty ? round.current : null;
+        final needsExtra = q != null &&
+            (q.activity != null ||
+                q.multiSelect != null ||
+                q.responseType == ResponseType.fill);
+        final baseSec = round.setup.liveVoiceHost
+            ? 35
+            : (round.setup.secondsPerQuestion ?? 15);
+        round.totalTimerSeconds = needsExtra ? baseSec + 10 : baseSec;
         round.remainingSeconds = round.totalTimerSeconds;
         break;
       case GameMode.sprint:
@@ -1120,6 +1229,7 @@ class ArenaController extends ChangeNotifier {
       if (r == null || r.finished || r.paused || r.pausedByOverlay || r.waitingStageBreak || r.revealed) {
         return;
       }
+      if (r.needsCreation) return;
       r.questionElapsedSeconds++;
       if (r.totalTimerSeconds <= 0) return;
 
@@ -1179,11 +1289,13 @@ class ArenaController extends ChangeNotifier {
         r.revealed ||
         r.jokerFiftyUsed ||
         !r.setup.mode.allowsJokers ||
-        r.current.isInteractiveSequence ||
-        r.current.isPronunciation) {
+        r.current.responseType != ResponseType.choice ||
+        r.current.options.length < 4) {
       return false;
     }
-    final wrongIndices = [0, 1, 2, 3]..remove(r.current.answer)..shuffle(_rng);
+    final wrongIndices = List.generate(r.current.options.length, (i) => i)
+      ..remove(r.current.answer)
+      ..shuffle(_rng);
     r.hiddenOptions = wrongIndices.take(2).toSet();
     r.jokerFiftyUsed = true;
     NativeBridge.playSfx('joker', enabled: sfxEnabled, haptics: hapticsEnabled);
@@ -1229,10 +1341,49 @@ class ArenaController extends ChangeNotifier {
   }
 
   // --- Answer Submission ---
+  bool saveCreationResponse(String value) {
+    final r = activeRound;
+    if (r == null || r.finished || r.revealed || !r.needsCreation || value.trim().isEmpty) return false;
+    r.creationResponse = value.trim();
+    creationPortfolio[r.current.id] = r.creationResponse;
+    unawaited(_savePersistedState());
+    notifyListeners();
+    if (r.setup.liveVoiceHost) unawaited(_runLiveVoiceForCurrentQuestion());
+    return true;
+  }
+
+  void submitMultiple(Set<int> selection) {
+    final r = activeRound;
+    if (r == null || r.finished || r.revealed || r.needsCreation || selection.isEmpty) return;
+    final task = r.current.multiSelect;
+    if (task == null || selection.any((i) => i < 0 || i >= task.options.length)) return;
+    _commitAnswer(round: r, question: r.current, isCorrect: task.matches(selection),
+        submittedSequence: selection.toList()..sort());
+  }
+
+  void submitWrittenAnswer(String value) {
+    final r = activeRound;
+    if (r == null || r.finished || r.revealed || r.needsCreation ||
+        r.current.responseType != ResponseType.fill || value.trim().isEmpty) {
+      return;
+    }
+    _commitAnswer(round: r, question: r.current, isCorrect: r.current.acceptsWritten(value),
+        writtenResponse: value.trim());
+  }
+
   void submitChoice(int? choiceIndex, {String? spokenTranscript}) {
     final r = activeRound;
     if (r == null || r.revealed || r.finished) return;
     final q = r.current;
+    if (r.needsCreation || (choiceIndex != null &&
+        (q.responseType == ResponseType.fill ||
+         q.responseType == ResponseType.multiSelect ||
+         q.isSlider ||
+         q.isAnagram ||
+         choiceIndex < 0 ||
+         choiceIndex >= q.options.length))) {
+      return;
+    }
     final isCorrect = choiceIndex != null && choiceIndex == q.answer;
     _commitAnswer(
       round: r,
@@ -1259,6 +1410,61 @@ class ArenaController extends ChangeNotifier {
     );
   }
 
+  void submitSliderAnswer(int estimate) {
+    final r = activeRound;
+    if (r == null || r.revealed || r.finished || r.needsCreation) return;
+    final q = r.current;
+    final act = q.activity;
+    if (act == null || act.kind != ActivityKind.slider) return;
+    final isCorrect = act.matchesSlider(estimate);
+    final unitSuffix = act.sliderUnit.isNotEmpty ? ' ${act.sliderUnit}' : '';
+    _commitAnswer(
+      round: r,
+      question: q,
+      isCorrect: isCorrect,
+      selectedOption: isCorrect ? q.answer : -1,
+      writtenResponse: '$estimate$unitSuffix',
+    );
+  }
+
+  void submitAnagramAnswer(String word) {
+    final r = activeRound;
+    if (r == null || r.revealed || r.finished || r.needsCreation) return;
+    final q = r.current;
+    final act = q.activity;
+    if (act == null || act.kind != ActivityKind.anagram || word.trim().isEmpty) return;
+    final isCorrect = act.matchesAnagram(word);
+    _commitAnswer(
+      round: r,
+      question: q,
+      isCorrect: isCorrect,
+      selectedOption: isCorrect ? q.answer : -1,
+      writtenResponse: word.trim(),
+    );
+  }
+
+  /// Bilgisayar rakipleri bu soruyu kendi hızlarında cevaplar; puanlama
+  /// oyuncununkiyle aynı kuralı izler.
+  void _simulateRivals(ActiveRound round, Question question) {
+    for (var i = 0; i < round.setup.rivalNames.length; i++) {
+      final hardness = switch (question.difficulty) {
+        Difficulty.easy => 0.12,
+        Difficulty.medium => 0.0,
+        Difficulty.hard => -0.15,
+      };
+      final knows = round.rivalRng.nextDouble() < (round.rivalSkill(i) + hardness).clamp(0.2, 0.95);
+      if (knows) {
+        round.rivalStreaks[i]++;
+        final speed = (round.rivalRng.nextDouble() * 0.8 + 0.1);
+        final speedBonus = round.totalTimerSeconds > 0 ? (speed * 45).round() : 20;
+        round.rivalScores[i] += question.difficulty.basePoints + speedBonus + min(round.rivalStreaks[i] * 15, 90);
+        round.rivalCorrects[i]++;
+      } else {
+        round.rivalStreaks[i] = 0;
+      }
+    }
+  }
+
   void _commitAnswer({
     required ActiveRound round,
     required Question question,
@@ -1266,7 +1472,9 @@ class ArenaController extends ChangeNotifier {
     int? selectedOption,
     List<int>? submittedSequence,
     String? spokenTranscript,
+    String? writtenResponse,
   }) {
+    if (round.needsCreation) return;
     round.revealed = true;
     playedQuestionIds.add(question.id);
 
@@ -1290,10 +1498,13 @@ class ArenaController extends ChangeNotifier {
       NativeBridge.playSfx('wrong', enabled: sfxEnabled, haptics: hapticsEnabled);
     }
 
+    _simulateRivals(round, question);
+
     round.answers.add(
       AnswerRecord(
         question: question,
         selectedOption: selectedOption,
+        writtenResponse: writtenResponse ?? (round.creationResponse.isEmpty ? null : round.creationResponse),
         submittedSequence: submittedSequence,
         spokenTranscript: spokenTranscript,
         correct: isCorrect,
@@ -1379,6 +1590,11 @@ class ArenaController extends ChangeNotifier {
     _stopRoundTimer();
     stopLiveVoiceCycle();
     r.finished = true;
+    final etkinlik = _aktifEtkinlik;
+    _aktifEtkinlik = null;
+    if (etkinlik != null && r.title.startsWith('Etkinlik · ')) {
+      etkinlikEnIyi[etkinlik] = max(etkinlikEnIyi[etkinlik] ?? 0, r.totalScore);
+    }
 
     final correctCount = r.answers.where((a) => a.correct).length;
     int gainedXp = correctCount * 22 + (r.maxStreak * 8) + 25;
@@ -1402,6 +1618,12 @@ class ArenaController extends ChangeNotifier {
           'score': r.duelScores[i],
           'correct': r.duelCorrects[i],
         });
+      }
+      standings.sort((a, b) => (b['score'] as int).compareTo(a['score'] as int));
+    } else if (r.hasRivals) {
+      standings.add({'name': 'Sen', 'score': r.totalScore, 'correct': correctCount});
+      for (var i = 0; i < r.setup.rivalNames.length; i++) {
+        standings.add({'name': r.setup.rivalNames[i], 'score': r.rivalScores[i], 'correct': r.rivalCorrects[i]});
       }
       standings.sort((a, b) => (b['score'] as int).compareTo(a['score'] as int));
     }
@@ -1462,23 +1684,67 @@ class ArenaController extends ChangeNotifier {
     }
   }
 
-  Future<void> speakActivityAudio(Question q) async {
+  Future<void> narrateCurrentQuestion() async {
+    final r = activeRound;
+    if (r == null) return;
+    if (r.setup.liveVoiceHost && !r.revealed) {
+      stopLiveVoiceCycle();
+      await _runLiveVoiceForCurrentQuestion();
+    } else {
+      await _speakQuestion(r, ++_liveToken, allowRevealed: true);
+    }
+  }
+
+  Future<void> _speakQuestion(ActiveRound round, int token, {bool allowRevealed = false}) async {
+    final index = round.currentIndex;
+    for (final segment in QuizNarration.questionSegments(round.current, index + 1,
+        creationSubmitted: round.creationResponse.isNotEmpty)) {
+      if (_liveToken != token || activeRound != round || round.currentIndex != index ||
+          (!allowRevealed && round.revealed) || round.finished || round.paused) return;
+      await _speakInLanguage(segment.text, segment.language, wait: true);
+    }
+  }
+
+  Future<bool> _speakInLanguage(
+    String text,
+    String language, {
+    required bool wait,
+    double? rateOverride,
+  }) =>
+      NativeBridge.speak(
+        text,
+        language: language,
+        rate: rateOverride ?? (language.startsWith('tr') ? ttsSpeechRate : 0.92),
+        awaitCompletion: wait,
+      );
+
+  Future<void> speakActivityAudio(
+    Question q, {
+    double? rate,
+    String? languageOverride,
+  }) async {
     final act = q.activity;
     if (act == null) return;
     final text = act.transcript ?? q.text;
-    final lang = act.language ?? 'tr-TR';
-    await NativeBridge.speak(
-      text,
-      language: lang,
-      rate: lang.startsWith('tr') ? ttsSpeechRate : 0.92,
-      awaitCompletion: false,
-    );
+    final lang = languageOverride ?? act.language ?? 'tr-TR';
+    await _speakInLanguage(text, lang, wait: false, rateOverride: rate);
   }
 
   Future<String?> listenOnceAndResolveCurrentQuestion({bool isPronunciation = false}) async {
     final r = activeRound;
-    if (r == null || r.revealed) return null;
+    if (r == null || r.revealed || r.needsCreation ||
+        r.current.responseType == ResponseType.fill ||
+        r.current.responseType == ResponseType.multiSelect ||
+        r.current.isSlider ||
+        r.current.isAnagram) {
+      return null;
+    }
+    final token = ++_liveToken;
+    final question = r.current;
+    bool active() => token == _liveToken && activeRound == r &&
+        r.current == question && !r.finished && !r.revealed && !r.paused;
     final hasPerm = await NativeBridge.requestMicPermission();
+    if (!active()) return null;
     if (!hasPerm) {
       return 'Mikrofon izni verilmedi. Ayarlardan izin verebilirsin.';
     }
@@ -1490,8 +1756,8 @@ class ArenaController extends ChangeNotifier {
 
     final completer = Completer<VoiceEvent>();
     _pendingVoiceCompleter = completer;
-    final lang = isPronunciation
-        ? (r.current.activity?.language ?? 'en-US')
+    final lang = question.isPronunciation
+        ? (question.activity?.language ?? 'en-US')
         : 'tr-TR';
     try {
       await NativeBridge.startListening(language: lang);
@@ -1499,6 +1765,7 @@ class ArenaController extends ChangeNotifier {
         const Duration(seconds: 10),
         onTimeout: () => const VoiceEvent(type: 'error', errorMessage: 'Dinleme zaman aşımına uğradı.'),
       );
+      if (!active()) return null;
       await NativeBridge.stopListening();
       livePhase = LiveVoicePhase.idle;
       if (ev.type == 'error') {
@@ -1521,9 +1788,11 @@ class ArenaController extends ChangeNotifier {
         alternatives: ev.alternatives,
       );
       if (resolved == null) {
-        final msg = isPronunciation
-            ? 'Söylenen: "${ev.text}" — hedef ifadeye yaklaşıyor, tekrar dene!'
-            : '"${ev.text}" tek bir şıkla eşleşmedi. A, B, C, D veya seçeneği söyle.';
+        final msg = question.isPronunciation
+            ? 'Tanınan sözcükler: “${ev.text}”. Örnekteki tüm sözcükleri aynı sırada söyle.'
+            : question.isInteractiveSequence
+                ? 'Öğe numaralarını sırasıyla söyle.'
+                : '“${ev.text}” bir seçenekle eşleşmedi. Seçeneği ya da harfini söyle.';
         liveError = msg;
         notifyListeners();
         return msg;
@@ -1545,7 +1814,7 @@ class ArenaController extends ChangeNotifier {
 
   Future<void> _runLiveVoiceForCurrentQuestion({bool skipReading = false}) async {
     final r = activeRound;
-    if (r == null || !r.setup.liveVoiceHost || r.finished || r.paused || r.revealed) return;
+    if (r == null || !r.setup.liveVoiceHost || r.finished || r.paused || r.revealed || r.needsCreation) return;
     final token = ++_liveToken;
     liveError = null;
     liveTranscript = '';
@@ -1554,17 +1823,20 @@ class ArenaController extends ChangeNotifier {
     if (!skipReading) {
       livePhase = LiveVoicePhase.speakingQuestion;
       notifyListeners();
-      final narration = QuizNarration.buildQuestionSpeech(r.current, r.currentIndex + 1);
-      await NativeBridge.speak(
-        narration,
-        language: 'tr-TR',
-        rate: ttsSpeechRate,
-        awaitCompletion: true,
-      );
+      await _speakQuestion(r, token);
       if (_liveToken != token || activeRound != r || r.revealed || r.paused || r.finished) return;
     }
 
+    if (r.current.responseType == ResponseType.fill ||
+        r.current.multiSelect != null ||
+        r.current.isSlider ||
+        r.current.isAnagram) {
+      livePhase = LiveVoicePhase.idle;
+      notifyListeners();
+      return;
+    }
     final hasPerm = await NativeBridge.requestMicPermission();
+    if (_liveToken != token || activeRound != r || r.revealed || r.paused || r.finished) return;
     if (!hasPerm) {
       livePhase = LiveVoicePhase.error;
       liveError = 'Canlı sesli yarışma için mikrofon izni gerekli.';
@@ -1684,7 +1956,11 @@ class ArenaController extends ChangeNotifier {
 
   void stopLiveVoiceCycle({bool keepPausedState = false}) {
     _liveToken++;
+    final pending = _pendingVoiceCompleter;
     _pendingVoiceCompleter = null;
+    if (pending != null && !pending.isCompleted) {
+      pending.complete(const VoiceEvent(type: 'error', errorMessage: 'Dinleme sona erdi.'));
+    }
     micLevel = 0.0;
     liveReviewCountdown = 0;
     livePhase = keepPausedState ? LiveVoicePhase.paused : LiveVoicePhase.idle;
@@ -1729,6 +2005,77 @@ class ArenaController extends ChangeNotifier {
     studyProfiles = studyProfiles.where((p) => p.id != id).toList();
     notifyListeners();
     unawaited(_savePersistedState());
+  }
+
+  void updateStudyProfile(StudyProfile updated) {
+    final idx = studyProfiles.indexWhere((p) => p.id == updated.id);
+    if (idx < 0) {
+      addStudyProfile(updated);
+      return;
+    }
+    final next = List<StudyProfile>.of(studyProfiles);
+    next[idx] = updated;
+    studyProfiles = next;
+    notifyListeners();
+    unawaited(_savePersistedState());
+  }
+
+  bool isInReviewDeck(Question q) =>
+      reviewDeck.any((c) => c.question.poolKey == q.poolKey);
+
+  void addQuestionToReviewDeck(Question q) {
+    if (isInReviewDeck(q)) return;
+    reviewDeck.insert(
+      0,
+      ReviewCard(
+        question: q,
+        box: 0,
+        attempts: 0,
+        correct: 0,
+        due: DateTime.now(),
+      ),
+    );
+    NativeBridge.playSfx('tick', enabled: sfxEnabled, haptics: hapticsEnabled, volume: 0.35);
+    notifyListeners();
+    unawaited(_savePersistedState());
+  }
+
+  void removeReviewCard(String questionId) {
+    final before = reviewDeck.length;
+    reviewDeck.removeWhere((c) => c.question.id == questionId);
+    if (reviewDeck.length != before) {
+      notifyListeners();
+      unawaited(_savePersistedState());
+    }
+  }
+
+  /// 3D Kart Çalışması sırasında tekil soru sonucunu Leitner kutularına işler.
+  void recordFlashcardReview(Question q, bool remembered) {
+    _updateReviewDeck(q, remembered);
+    playedQuestionIds.add(q.id);
+    categoryAnswered[q.category.label] = (categoryAnswered[q.category.label] ?? 0) + 1;
+    if (remembered) {
+      categoryCorrect[q.category.label] = (categoryCorrect[q.category.label] ?? 0) + 1;
+      xp += 5;
+    }
+    NativeBridge.playSfx(
+      remembered ? 'correct' : 'wrong',
+      enabled: sfxEnabled,
+      haptics: hapticsEnabled,
+      volume: 0.45,
+    );
+    notifyListeners();
+    unawaited(_savePersistedState());
+  }
+
+  bool deleteOfflinePack(String packId) {
+    if (packId.startsWith('builtin_sb_')) return false;
+    final idx = offlinePacks.indexWhere((p) => p.id == packId);
+    if (idx < 0) return false;
+    offlinePacks.removeAt(idx);
+    notifyListeners();
+    unawaited(_savePersistedState());
+    return true;
   }
 
   // --- AI & CLIProxyAPI Actions ---
@@ -1792,7 +2139,6 @@ class ArenaController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _ensurePoolKeysPopulated();
       final generated = await AiGatewayService.generateQuestionBatch(
         config: aiConfig,
         topic: topic,
@@ -1864,10 +2210,27 @@ class ArenaController extends ChangeNotifier {
   }
 
   // --- JSON Pack Import/Export & Full .bilgilibackup ZIP ---
+  static final _legacyPack = RegExp(r'^astra-(quant|science|culture|applied)-0[1-5]$');
+  static final _legacyQuestion = RegExp(r'^mb100k_astra_[0-9a-f]{20}$');
+
+  QuestionPack? _readPersonalPack(Map raw) {
+    final data = Map<String, dynamic>.from(raw);
+    final id = data['id'] ?? data['packID'];
+    if (id is String && id.startsWith('builtin_sb_')) return null;
+    if (id is String && _legacyPack.hasMatch(id) && data['questions'] is List) {
+      final retained = (data['questions'] as List).whereType<Map>().where((q) {
+        final questionId = q['id'] ?? q['contentID'];
+        return questionId is! String || !_legacyQuestion.hasMatch(questionId);
+      }).toList();
+      if (retained.isEmpty) return null;
+      data['questions'] = retained;
+    }
+    return QuestionPack.fromJson(data);
+  }
+
   Future<String> importJsonQuestionPacks() async {
     final files = await NativeBridge.pickFiles(mimeType: '*/*', allowMultiple: true);
     if (files.isEmpty) return 'Dosya seçilmedi.';
-    _ensurePoolKeysPopulated();
 
     int addedQuestions = 0;
     int duplicateCount = 0;
@@ -1880,7 +2243,9 @@ class ArenaController extends ChangeNotifier {
         final decoded = jsonDecode(text);
         QuestionPack pack;
         if (decoded is Map) {
-          pack = QuestionPack.fromJson(Map<String, dynamic>.from(decoded));
+          final personal = _readPersonalPack(decoded);
+          if (personal == null) continue;
+          pack = personal;
         } else if (decoded is List) {
           final qs = <Question>[];
           for (var i = 0; i < decoded.length; i++) {
@@ -1901,12 +2266,10 @@ class ArenaController extends ChangeNotifier {
 
         final fresh = <Question>[];
         for (final q in pack.questions) {
-          if (_poolKeys.add(q.poolKey)) {
+          if (!AdvancedCatalog.hasId(q.id) && !_loadedIds.contains(q.id) && _poolKeys.add(q.poolKey)) {
             _loadedIds.add(q.id);
             _allQuestions.add(q);
-            _categoryCounts[q.category] = (_categoryCounts[q.category] ?? 0) + 1;
-            if (q.visual != null) _visualCount++;
-            if (q.activity != null) _activityCount++;
+            _countPersonalQuestion(q);
             fresh.add(q);
             addedIds.add(q.id);
             addedQuestions++;
@@ -1952,6 +2315,7 @@ class ArenaController extends ChangeNotifier {
   }
 
   Future<bool> exportQuestionPack(QuestionPack pack) async {
+    if (pack.questions is FamilyQuestions) return false;
     final bytes = Uint8List.fromList(utf8.encode(pack.toPrettyJson()));
     final safeTitle = pack.title.replaceAll(RegExp(r'[^\w\-]+'), '_');
     return NativeBridge.saveFile(
@@ -2012,6 +2376,7 @@ class ArenaController extends ChangeNotifier {
     categoryAnswered.clear();
     categoryCorrect.clear();
     savedBookmarks.clear();
+    creationPortfolio.clear();
     reviewDeck.clear();
     history.clear();
     notifyListeners();
@@ -2020,9 +2385,17 @@ class ArenaController extends ChangeNotifier {
 
   // --- Badges ---
   List<ArenaBadgeInfo> get badges {
-    final hasFlawless = history.any((h) => h.totalQuestions >= 5 && h.correctCount == h.totalQuestions);
+    final hasFlawless =
+        history.any((h) => h.totalQuestions >= 5 && h.correctCount == h.totalQuestions);
     final hasVoiceRound = history.any((h) => h.wasLiveVoice);
     final hasDuelRound = history.any((h) => h.duelStandings.isNotEmpty);
+    final bestRoundStreak = history.fold<int>(0, (acc, h) => max(acc, h.maxStreak));
+    final activeCategories = Topic.poolCategories
+        .where((t) => (categoryAnswered[t.label] ?? 0) > 0)
+        .length;
+    final totalCategories = Topic.poolCategories.length;
+    final solvedCount = playedQuestionIds.length;
+
     return [
       ArenaBadgeInfo(
         id: 'first_step',
@@ -2030,20 +2403,59 @@ class ArenaController extends ChangeNotifier {
         description: 'İlk bilgi turunu tamamla',
         iconKind: IconDataCompat.spark,
         unlocked: history.isNotEmpty,
+        current: min(history.length, 1),
+        target: 1,
+        group: 'Genel',
       ),
       ArenaBadgeInfo(
         id: 'curious',
         title: 'Meraklı Kaşif',
         description: 'En az 50 soruyu yanıtla',
         iconKind: IconDataCompat.curious,
-        unlocked: playedQuestionIds.length >= 50,
+        unlocked: solvedCount >= 50,
+        current: min(solvedCount, 50),
+        target: 50,
+        group: 'Akademi',
+      ),
+      ArenaBadgeInfo(
+        id: 'hunter',
+        title: 'Bilgi Avcısı',
+        description: '250 farklı soruyu keşfet',
+        iconKind: IconDataCompat.hunter,
+        unlocked: solvedCount >= 250,
+        current: min(solvedCount, 250),
+        target: 250,
+        group: 'Akademi',
+      ),
+      ArenaBadgeInfo(
+        id: 'encyclopedia',
+        title: 'Yaşayan Ansiklopedi',
+        description: '1.000 soruyu tamamla',
+        iconKind: IconDataCompat.encyclopedia,
+        unlocked: solvedCount >= 1000,
+        current: min(solvedCount, 1000),
+        target: 1000,
+        group: 'Akademi',
       ),
       ArenaBadgeInfo(
         id: 'flawless',
         title: 'Kusursuz Tur',
-        description: 'Bir turu %100 doğrulukla bitir',
+        description: 'En az 5 soruluk turu %100 doğrulukla bitir',
         iconKind: IconDataCompat.flawless,
         unlocked: hasFlawless,
+        current: hasFlawless ? 1 : 0,
+        target: 1,
+        group: 'Ustalık',
+      ),
+      ArenaBadgeInfo(
+        id: 'streak_10',
+        title: 'Ateşli Seri',
+        description: 'Tek turda üst üste 10 doğru yanıt ver',
+        iconKind: IconDataCompat.streak,
+        unlocked: bestRoundStreak >= 10,
+        current: min(bestRoundStreak, 10),
+        target: 10,
+        group: 'Ustalık',
       ),
       ArenaBadgeInfo(
         id: 'master',
@@ -2051,6 +2463,59 @@ class ArenaController extends ChangeNotifier {
         description: 'Seviye 5 ve üzerine ulaş',
         iconKind: IconDataCompat.master,
         unlocked: level >= 5,
+        current: min(level, 5),
+        target: 5,
+        group: 'Ustalık',
+      ),
+      ArenaBadgeInfo(
+        id: 'sage',
+        title: 'İstanbul Bilgesi',
+        description: 'Seviye 15 unvanına yüksel',
+        iconKind: IconDataCompat.sage,
+        unlocked: level >= 15,
+        current: min(level, 15),
+        target: 15,
+        group: 'Ustalık',
+      ),
+      ArenaBadgeInfo(
+        id: 'explorer_5',
+        title: 'Çok Yönlü Zihin',
+        description: 'En az 5 farklı kategoride soru çöz',
+        iconKind: IconDataCompat.explorer5,
+        unlocked: activeCategories >= 5,
+        current: min(activeCategories, 5),
+        target: 5,
+        group: 'Akademi',
+      ),
+      ArenaBadgeInfo(
+        id: 'explorer_23',
+        title: '23 Alan Kaşifi',
+        description: 'Tüm $totalCategories kategorinin her birinde soru çöz',
+        iconKind: IconDataCompat.explorer23,
+        unlocked: activeCategories >= totalCategories,
+        current: activeCategories,
+        target: totalCategories,
+        group: 'Akademi',
+      ),
+      ArenaBadgeInfo(
+        id: 'zirve_mid',
+        title: 'Zirve Yolcusu',
+        description: 'Zirve Merdiveni\'nde 5. barajı geç',
+        iconKind: IconDataCompat.zirveMid,
+        unlocked: zirveEnUstBasamak >= 5,
+        current: min(zirveEnUstBasamak, 5),
+        target: 5,
+        group: 'Zirve',
+      ),
+      ArenaBadgeInfo(
+        id: 'zirve_top',
+        title: 'Zirve Şampiyonu',
+        description: 'Zirve Merdiveni\'nde 10. barajı aş',
+        iconKind: IconDataCompat.zirveTop,
+        unlocked: zirveEnUstBasamak >= 10,
+        current: min(zirveEnUstBasamak, 10),
+        target: 10,
+        group: 'Zirve',
       ),
       ArenaBadgeInfo(
         id: 'collector',
@@ -2058,14 +2523,19 @@ class ArenaController extends ChangeNotifier {
         description: 'Bilgi Defterine 5 soru kaydet',
         iconKind: IconDataCompat.collector,
         unlocked: savedBookmarks.length >= 5,
+        current: min(savedBookmarks.length, 5),
+        target: 5,
+        group: 'Akademi',
       ),
       ArenaBadgeInfo(
-        id: 'ai_explorer',
-        title: 'Model Kaşifi',
-        description: 'CLIProxy / AI ile özgün soru paketi üret',
-        iconKind: IconDataCompat.aiExplorer,
-        unlocked: aiGeneratedRoundCount >= 1 ||
-            offlinePacks.any((p) => !p.id.startsWith('builtin_sb_')),
+        id: 'daily_habit',
+        title: 'İstikrar Yıldızı',
+        description: '3 gün üst üste çalışma serisi yakala',
+        iconKind: IconDataCompat.dailyHabit,
+        unlocked: dailyStreak >= 3,
+        current: min(dailyStreak, 3),
+        target: 3,
+        group: 'Genel',
       ),
       ArenaBadgeInfo(
         id: 'voice_star',
@@ -2073,6 +2543,9 @@ class ArenaController extends ChangeNotifier {
         description: 'Canlı Sesli Yarışma turu tamamla',
         iconKind: IconDataCompat.voiceStar,
         unlocked: hasVoiceRound,
+        current: hasVoiceRound ? 1 : 0,
+        target: 1,
+        group: 'Genel',
       ),
       ArenaBadgeInfo(
         id: 'duel_king',
@@ -2080,6 +2553,9 @@ class ArenaController extends ChangeNotifier {
         description: 'Çok oyunculu bir düello turnuvası bitir',
         iconKind: IconDataCompat.duelKing,
         unlocked: hasDuelRound,
+        current: hasDuelRound ? 1 : 0,
+        target: 1,
+        group: 'Genel',
       ),
     ];
   }
@@ -2096,6 +2572,7 @@ class ArenaController extends ChangeNotifier {
         'categoryAnswered': categoryAnswered,
         'categoryCorrect': categoryCorrect,
         'savedBookmarks': savedBookmarks.map((q) => q.toJson()).toList(),
+        'creationPortfolio': Map<String, String>.of(creationPortfolio),
         'reviewDeck': reviewDeck.map((c) => c.toJson()).toList(),
         'offlinePacks': offlinePacks
             .where((p) => !p.id.startsWith('builtin_sb_'))
@@ -2109,6 +2586,7 @@ class ArenaController extends ChangeNotifier {
         'dailyGeneratedByCategory': dailyGeneratedByCategory,
         'wallpaperId': wallpaperId,
         'wallpaperClarity': wallpaperClarity.name,
+        'uiThemeRev': _currentUiThemeRev,
         'effectIntensity': effectIntensity.name,
         'menuMusicEnabled': menuMusicEnabled,
         'gameMusicEnabled': gameMusicEnabled,
@@ -2122,9 +2600,24 @@ class ArenaController extends ChangeNotifier {
         'highContrast': highContrast,
         'readingScale': readingScale,
         'reduceMotion': reduceMotion,
+        'etkinlikDenemeleri': etkinlikDenemeleri,
+        'etkinlikEnIyi': etkinlikEnIyi,
+        'zirveEnIyi': zirveEnIyi,
+        'zirveEnUstBasamak': zirveEnUstBasamak,
       };
 
   void _applyStateMap(Map<String, dynamic> map) {
+    zirveEnIyi = (map['zirveEnIyi'] as num?)?.toInt() ?? 0;
+    zirveEnUstBasamak = (map['zirveEnUstBasamak'] as num?)?.toInt() ?? 0;
+    for (final (hedef, ad) in [(etkinlikDenemeleri, 'etkinlikDenemeleri'), (etkinlikEnIyi, 'etkinlikEnIyi')]) {
+      hedef.clear();
+      final m = map[ad];
+      if (m is Map) {
+        for (final e in m.entries) {
+          hedef[e.key.toString()] = (e.value as num?)?.toInt() ?? 0;
+        }
+      }
+    }
     xp = (map['xp'] as num?)?.toInt() ?? 0;
     dailyStreak = (map['dailyStreak'] as num?)?.toInt() ?? 1;
     lastPlayedDayKey = map['lastPlayedDayKey']?.toString();
@@ -2150,6 +2643,15 @@ class ArenaController extends ChangeNotifier {
       }
     }
 
+    creationPortfolio.clear();
+    final portfolio = map['creationPortfolio'];
+    if (portfolio is Map) {
+      for (final entry in portfolio.entries) {
+        if (entry.key is String && entry.value is String && (entry.value as String).trim().isNotEmpty) {
+          creationPortfolio[entry.key as String] = entry.value as String;
+        }
+      }
+    }
     savedBookmarks
       ..clear()
       ..addAll(
@@ -2166,13 +2668,19 @@ class ArenaController extends ChangeNotifier {
             .map((m) => ReviewCard.fromJson(Map<String, dynamic>.from(m))),
       );
 
+    _allQuestions.clear();
+    _loadedIds.clear();
+    _poolKeys.clear();
+    _recomputePoolStats();
+    lastImportedPackId = null;
+    lastImportedQuestionIds = [];
     offlinePacks
       ..removeWhere((p) => !p.id.startsWith('builtin_sb_'))
       ..insertAll(
         0,
         ((map['offlinePacks'] as List?) ?? const [])
             .whereType<Map>()
-            .map((m) => QuestionPack.fromJson(Map<String, dynamic>.from(m))),
+            .map(_readPersonalPack).whereType<QuestionPack>(),
       );
     for (final p in offlinePacks) {
       if (!p.id.startsWith('builtin_sb_')) {
@@ -2208,11 +2716,17 @@ class ArenaController extends ChangeNotifier {
       }
     }
 
-    wallpaperId = map['wallpaperId']?.toString() ?? 'observatory';
-    wallpaperClarity = WallpaperClarity.values.firstWhere(
-      (c) => c.name == map['wallpaperClarity'],
-      orElse: () => WallpaperClarity.balanced,
-    );
+    final savedThemeRev = (map['uiThemeRev'] as num?)?.toInt() ?? 0;
+    if (savedThemeRev < _currentUiThemeRev) {
+      wallpaperId = 'istanbul_bogaz';
+      wallpaperClarity = WallpaperClarity.vivid;
+    } else {
+      wallpaperId = map['wallpaperId']?.toString() ?? 'istanbul_bogaz';
+      wallpaperClarity = WallpaperClarity.values.firstWhere(
+        (c) => c.name == map['wallpaperClarity'],
+        orElse: () => WallpaperClarity.vivid,
+      );
+    }
     effectIntensity = EffectIntensity.values.firstWhere(
       (e) => e.name == map['effectIntensity'],
       orElse: () => EffectIntensity.rich,
@@ -2251,12 +2765,21 @@ class ArenaController extends ChangeNotifier {
     } catch (_) {}
   }
 
-  Future<void> _savePersistedState() async {
-    if (!persistToDisk) return;
-    try {
-      final f = await _stateFile();
-      await f.writeAsString(jsonEncode(_buildStateMap()));
-    } catch (_) {}
+  Future<void> _pendingSave = Future<void>.value();
+
+  Future<void> _savePersistedState() {
+    if (!persistToDisk) return Future<void>.value();
+    _pendingSave = _pendingSave.then((_) async {
+      try {
+        final file = await _stateFile();
+        final pending = File('${file.path}.tmp');
+        await pending.writeAsString(jsonEncode(_buildStateMap()), flush: true);
+        await pending.rename(file.path);
+      } on FileSystemException catch (error) {
+        debugPrint('Bilgili ilerlemesi kaydedilemedi: $error');
+      }
+    });
+    return _pendingSave;
   }
 
   @override

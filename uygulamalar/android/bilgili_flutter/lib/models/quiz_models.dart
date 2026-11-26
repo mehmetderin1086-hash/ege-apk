@@ -17,6 +17,16 @@ enum Topic {
   music('Müzik', 'Ritmi ve ezgiyi tanı', Icons.music_note_rounded, Color(0xFFFF7BAC)),
   nature('Doğa', 'Yaşamın dengesini gör', Icons.eco_rounded, Color(0xFF7BE495)),
   exam('Sınav Hazırlık', 'Hedefine bir adım', Icons.school_rounded, Color(0xFFF7B955)),
+  mathematics('Matematik ve Geometri', 'Yapılar, uzay ve değişim', Icons.functions, Color(0xFF79B9FF)),
+  physics('Fizik ve Astronomi', 'Madde, enerji ve evren', Icons.public, Color(0xFF8AB7FF)),
+  chemistry('Kimya ve Malzeme', 'Maddenin yapısı ve dönüşümü', Icons.science, Color(0xFF69DCC4)),
+  biology('Biyoloji ve Yaşam Bilimleri', 'Canlı sistemler ve kalıtım', Icons.eco, Color(0xFF72D989)),
+  engineering('Mühendislik ve Tasarım', 'Tasarımları modelle ve sına', Icons.engineering, Color(0xFF76D7E5)),
+  computing('Bilişim ve Algoritmalar', 'Veriyi işle ve algoritma kur', Icons.computer, Color(0xFF8EC8FF)),
+  statistics('İstatistik ve Veri Bilimi', 'Belirsizliği ölç ve veriyi yorumla', Icons.query_stats, Color(0xFFA9C6FF)),
+  economics('Ekonomi ve Finans', 'Kaynaklar, fiyatlar ve kararlar', Icons.trending_up, Color(0xFFF2BA76)),
+  socialScience('Toplum ve Sosyal Bilimler', 'Toplumları ve kurumları incele', Icons.groups, Color(0xFFC7A6E7)),
+  research('Araştırma Yöntemleri', 'Kanıtı değerlendir ve çalışma tasarla', Icons.biotech, Color(0xFF9CDBC8)),
   custom('Özel Konu', 'Konuyu sen belirle', Icons.edit_note_rounded, Color(0xFF93B5FF));
 
   final String label;
@@ -25,8 +35,16 @@ enum Topic {
   final Color accent;
   const Topic(this.label, this.invitation, this.icon, this.accent);
 
-  String get coverImage => 'assets/images/topic_${name}_cover.webp';
-  String get detailImage => 'assets/images/topic_${name}_detail.webp';
+  String get _artName => switch (this) {
+    Topic.mathematics || Topic.statistics => 'exam',
+    Topic.physics || Topic.chemistry || Topic.research => 'science',
+    Topic.biology => 'nature',
+    Topic.computing || Topic.engineering => 'technology',
+    Topic.economics || Topic.socialScience => 'culture',
+    _ => name,
+  };
+  String get coverImage => 'assets/images/topic_${_artName}_cover.webp';
+  String get detailImage => 'assets/images/topic_${_artName}_detail.webp';
 
   static List<Topic> get poolCategories => values
       .where((t) => t != Topic.mixed && t != Topic.custom)
@@ -73,7 +91,7 @@ enum Difficulty {
 
 enum GameMode {
   classic('Klasik', '15 sn süre · 3 joker hakkı', Icons.bolt_rounded, 15, true),
-  training('Öğren', 'Süresiz · Anında açıklama & AI Koç', Icons.psychology_rounded, 0, false),
+  training('Öğren', 'Süresiz · Anında açıklama & pekiştirme', Icons.psychology_rounded, 0, false),
   sprint('Hız Turu', '8 sn yüksek tempo refleks turu', Icons.speed_rounded, 8, true),
   timed('Dakika Turu', 'Ortak tur sayacında en çok doğru', Icons.timer_rounded, 0, true),
   stages('Etaplı Tur', 'Isınma 20sn → Odak 15sn → Final 10sn', Icons.stairs_rounded, 20, true);
@@ -96,14 +114,39 @@ enum QuestionFormat {
   mixed('Karışık', Icons.dashboard_customize_rounded),
   visual('Görselli', Icons.bar_chart_rounded),
   text('Metin', Icons.notes_rounded),
-  listening('Dinleme', Icons.headphones_rounded),
+  multipleChoice('Çoktan seçmeli', Icons.list_rounded),
+  multiSelect('Çoklu seçim', Icons.checklist_rounded),
+  trueFalse('Doğru / yanlış', Icons.rule_rounded),
+  fill('Boşluk doldurma', Icons.edit_rounded),
+  creation('Açık uçlu tasarım', Icons.design_services_rounded),
+  listening('Sesli Dinleme', Icons.headphones_rounded),
+  dictation('Sesli Dikte', Icons.hearing_rounded),
   ordering('Sıralama', Icons.swap_vert_rounded),
   matching('Eşleştirme', Icons.compare_arrows_rounded),
-  pronunciation('Telaffuz', Icons.record_voice_over_rounded);
+  pronunciation('Telaffuz', Icons.record_voice_over_rounded),
+  slider('Tahmin Sürgüsü', Icons.tune_rounded),
+  anagram('Harf Dizme', Icons.spellcheck_rounded);
 
   final String label;
   final IconData icon;
   const QuestionFormat(this.label, this.icon);
+
+  /// Arayüzde sunulan tüm oynanabilir soru biçimleri.
+  static const sunulan = [
+    mixed,
+    visual,
+    listening,
+    dictation,
+    pronunciation,
+    slider,
+    anagram,
+    matching,
+    ordering,
+    multiSelect,
+    trueFalse,
+    fill,
+    text,
+  ];
 }
 
 enum ExamKind {
@@ -183,7 +226,19 @@ enum VisualKind {
   barChart,
   lineChart,
   diagram,
-  image;
+  image,
+  pieChart,
+  clock,
+  flag,
+  musicStaff,
+  coordPlane,
+  atom,
+  matrix,
+  circuit,
+  venn,
+  compass,
+  colorLab,
+  piano;
 
   static VisualKind? fromString(String? raw) {
     if (raw == null) return null;
@@ -268,7 +323,11 @@ class QuestionVisual {
   });
 
   String? get assetPath {
-    switch (imageID?.toLowerCase()) {
+    final name = imageID?.toLowerCase();
+    if (name != null && RegExp(r'^plate(0[1-9]|1[0-9]|2[0-4])$').hasMatch(name)) {
+      return 'assets/photos/$name.webp';
+    }
+    switch (name) {
       case 'bicycle':
         return 'assets/photos/QuestionBicycle.png';
       case 'leaf':
@@ -328,9 +387,12 @@ class QuestionVisual {
 
 enum ActivityKind {
   listening,
+  dictation,
   ordering,
   matching,
-  pronunciation;
+  pronunciation,
+  slider,
+  anagram;
 
   static ActivityKind? fromString(String? raw) {
     if (raw == null) return null;
@@ -344,12 +406,18 @@ enum ActivityKind {
     switch (this) {
       case ActivityKind.listening:
         return 'Dinleme';
+      case ActivityKind.dictation:
+        return 'Sesli Dikte';
       case ActivityKind.ordering:
         return 'Sıralama';
       case ActivityKind.matching:
         return 'Eşleştirme';
       case ActivityKind.pronunciation:
         return 'Telaffuz';
+      case ActivityKind.slider:
+        return 'Tahmin Sürgüsü';
+      case ActivityKind.anagram:
+        return 'Harf Dizme';
     }
   }
 }
@@ -383,6 +451,33 @@ class QuestionActivity {
     return true;
   }
 
+  double get sliderMin => items.isNotEmpty ? (double.tryParse(items[0]) ?? 0) : 0;
+  double get sliderMax => items.length > 1 ? (double.tryParse(items[1]) ?? 100) : 100;
+  double get sliderStep => items.length > 2 ? (double.tryParse(items[2]) ?? 1) : 1;
+  double get sliderTolerance => items.length > 3 ? (double.tryParse(items[3]) ?? 0) : 0;
+  String get sliderUnit => items.length > 4 ? items[4] : '';
+  int get sliderTarget => solution.isNotEmpty ? solution.first : 0;
+
+  bool matchesSlider(int estimate) => (estimate - sliderTarget).abs() <= sliderTolerance;
+
+  String get anagramTarget => left.isNotEmpty ? left.first : '';
+
+  bool matchesAnagram(String built) {
+    String fold(String s) => s
+        .trim()
+        .replaceAll('İ', 'i')
+        .replaceAll('I', 'ı')
+        .toLowerCase()
+        .replaceAll(RegExp(r'\s+'), '');
+    final exp = anagramTarget;
+    if (exp.isEmpty) return false;
+    if (language != null && language!.startsWith('en')) {
+      return built.trim().toLowerCase().replaceAll(' ', '') ==
+          exp.trim().toLowerCase().replaceAll(' ', '');
+    }
+    return fold(built) == fold(exp);
+  }
+
   String describeSequence(List<int> seq) {
     if (kind == ActivityKind.ordering && items.isNotEmpty) {
       return seq
@@ -398,6 +493,12 @@ class QuestionActivity {
         parts.add('${left[i]} → $rText');
       }
       return parts.join(' · ');
+    }
+    if (kind == ActivityKind.slider && solution.isNotEmpty) {
+      return '${solution.first}${sliderUnit.isNotEmpty ? ' $sliderUnit' : ''}';
+    }
+    if (kind == ActivityKind.anagram && left.isNotEmpty) {
+      return left.first;
     }
     return seq.map((e) => '${e + 1}').join(' - ');
   }
@@ -429,6 +530,49 @@ class QuestionActivity {
       };
 }
 
+enum BloomLevel {
+  hatirlama('Hatırlama'), anlama('Anlama'), uygulama('Uygulama'),
+  analiz('Analiz'), degerlendirme('Değerlendirme'), yaratma('Yaratma');
+  const BloomLevel(this.label);
+  final String label;
+}
+
+enum ResponseType {
+  choice('Çoktan seçmeli'), multiSelect('Çoklu seçim'), trueFalse('Doğru / yanlış'),
+  fill('Boşluk doldurma'), creation('Açık uçlu tasarım'),
+  ordering('Sıralama'), matching('Eşleştirme'), listening('Dinleme'),
+  pronunciation('Telaffuz'), slider('Tahmin sürgüsü'), anagram('Harf dizme');
+  const ResponseType(this.label);
+  final String label;
+}
+
+class MultiSelectTask {
+  final String prompt;
+  final List<String> options;
+  final List<int> correct;
+  final String explanation;
+  const MultiSelectTask(this.prompt, this.options, this.correct, this.explanation);
+
+  bool matches(Set<int> selection) =>
+      selection.length == correct.length && correct.every(selection.contains);
+
+  Map<String, dynamic> toJson() =>
+      {'prompt': prompt, 'options': options, 'correct': correct, 'explanation': explanation};
+  factory MultiSelectTask.fromJson(Map<String, dynamic> json) => MultiSelectTask(
+      json['prompt'] as String, List<String>.from(json['options'] as List),
+      List<int>.from(json['correct'] as List), json['explanation'] as String);
+}
+
+class CreationTask {
+  final String brief;
+  final List<String> criteria;
+  const CreationTask(this.brief, this.criteria);
+
+  Map<String, dynamic> toJson() => {'brief': brief, 'criteria': criteria};
+  factory CreationTask.fromJson(Map<String, dynamic> json) => CreationTask(
+        json['brief'] as String, List<String>.from(json['criteria'] as List));
+}
+
 class Question {
   final String id;
   final String? contentID;
@@ -445,6 +589,11 @@ class Question {
   final QuestionActivity? activity;
   final String? sourceModel;
   final String? verifiedByModel;
+  final BloomLevel? bloom;
+  final String? studyLevel;
+  final CreationTask? creation;
+  final MultiSelectTask? multiSelect;
+  final ResponseType _answerMode;
 
   const Question({
     required this.id,
@@ -462,12 +611,99 @@ class Question {
     this.activity,
     this.sourceModel,
     this.verifiedByModel,
-  });
+    this.bloom,
+    this.studyLevel,
+    this.creation,
+    this.multiSelect,
+    ResponseType responseType = ResponseType.choice,
+  }) : _answerMode = responseType;
+
+  ResponseType get responseType {
+    if (creation != null) return ResponseType.creation;
+    if (multiSelect != null) return ResponseType.multiSelect;
+    return switch (activity?.kind) {
+      ActivityKind.ordering => ResponseType.ordering,
+      ActivityKind.matching => ResponseType.matching,
+      ActivityKind.listening => ResponseType.listening,
+      ActivityKind.dictation => ResponseType.fill,
+      ActivityKind.pronunciation => ResponseType.pronunciation,
+      ActivityKind.slider => ResponseType.slider,
+      ActivityKind.anagram => ResponseType.anagram,
+      null => _answerMode,
+    };
+  }
+
+  /// Match exact academic terms or equivalent numeric fractions/decimals.
+  /// Preserve SI unit case, operation signs and inequality symbols.
+  bool acceptsWritten(String value) {
+    String clean(String s) => s
+        .trim()
+        .replaceAll('−', '-')
+        .replaceAll('’', "'")
+        .replaceAll('‘', "'")
+        .replaceAll(RegExp(r'\s+'), ' ');
+    final expected = clean(correctAnswerText), given = clean(value);
+    if (given.isEmpty) return false;
+    if (given == expected) return true;
+    if (given.length > 2048) return false;
+    final number = RegExp(r'^([+-]?\d+(?:[,.]\d+)?(?:[eE][+-]?\d+)?(?:/[+-]?\d+)?)\s*(.*)$');
+    String percent(String s) => s.startsWith('%') || s.startsWith('‰')
+        ? '${s.substring(1).trim()}${s[0]}' : s;
+    final a = number.firstMatch(percent(expected));
+    final b = number.firstMatch(percent(given));
+    if (a == null || b == null) {
+      if (a != null || b != null) return false;
+      String stripEndPunct(String s) => s.replaceAll(RegExp(r'[.!?]+$'), '').trim();
+      final expTrim = stripEndPunct(expected);
+      final givTrim = stripEndPunct(given);
+      if (category == Topic.language && expTrim.toLowerCase() == givTrim.toLowerCase()) {
+        return true;
+      }
+      String fold(String s) => s.replaceAll('İ', 'i').replaceAll('I', 'ı').toLowerCase();
+      return fold(expTrim) == fold(givTrim);
+    }
+    const optionalUnits = {
+      '%', '‰', '°', '°C', 'K', 'm', 'km', 'cm', 'mm', 'nm', 'µm',
+      'm²', 'cm²', 'km²', 'm³', 'cm³', 'L', 'mL', 'kg', 'g', 'mg',
+      's', 'ms', 'dk', 'sa', 'saat', 'dakika', 'saniye', 'gün', 'yıl',
+      'm/s', 'm/s²', 'km/sa', 'km/saat', 'N', 'kN', 'J', 'kJ', 'W',
+      'kW', 'MW', 'mW', 'Wh', 'kWh', 'Pa', 'kPa', 'MPa', 'Hz', 'kHz', 'MHz',
+      'mol', 'mmol', 'mol/L', 'g/L', 'kg/m³', 'V', 'mV', 'A', 'mA', 'Ω',
+      'C', 'F', 'TL', 'puan', 'kişi', 'adet', 'bit', 'bayt', 'MB', 'GB',
+      'N·s', 'N·m', 'µmol/L', 'kişi/km²', 'g/mol', 'mg/L', 'mmol/L',
+    };
+    final expectedUnit = a.group(2)!, enteredUnit = b.group(2)!;
+    if (expectedUnit != enteredUnit &&
+        !(enteredUnit.isEmpty && optionalUnits.contains(expectedUnit))) {
+      return false;
+    }
+    (BigInt, BigInt)? ratio(String s) {
+      final fraction = s.toLowerCase().replaceAll(',', '.').split('/');
+      final scientific = fraction.first.split('e');
+      final places = scientific.first.contains('.') ? scientific.first.split('.').last.length : 0;
+      final exponent = scientific.length == 2 ? int.tryParse(scientific.last) : 0;
+      if (exponent == null || exponent.abs() > 308) return null;
+      final shift = exponent - places;
+      final coefficient = BigInt.parse(scientific.first.replaceAll('.', ''));
+      final divisor = fraction.length == 2 ? BigInt.parse(fraction.last) : BigInt.one;
+      if (divisor == BigInt.zero) return null;
+      return (coefficient * BigInt.from(10).pow(max(0, shift)),
+          divisor * BigInt.from(10).pow(max(0, -shift)));
+    }
+    final x = ratio(a.group(1)!), y = ratio(b.group(1)!);
+    return x != null && y != null && x.$1 * y.$2 == y.$1 * x.$2;
+  }
 
   String get correctAnswerText {
+    if (multiSelect != null) {
+      return multiSelect!.correct.map((i) => multiSelect!.options[i]).join(' · ');
+    }
     if (activity != null) {
-      if (activity!.kind == ActivityKind.ordering || activity!.kind == ActivityKind.matching) {
-        if (activity!.solution.isNotEmpty) {
+      if (activity!.kind == ActivityKind.ordering ||
+          activity!.kind == ActivityKind.matching ||
+          activity!.kind == ActivityKind.slider ||
+          activity!.kind == ActivityKind.anagram) {
+        if (activity!.solution.isNotEmpty || activity!.left.isNotEmpty) {
           return activity!.describeSequence(activity!.solution);
         }
       }
@@ -484,7 +720,13 @@ class Question {
   bool get isInteractiveSequence =>
       activity?.kind == ActivityKind.ordering || activity?.kind == ActivityKind.matching;
 
+  bool get isSlider => activity?.kind == ActivityKind.slider;
+  bool get isAnagram => activity?.kind == ActivityKind.anagram;
+  bool get isCustomInteractive => isInteractiveSequence || isSlider || isAnagram;
+
   bool get isPronunciation => activity?.kind == ActivityKind.pronunciation;
+
+  bool get isDictation => activity?.kind == ActivityKind.dictation;
 
   bool matchesFormat(QuestionFormat format) {
     switch (format) {
@@ -493,19 +735,36 @@ class Question {
       case QuestionFormat.visual:
         return visual != null;
       case QuestionFormat.text:
-        return visual == null && activity == null;
+        return visual == null && activity == null && responseType == ResponseType.choice;
+      case QuestionFormat.multiSelect:
+        return responseType == ResponseType.multiSelect;
+      case QuestionFormat.multipleChoice:
+        return responseType == ResponseType.choice;
+      case QuestionFormat.trueFalse:
+        return responseType == ResponseType.trueFalse;
+      case QuestionFormat.fill:
+        return responseType == ResponseType.fill && activity?.kind != ActivityKind.dictation;
+      case QuestionFormat.creation:
+        return responseType == ResponseType.creation;
       case QuestionFormat.listening:
         return activity?.kind == ActivityKind.listening;
+      case QuestionFormat.dictation:
+        return activity?.kind == ActivityKind.dictation;
       case QuestionFormat.ordering:
         return activity?.kind == ActivityKind.ordering;
       case QuestionFormat.matching:
         return activity?.kind == ActivityKind.matching;
       case QuestionFormat.pronunciation:
         return activity?.kind == ActivityKind.pronunciation;
+      case QuestionFormat.slider:
+        return activity?.kind == ActivityKind.slider;
+      case QuestionFormat.anagram:
+        return activity?.kind == ActivityKind.anagram;
     }
   }
 
-  String get poolKey => normalizePoolKey(text);
+  // Graph and table questions can share a stem while presenting different evidence.
+  String get poolKey => id.startsWith('ak38_') ? id : normalizePoolKey(text);
 
   static String normalizePoolKey(String raw) {
     final lower = raw
@@ -522,7 +781,7 @@ class Question {
   }
 
   Question shuffled(Random rng) {
-    if (isInteractiveSequence || isPronunciation || options.length != 4) {
+    if (isCustomInteractive || isPronunciation || multiSelect != null || options.length != 4) {
       return this;
     }
     final indices = [0, 1, 2, 3]..shuffle(rng);
@@ -547,16 +806,19 @@ class Question {
       activity: activity,
       sourceModel: sourceModel,
       verifiedByModel: verifiedByModel,
+      bloom: bloom, studyLevel: studyLevel, creation: creation, multiSelect: multiSelect, responseType: _answerMode,
     );
   }
 
   factory Question.fromJson(Map<String, dynamic> json, {int fallbackIndex = 0}) {
     final rawOpts = (json['options'] as List?)?.map((e) => e.toString()).toList() ??
         const ['A', 'B', 'C', 'D'];
-    final opts = rawOpts.length >= 4
+    final mode = ResponseType.values.where((v) => v.name == json['responseType']).firstOrNull
+        ?? ResponseType.choice;
+    final opts = mode == ResponseType.trueFalse && rawOpts.length == 2 ? rawOpts : rawOpts.length >= 4
         ? rawOpts.sublist(0, 4)
         : [...rawOpts, ...List.filled(4 - rawOpts.length, '-')];
-    final ans = ((json['answer'] as num?)?.toInt() ?? 0).clamp(0, 3);
+    final ans = ((json['answer'] as num?)?.toInt() ?? 0).clamp(0, opts.length - 1);
     final contentId = json['contentID']?.toString();
     final id = json['id']?.toString() ??
         contentId ??
@@ -582,6 +844,13 @@ class Question {
           : null,
       sourceModel: json['sourceModel']?.toString(),
       verifiedByModel: json['verifiedByModel']?.toString(),
+      bloom: BloomLevel.values.where((b) => b.name == json['bloom']).firstOrNull,
+      studyLevel: json['studyLevel'] as String?,
+      creation: json['creation'] is Map
+          ? CreationTask.fromJson(Map<String, dynamic>.from(json['creation'])) : null,
+      multiSelect: json['multiSelect'] is Map
+          ? MultiSelectTask.fromJson(Map<String, dynamic>.from(json['multiSelect'])) : null,
+      responseType: mode,
     );
   }
 
@@ -601,6 +870,11 @@ class Question {
         if (activity != null) 'activity': activity!.toJson(),
         if (sourceModel != null) 'sourceModel': sourceModel,
         if (verifiedByModel != null) 'verifiedByModel': verifiedByModel,
+        if (bloom != null) 'bloom': bloom!.name,
+        if (studyLevel != null) 'studyLevel': studyLevel,
+        if (creation != null) 'creation': creation!.toJson(),
+        if (multiSelect != null) 'multiSelect': multiSelect!.toJson(),
+        if (responseType != ResponseType.choice) 'responseType': responseType.name,
       };
 }
 
@@ -613,6 +887,7 @@ class AnswerRecord {
   final int earnedPoints;
   final int elapsedSeconds;
   final int? duelPlayerIndex;
+  final String? writtenResponse;
 
   const AnswerRecord({
     required this.question,
@@ -623,11 +898,14 @@ class AnswerRecord {
     required this.earnedPoints,
     required this.elapsedSeconds,
     this.duelPlayerIndex,
+    this.writtenResponse,
   });
 }
 
 class RoundSetup {
   final Topic topic;
+  /// Birden fazla kategori seçildiğinde kullanılır; boşsa [topic] esas alınır.
+  final Set<Topic> selectedTopics;
   final Difficulty? difficulty; // null = mixed difficulty
   final GameMode mode;
   final QuestionFormat format;
@@ -637,10 +915,15 @@ class RoundSetup {
   final String? lesson;
   final String customTopicPrompt;
   final bool liveVoiceHost;
-  final List<String> duelPlayerNames; // empty = solo, 2..4 = duel/tournament
+  final List<String> duelPlayerNames; // empty = solo, 2..10 = sırayla oynayan oyuncular
+  /// Klasik modda soru başına süre (sn); boşsa varsayılan 15 sn.
+  final int? secondsPerQuestion;
+  /// Bilgisayar rakipleri (Bire Bir, Çoklu); her soruda kendi hızlarıyla cevaplar.
+  final List<String> rivalNames;
 
   const RoundSetup({
     this.topic = Topic.mixed,
+    this.selectedTopics = const {},
     this.difficulty,
     this.mode = GameMode.classic,
     this.format = QuestionFormat.mixed,
@@ -651,10 +934,46 @@ class RoundSetup {
     this.customTopicPrompt = '',
     this.liveVoiceHost = false,
     this.duelPlayerNames = const [],
+    this.secondsPerQuestion,
+    this.rivalNames = const [],
   });
+
+  /// Etkin seçili kategori kümesi. Boş küme "tüm kategoriler / karışık" demektir.
+  Set<Topic> get effectiveTopics {
+    if (selectedTopics.isNotEmpty) {
+      return selectedTopics
+          .where((t) => t != Topic.mixed && t != Topic.custom)
+          .toSet();
+    }
+    if (topic != Topic.mixed && topic != Topic.custom) {
+      return {topic};
+    }
+    return const {};
+  }
+
+  bool get isMultiTopic => effectiveTopics.length > 1;
+
+  bool isTopicSelected(Topic t) {
+    final active = effectiveTopics;
+    if (t == Topic.mixed) return active.isEmpty && topic != Topic.custom;
+    if (t == Topic.custom) return active.isEmpty && topic == Topic.custom;
+    return active.contains(t);
+  }
+
+  String get topicsLabel {
+    final active = effectiveTopics;
+    if (active.isEmpty) {
+      return topic == Topic.custom ? Topic.custom.label : Topic.mixed.label;
+    }
+    final ordered = Topic.poolCategories.where(active.contains).toList();
+    if (ordered.length == 1) return ordered.first.label;
+    if (ordered.length == 2) return '${ordered[0].label} + ${ordered[1].label}';
+    return '${ordered[0].label}, ${ordered[1].label} +${ordered.length - 2}';
+  }
 
   RoundSetup copyWith({
     Topic? topic,
+    Set<Topic>? selectedTopics,
     Difficulty? Function()? difficulty,
     GameMode? mode,
     QuestionFormat? format,
@@ -665,9 +984,25 @@ class RoundSetup {
     String? customTopicPrompt,
     bool? liveVoiceHost,
     List<String>? duelPlayerNames,
+    int? secondsPerQuestion,
+    List<String>? rivalNames,
   }) {
+    final nextTopic = topic ?? this.topic;
+    final Set<Topic> nextSelected;
+    if (selectedTopics != null) {
+      nextSelected = Set<Topic>.unmodifiable(
+        selectedTopics.where((t) => t != Topic.mixed && t != Topic.custom),
+      );
+    } else if (topic != null) {
+      nextSelected = (topic == Topic.mixed || topic == Topic.custom)
+          ? const {}
+          : Set<Topic>.unmodifiable({topic});
+    } else {
+      nextSelected = this.selectedTopics;
+    }
     return RoundSetup(
-      topic: topic ?? this.topic,
+      topic: nextTopic,
+      selectedTopics: nextSelected,
       difficulty: difficulty != null ? difficulty() : this.difficulty,
       mode: mode ?? this.mode,
       format: format ?? this.format,
@@ -678,6 +1013,8 @@ class RoundSetup {
       customTopicPrompt: customTopicPrompt ?? this.customTopicPrompt,
       liveVoiceHost: liveVoiceHost ?? this.liveVoiceHost,
       duelPlayerNames: duelPlayerNames ?? this.duelPlayerNames,
+      secondsPerQuestion: secondsPerQuestion ?? this.secondsPerQuestion,
+      rivalNames: rivalNames ?? this.rivalNames,
     );
   }
 }

@@ -21,9 +21,25 @@ android {
         versionName = flutter.versionName
     }
 
+    // BILGILI_IMZA_DOSYASI verilirse sürüm APK'sı bu sabit anahtarla imzalanır
+    // (CI önbellekte saklar); böylece sürümler birbirinin üzerine kurulur.
+    val imzaDosyasi = System.getenv("BILGILI_IMZA_DOSYASI")
+    signingConfigs {
+        if (imzaDosyasi != null) {
+            create("bilgili") {
+                storeFile = file(imzaDosyasi)
+                storePassword = System.getenv("BILGILI_IMZA_PAROLA") ?: "android"
+                keyAlias = System.getenv("BILGILI_IMZA_TAKMA_AD") ?: "androiddebugkey"
+                keyPassword = System.getenv("BILGILI_IMZA_PAROLA") ?: "android"
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(
+                if (imzaDosyasi != null) "bilgili" else "debug",
+            )
         }
     }
 }

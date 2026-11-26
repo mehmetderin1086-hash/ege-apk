@@ -18,19 +18,31 @@ class SettingsTab extends StatelessWidget {
         ArenaSceneHeader(title: 'Atmosfer, Ses & Ayarlar', description: 'Duvar kâğıtları, efektler, müzikler, sesli yanıt ve tam yedekleme', scene: 'atrium'),
         const SizedBox(height: 14),
 
-        // Wallpaper Gallery
+        // İstanbul Sahne & Arka Plan Galerisi
         ArenaGlassCard(
-          tint: accent,
+          tint: StudioPalette.gold,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Sahne & Arka Plan Galerisi',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
+              Row(
+                children: const [
+                  Icon(Icons.landscape_rounded, color: StudioPalette.goldBright, size: 18),
+                  SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      'İstanbul Sahne & Arka Plan Galerisi',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        color: StudioPalette.goldBright,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
               SizedBox(
-                height: 112,
+                height: 124,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: ArenaWallpapers.catalog.length,
@@ -38,62 +50,103 @@ class SettingsTab extends StatelessWidget {
                   itemBuilder: (ctx, i) {
                     final item = ArenaWallpapers.catalog[i];
                     final selected = item.id == controller.wallpaperId;
-                    return InkWell(
-                      onTap: () => controller.selectWallpaper(item.id),
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        width: 126,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: selected ? item.primary : Colors.white24,
-                            width: selected ? 2.0 : 1.0,
+                    return ArenaPressDepth(
+                      depthOffset: 1.8,
+                      child: InkWell(
+                        onTap: () => controller.selectWallpaper(item.id),
+                        borderRadius: BorderRadius.circular(18),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          width: 132,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: selected
+                                  ? StudioPalette.goldBright
+                                  : StudioPalette.gold.withValues(alpha: 0.35),
+                              width: selected ? 2.2 : 1.1,
+                            ),
+                            boxShadow: [
+                              if (selected)
+                                BoxShadow(
+                                  color: StudioPalette.gold.withValues(alpha: 0.4),
+                                  blurRadius: 12,
+                                ),
+                              const BoxShadow(color: Colors.black54, offset: Offset(0, 3)),
+                            ],
                           ),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(14),
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              if (item.assetPath != null)
-                                Image.asset(item.assetPath!, fit: BoxFit.cover)
-                              else
-                                ColoredBox(color: item.surface),
-                              DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      Colors.transparent,
-                                      Colors.black.withValues(alpha: 0.82),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                if (item.assetPath != null)
+                                  Image.asset(item.assetPath!, fit: BoxFit.cover)
+                                else
+                                  DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: item.gradient ?? [item.surface, item.ink],
+                                      ),
+                                    ),
+                                  ),
+                                DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.transparent,
+                                        const Color(0xD903061C),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(9),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      if (selected)
+                                        Container(
+                                          padding: const EdgeInsets.all(2),
+                                          decoration: const BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: StudioPalette.goldBright,
+                                          ),
+                                          child: const Icon(
+                                            Icons.check_rounded,
+                                            size: 13,
+                                            color: StudioPalette.night,
+                                          ),
+                                        ),
+                                      const Spacer(),
+                                      Text(
+                                        item.title,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w900,
+                                          color: selected ? StudioPalette.goldBright : Colors.white,
+                                        ),
+                                      ),
+                                      Text(
+                                        item.subtitle,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 9.5,
+                                          color: Colors.white70,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(9),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (selected)
-                                      Icon(Icons.check_circle_rounded,
-                                          size: 16, color: item.primary),
-                                    const Spacer(),
-                                    Text(
-                                      item.title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w800,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -103,8 +156,8 @@ class SettingsTab extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               const Text(
-                'Arka Plan Netliği',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white70),
+                'İstanbul Arka Plan Netliği',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white70),
               ),
               const SizedBox(height: 8),
               ArenaScrollPills<WallpaperClarity>(
@@ -116,8 +169,8 @@ class SettingsTab extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Yıldız & Aurora Efekt Yoğunluğu',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white70),
+                '3D Stüdyo Işıkları & Efekt Yoğunluğu',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white70),
               ),
               const SizedBox(height: 8),
               ArenaScrollPills<EffectIntensity>(
@@ -314,14 +367,20 @@ class SettingsTab extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'XP, seviye, tekrar kartları, bilgi defteri, çalışma profilleri ve çevrimdışı AI paketlerini tek dosyada yedekle.',
+                'XP, seviye, tekrar kartları, bilgi defteri, çalışma profilleri ve kişisel soru paketlerini tek dosyada yedekle.',
                 style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.7)),
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
-                    child: FilledButton.icon(
+                    child: Studio3DButton(
+                      label: 'Dışa Aktar',
+                      icon: Icons.archive_rounded,
+                      variant: StudioButtonVariant.emerald,
+                      expand: true,
+                      fontSize: 13.5,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
                       onPressed: () async {
                         final ok = await controller.exportFullBackup();
                         if (context.mounted && ok) {
@@ -330,17 +389,18 @@ class SettingsTab extends StatelessWidget {
                           );
                         }
                       },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF5CE09B),
-                        foregroundColor: const Color(0xFF06101F),
-                      ),
-                      icon: const Icon(Icons.archive_rounded, size: 18),
-                      label: const Text('Yedeği Dışa Aktar'),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: Studio3DButton(
+                      label: 'Geri Yükle',
+                      icon: Icons.restore_rounded,
+                      variant: StudioButtonVariant.navy,
+                      shimmer: false,
+                      expand: true,
+                      fontSize: 13.5,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
                       onPressed: () async {
                         final msg = await controller.restoreFullBackup();
                         if (context.mounted) {
@@ -349,8 +409,6 @@ class SettingsTab extends StatelessWidget {
                           );
                         }
                       },
-                      icon: const Icon(Icons.restore_rounded, size: 18),
-                      label: const Text('Geri Yükle'),
                     ),
                   ),
                 ],
@@ -361,11 +419,20 @@ class SettingsTab extends StatelessWidget {
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (ctx) => AlertDialog(
-                      backgroundColor: const Color(0xFF0E182B),
-                      title: const Text('İlerleme Sıfırlansın mı?',
-                          style: TextStyle(color: Colors.white)),
+                      backgroundColor: StudioPalette.navyDark,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(22),
+                        side: BorderSide(color: StudioPalette.gold.withValues(alpha: 0.45)),
+                      ),
+                      title: const Text(
+                        'İlerleme Sıfırlansın mı?',
+                        style: TextStyle(
+                          color: StudioPalette.goldBright,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                       content: const Text(
-                        'XP, geçmiş turlar ve tekrar kartların sıfırlanacak. Gömülü 10.400+ soru havuzu korunur.',
+                        'XP, geçmiş turlar ve tekrar kartların sıfırlanacak. Yerleşik akademik soru bankası korunur.',
                         style: TextStyle(color: Colors.white70),
                       ),
                       actions: [
@@ -373,10 +440,13 @@ class SettingsTab extends StatelessWidget {
                           onPressed: () => Navigator.of(ctx).pop(false),
                           child: const Text('Vazgeç'),
                         ),
-                        FilledButton(
+                        Studio3DButton(
+                          label: 'Sıfırla',
+                          variant: StudioButtonVariant.crimson,
+                          shimmer: false,
+                          fontSize: 13.5,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                           onPressed: () => Navigator.of(ctx).pop(true),
-                          style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFF6B7A)),
-                          child: const Text('Sıfırla'),
                         ),
                       ],
                     ),
@@ -385,10 +455,46 @@ class SettingsTab extends StatelessWidget {
                     await controller.resetAllProgress();
                   }
                 },
-                icon: const Icon(Icons.restart_alt_rounded, color: Color(0xFFFF7B89), size: 18),
+                icon: const Icon(Icons.restart_alt_rounded, color: StudioPalette.crimson, size: 18),
                 label: const Text(
                   'İlerlemeyi ve Geçmişi Sıfırla',
-                  style: TextStyle(color: Color(0xFFFF7B89)),
+                  style: TextStyle(color: StudioPalette.crimson, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        // 3D Marka & Sürüm Plaketi
+        ArenaGlassCard(
+          tint: StudioPalette.gold,
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              const Bilgili3DLogo(size: 56),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Bilgili · İstanbul Zirve Stüdyosu',
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w900,
+                        color: StudioPalette.goldBright,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      'Sürüm 3.21.0 · ${controller.totalPoolCount} çevrimdışı görsel, sesli & etkileşimli soru · 23 kategori',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: Colors.white.withValues(alpha: 0.74),
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

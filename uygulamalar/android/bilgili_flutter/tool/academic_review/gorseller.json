@@ -1,0 +1,194 @@
+[
+  {
+    "file": "assets/photos/plate01.webp",
+    "title": "Menderes ve geçmiş akarsu yatağı",
+    "prompt": "Photorealistic aerial geomorphology survey of a meandering blue-green river on a broad level floodplain. A distinct crescent oxbow lake is fully separated from the present channel. On one meander show a pale sandy point bar on the inside curve opposite a steep vegetated cut bank. Slight late morning shadows. Clear orthographic overhead image high enough to show the entire landform.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "bf290f77-579a-4f0d-b06e-698af91fd93f"
+  },
+  {
+    "file": "assets/photos/plate02.webp",
+    "title": "Buzul vadisi",
+    "prompt": "Realistic field geology view looking straight up an empty alpine glacial trough. Distinct broad U-shaped profile with a flat floor, steep polished rock walls and a small hanging tributary valley dropping over the left side. Natural contours, lush lower vegetation and a narrow modern stream occupying a tiny fraction of the valley floor.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "dba7bea6-adc1-4dc6-a7c7-aaf5dfc05947"
+  },
+  {
+    "file": "assets/photos/plate03.webp",
+    "title": "Irmak deltası",
+    "prompt": "Vertical overhead photograph of a natural river delta, single silt-laden upstream river at the top splitting seaward into many distributary channels, pale sediment plumes and shallow brown fringe entering open turquoise sea at bottom. Broad depositional plain with marshes. Make pattern unmistakeable.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "9e1f5e38-fbd2-4daa-a10b-ee3a26acd095"
+  },
+  {
+    "file": "assets/photos/plate04.webp",
+    "title": "Kıyı kumulu ve rüzgâr",
+    "prompt": "Detailed low-altitude oblique desert survey showing three crescent barchan dunes all similarly oriented, illuminated from left, gently rising long windward slopes and sharp slip faces between two downwind horns. Bare fine sand, smooth ambient shadow differentiating the slopes, no roads, coast or people.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "54cf2599-8a00-4340-92bd-f7a8f4584c4d"
+  },
+  {
+    "file": "assets/photos/plate05.webp",
+    "title": "Kıvrım ve tabakalanma",
+    "prompt": "Educational natural-history photograph, a frontal, perpendicular view of an exposed roadside cut in sedimentary strata. Alternating continuous light limestone and dark shale bands folded into one large arch and adjacent trough. Bedding line continuity visually unmistakable. No fault offset and no perspective distortion.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "dc04312e-d936-46df-92e9-2e26b8db80fb"
+  },
+  {
+    "file": "assets/photos/plate06.webp",
+    "title": "Açısal uyumsuzluk",
+    "prompt": "Perpendicular geological outcrop photograph showing lower tilted parallel sedimentary strata cleanly truncated by an erosional surface, overlain by younger horizontal sedimentary strata. Individual differently colored bands are clear. Image should communicate the contact unmistakably, no fold, no text.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "89f0922d-79f7-49f2-ae82-5f5e4f99b84d"
+  },
+  {
+    "file": "assets/photos/plate07.webp",
+    "title": "Kırılma ve görünür konum",
+    "prompt": "Studio physics photograph in profile: a straight slender single yellow rod partly submerged diagonally in a clear rectangular tank of still water appears laterally displaced at the air-water interface. Bright sideways silhouette and visible surface line, uncluttered neutral background, no instruments.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "010fe0ed-322e-41d3-b66f-be5d6530cff2"
+  },
+  {
+    "file": "assets/photos/plate08.webp",
+    "title": "Prizmada beyaz ışık",
+    "prompt": "Laboratory dark-field photograph of one sharp narrow white light beam approaching a clear triangular prism from the left and emerging on the right as a fan of continuous visible spectrum, red least deviated and violet most, coherent single beam path. Dark gray matte background, robust mobile contrast.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "c00d5b96-9e52-4bfe-b1e7-183d7af104f7"
+  },
+  {
+    "file": "assets/photos/plate09.webp",
+    "title": "Dalga leğeninde kırınım",
+    "prompt": "Physics ripple-tank top view, monochrome high contrast. From the left, equally spaced straight parallel incident water wavefronts approach a vertical barrier having one small opening in the middle, comparable to a wavelength. To the right clear outgoing concentric semicircular wavefronts all centered on that single opening. No source interference, no arrows.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "c27afd0d-ec45-4216-8bb6-b626b11116fa"
+  },
+  {
+    "file": "assets/photos/plate10.webp",
+    "title": "Kapiler yükselme",
+    "prompt": "Side-by-side lab capillary demonstration in a single photograph. Three vertical open glass capillary tubes of clearly different inner diameter dip in one broad open shallow reservoir of blue-tinted water. Narrowest on left has tallest meniscus, middle has intermediate, widest right lowest, each above reservoir surface. Clean eye-level neutral background, ample difference in level.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "9726b628-77ab-42d8-b492-9483be15a843"
+  },
+  {
+    "file": "assets/photos/plate11.webp",
+    "title": "Kemer ve yük aktarımı",
+    "prompt": "Architectural field photograph, front-on centered historic single-span stone arch bridge. Visible radial wedge-shaped voussoirs and a central keystone; two substantial stone abutments at banks. Oblique sunlight shows joints and arch opening, no pedestrians, no modern structural additions.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "213f62cf-3eb4-4a65-989f-b259530c0094"
+  },
+  {
+    "file": "assets/photos/plate12.webp",
+    "title": "Makas köprü",
+    "prompt": "Detailed civic-engineering photograph of side elevation of a simple metal pedestrian truss bridge over a quiet canal. Parallel top and bottom chords and clearly repeated triangular diagonal bracing connecting joints, two external supports, unobstructed silhouette; neutral background.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "227f306b-db6c-41c5-9e3b-be28f536de84"
+  },
+  {
+    "file": "assets/photos/plate13.webp",
+    "title": "Bitki dokusu ve stoma",
+    "prompt": "Realistic botanical scientific micrograph of a leaf epidermal peel. Show flat interlocking pavement cells and several pairs of kidney-shaped green guard cells enclosing small dark distinct open stomatal pores. Natural muted stain and sharp cellular boundaries; one central pore especially clear. No labels or scale annotations.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "3074952b-717d-427e-a82a-6bf07c94f17b"
+  },
+  {
+    "file": "assets/photos/plate14.webp",
+    "title": "Yaprak kesiti",
+    "prompt": "Natural-color educational plant histology plate, perpendicular transverse section through a dorsiventral leaf: thin top epidermis, tight single layer of elongated chloroplast-rich palisade cells just below, loosely spaced irregular spongy cells and conspicuous air spaces toward the lower epidermis. Clean microscope aesthetic with a broad view, no labels or cutaway arrows.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "cc9c0d3f-7317-4739-9ab1-a4e2d7416ddf"
+  },
+  {
+    "file": "assets/photos/plate15.webp",
+    "title": "Liken ve çıplak kaya",
+    "prompt": "Ecology field macro photograph of a bare granite rock surface with crustose pale yellow lichen tightly attached to stone, adjacent small patches of leafy lichen and a small moss cushion in a damp crack with a little accumulated fine substrate. Coexisting patches only, natural scale. No labels or people.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "dd70e7f0-9430-4736-9314-bd0ff8267815"
+  },
+  {
+    "file": "assets/photos/plate16.webp",
+    "title": "Kök ve erozyon",
+    "prompt": "Two paired environmental field photographs together forming a single comparison plate, same moderately sloped soil type and lighting. Left a bare disturbed slope with shallow branching erosion rills and sediment fan below; right grass-covered slope with intact soil surface and dense roots visible in a small natural cut. No labels or text, equal frames.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "c23e4967-cacb-4449-b64e-2b79fe30444b"
+  },
+  {
+    "file": "assets/photos/plate17.webp",
+    "title": "Doku ve değer gravürü",
+    "prompt": "Original black-and-white fine-art print of a simple pear and cloth on a tabletop lit from the left. Create gray values using ONLY visible parallel curved hatch marks and denser cross-hatching in deep shadow, white untouched paper for highlights. Rich engraved line quality particularly clear in close-up; no labels, no signature.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "5f581781-611f-4e61-b8f8-f9d28da6cbe8"
+  },
+  {
+    "file": "assets/photos/plate18.webp",
+    "title": "Tek kaçışlı perspektif",
+    "prompt": "Original measured pencil drawing of a long empty symmetrical interior corridor with regularly spaced floor tiles and columns. Receding ceiling edges, edges of floor tiles and parallel rows of columns all visibly converge on one central vanishing point at the far wall, eye level. Horizontal vertical picture plane lines remain parallel, no people or labels.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "4ec1fd67-b6a9-43e5-a080-5651667ff529"
+  },
+  {
+    "file": "assets/photos/plate19.webp",
+    "title": "Kemerli iç mekân ve ışık",
+    "prompt": "Original architectural photograph of a historic Gothic-inspired vaulted interior. Pointed stone arches, visibly intersecting rib vaults, clustered piers and tall narrow windows with colored glass. Low viewpoint emphasizes vertical height and the structural ribs. No furnishings obscuring structure.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "4f13c55f-dfb7-4340-aea4-9c0e15fcf858"
+  },
+  {
+    "file": "assets/photos/plate20.webp",
+    "title": "Dokuma örgüsü",
+    "prompt": "Textile technology studio macro on a simple wooden handloom. Closely cropped view with light vertical warp yarns held parallel and a contrasting dark horizontal weft yarn weaving alternately over and under, one-over-one plain weave. In the upper third, unwoven parallel warp is visible; lower portion is finished grid. No labels.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "327fee1a-27c3-4b0f-8cc0-a4de3d26691e"
+  },
+  {
+    "file": "assets/photos/plate21.webp",
+    "title": "Ay evreleri ve gözlem",
+    "prompt": "High-contrast astronomical photograph style comparative plate on black background showing two separated lunar disks in identical orientation and scale: on left a slim right-lit crescent, on right a more-than-half illuminated right-lit waxing gibbous moon. Curved terminators and natural lunar surface, no Earth shadow, no stars or letters.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "a9f94359-d82c-48bf-98db-ef6f9298c419"
+  },
+  {
+    "file": "assets/photos/plate22.webp",
+    "title": "Işık izi ve gözlem süresi",
+    "prompt": "Realistic single long-exposure astronomy photograph of the northern night sky, many stars forming short-to-medium concentric circular arcs around one common pivot above a dark fixed mountain skyline. Arc length varies with angular distance from the pivot, no meteor streaks or labels.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "22444492-653b-4649-b85a-1001945293d3"
+  },
+  {
+    "file": "assets/photos/plate23.webp",
+    "title": "Mezür ve paralaks",
+    "prompt": "Clear science classroom close-up frontal photo of transparent graduated glass cylinder filled partly with water, concave visible water meniscus and several strong equidistant horizontal graduation marks near it on the front wall. Plain matte background. Do not print numbers or text, leave visual about shape and observation geometry instead of an exact numerical reading.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "c6380983-9bce-42d2-959d-35b6106110c9"
+  },
+  {
+    "file": "assets/photos/plate24.webp",
+    "title": "Kâğıt kromatografisi",
+    "prompt": "Chemistry teaching photograph, close-up of vertical white chromatography paper. One small pencil starting mark near bottom with a single origin; above it colored soluble ink separated into four discrete horizontal narrow pigment zones at visibly different heights (yellow high, blue below, violet lower, dark orange lowest). Show a subtle solvent-front pencil line above every zone and baseline below. Blank neutral background, no writing.",
+    "provider": "Higgsfield",
+    "model": "gpt_image_2_6",
+    "job_id": "83577a4b-7cbd-418c-a527-23f26a659b57"
+  }
+]
