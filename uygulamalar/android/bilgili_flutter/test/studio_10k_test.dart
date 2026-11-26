@@ -228,6 +228,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
     expect(ctrl.activeRound!.answers.last.correct, isTrue);
     expect(tester.takeException(), isNull);
+    ctrl.exitRound();
   });
 
   testWidgets('HomePlayTab opens Sesli İngilizce Stüdyosu modal and launches listening round', (tester) async {
@@ -270,5 +271,7 @@ void main() {
     expect(ctrl.activeRound!.questions, hasLength(10));
     expect(ctrl.activeRound!.questions.every((q) => q.activity?.kind == ActivityKind.listening), isTrue);
     expect(tester.takeException(), isNull);
+    ctrl.exitRound();
+    await tester.pump();
   });
 }
