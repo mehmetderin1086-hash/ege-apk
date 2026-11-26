@@ -7,11 +7,27 @@ import '../models/quiz_models.dart';
 typedef BrowserCursor = ({int personal, int academic});
 const firstBrowserPage = (personal: 0, academic: 0);
 
+enum PoolStatusFilter {
+  all('Hepsi'),
+  unsolved('Çözülmemiş'),
+  solved('Çözülmüş'),
+  bookmarked('Defterim');
+
+  final String label;
+  const PoolStatusFilter(this.label);
+}
+
 class BrowserPage {
   final List<Question> items;
   final BrowserCursor next;
   final bool hasMore;
-  const BrowserPage(this.items, this.next, this.hasMore);
+  final int totalEstimate;
+  const BrowserPage(
+    this.items,
+    this.next,
+    this.hasMore, {
+    this.totalEstimate = 0,
+  });
 }
 
 bool _hasText(Question q, String query) =>
@@ -20,6 +36,24 @@ bool _hasText(Question q, String query) =>
     (q.creation?.brief.toLowerCase().contains(query) ?? false) ||
     q.options.any((o) => o.toLowerCase().contains(query));
 
+bool _matchesStatus(
+  Question q,
+  PoolStatusFilter statusFilter,
+  Set<String> playedIds,
+  Set<String> bookmarkedKeys,
+) {
+  switch (statusFilter) {
+    case PoolStatusFilter.all:
+      return true;
+    case PoolStatusFilter.unsolved:
+      return !playedIds.contains(q.id);
+    case PoolStatusFilter.solved:
+      return playedIds.contains(q.id);
+    case PoolStatusFilter.bookmarked:
+      return bookmarkedKeys.contains(q.poolKey);
+  }
+}
+
 typedef _SearchRequest = ({
   SendPort reply,
   Topic topic,
@@ -27,14 +61,18 @@ typedef _SearchRequest = ({
   QuestionFormat format,
   PoolCollection collection,
   BloomLevel? bloom,
+  Difficulty? difficulty,
+  PoolStatusFilter statusFilter,
+  Set<String> playedIds,
+  Set<String> bookmarkedKeys,
   String query,
   Set<String> hidden,
   int start,
   int limit,
 });
 
-// Only the small result index list crosses isolates. The million-question
-// catalog is compiled into the app, so workers open their own local view.
+// Only the small result index list crosses isolates. The catalog is compiled
+// into the app, so workers open their own local view.
 void _searchAcademicText(_SearchRequest request) {
   try {
     final view = AdvancedCatalog.select(
@@ -43,6 +81,7 @@ void _searchAcademicText(_SearchRequest request) {
       format: request.format,
       level: request.collection.level,
       bloom: request.bloom,
+      difficulty: request.difficulty,
     );
     final found = <int>[];
     for (
@@ -52,6 +91,12 @@ void _searchAcademicText(_SearchRequest request) {
     ) {
       final q = view[i];
       if (!request.hidden.contains(q.id) &&
+          _matchesStatus(
+            q,
+            request.statusFilter,
+            request.playedIds,
+            request.bookmarkedKeys,
+          ) &&
           (request.query.isEmpty || _hasText(q, request.query))) {
         found.add(i);
       }
@@ -69,6 +114,10 @@ class BrowserPageTask {
   final QuestionFormat format;
   final PoolCollection collection;
   final BloomLevel? bloom;
+  final Difficulty? difficulty;
+  final PoolStatusFilter statusFilter;
+  final Set<String> playedIds;
+  final Set<String> bookmarkedKeys;
   final String query;
   final Set<String> hidden;
   final BrowserCursor cursor;
@@ -84,6 +133,10 @@ class BrowserPageTask {
     required this.format,
     required this.collection,
     this.bloom,
+    this.difficulty,
+    this.statusFilter = PoolStatusFilter.all,
+    this.playedIds = const {},
+    this.bookmarkedKeys = const {},
     required this.query,
     required this.hidden,
     required this.cursor,
@@ -118,7 +171,9 @@ class BrowserPageTask {
       } else if (topic != Topic.mixed && q.category != topic) {
         continue;
       }
+      if (difficulty != null && q.difficulty != difficulty) continue;
       if (!q.matchesFormat(format) || hidden.contains(q.id)) continue;
+      if (!_matchesStatus(q, statusFilter, playedIds, bookmarkedKeys)) continue;
       if (query.isEmpty || _hasText(q, query)) matches.add(i);
     }
     return matches;
@@ -128,16 +183,32 @@ class BrowserPageTask {
     if (collection == PoolCollection.personal || cursor.academic >= view.length) {
       return [];
     }
-    if (query.isEmpty && hidden.length <= limit * 8) {
+    final fastPath = query.isEmpty &&
+        hidden.length <= limit * 8 &&
+        (statusFilter == PoolStatusFilter.all ||
+            (statusFilter == PoolStatusFilter.unsolved && playedIds.length <= limit * 8));
+    if (fastPath) {
       final found = <int>[];
       for (
         var i = cursor.academic;
         i < view.length && found.length <= limit;
         i++
       ) {
-        if (hidden.isEmpty || !hidden.contains(view[i].id)) found.add(i);
+        final q = view[i];
+        if ((hidden.isEmpty || !hidden.contains(q.id)) &&
+            _matchesStatus(q, statusFilter, playedIds, bookmarkedKeys)) {
+          found.add(i);
+        }
       }
       return found;
+    }
+
+    // For solved or bookmarked status with empty query, check direct lookup first if small!
+    if (query.isEmpty && statusFilter == PoolStatusFilter.solved && playedIds.isEmpty) {
+      return [];
+    }
+    if (query.isEmpty && statusFilter == PoolStatusFilter.bookmarked && bookmarkedKeys.isEmpty) {
+      return [];
     }
 
     final port = ReceivePort();
@@ -164,6 +235,10 @@ class BrowserPageTask {
         format: format,
         collection: collection,
         bloom: bloom,
+        difficulty: difficulty,
+        statusFilter: statusFilter,
+        playedIds: playedIds,
+        bookmarkedKeys: bookmarkedKeys,
         query: query,
         hidden: hidden,
         start: cursor.academic,
@@ -192,6 +267,7 @@ class BrowserPageTask {
       format: format,
       level: collection.level,
       bloom: bloom,
+      difficulty: difficulty,
     );
     final matches = await Future.wait([
       _personalMatches(),
@@ -216,6 +292,13 @@ class BrowserPageTask {
       personal: morePersonal ? baseMatches[b] : personal.length,
       academic: moreAcademic ? newMatches[n] : academic.length,
     );
-    return BrowserPage(items, next, morePersonal || moreAcademic);
+    final estimate = (collection == PoolCollection.personal ? 0 : academic.length) +
+        (collection.level != null || bloom != null ? 0 : personal.length);
+    return BrowserPage(
+      items,
+      next,
+      morePersonal || moreAcademic,
+      totalEstimate: estimate,
+    );
   }
 }

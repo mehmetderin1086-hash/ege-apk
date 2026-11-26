@@ -367,7 +367,7 @@ class SettingsTab extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'XP, seviye, tekrar kartları, bilgi defteri, çalışma profilleri ve çevrimdışı AI paketlerini tek dosyada yedekle.',
+                'XP, seviye, tekrar kartları, bilgi defteri, çalışma profilleri ve kişisel soru paketlerini tek dosyada yedekle.',
                 style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.7)),
               ),
               const SizedBox(height: 12),
@@ -459,6 +459,42 @@ class SettingsTab extends StatelessWidget {
                 label: const Text(
                   'İlerlemeyi ve Geçmişi Sıfırla',
                   style: TextStyle(color: StudioPalette.crimson, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        // 3D Marka & Sürüm Plaketi
+        ArenaGlassCard(
+          tint: StudioPalette.gold,
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              const Bilgili3DLogo(size: 56),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Bilgili · İstanbul Zirve Stüdyosu',
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w900,
+                        color: StudioPalette.goldBright,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      'Sürüm 3.19.0 · ${controller.totalPoolCount} çevrimdışı özgün & akademik soru · 23 kategori',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: Colors.white.withValues(alpha: 0.74),
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

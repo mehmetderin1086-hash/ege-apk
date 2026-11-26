@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/quiz_models.dart';
-import '../services/ai_gateway_service.dart';
 import '../state/arena_controller.dart';
 import '../theme/arena_design.dart';
 import '../widgets/question_renderers.dart';
@@ -18,9 +17,8 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _shakeCtrl;
   String? _lastAnimatedAnswerKey;
-  String? _coachQuestionId;
-  String? _coachReply;
-  bool _coachLoading = false;
+  String? _breakdownQuestionId;
+  bool _showOptionBreakdown = false;
 
   @override
   void initState() {
@@ -35,24 +33,6 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
   void dispose() {
     _shakeCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _askCoach(Question q, String style) async {
-    widget.controller.setOverlayPause(true);
-    setState(() {
-      _coachQuestionId = q.id;
-      _coachLoading = true;
-    });
-    final reply = await AiGatewayService.askLearningCoach(
-      config: widget.controller.aiConfig,
-      question: q,
-      promptStyle: style,
-    );
-    if (!mounted) return;
-    setState(() {
-      _coachReply = reply;
-      _coachLoading = false;
-    });
   }
 
   Future<void> _triggerSingleVoiceAnswer(BuildContext context, {bool pronunciation = false}) async {
@@ -83,10 +63,9 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
     }
 
     final q = round.current;
-    if (_coachQuestionId != q.id) {
-      _coachQuestionId = null;
-      _coachReply = null;
-      _coachLoading = false;
+    if (_breakdownQuestionId != q.id) {
+      _breakdownQuestionId = null;
+      _showOptionBreakdown = false;
     }
 
     if (round.revealed && round.answers.isNotEmpty) {
@@ -610,7 +589,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
           ],
           const SizedBox(height: 12),
           const Text(
-            'AI Öğrenme Koçu',
+            'Pekiştirme Araçları',
             style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w800,
@@ -618,35 +597,41 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
             ),
           ),
           const SizedBox(height: 6),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _coachChip('Daha basit anlat', () => _askCoach(q, 'Daha basit anlat'), accent),
-                const SizedBox(width: 6),
-                _coachChip('Örnek ver', () => _askCoach(q, 'Günlük hayattan örnek ver'), accent),
-                const SizedBox(width: 6),
-                _coachChip('Nasıl aklımda tutarım?', () => _askCoach(q, 'Nasıl aklımda tutarım?'), accent),
-              ],
-            ),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              _studyActionChip(
+                icon: widget.controller.isBookmarked(q)
+                    ? Icons.bookmark_rounded
+                    : Icons.bookmark_add_outlined,
+                label: widget.controller.isBookmarked(q) ? 'Defterde Kayıtlı' : 'Deftere Kaydet',
+                active: widget.controller.isBookmarked(q),
+                onTap: () => widget.controller.toggleBookmark(q),
+              ),
+              _studyActionChip(
+                icon: widget.controller.isInReviewDeck(q)
+                    ? Icons.replay_circle_filled_rounded
+                    : Icons.add_task_rounded,
+                label: widget.controller.isInReviewDeck(q)
+                    ? 'Tekrar Destesinde'
+                    : 'Tekrara Ekle',
+                active: widget.controller.isInReviewDeck(q),
+                onTap: () => widget.controller.addQuestionToReviewDeck(q),
+              ),
+              if (q.optionExplanations.isNotEmpty)
+                _studyActionChip(
+                  icon: Icons.fact_check_rounded,
+                  label: _showOptionBreakdown ? 'Şık Analizini Gizle' : 'Şık Analizini Gör',
+                  active: _showOptionBreakdown,
+                  onTap: () => setState(() {
+                    _breakdownQuestionId = q.id;
+                    _showOptionBreakdown = !_showOptionBreakdown;
+                  }),
+                ),
+            ],
           ),
-          if (_coachLoading) ...[
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: accent),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Öğrenme Koçu yanıt hazırlıyor...',
-                  style: TextStyle(fontSize: 12, color: Colors.white70),
-                ),
-              ],
-            ),
-          ] else if (_coachReply != null) ...[
+          if (_showOptionBreakdown && q.optionExplanations.isNotEmpty) ...[
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.all(11),
@@ -655,9 +640,22 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: StudioPalette.gold.withValues(alpha: 0.45)),
               ),
-              child: Text(
-                _coachReply!,
-                style: const TextStyle(fontSize: 12.5, color: Colors.white, height: 1.36),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var i = 0; i < q.optionExplanations.length && i < q.options.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 5),
+                    Text(
+                      '${String.fromCharCode(65 + i)}) ${q.optionExplanations[i]}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: i == q.answer ? const Color(0xFF8FF5B5) : Colors.white.withValues(alpha: 0.84),
+                        fontWeight: i == q.answer ? FontWeight.w800 : FontWeight.w500,
+                        height: 1.32,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],
@@ -666,7 +664,12 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
     );
   }
 
-  Widget _coachChip(String label, VoidCallback onTap, Color accent) {
+  Widget _studyActionChip({
+    required IconData icon,
+    required String label,
+    required bool active,
+    required VoidCallback onTap,
+  }) {
     return ArenaPressDepth(
       depthOffset: 1.3,
       child: InkWell(
@@ -675,14 +678,20 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [StudioPalette.navyTop, StudioPalette.navyDark]),
+            gradient: LinearGradient(
+              colors: active
+                  ? [StudioPalette.gold.withValues(alpha: 0.34), StudioPalette.navyTop]
+                  : const [StudioPalette.navyTop, StudioPalette.navyDark],
+            ),
             borderRadius: BorderRadius.circular(99),
-            border: Border.all(color: StudioPalette.gold.withValues(alpha: 0.55)),
+            border: Border.all(
+              color: active ? StudioPalette.goldBright : StudioPalette.gold.withValues(alpha: 0.55),
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.auto_awesome_rounded, size: 13, color: StudioPalette.goldBright),
+              Icon(icon, size: 13.5, color: StudioPalette.goldBright),
               const SizedBox(width: 5),
               Text(
                 label,

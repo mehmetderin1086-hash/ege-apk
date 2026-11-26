@@ -106,11 +106,11 @@ jobs:
           set -euo pipefail
           ETIKET="bilgili-v${SURUM}"
           {
-            echo "Bilgili ${SURUM} (sürüm kodu ${KOD}). Tüm arayüz Zirve Merdiveni × İstanbul 3D Stüdyo temasıyla yenilendi: 8 İstanbul gece sahnesi, 3D animasyonlu altın/lacivert düğmeler ve altıgen soru plaketleri, ayrıca tüm oyun modlarında çoklu kategori seçimi (224.144 soru bankası)."
+            echo "Bilgili ${SURUM} (sürüm kodu ${KOD}). AI Stüdyo kaldırıldı; yepyeni 3D altın-safir oyun logosu ve açılış ekranı eklendi. Bilgi Akademisi (zorluk/durum/çoklu kategori filtreleri, kart içi kendini sına, 6 kutulu Leitner grafiği, 3D çevrilebilir kart modu, paket ve sınav profili yöneticisi) ve İlerleme (kariyer rütbesi, 6 KPI kartı, başarı grafiği, akıllı çalışma analizi, 23 alan ustalığı, 16 takipli rozet ve detaylı tur geçmişi) baştan sona yenilendi."
             echo
             echo "Çoğu telefon için \`Bilgili-${SURUM}-arm64.apk\` dosyasını indirin. \`armv7\` dosyası eski 32 bit telefonlar içindir."
             echo
-            echo "Bu derleme 3.10.0–3.17.0 ile aynı sabit anahtarla imzalandı; 3.17.0 ve önceki sürümlerin (3.10.0+) üzerine doğrudan kurulur. 3.9.0 ve önceki sürümler kuruluysa önce Ayarlar bölümünden tam yedek alın, eski uygulamayı kaldırın, bu APK'yı kurup yedeği geri yükleyin."
+            echo "Bu derleme 3.10.0–3.18.0 ile aynı sabit anahtarla imzalandı; 3.18.0 ve önceki sürümlerin (3.10.0+) üzerine doğrudan kurulur. 3.9.0 ve önceki sürümler kuruluysa önce Ayarlar bölümünden tam yedek alın, eski uygulamayı kaldırın, bu APK'yı kurup yedeği geri yükleyin."
             echo
             echo '```'
             cat "$CIKTI/SHA256SUMS.txt"

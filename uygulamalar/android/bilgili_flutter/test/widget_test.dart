@@ -152,7 +152,7 @@ void main() {
     });
   });
 
-  testWidgets('Full UI renders all 5 tabs and plays a round on 360x800 screen without overflow',
+  testWidgets('Full UI renders all 4 tabs (without AI Stüdyo) and plays a round on 360x800 screen without overflow',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 3.0;
@@ -164,15 +164,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
 
     expect(find.text('Bilgili'), findsOneWidget);
+    expect(find.text('AI Stüdyo'), findsNothing);
+    expect(find.text('AI Soru Stüdyosu'), findsNothing);
 
-    // Navigate across all 5 tabs
+    // Navigate across all 4 tabs
     await tester.tap(find.text('Akademi'));
     await tester.pump(const Duration(milliseconds: 200));
     expect(find.text('Bilgi Akademisi & Havuz'), findsOneWidget);
-
-    await tester.tap(find.text('AI Stüdyo'));
-    await tester.pump(const Duration(milliseconds: 200));
-    expect(find.text('CLIProxy & AI Stüdyosu'), findsOneWidget);
 
     await tester.tap(find.text('İlerleme'));
     await tester.pump(const Duration(milliseconds: 200));
@@ -182,7 +180,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
     expect(find.text('Atmosfer, Ses & Ayarlar'), findsOneWidget);
 
-    // Return to Oyna tab and launch a 5-question round
+    // Return to Oyna tab and launch a 2-question round
     await tester.tap(find.text('Oyna'));
     await tester.pump(const Duration(milliseconds: 200));
     ctrl.updateSetup(ctrl.setup.copyWith(questionCount: 2));

@@ -1,4 +1,13 @@
-# Bilgili 3.18.0
+# Bilgili 3.19.0
+
+3.19.0 sürümünde **AI Stüdyo** tamamen kaldırıldı, yepyeni **3D altın-safir oyun logosu** eklendi ve **Bilgi Akademisi** ile **İlerleme & Başarımlar** bölümleri çok detaylı şekilde yenilendi:
+
+- **Yeni 3D Oyun Logosu & Açılış Ekranı:** Altıgen 24 ayar altın çerçeveli, safir kristalli, taçlı 3D **B** amblemi tüm Android yoğunluklarında (`mdpi`–`xxxhdpi`, uyarlamalı ikon ön/arka plan ve yuvarlak ikon), gece laciverti açılış ekranında (`launch_background.xml`) ve uygulama içi animasyonlu 3D logo bileşeninde (`Bilgili3DLogo`) yerini aldı.
+- **AI Stüdyo Kaldırıldı:** Alt gezinme çubuğu 4 sade sekmeye (`Oyna`, `Akademi`, `İlerleme`, `Ayarlar`) indi; ana ekrandaki AI Soru Stüdyosu kartı, CLIProxy özel konu üreticisi ve AI Öğrenme Koçu kaldırılıp çevrimdışı pekiştirme araçlarıyla değiştirildi.
+- **Bilgi Akademisi & Havuz Yenilemesi:** Tıklanabilir 3D istatistik şeridi, zorluk (`Kolay`/`Orta`/`Zor`) ve durum (`Çözülmemiş`/`Çözülmüş`/`Defterim`) filtreleri, 23 kategori izgarası, `Filtreyle Tur (10)` başlatıcısı, soru kartı içi anında kendini sına şıkları, 6 kutulu etkileşimli Leitner çubuk grafiği, gerçek 3D çevrilebilir kart çalışma modu (`_Studio3DFlashcardSheet`), defterden test başlatıcı, gruplanmış paket merkezi ve düzenlenebilir sınav çalışma profilleri eklendi.
+- **İlerleme & Başarımlar Yenilemesi:** 4 alt bölümlü (`Genel Bakış`, `Alan Ustalığı`, `Rozetler`, `Geçmiş`) 3D analiz stüdyosu; dinamik kariyer rütbesi, 6 KPI metrik kartı, özel çizimli doğruluk trend/alan grafiği, akıllı çalışma öneri kartı, 15 basamaklı Zirve Merdiveni karnesi, aranabilir/sıralanabilir 23 kategori ustalık kartları, canlı ilerleme çubuklu 16 rozet ve filtrelenebilir detaylı tur geçmişi eklendi.
+
+## 3.18.0
 
 3.18.0 sürümünde uygulamanın tüm arayüzü **Zirve Merdiveni × İstanbul 3D Stüdyo** tasarımına taşındı ve tüm modlara **çoklu kategori seçimi** eklendi:
 

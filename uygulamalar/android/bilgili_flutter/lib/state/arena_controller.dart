@@ -112,6 +112,9 @@ class ArenaBadgeInfo {
   final String description;
   final IconDataCompat iconKind;
   final bool unlocked;
+  final int current;
+  final int target;
+  final String group;
 
   const ArenaBadgeInfo({
     required this.id,
@@ -119,10 +122,33 @@ class ArenaBadgeInfo {
     required this.description,
     required this.iconKind,
     required this.unlocked,
+    this.current = 0,
+    this.target = 1,
+    this.group = 'Genel',
   });
+
+  double get progress =>
+      unlocked ? 1.0 : (target <= 0 ? 0.0 : (current / target).clamp(0.0, 1.0));
 }
 
-enum IconDataCompat { spark, curious, flawless, master, collector, aiExplorer, voiceStar, duelKing }
+enum IconDataCompat {
+  spark,
+  curious,
+  hunter,
+  encyclopedia,
+  flawless,
+  streak,
+  master,
+  sage,
+  explorer5,
+  explorer23,
+  zirveMid,
+  zirveTop,
+  collector,
+  dailyHabit,
+  voiceStar,
+  duelKing,
+}
 
 class ArenaController extends ChangeNotifier {
   final bool persistToDisk;
@@ -283,6 +309,44 @@ class ArenaController extends ChangeNotifier {
     return min(sum, totalPoolCount);
   }
 
+  /// Akademi havuzundaki etkin filtre kombinasyonuna uyan yaklaşık soru sayısını O(1) döndürür.
+  int countFilteredPool({
+    Set<Topic>? topics,
+    Difficulty? difficulty,
+    BloomLevel? bloom,
+    QuestionFormat format = QuestionFormat.mixed,
+    PoolCollection collection = PoolCollection.all,
+  }) {
+    final activeTopics = topics
+            ?.where((t) => t != Topic.mixed && t != Topic.custom)
+            .toSet() ??
+        const <Topic>{};
+    var total = 0;
+    if (collection != PoolCollection.personal) {
+      total += AdvancedCatalog.select(
+        topic: activeTopics.length == 1 ? activeTopics.first : Topic.mixed,
+        topics: activeTopics.length > 1 ? activeTopics : null,
+        format: format,
+        level: collection.level,
+        bloom: bloom,
+        difficulty: difficulty,
+      ).length;
+    }
+    if (collection.level == null && bloom == null) {
+      for (final q in _allQuestions) {
+        if (activeTopics.isNotEmpty) {
+          final hit = activeTopics.contains(q.category) ||
+              (activeTopics.contains(Topic.exam) && q.exam != null);
+          if (!hit) continue;
+        }
+        if (difficulty != null && q.difficulty != difficulty) continue;
+        if (!q.matchesFormat(format)) continue;
+        total++;
+      }
+    }
+    return total;
+  }
+
   List<ReviewCard> get dueReviewCards {
     final now = DateTime.now();
     return reviewDeck.where((c) => !c.due.isAfter(now)).toList();
@@ -300,9 +364,6 @@ class ArenaController extends ChangeNotifier {
     isLoadingPool = false;
     _syncBackgroundMusic();
     notifyListeners();
-
-    // Soft non-blocking discovery of CLIProxy models in background
-    if (!NativeBridge.testMode) unawaited(refreshLiveModels(silent: true));
   }
 
   void _mergeQuestions(Iterable<Question> incoming) {
@@ -680,16 +741,138 @@ class ArenaController extends ChangeNotifier {
     );
   }
 
-  bool startSpacedRepetitionReview() {
-    final due = dueReviewCards.isNotEmpty ? dueReviewCards : reviewDeck;
-    if (due.isEmpty) return false;
-    final qs = due.take(12).map((c) => c.question.shuffled(_rng)).toList();
+  bool startSpacedRepetitionReview() => startReviewRound();
+
+  bool startReviewRound({int? boxFilter, Topic? topicFilter, bool onlyDue = false}) {
+    Iterable<ReviewCard> source = onlyDue
+        ? dueReviewCards
+        : (dueReviewCards.isNotEmpty && boxFilter == null && topicFilter == null
+            ? dueReviewCards
+            : reviewDeck);
+    if (boxFilter != null) {
+      source = reviewDeck.where((c) => c.box == boxFilter);
+    }
+    if (topicFilter != null && topicFilter != Topic.mixed) {
+      source = source.where((c) => c.question.category == topicFilter);
+    }
+    final list = source.toList();
+    if (list.isEmpty) return false;
+    final qs = list.take(15).map((c) => c.question.shuffled(_rng)).toList();
+    final label = boxFilter != null
+        ? 'Tekrar · Kutu ${boxFilter + 1}'
+        : topicFilter != null && topicFilter != Topic.mixed
+            ? 'Tekrar · ${topicFilter.label}'
+            : 'Aralıklı Tekrar Turu';
     _beginRound(
-      title: 'Aralıklı Tekrar Turu',
-      cfg: RoundSetup(mode: GameMode.training, questionCount: qs.length),
+      title: label,
+      cfg: RoundSetup(
+        topic: topicFilter ?? Topic.mixed,
+        mode: GameMode.training,
+        questionCount: qs.length,
+      ),
       questions: qs,
     );
     return true;
+  }
+
+  bool startBookmarksRound({Topic? topicFilter, int maxQuestions = 15}) {
+    final list = (topicFilter == null || topicFilter == Topic.mixed)
+        ? List<Question>.of(savedBookmarks)
+        : savedBookmarks.where((q) => q.category == topicFilter).toList();
+    if (list.isEmpty) return false;
+    list.shuffle(_rng);
+    final qs = list.take(maxQuestions).map((q) => q.shuffled(_rng)).toList();
+    _beginRound(
+      title: topicFilter != null && topicFilter != Topic.mixed
+          ? 'Defterim · ${topicFilter.label}'
+          : 'Bilgi Defterim Turu',
+      cfg: RoundSetup(
+        topic: topicFilter ?? Topic.mixed,
+        mode: GameMode.training,
+        questionCount: qs.length,
+      ),
+      questions: qs,
+    );
+    return true;
+  }
+
+  bool startFilteredAcademyRound({
+    Set<Topic>? topics,
+    Difficulty? difficulty,
+    BloomLevel? bloom,
+    QuestionFormat format = QuestionFormat.mixed,
+    PoolCollection collection = PoolCollection.all,
+    int count = 10,
+    GameMode mode = GameMode.classic,
+  }) {
+    final activeTopics = topics
+            ?.where((t) => t != Topic.mixed && t != Topic.custom)
+            .toSet() ??
+        const <Topic>{};
+    final personalCandidates = <Question>[];
+    if (collection.level == null && bloom == null) {
+      for (final q in _allQuestions) {
+        if (reportedQuestionIds.contains(q.id)) continue;
+        if (activeTopics.isNotEmpty) {
+          final hit = activeTopics.contains(q.category) ||
+              (activeTopics.contains(Topic.exam) && q.exam != null);
+          if (!hit) continue;
+        }
+        if (difficulty != null && q.difficulty != difficulty) continue;
+        if (!q.matchesFormat(format)) continue;
+        personalCandidates.add(q);
+      }
+    }
+    final academic = collection == PoolCollection.personal
+        ? FamilyQuestions(const [])
+        : AdvancedCatalog.select(
+            topic: activeTopics.length == 1 ? activeTopics.first : Topic.mixed,
+            topics: activeTopics.length > 1 ? activeTopics : null,
+            format: format,
+            level: collection.level,
+            bloom: bloom,
+            difficulty: difficulty,
+          );
+    final pool = JoinedQuestions(personalCandidates, academic);
+    final picked = _pickRandomQuestions(pool, count, _rng);
+    if (picked.isEmpty) return false;
+    final parts = <String>[
+      if (activeTopics.length == 1)
+        activeTopics.first.label
+      else if (activeTopics.length > 1)
+        '${activeTopics.length} Kategori'
+      else
+        'Akademi Havuzu',
+      if (difficulty != null) difficulty.label,
+      if (bloom != null) bloom.label,
+    ];
+    _beginRound(
+      title: parts.join(' · '),
+      cfg: RoundSetup(
+        topic: activeTopics.length == 1 ? activeTopics.first : Topic.mixed,
+        selectedTopics: activeTopics,
+        difficulty: difficulty,
+        format: format,
+        mode: mode,
+        questionCount: picked.length,
+      ),
+      questions: picked,
+    );
+    return true;
+  }
+
+  bool startTopicPractice(Topic topic, {int count = 10, Difficulty? difficulty, GameMode mode = GameMode.classic}) {
+    final cfg = RoundSetup(
+      topic: topic,
+      selectedTopics: topic == Topic.mixed ? const {} : {topic},
+      difficulty: difficulty,
+      mode: mode,
+      questionCount: count,
+    );
+    return startConfiguredRound(
+      customTitle: '${topic.label} · Odak Çalışması',
+      overrideSetup: cfg,
+    );
   }
 
   void startDuelTournament(
@@ -1630,6 +1813,77 @@ class ArenaController extends ChangeNotifier {
     unawaited(_savePersistedState());
   }
 
+  void updateStudyProfile(StudyProfile updated) {
+    final idx = studyProfiles.indexWhere((p) => p.id == updated.id);
+    if (idx < 0) {
+      addStudyProfile(updated);
+      return;
+    }
+    final next = List<StudyProfile>.of(studyProfiles);
+    next[idx] = updated;
+    studyProfiles = next;
+    notifyListeners();
+    unawaited(_savePersistedState());
+  }
+
+  bool isInReviewDeck(Question q) =>
+      reviewDeck.any((c) => c.question.poolKey == q.poolKey);
+
+  void addQuestionToReviewDeck(Question q) {
+    if (isInReviewDeck(q)) return;
+    reviewDeck.insert(
+      0,
+      ReviewCard(
+        question: q,
+        box: 0,
+        attempts: 0,
+        correct: 0,
+        due: DateTime.now(),
+      ),
+    );
+    NativeBridge.playSfx('tick', enabled: sfxEnabled, haptics: hapticsEnabled, volume: 0.35);
+    notifyListeners();
+    unawaited(_savePersistedState());
+  }
+
+  void removeReviewCard(String questionId) {
+    final before = reviewDeck.length;
+    reviewDeck.removeWhere((c) => c.question.id == questionId);
+    if (reviewDeck.length != before) {
+      notifyListeners();
+      unawaited(_savePersistedState());
+    }
+  }
+
+  /// 3D Kart Çalışması sırasında tekil soru sonucunu Leitner kutularına işler.
+  void recordFlashcardReview(Question q, bool remembered) {
+    _updateReviewDeck(q, remembered);
+    playedQuestionIds.add(q.id);
+    categoryAnswered[q.category.label] = (categoryAnswered[q.category.label] ?? 0) + 1;
+    if (remembered) {
+      categoryCorrect[q.category.label] = (categoryCorrect[q.category.label] ?? 0) + 1;
+      xp += 5;
+    }
+    NativeBridge.playSfx(
+      remembered ? 'correct' : 'wrong',
+      enabled: sfxEnabled,
+      haptics: hapticsEnabled,
+      volume: 0.45,
+    );
+    notifyListeners();
+    unawaited(_savePersistedState());
+  }
+
+  bool deleteOfflinePack(String packId) {
+    if (packId.startsWith('builtin_sb_')) return false;
+    final idx = offlinePacks.indexWhere((p) => p.id == packId);
+    if (idx < 0) return false;
+    offlinePacks.removeAt(idx);
+    notifyListeners();
+    unawaited(_savePersistedState());
+    return true;
+  }
+
   // --- AI & CLIProxyAPI Actions ---
   void updateAiConfig(AiGatewayConfig next) {
     aiConfig = next;
@@ -1937,9 +2191,17 @@ class ArenaController extends ChangeNotifier {
 
   // --- Badges ---
   List<ArenaBadgeInfo> get badges {
-    final hasFlawless = history.any((h) => h.totalQuestions >= 5 && h.correctCount == h.totalQuestions);
+    final hasFlawless =
+        history.any((h) => h.totalQuestions >= 5 && h.correctCount == h.totalQuestions);
     final hasVoiceRound = history.any((h) => h.wasLiveVoice);
     final hasDuelRound = history.any((h) => h.duelStandings.isNotEmpty);
+    final bestRoundStreak = history.fold<int>(0, (acc, h) => max(acc, h.maxStreak));
+    final activeCategories = Topic.poolCategories
+        .where((t) => (categoryAnswered[t.label] ?? 0) > 0)
+        .length;
+    final totalCategories = Topic.poolCategories.length;
+    final solvedCount = playedQuestionIds.length;
+
     return [
       ArenaBadgeInfo(
         id: 'first_step',
@@ -1947,20 +2209,59 @@ class ArenaController extends ChangeNotifier {
         description: 'İlk bilgi turunu tamamla',
         iconKind: IconDataCompat.spark,
         unlocked: history.isNotEmpty,
+        current: min(history.length, 1),
+        target: 1,
+        group: 'Genel',
       ),
       ArenaBadgeInfo(
         id: 'curious',
         title: 'Meraklı Kaşif',
         description: 'En az 50 soruyu yanıtla',
         iconKind: IconDataCompat.curious,
-        unlocked: playedQuestionIds.length >= 50,
+        unlocked: solvedCount >= 50,
+        current: min(solvedCount, 50),
+        target: 50,
+        group: 'Akademi',
+      ),
+      ArenaBadgeInfo(
+        id: 'hunter',
+        title: 'Bilgi Avcısı',
+        description: '250 farklı soruyu keşfet',
+        iconKind: IconDataCompat.hunter,
+        unlocked: solvedCount >= 250,
+        current: min(solvedCount, 250),
+        target: 250,
+        group: 'Akademi',
+      ),
+      ArenaBadgeInfo(
+        id: 'encyclopedia',
+        title: 'Yaşayan Ansiklopedi',
+        description: '1.000 soruyu tamamla',
+        iconKind: IconDataCompat.encyclopedia,
+        unlocked: solvedCount >= 1000,
+        current: min(solvedCount, 1000),
+        target: 1000,
+        group: 'Akademi',
       ),
       ArenaBadgeInfo(
         id: 'flawless',
         title: 'Kusursuz Tur',
-        description: 'Bir turu %100 doğrulukla bitir',
+        description: 'En az 5 soruluk turu %100 doğrulukla bitir',
         iconKind: IconDataCompat.flawless,
         unlocked: hasFlawless,
+        current: hasFlawless ? 1 : 0,
+        target: 1,
+        group: 'Ustalık',
+      ),
+      ArenaBadgeInfo(
+        id: 'streak_10',
+        title: 'Ateşli Seri',
+        description: 'Tek turda üst üste 10 doğru yanıt ver',
+        iconKind: IconDataCompat.streak,
+        unlocked: bestRoundStreak >= 10,
+        current: min(bestRoundStreak, 10),
+        target: 10,
+        group: 'Ustalık',
       ),
       ArenaBadgeInfo(
         id: 'master',
@@ -1968,6 +2269,59 @@ class ArenaController extends ChangeNotifier {
         description: 'Seviye 5 ve üzerine ulaş',
         iconKind: IconDataCompat.master,
         unlocked: level >= 5,
+        current: min(level, 5),
+        target: 5,
+        group: 'Ustalık',
+      ),
+      ArenaBadgeInfo(
+        id: 'sage',
+        title: 'İstanbul Bilgesi',
+        description: 'Seviye 15 unvanına yüksel',
+        iconKind: IconDataCompat.sage,
+        unlocked: level >= 15,
+        current: min(level, 15),
+        target: 15,
+        group: 'Ustalık',
+      ),
+      ArenaBadgeInfo(
+        id: 'explorer_5',
+        title: 'Çok Yönlü Zihin',
+        description: 'En az 5 farklı kategoride soru çöz',
+        iconKind: IconDataCompat.explorer5,
+        unlocked: activeCategories >= 5,
+        current: min(activeCategories, 5),
+        target: 5,
+        group: 'Akademi',
+      ),
+      ArenaBadgeInfo(
+        id: 'explorer_23',
+        title: '23 Alan Kaşifi',
+        description: 'Tüm $totalCategories kategorinin her birinde soru çöz',
+        iconKind: IconDataCompat.explorer23,
+        unlocked: activeCategories >= totalCategories,
+        current: activeCategories,
+        target: totalCategories,
+        group: 'Akademi',
+      ),
+      ArenaBadgeInfo(
+        id: 'zirve_mid',
+        title: 'Zirve Yolcusu',
+        description: 'Zirve Merdiveni\'nde 5. barajı geç',
+        iconKind: IconDataCompat.zirveMid,
+        unlocked: zirveEnUstBasamak >= 5,
+        current: min(zirveEnUstBasamak, 5),
+        target: 5,
+        group: 'Zirve',
+      ),
+      ArenaBadgeInfo(
+        id: 'zirve_top',
+        title: 'Zirve Şampiyonu',
+        description: 'Zirve Merdiveni\'nde 10. barajı aş',
+        iconKind: IconDataCompat.zirveTop,
+        unlocked: zirveEnUstBasamak >= 10,
+        current: min(zirveEnUstBasamak, 10),
+        target: 10,
+        group: 'Zirve',
       ),
       ArenaBadgeInfo(
         id: 'collector',
@@ -1975,14 +2329,19 @@ class ArenaController extends ChangeNotifier {
         description: 'Bilgi Defterine 5 soru kaydet',
         iconKind: IconDataCompat.collector,
         unlocked: savedBookmarks.length >= 5,
+        current: min(savedBookmarks.length, 5),
+        target: 5,
+        group: 'Akademi',
       ),
       ArenaBadgeInfo(
-        id: 'ai_explorer',
-        title: 'Model Kaşifi',
-        description: 'CLIProxy / AI ile özgün soru paketi üret',
-        iconKind: IconDataCompat.aiExplorer,
-        unlocked: aiGeneratedRoundCount >= 1 ||
-            offlinePacks.any((p) => !p.id.startsWith('builtin_sb_')),
+        id: 'daily_habit',
+        title: 'İstikrar Yıldızı',
+        description: '3 gün üst üste çalışma serisi yakala',
+        iconKind: IconDataCompat.dailyHabit,
+        unlocked: dailyStreak >= 3,
+        current: min(dailyStreak, 3),
+        target: 3,
+        group: 'Genel',
       ),
       ArenaBadgeInfo(
         id: 'voice_star',
@@ -1990,6 +2349,9 @@ class ArenaController extends ChangeNotifier {
         description: 'Canlı Sesli Yarışma turu tamamla',
         iconKind: IconDataCompat.voiceStar,
         unlocked: hasVoiceRound,
+        current: hasVoiceRound ? 1 : 0,
+        target: 1,
+        group: 'Genel',
       ),
       ArenaBadgeInfo(
         id: 'duel_king',
@@ -1997,6 +2359,9 @@ class ArenaController extends ChangeNotifier {
         description: 'Çok oyunculu bir düello turnuvası bitir',
         iconKind: IconDataCompat.duelKing,
         unlocked: hasDuelRound,
+        current: hasDuelRound ? 1 : 0,
+        target: 1,
+        group: 'Genel',
       ),
     ];
   }

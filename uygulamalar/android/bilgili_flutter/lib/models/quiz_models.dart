@@ -91,7 +91,7 @@ enum Difficulty {
 
 enum GameMode {
   classic('Klasik', '15 sn süre · 3 joker hakkı', Icons.bolt_rounded, 15, true),
-  training('Öğren', 'Süresiz · Anında açıklama & AI Koç', Icons.psychology_rounded, 0, false),
+  training('Öğren', 'Süresiz · Anında açıklama & pekiştirme', Icons.psychology_rounded, 0, false),
   sprint('Hız Turu', '8 sn yüksek tempo refleks turu', Icons.speed_rounded, 8, true),
   timed('Dakika Turu', 'Ortak tur sayacında en çok doğru', Icons.timer_rounded, 0, true),
   stages('Etaplı Tur', 'Isınma 20sn → Odak 15sn → Final 10sn', Icons.stairs_rounded, 20, true);

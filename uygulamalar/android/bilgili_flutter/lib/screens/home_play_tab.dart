@@ -160,14 +160,14 @@ class _ZirveKarti extends StatelessWidget {
 
 class HomePlayTab extends StatefulWidget {
   final ArenaController controller;
-  final VoidCallback onOpenAiStudioTab;
   final VoidCallback onOpenAcademyReview;
+  final VoidCallback onOpenProgressTab;
 
   const HomePlayTab({
     super.key,
     required this.controller,
-    required this.onOpenAiStudioTab,
     required this.onOpenAcademyReview,
+    required this.onOpenProgressTab,
   });
 
   @override
@@ -175,8 +175,6 @@ class HomePlayTab extends StatefulWidget {
 }
 
 class _HomePlayTabState extends State<HomePlayTab> {
-  late final TextEditingController _customPromptCtrl;
-
   static const _sayisalBundle = {
     Topic.mathematics,
     Topic.physics,
@@ -205,18 +203,6 @@ class _HomePlayTabState extends State<HomePlayTab> {
     Topic.sport,
     Topic.nature,
   };
-
-  @override
-  void initState() {
-    super.initState();
-    _customPromptCtrl = TextEditingController(text: widget.controller.setup.customTopicPrompt);
-  }
-
-  @override
-  void dispose() {
-    _customPromptCtrl.dispose();
-    super.dispose();
-  }
 
   void _openDuelDialog(BuildContext context) {
     final c1 = TextEditingController(text: 'Oyuncu 1');
@@ -542,13 +528,13 @@ class _HomePlayTabState extends State<HomePlayTab> {
     const accent = StudioPalette.gold;
     final setup = ctrl.setup;
     final selectedSet = setup.effectiveTopics;
-    final topics = [Topic.mixed, ...ctrl.availableTopics, Topic.custom];
+    final topics = [Topic.mixed, ...ctrl.availableTopics];
     final headerImg = wp.assetPath ?? 'assets/images/istanbul_ortakoy.webp';
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 104),
       children: [
-        // 1. İstanbul × Zirve Merdiveni Üst Stüdyo Başlığı
+        // 1. İstanbul × Zirve Merdiveni Üst Stüdyo Başlığı + 3D Oyun Logosu
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
@@ -587,64 +573,70 @@ class _HomePlayTabState extends State<HomePlayTab> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 14),
                   child: Row(
                     children: [
+                      const Bilgili3DLogo(size: 46, showHalo: true),
+                      const SizedBox(width: 9),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            const Text(
+                              'Bilgili',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 23,
+                                fontWeight: FontWeight.w900,
+                                color: StudioPalette.goldBright,
+                                letterSpacing: -0.4,
+                                height: 1.08,
+                                shadows: [Shadow(color: Colors.black87, blurRadius: 8)],
+                              ),
+                            ),
+                            const SizedBox(height: 3),
                             Row(
                               children: [
-                                const Text(
-                                  'Bilgili',
-                                  style: TextStyle(
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.w900,
-                                    color: StudioPalette.goldBright,
-                                    letterSpacing: -0.4,
-                                    shadows: [Shadow(color: Colors.black87, blurRadius: 8)],
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6.5, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [StudioPalette.navyTop, StudioPalette.navyDark],
+                                    ),
+                                    borderRadius: BorderRadius.circular(99),
+                                    border: Border.all(color: StudioPalette.gold, width: 1.1),
+                                  ),
+                                  child: Text(
+                                    '${ctrl.totalPoolCount} Soru',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w900,
+                                      color: StudioPalette.goldBright,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [StudioPalette.navyTop, StudioPalette.navyDark],
-                                      ),
-                                      borderRadius: BorderRadius.circular(99),
-                                      border: Border.all(color: StudioPalette.gold, width: 1.2),
-                                    ),
-                                    child: Text(
-                                      '${ctrl.totalPoolCount} Soru',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w900,
-                                        color: StudioPalette.goldBright,
-                                      ),
+                                const SizedBox(width: 5),
+                                Expanded(
+                                  child: Text(
+                                    wp.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white.withValues(alpha: 0.85),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Zirve Stüdyosu · ${wp.title}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white.withValues(alpha: 0.85),
-                              ),
-                            ),
                           ],
                         ),
                       ),
+                      const SizedBox(width: 4),
                       ArenaPressDepth(
                         depthOffset: 1.6,
                         child: IconButton(
@@ -653,11 +645,12 @@ class _HomePlayTabState extends State<HomePlayTab> {
                           style: IconButton.styleFrom(
                             backgroundColor: StudioPalette.navyTop.withValues(alpha: 0.85),
                             side: const BorderSide(color: StudioPalette.gold, width: 1.3),
+                            visualDensity: VisualDensity.compact,
                           ),
-                          icon: const Icon(Icons.wallpaper_rounded, color: StudioPalette.goldBright, size: 20),
+                          icon: const Icon(Icons.wallpaper_rounded, color: StudioPalette.goldBright, size: 19),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       LevelMedallion(level: ctrl.level),
                     ],
                   ),
@@ -844,18 +837,18 @@ class _HomePlayTabState extends State<HomePlayTab> {
         ),
         const SizedBox(height: 10),
 
-        // 6. AI Soru Stüdyosu & Düello Arenası
+        // 6. İlerleme & Analiz + Düello Arenası
         Row(
           children: [
             Expanded(
               child: ArenaImageActionButton(
-                title: 'AI Soru Stüdyosu',
-                subtitle: 'CLIProxy · Tüm Modeller',
-                badge: '${ctrl.availableModels.length} MODEL',
-                icon: Icons.auto_fix_high_rounded,
+                title: 'İlerleme & Analiz',
+                subtitle: 'Ustalık · Rozetler · Grafikler',
+                badge: 'SVY ${ctrl.level}',
+                icon: Icons.workspace_premium_rounded,
                 imageAsset: 'assets/images/istanbul_bogaz.webp',
                 accent: StudioPalette.sapphire,
-                onTap: widget.onOpenAiStudioTab,
+                onTap: widget.onOpenProgressTab,
               ),
             ),
             const SizedBox(width: 10),
@@ -1448,63 +1441,6 @@ class _HomePlayTabState extends State<HomePlayTab> {
                   labelBuilder: (l) => l ?? 'Tüm Dersler',
                   onSelected: (l) => ctrl.updateSetup(setup.copyWith(lesson: () => l)),
                   accent: Topic.exam.accent,
-                ),
-              ],
-            ),
-          ),
-        ],
-
-        // Dynamic Custom Topic AI Prompt
-        if (setup.topic == Topic.custom && selectedSet.isEmpty) ...[
-          const SizedBox(height: 14),
-          ArenaGlassCard(
-            tint: Topic.custom.accent,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text(
-                  'Özel Konu ile Yapay Zekâ Turu',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w900,
-                    color: StudioPalette.goldBright,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _customPromptCtrl,
-                  onChanged: (v) => ctrl.updateSetup(setup.copyWith(customTopicPrompt: v)),
-                  style: const TextStyle(color: Colors.white, fontSize: 13.5),
-                  decoration: InputDecoration(
-                    hintText: 'Örn: İstanbul Tarihi, Kuantum Fiziği, Dünya Kupası...',
-                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 12.5),
-                    filled: true,
-                    fillColor: StudioPalette.navyDark.withValues(alpha: 0.8),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: StudioPalette.gold.withValues(alpha: 0.4)),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Studio3DButton(
-                  label: ctrl.isGeneratingAiQuestions
-                      ? ctrl.aiGenerationStatus
-                      : 'CLIProxy ile 10 Soru Üret ve Başla',
-                  icon: Icons.auto_awesome_rounded,
-                  expand: true,
-                  onPressed: ctrl.isGeneratingAiQuestions
-                      ? null
-                      : () {
-                          ctrl.generateAiQuestionsPack(
-                            topic: Topic.custom,
-                            difficulty: setup.difficulty ?? Difficulty.medium,
-                            format: setup.format,
-                            count: 10,
-                            customPrompt: _customPromptCtrl.text,
-                            startImmediately: true,
-                          );
-                        },
                 ),
               ],
             ),

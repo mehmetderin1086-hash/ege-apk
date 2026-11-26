@@ -1976,11 +1976,16 @@ class ArenaSceneHeader extends StatelessWidget {
   final String title;
   final String description;
   final String scene;
+  final Widget? trailing;
+  final List<Widget>? chips;
+
   const ArenaSceneHeader({
     super.key,
     required this.title,
     required this.description,
     required this.scene,
+    this.trailing,
+    this.chips,
   });
 
   String get _istanbulAsset => switch (scene) {
@@ -1991,6 +1996,7 @@ class ArenaSceneHeader extends StatelessWidget {
         'atrium' => 'assets/images/istanbul_ortakoy.webp',
         'galata' => 'assets/images/istanbul_galata.webp',
         'kiz_kulesi' => 'assets/images/istanbul_kiz_kulesi.webp',
+        'bogaz' => 'assets/images/istanbul_bogaz.webp',
         _ => 'assets/images/istanbul_ortakoy.webp',
       };
 
@@ -2025,9 +2031,26 @@ class ArenaSceneHeader extends StatelessWidget {
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                     colors: [
-                      const Color(0xEE040826),
-                      const Color(0xC2091248),
-                      const Color(0x660B1450),
+                      const Color(0xF0040826),
+                      const Color(0xC8091248),
+                      const Color(0x700B1450),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 20,
+              right: 20,
+              height: 1.6,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      StudioPalette.goldBright.withValues(alpha: 0.65),
+                      Colors.transparent,
                     ],
                   ),
                 ),
@@ -2051,46 +2074,75 @@ class ArenaSceneHeader extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 18, 20, 18),
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Icon(Icons.auto_awesome_rounded,
-                          color: StudioPalette.goldBright, size: 15),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'İSTANBUL ZİRVE STÜDYOSU',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.2,
-                          color: StudioPalette.goldBright,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.auto_awesome_rounded,
+                                    color: StudioPalette.goldBright, size: 14),
+                                SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    'İSTANBUL ZİRVE STÜDYOSU',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.2,
+                                      color: StudioPalette.goldBright,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                fontSize: 21.5,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                letterSpacing: -0.3,
+                                shadows: [Shadow(color: Colors.black87, blurRadius: 8)],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              description,
+                              style: TextStyle(
+                                fontSize: 11.8,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white.withValues(alpha: 0.86),
+                                height: 1.3,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      if (trailing != null) ...[
+                        const SizedBox(width: 12),
+                        trailing!,
+                      ],
                     ],
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: -0.3,
-                      shadows: [Shadow(color: Colors.black87, blurRadius: 8)],
+                  if (chips != null && chips!.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: chips!,
                     ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white.withValues(alpha: 0.86),
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -2100,3 +2152,399 @@ class ArenaSceneHeader extends StatelessWidget {
     );
   }
 }
+
+/// Bilgili 3D Altın-Safir Altıgen Oyun Logosu (animasyonlu 3D eğim & parlama).
+class Bilgili3DLogo extends StatefulWidget {
+  final double size;
+  final bool animate;
+  final bool showHalo;
+
+  const Bilgili3DLogo({
+    super.key,
+    this.size = 54,
+    this.animate = true,
+    this.showHalo = true,
+  });
+
+  @override
+  State<Bilgili3DLogo> createState() => _Bilgili3DLogoState();
+}
+
+class _Bilgili3DLogoState extends State<Bilgili3DLogo>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 7),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(covariant Bilgili3DLogo oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _sync();
+  }
+
+  void _sync() {
+    if (!widget.animate || MediaQuery.disableAnimationsOf(context)) {
+      _ctrl.stop();
+    } else if (!_ctrl.isAnimating) {
+      _ctrl.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final active = widget.animate && !MediaQuery.disableAnimationsOf(context);
+    final img = Image.asset(
+      'assets/images/app_logo_3d.png',
+      width: widget.size,
+      height: widget.size,
+      fit: BoxFit.contain,
+      excludeFromSemantics: true,
+      errorBuilder: (_, _, _) => Image.asset(
+        'assets/images/app_icon.png',
+        width: widget.size,
+        height: widget.size,
+        fit: BoxFit.contain,
+        excludeFromSemantics: true,
+      ),
+    );
+
+    final badge = SizedBox(
+      width: widget.size + (widget.showHalo ? 8 : 0),
+      height: widget.size + (widget.showHalo ? 8 : 0),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (widget.showHalo)
+            Container(
+              width: widget.size * 0.94,
+              height: widget.size * 0.94,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: StudioPalette.gold.withValues(alpha: 0.42),
+                    blurRadius: widget.size * 0.34,
+                    spreadRadius: 1,
+                  ),
+                  BoxShadow(
+                    color: StudioPalette.sapphire.withValues(alpha: 0.25),
+                    blurRadius: widget.size * 0.46,
+                  ),
+                ],
+              ),
+            ),
+          img,
+        ],
+      ),
+    );
+
+    if (!active) return badge;
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, child) {
+        final phase = _ctrl.value * 2 * pi;
+        final rotY = sin(phase) * 0.16;
+        final rotX = cos(phase * 0.8) * 0.06;
+        final bobY = sin(phase * 1.5) * 2.2;
+        return Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.identity()
+            ..setEntry(3, 2, 0.0022)
+            ..rotateY(rotY)
+            ..rotateX(rotX)
+            ..translateByDouble(0.0, bobY, 0.0, 1.0),
+          child: child,
+        );
+      },
+      child: badge,
+    );
+  }
+}
+
+/// 3D parlak cam yansımalı ilerleme çubuğu.
+class Studio3DProgressBar extends StatelessWidget {
+  final double value;
+  final Color color;
+  final Color? endColor;
+  final double height;
+  final Color? backgroundColor;
+
+  const Studio3DProgressBar({
+    super.key,
+    required this.value,
+    this.color = StudioPalette.gold,
+    this.endColor,
+    this.height = 8,
+    this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final clamped = value.clamp(0.0, 1.0);
+    final finish = endColor ?? Color.lerp(color, Colors.white, 0.32)!;
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(99),
+        color: backgroundColor ?? Colors.white.withValues(alpha: 0.09),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 0.8),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(99),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final fillWidth = constraints.maxWidth * clamped;
+            if (fillWidth <= 0.5) return const SizedBox.shrink();
+            return Align(
+              alignment: Alignment.centerLeft,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 360),
+                curve: Curves.easeOutCubic,
+                width: max(height * 0.8, fillWidth),
+                height: height,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(99),
+                  gradient: LinearGradient(colors: [color, finish]),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.55),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: Container(
+                    height: max(1.2, height * 0.28),
+                    margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(99),
+                      color: Colors.white.withValues(alpha: 0.42),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// Altın vurgulu bölüm başlığı.
+class Studio3DSectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? badge;
+  final Widget? trailing;
+
+  const Studio3DSectionHeader({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.badge,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [StudioPalette.navyLight, StudioPalette.navyDark],
+            ),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: StudioPalette.gold.withValues(alpha: 0.65), width: 1.1),
+          ),
+          child: Icon(icon, size: 16, color: StudioPalette.goldBright),
+        ),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w900,
+                    color: StudioPalette.goldBright,
+                    letterSpacing: -0.1,
+                  ),
+                ),
+              ),
+              if (badge != null) ...[
+                const SizedBox(width: 7),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: StudioPalette.gold.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(99),
+                    border: Border.all(color: StudioPalette.gold.withValues(alpha: 0.5)),
+                  ),
+                  child: Text(
+                    badge!,
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      color: StudioPalette.goldBright,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (trailing != null) ...[
+          const SizedBox(width: 6),
+          trailing!,
+        ],
+      ],
+    );
+  }
+}
+
+/// 3D KPI metrik kutucuğu (Akademi & İlerleme panoları için).
+class Studio3DMetricTile extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  final String? sublabel;
+  final Color accent;
+  final VoidCallback? onTap;
+
+  const Studio3DMetricTile({
+    super.key,
+    required this.icon,
+    required this.value,
+    required this.label,
+    this.sublabel,
+    required this.accent,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final content = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 11),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.alphaBlend(accent.withValues(alpha: 0.16), const Color(0xEE152270)),
+            const Color(0xF0060C30),
+          ],
+        ),
+        border: Border.all(color: accent.withValues(alpha: 0.45), width: 1.25),
+        boxShadow: [
+          BoxShadow(
+            color: Color.lerp(accent, const Color(0xFF010310), 0.78)!,
+            offset: const Offset(0, 3.5),
+          ),
+          BoxShadow(
+            color: accent.withValues(alpha: 0.14),
+            blurRadius: 12,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(9),
+                  border: Border.all(color: accent.withValues(alpha: 0.45)),
+                ),
+                child: Icon(icon, size: 14, color: accent),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white.withValues(alpha: 0.76),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 17.5,
+              fontWeight: FontWeight.w900,
+              color: accent,
+              letterSpacing: -0.3,
+            ),
+          ),
+          if (sublabel != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              sublabel!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: Colors.white.withValues(alpha: 0.62),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+
+    if (onTap == null) return content;
+    return ArenaPressDepth(
+      depthOffset: 1.8,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
+          child: content,
+        ),
+      ),
+    );
+  }
+}
+

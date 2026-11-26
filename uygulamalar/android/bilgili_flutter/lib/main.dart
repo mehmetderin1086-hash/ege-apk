@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'screens/academy_pool_tab.dart';
 import 'screens/home_play_tab.dart';
-import 'screens/model_center_tab.dart';
 import 'screens/progress_tab.dart';
 import 'screens/quiz_session_screen.dart';
 import 'screens/settings_tab.dart';
@@ -94,7 +93,7 @@ class _BilgiliAppState extends State<BilgiliApp> {
               labelTextStyle: WidgetStateProperty.resolveWith((states) {
                 final sel = states.contains(WidgetState.selected);
                 return TextStyle(
-                  fontSize: 11,
+                  fontSize: 11.5,
                   fontWeight: sel ? FontWeight.w900 : FontWeight.w600,
                   color: sel ? StudioPalette.goldBright : Colors.white70,
                 );
@@ -127,12 +126,11 @@ class _BilgiliAppState extends State<BilgiliApp> {
                             enabled: _tabIndex == 0,
                             child: HomePlayTab(
                               controller: ctrl,
-                              onOpenAiStudioTab: () => setState(() => _tabIndex = 2),
                               onOpenAcademyReview: () => setState(() => _tabIndex = 1),
+                              onOpenProgressTab: () => setState(() => _tabIndex = 2),
                             ),
                           ),
                           AcademyPoolTab(controller: ctrl),
-                          ModelCenterTab(controller: ctrl),
                           ProgressTab(controller: ctrl),
                           SettingsTab(controller: ctrl),
                         ],
@@ -143,6 +141,7 @@ class _BilgiliAppState extends State<BilgiliApp> {
                 ? null
                 : _StudioBottomNav(
                     selectedIndex: _tabIndex,
+                    dueReviewCount: ctrl.dueReviewCards.length,
                     onSelect: (idx) => setState(() => _tabIndex = idx),
                   ),
           ),
@@ -152,15 +151,34 @@ class _BilgiliAppState extends State<BilgiliApp> {
   }
 }
 
-/// Zirve Merdiveni tarzı 3D altın kenarlıklı stüdyo alt gezinme barı.
+/// Zirve Merdiveni tarzı 3D altın kenarlıklı 4 sekmeli stüdyo alt gezinme barı.
 class _StudioBottomNav extends StatelessWidget {
   final int selectedIndex;
+  final int dueReviewCount;
   final ValueChanged<int> onSelect;
 
   const _StudioBottomNav({
     required this.selectedIndex,
+    required this.dueReviewCount,
     required this.onSelect,
   });
+
+  Widget _academyIcon(bool selected) {
+    final base = Icon(
+      selected ? Icons.school_rounded : Icons.school_outlined,
+      color: selected ? StudioPalette.goldBright : null,
+    );
+    if (dueReviewCount <= 0) return base;
+    return Badge(
+      backgroundColor: StudioPalette.amber,
+      textColor: StudioPalette.night,
+      label: Text(
+        dueReviewCount > 99 ? '99+' : '$dueReviewCount',
+        style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900),
+      ),
+      child: base,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -199,28 +217,23 @@ class _StudioBottomNav extends StatelessWidget {
         selectedIndex: selectedIndex,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         onDestinationSelected: onSelect,
-        destinations: const [
-          NavigationDestination(
+        destinations: [
+          const NavigationDestination(
             icon: Icon(Icons.play_circle_outline_rounded),
             selectedIcon: Icon(Icons.play_circle_fill_rounded, color: StudioPalette.goldBright),
             label: 'Oyna',
           ),
           NavigationDestination(
-            icon: Icon(Icons.school_outlined),
-            selectedIcon: Icon(Icons.school_rounded, color: StudioPalette.goldBright),
+            icon: _academyIcon(false),
+            selectedIcon: _academyIcon(true),
             label: 'Akademi',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.auto_awesome_outlined),
-            selectedIcon: Icon(Icons.auto_awesome_rounded, color: StudioPalette.goldBright),
-            label: 'AI Stüdyo',
-          ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.workspace_premium_outlined),
             selectedIcon: Icon(Icons.workspace_premium_rounded, color: StudioPalette.goldBright),
             label: 'İlerleme',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.tune_rounded),
             selectedIcon: Icon(Icons.tune_rounded, color: StudioPalette.goldBright),
             label: 'Ayarlar',
