@@ -111,6 +111,24 @@ void main() {
                     File(visual.assetPath!).existsSync(),
                 'Resim dosyası',
               );
+            case VisualKind.pieChart:
+              require(
+                visual.values.length >= 2 &&
+                    visual.values.length == visual.labels.length,
+                'Pasta grafiği verisi',
+              );
+            case VisualKind.clock:
+              require(visual.values.length >= 2, 'Saat verisi');
+            case VisualKind.flag:
+              require(visual.imageID?.trim().isNotEmpty == true, 'Bayrak kodu');
+            case VisualKind.musicStaff:
+              require(visual.labels.isNotEmpty, 'Porte notaları');
+            case VisualKind.coordPlane:
+              require(visual.elements.isNotEmpty, 'Koordinat elemanları');
+            case VisualKind.atom:
+              require(visual.values.length >= 3, 'Atom katmanları');
+            case VisualKind.matrix:
+              require(visual.rows.length == 3, '3x3 matris verisi');
           }
           add(visuals, visual.kind.name);
         }

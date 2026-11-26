@@ -9,14 +9,15 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('clean installation has exactly 8,391 high-school multiple-choice questions', () async {
+  test('clean installation has exact high-school + ozgun + 10k studio bank count', () async {
     NativeBridge.testMode = true;
     final controller = ArenaController(persistToDisk: false);
     addTearDown(controller.dispose);
     await controller.initialize();
     expect(controller.personalQuestions, isEmpty);
-    expect(controller.totalPoolCount, 8391 + AdvancedCatalog.ozgun.length);
-    expect(AdvancedCatalog.all.length, 8391 + AdvancedCatalog.ozgun.length);
+    final expected = 8391 + AdvancedCatalog.ozgun.length + AdvancedCatalog.studio10k.length;
+    expect(controller.totalPoolCount, expected);
+    expect(AdvancedCatalog.all.length, expected);
     expect(controller.allQuestions.last.sourceModel, isNotEmpty);
   });
 
@@ -74,7 +75,10 @@ void main() {
       expect(controller.creationPortfolio['my-design'], 'İki grubu karşılaştırırım.');
       expect(controller.savedBookmarks.single.id, official['id']);
       expect(controller.personalQuestions.single.id, mine['id']);
-      expect(controller.totalPoolCount, 8392 + AdvancedCatalog.ozgun.length);
+      expect(
+        controller.totalPoolCount,
+        8392 + AdvancedCatalog.ozgun.length + AdvancedCatalog.studio10k.length,
+      );
     }
   });
 }

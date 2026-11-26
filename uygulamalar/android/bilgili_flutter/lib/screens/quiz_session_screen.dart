@@ -331,7 +331,8 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                                     question: q,
                                     accent: StudioPalette.gold,
                                     revealed: round.revealed,
-                                    onPlayListeningAudio: () => ctrl.speakActivityAudio(q),
+                                    onPlayListeningAudio: (rate) =>
+                                        ctrl.speakActivityAudio(q, rate: rate),
                                     onStartPronunciationMic: () =>
                                         _triggerSingleVoiceAnswer(context, pronunciation: true),
                                     onSubmitSequence: (seq) => ctrl.submitActivitySequence(seq),
@@ -388,14 +389,24 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                       if (q.responseType == ResponseType.fill && !round.revealed)
                         _WrittenInput(
                           key: ValueKey('fill-${q.id}'),
-                          label: 'Yanıtını yaz (varsa birimiyle)',
-                          action: 'Yanıtı kontrol et',
+                          label: q.isDictation
+                              ? 'Duyduğun eksik İngilizce ifadeyi yaz'
+                              : 'Yanıtını yaz (varsa birimiyle)',
+                          action: q.isDictation ? 'Dikteyi Kontrol Et' : 'Yanıtı kontrol et',
+                          hintAnswer: q.correctAnswerText,
                           onSubmit: ctrl.submitWrittenAnswer,
                         ),
                       if (!round.needsCreation &&
                           q.multiSelect == null &&
                           !q.isInteractiveSequence &&
-                          q.responseType != ResponseType.fill)
+                          q.responseType == ResponseType.trueFalse &&
+                          q.options.length == 2)
+                        _buildTrueFalseRow(ctrl, round, q),
+                      if (!round.needsCreation &&
+                          q.multiSelect == null &&
+                          !q.isInteractiveSequence &&
+                          q.responseType != ResponseType.fill &&
+                          !(q.responseType == ResponseType.trueFalse && q.options.length == 2))
                         for (var i = 0; i < q.options.length; i++)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 11),
@@ -1141,6 +1152,85 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
     );
   }
 
+  Widget _buildTrueFalseRow(ArenaController ctrl, ActiveRound round, Question q) {
+    final lastAns = round.revealed && round.answers.isNotEmpty ? round.answers.last : null;
+    Widget card(int idx, String label, IconData icon, Color baseColor) {
+      final isCorrectOpt = idx == q.answer;
+      final isSelected = lastAns?.selectedOption == idx;
+      Color borderColor = baseColor.withValues(alpha: 0.72);
+      Color bgTop = StudioPalette.navyTop;
+      Color bgBot = StudioPalette.navyDark;
+      if (round.revealed) {
+        if (isCorrectOpt) {
+          borderColor = const Color(0xFF4BE085);
+          bgTop = const Color(0xFF134E34);
+          bgBot = const Color(0xFF0A2E1E);
+        } else if (isSelected) {
+          borderColor = const Color(0xFFFF7B89);
+          bgTop = const Color(0xFF5B1B27);
+          bgBot = const Color(0xFF330C14);
+        } else {
+          borderColor = Colors.white24;
+        }
+      }
+      return Expanded(
+        child: ArenaPressDepth(
+          depthOffset: 2.0,
+          child: InkWell(
+            onTap: round.revealed ? null : () => ctrl.submitChoice(idx),
+            borderRadius: BorderRadius.circular(18),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [bgTop, bgBot],
+                ),
+                border: Border.all(color: borderColor, width: 1.8),
+                boxShadow: [
+                  BoxShadow(
+                    color: borderColor.withValues(alpha: 0.22),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 32, color: round.revealed && isCorrectOpt ? const Color(0xFF4BE085) : baseColor),
+                  const SizedBox(height: 8),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          card(0, q.options[0], Icons.check_circle_rounded, const Color(0xFF4BE085)),
+          const SizedBox(width: 12),
+          card(1, q.options[1], Icons.cancel_rounded, const Color(0xFFFF7B89)),
+        ],
+      ),
+    );
+  }
+
   Widget _resStat(String label, String value) {
     return Column(
       children: [
@@ -1161,6 +1251,7 @@ class _WrittenInput extends StatefulWidget {
   final String label;
   final String action;
   final String initial;
+  final String? hintAnswer;
   final bool long;
   final ValueChanged<String> onSubmit;
   const _WrittenInput({
@@ -1169,6 +1260,7 @@ class _WrittenInput extends StatefulWidget {
     required this.action,
     required this.onSubmit,
     this.initial = '',
+    this.hintAnswer,
     this.long = false,
   });
 
@@ -1178,6 +1270,7 @@ class _WrittenInput extends StatefulWidget {
 
 class _WrittenInputState extends State<_WrittenInput> {
   late final TextEditingController _text = TextEditingController(text: widget.initial);
+  bool _showHint = false;
 
   @override
   void dispose() {
@@ -1192,6 +1285,16 @@ class _WrittenInputState extends State<_WrittenInput> {
     widget.onSubmit(value);
   }
 
+  String _maskHint(String answer) {
+    final words = answer.trim().split(RegExp(r'\s+'));
+    final masked = words.map((w) {
+      if (w.length <= 1) return w;
+      return '${w[0]}${' _' * (w.length - 1)}';
+    }).join('   ');
+    final charCount = answer.replaceAll(' ', '').length;
+    return '$masked ($charCount karakter)';
+  }
+
   @override
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1201,13 +1304,14 @@ class _WrittenInputState extends State<_WrittenInput> {
             minLines: widget.long ? 3 : 1,
             maxLines: widget.long ? 8 : 1,
             autocorrect: false,
-            style: const TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
             onChanged: (_) => setState(() {}),
             onSubmitted: widget.long ? null : (_) => _send(),
             decoration: InputDecoration(
               labelText: widget.label,
+              labelStyle: const TextStyle(color: Colors.white70, fontSize: 13),
               filled: true,
-              fillColor: StudioPalette.navyDark.withValues(alpha: 0.8),
+              fillColor: StudioPalette.navyDark.withValues(alpha: 0.85),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide(color: StudioPalette.gold.withValues(alpha: 0.45)),
@@ -1218,6 +1322,42 @@ class _WrittenInputState extends State<_WrittenInput> {
               ),
             ),
           ),
+          if (widget.hintAnswer != null && widget.hintAnswer!.trim().isNotEmpty && !widget.long) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                if (_showHint)
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CE0D2).withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFF4CE0D2).withValues(alpha: 0.45)),
+                      ),
+                      child: Text(
+                        'İpucu: ${_maskHint(widget.hintAnswer!)}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF7CEEFF),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  TextButton.icon(
+                    onPressed: () => setState(() => _showHint = true),
+                    style: TextButton.styleFrom(
+                      foregroundColor: StudioPalette.goldBright,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    ),
+                    icon: const Icon(Icons.lightbulb_outline_rounded, size: 15),
+                    label: const Text('Harf İpucu Göster', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  ),
+              ],
+            ),
+          ],
           const SizedBox(height: 10),
           Studio3DButton(
             label: widget.action,
@@ -1247,33 +1387,120 @@ class _MultipleAnswerInputState extends State<_MultipleAnswerInput> {
   final selected = <int>{};
 
   @override
-  Widget build(BuildContext context) => Column(children: [
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: Text('Geçerli önermelerin tümünü seç.',
-              style: TextStyle(color: StudioPalette.goldBright, fontWeight: FontWeight.w800)),
+  Widget build(BuildContext context) {
+    final correctSet = widget.task.correct.toSet();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Row(
+            children: [
+              const Icon(Icons.checklist_rounded, size: 17, color: StudioPalette.goldBright),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Geçerli önermelerin tümünü seç (${selected.length} seçili)',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: StudioPalette.goldBright,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         for (final (index, option) in widget.task.options.indexed)
-          CheckboxListTile(
-            title: Text(option, style: const TextStyle(color: Colors.white)),
-            activeColor: StudioPalette.gold,
-            checkColor: StudioPalette.night,
-            value: selected.contains(index),
-            onChanged: widget.revealed
-                ? null
-                : (value) => setState(() {
-                      if (value == true) {
-                        selected.add(index);
-                      } else {
-                        selected.remove(index);
-                      }
-                    }),
+          Builder(
+            builder: (_) {
+              final isChecked = selected.contains(index);
+              final isCorrect = correctSet.contains(index);
+              Color borderColor = isChecked
+                  ? StudioPalette.gold
+                  : Colors.white.withValues(alpha: 0.18);
+              Color fill = isChecked
+                  ? StudioPalette.gold.withValues(alpha: 0.16)
+                  : StudioPalette.navyDark.withValues(alpha: 0.72);
+              IconData boxIcon = isChecked
+                  ? Icons.check_box_rounded
+                  : Icons.check_box_outline_blank_rounded;
+              Color iconColor = isChecked ? StudioPalette.goldBright : Colors.white54;
+
+              if (widget.revealed) {
+                if (isCorrect && isChecked) {
+                  borderColor = const Color(0xFF4BE085);
+                  fill = const Color(0xFF134E34).withValues(alpha: 0.75);
+                  boxIcon = Icons.check_circle_rounded;
+                  iconColor = const Color(0xFF4BE085);
+                } else if (isCorrect && !isChecked) {
+                  borderColor = const Color(0xFF4BE085).withValues(alpha: 0.75);
+                  fill = const Color(0xFF134E34).withValues(alpha: 0.35);
+                  boxIcon = Icons.verified_outlined;
+                  iconColor = const Color(0xFF4BE085);
+                } else if (!isCorrect && isChecked) {
+                  borderColor = const Color(0xFFFF7B89);
+                  fill = const Color(0xFF5B1B27).withValues(alpha: 0.72);
+                  boxIcon = Icons.cancel_rounded;
+                  iconColor = const Color(0xFFFF7B89);
+                }
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 9),
+                child: InkWell(
+                  onTap: widget.revealed
+                      ? null
+                      : () => setState(() {
+                            if (isChecked) {
+                              selected.remove(index);
+                            } else {
+                              selected.add(index);
+                            }
+                          }),
+                  borderRadius: BorderRadius.circular(14),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: fill,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: borderColor, width: isChecked ? 1.6 : 1.1),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(boxIcon, size: 22, color: iconColor),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            option,
+                            style: const TextStyle(
+                              fontSize: 13.8,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
-        if (!widget.revealed)
+        if (!widget.revealed) ...[
+          const SizedBox(height: 4),
           Studio3DButton(
-            label: 'Seçimlerimi kontrol et',
+            label: 'Seçimlerimi Kontrol Et',
+            icon: Icons.done_all_rounded,
             expand: true,
             onPressed: selected.isEmpty ? null : () => widget.onSubmit(Set.of(selected)),
           ),
-      ]);
+        ],
+      ],
+    );
+  }
 }

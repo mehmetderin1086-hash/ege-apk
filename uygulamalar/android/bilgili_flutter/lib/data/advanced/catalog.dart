@@ -10,6 +10,7 @@ import 'plates.dart';
 import 'renewed.dart';
 import 'secki.g.dart';
 import 'social.dart';
+import 'studio10k/studio_10k.dart';
 
 enum PoolCollection {
   all('Tümü'),
@@ -39,13 +40,14 @@ class AdvancedCatalog {
     ...liseMetinFamilies,
   ]);
 
-  /// Oyunun sunduğu aileler: yalnız lise düzeyindeki çoktan seçmeli aileler,
-  /// her biri `secki.g.dart` dosyasındaki birbirinden ayrışan vakalarla.
+  /// Oyunun sunduğu aileler: lise düzeyindeki seçki, özgün banka ve
+  /// 10.000 soruluk yeni nesil görsel/sesli/etkileşimli stüdyo paketi.
   static final families = List<AdvancedFamily>.unmodifiable([
     for (final f in kaynakAileler)
       if (cokSecmeliLise(f) && seckiler[f.key] != null)
         f.secili(seckiler[f.key]!),
     ...ozgunAileler,
+    ...studio10kFamilies,
   ]);
 
   /// Ailenin seçkiye girebilmesi için lise düzeyinde olması ve etkinlik,
@@ -60,9 +62,17 @@ class AdvancedCatalog {
 
   /// Elle yazılmış özgün soru bankası (3.12.0).
   static final ozgun = FamilyQuestions(ozgunAileler);
+
+  /// Bilgili 3.20 — 10.000 soruluk yeni nesil görsel, sesli İngilizce ve etkileşimli banka.
+  static final studio10k = FamilyQuestions(studio10kFamilies);
+  static final studioVisual4k = FamilyQuestions(visualStudio4kFamilies);
+  static final studioAudioEnglish3k = FamilyQuestions(audioEnglish3kFamilies);
+  static final studioInteractive3k = FamilyQuestions(interactiveStudio3kFamilies);
+
   static final visuals = select(format: QuestionFormat.visual);
   static final activityCount = [
     QuestionFormat.listening,
+    QuestionFormat.dictation,
     QuestionFormat.pronunciation,
     QuestionFormat.ordering,
     QuestionFormat.matching,

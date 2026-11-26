@@ -1580,8 +1580,59 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                 QuestionVisualViewer(visual: q.visual!, accent: q.category.accent),
                 const SizedBox(height: 8),
               ],
+              if (q.activity?.transcript != null && q.activity!.transcript!.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF58D5E3).withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFF58D5E3).withValues(alpha: 0.45)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.headphones_rounded, size: 17, color: Color(0xFF7CEEFF)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          q.activity!.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF7CEEFF),
+                          ),
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => ctrl.speakActivityAudio(q, rate: 0.95),
+                        style: TextButton.styleFrom(
+                          foregroundColor: StudioPalette.goldBright,
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        icon: const Icon(Icons.volume_up_rounded, size: 16),
+                        label: const Text('Dinle', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800)),
+                      ),
+                      TextButton(
+                        onPressed: () => ctrl.speakActivityAudio(q, rate: 0.72),
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFF7CEEFF),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        child: const Text('0.7x', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800)),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               // Kart içi etkileşimli kendini sına şıkları!
-              if (q.options.isNotEmpty) ...[
+              if (q.options.isNotEmpty &&
+                  !q.isInteractiveSequence &&
+                  q.responseType != ResponseType.fill &&
+                  q.multiSelect == null) ...[
                 Text(
                   selectedOpt == null
                       ? 'Kendini Sına (Bir şık seç veya cevabı aç):'

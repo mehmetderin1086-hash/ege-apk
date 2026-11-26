@@ -119,7 +119,8 @@ enum QuestionFormat {
   trueFalse('Doğru / yanlış', Icons.rule_rounded),
   fill('Boşluk doldurma', Icons.edit_rounded),
   creation('Açık uçlu tasarım', Icons.design_services_rounded),
-  listening('Dinleme', Icons.headphones_rounded),
+  listening('Sesli Dinleme', Icons.headphones_rounded),
+  dictation('Sesli Dikte', Icons.hearing_rounded),
   ordering('Sıralama', Icons.swap_vert_rounded),
   matching('Eşleştirme', Icons.compare_arrows_rounded),
   pronunciation('Telaffuz', Icons.record_voice_over_rounded);
@@ -128,8 +129,20 @@ enum QuestionFormat {
   final IconData icon;
   const QuestionFormat(this.label, this.icon);
 
-  /// Arayüzde sunulan biçimler: banka yalnız çoktan seçmeli sorulardan oluşur.
-  static const sunulan = [mixed, visual, text];
+  /// Arayüzde sunulan tüm oynanabilir soru biçimleri.
+  static const sunulan = [
+    mixed,
+    visual,
+    listening,
+    dictation,
+    pronunciation,
+    matching,
+    ordering,
+    multiSelect,
+    trueFalse,
+    fill,
+    text,
+  ];
 }
 
 enum ExamKind {
@@ -209,7 +222,14 @@ enum VisualKind {
   barChart,
   lineChart,
   diagram,
-  image;
+  image,
+  pieChart,
+  clock,
+  flag,
+  musicStaff,
+  coordPlane,
+  atom,
+  matrix;
 
   static VisualKind? fromString(String? raw) {
     if (raw == null) return null;
@@ -358,6 +378,7 @@ class QuestionVisual {
 
 enum ActivityKind {
   listening,
+  dictation,
   ordering,
   matching,
   pronunciation;
@@ -374,6 +395,8 @@ enum ActivityKind {
     switch (this) {
       case ActivityKind.listening:
         return 'Dinleme';
+      case ActivityKind.dictation:
+        return 'Sesli Dikte';
       case ActivityKind.ordering:
         return 'Sıralama';
       case ActivityKind.matching:
@@ -554,6 +577,7 @@ class Question {
       ActivityKind.ordering => ResponseType.ordering,
       ActivityKind.matching => ResponseType.matching,
       ActivityKind.listening => ResponseType.listening,
+      ActivityKind.dictation => ResponseType.fill,
       ActivityKind.pronunciation => ResponseType.pronunciation,
       null => _answerMode,
     };
@@ -562,7 +586,11 @@ class Question {
   /// Match exact academic terms or equivalent numeric fractions/decimals.
   /// Preserve SI unit case, operation signs and inequality symbols.
   bool acceptsWritten(String value) {
-    String clean(String s) => s.trim().replaceAll('−', '-')
+    String clean(String s) => s
+        .trim()
+        .replaceAll('−', '-')
+        .replaceAll('’', "'")
+        .replaceAll('‘', "'")
         .replaceAll(RegExp(r'\s+'), ' ');
     final expected = clean(correctAnswerText), given = clean(value);
     if (given.isEmpty) return false;
@@ -575,11 +603,14 @@ class Question {
     final b = number.firstMatch(percent(given));
     if (a == null || b == null) {
       if (a != null || b != null) return false;
-      if (category == Topic.language && expected.toLowerCase() == given.toLowerCase()) {
+      String stripEndPunct(String s) => s.replaceAll(RegExp(r'[.!?]+$'), '').trim();
+      final expTrim = stripEndPunct(expected);
+      final givTrim = stripEndPunct(given);
+      if (category == Topic.language && expTrim.toLowerCase() == givTrim.toLowerCase()) {
         return true;
       }
       String fold(String s) => s.replaceAll('İ', 'i').replaceAll('I', 'ı').toLowerCase();
-      return fold(expected) == fold(given);
+      return fold(expTrim) == fold(givTrim);
     }
     const optionalUnits = {
       '%', '‰', '°', '°C', 'K', 'm', 'km', 'cm', 'mm', 'nm', 'µm',
@@ -638,6 +669,8 @@ class Question {
 
   bool get isPronunciation => activity?.kind == ActivityKind.pronunciation;
 
+  bool get isDictation => activity?.kind == ActivityKind.dictation;
+
   bool matchesFormat(QuestionFormat format) {
     switch (format) {
       case QuestionFormat.mixed:
@@ -645,7 +678,7 @@ class Question {
       case QuestionFormat.visual:
         return visual != null;
       case QuestionFormat.text:
-        return visual == null && activity == null;
+        return visual == null && activity == null && responseType == ResponseType.choice;
       case QuestionFormat.multiSelect:
         return responseType == ResponseType.multiSelect;
       case QuestionFormat.multipleChoice:
@@ -653,11 +686,13 @@ class Question {
       case QuestionFormat.trueFalse:
         return responseType == ResponseType.trueFalse;
       case QuestionFormat.fill:
-        return responseType == ResponseType.fill;
+        return responseType == ResponseType.fill && activity?.kind != ActivityKind.dictation;
       case QuestionFormat.creation:
         return responseType == ResponseType.creation;
       case QuestionFormat.listening:
         return activity?.kind == ActivityKind.listening;
+      case QuestionFormat.dictation:
+        return activity?.kind == ActivityKind.dictation;
       case QuestionFormat.ordering:
         return activity?.kind == ActivityKind.ordering;
       case QuestionFormat.matching:

@@ -338,12 +338,13 @@ class MainActivity : FlutterActivity() {
             result?.success(false)
             return
         }
-        val locale = Locale.forLanguageTag(languageTag)
+        val bcp47 = normalizeBcp47(languageTag)
+        val locale = Locale.forLanguageTag(bcp47)
         val avail = engine.isLanguageAvailable(locale)
         if (avail >= TextToSpeech.LANG_AVAILABLE) {
             engine.language = locale
         } else {
-            val fallback = Locale.forLanguageTag(languageTag.substringBefore('-'))
+            val fallback = Locale.forLanguageTag(bcp47.substringBefore('-'))
             if (engine.isLanguageAvailable(fallback) >= TextToSpeech.LANG_AVAILABLE) {
                 engine.language = fallback
             }
@@ -459,10 +460,11 @@ class MainActivity : FlutterActivity() {
                     override fun onEvent(eventType: Int, params: Bundle?) {}
                 })
 
+                val bcp47 = normalizeBcp47(language)
                 val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                     putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, language)
-                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, language)
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE, bcp47)
+                    putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, bcp47)
                     putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
                     putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5)
                 }
@@ -472,6 +474,15 @@ class MainActivity : FlutterActivity() {
                 result.error("LISTEN_ERROR", e.localizedMessage ?: "Ses dinleme başlatılamadı.", null)
             }
         }
+    }
+
+    private fun normalizeBcp47(raw: String?): String {
+        val parts = (raw ?: "tr-TR").trim().split('-').filter { it.isNotEmpty() }
+        if (parts.isEmpty()) return "tr-TR"
+        if (parts.size >= 2) {
+            return "${parts[0].lowercase(Locale.ROOT)}-${parts[1].uppercase(Locale.ROOT)}"
+        }
+        return parts[0].lowercase(Locale.ROOT)
     }
 
     private fun emitVoiceEvent(payload: Map<String, Any>) {

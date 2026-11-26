@@ -254,7 +254,10 @@ class QuizNarration {
     }
     intro.write(q.text);
     final act = q.activity;
-    if (act != null && (act.kind == ActivityKind.listening || act.kind == ActivityKind.pronunciation)) {
+    if (act != null &&
+        (act.kind == ActivityKind.listening ||
+            act.kind == ActivityKind.dictation ||
+            act.kind == ActivityKind.pronunciation)) {
       final transcript = act.transcript ?? '';
       if (transcript.isNotEmpty) {
         segments.add((text: intro.toString(), language: 'tr-TR'));
@@ -263,6 +266,11 @@ class QuizNarration {
       }
       if (act.kind == ActivityKind.pronunciation) {
         intro.write('Duyduğun ifadeyi tekrar et.');
+        segments.add((text: intro.toString(), language: 'tr-TR'));
+        return segments;
+      }
+      if (act.kind == ActivityKind.dictation) {
+        intro.write('Duyduğun eksik ifadeyi ekranda yaz.');
         segments.add((text: intro.toString(), language: 'tr-TR'));
         return segments;
       }

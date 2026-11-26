@@ -922,7 +922,59 @@ class _HomePlayTabState extends State<HomePlayTab> {
         ),
         const SizedBox(height: 10),
 
-        // 8. Görsel & Etkinlik + Aralıklı Tekrar
+        // 8. Sesli İngilizce Stüdyosu (3.000 Yeni Soru)
+        ArenaGlassCard(
+          tint: const Color(0xFF58D5E3),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          onTap: () => _openAudioEnglishStudioSheet(context, ctrl),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF58D5E3).withValues(alpha: 0.20),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF58D5E3).withValues(alpha: 0.60)),
+                ),
+                child: const Icon(
+                  Icons.headphones_rounded,
+                  color: Color(0xFF7CEEFF),
+                  size: 21,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sesli İngilizce Stüdyosu (3.000 Soru)',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13.8,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'US/UK Dinleme · Sesli Dikte · Telaffuz · Word Order',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 11, color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Icon(Icons.play_circle_fill_rounded, color: Color(0xFF7CEEFF), size: 26),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        // 8b. Görsel & Etkinlik + Aralıklı Tekrar
         Row(
           children: [
             Expanded(
@@ -953,7 +1005,7 @@ class _HomePlayTabState extends State<HomePlayTab> {
                     ),
                     SizedBox(height: 3),
                     Text(
-                      'Grafik · Şema · Telaffuz',
+                      'Bayrak · Saat · Atom · Matris',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 10.5, color: Colors.white70),
@@ -1482,6 +1534,167 @@ class _HomePlayTabState extends State<HomePlayTab> {
           ),
         ),
       );
+
+  void _openAudioEnglishStudioSheet(BuildContext context, ArenaController ctrl) {
+    final modes = <(String, String, IconData, Color, QuestionFormat?)>[
+      (
+        'Karışık Sesli İngilizce (10 Soru)',
+        'US/UK/AU aksanlarla Dinleme + Dikte + Telaffuz karma tur',
+        Icons.auto_awesome_rounded,
+        StudioPalette.goldBright,
+        null,
+      ),
+      (
+        'İngilizce Dinleme & Anlama (1.800 Soru)',
+        'Günlük diyaloglar, havaalanı/otel anonsları, deyimler ve IELTS sayılar',
+        Icons.headphones_rounded,
+        const Color(0xFF58D5E3),
+        QuestionFormat.listening,
+      ),
+      (
+        'İngilizce Sesli Dikte (600 Soru)',
+        'Normal (1.0x) veya yavaş (0.7x) dinle, eksik İngilizce kelimeyi yaz',
+        Icons.hearing_rounded,
+        const Color(0xFF5CE09B),
+        QuestionFormat.dictation,
+      ),
+      (
+        'İngilizce Telaffuz & Konuşma (600 Soru)',
+        'Mikrofonla telaffuz denetimi, sessiz harfler, minimal çiftler ve hece vurgusu',
+        Icons.record_voice_over_rounded,
+        const Color(0xFFFF7BAC),
+        QuestionFormat.pronunciation,
+      ),
+      (
+        'İngilizce Cümle Kurma · Word Order (300 Soru)',
+        'Karışık İngilizce öbekleri doğru dilbilgisi sırasına diz',
+        Icons.swap_vert_rounded,
+        const Color(0xFFC5A3FF),
+        QuestionFormat.ordering,
+      ),
+      (
+        'İngilizce Deyim & Phrasal Verb Eşleştirme (350 Soru)',
+        'İngilizce deyimleri ve öbek fiilleri Türkçe anlamlarıyla eşleştir',
+        Icons.compare_arrows_rounded,
+        const Color(0xFFFFB076),
+        QuestionFormat.matching,
+      ),
+      (
+        'Görsel İngilizce Saat Stüdyosu (240 Soru)',
+        'Analog saat kadranına bakarak doğru İngilizce saat ifadesini seç',
+        Icons.schedule_rounded,
+        const Color(0xFF5AB2FF),
+        QuestionFormat.visual,
+      ),
+    ];
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0A1240),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.72,
+          maxChildSize: 0.9,
+          minChildSize: 0.45,
+          builder: (_, sc) => ListView(
+            controller: sc,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: StudioPalette.gold.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Row(
+                children: [
+                  Icon(Icons.headphones_rounded, color: Color(0xFF7CEEFF), size: 22),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Sesli İngilizce Stüdyosu',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: StudioPalette.goldBright,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Doğal Amerikan, İngiliz ve Avustralya aksanlarıyla dinle, yaz, konuş ve pekiştir.',
+                style: TextStyle(fontSize: 12, color: Colors.white70),
+              ),
+              const SizedBox(height: 14),
+              for (final m in modes)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 9),
+                  child: ArenaGlassCard(
+                    tint: m.$4,
+                    padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                      ctrl.startAudioEnglishStudio(format: m.$5, count: 10);
+                    },
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: m.$4.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(11),
+                          ),
+                          child: Icon(m.$3, color: m.$4, size: 19),
+                        ),
+                        const SizedBox(width: 11),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                m.$1,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                m.$2,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 11, color: Colors.white70),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(Icons.play_arrow_rounded, color: m.$4, size: 22),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _presetButton(String label, VoidCallback onTap, Color accent) {
     return ArenaPressDepth(

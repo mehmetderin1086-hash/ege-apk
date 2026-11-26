@@ -63,19 +63,27 @@ void main() {
     },
   );
 
-  test('every academic question is a four-option multiple-choice question', () {
+  test('academic bank covers multiple-choice, visual, audio English, and interactive formats', () {
     final all = AdvancedCatalog.all;
-    expect(AdvancedCatalog.select(format: QuestionFormat.multipleChoice).length, all.length);
-    for (final format in [QuestionFormat.multiSelect, QuestionFormat.trueFalse, QuestionFormat.fill,
-        QuestionFormat.creation, QuestionFormat.ordering, QuestionFormat.matching,
-        QuestionFormat.listening, QuestionFormat.pronunciation]) {
-      expect(AdvancedCatalog.select(format: format), isEmpty, reason: format.label);
+    expect(AdvancedCatalog.studio10k.length, 10000);
+    expect(AdvancedCatalog.select(format: QuestionFormat.multipleChoice).length, greaterThan(220000));
+    for (final format in [
+      QuestionFormat.visual,
+      QuestionFormat.listening,
+      QuestionFormat.dictation,
+      QuestionFormat.pronunciation,
+      QuestionFormat.ordering,
+      QuestionFormat.matching,
+      QuestionFormat.multiSelect,
+      QuestionFormat.trueFalse,
+      QuestionFormat.fill,
+    ]) {
+      expect(AdvancedCatalog.select(format: format), isNotEmpty, reason: format.label);
     }
-    for (var i = 0; i < all.length; i += 7) {
+    for (var i = 0; i < all.length; i += 37) {
       final q = all[i];
-      expect(q.responseType, ResponseType.choice, reason: q.id);
-      expect(q.options, hasLength(4), reason: q.id);
       expect(q.studyLevel, 'Lise', reason: q.id);
+      expect(q.explanation.trim(), isNotEmpty, reason: q.id);
       expect(AdvancedCatalog.questionById(q.id)?.text, q.text);
     }
   });

@@ -412,6 +412,10 @@ class ArenaController extends ChangeNotifier {
           AdvancedCatalog.select(level: level));
     }
     add('ozgun', 'Özgün Soru Bankası', AdvancedCatalog.ozgun);
+    add('studio_10k', 'Yeni Nesil 10.000 Seçki · Tümü', AdvancedCatalog.studio10k);
+    add('studio_visual_4k', 'Yeni Nesil Görsel Stüdyo · 4.000', AdvancedCatalog.studioVisual4k);
+    add('studio_audio_en_3k', 'Sesli İngilizce Stüdyosu · 3.000', AdvancedCatalog.studioAudioEnglish3k);
+    add('studio_interactive_3k', 'Çok Biçimli Etkileşimli · 3.000', AdvancedCatalog.studioInteractive3k);
     add('lise_metin', 'Lise · Metin Soru Bankası',
         AdvancedCatalog.select(level: StudyLevel.lise, format: QuestionFormat.text));
     for (final bloom in BloomLevel.values) {
@@ -582,11 +586,22 @@ class ArenaController extends ChangeNotifier {
   // --- Sampling & Round Launchers ---
   List<Question> sampleQuestions(RoundSetup cfg, {int? seed}) {
     final rng = seed != null ? Random(seed) : _rng;
-    final manual = cfg.format == QuestionFormat.fill || cfg.format == QuestionFormat.multiSelect;
+    final manual = cfg.format == QuestionFormat.fill ||
+        cfg.format == QuestionFormat.dictation ||
+        cfg.format == QuestionFormat.multiSelect;
     final quick = cfg.mode == GameMode.sprint || (cfg.liveVoiceHost && !manual);
-    final format = quick && {QuestionFormat.mixed, QuestionFormat.fill, QuestionFormat.creation, QuestionFormat.multiSelect,
-        QuestionFormat.visual, QuestionFormat.text}.contains(cfg.format)
-        ? QuestionFormat.multipleChoice : cfg.format;
+    final format = quick &&
+            {
+              QuestionFormat.mixed,
+              QuestionFormat.fill,
+              QuestionFormat.dictation,
+              QuestionFormat.creation,
+              QuestionFormat.multiSelect,
+              QuestionFormat.visual,
+              QuestionFormat.text,
+            }.contains(cfg.format)
+        ? QuestionFormat.multipleChoice
+        : cfg.format;
     final bool? requireVisual = quick && cfg.format == QuestionFormat.visual ? true
         : quick && cfg.format == QuestionFormat.text ? false : null;
     bool matches(Question q) => !reportedQuestionIds.contains(q.id) &&
@@ -717,28 +732,89 @@ class ArenaController extends ChangeNotifier {
   void startVisualAndActivityDiscovery() {
     final picked = <Question>[];
     final pickedIds = <String>{};
-    void addFrom(List<Question> questions, int count) {
+    void addFrom(List<Question> questions, int count, {int cap = 12}) {
       for (final q in _pickRandomQuestions(questions, count, _rng)) {
-        if (picked.length < 10 && pickedIds.add(q.id)) picked.add(q);
+        if (picked.length < cap && pickedIds.add(q.id)) picked.add(q);
       }
     }
-    for (final kind in VisualKind.values) {
+    for (final kind in [
+      VisualKind.flag,
+      VisualKind.clock,
+      VisualKind.pieChart,
+      VisualKind.coordPlane,
+      VisualKind.atom,
+      VisualKind.musicStaff,
+      VisualKind.matrix,
+    ]) {
       addFrom(AdvancedCatalog.select(visualKind: kind), 1);
     }
-    for (final format in [QuestionFormat.listening, QuestionFormat.pronunciation,
-        QuestionFormat.ordering, QuestionFormat.matching]) {
+    for (final format in [
+      QuestionFormat.listening,
+      QuestionFormat.dictation,
+      QuestionFormat.pronunciation,
+      QuestionFormat.matching,
+      QuestionFormat.ordering,
+    ]) {
       addFrom(AdvancedCatalog.select(format: format), 1);
     }
-    if (picked.length < 10) {
-      addFrom(_allQuestions.where((q) => q.visual != null || q.activity != null).toList(), 10);
+    if (picked.length < 12) {
+      addFrom(_allQuestions.where((q) => q.visual != null || q.activity != null).toList(), 12);
     }
-    if (picked.length < 10) addFrom(AdvancedCatalog.visuals, 10);
+    if (picked.length < 12) addFrom(AdvancedCatalog.visuals, 12);
     if (picked.isEmpty) return;
+    picked.shuffle(_rng);
     _beginRound(
       title: 'Görsel & Etkinlik Keşif Turu',
       cfg: RoundSetup(mode: GameMode.training, questionCount: picked.length),
       questions: picked,
     );
+  }
+
+  bool startAudioEnglishStudio({QuestionFormat? format, int count = 10}) {
+    final List<Question> source;
+    final String title;
+    switch (format) {
+      case QuestionFormat.listening:
+        source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.listening);
+        title = 'Sesli İngilizce · Dinleme & Anlama';
+        break;
+      case QuestionFormat.dictation:
+        source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.dictation);
+        title = 'Sesli İngilizce · Dikte Stüdyosu';
+        break;
+      case QuestionFormat.pronunciation:
+        source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.pronunciation);
+        title = 'Sesli İngilizce · Telaffuz & Konuşma';
+        break;
+      case QuestionFormat.visual:
+        source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.visual);
+        title = 'İngilizce Görsel Saat Stüdyosu';
+        break;
+      case QuestionFormat.ordering:
+        source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.ordering);
+        title = 'İngilizce Cümle Kurma (Word Order)';
+        break;
+      case QuestionFormat.matching:
+        source = AdvancedCatalog.select(topic: Topic.language, format: QuestionFormat.matching);
+        title = 'İngilizce Deyim & Fiil Eşleştirme';
+        break;
+      default:
+        source = AdvancedCatalog.studioAudioEnglish3k;
+        title = 'Sesli İngilizce Stüdyosu (Karışık)';
+    }
+    final qs = _pickRandomQuestions(source, count, _rng);
+    if (qs.isEmpty) return false;
+    _beginRound(
+      title: title,
+      cfg: RoundSetup(
+        topic: Topic.language,
+        format: format ?? QuestionFormat.mixed,
+        mode: GameMode.training,
+        questionCount: qs.length,
+      ),
+      questions: qs,
+    );
+    return true;
   }
 
   bool startSpacedRepetitionReview() => startReviewRound();
@@ -957,7 +1033,11 @@ class ArenaController extends ChangeNotifier {
         questionCount: 12,
       );
       final aday = sampleQuestions(cfg, seed: rng.nextInt(1 << 30))
-          .where((q) => q.options.length == 4 && q.visual == null && q.activity == null)
+          .where((q) =>
+              q.options.length == 4 &&
+              q.visual == null &&
+              q.activity == null &&
+              q.responseType == ResponseType.choice)
           .where((q) => sorular.every((x) => x.id != q.id))
           .toList();
       if (aday.length < 6) return null;
@@ -1063,7 +1143,15 @@ class ArenaController extends ChangeNotifier {
         round.remainingSeconds = 0;
         break;
       case GameMode.classic:
-        round.totalTimerSeconds = round.setup.liveVoiceHost ? 35 : (round.setup.secondsPerQuestion ?? 15);
+        final q = round.questions.isNotEmpty ? round.current : null;
+        final needsExtra = q != null &&
+            (q.activity != null ||
+                q.multiSelect != null ||
+                q.responseType == ResponseType.fill);
+        final baseSec = round.setup.liveVoiceHost
+            ? 35
+            : (round.setup.secondsPerQuestion ?? 15);
+        round.totalTimerSeconds = needsExtra ? baseSec + 10 : baseSec;
         round.remainingSeconds = round.totalTimerSeconds;
         break;
       case GameMode.sprint:
@@ -1530,16 +1618,25 @@ class ArenaController extends ChangeNotifier {
     }
   }
 
-  Future<bool> _speakInLanguage(String text, String language, {required bool wait}) =>
-      NativeBridge.speak(text, language: language,
-          rate: language.startsWith('tr') ? ttsSpeechRate : 0.92, awaitCompletion: wait);
+  Future<bool> _speakInLanguage(
+    String text,
+    String language, {
+    required bool wait,
+    double? rateOverride,
+  }) =>
+      NativeBridge.speak(
+        text,
+        language: language,
+        rate: rateOverride ?? (language.startsWith('tr') ? ttsSpeechRate : 0.92),
+        awaitCompletion: wait,
+      );
 
-  Future<void> speakActivityAudio(Question q) async {
+  Future<void> speakActivityAudio(Question q, {double? rate}) async {
     final act = q.activity;
     if (act == null) return;
     final text = act.transcript ?? q.text;
     final lang = act.language ?? 'tr-TR';
-    await _speakInLanguage(text, lang, wait: false);
+    await _speakInLanguage(text, lang, wait: false, rateOverride: rate);
   }
 
   Future<String?> listenOnceAndResolveCurrentQuestion({bool isPronunciation = false}) async {

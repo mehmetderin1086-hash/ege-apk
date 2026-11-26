@@ -88,6 +88,10 @@ object EdgeTtsClient {
         val lang = (languageTag ?: "tr-TR").trim().lowercase(Locale.ROOT)
         if (!lang.startsWith("tr")) {
             return when {
+                lang.startsWith("en-gb") && (lang.contains("female") || lang.contains("sonia")) -> "en-GB-SoniaNeural"
+                lang.startsWith("en-gb") -> "en-GB-RyanNeural"
+                lang.startsWith("en-au") -> "en-AU-NatashaNeural"
+                lang.startsWith("en") && (lang.contains("female") || lang.contains("aria")) -> "en-US-AriaNeural"
                 lang.startsWith("en") -> "en-US-ChristopherNeural"
                 lang.startsWith("de") -> "de-DE-ConradNeural"
                 lang.startsWith("fr") -> "fr-FR-HenriNeural"

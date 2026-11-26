@@ -1,4 +1,13 @@
-# Bilgili 3.19.0
+# Bilgili 3.20.0
+
+3.20.0 sürümünde **10.000 yeni nesil görsel, sesli İngilizce ve çok biçimli etkileşimli soru** eklendi (toplam soru bankası **234.144** soruya ulaştı) ve tüm yeni soru biçimleri 3D Stüdyo arayüzüyle desteklendi:
+
+- **7 Yeni Nesil Vektörel Görsel Soru Tipi (4.000 Soru):** 64 ülke için vektörel **Dünya Bayrakları Atlası** (640), **Analog Saat · Akrep-Yelkovan Açısı · İngilizce Saat & Dünya Saat Dilimleri** (640), **3D Pasta / Halka Grafiği Analizi** (520), **Koordinat Düzlemi, Poligon Alanı & Fizik Vektörleri** (640), **Bohr Atom Modeli & Elektron Katmanları** (480), **Sol/Fa Anahtarlı Müzik Portesi, Aralık & Akorlar** (480) ve **3×3 Görsel Zekâ / Şekil Örüntüsü Matrisi** (600).
+- **Sesli İngilizce Stüdyosu (3.000 Soru):** Çok aksanlı doğal sinirsel TTS (`en-US` erkek/kadın, `en-GB` erkek/kadın, `en-AU` + çevrimdışı sistem TTS yedekli), normal (`1.0x`) ve yavaş (`0.72x`) hızda dinleme oynatıcısı, açılabilir İngilizce altyazı, **Günlük Diyalog & Anonslar** (800), **Bağlamda Kelime/Deyim/Phrasal Verb** (600), **IELTS Sayı/Fiyat/Tarih/Saat** (400), harf ipuçlu **Sesli İngilizce Dikte** (600) ve mikrofonlu/fonetik **Telaffuz & Vurgu Stüdyosu** (600).
+- **Çok Biçimli Etkileşimli Soru Tipleri (3.000 Soru):** **Çift Eşleştirme** (750 — dünya/bilim/İngilizce deyimler), **Kronolojik & Süreç Sıralama + İngilizce Cümle Kurma (Word Order)** (750), 3D kartlı **Çoklu Doğru Seçim** (500), 3D **Doğru / Yanlış** kartları (500 — bilim/dünya/İngilizce gramer hata avı) ve harf ipuçlu **Akıllı Boşluk Doldurma** (500).
+- **Keşif & Erişim:** Ana ekrana **Sesli İngilizce Stüdyosu** hızlı başlatma menüsü, genişletilmiş **Görsel & Etkinlik Keşif Turu**, tüm yeni `QuestionFormat` filtreleri, Bilgi Akademisi kart içi ses önizlemesi ve 4 yeni hazır stüdyo paketi eklendi.
+
+## 3.19.0
 
 3.19.0 sürümünde **AI Stüdyo** tamamen kaldırıldı, yepyeni **3D altın-safir oyun logosu** eklendi ve **Bilgi Akademisi** ile **İlerleme & Başarımlar** bölümleri çok detaylı şekilde yenilendi:
 
