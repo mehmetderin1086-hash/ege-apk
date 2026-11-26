@@ -72,8 +72,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
     final round = ctrl.activeRound;
     if (round == null) return const SizedBox.shrink();
 
-    final wp = ctrl.currentWallpaper;
-    final accent = wp.primary;
+    const accent = StudioPalette.gold;
 
     if (round.finished) {
       return _buildResultScreen(context, ctrl, round, accent);
@@ -90,7 +89,6 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
       _coachLoading = false;
     }
 
-    // Trigger wrong-answer shake once per question
     if (round.revealed && round.answers.isNotEmpty) {
       final last = round.answers.last;
       final key = '${round.id}_${round.currentIndex}';
@@ -114,64 +112,92 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
           children: [
             Column(
               children: [
-                // Top HUD Bar
+                // Zirve Merdiveni Stüdyo Üst HUD Barı
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
                   child: Row(
                     children: [
-                      IconButton(
-                        onPressed: ctrl.togglePauseRound,
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.white.withValues(alpha: 0.08),
-                        ),
-                        icon: Icon(
-                          round.paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-                          color: Colors.white,
-                          size: 20,
+                      ArenaPressDepth(
+                        depthOffset: 1.5,
+                        child: IconButton(
+                          onPressed: ctrl.togglePauseRound,
+                          style: IconButton.styleFrom(
+                            backgroundColor: StudioPalette.navyTop.withValues(alpha: 0.85),
+                            side: const BorderSide(color: StudioPalette.gold, width: 1.3),
+                          ),
+                          icon: Icon(
+                            round.paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                            color: StudioPalette.goldBright,
+                            size: 20,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              round.setup.mode == GameMode.stages
-                                  ? round.currentStageLabel
-                                  : round.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w800,
-                                color: accent,
-                              ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(18),
+                            gradient: const LinearGradient(
+                              colors: [StudioPalette.navyTop, StudioPalette.navyDark],
                             ),
-                            Text(
-                              'Soru ${round.currentIndex + 1} / ${round.questions.length} · ${round.totalScore}p',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                              ),
+                            border: Border.all(
+                              color: StudioPalette.gold.withValues(alpha: 0.72),
+                              width: 1.3,
                             ),
-                          ],
+                            boxShadow: [
+                              BoxShadow(
+                                color: StudioPalette.gold.withValues(alpha: 0.16),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                round.setup.mode == GameMode.stages
+                                    ? round.currentStageLabel
+                                    : round.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  color: StudioPalette.goldBright,
+                                ),
+                              ),
+                              Text(
+                                'Soru ${round.currentIndex + 1} / ${round.questions.length} · ${round.totalScore}p',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       if (round.streak >= 2)
                         Container(
-                          margin: const EdgeInsets.only(right: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          margin: const EdgeInsets.only(left: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFF9559).withValues(alpha: 0.2),
+                            gradient: const LinearGradient(
+                              colors: [StudioPalette.amber, Color(0xFFCC6400)],
+                            ),
                             borderRadius: BorderRadius.circular(99),
+                            border: Border.all(color: Colors.white70),
                           ),
                           child: Text(
                             'x${round.streak}',
                             style: const TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w900,
-                              color: Color(0xFFFF9559),
+                              color: Colors.white,
                             ),
                           ),
                         ),
@@ -179,7 +205,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                         onPressed: () => ctrl.toggleBookmark(q),
                         icon: Icon(
                           bookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                          color: bookmarked ? const Color(0xFFF6C453) : Colors.white70,
+                          color: bookmarked ? StudioPalette.goldBright : Colors.white70,
                           size: 21,
                         ),
                       ),
@@ -192,28 +218,27 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                   ),
                 ),
 
-                // Progress linear strip
+                // Altın stüdyo ilerleme şeridi
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(99),
                     child: LinearProgressIndicator(
-                      minHeight: 4,
+                      minHeight: 5,
                       value: (round.currentIndex + 1) / max(1, round.questions.length),
                       backgroundColor: Colors.white12,
-                      valueColor: AlwaysStoppedAnimation<Color>(accent),
+                      valueColor: const AlwaysStoppedAnimation<Color>(StudioPalette.gold),
                     ),
                   ),
                 ),
 
-                // Duel Scoreboard Banner if active
                 if (round.isDuel) _buildDuelBanner(round, accent),
                 if (round.hasRivals) _buildRivalBanner(round),
 
-                // Scrollable Question + Options + Coach Area
+                // Soru Plaketi + 3D Altıgen Seçenekler + AI Koç
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 18),
                     children: [
                       AnimatedBuilder(
                         animation: _shakeCtrl,
@@ -223,105 +248,122 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                               10.0;
                           return Transform.translate(offset: Offset(dx, 0), child: child);
                         },
-                        child: ArenaGlassCard(
-                          tint: q.category.accent,
-                          highContrast: ctrl.highContrast,
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  ClipRRect(borderRadius: BorderRadius.circular(8),
-                                    child: Image.asset(q.category.detailImage, width: 38, height: 36,
-                                      fit: BoxFit.cover, excludeFromSemantics: true)),
-                                  const SizedBox(width: 6),
-                                  Flexible(
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 3,
+                        child: Studio3DEntrance(
+                          key: ValueKey('quiz_q_${q.id}_${round.currentIndex}'),
+                          child: Studio3DPlaque(
+                            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+                            chamfer: 16,
+                            borderColor: ctrl.highContrast ? StudioPalette.goldBright : StudioPalette.gold,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.asset(
+                                        q.category.detailImage,
+                                        width: 34,
+                                        height: 32,
+                                        fit: BoxFit.cover,
+                                        excludeFromSemantics: true,
                                       ),
-                                      decoration: BoxDecoration(
-                                        color: q.category.accent.withValues(alpha: 0.18),
-                                        borderRadius: BorderRadius.circular(99),
-                                      ),
-                                      child: Text(
-                                        q.exam != null
-                                            ? '${q.exam!.label} · ${q.lesson ?? q.category.label}'
-                                            : q.category.label,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w800,
-                                          color: q.category.accent,
+                                    ),
+                                    const SizedBox(width: 7),
+                                    Flexible(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 9,
+                                          vertical: 3.5,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: StudioPalette.gold.withValues(alpha: 0.16),
+                                          borderRadius: BorderRadius.circular(99),
+                                          border: Border.all(
+                                            color: StudioPalette.gold.withValues(alpha: 0.55),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          q.exam != null
+                                              ? '${q.exam!.label} · ${q.lesson ?? q.category.label}'
+                                              : q.category.label,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w900,
+                                            color: StudioPalette.goldBright,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    q.difficulty.label,
-                                    style: TextStyle(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: q.difficulty.color,
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      q.difficulty.label,
+                                      style: TextStyle(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w900,
+                                        color: q.difficulty.color,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    InkWell(
+                                      onTap: ctrl.narrateCurrentQuestion,
+                                      child: const Icon(
+                                        Icons.volume_up_rounded,
+                                        size: 20,
+                                        color: StudioPalette.goldBright,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (q.bloom != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 7),
+                                    child: Text(
+                                      [
+                                        if (q.studyLevel != null) q.studyLevel!,
+                                        q.bloom!.label,
+                                        q.responseType.label,
+                                      ].join(' · '),
+                                      style: const TextStyle(fontSize: 11.5, color: Colors.white70),
                                     ),
                                   ),
-                                  const Spacer(),
-                                  InkWell(
-                                    onTap: ctrl.narrateCurrentQuestion,
-                                    child: Icon(
-                                      Icons.volume_up_rounded,
-                                      size: 19,
-                                      color: Colors.white.withValues(alpha: 0.72),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (q.bloom != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: Text(
-                                    [if (q.studyLevel != null) q.studyLevel!, q.bloom!.label, q.responseType.label].join(' · '),
-                                    style: const TextStyle(fontSize: 12, color: Colors.white70),
+                                const SizedBox(height: 12),
+                                Text(
+                                  q.text,
+                                  style: TextStyle(
+                                    fontSize: 17.2 * ctrl.readingScale,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                    height: 1.34,
                                   ),
                                 ),
-                              const SizedBox(height: 12),
-                              Text(
-                                q.text,
-                                style: TextStyle(
-                                  fontSize: 17.0 * ctrl.readingScale,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  height: 1.32,
-                                ),
-                              ),
-                              if (q.visual != null)
-                                QuestionVisualViewer(
-                                  visual: q.visual!,
-                                  accent: q.category.accent,
-                                  onZoomStart: () => ctrl.setOverlayPause(true),
-                                  onZoomEnd: () => ctrl.setOverlayPause(false),
-                                ),
-                              if (q.activity != null)
-                                QuestionActivityWidget(
-                                  key: ValueKey(q.id),
-                                  question: q,
-                                  accent: q.category.accent,
-                                  revealed: round.revealed,
-                                  onPlayListeningAudio: () => ctrl.speakActivityAudio(q),
-                                  onStartPronunciationMic: () =>
-                                      _triggerSingleVoiceAnswer(context, pronunciation: true),
-                                  onSubmitSequence: (seq) => ctrl.submitActivitySequence(seq),
-                                  onSelectChoice: (idx) => ctrl.submitChoice(idx),
-                                ),
-                            ],
+                                if (q.visual != null)
+                                  QuestionVisualViewer(
+                                    visual: q.visual!,
+                                    accent: StudioPalette.gold,
+                                    onZoomStart: () => ctrl.setOverlayPause(true),
+                                    onZoomEnd: () => ctrl.setOverlayPause(false),
+                                  ),
+                                if (q.activity != null)
+                                  QuestionActivityWidget(
+                                    key: ValueKey(q.id),
+                                    question: q,
+                                    accent: StudioPalette.gold,
+                                    revealed: round.revealed,
+                                    onPlayListeningAudio: () => ctrl.speakActivityAudio(q),
+                                    onStartPronunciationMic: () =>
+                                        _triggerSingleVoiceAnswer(context, pronunciation: true),
+                                    onSubmitSequence: (seq) => ctrl.submitActivitySequence(seq),
+                                    onSelectChoice: (idx) => ctrl.submitChoice(idx),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
 
                       if (q.creation != null) ...[
                         ArenaGlassCard(
@@ -347,17 +389,23 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                                 const SizedBox(height: 8),
                                 SelectableText(round.creationResponse, style: const TextStyle(color: Colors.white)),
                                 const SizedBox(height: 8),
-                                const Text('Tasarımın defterine kaydedildi. Tur puanı aşağıdaki kontrol sorusuna göre hesaplanır.',
-                                  style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                const Text(
+                                  'Tasarımın defterine kaydedildi. Tur puanı aşağıdaki kontrol sorusuna göre hesaplanır.',
+                                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                                ),
                               ],
                             ],
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                       ],
                       if (q.multiSelect != null)
-                        _MultipleAnswerInput(key: ValueKey(q.id), task: q.multiSelect!,
-                            revealed: round.revealed, onSubmit: ctrl.submitMultiple),
+                        _MultipleAnswerInput(
+                          key: ValueKey(q.id),
+                          task: q.multiSelect!,
+                          revealed: round.revealed,
+                          onSubmit: ctrl.submitMultiple,
+                        ),
                       if (q.responseType == ResponseType.fill && !round.revealed)
                         _WrittenInput(
                           key: ValueKey('fill-${q.id}'),
@@ -365,15 +413,16 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                           action: 'Yanıtı kontrol et',
                           onSubmit: ctrl.submitWrittenAnswer,
                         ),
-                      if (!round.needsCreation && q.multiSelect == null && !q.isInteractiveSequence &&
+                      if (!round.needsCreation &&
+                          q.multiSelect == null &&
+                          !q.isInteractiveSequence &&
                           q.responseType != ResponseType.fill)
                         for (var i = 0; i < q.options.length; i++)
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 9),
-                            child: _buildOptionTile(ctrl, round, q, i, accent),
+                            padding: const EdgeInsets.only(bottom: 11),
+                            child: _buildOptionTile(ctrl, round, q, i),
                           ),
 
-                      // Revealed Explanation & AI Coach Card
                       if (round.revealed) ...[
                         const SizedBox(height: 6),
                         _buildPostAnswerPanel(ctrl, round, q, accent),
@@ -382,12 +431,10 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                   ),
                 ),
 
-                // Bottom Bar: Live Voice Host Bar OR Jokers + Voice Button OR Next Question
                 _buildBottomActionBar(context, ctrl, round, q, accent),
               ],
             ),
 
-            // Pause Overlay
             if (round.paused) _buildPauseModal(ctrl, accent),
           ],
         ),
@@ -397,16 +444,16 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
 
   Widget _buildDuelBanner(ActiveRound round, Color accent) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      margin: const EdgeInsets.fromLTRB(14, 8, 14, 0),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFFF9559).withValues(alpha: 0.14),
+        gradient: const LinearGradient(colors: [StudioPalette.navyTop, StudioPalette.navyDark]),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFF9559).withValues(alpha: 0.45)),
+        border: Border.all(color: StudioPalette.amber.withValues(alpha: 0.75), width: 1.3),
       ),
       child: Row(
         children: [
-          const Icon(Icons.shield_rounded, size: 17, color: Color(0xFFFF9559)),
+          const Icon(Icons.shield_rounded, size: 17, color: StudioPalette.goldBright),
           const SizedBox(width: 7),
           Text(
             'Sıra: ${round.activeDuelPlayerName}',
@@ -424,12 +471,8 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                 '${round.setup.duelPlayerNames[i]}: ${round.duelScores[i]}',
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight: i == round.activeDuelPlayerIndex
-                      ? FontWeight.w900
-                      : FontWeight.w600,
-                  color: i == round.activeDuelPlayerIndex
-                      ? const Color(0xFFFFB454)
-                      : Colors.white70,
+                  fontWeight: i == round.activeDuelPlayerIndex ? FontWeight.w900 : FontWeight.w600,
+                  color: i == round.activeDuelPlayerIndex ? StudioPalette.goldBright : Colors.white70,
                 ),
               ),
             ),
@@ -441,27 +484,30 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
   Widget _buildRivalBanner(ActiveRound round) {
     final satirlar = <(String, int)>[
       ('Sen', round.totalScore),
-      for (var i = 0; i < round.setup.rivalNames.length; i++) (round.setup.rivalNames[i], round.rivalScores[i]),
+      for (var i = 0; i < round.setup.rivalNames.length; i++)
+        (round.setup.rivalNames[i], round.rivalScores[i]),
     ]..sort((a, b) => b.$2.compareTo(a.$2));
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.fromLTRB(14, 8, 14, 0),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF12C25A).withValues(alpha: .16),
+        gradient: const LinearGradient(colors: [StudioPalette.navyTop, StudioPalette.navyDark]),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF12C25A).withValues(alpha: .5)),
+        border: Border.all(color: StudioPalette.gold.withValues(alpha: 0.65), width: 1.3),
       ),
       child: Wrap(
         spacing: 12,
         runSpacing: 4,
         children: [
           for (var i = 0; i < satirlar.length; i++)
-            Text('${i + 1}. ${satirlar[i].$1}: ${satirlar[i].$2}',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: satirlar[i].$1 == 'Sen' ? FontWeight.w900 : FontWeight.w600,
-                  color: satirlar[i].$1 == 'Sen' ? const Color(0xFF8DD14F) : Colors.white70,
-                )),
+            Text(
+              '${i + 1}. ${satirlar[i].$1}: ${satirlar[i].$2}',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: satirlar[i].$1 == 'Sen' ? FontWeight.w900 : FontWeight.w600,
+                color: satirlar[i].$1 == 'Sen' ? StudioPalette.goldBright : Colors.white70,
+              ),
+            ),
         ],
       ),
     );
@@ -472,107 +518,35 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
     ActiveRound round,
     Question q,
     int idx,
-    Color accent,
   ) {
-    final hidden = round.hiddenOptions.contains(idx) && !round.revealed;
-    if (hidden) {
-      return Opacity(
-        opacity: 0.25,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white12),
-          ),
-          child: const Text(
-            '50:50 ile elendi',
-            style: TextStyle(fontSize: 13, color: Colors.white54),
-          ),
-        ),
-      );
-    }
-
     const letters = ['A', 'B', 'C', 'D'];
+    final hidden = round.hiddenOptions.contains(idx) && !round.revealed;
     final lastAns = round.revealed && round.answers.isNotEmpty ? round.answers.last : null;
     final isCorrectOpt = idx == q.answer;
     final isSelectedOpt = lastAns?.selectedOption == idx;
 
-    Color borderColor = Colors.white.withValues(alpha: 0.14);
-    Color bgColor = const Color(0xCC0E1A30);
-    Color badgeColor = accent.withValues(alpha: 0.18);
-    Color badgeText = accent;
-
-    if (round.revealed) {
+    final StudioOptionState state;
+    if (hidden) {
+      state = StudioOptionState.hidden;
+    } else if (round.revealed) {
       if (isCorrectOpt) {
-        borderColor = const Color(0xFF5CE09B);
-        bgColor = const Color(0xFF5CE09B).withValues(alpha: 0.20);
-        badgeColor = const Color(0xFF5CE09B);
-        badgeText = const Color(0xFF06101F);
+        state = StudioOptionState.correct;
       } else if (isSelectedOpt) {
-        borderColor = const Color(0xFFFF6B7A);
-        bgColor = const Color(0xFFFF6B7A).withValues(alpha: 0.20);
-        badgeColor = const Color(0xFFFF6B7A);
-        badgeText = Colors.white;
+        state = StudioOptionState.wrong;
+      } else {
+        state = StudioOptionState.normal;
       }
+    } else {
+      state = StudioOptionState.normal;
     }
 
-    return ArenaPressDepth(child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: round.revealed ? null : () => ctrl.submitChoice(idx),
-        borderRadius: BorderRadius.circular(16),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
-              colors: [Color.alphaBlend(badgeColor.withValues(alpha: .19), const Color(0xff192c40)),Color.alphaBlend(bgColor,const Color(0xff101825))]),
-            boxShadow: const [BoxShadow(color: Color(0xaa03070c), offset: Offset(0,3))],
-            border: Border.all(
-              color: borderColor,
-              width: round.revealed && (isCorrectOpt || isSelectedOpt) ? 1.7 : 1.0,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: badgeColor,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  letters[idx % 4],
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: badgeText,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  q.options[idx],
-                  style: TextStyle(
-                    fontSize: 14.5 * ctrl.readingScale,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              if (round.revealed && isCorrectOpt)
-                const Icon(Icons.check_circle_rounded, color: Color(0xFF5CE09B), size: 20)
-              else if (round.revealed && isSelectedOpt && !isCorrectOpt)
-                const Icon(Icons.cancel_rounded, color: Color(0xFFFF6B7A), size: 20),
-            ],
-          ),
-        ),
-      ),
-    ));
+    return Studio3DOptionPlaque(
+      letter: letters[idx % 4],
+      text: hidden ? '50:50 ile elendi' : q.options[idx],
+      state: state,
+      fontSize: 14.8 * ctrl.readingScale,
+      onTap: (round.revealed || hidden) ? null : () => ctrl.submitChoice(idx),
+    );
   }
 
   Widget _buildPostAnswerPanel(
@@ -583,7 +557,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
   ) {
     final rec = round.answers.isNotEmpty ? round.answers.last : null;
     final ok = rec?.correct ?? false;
-    final statusColor = ok ? const Color(0xFF5CE09B) : const Color(0xFFFF7B89);
+    final statusColor = ok ? const Color(0xFF4BE085) : const Color(0xFFFF7B89);
 
     return ArenaGlassCard(
       tint: statusColor,
@@ -596,7 +570,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
               Icon(
                 ok ? Icons.verified_rounded : Icons.info_rounded,
                 color: statusColor,
-                size: 19,
+                size: 20,
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -606,7 +580,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                       : 'Doğru Yanıt: ${q.correctAnswerText}',
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w900,
                     color: statusColor,
                   ),
                 ),
@@ -629,7 +603,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
               q.explanation,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.white.withValues(alpha: 0.88),
+                color: Colors.white.withValues(alpha: 0.9),
                 height: 1.35,
               ),
             ),
@@ -637,7 +611,11 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
           const SizedBox(height: 12),
           const Text(
             'AI Öğrenme Koçu',
-            style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: Colors.white70),
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800,
+              color: StudioPalette.goldBright,
+            ),
           ),
           const SizedBox(height: 6),
           SingleChildScrollView(
@@ -673,9 +651,9 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
             Container(
               padding: const EdgeInsets.all(11),
               decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.12),
+                color: StudioPalette.navyDark.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: accent.withValues(alpha: 0.35)),
+                border: Border.all(color: StudioPalette.gold.withValues(alpha: 0.45)),
               ),
               child: Text(
                 _coachReply!,
@@ -689,26 +667,33 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
   }
 
   Widget _coachChip(String label, VoidCallback onTap, Color accent) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(99),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: accent.withValues(alpha: 0.14),
-          borderRadius: BorderRadius.circular(99),
-          border: Border.all(color: accent.withValues(alpha: 0.35)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.auto_awesome_rounded, size: 13, color: accent),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: accent),
-            ),
-          ],
+    return ArenaPressDepth(
+      depthOffset: 1.3,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(99),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [StudioPalette.navyTop, StudioPalette.navyDark]),
+            borderRadius: BorderRadius.circular(99),
+            border: Border.all(color: StudioPalette.gold.withValues(alpha: 0.55)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.auto_awesome_rounded, size: 13, color: StudioPalette.goldBright),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                  color: StudioPalette.goldBright,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -725,29 +710,23 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
       final isLast = round.currentIndex + 1 >= round.questions.length;
       return Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
-        decoration: BoxDecoration(
-          color: const Color(0xE6081020),
-          border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
-        ),
-        child: SizedBox(
-          width: double.infinity,
-          child: FilledButton.icon(
-            onPressed: () {
-              ctrl.setOverlayPause(false);
-              ctrl.nextQuestion();
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: accent,
-              foregroundColor: const Color(0xFF06101F),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            ),
-            icon: Icon(isLast ? Icons.emoji_events_rounded : Icons.arrow_forward_rounded),
-            label: Text(
-              isLast ? 'Sonuçları Gör' : 'Sonraki Soru',
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
-            ),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xEE0D175A), StudioPalette.night],
           ),
+          border: Border(top: BorderSide(color: StudioPalette.gold, width: 1.4)),
+        ),
+        child: Studio3DButton(
+          label: isLast ? 'Sonuçları Gör' : 'Sonraki Soru',
+          icon: isLast ? Icons.emoji_events_rounded : Icons.arrow_forward_rounded,
+          expand: true,
+          fontSize: 15.5,
+          onPressed: () {
+            ctrl.setOverlayPause(false);
+            ctrl.nextQuestion();
+          },
         ),
       );
     }
@@ -761,62 +740,56 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
 
     final jokersAllowed = round.setup.mode.allowsJokers;
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 9, 12, 12),
-      decoration: BoxDecoration(
-        color: const Color(0xE6081020),
-        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+      padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xEE0D175A), StudioPalette.night],
+        ),
+        border: Border(top: BorderSide(color: StudioPalette.gold, width: 1.3)),
       ),
       child: Row(
         children: [
           if (jokersAllowed) ...[
-            _jokerButton(
+            Studio3DJokerOrb(
               label: '50:50',
               icon: Icons.contrast_rounded,
-              used: round.jokerFiftyUsed || q.responseType != ResponseType.choice || q.options.length < 4,
+              used: round.jokerFiftyUsed ||
+                  q.responseType != ResponseType.choice ||
+                  q.options.length < 4,
               onTap: ctrl.useFiftyFiftyJoker,
             ),
-            const SizedBox(width: 6),
-            _jokerButton(
+            Studio3DJokerOrb(
               label: '+15sn',
               icon: Icons.more_time_rounded,
               used: round.jokerTimeUsed || round.totalTimerSeconds <= 0,
               onTap: ctrl.useExtraTimeJoker,
             ),
-            const SizedBox(width: 6),
-            _jokerButton(
+            Studio3DJokerOrb(
               label: 'Pas',
               icon: Icons.skip_next_rounded,
               used: round.jokerSkipUsed,
               onTap: ctrl.useSkipJoker,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
           ],
           Expanded(
-            child: FilledButton.icon(
+            child: Studio3DButton(
+              label: ctrl.livePhase == LiveVoicePhase.listening ? 'Dinliyor...' : 'Sesle',
+              icon: ctrl.livePhase == LiveVoicePhase.listening
+                  ? Icons.graphic_eq_rounded
+                  : Icons.mic_rounded,
+              expand: true,
+              shimmer: false,
+              fontSize: 13,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
               onPressed: ctrl.livePhase == LiveVoicePhase.listening
                   ? null
                   : () => _triggerSingleVoiceAnswer(
                         context,
                         pronunciation: q.isPronunciation,
                       ),
-              style: FilledButton.styleFrom(
-                backgroundColor: accent,
-                foregroundColor: const Color(0xFF06101F),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
-              ),
-              icon: Icon(
-                ctrl.livePhase == LiveVoicePhase.listening
-                    ? Icons.graphic_eq_rounded
-                    : Icons.mic_rounded,
-                size: 16,
-              ),
-              label: Text(
-                ctrl.livePhase == LiveVoicePhase.listening ? 'Dinliyor...' : 'Sesle',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900),
-              ),
             ),
           ),
         ],
@@ -824,78 +797,33 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
     );
   }
 
-  Widget _jokerButton({
-    required String label,
-    required IconData icon,
-    required bool used,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: used ? null : onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Opacity(
-        opacity: used ? 0.35 : 1.0,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white24),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 15, color: const Color(0xFFF6C453)),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildLiveVoiceStudioBar(ArenaController ctrl, Color accent) {
-    String statusTitle;
-    switch (ctrl.livePhase) {
-      case LiveVoicePhase.speakingQuestion:
-        statusTitle = 'Sunucu soruyu okuyor...';
-        break;
-      case LiveVoicePhase.listening:
-        statusTitle = 'Seni dinliyorum (A, B, C, D veya yanıtı söyle)';
-        break;
-      case LiveVoicePhase.reviewing:
-        statusTitle = '${ctrl.livePreview} · ${ctrl.liveReviewCountdown} sn içinde gönderiliyor';
-        break;
-      case LiveVoicePhase.speakingFeedback:
-        statusTitle = 'Sunucu sonucu açıklıyor...';
-        break;
-      case LiveVoicePhase.error:
-        statusTitle = ctrl.liveError ?? 'Ses anlaşılamadı';
-        break;
-      default:
-        statusTitle = 'Canlı Sesli Stüdyo Hazır';
-    }
+    final statusTitle = switch (ctrl.livePhase) {
+      LiveVoicePhase.speakingQuestion => 'Sunucu soruyu okuyor...',
+      LiveVoicePhase.listening => 'Seni dinliyorum (A, B, C, D veya yanıtı söyle)',
+      LiveVoicePhase.reviewing =>
+        '${ctrl.livePreview} · ${ctrl.liveReviewCountdown} sn içinde gönderiliyor',
+      LiveVoicePhase.speakingFeedback => 'Sunucu sonucu açıklıyor...',
+      LiveVoicePhase.error => ctrl.liveError ?? 'Ses anlaşılamadı',
+      _ => 'Canlı Sesli Stüdyo Hazır',
+    };
 
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
-      decoration: BoxDecoration(
-        color: const Color(0xF0081122),
-        border: Border(top: BorderSide(color: accent.withValues(alpha: 0.35))),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xF00D175A), StudioPalette.night],
+        ),
+        border: Border(top: BorderSide(color: StudioPalette.gold, width: 1.5)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Icon(Icons.mic_external_on_rounded, color: accent, size: 19),
+              const Icon(Icons.mic_external_on_rounded, color: StudioPalette.goldBright, size: 19),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -911,7 +839,8 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
               ),
               TextButton(
                 onPressed: ctrl.retryLiveListening,
-                child: const Text('Yeniden Dinle', style: TextStyle(fontSize: 12)),
+                child: const Text('Yeniden Dinle',
+                    style: TextStyle(fontSize: 12, color: StudioPalette.goldBright)),
               ),
             ],
           ),
@@ -922,7 +851,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                 minHeight: 4,
                 value: ctrl.micLevel.clamp(0.08, 1.0),
                 backgroundColor: Colors.white12,
-                valueColor: AlwaysStoppedAnimation<Color>(accent),
+                valueColor: const AlwaysStoppedAnimation<Color>(StudioPalette.gold),
               ),
             ),
         ],
@@ -934,14 +863,13 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
     return SafeArea(
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: ArenaGlassCard(
-            tint: accent,
+          padding: const EdgeInsets.all(22),
+          child: Studio3DPlaque(
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.stairs_rounded, size: 48, color: accent),
+                const Studio3DOrbitEmblem(icon: Icons.stairs_rounded, size: 74),
                 const SizedBox(height: 14),
                 Text(
                   round.currentStageLabel,
@@ -949,28 +877,21 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
-                    color: Colors.white,
+                    color: StudioPalette.goldBright,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Şu ana kadar ${round.totalScore} puan topladın. Yeni etapta soru süren hızlanıyor!',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13.5, color: Colors.white.withValues(alpha: 0.76)),
+                  style: TextStyle(fontSize: 13.5, color: Colors.white.withValues(alpha: 0.84)),
                 ),
                 const SizedBox(height: 20),
-                FilledButton.icon(
+                Studio3DButton(
+                  label: 'Yeni Etaba Başla',
+                  icon: Icons.bolt_rounded,
+                  expand: true,
                   onPressed: ctrl.continueFromStageBreak,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: accent,
-                    foregroundColor: const Color(0xFF06101F),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 13),
-                  ),
-                  icon: const Icon(Icons.bolt_rounded),
-                  label: const Text(
-                    'Yeni Etaba Başla',
-                    style: TextStyle(fontWeight: FontWeight.w900),
-                  ),
                 ),
               ],
             ),
@@ -982,12 +903,11 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
 
   Widget _buildPauseModal(ArenaController ctrl, Color accent) {
     return ColoredBox(
-      color: Colors.black.withValues(alpha: 0.76),
+      color: Colors.black.withValues(alpha: 0.78),
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(28),
-          child: ArenaGlassCard(
-            tint: accent,
+          child: Studio3DPlaque(
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -997,26 +917,26 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                   'Tur Duraklatıldı',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 21,
                     fontWeight: FontWeight.w900,
-                    color: Colors.white,
+                    color: StudioPalette.goldBright,
                   ),
                 ),
                 const SizedBox(height: 18),
-                FilledButton.icon(
+                Studio3DButton(
+                  label: 'Yarışmaya Devam Et',
+                  icon: Icons.play_arrow_rounded,
+                  expand: true,
                   onPressed: ctrl.togglePauseRound,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: accent,
-                    foregroundColor: const Color(0xFF06101F),
-                  ),
-                  icon: const Icon(Icons.play_arrow_rounded),
-                  label: const Text('Yarışmaya Devam Et'),
                 ),
                 const SizedBox(height: 10),
-                OutlinedButton.icon(
+                Studio3DButton(
+                  label: 'Ana Ekrana Dön',
+                  icon: Icons.exit_to_app_rounded,
+                  variant: StudioButtonVariant.navy,
+                  shimmer: false,
+                  expand: true,
                   onPressed: ctrl.exitRound,
-                  icon: const Icon(Icons.exit_to_app_rounded),
-                  label: const Text('Ana Ekrana Dön'),
                 ),
               ],
             ),
@@ -1044,20 +964,11 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
           ListView(
             padding: const EdgeInsets.fromLTRB(18, 20, 18, 40),
             children: [
-              ArenaGlassCard(
-                tint: accent,
+              Studio3DPlaque(
                 padding: const EdgeInsets.all(22),
                 child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 36,
-                      backgroundColor: const Color(0xFFF6C453).withValues(alpha: 0.2),
-                      child: const Icon(
-                        Icons.emoji_events_rounded,
-                        size: 40,
-                        color: Color(0xFFF6C453),
-                      ),
-                    ),
+                    const Studio3DOrbitEmblem(icon: Icons.emoji_events_rounded, size: 84),
                     const SizedBox(height: 12),
                     Text(
                       round.title,
@@ -1074,10 +985,10 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                       duration: const Duration(milliseconds: 900),
                       builder: (_, val, _) => Text(
                         '${val.round()} Puan',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 34,
                           fontWeight: FontWeight.w900,
-                          color: accent,
+                          color: StudioPalette.goldBright,
                         ),
                       ),
                     ),
@@ -1098,7 +1009,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
               if ((round.isDuel || round.hasRivals) && ctrl.history.isNotEmpty) ...[
                 const SizedBox(height: 14),
                 ArenaGlassCard(
-                  tint: const Color(0xFFFFB454),
+                  tint: StudioPalette.gold,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1106,8 +1017,8 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                         round.hasRivals ? 'Sıralama' : 'Düello Kürsüsü',
                         style: const TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          color: StudioPalette.goldBright,
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -1121,7 +1032,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w800,
-                                  color: i == 0 ? const Color(0xFFF6C453) : Colors.white,
+                                  color: i == 0 ? StudioPalette.goldBright : Colors.white,
                                 ),
                               ),
                               const Spacer(),
@@ -1141,32 +1052,25 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
               Row(
                 children: [
                   Expanded(
-                    child: FilledButton.icon(
+                    child: Studio3DButton(
+                      label: 'Yeni Tur',
+                      icon: Icons.replay_rounded,
+                      expand: true,
                       onPressed: () => ctrl.startConfiguredRound(
                         customTitle: round.title,
                         overrideSetup: round.setup,
-                      ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: accent,
-                        foregroundColor: const Color(0xFF06101F),
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                      ),
-                      icon: const Icon(Icons.replay_rounded),
-                      label: const Text(
-                        'Yeni Tur',
-                        style: TextStyle(fontWeight: FontWeight.w900),
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: Studio3DButton(
+                      label: 'Ana Ekran',
+                      icon: Icons.home_rounded,
+                      variant: StudioButtonVariant.navy,
+                      shimmer: false,
+                      expand: true,
                       onPressed: ctrl.exitRound,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                      ),
-                      icon: const Icon(Icons.home_rounded),
-                      label: const Text('Ana Ekran'),
                     ),
                   ),
                 ],
@@ -1178,8 +1082,8 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                   'Gözden Geçirilecek Sorular (${missed.length})',
                   style: const TextStyle(
                     fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    color: StudioPalette.goldBright,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -1205,7 +1109,7 @@ class _QuizSessionScreenState extends State<QuizSessionScreen>
                             style: const TextStyle(
                               fontSize: 12.5,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF5CE09B),
+                              color: Color(0xFF4BE085),
                             ),
                           ),
                           if (m.question.explanation.isNotEmpty) ...[
@@ -1250,8 +1154,14 @@ class _WrittenInput extends StatefulWidget {
   final String initial;
   final bool long;
   final ValueChanged<String> onSubmit;
-  const _WrittenInput({super.key, required this.label, required this.action,
-      required this.onSubmit, this.initial = '', this.long = false});
+  const _WrittenInput({
+    super.key,
+    required this.label,
+    required this.action,
+    required this.onSubmit,
+    this.initial = '',
+    this.long = false,
+  });
 
   @override
   State<_WrittenInput> createState() => _WrittenInputState();
@@ -1275,27 +1185,50 @@ class _WrittenInputState extends State<_WrittenInput> {
 
   @override
   Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      TextField(controller: _text, minLines: widget.long ? 3 : 1,
-        maxLines: widget.long ? 8 : 1, autocorrect: false,
-        style: const TextStyle(color: Colors.white),
-        onChanged: (_) => setState(() {}),
-        onSubmitted: widget.long ? null : (_) => _send(),
-        decoration: InputDecoration(labelText: widget.label),
-      ),
-      const SizedBox(height: 8),
-      FilledButton(onPressed: _text.text.trim().isEmpty ? null : _send,
-        child: Text(widget.action)),
-    ],
-  );
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _text,
+            minLines: widget.long ? 3 : 1,
+            maxLines: widget.long ? 8 : 1,
+            autocorrect: false,
+            style: const TextStyle(color: Colors.white),
+            onChanged: (_) => setState(() {}),
+            onSubmitted: widget.long ? null : (_) => _send(),
+            decoration: InputDecoration(
+              labelText: widget.label,
+              filled: true,
+              fillColor: StudioPalette.navyDark.withValues(alpha: 0.8),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: StudioPalette.gold.withValues(alpha: 0.45)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: StudioPalette.gold, width: 1.6),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Studio3DButton(
+            label: widget.action,
+            expand: true,
+            onPressed: _text.text.trim().isEmpty ? null : _send,
+          ),
+        ],
+      );
 }
 
 class _MultipleAnswerInput extends StatefulWidget {
   final MultiSelectTask task;
   final bool revealed;
   final ValueChanged<Set<int>> onSubmit;
-  const _MultipleAnswerInput({super.key, required this.task, required this.revealed, required this.onSubmit});
+  const _MultipleAnswerInput({
+    super.key,
+    required this.task,
+    required this.revealed,
+    required this.onSubmit,
+  });
 
   @override
   State<_MultipleAnswerInput> createState() => _MultipleAnswerInputState();
@@ -1306,16 +1239,32 @@ class _MultipleAnswerInputState extends State<_MultipleAnswerInput> {
 
   @override
   Widget build(BuildContext context) => Column(children: [
-    const Align(alignment: Alignment.centerLeft, child: Text('Geçerli önermelerin tümünü seç.')),
-    for (final (index, option) in widget.task.options.indexed)
-      CheckboxListTile(
-        title: Text(option), value: selected.contains(index),
-        onChanged: widget.revealed ? null : (value) => setState(() {
-          if (value == true) {selected.add(index);} else {selected.remove(index);}
-        }),
-      ),
-    if (!widget.revealed)
-      FilledButton(onPressed: selected.isEmpty ? null : () => widget.onSubmit(Set.of(selected)),
-        child: const Text('Seçimlerimi kontrol et')),
-  ]);
+        const Align(
+          alignment: Alignment.centerLeft,
+          child: Text('Geçerli önermelerin tümünü seç.',
+              style: TextStyle(color: StudioPalette.goldBright, fontWeight: FontWeight.w800)),
+        ),
+        for (final (index, option) in widget.task.options.indexed)
+          CheckboxListTile(
+            title: Text(option, style: const TextStyle(color: Colors.white)),
+            activeColor: StudioPalette.gold,
+            checkColor: StudioPalette.night,
+            value: selected.contains(index),
+            onChanged: widget.revealed
+                ? null
+                : (value) => setState(() {
+                      if (value == true) {
+                        selected.add(index);
+                      } else {
+                        selected.remove(index);
+                      }
+                    }),
+          ),
+        if (!widget.revealed)
+          Studio3DButton(
+            label: 'Seçimlerimi kontrol et',
+            expand: true,
+            onPressed: selected.isEmpty ? null : () => widget.onSubmit(Set.of(selected)),
+          ),
+      ]);
 }

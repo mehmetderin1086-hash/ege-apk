@@ -18,7 +18,7 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
   int _section = 0; // 0: Havuz, 1: Tekrar, 2: Defterim, 3: Paketler, 4: Profiller
   String _query = '';
   final _queryController = TextEditingController();
-  Topic _filterTopic = Topic.mixed;
+  final Set<Topic> _filterTopics = {};
   QuestionFormat _filterFormat = QuestionFormat.mixed;
   bool _hideReported = true;
   PoolCollection _collection = PoolCollection.all;
@@ -46,9 +46,10 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF0A1324),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      backgroundColor: StudioPalette.navyDark,
+      shape: RoundedRectangleBorder(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        side: BorderSide(color: StudioPalette.gold.withValues(alpha: 0.45)),
       ),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheet) {
@@ -66,7 +67,11 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
               children: [
                 const Text(
                   'Yeni Sınav Çalışma Profili',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                    color: StudioPalette.goldBright,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -74,11 +79,16 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: 'Profil Adı',
+                    labelStyle: const TextStyle(color: StudioPalette.goldBright),
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.06),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                    fillColor: StudioPalette.navyTop.withValues(alpha: 0.6),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: StudioPalette.gold.withValues(alpha: 0.35)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: const BorderSide(color: StudioPalette.gold, width: 1.5),
                     ),
                   ),
                 ),
@@ -110,7 +120,10 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                   accent: accent,
                 ),
                 const SizedBox(height: 16),
-                FilledButton.icon(
+                Studio3DButton(
+                  label: 'Profili Kaydet',
+                  icon: Icons.save_rounded,
+                  expand: true,
                   onPressed: () {
                     widget.controller.addStudyProfile(
                       StudyProfile(
@@ -126,12 +139,6 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                     );
                     Navigator.of(ctx).pop();
                   },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: accent,
-                    foregroundColor: const Color(0xFF06101F),
-                  ),
-                  icon: const Icon(Icons.save_rounded),
-                  label: const Text('Profili Kaydet'),
                 ),
               ],
             ),
@@ -218,8 +225,9 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
   Widget _buildQuestionPoolBrowser(BuildContext context, ArenaController ctrl, Color accent) {
     final query = _query.trim().toLowerCase();
     final hiddenCount = _hideReported ? ctrl.reportedQuestionIds.length : 0;
-    final key = (_collection, _bloom, _filterTopic, _filterFormat, query, _hideReported,
-        ctrl.totalPoolCount, hiddenCount, ctrl);
+    final topicsSig = Object.hashAllUnordered(_filterTopics);
+    final key = (_collection, _bloom, topicsSig, _filterTopics.length, _filterFormat, query,
+        _hideReported, ctrl.totalPoolCount, hiddenCount, ctrl);
     if (_searchKey != key) {
       _pageTask?.cancel();
       _pageFuture = null;
@@ -230,8 +238,14 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
     }
     if (_pageFuture == null) {
       _pageTask = BrowserPageTask(
-        personal: ctrl.personalQuestions, collection: _collection, bloom: _bloom, topic: _filterTopic,
-        format: _filterFormat, query: query, cursor: _pages.last,
+        personal: ctrl.personalQuestions,
+        collection: _collection,
+        bloom: _bloom,
+        topic: _filterTopics.length == 1 ? _filterTopics.first : Topic.mixed,
+        topics: Set<Topic>.of(_filterTopics),
+        format: _filterFormat,
+        query: query,
+        cursor: _pages.last,
         hidden: _hideReported ? Set.of(ctrl.reportedQuestionIds) : const {},
       );
       _pageFuture = _pageTask!.run();
@@ -246,6 +260,11 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
     final waiting = snapshot.connectionState != ConnectionState.done;
     final page = waiting ? null : snapshot.data;
     final shown = page?.items ?? const <Question>[];
+    final showCounts = _collection == PoolCollection.all &&
+        _bloom == null &&
+        _filterFormat == QuestionFormat.mixed &&
+        _query.trim().isEmpty;
+
     return ListView.builder(
       key: ValueKey(_pages.length),
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
@@ -261,7 +280,7 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                 padding: const EdgeInsets.all(12),
                 child: Row(
                   children: [
-                    Expanded(child: _miniStat('Toplam', '${ctrl.totalPoolCount}', accent)),
+                    Expanded(child: _miniStat('Toplam', '${ctrl.totalPoolCount}', StudioPalette.goldBright)),
                     Expanded(
                       child: _miniStat(
                         'Görsel',
@@ -298,11 +317,15 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                   hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.48), fontSize: 13),
                   prefixIcon: Icon(Icons.search_rounded, color: accent, size: 20),
                   filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.07),
+                  fillColor: StudioPalette.navyTop.withValues(alpha: 0.58),
                   contentPadding: const EdgeInsets.symmetric(vertical: 11),
-                  border: OutlineInputBorder(
+                  enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
+                    borderSide: BorderSide(color: StudioPalette.gold.withValues(alpha: 0.32)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: StudioPalette.gold, width: 1.5),
                   ),
                 ),
               ),
@@ -328,16 +351,69 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                 ),
                 const SizedBox(height: 8),
               ],
-              ArenaScrollPills<Topic>(
-                items: [Topic.mixed, ...ctrl.availableTopics],
-                selected: _filterTopic,
-                labelBuilder: (t) => _collection == PoolCollection.all && _bloom == null &&
-                    _filterFormat == QuestionFormat.mixed && _query.trim().isEmpty
-                    ? '${t.label} (${ctrl.countForTopic(t)})' : t.label,
-                onSelected: (t) => setState(() {
-                  _filterTopic = t;
-                }),
-                accent: accent,
+              // Çoklu kategori seçimi
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _filterTopics.isEmpty
+                          ? 'Kategoriler (Birden fazla seçebilirsin)'
+                          : 'Seçili Kategoriler (${_filterTopics.length})',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: StudioPalette.goldBright,
+                      ),
+                    ),
+                  ),
+                  if (_filterTopics.isNotEmpty)
+                    InkWell(
+                      onTap: () => setState(() => _filterTopics.clear()),
+                      borderRadius: BorderRadius.circular(99),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        child: Text(
+                          'Temizle',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w800,
+                            color: StudioPalette.gold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              SizedBox(
+                height: 38,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    _multiTopicChip(
+                      label: showCounts ? 'Tümü (${ctrl.totalPoolCount})' : 'Tümü',
+                      selected: _filterTopics.isEmpty,
+                      color: StudioPalette.gold,
+                      onTap: () => setState(() => _filterTopics.clear()),
+                    ),
+                    const SizedBox(width: 7),
+                    for (final t in ctrl.availableTopics) ...[
+                      _multiTopicChip(
+                        label: showCounts ? '${t.label} (${ctrl.countForTopic(t)})' : t.label,
+                        selected: _filterTopics.contains(t),
+                        color: t.accent,
+                        onTap: () => setState(() {
+                          if (!_filterTopics.remove(t)) {
+                            _filterTopics.add(t);
+                          }
+                        }),
+                      ),
+                      const SizedBox(width: 7),
+                    ],
+                  ],
+                ),
               ),
               const SizedBox(height: 8),
               ArenaScrollPills<QuestionFormat>(
@@ -612,16 +688,13 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                 style: TextStyle(fontSize: 12.5, color: Colors.white.withValues(alpha: 0.72)),
               ),
               const SizedBox(height: 12),
-              FilledButton.icon(
+              Studio3DButton(
+                label: 'Tekrar Turunu Başlat',
+                icon: Icons.play_arrow_rounded,
+                expand: true,
                 onPressed: ctrl.reviewDeck.isEmpty
                     ? null
                     : () => ctrl.startSpacedRepetitionReview(),
-                style: FilledButton.styleFrom(
-                  backgroundColor: accent,
-                  foregroundColor: const Color(0xFF06101F),
-                ),
-                icon: const Icon(Icons.play_arrow_rounded),
-                label: const Text('Tekrar Turunu Başlat'),
               ),
             ],
           ),
@@ -756,7 +829,11 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
             children: [
               const Text(
                 'Soru Paketi Aktarımı (JSON)',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: StudioPalette.goldBright,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
@@ -767,7 +844,12 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
               Row(
                 children: [
                   Expanded(
-                    child: FilledButton.icon(
+                    child: Studio3DButton(
+                      label: 'JSON İçe Aktar',
+                      icon: Icons.file_open_rounded,
+                      expand: true,
+                      fontSize: 13.5,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
                       onPressed: () async {
                         final msg = await ctrl.importJsonQuestionPacks();
                         if (context.mounted) {
@@ -776,25 +858,23 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                           );
                         }
                       },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: accent,
-                        foregroundColor: const Color(0xFF06101F),
-                      ),
-                      icon: const Icon(Icons.file_open_rounded, size: 18),
-                      label: const Text('JSON İçe Aktar'),
                     ),
                   ),
                   if (ctrl.lastImportedPackId != null) ...[
                     const SizedBox(width: 8),
-                    OutlinedButton.icon(
+                    Studio3DButton(
+                      label: 'Geri Al',
+                      icon: Icons.undo_rounded,
+                      variant: StudioButtonVariant.navy,
+                      shimmer: false,
+                      fontSize: 13,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
                       onPressed: () {
                         ctrl.undoLastImport();
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Son içe aktarım geri alındı.')),
                         );
                       },
-                      icon: const Icon(Icons.undo_rounded, size: 17),
-                      label: const Text('Geri Al'),
                     ),
                   ],
                 ],
@@ -834,21 +914,24 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      FilledButton.icon(
+                      Studio3DButton(
+                        label: 'Oyna',
+                        icon: Icons.play_arrow_rounded,
+                        fontSize: 13.5,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                         onPressed: () => ctrl.startPackRound(pack),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: accent,
-                          foregroundColor: const Color(0xFF06101F),
-                        ),
-                        icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                        label: const Text('Oyna'),
                       ),
                       if (pack.questions is! FamilyQuestions) const SizedBox(width: 8),
-                      if (pack.questions is! FamilyQuestions) OutlinedButton.icon(
-                        onPressed: () => ctrl.exportQuestionPack(pack),
-                        icon: const Icon(Icons.download_rounded, size: 17),
-                        label: const Text('JSON Kaydet'),
-                      ),
+                      if (pack.questions is! FamilyQuestions)
+                        Studio3DButton(
+                          label: 'JSON Kaydet',
+                          icon: Icons.download_rounded,
+                          variant: StudioButtonVariant.navy,
+                          shimmer: false,
+                          fontSize: 13,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                          onPressed: () => ctrl.exportQuestionPack(pack),
+                        ),
                     ],
                   ),
                 ],
@@ -863,18 +946,13 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
       children: [
-        FilledButton.icon(
+        Studio3DButton(
+          label: 'Yeni TYT / AYT / KPSS / LGS Profili Ekle',
+          icon: Icons.add_rounded,
+          expand: true,
+          fontSize: 13.5,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           onPressed: () => _showCreateProfileSheet(context),
-          style: FilledButton.styleFrom(
-            backgroundColor: accent,
-            foregroundColor: const Color(0xFF06101F),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-          ),
-          icon: const Icon(Icons.add_rounded),
-          label: const Text(
-            'Yeni TYT / AYT / KPSS / LGS Profili Ekle',
-            style: TextStyle(fontWeight: FontWeight.w800),
-          ),
         ),
         const SizedBox(height: 12),
         for (final p in ctrl.studyProfiles)
@@ -908,7 +986,10 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                     onPressed: () => ctrl.deleteStudyProfile(p.id),
                     icon: const Icon(Icons.delete_outline_rounded, color: Colors.white54),
                   ),
-                  FilledButton(
+                  Studio3DButton(
+                    label: 'Başla',
+                    fontSize: 13,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                     onPressed: () {
                       if (!ctrl.startStudyProfileRound(p)) {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -916,17 +997,85 @@ class _AcademyPoolTabState extends State<AcademyPoolTab> {
                         ));
                       }
                     },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Topic.exam.accent,
-                      foregroundColor: const Color(0xFF06101F),
-                    ),
-                    child: const Text('Başla'),
                   ),
                 ],
               ),
             ),
           ),
       ],
+    );
+  }
+
+  Widget _multiTopicChip({
+    required String label,
+    required bool selected,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return ArenaPressDepth(
+      depthOffset: 2.0,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            gradient: selected
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      StudioPalette.gold.withValues(alpha: 0.34),
+                      StudioPalette.navyTop.withValues(alpha: 0.92),
+                    ],
+                  )
+                : LinearGradient(
+                    colors: [
+                      StudioPalette.navyMid.withValues(alpha: 0.72),
+                      StudioPalette.navyDark.withValues(alpha: 0.85),
+                    ],
+                  ),
+            border: Border.all(
+              color: selected
+                  ? StudioPalette.gold
+                  : color.withValues(alpha: 0.34),
+              width: selected ? 1.5 : 1.0,
+            ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: StudioPalette.gold.withValues(alpha: 0.28),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (selected) ...[
+                const Icon(
+                  Icons.check_circle_rounded,
+                  size: 13,
+                  color: StudioPalette.goldBright,
+                ),
+                const SizedBox(width: 5),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  color: selected ? StudioPalette.goldBright : Colors.white.withValues(alpha: 0.88),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

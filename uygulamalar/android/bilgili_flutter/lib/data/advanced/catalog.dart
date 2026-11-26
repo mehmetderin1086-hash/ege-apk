@@ -92,6 +92,7 @@ class AdvancedCatalog {
 
   static FamilyQuestions select({
     Topic topic = Topic.mixed,
+    Set<Topic>? topics,
     QuestionFormat format = QuestionFormat.mixed,
     StudyLevel? level,
     BloomLevel? bloom,
@@ -101,9 +102,16 @@ class AdvancedCatalog {
     VisualKind? visualKind,
     bool? requireVisual,
   }) {
+    final activeTopics = topics != null
+        ? topics.where((t) => t != Topic.mixed && t != Topic.custom).toSet()
+        : const <Topic>{};
     return FamilyQuestions(
       families.where((f) {
-        if (topic == Topic.exam) {
+        if (activeTopics.isNotEmpty) {
+          final hit = activeTopics.contains(f.topic) ||
+              (activeTopics.contains(Topic.exam) && f.exam != null);
+          if (!hit) return false;
+        } else if (topic == Topic.exam) {
           if (f.exam == null && f.topic != Topic.exam) return false;
         } else if (topic != Topic.mixed &&
             topic != Topic.custom &&

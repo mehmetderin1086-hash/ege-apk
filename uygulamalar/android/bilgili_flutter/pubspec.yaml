@@ -1,7 +1,7 @@
 name: bilgili_flutter
 description: "Lise düzeyinde 224.144 çoktan seçmeli soru (215.753 elle yazılmış özgün soru dahil) içeren çevrimdışı bilgi yarışması"
 publish_to: 'none'
-version: 3.17.0+40
+version: 3.18.0+41
 
 environment:
   sdk: ^3.13.7

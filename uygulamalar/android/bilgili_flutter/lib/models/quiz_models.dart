@@ -808,6 +808,8 @@ class AnswerRecord {
 
 class RoundSetup {
   final Topic topic;
+  /// Birden fazla kategori seçildiğinde kullanılır; boşsa [topic] esas alınır.
+  final Set<Topic> selectedTopics;
   final Difficulty? difficulty; // null = mixed difficulty
   final GameMode mode;
   final QuestionFormat format;
@@ -825,6 +827,7 @@ class RoundSetup {
 
   const RoundSetup({
     this.topic = Topic.mixed,
+    this.selectedTopics = const {},
     this.difficulty,
     this.mode = GameMode.classic,
     this.format = QuestionFormat.mixed,
@@ -839,8 +842,42 @@ class RoundSetup {
     this.rivalNames = const [],
   });
 
+  /// Etkin seçili kategori kümesi. Boş küme "tüm kategoriler / karışık" demektir.
+  Set<Topic> get effectiveTopics {
+    if (selectedTopics.isNotEmpty) {
+      return selectedTopics
+          .where((t) => t != Topic.mixed && t != Topic.custom)
+          .toSet();
+    }
+    if (topic != Topic.mixed && topic != Topic.custom) {
+      return {topic};
+    }
+    return const {};
+  }
+
+  bool get isMultiTopic => effectiveTopics.length > 1;
+
+  bool isTopicSelected(Topic t) {
+    final active = effectiveTopics;
+    if (t == Topic.mixed) return active.isEmpty && topic != Topic.custom;
+    if (t == Topic.custom) return active.isEmpty && topic == Topic.custom;
+    return active.contains(t);
+  }
+
+  String get topicsLabel {
+    final active = effectiveTopics;
+    if (active.isEmpty) {
+      return topic == Topic.custom ? Topic.custom.label : Topic.mixed.label;
+    }
+    final ordered = Topic.poolCategories.where(active.contains).toList();
+    if (ordered.length == 1) return ordered.first.label;
+    if (ordered.length == 2) return '${ordered[0].label} + ${ordered[1].label}';
+    return '${ordered[0].label}, ${ordered[1].label} +${ordered.length - 2}';
+  }
+
   RoundSetup copyWith({
     Topic? topic,
+    Set<Topic>? selectedTopics,
     Difficulty? Function()? difficulty,
     GameMode? mode,
     QuestionFormat? format,
@@ -854,8 +891,22 @@ class RoundSetup {
     int? secondsPerQuestion,
     List<String>? rivalNames,
   }) {
+    final nextTopic = topic ?? this.topic;
+    final Set<Topic> nextSelected;
+    if (selectedTopics != null) {
+      nextSelected = Set<Topic>.unmodifiable(
+        selectedTopics.where((t) => t != Topic.mixed && t != Topic.custom),
+      );
+    } else if (topic != null) {
+      nextSelected = (topic == Topic.mixed || topic == Topic.custom)
+          ? const {}
+          : Set<Topic>.unmodifiable({topic});
+    } else {
+      nextSelected = this.selectedTopics;
+    }
     return RoundSetup(
-      topic: topic ?? this.topic,
+      topic: nextTopic,
+      selectedTopics: nextSelected,
       difficulty: difficulty != null ? difficulty() : this.difficulty,
       mode: mode ?? this.mode,
       format: format ?? this.format,

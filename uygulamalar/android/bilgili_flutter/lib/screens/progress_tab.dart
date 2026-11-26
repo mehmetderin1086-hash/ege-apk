@@ -54,12 +54,13 @@ class ProgressTab extends StatelessWidget {
           ),
         const SizedBox(height: 14),
 
-        // Overview Hero
-        ArenaGlassCard(
-          tint: accent,
+        // Overview Hero (Zirve 3D Plaket)
+        Studio3DPlaque(
+          padding: const EdgeInsets.all(16),
+          chamfer: 15,
           child: Row(
             children: [
-              LevelMedallion(level: controller.level, gold: wp.secondary),
+              LevelMedallion(level: controller.level),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -69,23 +70,23 @@ class ProgressTab extends StatelessWidget {
                       'Seviye ${controller.level} · Toplam ${controller.xp} XP',
                       style: const TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        color: StudioPalette.goldBright,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '$totalAns yanıt · %$accPct doğruluk · ${controller.history.length} tamamlanan tur',
-                      style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.72)),
+                      style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
                     ),
                     const SizedBox(height: 8),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(99),
                       child: LinearProgressIndicator(
-                        minHeight: 6,
+                        minHeight: 7,
                         value: (controller.xpInCurrentLevel / 250.0).clamp(0.04, 1.0),
                         backgroundColor: Colors.white12,
-                        valueColor: AlwaysStoppedAnimation<Color>(accent),
+                        valueColor: const AlwaysStoppedAnimation<Color>(StudioPalette.gold),
                       ),
                     ),
                   ],
@@ -99,7 +100,7 @@ class ProgressTab extends StatelessWidget {
         // Badges Grid
         const Text(
           'Kazanılan Rozetler',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: StudioPalette.goldBright),
         ),
         const SizedBox(height: 10),
         GridView.builder(
@@ -114,7 +115,7 @@ class ProgressTab extends StatelessWidget {
           ),
           itemBuilder: (ctx, i) {
             final b = controller.badges[i];
-            final color = b.unlocked ? wp.secondary : Colors.white38;
+            final color = b.unlocked ? StudioPalette.gold : Colors.white38;
             return ArenaGlassCard(
               tint: color,
               padding: const EdgeInsets.all(11),
@@ -125,7 +126,7 @@ class ProgressTab extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 14,
-                        backgroundColor: color.withValues(alpha: b.unlocked ? 0.22 : 0.08),
+                        backgroundColor: color.withValues(alpha: b.unlocked ? 0.24 : 0.08),
                         child: Icon(_badgeIcon(b.iconKind), size: 15, color: color),
                       ),
                       const Spacer(),
@@ -164,7 +165,11 @@ class ProgressTab extends StatelessWidget {
         // Category Mastery
         const Text(
           'Alan Ustalığı',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
+            color: StudioPalette.goldBright,
+          ),
         ),
         const SizedBox(height: 10),
         ArenaGlassCard(
@@ -183,7 +188,11 @@ class ProgressTab extends StatelessWidget {
         // Round History
         const Text(
           'Son Turlar',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
+            color: StudioPalette.goldBright,
+          ),
         ),
         const SizedBox(height: 10),
         if (controller.history.isEmpty)

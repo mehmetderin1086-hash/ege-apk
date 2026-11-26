@@ -23,6 +23,7 @@ bool _hasText(Question q, String query) =>
 typedef _SearchRequest = ({
   SendPort reply,
   Topic topic,
+  Set<Topic> topics,
   QuestionFormat format,
   PoolCollection collection,
   BloomLevel? bloom,
@@ -38,6 +39,7 @@ void _searchAcademicText(_SearchRequest request) {
   try {
     final view = AdvancedCatalog.select(
       topic: request.topic,
+      topics: request.topics.isEmpty ? null : request.topics,
       format: request.format,
       level: request.collection.level,
       bloom: request.bloom,
@@ -63,6 +65,7 @@ void _searchAcademicText(_SearchRequest request) {
 class BrowserPageTask {
   final List<Question> personal;
   final Topic topic;
+  final Set<Topic> topics;
   final QuestionFormat format;
   final PoolCollection collection;
   final BloomLevel? bloom;
@@ -77,6 +80,7 @@ class BrowserPageTask {
   BrowserPageTask({
     required this.personal,
     required this.topic,
+    this.topics = const {},
     required this.format,
     required this.collection,
     this.bloom,
@@ -97,6 +101,7 @@ class BrowserPageTask {
     final matches = <int>[];
     final slice = Stopwatch()..start();
     final size = personal.length;
+    final activeTopics = topics.where((t) => t != Topic.mixed && t != Topic.custom).toSet();
     for (var i = cursor.personal; i < size && matches.length <= limit; i++) {
       if ((i & 127) == 0 && slice.elapsedMilliseconds >= 3) {
         await Future<void>.delayed(const Duration(milliseconds: 1));
@@ -104,7 +109,11 @@ class BrowserPageTask {
         slice.reset();
       }
       final q = personal[i];
-      if (topic == Topic.exam) {
+      if (activeTopics.isNotEmpty) {
+        final hit = activeTopics.contains(q.category) ||
+            (activeTopics.contains(Topic.exam) && q.exam != null);
+        if (!hit) continue;
+      } else if (topic == Topic.exam) {
         if (q.category != Topic.exam && q.exam == null) continue;
       } else if (topic != Topic.mixed && q.category != topic) {
         continue;
@@ -151,6 +160,7 @@ class BrowserPageTask {
       final worker = await Isolate.spawn(_searchAcademicText, (
         reply: port.sendPort,
         topic: topic,
+        topics: topics,
         format: format,
         collection: collection,
         bloom: bloom,
@@ -178,6 +188,7 @@ class BrowserPageTask {
     }
     final academic = AdvancedCatalog.select(
       topic: topic,
+      topics: topics.isEmpty ? null : topics,
       format: format,
       level: collection.level,
       bloom: bloom,

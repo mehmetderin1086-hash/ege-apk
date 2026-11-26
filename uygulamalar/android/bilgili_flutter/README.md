@@ -1,4 +1,13 @@
-# Bilgili 3.17.0
+# Bilgili 3.18.0
+
+3.18.0 sürümünde uygulamanın tüm arayüzü **Zirve Merdiveni × İstanbul 3D Stüdyo** tasarımına taşındı ve tüm modlara **çoklu kategori seçimi** eklendi:
+
+- **Zirve Merdiveni Arayüzü Her Ekranda:** Gece laciverti (`#03061C`–`#1C2C8C`) ile imparatorluk altını (`#F2C14E`) renk dili; ana ekran, standart bilgi yarışması, Zirve Merdiveni, çok oyunculu salon, etkinlikler, Bilgi Akademisi, AI Stüdyo, ilerleme ve ayarlar ekranlarının tamamında uygulandı.
+- **8 İstanbul Gece Sahnesi:** Boğaziçi Köprüsü (varsayılan), Kız Kulesi, Galata Kulesi, Ayasofya, Ortaköy Camii, Tarihî Yarımada silüeti, Dolmabahçe Sarayı ve Süleymaniye gece görselleri tüm ekran arka planlarına, sahne başlıklarına ve aksiyon kartlarına entegre edildi. 3.17.0 ve önceki sürümlerden yükselten kullanıcılar otomatik olarak yeni İstanbul temasına geçer.
+- **Gelişmiş 3D Animasyonlar ve Düğmeler:** 2 eksenli perspektif dokunma eğimi (`ArenaPressDepth`), fiziksel 3D çıkıntılı ve metalik parlamalı altın/lacivert düğmeler (`Studio3DButton`), tüm soru ve seçeneklerde Zirve altıgen plaketleri (`Studio3DPlaque` / `Studio3DOptionPlaque`), 3D perspektif giriş çevirmeleri (`Studio3DEntrance`), hareketli Boğaz spot ışıkları, 3D yörünge madalyonları ve 3D metalik konfeti eklendi.
+- **Çoklu Kategori Seçimi:** Ana ekranda hazır paketlerle (`Tümü`, `Sayısal`, `Sözel`, `Bilim & Tek`, `Kültür & Sanat`) veya tek tek dokunarak birden fazla kategori aynı anda seçilebilir; seçim standart turlarda, Zirve Merdiveni'nde, Düello Arenası'nda, Çok Oyunculu rakiplerde ve Bilgi Akademisi 224.144 soruluk havuz tarayıcısında desteklenir.
+
+## 3.17.0
 
 3.17.0 sürümünde 23 kategoriye 51.995 yeni, elle yazılmış özgün çoktan seçmeli soru eklendi. Her kategoride 5 yeni alt alan açıldı (toplam 115 yeni alt alan, 345 yeni aile). Banka artık 224.144 soru içeriyor (215.753 özgün soru ve 8.391 seçki sorusu).
 

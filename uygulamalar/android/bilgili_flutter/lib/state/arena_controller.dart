@@ -217,8 +217,9 @@ class ArenaController extends ChangeNotifier {
   String dailyPoolDayKey = _todayKey();
 
   // Visual, Audio & Accessibility Settings
-  String wallpaperId = 'studyo';
-  WallpaperClarity wallpaperClarity = WallpaperClarity.balanced;
+  static const int _currentUiThemeRev = 318;
+  String wallpaperId = 'istanbul_bogaz';
+  WallpaperClarity wallpaperClarity = WallpaperClarity.vivid;
   EffectIntensity effectIntensity = EffectIntensity.rich;
   bool menuMusicEnabled = false;
   bool gameMusicEnabled = true;
@@ -270,6 +271,16 @@ class ArenaController extends ChangeNotifier {
   int countForTopic(Topic t) {
     if (t == Topic.mixed || t == Topic.custom) return totalPoolCount;
     return (_categoryCounts[t] ?? 0) + AdvancedCatalog.topicCounts[t]!;
+  }
+
+  int countForTopics(Set<Topic> topics) {
+    final active = topics.where((t) => t != Topic.mixed && t != Topic.custom).toSet();
+    if (active.isEmpty) return totalPoolCount;
+    var sum = 0;
+    for (final t in active) {
+      sum += countForTopic(t);
+    }
+    return min(sum, totalPoolCount);
   }
 
   List<ReviewCard> get dueReviewCards {
@@ -441,6 +452,49 @@ class ArenaController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Birden fazla kategori seçmek veya seçimi kaldırmak için kullanılır.
+  void toggleTopicSelection(Topic t) {
+    if (t == Topic.mixed) {
+      setup = setup.copyWith(topic: Topic.mixed, selectedTopics: const {});
+      notifyListeners();
+      return;
+    }
+    if (t == Topic.custom) {
+      setup = setup.copyWith(topic: Topic.custom, selectedTopics: const {});
+      notifyListeners();
+      return;
+    }
+    final next = Set<Topic>.of(setup.effectiveTopics);
+    if (!next.remove(t)) {
+      next.add(t);
+    }
+    if (next.isEmpty) {
+      setup = setup.copyWith(topic: Topic.mixed, selectedTopics: const {});
+    } else if (next.length == 1) {
+      setup = setup.copyWith(topic: next.first, selectedTopics: next);
+    } else {
+      setup = setup.copyWith(topic: Topic.mixed, selectedTopics: next);
+    }
+    notifyListeners();
+  }
+
+  void selectTopicBundle(Set<Topic> topics) {
+    final clean = topics.where((t) => t != Topic.mixed && t != Topic.custom).toSet();
+    if (clean.isEmpty) {
+      setup = setup.copyWith(topic: Topic.mixed, selectedTopics: const {});
+    } else if (clean.length == 1) {
+      setup = setup.copyWith(topic: clean.first, selectedTopics: clean);
+    } else {
+      setup = setup.copyWith(topic: Topic.mixed, selectedTopics: clean);
+    }
+    notifyListeners();
+  }
+
+  void clearSelectedTopics() {
+    setup = setup.copyWith(topic: Topic.mixed, selectedTopics: const {});
+    notifyListeners();
+  }
+
   void applyPreset(String preset) {
     if (preset == 'kesif') {
       setup = setup.copyWith(
@@ -477,10 +531,13 @@ class ArenaController extends ChangeNotifier {
     bool matches(Question q) => !reportedQuestionIds.contains(q.id) &&
         q.matchesFormat(format) && (requireVisual == null || (q.visual != null) == requireVisual);
 
+    final activeTopics = cfg.effectiveTopics;
+    final singleExam = activeTopics.length == 1 && activeTopics.first == Topic.exam;
+
     final candidates = _allQuestions.where((q) {
       if (!matches(q)) return false;
-      if (cfg.topic != Topic.mixed && cfg.topic != Topic.custom) {
-        if (cfg.topic == Topic.exam) {
+      if (activeTopics.isNotEmpty) {
+        if (singleExam) {
           if (q.category != Topic.exam && q.exam == null) return false;
           if (q.exam != null && q.exam != cfg.exam) return false;
           if (cfg.lesson != null &&
@@ -489,8 +546,10 @@ class ArenaController extends ChangeNotifier {
               q.lesson != cfg.lesson) {
             return false;
           }
-        } else if (q.category != cfg.topic) {
-          return false;
+        } else {
+          final hit = activeTopics.contains(q.category) ||
+              (activeTopics.contains(Topic.exam) && q.exam != null);
+          if (!hit) return false;
         }
       }
       if (cfg.difficulty != null && q.difficulty != cfg.difficulty) {
@@ -500,9 +559,11 @@ class ArenaController extends ChangeNotifier {
     }).toList();
 
     final academic = AdvancedCatalog.select(
-      topic: cfg.topic, difficulty: cfg.difficulty, format: format, requireVisual: requireVisual,
-      exam: cfg.topic == Topic.exam ? cfg.exam : null,
-      lesson: cfg.topic == Topic.exam ? cfg.lesson : null,
+      topic: singleExam ? Topic.exam : cfg.topic,
+      topics: activeTopics.length > 1 ? activeTopics : null,
+      difficulty: cfg.difficulty, format: format, requireVisual: requireVisual,
+      exam: singleExam ? cfg.exam : null,
+      lesson: singleExam ? cfg.lesson : null,
     );
     final pool = JoinedQuestions(candidates, academic);
 
@@ -557,7 +618,7 @@ class ArenaController extends ChangeNotifier {
               ? 'Düello Arenası (${cfg.duelPlayerNames.length} Oyuncu)'
               : cfg.liveVoiceHost
                   ? 'Canlı Sesli Yarışma'
-                  : '${cfg.topic.label} · ${cfg.mode.label}'),
+                  : '${cfg.topicsLabel} · ${cfg.mode.label}'),
       cfg: cfg,
       questions: qs,
     );
@@ -631,12 +692,18 @@ class ArenaController extends ChangeNotifier {
     return true;
   }
 
-  void startDuelTournament(List<String> players, {Topic topic = Topic.mixed, int perPlayer = 3}) {
+  void startDuelTournament(
+    List<String> players, {
+    Topic topic = Topic.mixed,
+    Set<Topic>? topics,
+    int perPlayer = 3,
+  }) {
     final cleanNames = players.map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
     if (cleanNames.length < 2) return;
     final count = cleanNames.length * perPlayer;
     final cfg = RoundSetup(
       topic: topic,
+      selectedTopics: topics ?? const {},
       mode: GameMode.classic,
       format: QuestionFormat.multipleChoice,
       questionCount: count,
@@ -664,9 +731,16 @@ class ArenaController extends ChangeNotifier {
   }
 
   /// Bire Bir ya da Çoklu: bilgisayar rakiplerine karşı.
-  bool startRakipMaci({required List<String> rakipler, Topic topic = Topic.mixed, int soru = 7, int sure = 20}) {
+  bool startRakipMaci({
+    required List<String> rakipler,
+    Topic topic = Topic.mixed,
+    Set<Topic>? topics,
+    int soru = 7,
+    int sure = 20,
+  }) {
     final cfg = RoundSetup(
       topic: topic,
+      selectedTopics: topics ?? const {},
       mode: GameMode.classic,
       format: QuestionFormat.multipleChoice,
       questionCount: soru,
@@ -682,12 +756,23 @@ class ArenaController extends ChangeNotifier {
   /// Zirve Merdiveni için 15 soru: 5 kolay, 5 orta, 5 zor; hepsi dört
   /// seçenekli metin sorusu. Ek olarak her zorluktan birer yedek soru
   /// (soru değiştirme jokeri için) döner.
-  ({List<Question> sorular, Map<Difficulty, Question> yedek})? zirveSorulari({Topic topic = Topic.mixed, int? seed}) {
+  ({List<Question> sorular, Map<Difficulty, Question> yedek})? zirveSorulari({
+    Topic topic = Topic.mixed,
+    Set<Topic>? topics,
+    int? seed,
+  }) {
     final rng = Random(seed ?? DateTime.now().microsecondsSinceEpoch);
     final sorular = <Question>[];
     final yedek = <Difficulty, Question>{};
     for (final d in Difficulty.values) {
-      final cfg = RoundSetup(topic: topic, difficulty: d, mode: GameMode.classic, format: QuestionFormat.text, questionCount: 12);
+      final cfg = RoundSetup(
+        topic: topic,
+        selectedTopics: topics ?? const {},
+        difficulty: d,
+        mode: GameMode.classic,
+        format: QuestionFormat.text,
+        questionCount: 12,
+      );
       final aday = sampleQuestions(cfg, seed: rng.nextInt(1 << 30))
           .where((q) => q.options.length == 4 && q.visual == null && q.activity == null)
           .where((q) => sorular.every((x) => x.id != q.id))
@@ -1942,6 +2027,7 @@ class ArenaController extends ChangeNotifier {
         'dailyGeneratedByCategory': dailyGeneratedByCategory,
         'wallpaperId': wallpaperId,
         'wallpaperClarity': wallpaperClarity.name,
+        'uiThemeRev': _currentUiThemeRev,
         'effectIntensity': effectIntensity.name,
         'menuMusicEnabled': menuMusicEnabled,
         'gameMusicEnabled': gameMusicEnabled,
@@ -2071,11 +2157,17 @@ class ArenaController extends ChangeNotifier {
       }
     }
 
-    wallpaperId = map['wallpaperId']?.toString() ?? 'observatory';
-    wallpaperClarity = WallpaperClarity.values.firstWhere(
-      (c) => c.name == map['wallpaperClarity'],
-      orElse: () => WallpaperClarity.balanced,
-    );
+    final savedThemeRev = (map['uiThemeRev'] as num?)?.toInt() ?? 0;
+    if (savedThemeRev < _currentUiThemeRev) {
+      wallpaperId = 'istanbul_bogaz';
+      wallpaperClarity = WallpaperClarity.vivid;
+    } else {
+      wallpaperId = map['wallpaperId']?.toString() ?? 'istanbul_bogaz';
+      wallpaperClarity = WallpaperClarity.values.firstWhere(
+        (c) => c.name == map['wallpaperClarity'],
+        orElse: () => WallpaperClarity.vivid,
+      );
+    }
     effectIntensity = EffectIntensity.values.firstWhere(
       (e) => e.name == map['effectIntensity'],
       orElse: () => EffectIntensity.rich,

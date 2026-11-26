@@ -139,7 +139,12 @@ class _ModelCenterTabState extends State<ModelCenterTab> {
               Row(
                 children: [
                   Expanded(
-                    child: FilledButton.icon(
+                    child: Studio3DButton(
+                      label: ctrl.isGeneratingAiQuestions ? 'Üretiliyor...' : 'Üret & Oyna',
+                      icon: Icons.bolt_rounded,
+                      expand: true,
+                      fontSize: 13.5,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
                       onPressed: ctrl.isGeneratingAiQuestions
                           ? null
                           : () => ctrl.generateAiQuestionsPack(
@@ -149,22 +154,18 @@ class _ModelCenterTabState extends State<ModelCenterTab> {
                                 count: _genCount,
                                 startImmediately: true,
                               ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: accent,
-                        foregroundColor: const Color(0xFF06101F),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
-                      ),
-                      icon: const Icon(Icons.bolt_rounded, size: 17),
-                      label: Text(
-                        ctrl.isGeneratingAiQuestions ? 'Üretiliyor...' : 'Üret & Oyna',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: Studio3DButton(
+                      label: 'Havuza Ekle',
+                      icon: Icons.save_alt_rounded,
+                      variant: StudioButtonVariant.navy,
+                      shimmer: false,
+                      expand: true,
+                      fontSize: 13.5,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
                       onPressed: ctrl.isGeneratingAiQuestions
                           ? null
                           : () => ctrl.generateAiQuestionsPack(
@@ -174,15 +175,6 @@ class _ModelCenterTabState extends State<ModelCenterTab> {
                                 count: _genCount,
                                 startImmediately: false,
                               ),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
-                      ),
-                      icon: const Icon(Icons.save_alt_rounded, size: 16),
-                      label: const Text(
-                        'Havuza Ekle',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
                     ),
                   ),
                 ],
@@ -200,7 +192,11 @@ class _ModelCenterTabState extends State<ModelCenterTab> {
             children: [
               const Text(
                 'Sunucu & Bağlantı Yolu',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: StudioPalette.goldBright,
+                ),
               ),
               const SizedBox(height: 10),
               ArenaScrollPills<AiConnectionMode>(
@@ -225,10 +221,14 @@ class _ModelCenterTabState extends State<ModelCenterTab> {
                     labelText: 'CLIProxy / OpenAI Uyumlu Sunucu URL',
                     hintText: 'http://127.0.0.1:8317',
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.06),
-                    border: OutlineInputBorder(
+                    fillColor: StudioPalette.navyTop.withValues(alpha: 0.55),
+                    enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(color: StudioPalette.gold.withValues(alpha: 0.32)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: StudioPalette.gold, width: 1.4),
                     ),
                   ),
                 ),
@@ -245,10 +245,14 @@ class _ModelCenterTabState extends State<ModelCenterTab> {
                         ? 'Gemini API Anahtarı'
                         : 'Bearer API Anahtarı (İsteğe bağlı)',
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 0.06),
-                    border: OutlineInputBorder(
+                    fillColor: StudioPalette.navyTop.withValues(alpha: 0.55),
+                    enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(color: StudioPalette.gold.withValues(alpha: 0.32)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: StudioPalette.gold, width: 1.4),
                     ),
                   ),
                 ),
@@ -257,7 +261,14 @@ class _ModelCenterTabState extends State<ModelCenterTab> {
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: Studio3DButton(
+                      label: ctrl.isDiscoveringModels ? 'Taranıyor...' : 'Yenile',
+                      icon: Icons.sync_rounded,
+                      variant: StudioButtonVariant.navy,
+                      shimmer: false,
+                      expand: true,
+                      fontSize: 13,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                       onPressed: ctrl.isDiscoveringModels
                           ? null
                           : () async {
@@ -274,30 +285,19 @@ class _ModelCenterTabState extends State<ModelCenterTab> {
                                 );
                               }
                             },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                      ),
-                      icon: const Icon(Icons.sync_rounded, size: 16),
-                      label: Text(
-                        ctrl.isDiscoveringModels ? 'Taranıyor...' : 'Yenile',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: Studio3DButton(
+                      label: 'Takım Testi',
+                      icon: Icons.network_check_rounded,
+                      variant: StudioButtonVariant.navy,
+                      shimmer: false,
+                      expand: true,
+                      fontSize: 13,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                       onPressed: ctrl.probeTeamModels,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                      ),
-                      icon: const Icon(Icons.network_check_rounded, size: 16),
-                      label: const Text(
-                        'Takım Testi',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
                     ),
                   ),
                 ],
@@ -344,8 +344,8 @@ class _ModelCenterTabState extends State<ModelCenterTab> {
                 'Tüm Modeller (${models.length})',
                 style: const TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  color: StudioPalette.goldBright,
                 ),
               ),
             ),
@@ -360,11 +360,15 @@ class _ModelCenterTabState extends State<ModelCenterTab> {
             hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.45), fontSize: 12.5),
             prefixIcon: Icon(Icons.search_rounded, color: accent, size: 19),
             filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.06),
+            fillColor: StudioPalette.navyTop.withValues(alpha: 0.55),
             contentPadding: const EdgeInsets.symmetric(vertical: 10),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: StudioPalette.gold.withValues(alpha: 0.30)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: StudioPalette.gold, width: 1.4),
             ),
           ),
         ),

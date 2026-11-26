@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../models/quiz_models.dart';
 import '../services/native_bridge.dart';
 import '../state/arena_controller.dart';
+import '../theme/arena_design.dart';
 
 /// Zirve Merdiveni: 15 basamaklı, giderek zorlaşan bilgi yarışması.
 /// Yanlış cevapta son baraj puanına düşülür; istenen anda çekilip
@@ -36,28 +37,33 @@ String puanYaz(int n) {
   return b.toString();
 }
 
-const _altin = Color(0xFFF2C14E);
-const _lacivert = Color(0xFF0B1450);
-const _gece = Color(0xFF03061C);
-const _turuncu = Color(0xFFFF9A1F);
-const _dogruYesil = Color(0xFF22B455);
-const _yanlisKirmizi = Color(0xFFD6333F);
+const _altin = StudioPalette.gold;
+const _lacivert = StudioPalette.navyMid;
+const _gece = StudioPalette.night;
+const _yanlisKirmizi = StudioPalette.crimson;
 
 enum _Evre { giris, soru, bekle, acikla, bitti }
 
 class ZirveScreen extends StatefulWidget {
   final ArenaController controller;
   final Topic konu;
-  const ZirveScreen({super.key, required this.controller, this.konu = Topic.mixed});
+  final Set<Topic> konular;
+  const ZirveScreen({
+    super.key,
+    required this.controller,
+    this.konu = Topic.mixed,
+    this.konular = const {},
+  });
 
   @override
   State<ZirveScreen> createState() => _ZirveScreenState();
 }
 
-class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStateMixin {
+class _ZirveScreenState extends State<ZirveScreen> {
   final _rng = Random();
   late List<Question> _sorular;
   late Map<Difficulty, Question> _yedek;
+  late Set<Topic> _seciliKonular;
   bool _hazir = false;
   int _i = 0;
   _Evre _evre = _Evre.soru;
@@ -71,8 +77,6 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
   Timer? _sonMuzik;
   int _kazanc = 0;
   String _bitisNedeni = '';
-  late final AnimationController _isik =
-      AnimationController(vsync: this, duration: const Duration(seconds: 6))..repeat();
 
   ArenaController get ctrl => widget.controller;
   Question get _q => _sorular[_i];
@@ -82,6 +86,9 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
+    _seciliKonular = widget.konular.isNotEmpty
+        ? Set<Topic>.of(widget.konular.where((t) => t != Topic.mixed && t != Topic.custom))
+        : (widget.konu != Topic.mixed && widget.konu != Topic.custom ? {widget.konu} : <Topic>{});
     // Efektleri önceden yükle (sessiz çalma ilk gecikmeyi önler).
     for (final k in _klipler) {
       NativeBridge.playClip(k, enabled: ctrl.sfxEnabled, volume: 0);
@@ -93,7 +100,6 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
   void dispose() {
     _saat?.cancel();
     _sonMuzik?.cancel();
-    _isik.dispose();
     ctrl.ozelMuzikAyarla(null);
     super.dispose();
   }
@@ -109,7 +115,10 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
   void _muzik(String? parca) => ctrl.ozelMuzikAyarla(parca == null ? 'sessiz' : 'zirve_$parca');
 
   void _yeniOyun() {
-    final paket = ctrl.zirveSorulari(topic: widget.konu);
+    final paket = ctrl.zirveSorulari(
+      topic: _seciliKonular.length == 1 ? _seciliKonular.first : Topic.mixed,
+      topics: _seciliKonular.isEmpty ? null : _seciliKonular,
+    );
     if (paket == null) {
       setState(() => _hazir = false);
       return;
@@ -127,6 +136,17 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
     _saat?.cancel();
     _sonMuzik?.cancel();
     _muzik('giris');
+  }
+
+  void _konuDegistir(Topic t) {
+    setState(() {
+      if (t == Topic.mixed) {
+        _seciliKonular.clear();
+      } else if (!_seciliKonular.remove(t)) {
+        _seciliKonular.add(t);
+      }
+    });
+    _yeniOyun();
   }
 
   void _soruyaBasla() {
@@ -318,93 +338,237 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final wp = ctrl.currentWallpaper;
     return Scaffold(
       backgroundColor: _gece,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment(0, -.35),
-                radius: 1.15,
-                colors: [Color(0xFF1C2C8C), _lacivert, _gece],
-                stops: [0, .45, 1],
-              ),
-            ),
-          ),
-          if (!MediaQuery.disableAnimationsOf(context))
-            IgnorePointer(
-              child: AnimatedBuilder(
-                animation: _isik,
-                builder: (_, _) => CustomPaint(painter: _IsikHuzmeleri(_isik.value)),
-              ),
-            ),
-          SafeArea(
-              child: !_hazir
-                  ? _yetersiz()
-                  : switch (_evre) {
-                      _Evre.giris => _acilis(),
-                      _Evre.bitti => _sonuc(),
-                      _ => _oyun(),
-                    }),
-        ],
+      body: ArenaAmbientBackground(
+        wallpaper: wp,
+        clarity: ctrl.wallpaperClarity,
+        intensity: ctrl.effectIntensity,
+        reduceMotion: ctrl.reduceMotion,
+        overrideAssetPath: wp.id.startsWith('istanbul_')
+            ? wp.assetPath
+            : 'assets/images/istanbul_kiz_kulesi.webp',
+        child: SafeArea(
+          child: !_hazir
+              ? _yetersiz()
+              : switch (_evre) {
+                  _Evre.giris => _acilis(),
+                  _Evre.bitti => _sonuc(),
+                  _ => _oyun(),
+                },
+        ),
       ),
     );
   }
 
+  String get _seciliKonuOzeti {
+    if (_seciliKonular.isEmpty) return 'Tüm 23 Kategori (Karışık)';
+    final adlar = Topic.poolCategories.where(_seciliKonular.contains).map((t) => t.label).toList();
+    if (adlar.length <= 2) return adlar.join(' + ');
+    return '${adlar[0]}, ${adlar[1]} +${adlar.length - 2} alan';
+  }
+
   Widget _acilis() => ListView(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: IconButton(
-              tooltip: 'Geri',
-              onPressed: () => Navigator.of(context).maybePop(),
-              icon: const Icon(Icons.close_rounded, color: Colors.white70),
-            ),
+          Row(
+            children: [
+              IconButton(
+                tooltip: 'Geri',
+                style: IconButton.styleFrom(
+                  backgroundColor: StudioPalette.navyTop.withValues(alpha: 0.72),
+                  side: const BorderSide(color: _altin, width: 1.2),
+                ),
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.close_rounded, color: Colors.white),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+                decoration: BoxDecoration(
+                  color: StudioPalette.navyDark.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(99),
+                  border: Border.all(color: _altin.withValues(alpha: 0.7)),
+                ),
+                child: const Text(
+                  'İSTANBUL SAHNESİ',
+                  style: TextStyle(
+                    color: StudioPalette.goldBright,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          const Icon(Icons.stairs_rounded, color: _altin, size: 96),
-          const SizedBox(height: 8),
-          const Text('Zirve Merdiveni',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: _altin, fontSize: 34, fontWeight: FontWeight.w900)),
           const SizedBox(height: 10),
-          const Text('15 soru, giderek zorlaşır. 5. ve 10. basamaklar baraj.\nDört jokerin var; istediğin an çekilebilirsin.',
-              textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 16, height: 1.4)),
-          const SizedBox(height: 18),
-          Center(
-            child: Text('Zirve ödülü: ${puanYaz(ZirveMerdiveni.odul.last)} puan',
-                style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
-          ),
-          if (ctrl.zirveEnIyi > 0)
-            Center(
-              child: Text('En iyi kazancın: ${puanYaz(ctrl.zirveEnIyi)} puan',
-                  style: const TextStyle(color: Colors.white60)),
+          const Center(child: Studio3DOrbitEmblem(icon: Icons.stairs_rounded, size: 88)),
+          const SizedBox(height: 10),
+          const Text(
+            'Zirve Merdiveni',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: StudioPalette.goldBright,
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              shadows: [Shadow(color: Colors.black87, blurRadius: 12)],
             ),
-          const SizedBox(height: 28),
-          _AltinDugme(metin: 'Başla', onTap: _soruyaBasla),
-          const SizedBox(height: 12),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '15 soru, giderek zorlaşır. 5. ve 10. basamaklar baraj.\nDört jokerin var; istediğin an çekilebilirsin.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white, fontSize: 14.5, height: 1.38),
+          ),
+          const SizedBox(height: 14),
+          Center(
+            child: Studio3DPlaque(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              chamfer: 12,
+              child: Column(
+                children: [
+                  Text(
+                    'Zirve ödülü: ${puanYaz(ZirveMerdiveni.odul.last)} puan',
+                    style: const TextStyle(color: StudioPalette.goldBright, fontWeight: FontWeight.w900),
+                  ),
+                  if (ctrl.zirveEnIyi > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3),
+                      child: Text(
+                        'En iyi kazancın: ${puanYaz(ctrl.zirveEnIyi)} puan',
+                        style: const TextStyle(color: Colors.white70, fontSize: 12.5, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Studio3DButton(
+            label: 'Başla',
+            icon: Icons.play_arrow_rounded,
+            onPressed: _soruyaBasla,
+            variant: StudioButtonVariant.gold,
+            expand: true,
+            fontSize: 20,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 15),
+          ),
+          const SizedBox(height: 10),
           Center(
             child: TextButton.icon(
               onPressed: _merdiveniGoster,
               icon: const Icon(Icons.format_list_numbered_rounded, color: _altin),
-              label: const Text('Ödül merdivenini gör', style: TextStyle(color: _altin)),
+              label: const Text('Ödül merdivenini gör',
+                  style: TextStyle(color: StudioPalette.goldBright, fontWeight: FontWeight.w800)),
+            ),
+          ),
+          const SizedBox(height: 14),
+          // Çoklu kategori seçici (Zirve Merdiveni'nde de birden fazla kategori seçilebilir!)
+          ArenaGlassCard(
+            tint: _altin,
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.category_rounded, color: StudioPalette.goldBright, size: 17),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Kategoriler: $_seciliKonuOzeti',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    if (_seciliKonular.isNotEmpty)
+                      InkWell(
+                        onTap: () => _konuDegistir(Topic.mixed),
+                        child: const Text('Temizle',
+                            style: TextStyle(color: _altin, fontSize: 11.5, fontWeight: FontWeight.w800)),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _zirveKonuCipi(Topic.mixed, _seciliKonular.isEmpty),
+                      for (final t in ctrl.availableTopics) ...[
+                        const SizedBox(width: 6),
+                        _zirveKonuCipi(t, _seciliKonular.contains(t)),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       );
 
+  Widget _zirveKonuCipi(Topic t, bool secili) => ArenaPressDepth(
+        depthOffset: 1.5,
+        child: InkWell(
+          onTap: () => _konuDegistir(t),
+          borderRadius: BorderRadius.circular(99),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(99),
+              gradient: LinearGradient(
+                colors: secili
+                    ? const [StudioPalette.goldBright, StudioPalette.gold]
+                    : const [Color(0xE01A2A88), Color(0xE0081044)],
+              ),
+              border: Border.all(
+                color: secili ? Colors.white : _altin.withValues(alpha: 0.4),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(t.icon, size: 14, color: secili ? _gece : StudioPalette.goldBright),
+                const SizedBox(width: 5),
+                Text(
+                  t.label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: secili ? FontWeight.w900 : FontWeight.w700,
+                    color: secili ? _gece : Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
   Widget _yetersiz() => Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('Bu konuda merdiven için yeterli soru yok.',
-                textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 18)),
-            const SizedBox(height: 16),
-            _AltinDugme(metin: 'Geri dön', onTap: () => Navigator.of(context).maybePop()),
-          ]),
+          child: ArenaGlassCard(
+            tint: _altin,
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Text('Bu konuda merdiven için yeterli soru yok.',
+                  textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 18)),
+              const SizedBox(height: 16),
+              Studio3DButton(
+                label: 'Geri dön',
+                onPressed: () => Navigator.of(context).maybePop(),
+                variant: StudioButtonVariant.gold,
+              ),
+            ]),
+          ),
         ),
       );
 
@@ -417,6 +581,10 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
           child: Row(children: [
             IconButton(
               tooltip: 'Çık',
+              style: IconButton.styleFrom(
+                backgroundColor: StudioPalette.navyTop.withValues(alpha: 0.7),
+                side: BorderSide(color: _altin.withValues(alpha: 0.5)),
+              ),
               onPressed: () async {
                 final ok = await showDialog<bool>(
                   context: context,
@@ -425,7 +593,7 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
                 );
                 if (ok == true && mounted) Navigator.of(context).maybePop();
               },
-              icon: const Icon(Icons.close_rounded, color: Colors.white70),
+              icon: const Icon(Icons.close_rounded, color: Colors.white),
             ),
             Expanded(
               child: Center(
@@ -435,7 +603,7 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
             TextButton.icon(
               onPressed: _evre == _Evre.soru ? _cekil : null,
               icon: const Icon(Icons.flag_rounded, color: _altin),
-              label: const Text('Çekil', style: TextStyle(color: _altin, fontWeight: FontWeight.w800)),
+              label: const Text('Çekil', style: TextStyle(color: StudioPalette.goldBright, fontWeight: FontWeight.w900)),
             ),
           ]),
         ),
@@ -443,58 +611,67 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _JokerDugme(ikon: Icons.contrast_rounded, etiket: '50:50', kullanildi: _yariKullanildi, onTap: _yariYariya),
-            _JokerDugme(ikon: Icons.bar_chart_rounded, etiket: 'Salon', kullanildi: _salonKullanildi, onTap: _salon),
-            _JokerDugme(ikon: Icons.support_agent_rounded, etiket: 'Danışman', kullanildi: _danismanKullanildi, onTap: _danisman),
-            _JokerDugme(ikon: Icons.swap_horiz_rounded, etiket: 'Değiştir', kullanildi: _degistirKullanildi, onTap: _degistir),
+            Studio3DJokerOrb(icon: Icons.contrast_rounded, label: '50:50', used: _yariKullanildi, onTap: _yariYariya),
+            Studio3DJokerOrb(icon: Icons.bar_chart_rounded, label: 'Salon', used: _salonKullanildi, onTap: _salon),
+            Studio3DJokerOrb(icon: Icons.support_agent_rounded, label: 'Danışman', used: _danismanKullanildi, onTap: _danisman),
+            Studio3DJokerOrb(icon: Icons.swap_horiz_rounded, label: 'Değiştir', used: _degistirKullanildi, onTap: _degistir),
           ],
         ),
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 20),
-            children: [
-              if (_salonOylari != null) _SalonGrafigi(oylar: _salonOylari!, gizli: _gizli),
-              if (_danismanSozu != null) _DanismanBalonu(soz: _danismanSozu!),
-              const SizedBox(height: 8),
-              if (sure > 0)
-                Center(child: _SureHalkasi(kalan: _kalan, toplam: sure))
-              else
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: Text('Süre sınırı yok', style: TextStyle(color: Colors.white60, fontWeight: FontWeight.w700)),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_salonOylari != null) _SalonGrafigi(oylar: _salonOylari!, gizli: _gizli),
+                if (_danismanSozu != null) _DanismanBalonu(soz: _danismanSozu!),
+                const SizedBox(height: 4),
+                if (sure > 0)
+                  Center(child: _SureHalkasi(kalan: _kalan, toplam: sure))
+                else
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 6),
+                      child: Text('Süre sınırı yok', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w800)),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Studio3DEntrance(
+                  key: ValueKey('zirve_q_${_q.id}_$_i'),
+                  child: _SoruKutusu(
+                    baslik: 'Soru ${_i + 1} · ${puanYaz(ZirveMerdiveni.odul[_i])} puan',
+                    metin: _q.text,
                   ),
                 ),
-              const SizedBox(height: 12),
-              _SoruKutusu(
-                  baslik: 'Soru ${_i + 1} · ${puanYaz(ZirveMerdiveni.odul[_i])} puan', metin: _q.text),
-              const SizedBox(height: 16),
-              for (var k = 0; k < _q.options.length; k++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _SecenekKutusu(
-                    harf: String.fromCharCode(65 + k),
-                    metin: _gizli.contains(k) ? '' : _q.options[k],
-                    durum: _durum(k),
-                    onTap: () => _sec(k),
+                const SizedBox(height: 12),
+                for (var k = 0; k < _q.options.length; k++)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Studio3DOptionPlaque(
+                      letter: String.fromCharCode(65 + k),
+                      text: _gizli.contains(k) ? '' : _q.options[k],
+                      state: _durum(k),
+                      fontSize: 15.5,
+                      onTap: _gizli.contains(k) ? null : () => _sec(k),
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
     );
   }
 
-  _SecenekDurumu _durum(int k) {
-    if (_gizli.contains(k)) return _SecenekDurumu.gizli;
+  StudioOptionState _durum(int k) {
+    if (_gizli.contains(k)) return StudioOptionState.hidden;
     if (_evre == _Evre.acikla) {
-      if (k == _q.answer) return _SecenekDurumu.dogru;
-      if (k == _secim) return _SecenekDurumu.yanlis;
-      return _SecenekDurumu.normal;
+      if (k == _q.answer) return StudioOptionState.correct;
+      if (k == _secim) return StudioOptionState.wrong;
+      return StudioOptionState.normal;
     }
-    if (k == _secim) return _SecenekDurumu.secili;
-    return _SecenekDurumu.normal;
+    if (k == _secim) return StudioOptionState.selected;
+    return StudioOptionState.normal;
   }
 
   void _merdiveniGoster() {
@@ -503,7 +680,9 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
       backgroundColor: _lacivert,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)), side: BorderSide(color: _altin)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        side: BorderSide(color: _altin, width: 1.8),
+      ),
       builder: (c) => SafeArea(child: _MerdivenListesi(i: _i)),
     );
   }
@@ -511,45 +690,77 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
   Widget _sonuc() {
     final zirve = _kazanc == ZirveMerdiveni.odul.last;
     final q = _q;
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 30, 20, 30),
+    return Stack(
       children: [
-        Icon(zirve ? Icons.emoji_events_rounded : Icons.stars_rounded, size: 96, color: _altin),
-        const SizedBox(height: 10),
-        Text(_bitisNedeni,
-            textAlign: TextAlign.center, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white)),
-        const SizedBox(height: 18),
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(40),
-            border: Border.all(color: _altin, width: 2),
-            gradient: const LinearGradient(colors: [Color(0xFF14207A), _lacivert]),
-          ),
-          child: Column(children: [
-            const Text('Kazancın', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
-            Text('${puanYaz(_kazanc)} puan',
-                style: const TextStyle(color: _altin, fontSize: 34, fontWeight: FontWeight.w900)),
-            Text('Ulaşılan basamak: ${zirve ? 15 : _i} / 15',
-                style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
-          ]),
+        ListView(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 30),
+          children: [
+            Center(
+              child: Studio3DOrbitEmblem(
+                icon: zirve ? Icons.emoji_events_rounded : Icons.stars_rounded,
+                size: 94,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _bitisNedeni,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                shadows: [Shadow(color: Colors.black87, blurRadius: 8)],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Studio3DPlaque(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+              child: Column(children: [
+                const Text('Kazancın', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
+                Text(
+                  '${puanYaz(_kazanc)} puan',
+                  style: const TextStyle(color: StudioPalette.goldBright, fontSize: 34, fontWeight: FontWeight.w900),
+                ),
+                Text(
+                  'Ulaşılan basamak: ${zirve ? 15 : _i} / 15',
+                  style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w700),
+                ),
+              ]),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'En iyi kazancın: ${puanYaz(ctrl.zirveEnIyi)} puan',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+            ),
+            if (!zirve && _bitisNedeni != 'Çekildin.') ...[
+              const SizedBox(height: 18),
+              _SoruKutusu(
+                baslik: 'Doğru cevap: ${String.fromCharCode(65 + q.answer)}) ${q.options[q.answer]}',
+                metin: q.explanation,
+              ),
+            ],
+            const SizedBox(height: 22),
+            Studio3DButton(
+              label: 'Yeniden Oyna',
+              icon: Icons.replay_rounded,
+              onPressed: _yeniOyun,
+              variant: StudioButtonVariant.gold,
+              expand: true,
+              fontSize: 18,
+              padding: const EdgeInsets.symmetric(vertical: 15),
+            ),
+            const SizedBox(height: 12),
+            Center(
+              child: TextButton(
+                onPressed: () => Navigator.of(context).maybePop(),
+                child: const Text('Ana sayfaya dön',
+                    style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        Text('En iyi kazancın: ${puanYaz(ctrl.zirveEnIyi)} puan',
-            textAlign: TextAlign.center, style: const TextStyle(color: Colors.white60)),
-        if (!zirve && _bitisNedeni != 'Çekildin.') ...[
-          const SizedBox(height: 18),
-          _SoruKutusu(baslik: 'Doğru cevap: ${String.fromCharCode(65 + q.answer)}) ${q.options[q.answer]}', metin: q.explanation),
-        ],
-        const SizedBox(height: 24),
-        _AltinDugme(metin: 'Yeniden Oyna', onTap: _yeniOyun),
-        const SizedBox(height: 12),
-        Center(
-          child: TextButton(
-            onPressed: () => Navigator.of(context).maybePop(),
-            child: const Text('Ana sayfaya dön', style: TextStyle(color: Colors.white70, fontSize: 16)),
-          ),
-        ),
+        ConfettiCelebrationOverlay(active: !ctrl.reduceMotion && _kazanc >= 2000),
       ],
     );
   }
@@ -559,149 +770,27 @@ class _ZirveScreenState extends State<ZirveScreen> with SingleTickerProviderStat
 // Bileşenler
 // ---------------------------------------------------------------------------
 
-class _IsikHuzmeleri extends CustomPainter {
-  final double t;
-  const _IsikHuzmeleri(this.t);
-  @override
-  void paint(Canvas canvas, Size s) {
-    for (var k = 0; k < 3; k++) {
-      final aci = sin(t * 2 * pi + k * 2.1) * .35;
-      final kaynak = Offset(s.width * (.2 + .3 * k), -20);
-      final boy = s.height * 1.1;
-      final p = Path()
-        ..moveTo(kaynak.dx, kaynak.dy)
-        ..lineTo(kaynak.dx + sin(aci - .12) * boy, kaynak.dy + cos(aci - .12) * boy)
-        ..lineTo(kaynak.dx + sin(aci + .12) * boy, kaynak.dy + cos(aci + .12) * boy)
-        ..close();
-      canvas.drawPath(
-        p,
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [const Color(0xFF8FB4FF).withValues(alpha: .16), Colors.transparent],
-          ).createShader(Offset.zero & s),
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _IsikHuzmeleri old) => old.t != t;
-}
-
 class _SoruKutusu extends StatelessWidget {
   final String baslik;
   final String metin;
   const _SoruKutusu({required this.baslik, required this.metin});
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: _altin, width: 2),
-          gradient: const LinearGradient(
-              begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF1A2A8E), Color(0xFF070C3A)]),
-          boxShadow: [BoxShadow(color: _altin.withValues(alpha: .25), blurRadius: 18)],
-        ),
+  Widget build(BuildContext context) => Studio3DPlaque(
+        padding: const EdgeInsets.fromLTRB(22, 16, 22, 18),
+        chamfer: 18,
         child: Column(children: [
-          Text(baslik, textAlign: TextAlign.center,
-              style: const TextStyle(color: _altin, fontWeight: FontWeight.w900, fontSize: 14)),
+          Text(
+            baslik,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: StudioPalette.goldBright, fontWeight: FontWeight.w900, fontSize: 14),
+          ),
           const SizedBox(height: 8),
-          Text(metin, textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, height: 1.35)),
+          Text(
+            metin,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, height: 1.35),
+          ),
         ]),
-      );
-}
-
-enum _SecenekDurumu { normal, secili, dogru, yanlis, gizli }
-
-class _SecenekKutusu extends StatelessWidget {
-  final String harf;
-  final String metin;
-  final _SecenekDurumu durum;
-  final VoidCallback onTap;
-  const _SecenekKutusu({required this.harf, required this.metin, required this.durum, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final (zemin, kenar) = switch (durum) {
-      _SecenekDurumu.secili => (_turuncu, Colors.white),
-      _SecenekDurumu.dogru => (_dogruYesil, Colors.white),
-      _SecenekDurumu.yanlis => (_yanlisKirmizi, Colors.white),
-      _SecenekDurumu.gizli => (const Color(0xFF080C2E), const Color(0x55F2C14E)),
-      _SecenekDurumu.normal => (const Color(0xFF0D1660), _altin),
-    };
-    return Semantics(
-      button: durum != _SecenekDurumu.gizli,
-      label: durum == _SecenekDurumu.gizli ? 'Seçenek $harf elendi' : 'Seçenek $harf: $metin',
-      child: GestureDetector(
-        onTap: durum == _SecenekDurumu.gizli ? null : onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          constraints: const BoxConstraints(minHeight: 58),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          decoration: BoxDecoration(
-            color: zemin,
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: kenar, width: 2),
-            boxShadow: durum == _SecenekDurumu.normal || durum == _SecenekDurumu.gizli
-                ? null
-                : [BoxShadow(color: zemin.withValues(alpha: .6), blurRadius: 16)],
-          ),
-          child: Row(children: [
-            Text('$harf:', style: TextStyle(
-                color: durum == _SecenekDurumu.normal ? _altin : Colors.white,
-                fontWeight: FontWeight.w900, fontSize: 17)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(metin,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
-            ),
-          ]),
-        ),
-      ),
-    );
-  }
-}
-
-class _JokerDugme extends StatelessWidget {
-  final IconData ikon;
-  final String etiket;
-  final bool kullanildi;
-  final VoidCallback onTap;
-  const _JokerDugme({required this.ikon, required this.etiket, required this.kullanildi, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6),
-        child: Semantics(
-          button: true,
-          enabled: !kullanildi,
-          label: 'Joker: $etiket${kullanildi ? ', kullanıldı' : ''}',
-          child: GestureDetector(
-            onTap: kullanildi ? null : onTap,
-            child: Opacity(
-              opacity: kullanildi ? .35 : 1,
-              child: Column(children: [
-                Container(
-                  width: 58,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _altin, width: 2),
-                    gradient: const LinearGradient(colors: [Color(0xFF1A2A8E), Color(0xFF070C3A)]),
-                  ),
-                  child: Stack(alignment: Alignment.center, children: [
-                    Icon(ikon, color: Colors.white, size: 22),
-                    if (kullanildi) const Icon(Icons.close_rounded, color: _yanlisKirmizi, size: 34),
-                  ]),
-                ),
-                const SizedBox(height: 3),
-                Text(etiket, style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w700)),
-              ]),
-            ),
-          ),
-        ),
       );
 }
 
@@ -710,15 +799,29 @@ class _SureHalkasi extends StatelessWidget {
   final int toplam;
   const _SureHalkasi({required this.kalan, required this.toplam});
   @override
-  Widget build(BuildContext context) => SizedBox(
-        width: 64,
-        height: 64,
+  Widget build(BuildContext context) => Container(
+        width: 68,
+        height: 68,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const RadialGradient(colors: [StudioPalette.navyTop, _gece]),
+          boxShadow: [
+            BoxShadow(
+              color: (kalan <= 5 ? _yanlisKirmizi : _altin).withValues(alpha: 0.45),
+              blurRadius: 16,
+            ),
+          ],
+        ),
         child: Stack(alignment: Alignment.center, children: [
-          CircularProgressIndicator(
-            value: toplam == 0 ? 0 : kalan / toplam,
-            strokeWidth: 5,
-            backgroundColor: Colors.white12,
-            color: kalan <= 5 ? _yanlisKirmizi : _altin,
+          SizedBox(
+            width: 62,
+            height: 62,
+            child: CircularProgressIndicator(
+              value: toplam == 0 ? 0 : kalan / toplam,
+              strokeWidth: 5,
+              backgroundColor: Colors.white12,
+              color: kalan <= 5 ? _yanlisKirmizi : _altin,
+            ),
           ),
           Text('$kalan', style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
         ]),
@@ -730,45 +833,47 @@ class _SalonGrafigi extends StatelessWidget {
   final Set<int> gizli;
   const _SalonGrafigi({required this.oylar, required this.gizli});
   @override
-  Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _altin.withValues(alpha: .6)),
-          color: const Color(0xFF070C3A),
-        ),
-        child: Column(children: [
-          const Text('Salon oylaması', style: TextStyle(color: _altin, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 110,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                for (var k = 0; k < 4; k++)
-                  Expanded(
-                    child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-                      Text(gizli.contains(k) ? '' : '%${oylar[k]}',
-                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 2),
-                      Container(
-                        width: 26,
-                        height: 70 * oylar[k] / 100 + 2,
-                        decoration: BoxDecoration(
-                          color: _altin,
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: ArenaGlassCard(
+          tint: _altin,
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+          child: Column(children: [
+            const Text('Salon oylaması', style: TextStyle(color: StudioPalette.goldBright, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 110,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  for (var k = 0; k < 4; k++)
+                    Expanded(
+                      child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+                        Text(gizli.contains(k) ? '' : '%${oylar[k]}',
+                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 2),
+                        Container(
+                          width: 28,
+                          height: 70 * oylar[k] / 100 + 2,
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [StudioPalette.goldBright, StudioPalette.goldDeep],
+                            ),
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(6)),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(String.fromCharCode(65 + k),
-                          style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w800)),
-                    ]),
-                  ),
-              ],
+                        const SizedBox(height: 2),
+                        Text(String.fromCharCode(65 + k),
+                            style: const TextStyle(color: StudioPalette.goldBright, fontWeight: FontWeight.w900)),
+                      ]),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ]),
+          ]),
+        ),
       );
 }
 
@@ -776,19 +881,17 @@ class _DanismanBalonu extends StatelessWidget {
   final String soz;
   const _DanismanBalonu({required this.soz});
   @override
-  Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _altin.withValues(alpha: .6)),
-          color: const Color(0xFF070C3A),
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: ArenaGlassCard(
+          tint: _altin,
+          padding: const EdgeInsets.all(12),
+          child: Row(children: [
+            const Icon(Icons.support_agent_rounded, color: StudioPalette.goldBright, size: 30),
+            const SizedBox(width: 10),
+            Expanded(child: Text('Danışman: $soz', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700))),
+          ]),
         ),
-        child: Row(children: [
-          const Icon(Icons.support_agent_rounded, color: _altin, size: 30),
-          const SizedBox(width: 10),
-          Expanded(child: Text('Danışman: $soz', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600))),
-        ]),
       );
 }
 
@@ -800,21 +903,25 @@ class _MerdivenRozeti extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
         button: true,
         label: 'Ödül merdiveni, basamak ${i + 1}',
-        child: GestureDetector(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _altin),
-              color: const Color(0xFF070C3A),
+        child: ArenaPressDepth(
+          depthOffset: 1.8,
+          child: GestureDetector(
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: _altin, width: 1.6),
+                gradient: const LinearGradient(colors: [StudioPalette.navyTop, StudioPalette.navyDark]),
+                boxShadow: [BoxShadow(color: _altin.withValues(alpha: 0.25), blurRadius: 10)],
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.stairs_rounded, color: StudioPalette.goldBright, size: 18),
+                const SizedBox(width: 6),
+                Text('${i + 1}/15 · ${puanYaz(ZirveMerdiveni.odul[i])}',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+              ]),
             ),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              const Icon(Icons.stairs_rounded, color: _altin, size: 18),
-              const SizedBox(width: 6),
-              Text('${i + 1}/15 · ${puanYaz(ZirveMerdiveni.odul[i])}',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
-            ]),
           ),
         ),
       );
@@ -829,7 +936,7 @@ class _MerdivenListesi extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
         children: [
           const Center(
-            child: Text('Ödül Merdiveni', style: TextStyle(color: _altin, fontSize: 20, fontWeight: FontWeight.w900)),
+            child: Text('Ödül Merdiveni', style: TextStyle(color: StudioPalette.goldBright, fontSize: 20, fontWeight: FontWeight.w900)),
           ),
           const SizedBox(height: 10),
           for (var k = 14; k >= 0; k--)
@@ -837,8 +944,11 @@ class _MerdivenListesi extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 4),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
-                color: k == i ? _turuncu : Colors.transparent,
+                gradient: k == i
+                    ? const LinearGradient(colors: [StudioPalette.amber, Color(0xFFCC6400)])
+                    : null,
                 borderRadius: BorderRadius.circular(14),
+                border: k == i ? Border.all(color: Colors.white70) : null,
               ),
               child: Row(children: [
                 SizedBox(
@@ -877,36 +987,20 @@ class _StudyoDiyalog extends StatelessWidget {
   Widget build(BuildContext context) => AlertDialog(
         backgroundColor: _lacivert,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: const BorderSide(color: _altin, width: 2)),
-        title: Text(baslik, style: const TextStyle(color: _altin, fontWeight: FontWeight.w900)),
+        title: Text(baslik, style: const TextStyle(color: StudioPalette.goldBright, fontWeight: FontWeight.w900)),
         content: Text(metin, style: const TextStyle(color: Colors.white, fontSize: 16)),
         actions: [
           if (hayir != null)
             TextButton(onPressed: () => Navigator.pop(context, false),
                 child: Text(hayir!, style: const TextStyle(color: Colors.white70))),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: _altin, foregroundColor: _gece),
+          Studio3DButton(
+            label: evet,
             onPressed: () => Navigator.pop(context, true),
-            child: Text(evet, style: const TextStyle(fontWeight: FontWeight.w900)),
+            variant: StudioButtonVariant.gold,
+            shimmer: false,
+            fontSize: 14,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           ),
         ],
-      );
-}
-
-class _AltinDugme extends StatelessWidget {
-  final String metin;
-  final VoidCallback onTap;
-  const _AltinDugme({required this.metin, required this.onTap});
-  @override
-  Widget build(BuildContext context) => Center(
-        child: FilledButton(
-          style: FilledButton.styleFrom(
-            backgroundColor: _altin,
-            foregroundColor: _gece,
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-            shape: const StadiumBorder(),
-          ),
-          onPressed: onTap,
-          child: Text(metin, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
-        ),
       );
 }
